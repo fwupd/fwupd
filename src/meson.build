@@ -91,7 +91,7 @@ endif
 
 fwupdutil = library(
   'fwupdutil',
-  sources: ['fu-console.c', 'fu-util-bios-setting.c', 'fu-util-common.c', systemd_src],
+  sources: ['fu-console.c', 'fu-bios-setting-common.c', 'fu-cli-common.c', systemd_src],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
@@ -113,7 +113,7 @@ dbus_interface = custom_target(
 if build_daemon
   executable(
     'fwupdmgr',
-    sources: ['fu-util.c', client_src],
+    sources: ['fu-dbus-cli.c', client_src],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
     link_with: [fwupd, fwupdplugin, fwupdutil],
@@ -179,7 +179,7 @@ executable(
   fwupdengine_rs,
   plugins_hdr,
   export_dynamic: true,
-  sources: ['fu-tool.c'],
+  sources: ['fu-tool-cli.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
   dependencies: [libfwupd_deps, client_dep, valgrind],
   link_with: [fwupdengine, fwupdutil, plugin_libs],
@@ -300,6 +300,7 @@ if get_option('tests')
 
   test_names = [
     'cabinet',
+    'cli',
     'client-list',
     'console',
     'device-list',
@@ -315,7 +316,6 @@ if get_option('tests')
     'remote',
     'remote-list',
     'usb-backend',
-    'util',
   ]
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'

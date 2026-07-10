@@ -10,12 +10,12 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-bios-setting-common.h"
 #include "fu-bios-settings-private.h"
-#include "fu-util-bios-setting.h"
-#include "fu-util-common.h"
+#include "fu-cli-common.h"
 
 static void
-fu_util_bios_setting_update_description(FwupdBiosSetting *setting)
+fu_bios_setting_update_description(FwupdBiosSetting *setting)
 {
 	const gchar *tmp = fwupd_bios_setting_get_description(setting);
 	const gchar *new = NULL;
@@ -29,7 +29,7 @@ fu_util_bios_setting_update_description(FwupdBiosSetting *setting)
 }
 
 static const gchar *
-fu_util_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
+fu_bios_setting_kind_to_user_string(FwupdBiosSettingKind kind)
 {
 	if (kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		/* TRANSLATORS: The BIOS setting can only be changed to fixed values */
@@ -47,7 +47,7 @@ fu_util_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
 }
 
 gboolean
-fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
+fu_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 {
 	/* no arguments set */
 	if (g_strv_length(values) == 0)
@@ -66,16 +66,16 @@ fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 }
 
 void
-fu_util_bios_setting_console_print(FuConsole *console, gchar **values, GPtrArray *settings)
+fu_bios_setting_console_print(FuConsole *console, gchar **values, GPtrArray *settings)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
 	for (guint i = 0; i < settings->len; i++) {
 		FwupdBiosSetting *setting = g_ptr_array_index(settings, i);
-		if (fu_util_bios_setting_matches_args(setting, values)) {
+		if (fu_bios_setting_matches_args(setting, values)) {
 			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fu_util_bios_setting_update_description(setting);
+			fu_bios_setting_update_description(setting);
 			fwupd_codec_to_json(FWUPD_CODEC(setting),
 					    json_obj_tmp,
 					    FWUPD_CODEC_FLAG_NONE);
@@ -83,11 +83,11 @@ fu_util_bios_setting_console_print(FuConsole *console, gchar **values, GPtrArray
 		}
 	}
 	fwupd_json_object_add_array(json_obj, "BiosSettings", json_arr);
-	fu_util_print_json_object(console, json_obj);
+	fu_cli_print_json_object(console, json_obj);
 }
 
 gchar *
-fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
+fu_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 {
 	const gchar *tmp;
 	FwupdBiosSettingKind type;
@@ -105,7 +105,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 				  idt + 1,
 				  /* TRANSLATORS: type of BIOS setting */
 				  _("Setting type"),
-				  fu_util_bios_setting_kind_to_string(type));
+				  fu_bios_setting_kind_to_user_string(type));
 
 	tmp = fwupd_bios_setting_get_current_value(setting);
 	if (tmp != NULL) {
@@ -117,7 +117,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 	/* TRANSLATORS: current value of a BIOS setting */
 	fwupd_codec_string_append(str, idt + 1, _("Current Value"), current_value);
 
-	fu_util_bios_setting_update_description(setting);
+	fu_bios_setting_update_description(setting);
 	fwupd_codec_string_append(str,
 				  idt + 1,
 				  /* TRANSLATORS: description of BIOS setting */
@@ -189,7 +189,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 }
 
 GHashTable *
-fu_util_bios_settings_parse_argv(gchar **input, GError **error)
+fu_bios_settings_parse_argv(gchar **input, GError **error)
 {
 	GHashTable *bios_settings;
 
