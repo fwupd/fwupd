@@ -1,0 +1,9 @@
+[wrap-file]
+directory = xz-5.2.12
+source_url = http://tukaani.org/xz/xz-5.2.12.tar.xz
+source_filename = xz-5.2.12.tar.xz
+source_hash = f79a92b84101d19d76be833aecc93e68e56065b61ec737610964cd4f6c54ff2e
+patch_directory = liblzma
+
+[provide]
+liblzma = lzma_dep
