@@ -11,8 +11,8 @@ src/fu-engine-helper.c
 src/fu-main.c
 src/fu-remote-list.c
 src/fu-security-attr-common.c
-src/fu-tool.c
+src/fu-cli.c
+src/fu-direct-cli.c
 src/fu-util.c
 src/fu-util-bios-setting.c
 src/fu-util-common.c
-src/fu-util-impl.c

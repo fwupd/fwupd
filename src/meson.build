@@ -89,13 +89,13 @@ if host_machine.system() == 'windows'
   fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
-fwupdutil = library(
-  'fwupdutil',
+fwupdcli = library(
+  'fwupdcli',
   sources: [
     'fu-console.c',
     'fu-util-bios-setting.c',
     'fu-util-common.c',
-    'fu-util-impl.c',
+    'fu-cli.c',
     systemd_src,
   ],
   install: true,
@@ -122,7 +122,7 @@ if build_daemon
     sources: ['fu-util.c', client_src],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
-    link_with: [fwupd, fwupdplugin, fwupdutil],
+    link_with: [fwupd, fwupdplugin, fwupdcli],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: bindir,
@@ -185,10 +185,10 @@ executable(
   fwupdengine_rs,
   plugins_hdr,
   export_dynamic: true,
-  sources: ['fu-tool.c'],
+  sources: ['fu-direct-cli.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
   dependencies: [libfwupd_deps, client_dep, valgrind],
-  link_with: [fwupdengine, fwupdutil, plugin_libs],
+  link_with: [fwupdengine, fwupdcli, plugin_libs],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: bindir,
@@ -342,7 +342,7 @@ if get_option('tests')
       sources: ['fu-' + test_name + '-test.c'],
       include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [engine_dep],
-      link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
+      link_with: [fwupdengine, fwupdcli, libfutest, plugin_libs],
       c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
     )
     test(

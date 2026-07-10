@@ -5541,292 +5541,292 @@ main(int argc, char *argv[])
 	fu_console_set_main_context(self->console, self->main_ctx);
 
 	/* add commands */
-	fu_util_cmd_array_add(cmd_array,
-			      "check-reboot-needed",
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Check if any devices are pending a reboot to complete update"),
-			      fu_util_check_reboot_needed);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-devices,get-topology",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Get all devices that support firmware updates"),
-			      fu_util_get_devices);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-history",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Show history of firmware updates"),
-			      fu_util_get_history);
-	fu_util_cmd_array_add(cmd_array,
-			      "report-history",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Share firmware history with the developers"),
-			      fu_util_report_history);
-	fu_util_cmd_array_add(cmd_array,
-			      "report-export",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Export firmware history for manual upload"),
-			      fu_util_report_export);
-	fu_util_cmd_array_add(cmd_array,
-			      "install",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID] [VERSION]"),
-			      /* TRANSLATORS: command description */
-			      _("Install a specific firmware file on all devices that match"),
-			      fu_util_install);
-	fu_util_cmd_array_add(cmd_array,
-			      "local-install",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILE [DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Install a firmware file in cabinet format on this hardware"),
-			      fu_util_local_install);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-details",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILE"),
-			      /* TRANSLATORS: command description */
-			      _("Gets details about a firmware file"),
-			      fu_util_get_details);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-updates,get-upgrades",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Gets the list of updates for all specified devices, or all "
-				"devices if unspecified"),
-			      fu_util_get_updates);
-	fu_util_cmd_array_add(cmd_array,
-			      "update,upgrade",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Updates all specified devices to latest firmware version, or all "
-				"devices if unspecified"),
-			      fu_util_update);
-	fu_util_cmd_array_add(cmd_array,
-			      "verify",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Checks cryptographic hash matches firmware"),
-			      fu_util_verify);
-	fu_util_cmd_array_add(cmd_array,
-			      "unlock",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("DEVICE-ID|GUID"),
-			      /* TRANSLATORS: command description */
-			      _("Unlocks the device for firmware access"),
-			      fu_util_unlock);
-	fu_util_cmd_array_add(cmd_array,
-			      "clear-results",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("DEVICE-ID|GUID"),
-			      /* TRANSLATORS: command description */
-			      _("Clears the results from the last update"),
-			      fu_util_clear_results);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-results",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("DEVICE-ID|GUID"),
-			      /* TRANSLATORS: command description */
-			      _("Gets the results from the last update"),
-			      fu_util_get_results);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-releases",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Gets the releases for a device"),
-			      fu_util_get_releases);
-	fu_util_cmd_array_add(cmd_array,
-			      "search",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("WORD"),
-			      /* TRANSLATORS: command description */
-			      _("Finds firmware releases from the metadata"),
-			      fu_util_search);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-remotes",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Gets the configured remotes"),
-			      fu_util_get_remotes);
-	fu_util_cmd_array_add(cmd_array,
-			      "downgrade",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Downgrades the firmware on a device"),
-			      fu_util_downgrade);
-	fu_util_cmd_array_add(cmd_array,
-			      "refresh",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[FILE FILE_SIG REMOTE-ID]"),
-			      /* TRANSLATORS: command description */
-			      _("Refresh metadata from remote server"),
-			      fu_util_refresh);
-	fu_util_cmd_array_add(cmd_array,
-			      "verify-update",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Update the stored cryptographic hash with current ROM contents"),
-			      fu_util_verify_update);
-	fu_util_cmd_array_add(cmd_array,
-			      "modify-remote",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("REMOTE-ID KEY VALUE"),
-			      /* TRANSLATORS: command description */
-			      _("Modifies a given remote"),
-			      fu_util_remote_modify);
-	fu_util_cmd_array_add(cmd_array,
-			      "enable-remote",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("REMOTE-ID"),
-			      /* TRANSLATORS: command description */
-			      _("Enables a given remote"),
-			      fu_util_remote_enable);
-	fu_util_cmd_array_add(cmd_array,
-			      "clean-remote",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("REMOTE-ID"),
-			      /* TRANSLATORS: command description */
-			      _("Cleans a given remote"),
-			      fu_util_remote_clean);
-	fu_util_cmd_array_add(cmd_array,
-			      "disable-remote",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("REMOTE-ID"),
-			      /* TRANSLATORS: command description */
-			      _("Disables a given remote"),
-			      fu_util_remote_disable);
-	fu_util_cmd_array_add(cmd_array,
-			      "enable-remote-auth",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[REMOTE-ID] [USERNAME] [TOKEN]"),
-			      /* TRANSLATORS: command description */
-			      _("Enable an authenticated remote"),
-			      fu_util_enable_remote_auth);
-	fu_util_cmd_array_add(cmd_array,
-			      "activate",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Activate devices"),
-			      fu_util_activate);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-approved-firmware",
-			      NULL,
-			      /* TRANSLATORS: firmware approved by the admin */
-			      _("Gets the list of approved firmware"),
-			      fu_util_get_approved_firmware);
-	fu_util_cmd_array_add(cmd_array,
-			      "set-approved-firmware",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
-			      /* TRANSLATORS: firmware approved by the admin */
-			      _("Sets the list of approved firmware"),
-			      fu_util_set_approved_firmware);
-	fu_util_cmd_array_add(cmd_array,
-			      "modify-config",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[SECTION] KEY VALUE"),
-			      /* TRANSLATORS: sets something in the daemon configuration file */
-			      _("Modifies a daemon configuration value"),
-			      fu_util_modify_config);
-	fu_util_cmd_array_add(cmd_array,
-			      "reset-config",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("SECTION"),
-			      /* TRANSLATORS: sets something in the daemon configuration file */
-			      _("Resets a daemon configuration section"),
-			      fu_util_reset_config);
-	fu_util_cmd_array_add(cmd_array,
-			      "reinstall",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Reinstall current firmware on the device"),
-			      fu_util_reinstall);
-	fu_util_cmd_array_add(cmd_array,
-			      "switch-branch",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID] [BRANCH]"),
-			      /* TRANSLATORS: command description */
-			      _("Switch the firmware branch on the device"),
-			      fu_util_switch_branch);
-	fu_util_cmd_array_add(cmd_array,
-			      "security",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Gets the host security attributes"),
-			      fu_util_security);
-	fu_util_cmd_array_add(cmd_array,
-			      "sync,sync-bkc",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Sync firmware versions to the chosen configuration"),
-			      fu_util_sync);
-	fu_util_cmd_array_add(cmd_array,
-			      "get-plugins",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Get all enabled plugins registered with the system"),
-			      fu_util_get_plugins);
-	fu_util_cmd_array_add(cmd_array,
-			      "download",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("LOCATION"),
-			      /* TRANSLATORS: command description */
-			      _("Download a file"),
-			      fu_util_download);
-	fu_util_cmd_array_add(cmd_array,
-			      "device-test",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[FILENAME1] [FILENAME2]"),
-			      /* TRANSLATORS: command description */
-			      _("Test a device using a JSON manifest"),
-			      fu_util_device_test);
-	fu_util_cmd_array_add(cmd_array,
-			      "device-emulate",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[FILENAME1] [FILENAME2]"),
-			      /* TRANSLATORS: command description */
-			      _("Emulate a device using a JSON manifest"),
-			      fu_util_device_emulate);
-	fu_util_cmd_array_add(cmd_array,
-			      "inhibit",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[REASON] [TIMEOUT]"),
-			      /* TRANSLATORS: command description */
-			      _("Inhibit the system to prevent upgrades"),
-			      fu_util_inhibit);
-	fu_util_cmd_array_add(cmd_array,
-			      "uninhibit",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("INHIBIT-ID"),
-			      /* TRANSLATORS: command description */
-			      _("Uninhibit the system to allow upgrades"),
-			      fu_util_uninhibit);
-	fu_util_cmd_array_add(cmd_array,
-			      "device-wait",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("GUID|DEVICE-ID"),
-			      /* TRANSLATORS: command description */
-			      _("Wait for a device to appear"),
-			      fu_util_device_wait);
-	fu_util_cmd_array_add(cmd_array,
-			      "quit",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Asks the daemon to quit"),
-			      fu_util_quit);
-	fu_util_cmd_array_add(
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "check-reboot-needed",
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Check if any devices are pending a reboot to complete update"),
+			     fu_util_check_reboot_needed);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-devices,get-topology",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Get all devices that support firmware updates"),
+			     fu_util_get_devices);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-history",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Show history of firmware updates"),
+			     fu_util_get_history);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "report-history",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Share firmware history with the developers"),
+			     fu_util_report_history);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "report-export",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Export firmware history for manual upload"),
+			     fu_util_report_export);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "install",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID] [VERSION]"),
+			     /* TRANSLATORS: command description */
+			     _("Install a specific firmware file on all devices that match"),
+			     fu_util_install);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "local-install",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILE [DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Install a firmware file in cabinet format on this hardware"),
+			     fu_util_local_install);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-details",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILE"),
+			     /* TRANSLATORS: command description */
+			     _("Gets details about a firmware file"),
+			     fu_util_get_details);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-updates,get-upgrades",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Gets the list of updates for all specified devices, or all "
+			       "devices if unspecified"),
+			     fu_util_get_updates);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "update,upgrade",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Updates all specified devices to latest firmware version, or all "
+			       "devices if unspecified"),
+			     fu_util_update);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "verify",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Checks cryptographic hash matches firmware"),
+			     fu_util_verify);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "unlock",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("DEVICE-ID|GUID"),
+			     /* TRANSLATORS: command description */
+			     _("Unlocks the device for firmware access"),
+			     fu_util_unlock);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "clear-results",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("DEVICE-ID|GUID"),
+			     /* TRANSLATORS: command description */
+			     _("Clears the results from the last update"),
+			     fu_util_clear_results);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-results",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("DEVICE-ID|GUID"),
+			     /* TRANSLATORS: command description */
+			     _("Gets the results from the last update"),
+			     fu_util_get_results);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-releases",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Gets the releases for a device"),
+			     fu_util_get_releases);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "search",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("WORD"),
+			     /* TRANSLATORS: command description */
+			     _("Finds firmware releases from the metadata"),
+			     fu_util_search);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-remotes",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Gets the configured remotes"),
+			     fu_util_get_remotes);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "downgrade",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Downgrades the firmware on a device"),
+			     fu_util_downgrade);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "refresh",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[FILE FILE_SIG REMOTE-ID]"),
+			     /* TRANSLATORS: command description */
+			     _("Refresh metadata from remote server"),
+			     fu_util_refresh);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "verify-update",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Update the stored cryptographic hash with current ROM contents"),
+			     fu_util_verify_update);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "modify-remote",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("REMOTE-ID KEY VALUE"),
+			     /* TRANSLATORS: command description */
+			     _("Modifies a given remote"),
+			     fu_util_remote_modify);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "enable-remote",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("REMOTE-ID"),
+			     /* TRANSLATORS: command description */
+			     _("Enables a given remote"),
+			     fu_util_remote_enable);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "clean-remote",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("REMOTE-ID"),
+			     /* TRANSLATORS: command description */
+			     _("Cleans a given remote"),
+			     fu_util_remote_clean);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "disable-remote",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("REMOTE-ID"),
+			     /* TRANSLATORS: command description */
+			     _("Disables a given remote"),
+			     fu_util_remote_disable);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "enable-remote-auth",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[REMOTE-ID] [USERNAME] [TOKEN]"),
+			     /* TRANSLATORS: command description */
+			     _("Enable an authenticated remote"),
+			     fu_util_enable_remote_auth);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "activate",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Activate devices"),
+			     fu_util_activate);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-approved-firmware",
+			     NULL,
+			     /* TRANSLATORS: firmware approved by the admin */
+			     _("Gets the list of approved firmware"),
+			     fu_util_get_approved_firmware);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "set-approved-firmware",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
+			     /* TRANSLATORS: firmware approved by the admin */
+			     _("Sets the list of approved firmware"),
+			     fu_util_set_approved_firmware);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "modify-config",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[SECTION] KEY VALUE"),
+			     /* TRANSLATORS: sets something in the daemon configuration file */
+			     _("Modifies a daemon configuration value"),
+			     fu_util_modify_config);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "reset-config",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("SECTION"),
+			     /* TRANSLATORS: sets something in the daemon configuration file */
+			     _("Resets a daemon configuration section"),
+			     fu_util_reset_config);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "reinstall",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Reinstall current firmware on the device"),
+			     fu_util_reinstall);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "switch-branch",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID] [BRANCH]"),
+			     /* TRANSLATORS: command description */
+			     _("Switch the firmware branch on the device"),
+			     fu_util_switch_branch);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "security",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Gets the host security attributes"),
+			     fu_util_security);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "sync,sync-bkc",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Sync firmware versions to the chosen configuration"),
+			     fu_util_sync);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "get-plugins",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Get all enabled plugins registered with the system"),
+			     fu_util_get_plugins);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "download",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("LOCATION"),
+			     /* TRANSLATORS: command description */
+			     _("Download a file"),
+			     fu_util_download);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "device-test",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[FILENAME1] [FILENAME2]"),
+			     /* TRANSLATORS: command description */
+			     _("Test a device using a JSON manifest"),
+			     fu_util_device_test);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "device-emulate",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[FILENAME1] [FILENAME2]"),
+			     /* TRANSLATORS: command description */
+			     _("Emulate a device using a JSON manifest"),
+			     fu_util_device_emulate);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "inhibit",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[REASON] [TIMEOUT]"),
+			     /* TRANSLATORS: command description */
+			     _("Inhibit the system to prevent upgrades"),
+			     fu_util_inhibit);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "uninhibit",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("INHIBIT-ID"),
+			     /* TRANSLATORS: command description */
+			     _("Uninhibit the system to allow upgrades"),
+			     fu_util_uninhibit);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "device-wait",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("GUID|DEVICE-ID"),
+			     /* TRANSLATORS: command description */
+			     _("Wait for a device to appear"),
+			     fu_util_device_wait);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "quit",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Asks the daemon to quit"),
+			     fu_util_quit);
+	fu_cli_cmd_array_add(
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",
 	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
@@ -5834,67 +5834,67 @@ main(int argc, char *argv[])
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
 	    fu_util_get_bios_setting);
-	fu_util_cmd_array_add(cmd_array,
-			      "set-bios-setting",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("SETTING1 VALUE1 [SETTING2] [VALUE2]"),
-			      /* TRANSLATORS: command description */
-			      _("Sets one or more BIOS settings"),
-			      fu_util_set_bios_setting);
-	fu_util_cmd_array_add(cmd_array,
-			      "emulation-load",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME"),
-			      /* TRANSLATORS: command description */
-			      _("Load device emulation data"),
-			      fu_util_emulation_load);
-	fu_util_cmd_array_add(cmd_array,
-			      "emulation-save",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME"),
-			      /* TRANSLATORS: command description */
-			      _("Save device emulation data"),
-			      fu_util_emulation_save);
-	fu_util_cmd_array_add(cmd_array,
-			      "emulation-tag",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Adds devices to watch for future emulation"),
-			      fu_util_emulation_tag);
-	fu_util_cmd_array_add(cmd_array,
-			      "emulation-untag",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[DEVICE-ID|GUID]"),
-			      /* TRANSLATORS: command description */
-			      _("Removes devices to watch for future emulation"),
-			      fu_util_emulation_untag);
-	fu_util_cmd_array_add(cmd_array,
-			      "security-fix",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[APPSTREAM_ID]"),
-			      /* TRANSLATORS: command description */
-			      _("Fix a specific host security attribute"),
-			      fu_util_security_fix);
-	fu_util_cmd_array_add(cmd_array,
-			      "security-undo",
-			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[APPSTREAM_ID]"),
-			      /* TRANSLATORS: command description */
-			      _("Undo the host security attribute fix"),
-			      fu_util_security_undo);
-	fu_util_cmd_array_add(cmd_array,
-			      "report-devices",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Upload the list of updatable devices to a remote server"),
-			      fu_util_report_devices);
-	fu_util_cmd_array_add(cmd_array,
-			      "hwids",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Return all the hardware IDs for the machine"),
-			      fu_util_hwids);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "set-bios-setting",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("SETTING1 VALUE1 [SETTING2] [VALUE2]"),
+			     /* TRANSLATORS: command description */
+			     _("Sets one or more BIOS settings"),
+			     fu_util_set_bios_setting);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "emulation-load",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILENAME"),
+			     /* TRANSLATORS: command description */
+			     _("Load device emulation data"),
+			     fu_util_emulation_load);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "emulation-save",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILENAME"),
+			     /* TRANSLATORS: command description */
+			     _("Save device emulation data"),
+			     fu_util_emulation_save);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "emulation-tag",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Adds devices to watch for future emulation"),
+			     fu_util_emulation_tag);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "emulation-untag",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[DEVICE-ID|GUID]"),
+			     /* TRANSLATORS: command description */
+			     _("Removes devices to watch for future emulation"),
+			     fu_util_emulation_untag);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "security-fix",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[APPSTREAM_ID]"),
+			     /* TRANSLATORS: command description */
+			     _("Fix a specific host security attribute"),
+			     fu_util_security_fix);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "security-undo",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("[APPSTREAM_ID]"),
+			     /* TRANSLATORS: command description */
+			     _("Undo the host security attribute fix"),
+			     fu_util_security_undo);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "report-devices",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Upload the list of updatable devices to a remote server"),
+			     fu_util_report_devices);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "hwids",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Return all the hardware IDs for the machine"),
+			     fu_util_hwids);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
@@ -5904,7 +5904,7 @@ main(int argc, char *argv[])
 			 self);
 
 	/* sort by command name */
-	fu_util_cmd_array_sort(cmd_array);
+	fu_cli_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
 	if (!fu_util_setup_interactive(self, &error_console)) {
@@ -5924,7 +5924,7 @@ main(int argc, char *argv[])
 
 	/* get a list of the commands */
 	self->context = g_option_context_new(NULL);
-	cmd_descriptions = fu_util_cmd_array_to_string(cmd_array);
+	cmd_descriptions = fu_cli_cmd_array_to_string(cmd_array);
 	g_option_context_set_summary(self->context, cmd_descriptions);
 	g_option_context_set_description(
 	    self->context,
@@ -6158,7 +6158,7 @@ main(int argc, char *argv[])
 	}
 
 	/* run the specified command */
-	ret = fu_util_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
+	ret = fu_cli_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
 	if (!ret) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */

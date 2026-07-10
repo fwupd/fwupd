@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-console.h"
-#include "fu-util-impl.h"
 
 /* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
@@ -23,15 +22,6 @@ typedef enum {
 	FU_UTIL_CMD_FLAG_NONE = 0,
 	FU_UTIL_CMD_FLAG_IS_ALIAS = 1 << 0,
 } G_GNUC_FLAG_ENUM FuUtilCmdFlags;
-
-typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
-typedef struct {
-	gchar *name;
-	gchar *arguments;
-	gchar *description;
-	FuUtilCmdFlags flags;
-	FuUtilCmdFunc callback;
-} FuUtilCmd;
 
 typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_NONE = 0,
@@ -73,24 +63,6 @@ gboolean
 fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
     G_GNUC_NON_NULL(1);
 
-GPtrArray *
-fu_util_cmd_array_new(void);
-void
-fu_util_cmd_array_add(GPtrArray *array,
-		      const gchar *name,
-		      const gchar *arguments,
-		      const gchar *description,
-		      FuUtilCmdFunc callback) G_GNUC_NON_NULL(1, 2, 4);
-gchar *
-fu_util_cmd_array_to_string(GPtrArray *array) G_GNUC_NON_NULL(1);
-void
-fu_util_cmd_array_sort(GPtrArray *array) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtil *self,
-		      const gchar *command,
-		      gchar **values,
-		      GError **error) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_util_branch_for_display(const gchar *branch);
 const gchar *
