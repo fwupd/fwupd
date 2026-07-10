@@ -40,6 +40,7 @@ CounterpartGuid = USB\VID_0489&PID_E0B5
 # Rolling RW101 in fastboot mode
 [USB\VID_33F8&PID_D00D]
 Plugin = fastboot
+GType = FuFastbootRollingDevice
 FastbootBlockSize = 16384
 FastbootOperationDelay = 0
 Summary = Rolling RW101 Modem (fastboot)
