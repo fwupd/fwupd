@@ -486,7 +486,7 @@ fu_mm_mbim_device_transaction_sync(const gchar *device_file,
         /* Command failed; still try to close the device but ignore close errors,
          * as the primary error is already set */
         if (!fu_mm_mbim_device_close_sync(device, timeout_ms, &error_local)) {
-            g_error("Failed to close MBIM device after command error: %s",
+            g_warning("Failed to close MBIM device after command error: %s",
                       error_local->message);
         }
         return NULL;
@@ -495,7 +495,7 @@ fu_mm_mbim_device_transaction_sync(const gchar *device_file,
     /* Close the device (synchronous); close failure is only warned,
      * it doesn't affect the already obtained response */
     if (!fu_mm_mbim_device_close_sync(device, timeout_ms, &error_local)) {
-        g_error("Failed to close MBIM device after successful command: %s",
+        g_warning("Failed to close MBIM device after successful command: %s",
                   error_local->message);
     }
 

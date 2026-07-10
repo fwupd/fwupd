@@ -93,10 +93,10 @@ fu_mm_rolling_deatch_at_cmd_transaction_sync(const gchar *device_file,
     if (request == NULL)
         return FALSE;
 
-    fu_mm_mbim_device_transaction_sync(device_file,
-                                       request,
-                                       10 * 1000,
-                                       NULL);
+    response = fu_mm_mbim_device_transaction_sync(device_file,
+                                                  request,
+                                                  10 * 1000,
+                                                  NULL);
     return TRUE;
 }
 
@@ -123,8 +123,7 @@ fu_mm_fastboot_device_detach(FuDevice *device, FuProgress *progress, GError **er
         } else {
 	        g_autofree gchar *device_file = NULL;
                 if (!fu_mm_device_get_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_MBIM, &device_file, error)) {
-                    g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
-                            "no mbim port type found for modem: ");
+		    g_prefix_error_literal(error, "no mbim port type found for modem: ");
                     return FALSE;
                 }
 
