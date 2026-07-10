@@ -1,0 +1,10 @@
+configure.tool: meson
+configure.args: @build_options@
+configure.backend: @build_backend@
+configure.version: @meson_version@
+host.os: @build_system@
+host.cpu: @build_cpu@
+target.os: @host_system@
+target.cpu: @host_cpu@
+compiler: @compiler_id@
+compiler.version: @compiler_version@

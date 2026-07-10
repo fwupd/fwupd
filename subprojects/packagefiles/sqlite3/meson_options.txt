@@ -1,0 +1,50 @@
+option(
+    'strict',
+    description: 'Enable extra checks',
+    type: 'boolean',
+    value: true,
+)
+
+# extensions
+option(
+    'all-extensions',
+    description: 'Enable or disable all known extensions by default',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'fts34',
+    description: 'Enable FTS3 and FTS4',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'fts5',
+    description: 'Enable FTS5',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'geopoly',
+    description: 'Enable Geopoly extension',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'rbu',
+    description: 'Enable Resumable Bulk Update extension',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'rtree',
+    description: 'Enable R*Tree index extension',
+    type: 'feature',
+    value: 'auto',
+)
+option(
+    'session',
+    description: 'Enable session extension',
+    type: 'feature',
+    value: 'auto',
+)
