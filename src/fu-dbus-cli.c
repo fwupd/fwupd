@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fu-cli.h"
 #include "fu-console.h"
 #include "fu-polkit-agent.h"
 #include "fu-util-bios-setting.h"
@@ -38,7 +39,12 @@ typedef enum {
 	FU_UTIL_OPERATION_LAST
 } FuUtilOperation;
 
-struct FuUtil {
+#define FU_TYPE_DBUS_CLI (fu_dbus_cli_get_type())
+
+G_DECLARE_FINAL_TYPE(FuDbusCli, fu_dbus_cli, FU, DBUS_CLI, FuCli)
+
+struct _FuDbusCli {
+	FuCli parent_instance;
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
@@ -46,7 +52,6 @@ struct FuUtil {
 	FwupdInstallFlags flags;
 	FwupdClientDownloadFlags download_flags;
 	FwupdClient *client;
-	FuConsole *console;
 	gboolean no_remote_check;
 	gboolean no_metadata_check;
 	gboolean no_reboot_check;
@@ -59,7 +64,6 @@ struct FuUtil {
 	gboolean sign;
 	gboolean show_all;
 	gboolean disable_ssl_strict;
-	gboolean as_json;
 	/* only valid in update and downgrade */
 	FuUtilOperation current_operation;
 	FwupdDevice *current_device;
@@ -73,23 +77,25 @@ struct FuUtil {
 	FwupdReleaseFlags filter_release_exclude;
 };
 
+G_DEFINE_TYPE(FuDbusCli, fu_dbus_cli, FU_TYPE_CLI)
+
 static gboolean
-fu_util_report_history(FuUtil *self, gchar **values, GError **error);
+fu_util_report_history(FuCli *cli, gchar **values, GError **error);
 static FwupdDevice *
-fu_util_get_device_by_id(FuUtil *self, const gchar *id, GError **error);
+fu_util_get_device_by_id(FuDbusCli *self, const gchar *id, GError **error);
 
 static void
-fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtil *self)
+fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuDbusCli *self)
 {
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return;
-	fu_console_set_progress(self->console,
+	fu_console_set_progress(fu_cli_get_console(FU_CLI(self)),
 				fwupd_client_get_status(self->client),
 				fwupd_client_get_percentage_full(self->client));
 }
 
 static void
-fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuUtil *self)
+fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuDbusCli *self)
 {
 	/* nothing sensible to show */
 	if (fwupd_request_get_message(request) == NULL)
@@ -103,8 +109,8 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 		/* TRANSLATORS: the user needs to do something, e.g. remove the device */
 		fmt = fu_console_color_format(_("Action Required:"), FU_CONSOLE_COLOR_RED);
 		tmp = g_strdup_printf("%s %s", fmt, fwupd_request_get_message(request));
-		fu_console_set_progress_title(self->console, tmp);
-		fu_console_beep(self->console, 5);
+		fu_console_set_progress_title(fu_cli_get_console(FU_CLI(self)), tmp);
+		fu_console_beep(fu_cli_get_console(FU_CLI(self)), 5);
 	}
 
 	/* save for later */
@@ -113,7 +119,7 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 }
 
 static void
-fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUtil *self)
+fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuDbusCli *self)
 {
 	g_autofree gchar *str = NULL;
 
@@ -148,15 +154,15 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 	if (self->current_operation == FU_UTIL_OPERATION_UPDATE) {
 		/* TRANSLATORS: %1 is a device name */
 		str = g_strdup_printf(_("Updating %s…"), fwupd_device_get_name(device));
-		fu_console_set_progress_title(self->console, str);
+		fu_console_set_progress_title(fu_cli_get_console(FU_CLI(self)), str);
 	} else if (self->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
 		/* TRANSLATORS: %1 is a device name */
 		str = g_strdup_printf(_("Downgrading %s…"), fwupd_device_get_name(device));
-		fu_console_set_progress_title(self->console, str);
+		fu_console_set_progress_title(fu_cli_get_console(FU_CLI(self)), str);
 	} else if (self->current_operation == FU_UTIL_OPERATION_INSTALL) {
 		/* TRANSLATORS: %1 is a device name  */
 		str = g_strdup_printf(_("Installing on %s…"), fwupd_device_get_name(device));
-		fu_console_set_progress_title(self->console, str);
+		fu_console_set_progress_title(fu_cli_get_console(FU_CLI(self)), str);
 	} else {
 		g_warning("no FuUtilOperation set");
 	}
@@ -164,7 +170,7 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 }
 
 static FwupdDevice *
-fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
+fu_util_prompt_for_device(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	FwupdDevice *dev;
 	guint idx;
@@ -183,9 +189,9 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 	/* exactly one */
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index(devices_filtered, 0);
-		if (!self->as_json) {
+		if (!fu_cli_get_as_json(FU_CLI(self))) {
 			fu_console_print(
-			    self->console,
+			    fu_cli_get_console(FU_CLI(self)),
 			    "%s: %s",
 			    /* TRANSLATORS: device has been chosen by the daemon for the user */
 			    _("Selected device"),
@@ -204,17 +210,20 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 	}
 
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	fu_console_print(self->console, "0.\t%s", _("Cancel"));
+	fu_console_print(fu_cli_get_console(FU_CLI(self)), "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		dev = g_ptr_array_index(devices_filtered, i);
-		fu_console_print(self->console,
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
 				 "%u.\t%s (%s)",
 				 i + 1,
 				 fwupd_device_get_id(dev),
 				 fwupd_device_get_name(dev));
 	}
 	/* TRANSLATORS: get interactive prompt */
-	idx = fu_console_input_uint(self->console, devices_filtered->len, "%s", _("Choose device"));
+	idx = fu_console_input_uint(fu_cli_get_console(FU_CLI(self)),
+				    devices_filtered->len,
+				    "%s",
+				    _("Choose device"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -227,7 +236,7 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 }
 
 static gboolean
-fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
+fu_util_perhaps_show_unreported(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -238,7 +247,7 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 	gboolean all_automatic = FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_unreported_check || self->as_json) {
+	if (self->no_unreported_check || fu_cli_get_as_json(FU_CLI(self))) {
 		g_debug("skipping unreported check");
 		return TRUE;
 	}
@@ -335,17 +344,17 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 	/* show the success and failures */
 	if (!self->assume_yes && !all_automatic) {
 		/* delimit */
-		fu_console_line(self->console, 48);
+		fu_console_line(fu_cli_get_console(FU_CLI(self)), 48);
 
 		/* failures */
 		if (devices_failed->len > 0) {
-			fu_console_print_literal(self->console,
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 						 /* TRANSLATORS: a list of failed updates */
 						 _("Devices that were not updated correctly:"));
 			for (guint i = 0; i < devices_failed->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_failed, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
-				fu_console_print(self->console,
+				fu_console_print(fu_cli_get_console(FU_CLI(self)),
 						 " • %s (%s → %s)",
 						 fwupd_device_get_name(dev),
 						 fwupd_device_get_version(dev),
@@ -355,13 +364,13 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 
 		/* success */
 		if (devices_success->len > 0) {
-			fu_console_print_literal(self->console,
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 						 /* TRANSLATORS: a list of successful updates */
 						 _("Devices that have been updated successfully:"));
 			for (guint i = 0; i < devices_success->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_success, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
-				fu_console_print(self->console,
+				fu_console_print(fu_cli_get_console(FU_CLI(self)),
 						 " • %s (%s → %s)",
 						 fwupd_device_get_name(dev),
 						 fwupd_device_get_version(dev),
@@ -370,19 +379,19 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 		}
 
 		/* ask for permission */
-		fu_console_print_literal(self->console,
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: explain why we want to upload */
 					 _("Uploading firmware reports helps hardware vendors "
 					   "to quickly identify failing and successful updates "
 					   "on real devices."));
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   TRUE,
 					   "%s (%s)",
 					   /* TRANSLATORS: ask the user to upload */
 					   _("Review and upload report now?"),
 					   /* TRANSLATORS: metadata is downloaded */
 					   _("Requires internet connection"))) {
-			if (fu_console_input_bool(self->console,
+			if (fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 						  FALSE,
 						  "%s",
 						  /* TRANSLATORS: offer to disable this nag */
@@ -411,12 +420,12 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 	}
 
 	/* upload */
-	if (!fu_util_report_history(self, NULL, error))
+	if (!fu_util_report_history(FU_CLI(self), NULL, error))
 		return FALSE;
 
 	/* offer to make automatic */
 	if (!self->assume_yes && !all_automatic) {
-		if (fu_console_input_bool(self->console,
+		if (fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					  FALSE,
 					  "%s",
 					  /* TRANSLATORS: offer to stop asking the question */
@@ -446,7 +455,7 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 }
 
 static void
-fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FwupdDevice *dev)
+fu_util_build_device_tree(FuDbusCli *self, FuUtilNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
@@ -468,7 +477,7 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, Fwupd
 }
 
 static void
-fu_util_get_releases_as_json(FuUtil *self, GPtrArray *rels)
+fu_util_get_releases_as_json(FuDbusCli *self, GPtrArray *rels)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -484,11 +493,11 @@ fu_util_get_releases_as_json(FuUtil *self, GPtrArray *rels)
 		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
 	fwupd_json_object_add_array(json_obj, "Releases", json_arr);
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static void
-fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs)
+fu_util_get_devices_as_json(FuDbusCli *self, GPtrArray *devs)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -532,12 +541,13 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs)
 		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
 	fwupd_json_object_add_array(json_obj, "Devices", json_arr);
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static gboolean
-fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
+fu_util_check_reboot_needed(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
 		g_autoptr(GPtrArray) devices =
@@ -572,15 +582,19 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
+fu_util_get_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) devices_filtered = NULL;
@@ -611,7 +625,7 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_get_devices_as_json(self, devices_filtered);
 		return TRUE;
 	}
@@ -627,7 +641,7 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 				    _("No hardware detected with firmware update capability"));
 		return FALSE;
 	}
-	fu_util_print_node(self->console, self->client, root);
+	fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported(self, error))
@@ -636,36 +650,15 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
+static GPtrArray *
+fu_dbus_cli_get_plugins(FuCli *cli, GError **error)
 {
-	g_autoptr(GPtrArray) plugins = NULL;
-
-	/* get results from daemon */
-	plugins = fwupd_client_get_plugins(self->client, self->cancellable, error);
-	if (plugins == NULL)
-		return FALSE;
-	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
-	if (self->as_json) {
-		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
-		fwupd_codec_array_to_json(plugins, "Plugins", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-		fu_util_print_json_object(self->console, json_obj);
-		return TRUE;
-	}
-
-	/* print */
-	for (guint i = 0; i < plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
-		fu_console_print_literal(self->console, str);
-	}
-
-	/* success */
-	return TRUE;
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+	return fwupd_client_get_plugins(self->client, self->cancellable, error);
 }
 
 static gchar *
-fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **error)
+fu_util_download_if_required(FuDbusCli *self, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -697,18 +690,20 @@ fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **erro
 }
 
 static void
-fu_util_display_current_message(FuUtil *self)
+fu_util_display_current_message(FuDbusCli *self)
 {
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return;
 
 	/* TRANSLATORS: success message */
-	fu_console_print_literal(self->console, _("Successfully installed firmware"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully installed firmware"));
 
 	/* print all POST requests */
 	for (guint i = 0; i < self->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(self->post_requests, i);
-		fu_console_print_literal(self->console, fu_util_request_get_message(request));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 fu_util_request_get_message(request));
 	}
 }
 
@@ -739,7 +734,7 @@ fu_util_device_test_helper_new(void)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilDeviceTestHelper, fu_util_device_test_helper_free)
 
 static GPtrArray *
-fu_util_filter_devices(FuUtil *self, GPtrArray *devices, GError **error)
+fu_util_filter_devices(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(GPtrArray) devices_filtered =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -766,7 +761,7 @@ fu_util_filter_devices(FuUtil *self, GPtrArray *devices, GError **error)
 }
 
 static gboolean
-fu_util_device_test_component(FuUtil *self,
+fu_util_device_test_component(FuDbusCli *self,
 			      FuUtilDeviceTestHelper *helper,
 			      FwupdJsonObject *json_obj,
 			      FwupdJsonObject *json_object_result,
@@ -826,13 +821,13 @@ fu_util_device_test_component(FuUtil *self,
 		break;
 	}
 	if (device == NULL) {
-		if (!self->as_json) {
+		if (!fu_cli_get_as_json(FU_CLI(self))) {
 			g_autofree gchar *msg = NULL;
 			msg = fu_console_color_format(
 			    /* TRANSLATORS: this is for the device tests */
 			    _("Did not find any devices with matching GUIDs"),
 			    FU_CONSOLE_COLOR_RED);
-			fu_console_print(self->console, "%s: %s", name, msg);
+			fu_console_print(fu_cli_get_console(FU_CLI(self)), "%s: %s", name, msg);
 		}
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no devices found");
 		return FALSE;
@@ -881,14 +876,21 @@ fu_util_device_test_component(FuUtil *self,
 	}
 
 	/* success */
-	if (!self->as_json) {
+	if (!fu_cli_get_as_json(FU_CLI(self))) {
 		g_autofree gchar *msg = NULL;
 		/* TRANSLATORS: this is for the device tests */
 		msg = fu_console_color_format(_("OK!"), FU_CONSOLE_COLOR_GREEN);
 		if (g_strcmp0(name, "component") != 0) {
-			fu_console_print(self->console, "%s [%s]: %s", helper->name, name, msg);
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 "%s [%s]: %s",
+					 helper->name,
+					 name,
+					 msg);
 		} else {
-			fu_console_print(self->console, "%s: %s", helper->name, msg);
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 "%s: %s",
+					 helper->name,
+					 msg);
 		}
 	}
 	helper->nr_success++;
@@ -896,7 +898,7 @@ fu_util_device_test_component(FuUtil *self,
 }
 
 static gboolean
-fu_util_device_test_remove_emulated_devices(FuUtil *self, GError **error)
+fu_util_device_test_remove_emulated_devices(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -930,7 +932,7 @@ fu_util_device_test_remove_emulated_devices(FuUtil *self, GError **error)
 }
 
 static gchar *
-fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError **error)
+fu_util_maybe_expand_basename(FuDbusCli *self, const gchar *maybe_basename, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 
@@ -951,7 +953,7 @@ fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError 
 }
 
 static gboolean
-fu_util_device_test_step(FuUtil *self,
+fu_util_device_test_step(FuDbusCli *self,
 			 FuUtilDeviceTestHelper *helper,
 			 FwupdJsonObject *json_obj,
 			 FwupdJsonObject *json_object_result,
@@ -1040,7 +1042,7 @@ fu_util_device_test_step(FuUtil *self,
 					  self->cancellable,
 					  &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-				if (self->as_json) {
+				if (fu_cli_get_as_json(FU_CLI(self))) {
 					fwupd_json_object_add_string(json_object_result,
 								     "info",
 								     error_local->message);
@@ -1048,7 +1050,7 @@ fu_util_device_test_step(FuUtil *self,
 					g_autofree gchar *msg = NULL;
 					msg = fu_console_color_format(error_local->message,
 								      FU_CONSOLE_COLOR_YELLOW);
-					fu_console_print(self->console,
+					fu_console_print(fu_cli_get_console(FU_CLI(self)),
 							 "%s: %s",
 							 helper->name,
 							 msg);
@@ -1092,7 +1094,7 @@ fu_util_device_test_step(FuUtil *self,
 }
 
 static gboolean
-fu_util_device_test_filename(FuUtil *self,
+fu_util_device_test_filename(FuDbusCli *self,
 			     FuUtilDeviceTestHelper *helper,
 			     const gchar *filename,
 			     FwupdJsonObject *json_object_result,
@@ -1215,7 +1217,7 @@ fu_util_device_test_filename(FuUtil *self,
 }
 
 typedef struct {
-	FuUtil *self;
+	FuDbusCli *self;
 	gchar *inhibit_id;
 } FuUtilInhibitHelper;
 
@@ -1231,7 +1233,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilInhibitHelper, fu_util_inhibit_helper_free)
 static gboolean
 fu_util_inhibit_timeout_cb(FuUtilInhibitHelper *helper)
 {
-	FuUtil *self = helper->self;
+	FuDbusCli *self = helper->self;
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fwupd_client_uninhibit(self->client,
@@ -1245,8 +1247,9 @@ fu_util_inhibit_timeout_cb(FuUtilInhibitHelper *helper)
 }
 
 static gboolean
-fu_util_inhibit(FuUtil *self, gchar **values, GError **error)
+fu_util_inhibit(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *reason = "not set";
 	guint64 timeout_ms = 0;
 	g_autoptr(FuUtilInhibitHelper) helper = g_new0(FuUtilInhibitHelper, 1);
@@ -1291,14 +1294,18 @@ fu_util_inhibit(FuUtil *self, gchar **values, GError **error)
 	/* TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program */
 	g_string_append(str, _("Use CTRL^C to cancel."));
 	/* TRANSLATORS: this CLI tool is now preventing system updates */
-	fu_console_box(self->console, _("System Update Inhibited"), str->str, 80);
+	fu_console_box(fu_cli_get_console(FU_CLI(self)),
+		       _("System Update Inhibited"),
+		       str->str,
+		       80);
 	g_main_loop_run(self->loop);
 	return TRUE;
 }
 
 static gboolean
-fu_util_uninhibit(FuUtil *self, gchar **values, GError **error)
+fu_util_uninhibit(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* one argument required */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -1313,7 +1320,7 @@ fu_util_uninhibit(FuUtil *self, gchar **values, GError **error)
 }
 
 typedef struct {
-	FuUtil *self;
+	FuDbusCli *self;
 	const gchar *value;
 	FwupdDevice *device; /* no-ref */
 } FuUtilWaitHelper;
@@ -1321,7 +1328,7 @@ typedef struct {
 static void
 fu_util_device_wait_added_cb(FwupdClient *client, FwupdDevice *device, FuUtilWaitHelper *helper)
 {
-	FuUtil *self = helper->self;
+	FuDbusCli *self = helper->self;
 	if (g_strcmp0(fwupd_device_get_id(device), helper->value) == 0 ||
 	    fwupd_device_has_guid(device, helper->value)) {
 		helper->device = device;
@@ -1333,14 +1340,15 @@ fu_util_device_wait_added_cb(FwupdClient *client, FwupdDevice *device, FuUtilWai
 static gboolean
 fu_util_device_wait_timeout_cb(gpointer user_data)
 {
-	FuUtil *self = (FuUtil *)user_data;
+	FuDbusCli *self = (FuDbusCli *)user_data;
 	g_main_loop_quit(self->loop);
 	return G_SOURCE_REMOVE;
 }
 
 static gboolean
-fu_util_device_wait(FuUtil *self, gchar **values, GError **error)
+fu_util_device_wait(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GSource) source = g_timeout_source_new_seconds(30);
@@ -1360,18 +1368,20 @@ fu_util_device_wait(FuUtil *self, gchar **values, GError **error)
 	device = fwupd_client_get_device_by_id(self->client, helper.value, NULL, NULL);
 	if (device != NULL) {
 		/* TRANSLATORS: the device is already connected */
-		fu_console_print_literal(self->console, _("Device already exists"));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("Device already exists"));
 		return TRUE;
 	}
 	devices = fwupd_client_get_devices_by_guid(self->client, helper.value, NULL, NULL);
 	if (devices != NULL) {
 		/* TRANSLATORS: the device is already connected */
-		fu_console_print_literal(self->console, _("Device already exists"));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("Device already exists"));
 		return TRUE;
 	}
 
 	/* wait for device to show up */
-	fu_console_set_progress(self->console, FWUPD_STATUS_IDLE, 0);
+	fu_console_set_progress(fu_cli_get_console(FU_CLI(self)), FWUPD_STATUS_IDLE, 0);
 	g_signal_connect(FWUPD_CLIENT(self->client),
 			 "device-added",
 			 G_CALLBACK(fu_util_device_wait_added_cb),
@@ -1392,7 +1402,7 @@ fu_util_device_wait(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* success */
-	fu_console_print(self->console,
+	fu_console_print(fu_cli_get_console(FU_CLI(self)),
 			 /* TRANSLATORS: the device showed up in time */
 			 _("Successfully waited %.0fms for device"),
 			 g_timer_elapsed(timer, NULL) * 1000.f);
@@ -1400,14 +1410,15 @@ fu_util_device_wait(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_quit(FuUtil *self, gchar **values, GError **error)
+fu_util_quit(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* success */
 	return fwupd_client_quit(self->client, self->cancellable, error);
 }
 
 static gboolean
-fu_util_device_test_full(FuUtil *self,
+fu_util_device_test_full(FuDbusCli *self,
 			 gchar **values,
 			 FuUtilDeviceTestHelper *helper,
 			 GError **error)
@@ -1447,10 +1458,10 @@ fu_util_device_test_full(FuUtil *self,
 	}
 
 	/* dump to screen as JSON format */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
 		fwupd_json_object_add_array(json_object_results, "results", json_array_results);
-		fu_util_print_json_object(self->console, json_object_results);
+		fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_object_results);
 		return TRUE;
 	}
 
@@ -1462,7 +1473,7 @@ fu_util_device_test_full(FuUtil *self,
 		    /* TRANSLATORS: device tests can be specific to a CPU type */
 		    ngettext("%u test was skipped", "%u tests were skipped", helper->nr_skipped),
 		    helper->nr_skipped);
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_WARNING,
 				      "%s\n",
 				      str->str);
@@ -1495,8 +1506,9 @@ fu_util_device_test_full(FuUtil *self,
 }
 
 static gboolean
-fu_util_device_emulate(FuUtil *self, gchar **values, GError **error)
+fu_util_device_emulate(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
 	helper->use_emulation = TRUE;
 	self->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
@@ -1505,16 +1517,18 @@ fu_util_device_emulate(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_device_test(FuUtil *self, gchar **values, GError **error)
+fu_util_device_test(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
 	self->filter_device_exclude |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_util_device_test_full(self, values, helper, error);
 }
 
 static gboolean
-fu_util_download(FuUtil *self, gchar **values, GError **error)
+fu_util_download(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *basename = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
@@ -1552,8 +1566,9 @@ fu_util_download(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_local_install(FuUtil *self, gchar **values, GError **error)
+fu_util_local_install(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -1583,7 +1598,7 @@ fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 
 	/* detect bitlocker */
 	if (dev != NULL && !self->no_safety_check && !self->assume_yes) {
-		if (!fu_util_prompt_warning_fde(self->console, dev, error))
+		if (!fu_util_prompt_warning_fde(fu_cli_get_console(FU_CLI(self)), dev, error))
 			return FALSE;
 	}
 
@@ -1604,12 +1619,16 @@ fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* show reboot if needed */
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_get_details(FuUtil *self, gchar **values, GError **error)
+fu_util_get_details(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 
@@ -1628,21 +1647,21 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 	array = fwupd_client_get_details(self->client, values[0], self->cancellable, error);
 	if (array == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(array, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-		fu_util_print_json_object(self->console, json_obj);
+		fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 		return TRUE;
 	}
 
 	fu_util_build_device_tree(self, root, array, NULL);
-	fu_util_print_node(self->console, self->client, root);
+	fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 
 	return TRUE;
 }
 
 static gboolean
-fu_util_report_history_for_remote(FuUtil *self,
+fu_util_report_history_for_remote(FuDbusCli *self,
 				  GPtrArray *devices,
 				  FwupdRemote *remote_filter,
 				  FwupdRemote *remote_upload,
@@ -1683,11 +1702,14 @@ fu_util_report_history_for_remote(FuUtil *self,
 		return FALSE;
 	if (!self->assume_yes &&
 	    !fwupd_remote_has_flag(remote_upload, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
-		fu_console_print_kv(self->console, _("Target"), report_uri);
-		fu_console_print_kv(self->console, _("Payload"), data);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Target"), report_uri);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Payload"), data);
 		if (sig != NULL)
-			fu_console_print_kv(self->console, _("Signature"), sig);
-		if (!fu_console_input_bool(self->console, TRUE, "%s", _("Proceed with upload?"))) {
+			fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Signature"), sig);
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
+					   TRUE,
+					   "%s",
+					   _("Proceed with upload?"))) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_PERMISSION_DENIED,
@@ -1710,7 +1732,7 @@ fu_util_report_history_for_remote(FuUtil *self,
 	/* server wanted us to see a message */
 	if (g_strcmp0(uri, "") != 0) {
 		fu_console_print(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    "%s %s",
 		    /* TRANSLATORS: the server sent the user a small message */
 		    _("Update failure is a known issue, visit this URL for more information:"),
@@ -1722,7 +1744,7 @@ fu_util_report_history_for_remote(FuUtil *self,
 }
 
 static gboolean
-fu_util_report_history_force(FuUtil *self, GPtrArray *devices, GError **error)
+fu_util_report_history_force(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(FwupdRemote) remote_upload = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -1760,13 +1782,14 @@ fu_util_report_history_force(FuUtil *self, GPtrArray *devices, GError **error)
 					"Successfully uploaded %u reports",
 					devices->len),
 			       devices->len);
-	fu_console_print_literal(self->console, str->str);
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), str->str);
 	return TRUE;
 }
 
 static gboolean
-fu_util_report_export(FuUtil *self, gchar **values, GError **error)
+fu_util_report_export(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GPtrArray) devices_filtered =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -1891,7 +1914,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 
 		/* TRANSLATORS: key for a offline report filename */
-		fu_console_print_kv(self->console, _("Saved report"), filename);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Saved report"), filename);
 	}
 
 	/* success */
@@ -1899,7 +1922,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GError **error)
+fu_util_report_history_full(FuDbusCli *self, gboolean only_automatic_reports, GError **error)
 {
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1937,7 +1960,7 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s activate", g_get_prgname());
 			fu_console_print(
-			    self->console,
+			    fu_cli_get_console(FU_CLI(self)),
 			    /* TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
 			     * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate" */
 			    _("%s is pending activation; use %s to complete the update."),
@@ -2002,13 +2025,14 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 	}
 
 	/* TRANSLATORS: where the user has uploaded success and/or failure report to the server */
-	fu_console_print_literal(self->console, "Successfully uploaded report");
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), "Successfully uploaded report");
 	return TRUE;
 }
 
 static gboolean
-fu_util_report_history(FuUtil *self, gchar **values, GError **error)
+fu_util_report_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	if (values != NULL && g_strv_length(values) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2020,8 +2044,9 @@ fu_util_report_history(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_get_history(FuUtil *self, gchar **values, GError **error)
+fu_util_get_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 
@@ -2031,10 +2056,10 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(devices, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-		fu_util_print_json_object(self->console, json_obj);
+		fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 		return TRUE;
 	}
 
@@ -2060,13 +2085,13 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 		g_node_append_data(child, g_object_ref(rel));
 	}
 
-	fu_util_print_node(self->console, self->client, root);
+	fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 
 	return TRUE;
 }
 
 static FwupdDevice *
-fu_util_get_device_by_id(FuUtil *self, const gchar *id, GError **error)
+fu_util_get_device_by_id(FuDbusCli *self, const gchar *id, GError **error)
 {
 	if (fwupd_guid_is_valid(id)) {
 		g_autoptr(GPtrArray) devices = NULL;
@@ -2090,7 +2115,7 @@ fu_util_get_device_by_id(FuUtil *self, const gchar *id, GError **error)
 }
 
 static FwupdDevice *
-fu_util_get_device_or_prompt(FuUtil *self, gchar **values, GError **error)
+fu_util_get_device_or_prompt(FuDbusCli *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -2103,7 +2128,7 @@ fu_util_get_device_or_prompt(FuUtil *self, gchar **values, GError **error)
 		return fu_util_get_device_by_id(self, values[0], error);
 	}
 
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
@@ -2119,7 +2144,7 @@ fu_util_get_device_or_prompt(FuUtil *self, gchar **values, GError **error)
 }
 
 static FwupdRelease *
-fu_util_get_release_for_device_version(FuUtil *self,
+fu_util_get_release_for_device_version(FuDbusCli *self,
 				       FwupdDevice *device,
 				       const gchar *version,
 				       GError **error)
@@ -2155,8 +2180,9 @@ fu_util_get_release_for_device_version(FuUtil *self,
 }
 
 static gboolean
-fu_util_clear_results(FuUtil *self, gchar **values, GError **error)
+fu_util_clear_results(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	dev = fu_util_get_device_or_prompt(self, values, error);
@@ -2170,8 +2196,9 @@ fu_util_clear_results(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_verify_update(FuUtil *self, gchar **values, GError **error)
+fu_util_verify_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
@@ -2188,13 +2215,14 @@ fu_util_verify_update(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* TRANSLATORS: success message when user refreshes device checksums */
-	fu_console_print_literal(self->console, _("Successfully updated device checksums"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully updated device checksums"));
 
 	return TRUE;
 }
 
 static gboolean
-fu_util_download_metadata_enable_lvfs(FuUtil *self, GError **error)
+fu_util_download_metadata_enable_lvfs(FuDbusCli *self, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 
@@ -2203,16 +2231,19 @@ fu_util_download_metadata_enable_lvfs(FuUtil *self, GError **error)
 	if (remote == NULL)
 		return TRUE;
 	fu_console_print_literal(
-	    self->console,
+	    fu_cli_get_console(FU_CLI(self)),
 	    /* TRANSLATORS: explain why no metadata available */
 	    _("No remotes are currently enabled so no metadata is available."));
 	fu_console_print_literal(
-	    self->console,
+	    fu_cli_get_console(FU_CLI(self)),
 	    /* TRANSLATORS: explain why no metadata available */
 	    _("Metadata can be obtained from the Linux Vendor Firmware Service."));
 
 	/* TRANSLATORS: Turn on the remote */
-	if (!fu_console_input_bool(self->console, TRUE, "%s", _("Enable this remote?")))
+	if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
+				   TRUE,
+				   "%s",
+				   _("Enable this remote?")))
 		return TRUE;
 	if (!fwupd_client_modify_remote(self->client,
 					fwupd_remote_get_id(remote),
@@ -2221,7 +2252,10 @@ fu_util_download_metadata_enable_lvfs(FuUtil *self, GError **error)
 					self->cancellable,
 					error))
 		return FALSE;
-	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_util_modify_remote_warning(fu_cli_get_console(FU_CLI(self)),
+					   remote,
+					   self->assume_yes,
+					   error))
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
@@ -2233,7 +2267,7 @@ fu_util_download_metadata_enable_lvfs(FuUtil *self, GError **error)
 }
 
 static gboolean
-fu_util_check_oldest_remote(FuUtil *self, guint64 *age_oldest, GError **error)
+fu_util_check_oldest_remote(FuDbusCli *self, guint64 *age_oldest, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
 	gboolean checked = FALSE;
@@ -2270,7 +2304,7 @@ fu_util_check_oldest_remote(FuUtil *self, guint64 *age_oldest, GError **error)
 }
 
 static gboolean
-fu_util_download_metadata(FuUtil *self, GError **error)
+fu_util_download_metadata(FuDbusCli *self, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
 	guint devices_supported_cnt = 0;
@@ -2304,8 +2338,8 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		if (!self->as_json)
-			fu_console_print(self->console,
+		if (!fu_cli_get_as_json(FU_CLI(self)))
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
 					 "%s %s",
 					 _("Updating"),
 					 fwupd_remote_get_id(remote));
@@ -2342,7 +2376,7 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* get devices from daemon */
@@ -2361,17 +2395,18 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 
 	/* TRANSLATORS: success message -- where 'metadata' is information
 	 * about available firmware on the remote server */
-	fu_console_print_literal(self->console, _("Successfully downloaded new metadata:"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully downloaded new metadata:"));
 
 	if (devices_updatable_cnt == 0) {
 		fu_console_print_full(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    FU_CONSOLE_PRINT_FLAG_LIST_ITEM | FU_CONSOLE_PRINT_FLAG_NEWLINE,
 		    "%s",
 		    /* TRANSLATORS: no devices that can be upgraded with new firmware */
 		    _("No devices are updatable"));
 	} else {
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
 					  FU_CONSOLE_PRINT_FLAG_NEWLINE,
 				      /* TRANSLATORS: how many devices could be updated in theory if
@@ -2380,7 +2415,7 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 					       "%u devices are updatable",
 					       devices_updatable_cnt),
 				      devices_updatable_cnt);
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
 					  FU_CONSOLE_PRINT_FLAG_NEWLINE,
 				      /* TRANSLATORS: how many devices have published updates on
@@ -2407,8 +2442,9 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 }
 
 static gboolean
-fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+fu_util_refresh(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	if (g_strv_length(values) == 0)
 		return fu_util_download_metadata(self, error);
 	if (g_strv_length(values) != 3) {
@@ -2428,17 +2464,19 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 					  error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: success message -- the user can do this by-hand too */
-	fu_console_print_literal(self->console, _("Successfully refreshed metadata manually"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully refreshed metadata manually"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_get_results(FuUtil *self, gchar **values, GError **error)
+fu_util_get_results(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdDevice) rel = NULL;
@@ -2453,20 +2491,21 @@ fu_util_get_results(FuUtil *self, gchar **values, GError **error)
 				       error);
 	if (rel == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-		fu_util_print_json_object(self->console, json_obj);
+		fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 		return TRUE;
 	}
 	tmp = fu_util_device_to_string(self->client, rel, 0);
-	fu_console_print_literal(self->console, tmp);
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), tmp);
 	return TRUE;
 }
 
 static gboolean
-fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
+fu_util_get_releases(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
@@ -2484,14 +2523,15 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_get_releases_as_json(self, rels);
 		return TRUE;
 	}
 
 	if (rels->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
-		fu_console_print_literal(self->console, _("No releases available"));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("No releases available"));
 		return TRUE;
 	}
 	if (g_log_get_debug_enabled()) {
@@ -2503,7 +2543,7 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 						       self->filter_release_exclude))
 				continue;
 			tmp = fwupd_codec_to_string(FWUPD_CODEC(rel));
-			fu_console_print_literal(self->console, tmp);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), tmp);
 		}
 	} else {
 		g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -2515,15 +2555,16 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 				continue;
 			g_node_append_data(root, g_object_ref(rel));
 		}
-		fu_util_print_node(self->console, self->client, root);
+		fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 	}
 
 	return TRUE;
 }
 
 static gboolean
-fu_util_search(FuUtil *self, gchar **values, GError **error)
+fu_util_search(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) rels = NULL;
 
 	/* sanity check */
@@ -2541,7 +2582,7 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_get_releases_as_json(self, rels);
 		return TRUE;
 	}
@@ -2563,7 +2604,7 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 						       self->filter_release_exclude))
 				continue;
 			tmp = fwupd_codec_to_string(FWUPD_CODEC(rel));
-			fu_console_print_literal(self->console, tmp);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), tmp);
 		}
 	} else {
 		g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -2575,14 +2616,14 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 				continue;
 			g_node_append_data(root, g_object_ref(rel));
 		}
-		fu_util_print_node(self->console, self->client, root);
+		fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 	}
 
 	return TRUE;
 }
 
 static FwupdRelease *
-fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **error)
+fu_util_prompt_for_release(FuDbusCli *self, GPtrArray *rels_unfiltered, GError **error)
 {
 	FwupdRelease *rel;
 	guint idx;
@@ -2603,16 +2644,19 @@ fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **er
 	}
 
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	fu_console_print(self->console, "0.\t%s", _("Cancel"));
+	fu_console_print(fu_cli_get_console(FU_CLI(self)), "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index(rels, i);
-		fu_console_print(self->console,
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
 				 "%u.\t%s",
 				 i + 1,
 				 fwupd_release_get_version(rel_tmp));
 	}
 	/* TRANSLATORS: get interactive prompt */
-	idx = fu_console_input_uint(self->console, rels->len, "%s", _("Choose release"));
+	idx = fu_console_input_uint(fu_cli_get_console(FU_CLI(self)),
+				    rels->len,
+				    "%s",
+				    _("Choose release"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2625,8 +2669,9 @@ fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **er
 }
 
 static gboolean
-fu_util_verify(FuUtil *self, gchar **values, GError **error)
+fu_util_verify(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
@@ -2643,14 +2688,16 @@ fu_util_verify(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* TRANSLATORS: success message when user verified device checksums */
-	fu_console_print_literal(self->console, _("Successfully verified device checksums"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully verified device checksums"));
 
 	return TRUE;
 }
 
 static gboolean
-fu_util_unlock(FuUtil *self, gchar **values, GError **error)
+fu_util_unlock(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_LOCKED;
@@ -2667,17 +2714,20 @@ fu_util_unlock(FuUtil *self, gchar **values, GError **error)
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 		self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_perhaps_refresh_remotes(FuUtil *self, GError **error)
+fu_util_perhaps_refresh_remotes(FuDbusCli *self, GError **error)
 {
 	guint64 age_oldest = 0;
 	const guint64 age_limit_days = 30;
 
 	/* we don't want to ask anything */
-	if (self->no_metadata_check || self->as_json) {
+	if (self->no_metadata_check || fu_cli_get_as_json(FU_CLI(self))) {
 		g_debug("skipping metadata check");
 		return TRUE;
 	}
@@ -2692,7 +2742,7 @@ fu_util_perhaps_refresh_remotes(FuUtil *self, GError **error)
 	/* ask for permission */
 	if (!self->assume_yes) {
 		fu_console_print(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    /* TRANSLATORS: the metadata is very out of date; %u is a number > 1 */
 		    ngettext("Firmware metadata has not been updated for %u"
 			     " day and may not be up to date.",
@@ -2700,7 +2750,7 @@ fu_util_perhaps_refresh_remotes(FuUtil *self, GError **error)
 			     " days and may not be up to date.",
 			     (gint)age_limit_days),
 		    (guint)age_limit_days);
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   FALSE,
 					   "%s (%s)",
 					   /* TRANSLATORS: ask if we can update metadata */
@@ -2715,7 +2765,7 @@ fu_util_perhaps_refresh_remotes(FuUtil *self, GError **error)
 }
 
 static void
-fu_util_get_updates_as_json(FuUtil *self, GPtrArray *devices)
+fu_util_get_updates_as_json(FuDbusCli *self, GPtrArray *devices)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -2753,12 +2803,13 @@ fu_util_get_updates_as_json(FuUtil *self, GPtrArray *devices)
 		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
 	fwupd_json_object_add_array(json_obj, "Devices", json_arr);
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static gboolean
-fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
+fu_util_get_updates(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -2792,7 +2843,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_get_updates_as_json(self, devices);
 		return TRUE;
 	}
@@ -2847,23 +2898,27 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 
 	/* devices that have no updates available for whatever reason */
 	if (devices_no_support->len > 0) {
-		fu_console_print_literal(self->console,
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
 					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
-			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 " • %s",
+					 fwupd_device_get_name(dev));
 		}
 	}
 	if (devices_no_upgrades->len > 0) {
 		fu_console_print_literal(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    /* TRANSLATORS: message letting the user know no device upgrade available */
 		    _("Devices with the latest available firmware version:"));
 		for (guint i = 0; i < devices_no_upgrades->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
-			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 " • %s",
+					 fwupd_device_get_name(dev));
 		}
 	}
 
@@ -2890,31 +2945,33 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	fu_util_print_node(self->console, self->client, root);
+	fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
+fu_util_get_remotes(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	remotes = fwupd_client_get_remotes(self->client, self->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(remotes, "Remotes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-		fu_util_print_json_object(self->console, json_obj);
+		fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 		return TRUE;
 	}
 
 	if (remotes->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
-		fu_console_print_literal(self->console, _("No remotes available"));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("No remotes available"));
 		return TRUE;
 	}
 
@@ -2922,13 +2979,16 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote_tmp));
 	}
-	fu_util_print_node(self->console, self->client, root);
+	fu_util_print_node(fu_cli_get_console(FU_CLI(self)), self->client, root);
 
 	return TRUE;
 }
 
 static FwupdRelease *
-fu_util_get_release_with_tag(FuUtil *self, FwupdDevice *dev, const gchar *host_bkc, GError **error)
+fu_util_get_release_with_tag(FuDbusCli *self,
+			     FwupdDevice *dev,
+			     const gchar *host_bkc,
+			     GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
 	g_auto(GStrv) host_bkcs = g_strsplit(host_bkc, ",", -1);
@@ -2961,7 +3021,10 @@ fu_util_get_release_with_tag(FuUtil *self, FwupdDevice *dev, const gchar *host_b
 }
 
 static FwupdRelease *
-fu_util_get_release_with_branch(FuUtil *self, FwupdDevice *dev, const gchar *branch, GError **error)
+fu_util_get_release_with_branch(FuDbusCli *self,
+				FwupdDevice *dev,
+				const gchar *branch,
+				GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
 
@@ -2991,7 +3054,7 @@ fu_util_get_release_with_branch(FuUtil *self, FwupdDevice *dev, const gchar *bra
 }
 
 static gboolean
-fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
+fu_util_prompt_warning_bkc(FuDbusCli *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(self->client);
 	g_autofree gchar *cmd = g_strdup_printf("%s sync", g_get_prgname());
@@ -3032,7 +3095,7 @@ fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GE
 	    cmd);
 
 	fu_console_box(
-	    self->console,
+	    fu_cli_get_console(FU_CLI(self)),
 	    /* TRANSLATORS: the best known configuration is a set of software that we know works
 	     * well together. In the OEM and ODM industries it is often called a BKC */
 	    _("Deviate from the best known configuration?"),
@@ -3040,7 +3103,10 @@ fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GE
 	    80);
 
 	/* TRANSLATORS: prompt to apply the update */
-	if (!fu_console_input_bool(self->console, TRUE, "%s", _("Perform operation?"))) {
+	if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
+				   TRUE,
+				   "%s",
+				   _("Perform operation?"))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -3053,7 +3119,10 @@ fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GE
 }
 
 static gboolean
-fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
+fu_util_prompt_warning_composite(FuDbusCli *self,
+				 FwupdDevice *dev,
+				 FwupdRelease *rel,
+				 GError **error)
 {
 	const gchar *rel_csum;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -3111,7 +3180,11 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 			title = g_strdup_printf("%s %s",
 						fwupd_client_get_host_vendor(self->client),
 						fwupd_client_get_host_product(self->client));
-			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
+			if (!fu_util_prompt_warning(fu_cli_get_console(FU_CLI(self)),
+						    dev_tmp,
+						    rel_tmp,
+						    title,
+						    error))
 				return FALSE;
 			break;
 		}
@@ -3122,7 +3195,7 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 }
 
 static gboolean
-fu_util_update_device_with_release(FuUtil *self,
+fu_util_update_device_with_release(FuDbusCli *self,
 				   FwupdDevice *dev,
 				   FwupdRelease *rel,
 				   GError **error)
@@ -3132,13 +3205,13 @@ fu_util_update_device_with_release(FuUtil *self,
 		g_autoptr(GPtrArray) array = fu_util_device_problems_to_strings(self->client, dev);
 
 		/* enumerate each problem to the console */
-		fu_console_print(self->console,
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
 				 /* TRANSLATORS: there are reasons the device can't update */
 				 _("%s is not currently updatable:"),
 				 name);
 		for (guint i = 0; i < array->len; i++) {
 			const gchar *str = g_ptr_array_index(array, i);
-			fu_console_print_full(self->console,
+			fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 					      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
 						  FU_CONSOLE_PRINT_FLAG_NEWLINE,
 					      "%s",
@@ -3151,11 +3224,15 @@ fu_util_update_device_with_release(FuUtil *self,
 				    _("Nothing to do"));
 		return FALSE;
 	}
-	if (!self->as_json && !self->no_safety_check && !self->assume_yes) {
+	if (!fu_cli_get_as_json(FU_CLI(self)) && !self->no_safety_check && !self->assume_yes) {
 		const gchar *title = fwupd_client_get_host_product(self->client);
-		if (!fu_util_prompt_warning(self->console, dev, rel, title, error))
+		if (!fu_util_prompt_warning(fu_cli_get_console(FU_CLI(self)),
+					    dev,
+					    rel,
+					    title,
+					    error))
 			return FALSE;
-		if (!fu_util_prompt_warning_fde(self->console, dev, error))
+		if (!fu_util_prompt_warning_fde(fu_cli_get_console(FU_CLI(self)), dev, error))
 			return FALSE;
 		if (!fu_util_prompt_warning_composite(self, dev, rel, error))
 			return FALSE;
@@ -3172,7 +3249,7 @@ fu_util_update_device_with_release(FuUtil *self,
 }
 
 static gboolean
-fu_util_maybe_send_reports(FuUtil *self, FwupdRelease *rel, GError **error)
+fu_util_maybe_send_reports(FuDbusCli *self, FwupdRelease *rel, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -3187,7 +3264,7 @@ fu_util_maybe_send_reports(FuUtil *self, FwupdRelease *rel, GError **error)
 	if (remote == NULL)
 		return FALSE;
 	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
-		if (!fu_util_report_history(self, NULL, &error_local))
+		if (!fu_util_report_history(FU_CLI(self), NULL, &error_local))
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("%s", error_local->message);
 	}
@@ -3196,8 +3273,9 @@ fu_util_maybe_send_reports(FuUtil *self, FwupdRelease *rel, GError **error)
 }
 
 static gboolean
-fu_util_update(FuUtil *self, gchar **values, GError **error)
+fu_util_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean supported = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_latest = g_ptr_array_new();
@@ -3340,34 +3418,40 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* show warnings */
-	if (devices_latest->len > 0 && !self->as_json) {
-		fu_console_print_literal(self->console,
+	if (devices_latest->len > 0 && !fu_cli_get_as_json(FU_CLI(self))) {
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available */
 					 _("Devices with the latest available firmware version:"));
 		for (guint i = 0; i < devices_latest->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_latest, i);
-			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 " • %s",
+					 fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_unsupported->len > 0 && !self->as_json) {
-		fu_console_print_literal(self->console,
+	if (devices_unsupported->len > 0 && !fu_cli_get_as_json(FU_CLI(self))) {
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
 					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_unsupported->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
-			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 " • %s",
+					 fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_pending->len > 0 && !self->as_json) {
-		fu_console_print_literal(self->console,
+	if (devices_pending->len > 0 && !fu_cli_get_as_json(FU_CLI(self))) {
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: message letting the user there is an update
 					  * waiting, but there is a reason it cannot be deployed */
 					 _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
-			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
+					 " • %s",
+					 fwupd_device_get_name(dev));
 			for (guint j = 0; j < 64; j++) {
 				FwupdDeviceProblem problem = (guint64)1 << j;
 				g_autofree gchar *desc = NULL;
@@ -3376,7 +3460,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 				desc = fu_util_device_problem_to_string(self->client, dev, problem);
 				if (desc == NULL)
 					continue;
-				fu_console_print(self->console, "   ‣ %s", desc);
+				fu_console_print(fu_cli_get_console(FU_CLI(self)), "   ‣ %s", desc);
 			}
 		}
 	}
@@ -3391,17 +3475,21 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check || self->as_json) {
+	if (self->no_reboot_check || fu_cli_get_as_json(FU_CLI(self))) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_remote_modify(FuUtil *self, gchar **values, GError **error)
+fu_util_remote_modify(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) < 3) {
 		g_set_error_literal(error,
@@ -3423,17 +3511,19 @@ fu_util_remote_modify(FuUtil *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: success message for a per-remote setting change */
-	fu_console_print_literal(self->console, _("Successfully modified remote"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully modified remote"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
+fu_util_remote_enable(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -3445,7 +3535,10 @@ fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
 	remote = fwupd_client_get_remote_by_id(self->client, values[0], self->cancellable, error);
 	if (remote == NULL)
 		return FALSE;
-	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_util_modify_remote_warning(fu_cli_get_console(FU_CLI(self)),
+					   remote,
+					   self->assume_yes,
+					   error))
 		return FALSE;
 	if (!fwupd_client_modify_remote(self->client,
 					fwupd_remote_get_id(remote),
@@ -3455,17 +3548,18 @@ fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* ask for permission to refresh */
 	if (self->no_remote_check || fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
 		/* TRANSLATORS: success message */
-		fu_console_print_literal(self->console, _("Successfully enabled remote"));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("Successfully enabled remote"));
 		return TRUE;
 	}
 	if (!self->assume_yes) {
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   TRUE,
 					   "%s (%s)",
 					   /* TRANSLATORS: ask if we can update the metadata */
@@ -3473,7 +3567,8 @@ fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
 					   /* TRANSLATORS: metadata is downloaded */
 					   _("Requires internet connection"))) {
 			/* TRANSLATORS: success message */
-			fu_console_print_literal(self->console, _("Successfully enabled remote"));
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+						 _("Successfully enabled remote"));
 			return TRUE;
 		}
 	}
@@ -3485,13 +3580,15 @@ fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* TRANSLATORS: success message */
-	fu_console_print_literal(self->console, _("Successfully enabled and refreshed remote"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully enabled and refreshed remote"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_remote_clean(FuUtil *self, gchar **values, GError **error)
+fu_util_remote_clean(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -3509,17 +3606,19 @@ fu_util_remote_clean(FuUtil *self, gchar **values, GError **error)
 				       error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: success message */
-	fu_console_print_literal(self->console, _("Successfully cleaned remote"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully cleaned remote"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
+fu_util_remote_disable(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 
 	if (g_strv_length(values) != 1) {
@@ -3542,17 +3641,18 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: success message */
-	fu_console_print_literal(self->console, _("Successfully disabled remote"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully disabled remote"));
 
 	/* delete the now-unused cache files? */
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
 	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
 		if (self->assume_yes ||
-		    fu_console_input_bool(self->console,
+		    fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					  FALSE,
 					  "%s",
 					  /* TRANSLATORS: this is now useless */
@@ -3562,7 +3662,7 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 						       self->cancellable,
 						       error))
 				return FALSE;
-			fu_console_print_literal(self->console,
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 						 /* TRANSLATORS: success message */
 						 _("Successfully cleaned remote"));
 		}
@@ -3573,8 +3673,9 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_downgrade(FuUtil *self, gchar **values, GError **error)
+fu_util_downgrade(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3642,12 +3743,16 @@ fu_util_downgrade(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_reinstall(FuUtil *self, gchar **values, GError **error)
+fu_util_reinstall(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -3693,12 +3798,16 @@ fu_util_reinstall(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_install(FuUtil *self, gchar **values, GError **error)
+fu_util_install(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3707,7 +3816,7 @@ fu_util_install(FuUtil *self, gchar **values, GError **error)
 	/* fall back for CLI compatibility */
 	if (g_strv_length(values) >= 1) {
 		if (g_file_test(values[0], G_FILE_TEST_EXISTS) || fu_util_is_url(values[0]))
-			return fu_util_local_install(self, values, error);
+			return fu_util_local_install(cli, values, error);
 	}
 
 	/* find device */
@@ -3762,7 +3871,10 @@ fu_util_install(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
@@ -3772,8 +3884,9 @@ _g_str_equal0(gconstpointer str1, gconstpointer str2)
 }
 
 static gboolean
-fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
+fu_util_switch_branch(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *branch;
 	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3819,17 +3932,20 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 		guint idx;
 
 		/* TRANSLATORS: this is to abort the interactive prompt */
-		fu_console_print(self->console, "0.\t%s", _("Cancel"));
+		fu_console_print(fu_cli_get_console(FU_CLI(self)), "0.\t%s", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
 			const gchar *branch_tmp = g_ptr_array_index(branches, i);
-			fu_console_print(self->console,
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
 					 "%u.\t%s",
 					 i + 1,
 					 fu_util_branch_for_display(branch_tmp));
 		}
 		/* TRANSLATORS: get interactive prompt, where branch is the
 		 * supplier of the firmware, e.g. "non-free" or "free" */
-		idx = fu_console_input_uint(self->console, branches->len, "%s", _("Choose branch"));
+		idx = fu_console_input_uint(fu_cli_get_console(FU_CLI(self)),
+					    branches->len,
+					    "%s",
+					    _("Choose branch"));
 		if (idx == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -3869,7 +3985,11 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* we're switching branch */
-	if (!fu_util_switch_branch_warning(self->console, dev, rel, self->assume_yes, error))
+	if (!fu_util_switch_branch_warning(fu_cli_get_console(FU_CLI(self)),
+					   dev,
+					   rel,
+					   self->assume_yes,
+					   error))
 		return FALSE;
 
 	/* update the console if composite devices are also updated */
@@ -3902,12 +4022,16 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_activate(FuUtil *self, gchar **values, GError **error)
+fu_util_activate(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean has_pending = FALSE;
 
@@ -3963,7 +4087,7 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		fu_console_print(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    "%s %s…",
 		    /* TRANSLATORS: shown when shutting down to switch to the new version */
 		    _("Activating firmware update for"),
@@ -3975,18 +4099,20 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: success message -- where activation is making the new
 	 * firmware take effect, usually after updating offline */
-	fu_console_print_literal(self->console, _("Successfully activated all devices"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully activated all devices"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_set_approved_firmware(FuUtil *self, gchar **values, GError **error)
+fu_util_set_approved_firmware(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) checksums = NULL;
 
 	/* check args */
@@ -4016,7 +4142,7 @@ fu_util_set_approved_firmware(FuUtil *self, gchar **values, GError **error)
 }
 
 static void
-fu_util_get_checksums_as_json(FuUtil *self, gchar **csums)
+fu_util_get_checksums_as_json(FuDbusCli *self, gchar **csums)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -4024,12 +4150,13 @@ fu_util_get_checksums_as_json(FuUtil *self, gchar **csums)
 	for (guint i = 0; csums[i] != NULL; i++)
 		fwupd_json_array_add_string(json_arr, csums[i]);
 	fwupd_json_object_add_array(json_obj, "Checksums", json_arr);
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static gboolean
-fu_util_get_approved_firmware(FuUtil *self, gchar **values, GError **error)
+fu_util_get_approved_firmware(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) checksums = NULL;
 
 	/* check args */
@@ -4045,29 +4172,31 @@ fu_util_get_approved_firmware(FuUtil *self, gchar **values, GError **error)
 	checksums = fwupd_client_get_approved_firmware(self->client, self->cancellable, error);
 	if (checksums == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_get_checksums_as_json(self, checksums);
 		return TRUE;
 	}
 	if (g_strv_length(checksums) == 0) {
 		/* TRANSLATORS: approved firmware has been checked by
 		 * the domain administrator */
-		fu_console_print_literal(self->console, _("There is no approved firmware."));
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+					 _("There is no approved firmware."));
 	} else {
 		fu_console_print_literal(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    /* TRANSLATORS: approved firmware has been checked by
 		     * the domain administrator */
 		    ngettext("Approved firmware:", "Approved firmware:", g_strv_length(checksums)));
 		for (guint i = 0; checksums[i] != NULL; i++)
-			fu_console_print(self->console, " * %s", checksums[i]);
+			fu_console_print(fu_cli_get_console(FU_CLI(self)), " * %s", checksums[i]);
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_util_modify_config(FuUtil *self, gchar **values, GError **error)
+fu_util_modify_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* check args */
 	if (g_strv_length(values) == 3) {
 		if (!fwupd_client_modify_config(self->client,
@@ -4093,11 +4222,11 @@ fu_util_modify_config(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	if (!self->assume_yes) {
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   FALSE,
 					   "%s",
 					   /* TRANSLATORS: changes only take effect on restart */
@@ -4105,19 +4234,21 @@ fu_util_modify_config(FuUtil *self, gchar **values, GError **error)
 			return TRUE;
 	}
 
-	if (!fu_util_quit(self, NULL, error))
+	if (!fu_util_quit(cli, NULL, error))
 		return FALSE;
 	if (!fwupd_client_connect(self->client, self->cancellable, error))
 		return FALSE;
 
 	/* TRANSLATORS: success message -- a per-system setting value */
-	fu_console_print_literal(self->console, _("Successfully modified configuration value"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully modified configuration value"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_reset_config(FuUtil *self, gchar **values, GError **error)
+fu_util_reset_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -4129,29 +4260,30 @@ fu_util_reset_config(FuUtil *self, gchar **values, GError **error)
 	if (!fwupd_client_reset_config(self->client, values[0], self->cancellable, error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	if (!self->assume_yes) {
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   FALSE,
 					   "%s",
 					   /* TRANSLATORS: changes only take effect on restart */
 					   _("Restart the daemon to make the change effective?")))
 			return TRUE;
 	}
-	if (!fu_util_quit(self, NULL, error))
+	if (!fu_util_quit(cli, NULL, error))
 		return FALSE;
 	if (!fwupd_client_connect(self->client, self->cancellable, error))
 		return FALSE;
 
 	/* TRANSLATORS: success message -- a per-system setting value */
-	fu_console_print_literal(self->console, _("Successfully reset configuration values"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Successfully reset configuration values"));
 	return TRUE;
 }
 
 static FwupdRemote *
-fu_util_get_remote_with_report_uri(FuUtil *self, GError **error)
+fu_util_get_remote_with_report_uri(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -4177,7 +4309,7 @@ fu_util_get_remote_with_report_uri(FuUtil *self, GError **error)
 }
 
 static gboolean
-fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
+fu_util_upload_security(FuDbusCli *self, GPtrArray *attrs, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
@@ -4205,7 +4337,7 @@ fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
 	/* ask for permission */
 	if (!self->assume_yes &&
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   FALSE,
 					   /* TRANSLATORS: ask the user to share, %s is something
 					    * like: "Linux Vendor Firmware Service" */
@@ -4230,13 +4362,16 @@ fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
 	/* ask for permission */
 	if (!self->assume_yes &&
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
-		fu_console_print_kv(self->console,
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)),
 				    _("Target"),
 				    fwupd_remote_get_report_uri(remote));
-		fu_console_print_kv(self->console, _("Payload"), data);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Payload"), data);
 		if (sig != NULL)
-			fu_console_print_kv(self->console, _("Signature"), sig);
-		if (!fu_console_input_bool(self->console, TRUE, "%s", _("Proceed with upload?"))) {
+			fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Signature"), sig);
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
+					   TRUE,
+					   "%s",
+					   _("Proceed with upload?"))) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_PERMISSION_DENIED,
@@ -4258,13 +4393,13 @@ fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
 					 error);
 	if (uri == NULL)
 		return FALSE;
-	fu_console_print_literal(self->console,
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 				 /* TRANSLATORS: success, so say thank you to the user */
 				 _("Host Security ID attributes uploaded successfully, thanks!"));
 
 	/* as this worked, ask if the user want to do this every time */
 	if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
-		if (fu_console_input_bool(self->console,
+		if (fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					  FALSE,
 					  "%s",
 					  /* TRANSLATORS: can we JFDI? */
@@ -4283,7 +4418,7 @@ fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
 }
 
 static void
-fu_util_security_as_json(FuUtil *self, GPtrArray *attrs, GPtrArray *events, GPtrArray *devices)
+fu_util_security_as_json(FuDbusCli *self, GPtrArray *attrs, GPtrArray *events, GPtrArray *devices)
 {
 	g_autoptr(GPtrArray) devices_issues = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
@@ -4314,12 +4449,13 @@ fu_util_security_as_json(FuUtil *self, GPtrArray *attrs, GPtrArray *events, GPtr
 					  json_obj,
 					  FWUPD_CODEC_FLAG_TRUSTED);
 	}
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static gboolean
-fu_util_sync(FuUtil *self, gchar **values, GError **error)
+fu_util_sync(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *host_bkc = fwupd_client_get_host_bkc(self->client);
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -4402,11 +4538,14 @@ fu_util_sync(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* show reboot if needed */
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_security_fix_attr(FuUtil *self, FwupdSecurityAttr *attr, GError **error)
+fu_util_security_fix_attr(FuDbusCli *self, FwupdSecurityAttr *attr, GError **error)
 {
 	g_autoptr(GString) body = g_string_new(NULL);
 	g_autoptr(GString) title = g_string_new(NULL);
@@ -4466,10 +4605,13 @@ fu_util_security_fix_attr(FuUtil *self, FwupdSecurityAttr *attr, GError **error)
 				  "instability."));
 	}
 
-	fu_console_box(self->console, title->str, body->str, 80);
+	fu_console_box(fu_cli_get_console(FU_CLI(self)), title->str, body->str, 80);
 
 	/* TRANSLATORS: prompt to apply the update */
-	if (!fu_console_input_bool(self->console, FALSE, "%s", _("Perform operation?")))
+	if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
+				   FALSE,
+				   "%s",
+				   _("Perform operation?")))
 		return TRUE;
 	if (!fwupd_client_fix_host_security_attr(self->client,
 						 fwupd_security_attr_get_appstream_id(attr),
@@ -4483,8 +4625,9 @@ fu_util_security_fix_attr(FuUtil *self, FwupdSecurityAttr *attr, GError **error)
 }
 
 static gboolean
-fu_util_security(FuUtil *self, gchar **values, GError **error)
+fu_util_security(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -4530,12 +4673,12 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_security_as_json(self, attrs, events, devices);
 		return TRUE;
 	}
 
-	fu_console_print(self->console,
+	fu_console_print(fu_cli_get_console(FU_CLI(self)),
 			 "%s \033[1m%s\033[0m",
 			 /* TRANSLATORS: this is a string like 'HSI:2-U' */
 			 _("Host Security ID:"),
@@ -4547,20 +4690,20 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
 	}
 	str = fu_util_security_attrs_to_string(attrs, flags);
-	fu_console_print_literal(self->console, str);
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), str);
 
 	/* events */
 	if (events != NULL && events->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
 		if (estr != NULL)
-			fu_console_print_literal(self->console, estr);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), estr);
 	}
 
 	/* known CVEs */
 	if (devices != NULL && devices->len > 0) {
 		g_autofree gchar *estr = fu_util_security_issues_to_string(devices);
 		if (estr != NULL)
-			fu_console_print_literal(self->console, estr);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), estr);
 	}
 
 	/* host emulation */
@@ -4594,7 +4737,10 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	/* reboot is required? */
 	if (!self->no_reboot_check &&
 	    (self->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) > 0) {
-		if (!fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error))
+		if (!fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+					     self->completion_flags,
+					     TRUE,
+					     error))
 			return FALSE;
 	}
 
@@ -4614,7 +4760,7 @@ fu_util_ignore_cb(const gchar *log_domain,
 static gboolean
 fu_util_sigint_cb(gpointer user_data)
 {
-	FuUtil *self = (FuUtil *)user_data;
+	FuDbusCli *self = (FuDbusCli *)user_data;
 	g_debug("handling SIGINT");
 	g_cancellable_cancel(self->cancellable);
 	return FALSE;
@@ -4622,7 +4768,7 @@ fu_util_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_util_setup_signal_handlers(FuUtil *self)
+fu_util_setup_signal_handlers(FuDbusCli *self)
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
@@ -4631,34 +4777,8 @@ fu_util_setup_signal_handlers(FuUtil *self)
 #endif
 }
 
-static void
-fu_util_private_free(FuUtil *self)
-{
-	if (self->client != NULL) {
-		/* when destroying GDBusProxy in a custom GMainContext, the context must be
-		 * iterated enough after finalization of the proxies that any pending D-Bus traffic
-		 * can be freed */
-		fwupd_client_disconnect(self->client, NULL);
-		while (g_main_context_iteration(self->main_ctx, FALSE)) {
-			/* nothing needs to be done here */
-		};
-		g_object_unref(self->client);
-	}
-	if (self->current_device != NULL)
-		g_object_unref(self->current_device);
-	g_ptr_array_unref(self->post_requests);
-	g_ptr_array_unref(self->filter_protocols_include);
-	g_ptr_array_unref(self->filter_protocols_exclude);
-	g_main_loop_unref(self->loop);
-	g_main_context_unref(self->main_ctx);
-	g_object_unref(self->cancellable);
-	g_object_unref(self->console);
-	g_option_context_free(self->context);
-	g_free(self);
-}
-
 static gboolean
-fu_util_check_daemon_version(FuUtil *self, GError **error)
+fu_util_check_daemon_version(FuDbusCli *self, GError **error)
 {
 	const gchar *daemon = fwupd_client_get_daemon_version(self->client);
 
@@ -4709,18 +4829,13 @@ fu_util_check_polkit_actions(GError **error)
 	return TRUE;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_util_private_free)
-#pragma clang diagnostic pop
-
 static void
-fu_util_show_plugin_warnings(FuUtil *self)
+fu_util_show_plugin_warnings(FuDbusCli *self)
 {
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	g_autoptr(GPtrArray) plugins = NULL;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return;
 
 	/* get plugins from daemon, ignoring if the daemon is too old */
@@ -4761,7 +4876,7 @@ fu_util_show_plugin_warnings(FuUtil *self)
 				      fwupd_plugin_flag_to_string(flag));
 		/* TRANSLATORS: %s is a link to a website */
 		g_string_append_printf(str, _("See %s for more information."), url);
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_WARNING,
 				      "%s\n",
 				      str->str);
@@ -4769,11 +4884,12 @@ fu_util_show_plugin_warnings(FuUtil *self)
 }
 
 static gboolean
-fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
+fu_util_set_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GHashTable) settings = NULL;
 
-	settings = fu_util_bios_settings_parse_argv(input, error);
+	settings = fu_util_bios_settings_parse_argv(values, error);
 	if (settings == NULL)
 		return FALSE;
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
@@ -4781,7 +4897,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 		return FALSE;
 	}
 
-	if (!self->as_json) {
+	if (!fu_cli_get_as_json(FU_CLI(self))) {
 		gpointer key;
 		gpointer value;
 		GHashTableIter iter;
@@ -4793,7 +4909,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 			    g_strdup_printf(_("Set BIOS setting '%s' using '%s'."),
 					    (const gchar *)key,
 					    (const gchar *)value);
-			fu_console_print_literal(self->console, msg);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), msg);
 		}
 	}
 	self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
@@ -4803,20 +4919,24 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(self->console, self->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(fu_cli_get_console(FU_CLI(self)),
+				       self->completion_flags,
+				       TRUE,
+				       error);
 }
 
 static gboolean
-fu_util_get_bios_setting(FuUtil *self, gchar **values, GError **error)
+fu_util_get_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) attrs = NULL;
 	gboolean found = FALSE;
 
 	attrs = fwupd_client_get_bios_settings(self->client, self->cancellable, error);
 	if (attrs == NULL)
 		return FALSE;
-	if (self->as_json) {
-		fu_util_bios_setting_console_print(self->console, values, attrs);
+	if (fu_cli_get_as_json(FU_CLI(self))) {
+		fu_util_bios_setting_console_print(fu_cli_get_console(FU_CLI(self)), values, attrs);
 		return TRUE;
 	}
 
@@ -4824,7 +4944,7 @@ fu_util_get_bios_setting(FuUtil *self, gchar **values, GError **error)
 		FwupdBiosSetting *attr = g_ptr_array_index(attrs, i);
 		if (fu_util_bios_setting_matches_args(attr, values)) {
 			g_autofree gchar *tmp = fu_util_bios_setting_to_string(attr, 0);
-			fu_console_print_literal(self->console, tmp);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), tmp);
 			found = TRUE;
 		}
 	}
@@ -4848,8 +4968,9 @@ fu_util_get_bios_setting(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
+fu_util_security_fix(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -4871,47 +4992,51 @@ fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 	if (!fwupd_client_fix_host_security_attr(self->client, values[0], self->cancellable, error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: we've fixed a security problem on the machine */
-	fu_console_print_literal(self->console, _("Fixed successfully"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), _("Fixed successfully"));
 	return TRUE;
 }
 
 static void
-fu_util_hwids_as_json(FuUtil *self, GStrv hwids_keys, GStrv hwids_values)
+fu_util_hwids_as_json(FuDbusCli *self, GStrv hwids_keys, GStrv hwids_values)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	for (guint i = 0; hwids_keys[i] != NULL; i++)
 		fwupd_json_object_add_string(json_obj, hwids_keys[i], hwids_values[i]);
-	fu_util_print_json_object(self->console, json_obj);
+	fu_util_print_json_object(fu_cli_get_console(FU_CLI(self)), json_obj);
 }
 
 static gboolean
-fu_util_hwids(FuUtil *self, gchar **values, GError **error)
+fu_util_hwids(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) hwids_keys = NULL;
 	g_auto(GStrv) hwids_values = NULL;
 
 	fwupd_client_get_hwids(self->client, &hwids_keys, &hwids_values);
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		fu_util_hwids_as_json(self, hwids_keys, hwids_values);
 		return TRUE;
 	}
 
 	/* show debug output */
-	fu_console_print_literal(self->console, "Computer Information");
-	fu_console_print_literal(self->console, "--------------------");
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), "Computer Information");
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), "--------------------");
 	for (guint i = 0; hwids_keys[i] != NULL; i++) {
 		if (fwupd_guid_is_valid(hwids_values[i]))
 			continue;
-		fu_console_print(self->console, "%s: %s", hwids_keys[i], hwids_values[i]);
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
+				 "%s: %s",
+				 hwids_keys[i],
+				 hwids_values[i]);
 	}
 
 	/* show GUIDs */
-	fu_console_print_literal(self->console, "Hardware IDs");
-	fu_console_print_literal(self->console, "------------");
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), "Hardware IDs");
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), "------------");
 	for (guint i = 0; hwids_keys[i] != NULL; i++) {
 		g_autofree gchar *hwids_keys_real = NULL;
 		g_auto(GStrv) hwids_keys_strv = NULL;
@@ -4919,7 +5044,10 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 			continue;
 		hwids_keys_strv = g_strsplit(hwids_keys[i], "&", -1);
 		hwids_keys_real = g_strjoinv(" + ", hwids_keys_strv);
-		fu_console_print(self->console, "{%s}   <- %s", hwids_values[i], hwids_keys_real);
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
+				 "{%s}   <- %s",
+				 hwids_values[i],
+				 hwids_keys_real);
 	}
 
 	/* success */
@@ -4927,8 +5055,9 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
+fu_util_report_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
 	g_autofree gchar *uri = NULL;
@@ -4955,7 +5084,7 @@ fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
 	if (data == NULL)
 		return FALSE;
 
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		if (!self->assume_yes) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -4965,16 +5094,16 @@ fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
 		}
 	} else {
 		/* show the user the entire data blob */
-		fu_console_print_kv(self->console, _("Target"), report_uri);
-		fu_console_print_kv(self->console, _("Payload"), data);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Target"), report_uri);
+		fu_console_print_kv(fu_cli_get_console(FU_CLI(self)), _("Payload"), data);
 		fu_console_print(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    /* TRANSLATORS: explain why we want to upload */
 		    _("Uploading a device list allows the %s team to know what hardware "
 		      "exists, and allows us to put pressure on vendors that do not upload "
 		      "firmware updates for their hardware."),
 		    fwupd_remote_get_title(remote));
-		if (!fu_console_input_bool(self->console,
+		if (!fu_console_input_bool(fu_cli_get_console(FU_CLI(self)),
 					   TRUE,
 					   "%s (%s)",
 					   /* TRANSLATORS: ask the user to upload */
@@ -5001,8 +5130,8 @@ fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* success */
-	if (!self->as_json) {
-		fu_console_print_literal(self->console,
+	if (!fu_cli_get_as_json(FU_CLI(self))) {
+		fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
 					 /* TRANSLATORS: success, so say thank you to the user */
 					 _("Device list uploaded successfully, thanks!"));
 	}
@@ -5011,8 +5140,9 @@ fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
+fu_util_security_undo(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -5037,17 +5167,18 @@ fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
 						  error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_get_as_json(FU_CLI(self)))
 		return TRUE;
 
 	/* TRANSLATORS: we've fixed a security problem on the machine */
-	fu_console_print_literal(self->console, _("Fix reverted successfully"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), _("Fix reverted successfully"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_emulation_tag(FuUtil *self, gchar **values, GError **error)
+fu_util_emulation_tag(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* set the flag */
@@ -5064,8 +5195,9 @@ fu_util_emulation_tag(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_emulation_untag(FuUtil *self, gchar **values, GError **error)
+fu_util_emulation_untag(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* set the flag */
@@ -5082,8 +5214,9 @@ fu_util_emulation_untag(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
+fu_util_emulation_save(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -5098,8 +5231,9 @@ fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
+fu_util_emulation_load(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -5112,8 +5246,9 @@ fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
+fu_util_enable_remote_auth(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *remote_id = "lvfs-embargo";
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autofree gchar *username = NULL;
@@ -5131,7 +5266,7 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	if (g_strv_length(values) > 1) {
 		username = g_strdup(values[1]);
 	} else {
-		username = fu_console_input_string(self->console,
+		username = fu_console_input_string(fu_cli_get_console(FU_CLI(self)),
 						   /* TRANSLATORS: remote refers to a website
 						      distributing fw, %1 is a name e.g. 'lvfs' */
 						   _("Enter your email address for remote '%s'"),
@@ -5152,12 +5287,12 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 		if (g_strcmp0(remote_id, "lvfs-embargo") == 0) {
 			const gchar *uri = "https://fwupd.org/lvfs/profile";
 			fu_console_print(
-			    self->console,
+			    fu_cli_get_console(FU_CLI(self)),
 			    /* TRANSLATORS: token refers to a password thing; %1 is a URL */
 			    _("To get a new token please go to %s and click 'Generate Token'"),
 			    uri);
 		}
-		password = fu_console_input_string(self->console,
+		password = fu_console_input_string(fu_cli_get_console(FU_CLI(self)),
 						   /* TRANSLATORS: remote refers to a website
 						      distributing fw, %1 is a name e.g. 'lvfs' */
 						   _("Enter your token for remote '%s'"),
@@ -5188,7 +5323,10 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* save secrets and enable remote */
-	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_util_modify_remote_warning(fu_cli_get_console(FU_CLI(self)),
+					   remote,
+					   self->assume_yes,
+					   error))
 		return FALSE;
 	if (!fwupd_remote_save_user_secrets(remote, error))
 		return FALSE;
@@ -5207,12 +5345,13 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* TRANSLATORS: we've gained access to a new firmware remote */
-	fu_console_print_literal(self->console, _("Remote enabled and refreshed successfully"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)),
+				 _("Remote enabled and refreshed successfully"));
 	return TRUE;
 }
 
 static gboolean
-fu_util_version(FuUtil *self, GError **error)
+fu_util_version(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autofree gchar *str = NULL;
@@ -5223,44 +5362,87 @@ fu_util_version(FuUtil *self, GError **error)
 		return FALSE;
 
 	/* dump to the screen in the most appropriate format */
-	if (self->as_json) {
-		fu_util_project_versions_as_json(self->console, metadata);
+	if (fu_cli_get_as_json(FU_CLI(self))) {
+		fu_util_project_versions_as_json(fu_cli_get_console(FU_CLI(self)), metadata);
 		return TRUE;
 	}
 	str = fu_util_project_versions_to_string(metadata);
-	fu_console_print_literal(self->console, str);
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), str);
 	return TRUE;
 }
 
 static gboolean
-fu_util_setup_interactive(FuUtil *self, GError **error)
+fu_util_setup_interactive(FuDbusCli *self, GError **error)
 {
-	if (self->as_json) {
+	if (fu_cli_get_as_json(FU_CLI(self))) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "using --json");
 		return FALSE;
 	}
-	return fu_console_setup(self->console, error);
+	return fu_console_setup(fu_cli_get_console(FU_CLI(self)), error);
 }
 
 static void
 fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 {
-	FuUtil *self = (FuUtil *)user_data;
+	FuDbusCli *self = (FuDbusCli *)user_data;
 	if (!g_main_loop_is_running(self->loop))
 		return;
 	/* TRANSLATORS: this is from ctrl+c */
-	fu_console_print_literal(self->console, _("Cancelled"));
+	fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), _("Cancelled"));
 	g_main_loop_quit(self->loop);
 }
 
 static void
-fu_util_print_error(FuUtil *self, const GError *error)
+fu_util_print_error(FuDbusCli *self, const GError *error)
 {
-	if (self->as_json) {
-		fu_util_print_error_as_json(self->console, error);
+	if (fu_cli_get_as_json(FU_CLI(self))) {
+		fu_util_print_error_as_json(fu_cli_get_console(FU_CLI(self)), error);
 		return;
 	}
-	fu_console_print_full(self->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
+	fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
+			      FU_CONSOLE_PRINT_FLAG_STDERR,
+			      "%s\n",
+			      error->message);
+}
+
+static void
+fu_dbus_cli_init(FuDbusCli *self)
+{
+}
+
+static void
+fu_dbus_cli_finalize(GObject *obj)
+{
+	FuDbusCli *self = FU_DBUS_CLI(obj);
+	if (self->client != NULL) {
+		/* when destroying GDBusProxy in a custom GMainContext, the context must be
+		 * iterated enough after finalization of the proxies that any pending D-Bus traffic
+		 * can be freed */
+		fwupd_client_disconnect(self->client, NULL);
+		while (g_main_context_iteration(self->main_ctx, FALSE)) {
+			/* nothing needs to be done here */
+		};
+		g_object_unref(self->client);
+	}
+	if (self->current_device != NULL)
+		g_object_unref(self->current_device);
+	g_ptr_array_unref(self->post_requests);
+	g_ptr_array_unref(self->filter_protocols_include);
+	g_ptr_array_unref(self->filter_protocols_exclude);
+	g_main_loop_unref(self->loop);
+	g_main_context_unref(self->main_ctx);
+	g_object_unref(self->cancellable);
+	g_option_context_free(self->context);
+	G_OBJECT_CLASS(fu_dbus_cli_parent_class)->finalize(obj);
+}
+
+static void
+fu_dbus_cli_class_init(FuDbusCliClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuCliClass *cli_class = FU_CLI_CLASS(klass);
+	object_class->finalize = fu_dbus_cli_finalize;
+	cli_class->get_plugins = fu_dbus_cli_get_plugins;
 }
 
 int
@@ -5280,11 +5462,10 @@ main(int argc, char *argv[])
 	gboolean version = FALSE;
 	guint download_retries = 0;
 	g_auto(GStrv) filter_protocols = NULL;
-	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
+	g_autoptr(FuDbusCli) self = g_object_new(FU_TYPE_DBUS_CLI, NULL);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_console = NULL;
-	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 #ifdef HAVE_POLKIT
 	g_autoptr(FuPolkitAgent) polkit_agent = fu_polkit_agent_new();
 #endif
@@ -5486,14 +5667,6 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"),
 	     NULL},
-	    {"json",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &self->as_json,
-	     /* TRANSLATORS: command line option */
-	     N_("Output in JSON format (disables all interactive prompts)"),
-	     NULL},
 	    {"no-security-fix",
 	     '\0',
 	     0,
@@ -5534,13 +5707,13 @@ main(int argc, char *argv[])
 	/* create helper object */
 	self->main_ctx = g_main_context_new();
 	self->loop = g_main_loop_new(self->main_ctx, FALSE);
-	self->console = fu_console_new();
 	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
 	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
-	fu_console_set_main_context(self->console, self->main_ctx);
+	fu_console_set_main_context(fu_cli_get_console(FU_CLI(self)), self->main_ctx);
 
 	/* add commands */
+	fu_cli_cmd_array_add_common(FU_CLI(self));
 	fu_cli_cmd_array_add(FU_CLI(self),
 			     "check-reboot-needed",
 			     _("[DEVICE-ID|GUID]"),
@@ -5773,12 +5946,6 @@ main(int argc, char *argv[])
 			     _("Sync firmware versions to the chosen configuration"),
 			     fu_util_sync);
 	fu_cli_cmd_array_add(FU_CLI(self),
-			     "get-plugins",
-			     NULL,
-			     /* TRANSLATORS: command description */
-			     _("Get all enabled plugins registered with the system"),
-			     fu_util_get_plugins);
-	fu_cli_cmd_array_add(FU_CLI(self),
 			     "download",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			     _("LOCATION"),
@@ -5827,7 +5994,7 @@ main(int argc, char *argv[])
 			     _("Asks the daemon to quit"),
 			     fu_util_quit);
 	fu_cli_cmd_array_add(
-	    cmd_array,
+	    FU_CLI(self),
 	    "get-bios-settings,get-bios-setting",
 	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 	    _("[SETTING1] [SETTING2] [--no-authenticate]"),
@@ -5904,7 +6071,7 @@ main(int argc, char *argv[])
 			 self);
 
 	/* sort by command name */
-	fu_cli_cmd_array_sort(cmd_array);
+	fu_cli_cmd_array_sort(FU_CLI(self));
 
 	/* non-TTY consoles cannot answer questions */
 	if (!fu_util_setup_interactive(self, &error_console)) {
@@ -5920,11 +6087,12 @@ main(int argc, char *argv[])
 	} else {
 		is_interactive = TRUE;
 	}
-	fu_console_set_interactive(self->console, is_interactive);
+	fu_console_set_interactive(fu_cli_get_console(FU_CLI(self)), is_interactive);
 
 	/* get a list of the commands */
 	self->context = g_option_context_new(NULL);
-	cmd_descriptions = fu_cli_cmd_array_to_string(cmd_array);
+	cmd_descriptions = fu_cli_cmd_array_to_string(FU_CLI(self));
+	g_option_context_add_group(self->context, fu_cli_get_option_group(FU_CLI(self)));
 	g_option_context_set_summary(self->context, cmd_descriptions);
 	g_option_context_set_description(
 	    self->context,
@@ -5938,7 +6106,7 @@ main(int argc, char *argv[])
 	g_option_context_add_main_entries(self->context, options, NULL);
 	ret = g_option_context_parse(self->context, &argc, &argv, &error);
 	if (!ret) {
-		fu_console_print(self->console,
+		fu_console_print(fu_cli_get_console(FU_CLI(self)),
 				 "%s: %s",
 				 /* TRANSLATORS: the user didn't read the man page */
 				 _("Failed to parse arguments"),
@@ -5948,7 +6116,7 @@ main(int argc, char *argv[])
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (self->disable_ssl_strict) {
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_WARNING,
 				      "%s\n",
 				      /* TRANSLATORS: try to help */
@@ -5962,7 +6130,7 @@ main(int argc, char *argv[])
 	 * want to check the clock is not set to the default of 1970-01-01... */
 	if (g_date_time_get_year(dt_now) < 2021) {
 		fu_console_print_full(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    FU_CONSOLE_PRINT_FLAG_WARNING,
 		    "%s\n",
 		    /* TRANSLATORS: try to help */
@@ -6054,7 +6222,7 @@ main(int argc, char *argv[])
 		g_autoptr(FuPathStore) pstore = fu_path_store_new();
 		fu_path_store_load_from_env(pstore);
 		if (!fu_polkit_agent_open(polkit_agent, pstore, &error_polkit)) {
-			fu_console_print(self->console,
+			fu_console_print(fu_cli_get_console(FU_CLI(self)),
 					 "Failed to open polkit agent: %s",
 					 error_polkit->message);
 		}
@@ -6086,7 +6254,7 @@ main(int argc, char *argv[])
 	if (!fwupd_client_connect(self->client, self->cancellable, &error)) {
 #ifdef _WIN32
 		fu_console_print_literal(
-		    self->console,
+		    fu_cli_get_console(FU_CLI(self)),
 		    /* TRANSLATORS: error message for Windows */
 		    _("Failed to connect to Windows service, please ensure it's running."));
 		g_debug("%s", error->message);
@@ -6098,7 +6266,7 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	if (fwupd_client_get_tainted(self->client)) {
-		fu_console_print_full(self->console,
+		fu_console_print_full(fu_cli_get_console(FU_CLI(self)),
 				      FU_CONSOLE_PRINT_FLAG_WARNING,
 				      "%s\n",
 				      /* TRANSLATORS: the user is SOL for support... */
@@ -6115,12 +6283,12 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if (!self->as_json) {
+	if (!fu_cli_get_as_json(FU_CLI(self))) {
 		/* show user-visible warnings from the plugins */
 		fu_util_show_plugin_warnings(self);
 
 		/* show any unsupported warnings */
-		fu_util_show_unsupported_warning(self->console);
+		fu_util_show_unsupported_warning(fu_cli_get_console(FU_CLI(self)));
 	}
 
 	/* we know the runtime daemon version now */
@@ -6158,7 +6326,7 @@ main(int argc, char *argv[])
 	}
 
 	/* run the specified command */
-	ret = fu_cli_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
+	ret = fu_cli_cmd_array_run(FU_CLI(self), argv[1], (gchar **)&argv[2], &error);
 	if (!ret) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
@@ -6168,14 +6336,14 @@ main(int argc, char *argv[])
 		}
 #endif
 		fu_util_print_error(self, error);
-		if (!self->as_json &&
+		if (!fu_cli_get_as_json(FU_CLI(self)) &&
 		    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s --help", g_get_prgname());
 			g_autoptr(GString) str = g_string_new("\n");
 			/* TRANSLATORS: explain how to get help,
 			 * where $1 is something like 'fwupdmgr --help' */
 			g_string_append_printf(str, _("Use %s for help"), cmd);
-			fu_console_print_literal(self->console, str->str);
+			fu_console_print_literal(fu_cli_get_console(FU_CLI(self)), str->str);
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			return EXIT_NOTHING_TO_DO;
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE)) {

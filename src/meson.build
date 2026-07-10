@@ -119,7 +119,7 @@ dbus_interface = custom_target(
 if build_daemon
   executable(
     'fwupdmgr',
-    sources: ['fu-util.c', client_src],
+    sources: ['fu-dbus-cli.c', client_src],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
     link_with: [fwupd, fwupdplugin, fwupdcli],

@@ -103,11 +103,6 @@ struct _FuDirectCli {
 G_DEFINE_TYPE(FuDirectCli, fu_direct_cli, FU_TYPE_CLI)
 
 static void
-fu_direct_cli_init(FuDirectCli *self)
-{
-}
-
-static void
 fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuDirectCli *self)
 {
 	if (fu_cli_get_as_json(FU_CLI(self)))
@@ -6419,6 +6414,44 @@ fu_util_jcat_verify(FuCli *cli, gchar **values, GError **error)
 }
 
 static void
+fu_direct_cli_init(FuDirectCli *self)
+{
+	self->lock_fd = -1;
+	self->main_ctx = g_main_context_new();
+	self->loop = g_main_loop_new(self->main_ctx, FALSE);
+	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
+	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
+	fu_console_set_main_context(fu_cli_get_console(FU_CLI(self)), self->main_ctx);
+	self->request = fu_engine_request_new(NULL);
+
+	/* used for monitoring and downloading */
+	self->client = fwupd_client_new();
+	fwupd_client_set_main_context(self->client, self->main_ctx);
+	fwupd_client_set_daemon_version(self->client, PACKAGE_VERSION);
+	fwupd_client_set_user_agent_for_package(self->client, "fwupdtool", PACKAGE_VERSION);
+	g_signal_connect(FWUPD_CLIENT(self->client),
+			 "notify::percentage",
+			 G_CALLBACK(fu_util_client_notify_cb),
+			 self);
+	g_signal_connect(FWUPD_CLIENT(self->client),
+			 "notify::status",
+			 G_CALLBACK(fu_util_client_notify_cb),
+			 self);
+
+	/* when not using the engine */
+	self->progress = fu_progress_new(G_STRLOC);
+	g_signal_connect(self->progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_util_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(self->progress,
+			 "status-changed",
+			 G_CALLBACK(fu_util_progress_status_changed_cb),
+			 self);
+}
+
+static void
 fu_direct_cli_class_init(FuDirectCliClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -6687,41 +6720,6 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 	g_set_prgname(fu_util_get_prgname(argv[0]));
-
-	/* create helper object */
-	self->lock_fd = -1;
-	self->main_ctx = g_main_context_new();
-	self->loop = g_main_loop_new(self->main_ctx, FALSE);
-	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
-	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
-	fu_console_set_main_context(fu_cli_get_console(FU_CLI(self)), self->main_ctx);
-	self->request = fu_engine_request_new(NULL);
-
-	/* used for monitoring and downloading */
-	self->client = fwupd_client_new();
-	fwupd_client_set_main_context(self->client, self->main_ctx);
-	fwupd_client_set_daemon_version(self->client, PACKAGE_VERSION);
-	fwupd_client_set_user_agent_for_package(self->client, "fwupdtool", PACKAGE_VERSION);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "notify::percentage",
-			 G_CALLBACK(fu_util_client_notify_cb),
-			 self);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "notify::status",
-			 G_CALLBACK(fu_util_client_notify_cb),
-			 self);
-
-	/* when not using the engine */
-	self->progress = fu_progress_new(G_STRLOC);
-	g_signal_connect(self->progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_util_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(self->progress,
-			 "status-changed",
-			 G_CALLBACK(fu_util_progress_status_changed_cb),
-			 self);
 
 	/* add commands */
 	fu_cli_cmd_array_add_common(FU_CLI(self));
