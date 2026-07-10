@@ -55,6 +55,7 @@ device_tests += files(
 enumeration_data += files(
   'tests/foxconn-t99w373-mbim-setup.json',
   'tests/qc-eg25ggc-fastboot-setup.json',
+  'tests/qc-rw135r-firehose-setup.json',
 )
 
 if get_option('tests')

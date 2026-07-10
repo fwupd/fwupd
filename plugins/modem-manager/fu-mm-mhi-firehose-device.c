@@ -83,7 +83,7 @@ fu_mm_mhi_firehose_device_detach(FuDevice *device, FuProgress *progress, GError 
 	path = fu_kernel_search_path_locker_get_path(self->search_path_locker);
 	fn = g_build_filename(path, self->firehose_prog_file, NULL);
 	if (!fu_bytes_set_contents(fn, self->firehose_prog, error)) {
-		g_prefix_error_literal(error, "create firehose prog file fail");
+		g_prefix_error_literal(error, "create firehose prog file fail: ");
 		return FALSE;
 	}
 
@@ -291,6 +291,8 @@ static void
 fu_mm_mhi_firehose_device_finalize(GObject *object)
 {
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(object);
+
+	g_clear_object(&self->search_path_locker);
 	g_free(self->firehose_prog_file);
 	g_free(self->lib_firmware_path);
 	if (self->firehose_prog != NULL)
