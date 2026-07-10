@@ -91,7 +91,13 @@ endif
 
 fwupdutil = library(
   'fwupdutil',
-  sources: ['fu-console.c', 'fu-util-bios-setting.c', 'fu-util-common.c', systemd_src],
+  sources: [
+    'fu-console.c',
+    'fu-util-bios-setting.c',
+    'fu-util-common.c',
+    'fu-util-impl.c',
+    systemd_src,
+  ],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,

@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-console.h"
+#include "fu-util-impl.h"
 
 /* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
@@ -23,7 +24,6 @@ typedef enum {
 	FU_UTIL_CMD_FLAG_IS_ALIAS = 1 << 0,
 } G_GNUC_FLAG_ENUM FuUtilCmdFlags;
 
-typedef struct FuUtil FuUtil;
 typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
