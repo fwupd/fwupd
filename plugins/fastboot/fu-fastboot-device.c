@@ -18,7 +18,6 @@
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
 
 typedef struct {
-	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint operation_delay;
 } FuFastbootDevicePrivate;
