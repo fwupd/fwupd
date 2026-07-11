@@ -1,5 +1,7 @@
-[Call internal fwupd actions]
-Identity=unix-group:admin;unix-group:sudo
-Action=org.freedesktop.fwupd.update-internal
+# Create polkit configuration file to allow fwupd-refresh service to run with elevated privileges
+# This file is used to specify the polkit configuration for the fwupd-refresh service
+# We add the configuration to allow the service to run with elevated privileges
+[fwupd-refresh]
+Identity=unix-user:*
+Action=org.freedesktop.fwupd.refresh
 ResultActive=yes
-

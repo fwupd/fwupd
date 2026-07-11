@@ -1,1 +1,5 @@
-var/cache/app-info/xmls
+# Add polkit configuration file to allow fwupd-refresh service to run with elevated privileges
+# This file is used to specify the directories that contain files that are used by the fwupd-refresh service
+# We add the polkit configuration file to this list
+[Install]
+want fwupd.dirs = /etc/polkit-1/rules.d

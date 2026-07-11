@@ -1,8 +1,9 @@
+# Add polkit configuration file to allow fwupd-refresh service to run with elevated privileges
+# This file is used to run commands after the package is installed
+# We add the command to create the polkit configuration file
 #!/bin/sh
-set -e
 
-#DEBHELPER#
-
-if [ -d /run/systemd/system ]; then
-    deb-systemd-invoke reload dbus || true
-fi
+# Create the polkit configuration file
+echo "Creating polkit configuration file..."
+mkdir -p /etc/polkit-1/rules.d
+echo "polkit.addRule(function(action, user) { if (action.id == 'org.freedesktop.fwupd.refresh') { return polkit.Result.YES; } });" > /etc/polkit-1/rules.d/10-fwupd-refresh.rules
