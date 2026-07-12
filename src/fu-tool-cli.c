@@ -51,7 +51,6 @@ struct FuCli {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
-	GOptionContext *context;
 	FuContext *ctx;
 	GSource *source_sigint;
 	FuEngine *engine;
@@ -381,8 +380,6 @@ fu_tool_cli_private_free(FuCli *self)
 		g_object_unref(self->console);
 	if (self->progress != NULL)
 		g_object_unref(self->progress);
-	if (self->context != NULL)
-		g_option_context_free(self->context);
 	if (self->jcat_context != NULL)
 		g_object_unref(self->jcat_context);
 	if (self->source_sigint != NULL)
@@ -6291,6 +6288,7 @@ main(int argc, char *argv[])
 	g_autoptr(FuCli) self = g_new0(FuCli, 1);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GOptionContext) option_context = g_option_context_new(NULL);
 	g_autoptr(GPtrArray) cmd_array = fu_cli_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *destdir = NULL;
@@ -7159,20 +7157,19 @@ main(int argc, char *argv[])
 	fu_console_set_interactive(self->console, self->interactive);
 
 	/* get a list of the commands */
-	self->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_cli_cmd_array_to_string(cmd_array);
-	g_option_context_set_summary(self->context, cmd_descriptions);
+	g_option_context_set_summary(option_context, cmd_descriptions);
 	g_option_context_set_description(
-	    self->context,
+	    option_context,
 	    /* TRANSLATORS: CLI description */
 	    _("This tool allows an administrator to use the fwupd plugins "
 	      "without being installed on the host system."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("Firmware Utility"));
-	g_option_context_add_main_entries(self->context, options, NULL);
-	g_option_context_add_group(self->context, fu_debug_get_option_group());
-	ret = g_option_context_parse(self->context, &argc, &argv, &error);
+	g_option_context_add_main_entries(option_context, options, NULL);
+	g_option_context_add_group(option_context, fu_debug_get_option_group());
+	ret = g_option_context_parse(option_context, &argc, &argv, &error);
 	if (!ret) {
 		fu_console_print(self->console,
 				 "%s: %s",
