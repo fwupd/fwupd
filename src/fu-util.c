@@ -42,7 +42,6 @@ struct FuUtil {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
-	GOptionContext *context;
 	FwupdInstallFlags flags;
 	FwupdClientDownloadFlags download_flags;
 	FwupdClient *client;
@@ -4653,7 +4652,6 @@ fu_util_private_free(FuUtil *self)
 	g_main_context_unref(self->main_ctx);
 	g_object_unref(self->cancellable);
 	g_object_unref(self->console);
-	g_option_context_free(self->context);
 	g_free(self);
 }
 
@@ -5275,7 +5273,6 @@ main(int argc, char *argv[])
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
-	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	guint download_retries = 0;
@@ -5284,6 +5281,7 @@ main(int argc, char *argv[])
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_console = NULL;
+	g_autoptr(GOptionContext) option_context = g_option_context_new(NULL);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 #ifdef HAVE_POLKIT
 	g_autoptr(FuPolkitAgent) polkit_agent = fu_polkit_agent_new();
@@ -5923,11 +5921,10 @@ main(int argc, char *argv[])
 	fu_console_set_interactive(self->console, is_interactive);
 
 	/* get a list of the commands */
-	self->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_util_cmd_array_to_string(cmd_array);
-	g_option_context_set_summary(self->context, cmd_descriptions);
+	g_option_context_set_summary(option_context, cmd_descriptions);
 	g_option_context_set_description(
-	    self->context,
+	    option_context,
 	    /* TRANSLATORS: CLI description */
 	    _("This tool allows an administrator to query and control the "
 	      "fwupd daemon, allowing them to perform actions such as "
@@ -5935,9 +5932,8 @@ main(int argc, char *argv[])
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("Firmware Utility"));
-	g_option_context_add_main_entries(self->context, options, NULL);
-	ret = g_option_context_parse(self->context, &argc, &argv, &error);
-	if (!ret) {
+	g_option_context_add_main_entries(option_context, options, NULL);
+	if (!g_option_context_parse(option_context, &argc, &argv, &error)) {
 		fu_console_print(self->console,
 				 "%s: %s",
 				 /* TRANSLATORS: the user didn't read the man page */
@@ -6158,8 +6154,7 @@ main(int argc, char *argv[])
 	}
 
 	/* run the specified command */
-	ret = fu_util_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
-	if (!ret) {
+	if (!fu_util_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error)) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
 		if (error == NULL) {
