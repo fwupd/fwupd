@@ -93,7 +93,7 @@ fu_sunwinon_hid_firmware_parse(FuFirmware *firmware,
 	self->bin_size = fu_struct_sunwinon_dfu_image_info_get_bin_size(st);
 
 	/* check fw sign pattern to see if it is signed */
-	if (streamsz >= self->bin_size + FU_STRUCT_SUNWINON_DFU_IMAGE_INFO_SIZE +
+	if (streamsz >= (gsize)self->bin_size + FU_STRUCT_SUNWINON_DFU_IMAGE_INFO_SIZE +
 			    FU_SUNWINON_HID_DFU_SIGN_LEN) {
 		guint32 fw_pattern_deadbeef = 0;
 		guint32 fw_pattern_sign = 0;
@@ -120,7 +120,8 @@ fu_sunwinon_hid_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* check if the fw is correctly packed */
-	if (streamsz != self->bin_size + FU_STRUCT_SUNWINON_DFU_IMAGE_INFO_SIZE + tail_size) {
+	if (streamsz !=
+	    (gsize)self->bin_size + FU_STRUCT_SUNWINON_DFU_IMAGE_INFO_SIZE + tail_size) {
 		g_set_error(
 		    error,
 		    FWUPD_ERROR,
