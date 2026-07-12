@@ -74,7 +74,6 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 	g_autoptr(FuDeviceLocker) locker_enable = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 
 	/* sanity check */
@@ -88,8 +87,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 
 	/* open file */
 	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "rom", NULL);
-	file = g_file_new_for_path(rom_fn);
-	stream = FU_INPUT_STREAM(g_file_read(file, NULL, &error_local));
+	stream = fu_input_stream_from_path(rom_fn, &error_local);
 	if (stream == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

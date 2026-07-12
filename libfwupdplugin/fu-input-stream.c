@@ -10,6 +10,7 @@
 
 #include "fu-chunk-array.h"
 #include "fu-crc-private.h"
+#include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-sum.h"
@@ -29,13 +30,13 @@ FuInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error)
 {
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileInputStream) stream = NULL;
+	g_autoptr(FuFileInputStream) stream = NULL;
 
 	g_return_val_if_fail(path != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	file = g_file_new_for_path(path);
-	stream = g_file_read(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, NULL, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return NULL;

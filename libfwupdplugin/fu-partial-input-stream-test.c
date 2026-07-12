@@ -126,18 +126,16 @@ fu_partial_input_stream_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	/*                                             \--/   */
 	g_autoptr(GBytes) blob2 = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) stream_complete = NULL;
 	g_autoptr(FuInputStream) stream_error = NULL;
 	g_autoptr(FuInputStream) stream_file = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 
-	/* check the behavior of GFileInputStream */
+	/* check the behavior of FuFileInputStream */
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
 	g_assert_nonnull(fn);
-	file = g_file_new_for_path(fn);
-	stream_file = FU_INPUT_STREAM(g_file_read(file, NULL, &error));
+	stream_file = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream_file);
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), 0x0, G_SEEK_SET, NULL, &error);

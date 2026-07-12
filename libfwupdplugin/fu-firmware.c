@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
+#include "fu-file-input-stream.h"
 #include "fu-firmware-private.h"
 #include "fu-fuzzer.h"
 #include "fu-input-stream.h"
@@ -1648,13 +1649,13 @@ fu_firmware_new_from_filename(const gchar *filename, GError **error)
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags, GError **error)
 {
-	g_autoptr(GFileInputStream) stream = NULL;
+	g_autoptr(FuFileInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_file_read(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, NULL, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
