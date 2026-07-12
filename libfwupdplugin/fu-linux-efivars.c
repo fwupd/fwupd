@@ -25,6 +25,7 @@
 #include "fwupd-error.h"
 
 #include "fu-efivars-private.h"
+#include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-linux-efivars.h"
 #include "fu-path.h"
@@ -254,7 +255,6 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	FuEfiVariableAttrs attr_tmp;
 	guint64 sz;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
@@ -262,16 +262,15 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
 	if (fn == NULL)
 		return FALSE;
-	file = g_file_new_for_path(fn);
-	istr = FU_INPUT_STREAM(g_file_read(file, NULL, error));
+	istr = fu_input_stream_from_path(fn, error);
 	if (istr == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	info = g_file_input_stream_query_info(G_FILE_INPUT_STREAM(istr),
-					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
-					      NULL,
-					      error);
+	info = fu_file_input_stream_query_info(FU_FILE_INPUT_STREAM(istr),
+					       G_FILE_ATTRIBUTE_STANDARD_SIZE,
+					       NULL,
+					       error);
 	if (info == NULL) {
 		g_prefix_error_literal(error, "failed to get stream info: ");
 		fwupd_error_convert(error);

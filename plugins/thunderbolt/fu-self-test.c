@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "fu-context-private.h"
+#include "fu-file-input-stream.h"
 #include "fu-plugin-private.h"
 #include "fu-thunderbolt-plugin.h"
 #include "fu-udev-device-private.h"
@@ -238,7 +239,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	nvm_device = g_file_new_for_path(node->nvm_non_active);
 	nvm = g_file_get_child(nvm_device, "nvmem");
 
-	is = FU_INPUT_STREAM(g_file_read(nvm, NULL, &error)); /* nocheck:blocked */
+	is = fu_file_input_stream_from_file(nvm, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(is);
 

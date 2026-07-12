@@ -972,7 +972,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 			continue;
 		}
 		g_debug("indexing vendor IDs from %s", fn);
-		stream = FU_INPUT_STREAM(g_file_read(file, NULL, error));
+		stream = fu_input_stream_from_path(fn, error);
 		if (stream == NULL)
 			return FALSE;
 		helper->self = self;

@@ -127,7 +127,6 @@ fu_input_stream_func(void)
 	g_autofree guint8 *buf2 = NULL;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
@@ -138,8 +137,7 @@ fu_input_stream_func(void)
 	fu_dump_raw(G_LOG_DOMAIN, "src", buf, bufsz);
 	csum = g_compute_checksum_for_data(G_CHECKSUM_MD5, (const guchar *)buf, bufsz);
 
-	file = g_file_new_for_path(fn);
-	stream = FU_INPUT_STREAM(g_file_read(file, NULL, &error));
+	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 
