@@ -89,8 +89,25 @@ if host_machine.system() == 'windows'
   fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
-fwupdutil = library(
-  'fwupdutil',
+fwupdcli_rs = custom_target(
+  'fu-cli-rs',
+  input: 'fu-cli.rs',
+  output: ['fu-cli-struct.c', 'fu-cli-struct.h'],
+  command: [
+    python3,
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '--outc', '@OUTPUT0@',
+    '--outh', '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
+  ],
+)
+fwupdcli = library(
+  'fwupdcli',
+  fwupdcli_rs,
   sources: ['fu-console.c', 'fu-bios-setting-common.c', 'fu-cli-common.c', systemd_src],
   install: true,
   install_rpath: libdir_pkg,
@@ -116,7 +133,7 @@ if build_daemon
     sources: ['fu-dbus-cli.c', client_src],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
-    link_with: [fwupd, fwupdplugin, fwupdutil],
+    link_with: [fwupd, fwupdplugin, fwupdcli],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: bindir,
@@ -182,7 +199,7 @@ executable(
   sources: ['fu-tool-cli.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
   dependencies: [libfwupd_deps, client_dep, valgrind],
-  link_with: [fwupdengine, fwupdutil, plugin_libs],
+  link_with: [fwupdengine, fwupdcli, plugin_libs],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: bindir,
@@ -336,7 +353,7 @@ if get_option('tests')
       sources: ['fu-' + test_name + '-test.c'],
       include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [engine_dep],
-      link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
+      link_with: [fwupdengine, fwupdcli, libfutest, plugin_libs],
       c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
     )
     test(

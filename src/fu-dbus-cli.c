@@ -38,19 +38,7 @@ struct FuCli {
 	FwupdClientDownloadFlags download_flags;
 	FwupdClient *client;
 	FuConsole *console;
-	gboolean no_remote_check;
-	gboolean no_metadata_check;
-	gboolean no_reboot_check;
-	gboolean no_unreported_check;
-	gboolean no_safety_check;
-	gboolean no_device_prompt;
-	gboolean no_emulation_check;
-	gboolean no_security_fix;
-	gboolean assume_yes;
-	gboolean sign;
-	gboolean show_all;
-	gboolean disable_ssl_strict;
-	gboolean as_json;
+	FuCliArgFlag arg_flags;
 	/* only valid in update and downgrade */
 	FuCliOperation current_operation;
 	FwupdDevice *current_device;
@@ -72,7 +60,7 @@ fu_dbus_cli_get_device_by_id(FuCli *self, const gchar *id, GError **error);
 static void
 fu_dbus_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
 {
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return;
 	fu_console_set_progress(self->console,
 				fwupd_client_get_status(self->client),
@@ -174,7 +162,7 @@ fu_dbus_cli_prompt_for_device(FuCli *self, GPtrArray *devices, GError **error)
 	/* exactly one */
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index(devices_filtered, 0);
-		if (!self->as_json) {
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 			fu_console_print(
 			    self->console,
 			    "%s: %s",
@@ -186,7 +174,7 @@ fu_dbus_cli_prompt_for_device(FuCli *self, GPtrArray *devices, GError **error)
 	}
 
 	/* no questions */
-	if (self->no_device_prompt) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_DEVICE_PROMPT)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
@@ -229,7 +217,8 @@ fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
 	gboolean all_automatic = FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_unreported_check || self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK) ||
+	    fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_debug("skipping unreported check");
 		return TRUE;
 	}
@@ -324,7 +313,7 @@ fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
 
 	g_debug("all automatic: %d", all_automatic);
 	/* show the success and failures */
-	if (!self->assume_yes && !all_automatic) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) && !all_automatic) {
 		/* delimit */
 		fu_console_line(self->console, 48);
 
@@ -406,7 +395,7 @@ fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
 		return FALSE;
 
 	/* offer to make automatic */
-	if (!self->assume_yes && !all_automatic) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) && !all_automatic) {
 		if (fu_console_input_bool(self->console,
 					  FALSE,
 					  "%s",
@@ -449,7 +438,8 @@ fu_dbus_cli_build_device_tree(FuCli *self, FuCliNode *root, GPtrArray *devs, Fwu
 						  self->filter_protocols_include,
 						  self->filter_protocols_exclude))
 			continue;
-		if (!self->show_all && !fu_cli_is_interesting_device(devs, dev_tmp))
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_SHOW_ALL) &&
+		    !fu_cli_is_interesting_device(devs, dev_tmp))
 			continue;
 		if (fwupd_device_get_parent(dev_tmp) == dev) {
 			FuCliNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
@@ -563,7 +553,7 @@ fu_dbus_cli_check_reboot_needed(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	return fu_cli_prompt_complete(self->console, self->completion_flags, TRUE, error);
@@ -602,7 +592,7 @@ fu_dbus_cli_get_devices(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_get_devices_as_json(self, devices_filtered);
 		return TRUE;
 	}
@@ -637,7 +627,7 @@ fu_dbus_cli_get_plugins(FuCli *self, gchar **values, GError **error)
 	if (plugins == NULL)
 		return FALSE;
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_cli_plugin_name_sort_cb);
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(plugins, "Plugins", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_cli_print_json_object(self->console, json_obj);
@@ -690,7 +680,7 @@ fu_dbus_cli_download_if_required(FuCli *self, const gchar *perhapsfn, GError **e
 static void
 fu_dbus_cli_display_current_message(FuCli *self)
 {
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return;
 
 	/* TRANSLATORS: success message */
@@ -817,7 +807,7 @@ fu_dbus_cli_device_test_component(FuCli *self,
 		break;
 	}
 	if (device == NULL) {
-		if (!self->as_json) {
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 			g_autofree gchar *msg = NULL;
 			msg = fu_console_color_format(
 			    /* TRANSLATORS: this is for the device tests */
@@ -872,7 +862,7 @@ fu_dbus_cli_device_test_component(FuCli *self,
 	}
 
 	/* success */
-	if (!self->as_json) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autofree gchar *msg = NULL;
 		/* TRANSLATORS: this is for the device tests */
 		msg = fu_console_color_format(_("OK!"), FU_CONSOLE_COLOR_GREEN);
@@ -1031,7 +1021,7 @@ fu_dbus_cli_device_test_step(FuCli *self,
 					  self->cancellable,
 					  &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-				if (self->as_json) {
+				if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 					fwupd_json_object_add_string(json_object_result,
 								     "info",
 								     error_local->message);
@@ -1438,7 +1428,7 @@ fu_dbus_cli_device_test_full(FuCli *self,
 	}
 
 	/* dump to screen as JSON format */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
 		fwupd_json_object_add_array(json_object_results, "results", json_array_results);
 		fu_cli_print_json_object(self->console, json_object_results);
@@ -1573,7 +1563,8 @@ fu_dbus_cli_local_install(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* detect bitlocker */
-	if (dev != NULL && !self->no_safety_check && !self->assume_yes) {
+	if (dev != NULL && !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK) &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		if (!fu_cli_prompt_warning_fde(self->console, dev, error))
 			return FALSE;
 	}
@@ -1589,7 +1580,7 @@ fu_dbus_cli_local_install(FuCli *self, gchar **values, GError **error)
 	fu_dbus_cli_display_current_message(self);
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -1614,12 +1605,12 @@ fu_dbus_cli_get_details(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* implied, important for get-details on a device not in your system */
-	self->show_all = TRUE;
+	fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_SHOW_ALL);
 
 	array = fwupd_client_get_details(self->client, values[0], self->cancellable, error);
 	if (array == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(array, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_cli_print_json_object(self->console, json_obj);
@@ -1658,7 +1649,7 @@ fu_dbus_cli_report_history_for_remote(FuCli *self,
 		return FALSE;
 
 	/* self sign data */
-	if (self->sign) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_SIGN)) {
 		sig = fwupd_client_self_sign(self->client,
 					     data,
 					     FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
@@ -1672,7 +1663,7 @@ fu_dbus_cli_report_history_for_remote(FuCli *self,
 	report_uri = fwupd_remote_build_report_uri(remote_upload, error);
 	if (report_uri == NULL)
 		return FALSE;
-	if (!self->assume_yes &&
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) &&
 	    !fwupd_remote_has_flag(remote_upload, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
 		fu_console_print_kv(self->console, _("Target"), report_uri);
 		fu_console_print_kv(self->console, _("Payload"), data);
@@ -1854,7 +1845,7 @@ fu_dbus_cli_report_export(FuCli *self, gchar **values, GError **error)
 			return FALSE;
 
 		/* self sign data */
-		if (self->sign) {
+		if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_SIGN)) {
 			g_autofree gchar *sig = NULL;
 			g_autoptr(FuFirmware) sig_img = fu_zip_file_new();
 			g_autoptr(GBytes) sig_blob = NULL;
@@ -2022,7 +2013,7 @@ fu_dbus_cli_get_history(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(devices, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_cli_print_json_object(self->console, json_obj);
@@ -2094,7 +2085,7 @@ fu_dbus_cli_get_device_or_prompt(FuCli *self, gchar **values, GError **error)
 		return fu_dbus_cli_get_device_by_id(self, values[0], error);
 	}
 
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
@@ -2212,7 +2203,11 @@ fu_dbus_cli_download_metadata_enable_lvfs(FuCli *self, GError **error)
 					self->cancellable,
 					error))
 		return FALSE;
-	if (!fu_cli_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_cli_modify_remote_warning(
+		self->console,
+		remote,
+		fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES),
+		error))
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
@@ -2295,7 +2290,7 @@ fu_dbus_cli_download_metadata(FuCli *self, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		if (!self->as_json)
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 			fu_console_print(self->console,
 					 "%s %s",
 					 _("Updating"),
@@ -2312,7 +2307,7 @@ fu_dbus_cli_download_metadata(FuCli *self, GError **error)
 	/* no web remote is declared; try to enable LVFS */
 	if (!download_remote_enabled) {
 		/* we don't want to ask anything */
-		if (self->no_remote_check) {
+		if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REMOTE_CHECK)) {
 			g_debug("skipping remote check");
 			return TRUE;
 		}
@@ -2333,7 +2328,7 @@ fu_dbus_cli_download_metadata(FuCli *self, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* get devices from daemon */
@@ -2419,7 +2414,7 @@ fu_dbus_cli_refresh(FuCli *self, gchar **values, GError **error)
 					  error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: success message -- the user can do this by-hand too */
@@ -2444,7 +2439,7 @@ fu_dbus_cli_get_results(FuCli *self, gchar **values, GError **error)
 				       error);
 	if (rel == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_cli_print_json_object(self->console, json_obj);
@@ -2475,7 +2470,7 @@ fu_dbus_cli_get_releases(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_get_releases_as_json(self, rels);
 		return TRUE;
 	}
@@ -2532,7 +2527,7 @@ fu_dbus_cli_search(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_get_releases_as_json(self, rels);
 		return TRUE;
 	}
@@ -2668,7 +2663,8 @@ fu_dbus_cli_perhaps_refresh_remotes(FuCli *self, GError **error)
 	const guint64 age_limit_days = 30;
 
 	/* we don't want to ask anything */
-	if (self->no_metadata_check || self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_METADATA_CHECK) ||
+	    fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_debug("skipping metadata check");
 		return TRUE;
 	}
@@ -2681,7 +2677,7 @@ fu_dbus_cli_perhaps_refresh_remotes(FuCli *self, GError **error)
 		return TRUE;
 
 	/* ask for permission */
-	if (!self->assume_yes) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		fu_console_print(
 		    self->console,
 		    /* TRANSLATORS: the metadata is very out of date; %u is a number > 1 */
@@ -2784,7 +2780,7 @@ fu_dbus_cli_get_updates(FuCli *self, gchar **values, GError **error)
 	g_ptr_array_sort(devices, fu_cli_sort_devices_by_flags_cb);
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_get_updates_as_json(self, devices);
 		return TRUE;
 	}
@@ -2897,7 +2893,7 @@ fu_dbus_cli_get_remotes(FuCli *self, gchar **values, GError **error)
 	remotes = fwupd_client_get_remotes(self->client, self->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(remotes, "Remotes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_cli_print_json_object(self->console, json_obj);
@@ -3152,7 +3148,9 @@ fu_dbus_cli_update_device_with_release(FuCli *self,
 				    _("Nothing to do"));
 		return FALSE;
 	}
-	if (!self->as_json && !self->no_safety_check && !self->assume_yes) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON) &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK) &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		const gchar *title = fwupd_client_get_host_product(self->client);
 		if (!fu_cli_prompt_warning(self->console, dev, rel, title, error))
 			return FALSE;
@@ -3341,7 +3339,8 @@ fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* show warnings */
-	if (devices_latest->len > 0 && !self->as_json) {
+	if (devices_latest->len > 0 &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available */
@@ -3351,7 +3350,8 @@ fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_unsupported->len > 0 && !self->as_json) {
+	if (devices_unsupported->len > 0 &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
@@ -3361,7 +3361,8 @@ fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_pending->len > 0 && !self->as_json) {
+	if (devices_pending->len > 0 &&
+	    !fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user there is an update
 					  * waiting, but there is a reason it cannot be deployed */
@@ -3392,7 +3393,8 @@ fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check || self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK) ||
+	    fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3424,7 +3426,7 @@ fu_dbus_cli_remote_modify(FuCli *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: success message for a per-remote setting change */
@@ -3446,7 +3448,11 @@ fu_dbus_cli_remote_enable(FuCli *self, gchar **values, GError **error)
 	remote = fwupd_client_get_remote_by_id(self->client, values[0], self->cancellable, error);
 	if (remote == NULL)
 		return FALSE;
-	if (!fu_cli_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_cli_modify_remote_warning(
+		self->console,
+		remote,
+		fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES),
+		error))
 		return FALSE;
 	if (!fwupd_client_modify_remote(self->client,
 					fwupd_remote_get_id(remote),
@@ -3456,16 +3462,17 @@ fu_dbus_cli_remote_enable(FuCli *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* ask for permission to refresh */
-	if (self->no_remote_check || fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REMOTE_CHECK) ||
+	    fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
 		/* TRANSLATORS: success message */
 		fu_console_print_literal(self->console, _("Successfully enabled remote"));
 		return TRUE;
 	}
-	if (!self->assume_yes) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		if (!fu_console_input_bool(self->console,
 					   TRUE,
 					   "%s (%s)",
@@ -3510,7 +3517,7 @@ fu_dbus_cli_remote_clean(FuCli *self, gchar **values, GError **error)
 				       error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: success message */
@@ -3543,7 +3550,7 @@ fu_dbus_cli_remote_disable(FuCli *self, gchar **values, GError **error)
 					error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: success message */
@@ -3552,7 +3559,7 @@ fu_dbus_cli_remote_disable(FuCli *self, gchar **values, GError **error)
 	/* delete the now-unused cache files? */
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
 	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
-		if (self->assume_yes ||
+		if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) ||
 		    fu_console_input_bool(self->console,
 					  FALSE,
 					  "%s",
@@ -3638,7 +3645,7 @@ fu_dbus_cli_downgrade(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3691,7 +3698,7 @@ fu_dbus_cli_reinstall(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3760,7 +3767,7 @@ fu_dbus_cli_install(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3872,7 +3879,12 @@ fu_dbus_cli_switch_branch(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* we're switching branch */
-	if (!fu_cli_switch_branch_warning(self->console, dev, rel, self->assume_yes, error))
+	if (!fu_cli_switch_branch_warning(
+		self->console,
+		dev,
+		rel,
+		fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES),
+		error))
 		return FALSE;
 
 	/* update the console if composite devices are also updated */
@@ -3900,7 +3912,7 @@ fu_dbus_cli_switch_branch(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3978,7 +3990,7 @@ fu_dbus_cli_activate(FuCli *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: success message -- where activation is making the new
@@ -4048,7 +4060,7 @@ fu_dbus_cli_get_approved_firmware(FuCli *self, gchar **values, GError **error)
 	checksums = fwupd_client_get_approved_firmware(self->client, self->cancellable, error);
 	if (checksums == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_get_checksums_as_json(self, checksums);
 		return TRUE;
 	}
@@ -4096,10 +4108,10 @@ fu_dbus_cli_modify_config(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
-	if (!self->assume_yes) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		if (!fu_console_input_bool(self->console,
 					   FALSE,
 					   "%s",
@@ -4132,10 +4144,10 @@ fu_dbus_cli_reset_config(FuCli *self, gchar **values, GError **error)
 	if (!fwupd_client_reset_config(self->client, values[0], self->cancellable, error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
-	if (!self->assume_yes) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 		if (!fu_console_input_bool(self->console,
 					   FALSE,
 					   "%s",
@@ -4206,7 +4218,7 @@ fu_dbus_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
 		return FALSE;
 
 	/* ask for permission */
-	if (!self->assume_yes &&
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) &&
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		if (!fu_console_input_bool(self->console,
 					   FALSE,
@@ -4220,7 +4232,7 @@ fu_dbus_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
 	}
 
 	/* self sign data */
-	if (self->sign) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_SIGN)) {
 		sig = fwupd_client_self_sign(self->client,
 					     data,
 					     FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
@@ -4231,7 +4243,7 @@ fu_dbus_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
 	}
 
 	/* ask for permission */
-	if (!self->assume_yes &&
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES) &&
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		fu_console_print_kv(self->console,
 				    _("Target"),
@@ -4399,7 +4411,7 @@ fu_dbus_cli_sync(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* we don't want to ask anything */
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -4533,7 +4545,7 @@ fu_dbus_cli_security(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* not for human consumption */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_security_as_json(self, attrs, events, devices);
 		return TRUE;
 	}
@@ -4545,7 +4557,7 @@ fu_dbus_cli_security(FuCli *self, gchar **values, GError **error)
 			 fwupd_client_get_host_security_id(self->client));
 
 	/* show or hide different elements */
-	if (self->show_all) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_SHOW_ALL)) {
 		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES;
 		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
 	}
@@ -4571,13 +4583,13 @@ fu_dbus_cli_security(FuCli *self, gchar **values, GError **error)
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
 		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr),
 			      FWUPD_SECURITY_ATTR_ID_HOST_EMULATION) == 0) {
-			self->no_unreported_check = TRUE;
+			fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK);
 			break;
 		}
 	}
 
 	/* any things we can fix? */
-	if (!self->no_security_fix) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_SECURITY_FIX)) {
 		for (guint j = 0; j < attrs->len; j++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
 			if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX) &&
@@ -4589,13 +4601,13 @@ fu_dbus_cli_security(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* upload, with confirmation */
-	if (!self->no_unreported_check) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK)) {
 		if (!fu_dbus_cli_upload_security(self, attrs, error))
 			return FALSE;
 	}
 
 	/* reboot is required? */
-	if (!self->no_reboot_check &&
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK) &&
 	    (self->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) > 0) {
 		if (!fu_cli_prompt_complete(self->console, self->completion_flags, TRUE, error))
 			return FALSE;
@@ -4722,7 +4734,7 @@ fu_dbus_cli_show_plugin_warnings(FuCli *self)
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	g_autoptr(GPtrArray) plugins = NULL;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return;
 
 	/* get plugins from daemon, ignoring if the daemon is too old */
@@ -4783,7 +4795,7 @@ fu_dbus_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
 		return FALSE;
 	}
 
-	if (!self->as_json) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		gpointer key;
 		gpointer value;
 		GHashTableIter iter;
@@ -4800,7 +4812,7 @@ fu_dbus_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
 	}
 	self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
-	if (self->no_reboot_check) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -4817,7 +4829,7 @@ fu_dbus_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
 	attrs = fwupd_client_get_bios_settings(self->client, self->cancellable, error);
 	if (attrs == NULL)
 		return FALSE;
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_bios_setting_console_print(self->console, values, attrs);
 		return TRUE;
 	}
@@ -4873,7 +4885,7 @@ fu_dbus_cli_security_fix(FuCli *self, gchar **values, GError **error)
 	if (!fwupd_client_fix_host_security_attr(self->client, values[0], self->cancellable, error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: we've fixed a security problem on the machine */
@@ -4897,7 +4909,7 @@ fu_dbus_cli_hwids(FuCli *self, gchar **values, GError **error)
 	g_auto(GStrv) hwids_values = NULL;
 
 	fwupd_client_get_hwids(self->client, &hwids_keys, &hwids_values);
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_dbus_cli_hwids_as_json(self, hwids_keys, hwids_values);
 		return TRUE;
 	}
@@ -4957,8 +4969,8 @@ fu_dbus_cli_report_devices(FuCli *self, gchar **values, GError **error)
 	if (data == NULL)
 		return FALSE;
 
-	if (self->as_json) {
-		if (!self->assume_yes) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_ARGS,
@@ -5003,7 +5015,7 @@ fu_dbus_cli_report_devices(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* success */
-	if (!self->as_json) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: success, so say thank you to the user */
 					 _("Device list uploaded successfully, thanks!"));
@@ -5039,7 +5051,7 @@ fu_dbus_cli_security_undo(FuCli *self, gchar **values, GError **error)
 						  error))
 		return FALSE;
 
-	if (self->as_json)
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON))
 		return TRUE;
 
 	/* TRANSLATORS: we've fixed a security problem on the machine */
@@ -5190,7 +5202,11 @@ fu_dbus_cli_enable_remote_auth(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* save secrets and enable remote */
-	if (!fu_cli_modify_remote_warning(self->console, remote, self->assume_yes, error))
+	if (!fu_cli_modify_remote_warning(
+		self->console,
+		remote,
+		fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES),
+		error))
 		return FALSE;
 	if (!fwupd_remote_save_user_secrets(remote, error))
 		return FALSE;
@@ -5225,7 +5241,7 @@ fu_dbus_cli_version(FuCli *self, GError **error)
 		return FALSE;
 
 	/* dump to the screen in the most appropriate format */
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_cli_project_versions_as_json(self->console, metadata);
 		return TRUE;
 	}
@@ -5237,7 +5253,7 @@ fu_dbus_cli_version(FuCli *self, GError **error)
 static gboolean
 fu_dbus_cli_setup_interactive(FuCli *self, GError **error)
 {
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "using --json");
 		return FALSE;
 	}
@@ -5258,7 +5274,7 @@ fu_dbus_cli_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 static void
 fu_dbus_cli_print_error(FuCli *self, const GError *error)
 {
-	if (self->as_json) {
+	if (fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_cli_print_error_as_json(self->console, error);
 		return;
 	}
@@ -5272,12 +5288,24 @@ main(int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean as_json = FALSE;
+	gboolean assume_yes = FALSE;
+	gboolean disable_ssl_strict = FALSE;
+	gboolean no_remote_check = FALSE;
+	gboolean no_metadata_check = FALSE;
+	gboolean no_reboot_check = FALSE;
+	gboolean no_unreported_check = FALSE;
+	gboolean no_safety_check = FALSE;
+	gboolean no_device_prompt = FALSE;
+	gboolean no_security_fix = FALSE;
+	gboolean sign = FALSE;
 	gboolean only_emulated = FALSE;
 	gboolean only_p2p = FALSE;
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
 	gboolean ret;
+	gboolean show_all;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	guint download_retries = 0;
@@ -5363,7 +5391,7 @@ main(int argc, char *argv[])
 	     'y',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->assume_yes,
+	     &assume_yes,
 	     /* TRANSLATORS: command line option */
 	     N_("Answer yes to all questions"),
 	     NULL},
@@ -5371,7 +5399,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->sign,
+	     &sign,
 	     /* TRANSLATORS: command line option */
 	     N_("Sign the uploaded data with the client certificate"),
 	     NULL},
@@ -5379,7 +5407,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_unreported_check,
+	     &no_unreported_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not check for unreported history"),
 	     NULL},
@@ -5387,7 +5415,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_metadata_check,
+	     &no_metadata_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not check for old metadata"),
 	     NULL},
@@ -5395,7 +5423,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_remote_check,
+	     &no_remote_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not check if download remotes should be enabled"),
 	     NULL},
@@ -5403,7 +5431,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_reboot_check,
+	     &no_reboot_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not check or prompt for reboot after update"),
 	     NULL},
@@ -5411,7 +5439,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_safety_check,
+	     &no_safety_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not perform device safety checks"),
 	     NULL},
@@ -5419,7 +5447,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_device_prompt,
+	     &no_device_prompt,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not prompt for devices"),
 	     NULL},
@@ -5435,7 +5463,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->show_all,
+	     &show_all,
 	     /* TRANSLATORS: command line option */
 	     N_("Show all results"),
 	     NULL},
@@ -5443,7 +5471,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     G_OPTION_FLAG_HIDDEN,
 	     G_OPTION_ARG_NONE,
-	     &self->show_all,
+	     &show_all,
 	     /* TRANSLATORS: command line option */
 	     N_("Show devices that are not updatable"),
 	     NULL},
@@ -5451,7 +5479,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->disable_ssl_strict,
+	     &disable_ssl_strict,
 	     /* TRANSLATORS: command line option */
 	     N_("Ignore SSL strict checks when downloading files"),
 	     NULL},
@@ -5493,7 +5521,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->as_json,
+	     &as_json,
 	     /* TRANSLATORS: command line option */
 	     N_("Output in JSON format (disables all interactive prompts)"),
 	     NULL},
@@ -5501,7 +5529,7 @@ main(int argc, char *argv[])
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &self->no_security_fix,
+	     &no_security_fix,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not prompt to fix security issues"),
 	     NULL},
@@ -5912,14 +5940,13 @@ main(int argc, char *argv[])
 	/* non-TTY consoles cannot answer questions */
 	if (!fu_dbus_cli_setup_interactive(self, &error_console)) {
 		g_info("failed to initialize interactive console: %s", error_console->message);
-		self->no_unreported_check = TRUE;
-		self->no_metadata_check = TRUE;
-		self->no_reboot_check = TRUE;
-		self->no_safety_check = TRUE;
-		self->no_remote_check = TRUE;
-		self->no_device_prompt = TRUE;
-		self->no_emulation_check = TRUE;
-		self->no_security_fix = TRUE;
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_METADATA_CHECK);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_REMOTE_CHECK);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_DEVICE_PROMPT);
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_SECURITY_FIX);
 	} else {
 		is_interactive = TRUE;
 	}
@@ -5948,8 +5975,34 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* convert to flags */
+	if (as_json)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON);
+	if (disable_ssl_strict)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_DISABLE_SSL_STRICT);
+	if (assume_yes)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_ASSUME_YES);
+	if (show_all)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_SHOW_ALL);
+	if (no_remote_check)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_REMOTE_CHECK);
+	if (no_metadata_check)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_METADATA_CHECK);
+	if (no_reboot_check)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK);
+	if (no_unreported_check)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK);
+	if (no_safety_check)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK);
+	if (no_device_prompt)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_DEVICE_PROMPT);
+	if (no_security_fix)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_NO_SECURITY_FIX);
+	if (sign)
+		fu_cli_add_arg_flag(&self->arg_flags, FU_CLI_ARG_FLAG_SIGN);
+
 	/* allow disabling SSL strict mode for broken corporate proxies */
-	if (self->disable_ssl_strict) {
+	if (disable_ssl_strict) {
 		fu_console_print_full(self->console,
 				      FU_CONSOLE_PRINT_FLAG_WARNING,
 				      "%s\n",
@@ -6117,7 +6170,7 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if (!self->as_json) {
+	if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON)) {
 		/* show user-visible warnings from the plugins */
 		fu_dbus_cli_show_plugin_warnings(self);
 
@@ -6170,7 +6223,7 @@ main(int argc, char *argv[])
 		}
 #endif
 		fu_dbus_cli_print_error(self, error);
-		if (!self->as_json &&
+		if (!fu_cli_has_arg_flag(self->arg_flags, FU_CLI_ARG_FLAG_AS_JSON) &&
 		    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s --help", g_get_prgname());
 			g_autoptr(GString) str = g_string_new("\n");

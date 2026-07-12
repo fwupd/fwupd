@@ -3151,3 +3151,15 @@ fu_cli_get_prgname(const gchar *argv0)
 		return prgname + 1;
 	return argv0;
 }
+
+gboolean
+fu_cli_has_arg_flag(FuCliArgFlag arg_flags, FuCliArgFlag arg_flag)
+{
+	return (arg_flags & arg_flag) > 0;
+}
+
+void
+fu_cli_add_arg_flag(FuCliArgFlag *arg_flags, FuCliArgFlag arg_flag)
+{
+	(*arg_flags) |= arg_flag;
+}

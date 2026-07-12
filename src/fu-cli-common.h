@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-cli-struct.h"
 #include "fu-console.h"
 
 /* custom return codes */
@@ -179,3 +180,7 @@ void
 fu_cli_project_versions_as_json(FuConsole *console, GHashTable *metadata) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_cli_get_prgname(const gchar *argv0) G_GNUC_NON_NULL(1);
+gboolean
+fu_cli_has_arg_flag(FuCliArgFlag arg_flags, FuCliArgFlag arg_flag);
+void
+fu_cli_add_arg_flag(FuCliArgFlag *arg_flags, FuCliArgFlag arg_flag);
