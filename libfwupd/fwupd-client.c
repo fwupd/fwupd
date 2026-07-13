@@ -89,7 +89,7 @@ typedef struct {
 	GStrv hwid_keys;
 	GStrv hwid_values;
 	GMutex download_items_mutex; /* for @download_items */
-	GPtrArray *download_items; /* element-type FwupdClientDownloadItem */
+	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
 } FwupdClientPrivate;
 
 typedef struct {

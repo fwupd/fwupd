@@ -10,6 +10,7 @@
 
 #include <glib/gi18n.h>
 
+#include "fwupd-bios-setting-struct.h"
 #include "fwupd-error.h"
 
 #include "fu-bios-setting.h"
@@ -19,8 +20,6 @@
 #include "fu-path.h"
 #include "fu-quirks.h"
 #include "fu-string.h"
-
-#include "fwupd-bios-setting-struct.h"
 
 #define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
 
@@ -363,7 +362,9 @@ static const struct {
 	const gchar *icon;
 } fu_bios_settings_appstream[] = {
     {"org.fwupd.bios.secure-boot", N_("Secure Boot"), "application-certificate"},
-    {"org.fwupd.bios.firmware-update-opt-in", N_("Firmware Update Opt-in"), "system-software-update"},
+    {"org.fwupd.bios.firmware-update-opt-in",
+     N_("Firmware Update Opt-in"),
+     "system-software-update"},
     {"org.fwupd.bios.wake-on-lan", N_("Wake on LAN"), "network-wired"},
     {"org.fwupd.bios.num-lock", N_("Num Lock"), "input-keyboard"},
     {"org.fwupd.bios.memory-encryption", N_("Memory Encryption"), "security-high"},
