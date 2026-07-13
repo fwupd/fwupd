@@ -1,0 +1,20 @@
+{
+  "name": "MaxLinear MxL86252 Ethernet Switch Update",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "972ec047263bc0e3e06a9fa929c65923f1cae6ead59e0904d4fe7440c5e6847a-mxl862xxc-1085-signed-upgrade-dsa.cab",
+      "emulation-url": "c2973f267c338b9904238c9964f612260f789248d711247bda6485bf4750d2b4-mxl86252-emulation.zip",
+      "components": [
+        {
+          "name": "fw",
+          "protocol": "org.kernel.devlink",
+          "version": "1.0.85",
+          "guids": [
+            "d2a6f602-d988-5425-b686-5c1081576cce"
+          ]
+        }
+      ]
+    }
+  ]
+}
