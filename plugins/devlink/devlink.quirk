@@ -27,3 +27,23 @@ DevlinkFixedVersions = fw.psid
 # NVIDIA ConnectX-8
 [PCI\VEN_15B3&DEV_1023]
 DevlinkFixedVersions = fw.psid
+
+# MaxLinear MxL86252 Ethernet switch
+[DEVLINK\ASIC.ID_MaxLinear-MxL86252]
+Name = MxL86252 Ethernet Switch
+Vendor = MaxLinear
+DevlinkFixedVersions = asic.id
+[MDIO_BUS\COMPONENT_fw&ASIC.ID_MaxLinear MxL86252]
+Vendor = MaxLinear
+VendorId = DT:maxlinear
+Flags = omit-component-name,~usable-during-update,~dual-image
+
+# MaxLinear MxL86282 Ethernet switch
+[DEVLINK\ASIC.ID_MaxLinear-MxL86282]
+Name = MxL86282 Ethernet Switch
+Vendor = MaxLinear
+DevlinkFixedVersions = asic.id
+[MDIO_BUS\COMPONENT_fw&ASIC.ID_MaxLinear MxL86282]
+Vendor = MaxLinear
+VendorId = DT:maxlinear
+Flags = omit-component-name,~usable-during-update,~dual-image
