@@ -40,7 +40,16 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 	}
 
 	/* construct PCI sysfs path from bus_name (e.g., "pci/0000:01:00.0") */
-	pci_sysfs_path = g_strdup_printf("/sys/bus/pci/devices/%s", dev_name);
+	pci_sysfs_path = fu_context_build_filename(ctx,
+						   error,
+						   FU_PATH_KIND_SYSFSDIR,
+						   "bus",
+						   "pci",
+						   "devices",
+						   dev_name,
+						   NULL);
+	if (pci_sysfs_path == NULL)
+		return NULL;
 	pci_sysfs_real = fu_path_make_absolute(pci_sysfs_path, error);
 	if (pci_sysfs_real == NULL)
 		return NULL;
@@ -90,7 +99,16 @@ fu_devlink_backend_create_mdio_parent(FuDevlinkBackend *self,
 		return NULL;
 	}
 
-	mdio_sysfs_path = g_strdup_printf("/sys/bus/mdio_bus/devices/%s", dev_name);
+	mdio_sysfs_path = fu_context_build_filename(ctx,
+						    error,
+						    FU_PATH_KIND_SYSFSDIR,
+						    "bus",
+						    "mdio_bus",
+						    "devices",
+						    dev_name,
+						    NULL);
+	if (mdio_sysfs_path == NULL)
+		return NULL;
 	mdio_sysfs_real = fu_path_make_absolute(mdio_sysfs_path, error);
 	if (mdio_sysfs_real == NULL)
 		return NULL;
@@ -118,13 +136,14 @@ fu_devlink_backend_create_mdio_parent(FuDevlinkBackend *self,
 							  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 							  NULL);
 	if (compatible_blob != NULL && g_bytes_get_size(compatible_blob) > 0) {
-		g_autofree gchar *compatible = g_strndup(g_bytes_get_data(compatible_blob, NULL),
-							 g_bytes_get_size(compatible_blob));
-		g_auto(GStrv) parts = g_strsplit(compatible, ",", 2);
-		if (g_strv_length(parts) == 2) {
-			fu_device_build_vendor_id(mdio_device, "DT", parts[0]);
-			fu_device_add_instance_strsafe(mdio_device, "VEN", parts[0]);
-			fu_device_add_instance_strsafe(mdio_device, "DEV", parts[1]);
+		g_autofree gchar *compatible = fu_strsafe_bytes(compatible_blob, G_MAXSIZE);
+		if (compatible != NULL) {
+			g_auto(GStrv) parts = g_strsplit(compatible, ",", 2);
+			if (g_strv_length(parts) == 2) {
+				fu_device_build_vendor_id(mdio_device, "DT", parts[0]);
+				fu_device_add_instance_strsafe(mdio_device, "VEN", parts[0]);
+				fu_device_add_instance_strsafe(mdio_device, "DEV", parts[1]);
+			}
 		}
 	}
 
@@ -161,7 +180,7 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	FuDevice *old_devlink_device;
-	const gchar *instance_keys[] = {"VEN", "DEV", NULL};
+	const gchar *instance_keys[] = {"VEN", "DEV"};
 	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 
@@ -229,7 +248,7 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR |
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
-	for (guint i = 0; instance_keys[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(instance_keys); i++) {
 		const gchar *value = fu_device_get_instance_str(parent_device, instance_keys[i]);
 		if (value != NULL)
 			fu_device_add_instance_str(devlink_device, instance_keys[i], value);
