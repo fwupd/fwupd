@@ -13,8 +13,9 @@ import glob
 import sys
 import os
 import argparse
+import multiprocessing
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 from ctokenizer import Tokenizer, Node, NodeHint, Token, TokenHint
 
 
@@ -59,7 +60,7 @@ class Checker:
     failures: List[SourceFailure] = field(default_factory=list)
     _current_fn: Optional[str] = field(default=None, init=False)
     _current_nocheck: Optional[str] = field(default=None, init=False)
-    _gtype_parents: dict[str, str] = field(default_factory=dict, init=False)
+    _gtype_parents: Dict[str, str] = field(default_factory=dict)
     _klass_funcs: List[str] = field(default_factory=list, init=False)
     _expected_failure_prefixes: List[str] = field(default_factory=list, init=False)
 
@@ -1575,10 +1576,43 @@ class Checker:
         self._test_nodes(nodes)
 
 
+def _build_gtype_parents(fns: List[str]) -> Dict[str, str]:
+    """Pre-scan header files to build the GType parent map."""
+    gtype_parents: Dict[str, str] = {}
+    for fn in fns:
+        if not fn.endswith(".h"):
+            continue
+        with open(fn, "rb") as f:
+            try:
+                data = f.read().decode()
+            except UnicodeDecodeError as e:
+                print(f"failed to read {fn}: {e}", file=sys.stderr)
+                continue
+        tokenizer = Tokenizer(data)
+        for node in tokenizer.nodes:
+            if node.depth != 0:
+                continue
+            idx = node.tokens_pre.find_fuzzy(["~G_DECLARE_*_TYPE", "("])
+            if idx != -1:
+                gtype = node.tokens_pre[idx + 2].data
+                gtypeparent = node.tokens_pre[idx + 10].data
+                gtype_parents[gtype] = gtypeparent
+    return gtype_parents
+
+
+def _check_file(
+    args: Tuple[str, Dict[str, str], bool],
+) -> List[SourceFailure]:
+    """Check a single file -- top-level function for multiprocessing."""
+    fn, gtype_parents, verbose = args
+    print(f"checking {fn}…", file=sys.stderr)
+    checker = Checker(verbose=verbose, _gtype_parents=gtype_parents)
+    checker.test_file(fn)
+    return checker.failures
+
+
 def test_files(fns_optional: List[str], verbose: bool = False) -> int:
     # test all C and H files
-
-    checker = Checker(verbose=verbose)
 
     # use any file specified in argv, falling back to scanning the entire tree
     fns: List[str] = []
@@ -1597,14 +1631,30 @@ def test_files(fns_optional: List[str], verbose: bool = False) -> int:
         fns.extend(glob.glob("libfwupdplugin/*.[c|h]"))
         fns.extend(glob.glob("plugins/*/*.[c|h]"))
         fns.extend(glob.glob("src/*.[c|h]"))
-    for fn in sorted(fns, reverse=True):
-        if os.path.basename(fn) == "check-source.py":
-            continue
-        print(f"checking {fn}…", file=sys.stderr)
-        checker.test_file(fn)
+    fns = sorted(fns, reverse=True)
+    fns = [fn for fn in fns if os.path.basename(fn) != "check-source.py"]
+
+    # pre-scan .h files to build the GType parent map
+    gtype_parents = _build_gtype_parents(fns)
+
+    # check files in parallel (fall back to serial for verbose or small batches)
+    failures: List[SourceFailure] = []
+    if verbose or len(fns) < 4:
+        checker = Checker(verbose=verbose, _gtype_parents=gtype_parents)
+        for fn in fns:
+            print(f"checking {fn}…", file=sys.stderr)
+            checker.test_file(fn)
+        failures = checker.failures
+    else:
+        work = [(fn, gtype_parents, False) for fn in fns]
+        nprocs = min(os.cpu_count() or 1, len(fns))
+        with multiprocessing.Pool(processes=nprocs) as pool:
+            for file_failures in pool.imap_unordered(_check_file, work):
+                failures.extend(file_failures)
 
     # show issues
-    for failure in checker.failures:
+    failures.sort(key=lambda f: (f.fn or "", f.linecnt or 0))
+    for failure in failures:
         line: str = ""
         if failure.fn:
             line += failure.fn
@@ -1614,9 +1664,9 @@ def test_files(fns_optional: List[str], verbose: bool = False) -> int:
         if failure.nocheck:
             line += f" -- use a {failure.nocheck} comment to ignore"
         print(line)
-    if checker.failures:
-        print(f"{len(checker.failures)} failures!")
-    return 1 if checker.failures else 0
+    if failures:
+        print(f"{len(failures)} failures!")
+    return 1 if failures else 0
 
 
 def unit_test(fn: str, verbose: bool = False) -> int:

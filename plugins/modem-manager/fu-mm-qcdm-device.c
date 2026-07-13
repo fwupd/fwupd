@@ -118,6 +118,8 @@ fu_mm_qcdm_device_init(FuMmQcdmDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	/* we want the post-replugged GType to handle this */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "USB\\VID_05C6&PID_9008",
 				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);

@@ -2898,6 +2898,27 @@ fu_plugin_composite_release_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static void
+fu_engine_codec_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load dummy hwids */
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* dump */
+	str = fwupd_codec_to_string(FWUPD_CODEC(engine));
+	g_debug("%s", str);
+	g_assert_nonnull(str);
+}
+
+static void
 fu_engine_plugin_composite_func(void)
 {
 	FuDevice *dev_tmp;
@@ -3541,6 +3562,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
+	g_test_add_func("/fwupd/engine/codec", fu_engine_codec_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);

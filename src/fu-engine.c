@@ -162,7 +162,14 @@ enum {
 
 static guint quarks[QUARK_LAST] = {0};
 
-G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
+static void
+fu_engine_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEngine,
+		       fu_engine,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_codec_iface_init))
 
 gboolean
 fu_engine_get_loaded(FuEngine *self)
@@ -2103,6 +2110,9 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 static gboolean
 fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError **error)
 {
+#ifdef __ANDROID__
+	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("enforcing"));
+#else
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *filename = NULL;
 
@@ -2128,6 +2138,7 @@ fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError *
 		return TRUE;
 	}
 	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("permissive"));
+#endif
 	return TRUE;
 }
 
@@ -9415,6 +9426,22 @@ fu_engine_idle_inhibit_changed_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *sel
 		 * inhibits are being set up correctly */
 		fu_engine_context_power_changed(self);
 	}
+}
+
+static void
+fu_engine_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuEngine *self = FU_ENGINE(codec);
+	g_autoptr(GHashTable) metadata = fu_engine_get_report_metadata(self, NULL);
+	if (metadata != NULL)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
+	fwupd_codec_to_json(FWUPD_CODEC(self->device_list), json_obj, flags);
+}
+
+static void
+fu_engine_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_engine_add_json;
 }
 
 static void

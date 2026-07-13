@@ -6,8 +6,12 @@
 
 #include "config.h"
 
-#include <scsi/sg.h>
+/* clang-format off */
+#define __need_size_t
 #include <stddef.h>
+/* clang-format on */
+
+#include <scsi/sg.h>
 
 #include "fu-ata-device.h"
 
