@@ -565,7 +565,7 @@ fu_io_channel_read_raw(FuIOChannel *self,
 	if (buf != NULL)
 		memcpy(buf, tmp->data, MIN(tmp->len, bufsz)); /* nocheck:blocked */
 	if (bytes_read != NULL)
-		*bytes_read = tmp->len;
+		*bytes_read = MIN(tmp->len, bufsz);
 	return TRUE;
 }
 
