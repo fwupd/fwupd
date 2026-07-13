@@ -30,6 +30,13 @@ These devices use custom instance IDs consisting of the component name.
 
 Optionally, additional GUID might get generated as specified in the squirk file, see below.
 
+In addition, the devlink device itself gets a quirk-only instance ID for every
+"fixed version" reported by the kernel, e.g. `DEVLINK\ASIC.ID_MaxLinear-MxL86252`.
+The values are sanitised like all instance ID components, replacing spaces and
+other problematic characters with dashes. These IDs are not exported as GUIDs
+but can be used to match quirk entries for devices on buses without vendor and
+device IDs, for example to set `DevlinkFixedVersions`, a name or a vendor ID.
+
 ### Device Identification
 
 Devices are identified using their in the format:
