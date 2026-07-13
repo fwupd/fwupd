@@ -866,16 +866,17 @@ fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCod
 	if (self->dev_name != NULL)
 		fwupd_json_object_add_string(json_obj, "DevName", self->dev_name);
 
-	/* instance strings inherited from the parent device, which does not exist under
-	 * emulation */
-	if (fu_device_get_instance_str(device, "VEN") != NULL)
+	/* instance strings inherited from the parent, which does not exist under emulation */
+	if (fu_device_get_instance_str(device, "VEN") != NULL) {
 		fwupd_json_object_add_string(json_obj,
-					     "Ven",
+					     "Vid",
 					     fu_device_get_instance_str(device, "VEN"));
-	if (fu_device_get_instance_str(device, "DEV") != NULL)
+	}
+	if (fu_device_get_instance_str(device, "DEV") != NULL) {
 		fwupd_json_object_add_string(json_obj,
-					     "Dev",
+					     "Pid",
 					     fu_device_get_instance_str(device, "DEV"));
+	}
 }
 
 static gboolean
@@ -891,10 +892,14 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	/* devlink-specific properties */
 	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
 	dev_name = fwupd_json_object_get_string(json_obj, "DevName", NULL);
-	ven = fwupd_json_object_get_string(json_obj, "Ven", NULL);
+	ven = fwupd_json_object_get_string(json_obj, "Vid", NULL);
+	if (ven == NULL)
+		ven = fwupd_json_object_get_string(json_obj, "Ven", NULL);
 	if (ven != NULL)
 		fu_device_add_instance_str(device, "VEN", ven);
-	dev = fwupd_json_object_get_string(json_obj, "Dev", NULL);
+	dev = fwupd_json_object_get_string(json_obj, "Pid", NULL);
+	if (dev == NULL)
+		dev = fwupd_json_object_get_string(json_obj, "Dev", NULL);
 	if (dev != NULL)
 		fu_device_add_instance_str(device, "DEV", dev);
 

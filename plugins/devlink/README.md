@@ -29,7 +29,7 @@ These devices use custom instance IDs consisting of the component name.
 * `MDIO_BUS\COMPONENT_fw`
 * `MDIO_BUS\VEN_maxlinear&DEV_mxl86252&COMPONENT_fw`
 
-Optionally, additional GUID might get generated as specified in the squirk file, see below.
+Optionally, additional GUIDs might be generated as specified in the quirk file, see below.
 
 For devices attached via MDIO with an associated devicetree node, the vendor
 prefix and device name from the first "compatible" string are used as the
