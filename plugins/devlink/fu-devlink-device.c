@@ -699,6 +699,9 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 	if (fu_device_get_vid(device) != 0 && fu_device_get_pid(device) != 0) {
 		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+	}
+	if (fu_device_get_instance_str(device, "VEN") != NULL &&
+	    fu_device_get_instance_str(device, "DEV") != NULL) {
 		if (!fu_device_build_instance_id_full(device,
 						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						      error,
@@ -862,6 +865,17 @@ fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCod
 		fwupd_json_object_add_string(json_obj, "BusName", self->bus_name);
 	if (self->dev_name != NULL)
 		fwupd_json_object_add_string(json_obj, "DevName", self->dev_name);
+
+	/* instance strings inherited from the parent device, which does not exist under
+	 * emulation */
+	if (fu_device_get_instance_str(device, "VEN") != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     "Ven",
+					     fu_device_get_instance_str(device, "VEN"));
+	if (fu_device_get_instance_str(device, "DEV") != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     "Dev",
+					     fu_device_get_instance_str(device, "DEV"));
 }
 
 static gboolean
@@ -870,11 +884,19 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	const gchar *bus_name;
 	const gchar *dev_name;
+	const gchar *ven;
+	const gchar *dev;
 	g_autofree gchar *device_id = NULL;
 
 	/* devlink-specific properties */
 	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
 	dev_name = fwupd_json_object_get_string(json_obj, "DevName", NULL);
+	ven = fwupd_json_object_get_string(json_obj, "Ven", NULL);
+	if (ven != NULL)
+		fu_device_add_instance_str(device, "VEN", ven);
+	dev = fwupd_json_object_get_string(json_obj, "Dev", NULL);
+	if (dev != NULL)
+		fu_device_add_instance_str(device, "DEV", dev);
 
 	if (bus_name == NULL || dev_name == NULL) {
 		g_set_error_literal(error,
