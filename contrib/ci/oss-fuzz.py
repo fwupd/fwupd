@@ -331,7 +331,6 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-
     # libusb
     src = bld.checkout_source(
         "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"

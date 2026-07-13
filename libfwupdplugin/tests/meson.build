@@ -205,6 +205,24 @@ install_data(
 
 install_data(
   [
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/current_value',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/default_value',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/dell_modifier',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/dell_value_modifier',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/display_name',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/display_name_language_code',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/possible_values',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/type',
+  ],
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera',
+  ),
+  follow_symlinks: true,
+)
+
+install_data(
+  [
     'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/current_value',
     'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/display_name',
     'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/display_name_language_code',

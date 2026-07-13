@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 
 
 def _build_certs():
-
     # expire in 7 days to avoid people using these in production
     dt_activation = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     dt_expiration = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()

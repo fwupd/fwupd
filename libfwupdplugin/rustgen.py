@@ -88,7 +88,6 @@ class EnumObj:
         self._is_force_enum = False
 
     def c_method(self, suffix: str):
-
         # override
         if suffix in self._c_methods:
             return self._c_methods[suffix]
@@ -159,7 +158,6 @@ class EnumObj:
         self._exports[derive] = Export.PRIVATE
 
     def add_export_param(self, derive: str, value: str):
-
         if derive in ["FromString", "ToString"] and value == "enum":
             self._is_force_enum = True
             return
@@ -172,7 +170,6 @@ class EnumObj:
         raise ValueError(f"derive {derive} parameter {value} unknown")
 
     def add_public_export(self, derive: str) -> None:
-
         # split out the any derive params
         idx = derive.find("(")
         if idx != -1:
@@ -726,7 +723,6 @@ class Generator:
         return template_c.render(subst), template_h.render(subst)
 
     def _use_import(self, where: str, module: str, what: str) -> None:
-
         module_basename = module.replace("_", "-")
         try:
             fn = os.path.join(self.modules_map[where], f"fu-{module_basename}.rs")
@@ -924,7 +920,6 @@ class Generator:
                 struct_cur.items.append(item)
 
     def process_input(self, contents: str) -> Tuple[str, str]:
-
         # parse input
         self._parse_input(contents)
 
