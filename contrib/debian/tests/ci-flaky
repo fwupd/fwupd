@@ -1,0 +1,13 @@
+#!/bin/sh -e
+exec 2>&1
+# Flaky test suite - run the same tests as ci but mark them as potentially flaky
+# Individual flaky tests (like fwupdmgr-p2p.sh) check DEB_ALLOW_FLAKY_TESTS to decide if they should run
+modprobe mtdram || true
+fwupdtool enable-test-devices
+fwupdtool modify-config VerboseDomains "*"
+sed "s,ConditionVirtualization=.*,," \
+    /lib/systemd/system/fwupd.service > \
+    /etc/systemd/system/fwupd.service
+systemctl daemon-reload
+export DEB_ALLOW_FLAKY_TESTS=1
+gnome-desktop-testing-runner --timeout=1200 fwupd
