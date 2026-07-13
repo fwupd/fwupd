@@ -1,6 +1,11 @@
 Tests: ci
+Depends: kmod, jq, fwupd-tests
 Restrictions: needs-root
 
+Tests: ci-flaky
+Depends: kmod, jq, fwupd-tests
+Restrictions: needs-root, flaky
+
 Tests: libfwupd-dev
-Depends: build-essential, libfwupd-dev, pkg-config
+Depends: build-essential, libfwupd-dev, pkgconf
 Restrictions: allow-stderr, superficial
