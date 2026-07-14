@@ -28,7 +28,7 @@ These devices use custom instance IDs consisting of the component name.
 * `PCI\VEN_15B3&DEV_1021&COMPONENT_fw`
 * `MDIO_BUS\COMPONENT_fw`
 
-Optionally, additional GUID might get generated as specified in the squirk file, see below.
+Optionally, additional GUIDs might be generated as specified in the quirk file, see below.
 
 In addition, the devlink device itself gets a quirk-only instance ID for every
 "fixed version" reported by the kernel, e.g. `DEVLINK\ASIC.ID_MaxLinear-MxL86252`.
