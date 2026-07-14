@@ -15,4 +15,26 @@ enum FuCliArgFlag {
     NoDevicePrompt = 1 << 9,
     NoSecurityFix = 1 << 10,
     Sign = 1 << 11,
+    AllowReinstall = 1 << 12,
+    AllowOlder = 1 << 13,
+    AllowBranchSwitch = 1 << 14,
+    OnlyEmulated = 1 << 15,
+    Force = 1 << 16,
+    IgnoreRequirements = 1 << 17,
+    NoHistory = 1 << 18,
 }
+
+
+enum FuCliOperation {
+    Unknown,
+    Update,
+    Downgrade,
+    Install,
+    Read,
+}
+
+enum FuCliCmdFlags {
+	None = 0,
+	IsAlias = 1 << 0,
+}
+

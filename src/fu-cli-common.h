@@ -20,30 +20,6 @@
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
 typedef enum {
-	FU_CLI_CMD_FLAG_NONE = 0,
-	FU_CLI_CMD_FLAG_IS_ALIAS = 1 << 0,
-} G_GNUC_FLAG_ENUM FuCliCmdFlags;
-
-typedef struct FuCli FuCli;
-typedef gboolean (*FuCliCmdFunc)(FuCli *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
-typedef struct {
-	gchar *name;
-	gchar *arguments;
-	gchar *description;
-	FuCliCmdFlags flags;
-	FuCliCmdFunc callback;
-} FuCliCmd;
-
-typedef enum {
-	FU_CLI_OPERATION_UNKNOWN,
-	FU_CLI_OPERATION_UPDATE,
-	FU_CLI_OPERATION_DOWNGRADE,
-	FU_CLI_OPERATION_INSTALL,
-	FU_CLI_OPERATION_READ,
-	FU_CLI_OPERATION_LAST
-} FuCliOperation;
-
-typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_NONE = 0,
 	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES = 1 << 0,
 	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS = 1 << 1,
@@ -83,55 +59,11 @@ gboolean
 fu_cli_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
     G_GNUC_NON_NULL(1);
 
-GPtrArray *
-fu_cli_cmd_array_new(void);
-void
-fu_cli_cmd_array_add(GPtrArray *array,
-		     const gchar *name,
-		     const gchar *arguments,
-		     const gchar *description,
-		     FuCliCmdFunc callback) G_GNUC_NON_NULL(1, 2, 4);
-gchar *
-fu_cli_cmd_array_to_string(GPtrArray *array) G_GNUC_NON_NULL(1);
-void
-fu_cli_cmd_array_sort(GPtrArray *array) G_GNUC_NON_NULL(1);
-gboolean
-fu_cli_cmd_array_run(GPtrArray *array,
-		     FuCli *self,
-		     const gchar *command,
-		     gchar **values,
-		     GError **error) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_cli_branch_for_display(const gchar *branch);
 const gchar *
 fu_cli_request_get_message(FwupdRequest *req) G_GNUC_NON_NULL(1);
 
-gboolean
-fu_cli_parse_filter_device_flags(const gchar *filter,
-				 FwupdDeviceFlags *include,
-				 FwupdDeviceFlags *exclude,
-				 GError **error) G_GNUC_NON_NULL(1, 2, 3);
-gboolean
-fu_cli_parse_filter_release_flags(const gchar *filter,
-				  FwupdReleaseFlags *include,
-				  FwupdReleaseFlags *exclude,
-				  GError **error) G_GNUC_NON_NULL(1, 2, 3);
-gboolean
-fu_cli_parse_filter_protocol_flags(gchar **filters,
-				   GPtrArray *include,
-				   GPtrArray *exclude,
-				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
-GPtrArray *
-fu_cli_device_array_filter(GPtrArray *devices,
-			   FwupdDeviceFlags include,
-			   FwupdDeviceFlags exclude,
-			   GPtrArray *protocols_include,
-			   GPtrArray *protocols_exclude,
-			   GError **error) G_GNUC_NON_NULL(1, 4, 5);
-gboolean
-fu_cli_device_match_protocol(FwupdDevice *device,
-			     GPtrArray *protocols_include,
-			     GPtrArray *protocols_exclude) G_GNUC_NON_NULL(1, 2, 3);
 gchar *
 fu_cli_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt) G_GNUC_NON_NULL(1, 2);
 gchar *
@@ -142,8 +74,6 @@ const gchar *
 fu_cli_release_flag_to_string(FwupdReleaseFlags release_flag);
 const gchar *
 fu_cli_request_flag_to_string(FwupdRequestFlags request_flag);
-gint
-fu_cli_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);
 gchar *
 fu_cli_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
     G_GNUC_NON_NULL(1, 2);
@@ -180,7 +110,3 @@ void
 fu_cli_project_versions_as_json(FuConsole *console, GHashTable *metadata) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_cli_get_prgname(const gchar *argv0) G_GNUC_NON_NULL(1);
-gboolean
-fu_cli_has_arg_flag(FuCliArgFlag arg_flags, FuCliArgFlag arg_flag);
-void
-fu_cli_add_arg_flag(FuCliArgFlag *arg_flags, FuCliArgFlag arg_flag);
