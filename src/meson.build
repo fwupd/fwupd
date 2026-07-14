@@ -366,7 +366,10 @@ if host_machine.system() == 'android' and binder_ndk.found()
     link_language: 'c',
     install: true,
     install_rpath: libdir_pkg,
-    install_dir: daemon_dir
+    install_dir: daemon_dir,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
 
   fwupdmgr = executable(
@@ -395,6 +398,9 @@ if host_machine.system() == 'android' and binder_ndk.found()
     ],
     link_language: 'c', 
     install: true,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
 endif
 
