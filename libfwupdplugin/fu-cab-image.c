@@ -165,16 +165,16 @@ fu_cab_image_class_init(FuCabImageClass *klass)
 	object_class->finalize = fu_cab_image_finalize;
 	firmware_class->build = fu_cab_image_build;
 	firmware_class->export = fu_cab_image_export;
+#ifdef __x86_64__
+	fu_firmware_set_size_max(firmware_class, 16 * FU_GB);
+#else
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
+#endif
 }
 
 static void
 fu_cab_image_init(FuCabImage *self)
 {
-#ifdef __x86_64__
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_GB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 }
 
 /**

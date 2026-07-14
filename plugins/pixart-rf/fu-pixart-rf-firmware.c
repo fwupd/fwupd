@@ -41,7 +41,7 @@ fu_pixart_rf_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_pixart_rf_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -105,7 +105,7 @@ fu_pixart_rf_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_pixart_rf_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -294,7 +294,6 @@ fu_pixart_rf_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_pixart_rf_firmware_init(FuPixartRfFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -316,6 +315,7 @@ fu_pixart_rf_firmware_class_init(FuPixartRfFirmwareClass *klass)
 	firmware_class->build = fu_pixart_rf_firmware_build;
 	firmware_class->write = fu_pixart_rf_firmware_write;
 	firmware_class->export = fu_pixart_rf_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *

@@ -176,7 +176,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -292,7 +292,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* data first */
@@ -329,7 +329,6 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_uf2_firmware_init(FuUf2Firmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -338,6 +337,7 @@ fu_uf2_firmware_class_init(FuUf2FirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_uf2_firmware_parse;
 	firmware_class->write = fu_uf2_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }
 
 FuFirmware *

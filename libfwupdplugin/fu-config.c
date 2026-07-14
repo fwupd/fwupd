@@ -146,7 +146,8 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 			}
 		}
 		comment_group = g_key_file_get_comment(kf, groups[i], NULL, NULL);
-		if (comment_group != NULL && comment_group[0] != '\0') {
+		if (comment_group != NULL && comment_group[0] != '\0' &&
+		    g_key_file_has_group(priv->keyfile, groups[i])) {
 			if (!g_key_file_set_comment(priv->keyfile,
 						    groups[i],
 						    NULL,

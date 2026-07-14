@@ -114,7 +114,7 @@ fu_cabinet_verify_payload_target(FuCabinet *self,
 	g_autofree gchar *checksum_sha256 = NULL;
 	g_autofree gchar *checksum_sha512 = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FwupdJcatBlob) blob_target_sha256 = NULL;
 	g_autoptr(FwupdJcatBlob) blob_target_sha512 = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
@@ -232,7 +232,7 @@ fu_cabinet_parse_release(FuCabinet *self,
 	gsize streamsz = 0;
 	g_autofree gchar *basename = NULL;
 	g_autoptr(FuFirmware) img_blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local2 = NULL;
 	g_autoptr(GError) error_payload = NULL;
 	g_autoptr(XbNode) artifact = NULL;
@@ -307,7 +307,7 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents size invalid, expected "
-				    "%" G_GSIZE_FORMAT ", got %" G_GUINT64_FORMAT,
+				    "%zu, got %" G_GUINT64_FORMAT,
 				    streamsz,
 				    size);
 			return FALSE;
@@ -614,14 +614,16 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 		return FALSE;
 	}
 	if (g_str_has_suffix(fn, ".jcat")) {
-		g_autoptr(GInputStream) istream = NULL;
+		g_autoptr(FuInputStream) istream = NULL;
 		istream = fu_firmware_get_stream(img, error);
 		if (istream == NULL)
 			return FALSE;
 		/* TODO: move this to libjcat? */
 		if (!g_seekable_seek(G_SEEKABLE(istream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(self->jcat_file, istream, error)) {
+		if (!fwupd_jcat_file_import_stream(self->jcat_file,
+						   G_INPUT_STREAM(istream),
+						   error)) {
 			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
@@ -929,12 +931,12 @@ fu_cabinet_sign(FuCabinet *self,
 	/* load existing .jcat file if it exists */
 	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "firmware.jcat", NULL);
 	if (img != NULL) {
-		g_autoptr(GInputStream) stream = fu_firmware_get_stream(img, error);
+		g_autoptr(FuInputStream) stream = fu_firmware_get_stream(img, error);
 		if (stream == NULL)
 			return FALSE;
 		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(jcat_file, stream, error))
+		if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(stream), error))
 			return FALSE;
 	}
 
@@ -969,7 +971,7 @@ fu_cabinet_sign(FuCabinet *self,
 
 static gboolean
 fu_cabinet_parse(FuFirmware *firmware,
-		 GInputStream *stream,
+		 FuInputStream *stream,
 		 FuFirmwareParseFlags flags,
 		 GError **error)
 {
@@ -1113,7 +1115,6 @@ fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 static void
 fu_cabinet_init(FuCabinet *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), G_MAXUINT32); /* ~4GB */
 	self->builder = xb_builder_new();
 	self->jcat_file = fwupd_jcat_file_new();
 	self->jcat_context = fu_jcat_context_new();
@@ -1145,6 +1146,7 @@ fu_cabinet_class_init(FuCabinetClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_cabinet_finalize;
+	fu_firmware_set_size_max(firmware_class, G_MAXUINT32); /* ~4GB */
 	firmware_class->parse = fu_cabinet_parse;
 }
 

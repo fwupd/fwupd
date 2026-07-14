@@ -34,4 +34,5 @@ fu_goodixtp_firmware_class_init(FuGoodixtpFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->convert_version = fu_goodixtp_firmware_convert_version;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

@@ -18,14 +18,6 @@ plugin_builtin_uefi_mok = static_library('fu_plugin_uefi_mok',
 plugin_builtins += plugin_builtin_uefi_mok
 
 if get_option('tests')
-  install_data(
-    [
-      'tests/HSIStatus-nx-disabled',
-      'tests/HSIStatus-nx-invalid',
-      'tests/HSIStatus-nx-valid',
-    ],
-    install_dir: join_paths(installed_test_datadir, 'tests')
-  )
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
@@ -43,6 +35,7 @@ if get_option('tests')
     link_with: [
       fwupd,
       fwupdplugin,
+      libfutest,
       plugin_builtin_uefi_mok,
     ],
     install: true,

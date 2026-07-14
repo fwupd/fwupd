@@ -35,7 +35,7 @@ fu_acpi_phat_health_record_export(FuFirmware *firmware,
 
 static gboolean
 fu_acpi_phat_health_record_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -88,7 +88,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "device path not valid: %" G_GSIZE_FORMAT,
+				    "device path not valid: %zu",
 				    ubufsz);
 			return FALSE;
 		}
@@ -186,8 +186,6 @@ fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error
 static void
 fu_acpi_phat_health_record_init(FuAcpiPhatHealthRecord *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
@@ -210,6 +208,8 @@ fu_acpi_phat_health_record_class_init(FuAcpiPhatHealthRecordClass *klass)
 	firmware_class->write = fu_acpi_phat_health_record_write;
 	firmware_class->export = fu_acpi_phat_health_record_export;
 	firmware_class->build = fu_acpi_phat_health_record_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
 FuFirmware *

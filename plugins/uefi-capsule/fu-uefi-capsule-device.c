@@ -727,6 +727,8 @@ fu_uefi_capsule_device_get_esp(FuUefiCapsuleDevice *self)
  *
  * If `EFI_OS_DIR` has not been set then we look for the presence of the `systemd` directory,
  * falling back to the os-release `ID` or `ID_LIKE` directories.
+ * If no known directory is found, we create the `EFI/<ID>` (or `EFI/fwupd` if `ID` is not
+ * available) directory.
  *
  * Returns: (transfer full): a path or %NULL for error
  */
@@ -783,13 +785,12 @@ fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
 		}
 	}
 
-	/* nothing sensible to do*/
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_BROKEN_SYSTEM,
-		    "cannot find either EFI/systemd or EFI/%s in ESP",
-		    os_release_id);
-	return NULL;
+	/* create a directory for the OS ID so we can write the capsule there */
+	if (os_release_id == NULL)
+		os_release_id = g_strdup("fwupd");
+	if (!fu_path_mkdir(g_build_filename(esp_path, "EFI", os_release_id, NULL), error))
+		return NULL;
+	return g_build_filename(esp_path, "EFI", os_release_id, filename_built, NULL);
 #else
 	return g_build_filename(esp_path, "EFI", EFI_OS_DIR, filename_built, NULL);
 #endif
@@ -797,7 +798,7 @@ fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
 
 static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)
@@ -902,27 +903,6 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 }
 
 static void
@@ -965,6 +945,24 @@ fu_uefi_capsule_device_class_init(FuUefiCapsuleDeviceClass *klass)
 	device_class->get_results = fu_uefi_capsule_device_get_results;
 	device_class->set_progress = fu_uefi_capsule_device_set_progress;
 	device_class->convert_version = fu_uefi_capsule_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 
 	/**
 	 * FuUefiCapsuleDevice:fw-class:

@@ -54,7 +54,7 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -85,7 +85,7 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 		if (!fu_input_stream_read_u8(stream, 1, &data_size, error))
 			return FALSE;
 	} else {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		if (data_size == 1) {
 			guint8 value = 0;
 			if (!fu_input_stream_read_u8(stream, 1, &value, error))
@@ -180,13 +180,13 @@ static void
 fu_hid_report_item_init(FuHidReportItem *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
 fu_hid_report_item_class_init(FuHidReportItemClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	firmware_class->export = fu_hid_report_item_export;
 	firmware_class->parse = fu_hid_report_item_parse;
 	firmware_class->write = fu_hid_report_item_write;

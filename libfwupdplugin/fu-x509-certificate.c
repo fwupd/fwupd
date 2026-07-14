@@ -176,7 +176,7 @@ fu_x509_certificate_get_activation_time(FuX509Certificate *self)
 
 static gboolean
 fu_x509_certificate_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -423,7 +423,6 @@ fu_x509_certificate_write(FuFirmware *firmware, GError **error)
 static void
 fu_x509_certificate_init(FuX509Certificate *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

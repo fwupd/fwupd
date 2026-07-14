@@ -572,7 +572,7 @@ static gboolean
 fu_igsc_device_update_start(FuIgscDevice *self,
 			    guint32 payload_type,
 			    GBytes *fw_info,
-			    GInputStream *fw,
+			    FuInputStream *fw,
 			    GError **error)
 {
 	guint8 res_buf[FU_IGSC_FWU_HECI_START_RES_SIZE] = {0};
@@ -703,7 +703,7 @@ gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuProgress *progress,
 			  GError **error)
 {
@@ -828,7 +828,7 @@ fu_igsc_device_write_firmware(FuDevice *device,
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* get image, and install on ourself */
 	fw_info =
@@ -878,10 +878,6 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IGSC_CODE_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_SKU);
 }
 
 static void
@@ -906,4 +902,8 @@ fu_igsc_device_class_init(FuIgscDeviceClass *klass)
 	device_class->probe = fu_igsc_device_probe;
 	device_class->check_firmware = fu_igsc_device_check_firmware;
 	device_class->write_firmware = fu_igsc_device_write_firmware;
+	fu_device_register_private_flag(device_class, FU_IGSC_DEVICE_FLAG_HAS_AUX);
+	fu_device_register_private_flag(device_class, FU_IGSC_DEVICE_FLAG_HAS_OPROM);
+	fu_device_register_private_flag(device_class, FU_IGSC_DEVICE_FLAG_IS_WEDGED);
+	fu_device_register_private_flag(device_class, FU_IGSC_DEVICE_FLAG_HAS_SKU);
 }

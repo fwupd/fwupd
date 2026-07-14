@@ -69,7 +69,7 @@ fu_efi_guid_to_name(const gchar *guid)
 /**
  * fu_efi_parse_sections:
  * @firmware: #FuFirmware
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @flags: #FuFirmwareParseFlags
  * @error: (nullable): optional return location for an error
  *
@@ -81,7 +81,7 @@ fu_efi_guid_to_name(const gchar *guid)
  **/
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
@@ -92,7 +92,7 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		return FALSE;
 	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = fu_efi_section_new();
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* parse maximum payload */
 		partial_stream =

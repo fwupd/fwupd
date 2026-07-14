@@ -338,8 +338,6 @@ fu_logitech_hidpp_bootloader_init(FuLogitechHidppBootloader *self)
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver (bootloader)");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 
@@ -351,4 +349,5 @@ fu_logitech_hidpp_bootloader_class_init(FuLogitechHidppBootloaderClass *klass)
 	device_class->attach = fu_logitech_hidpp_bootloader_attach;
 	device_class->setup = fu_logitech_hidpp_bootloader_setup;
 	device_class->replace = fu_logitech_hidpp_bootloader_replace;
+	fu_device_register_private_flag(device_class, FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED);
 }

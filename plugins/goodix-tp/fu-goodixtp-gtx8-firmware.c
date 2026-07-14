@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuGoodixtpGtx8Firmware, fu_goodixtp_gtx8_firmware, FU_TYPE_GOODIXT
 
 gboolean
 fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				guint8 sensor_id,
 				GError **error)
 {
@@ -227,13 +227,14 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 static void
 fu_goodixtp_gtx8_firmware_init(FuGoodixtpGtx8Firmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void
 fu_goodixtp_gtx8_firmware_class_init(FuGoodixtpGtx8FirmwareClass *klass)
 {
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_images_max(firmware_class, 1024);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 }
 
 FuFirmware *

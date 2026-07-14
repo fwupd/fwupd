@@ -1,0 +1,23 @@
+{
+  "id": "org.fwupd.hsi.HwDiskEncryption",
+  "name": "Hardware Disk Encryption",
+  "description": [
+    "Hardware disk encryption (for example, TCG Opal) is used by storage devices to protect the contained data."
+  ],
+  "failure-impact": [
+    "An attacker with physical access may be able to read data from removed storage media."
+  ],
+  "failure-results": {
+    "not-enabled": "Disk encryption is not enabled",
+    "not-supported": "Disk encryption is not available"
+  },
+  "success-results": {
+    "enabled": "Disk encryption is enabled"
+  },
+  "hsi-level": 4,
+  "resolution": "Ensure that the internal storage device supports TCG Opal, and ensure it is enabled in the UEFI setup screen.",
+  "references": {
+    "https://trustedcomputinggroup.org/resource/storage-work-group-storage-security-subsystem-class-opal/": "TCG Storage Opal specification"
+  },
+  "fwupd-version": "2.1.7"
+}

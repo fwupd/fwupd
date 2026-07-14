@@ -131,10 +131,10 @@ struct _FuEngine {
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
-	GPtrArray *disabled_devices;   /* (element-type utf-8) */
-	GPtrArray *disabled_plugins;   /* (element-type utf-8) */
-	GPtrArray *trusted_reports;    /* (element-type FwupdReport) */
-	GArray *trusted_uids;	       /* (element-type guint64) */
+	GPtrArray *disabled_devices; /* (element-type utf-8) */
+	GPtrArray *disabled_plugins; /* (element-type utf-8) */
+	GPtrArray *trusted_reports;  /* (element-type FwupdReport) */
+	GArray *trusted_uids;	     /* (element-type guint64) */
 };
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };
@@ -162,7 +162,14 @@ enum {
 
 static guint quarks[QUARK_LAST] = {0};
 
-G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
+static void
+fu_engine_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEngine,
+		       fu_engine,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_codec_iface_init))
 
 gboolean
 fu_engine_get_loaded(FuEngine *self)
@@ -594,7 +601,8 @@ fu_engine_ensure_device_maybe_remove_affects_fde(FuEngine *self, FuDevice *devic
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
 		return;
 	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER) &&
-	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD)) {
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK)) {
 		g_debug("removing affects-fde from %s as no FDE detected",
 			fu_device_get_id(device));
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
@@ -929,7 +937,7 @@ fu_engine_get_releases_for_container_checksum(FuEngine *self, const gchar *csum)
 
 /* does this exist in any enabled remote */
 gchar *
-fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
+fu_engine_get_remote_id_for_stream(FuEngine *self, FuInputStream *stream)
 {
 	GChecksumType checksum_types[] = {
 	    G_CHECKSUM_SHA256,
@@ -937,7 +945,7 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 	};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 
 	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *csum = NULL;
@@ -1040,7 +1048,6 @@ fu_engine_modify_config(FuEngine *self,
 		    "IgnoreEfivarsFreeSpace",
 		    "IgnorePower",
 		    "IgnoreRequirements",
-		    "OnlyTrusted",
 		    "OnlyTrustPostQuantumSignatures",
 		    "P2pPolicy",
 		    "ReleaseDedupe",
@@ -1049,12 +1056,12 @@ fu_engine_modify_config(FuEngine *self,
 		    "ShowDevicePrivate",
 		    "TestDevices",
 		    "TrustedReports",
-		    "TrustedUids",
 		    "UpdateMotd",
 		    "UriSchemes",
 		    "VerboseDomains",
 		    NULL,
 		};
+		/* OnlyTrusted / TrustedUids are intentionally NOT writable at runtime */
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -1991,7 +1998,7 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 	 *    ProductVersion: 10.14.6
 	 *    BuildVersion:   18G103
 	 */
-	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error)) /* nocheck:blocked */
 		return FALSE;
 	split = g_strsplit(stdout, "\n", -1);
 	for (guint j = 0; split[j] != NULL; j++) {
@@ -2103,6 +2110,9 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 static gboolean
 fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError **error)
 {
+#ifdef __ANDROID__
+	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("enforcing"));
+#else
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *filename = NULL;
 
@@ -2128,6 +2138,7 @@ fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError *
 		return TRUE;
 	}
 	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("permissive"));
+#endif
 	return TRUE;
 }
 
@@ -2293,7 +2304,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
 	/* this is the architecture of the userspace, e.g. i686 would be returned for
 	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
-	tmp = (const gchar *)getauxval(AT_PLATFORM);
+	tmp = (const gchar *)getauxval(AT_PLATFORM); /* NOLINT(performance-no-int-to-ptr) */
 	if (tmp == NULL) {
 		tmp = name_tmp.machine;
 		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);
@@ -2470,7 +2481,7 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 {
 #ifdef HAVE_PASSIM
 	FuDevice *device = fu_release_get_device(release);
-	GInputStream *stream = fu_release_get_stream(release);
+	FuInputStream *stream = fu_release_get_stream(release);
 
 	/* lazy load */
 	fu_engine_ensure_passim_client(self);
@@ -2495,7 +2506,7 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		if (!fu_input_stream_size(stream, &streamsz, error))
 			return FALSE;
 		passim_item_set_size(passim_item, streamsz);
-		passim_item_set_stream(passim_item, stream);
+		passim_item_set_stream(passim_item, G_INPUT_STREAM(stream));
 		passim_item_set_hash(passim_item, checksum);
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
@@ -2893,7 +2904,7 @@ fu_engine_install_release(FuEngine *self,
 	FuEngineRequest *request = fu_release_get_request(release);
 	FuPlugin *plugin;
 	FwupdFeatureFlags feature_flags = FWUPD_FEATURE_FLAG_NONE;
-	GInputStream *stream = fu_release_get_stream(release);
+	FuInputStream *stream = fu_release_get_stream(release);
 	const gchar *tmp;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -3090,12 +3101,12 @@ fu_engine_get_plugin_by_name(FuEngine *self, const gchar *name, GError **error)
 }
 
 gboolean
-fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
+fu_engine_emulation_load(FuEngine *self, FuInputStream *stream, GError **error)
 {
 	gsize streamsz = 0;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
@@ -3270,7 +3281,7 @@ fu_engine_device_check_power(FuEngine *self,
 static FuFirmware *
 fu_engine_prepare_firmware(FuEngine *self,
 			   const gchar *device_id,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
@@ -3809,7 +3820,7 @@ fu_engine_install_loop(FuEngine *self,
 		       FuProgress *progress,
 		       GError **error)
 {
-	GInputStream *stream_fw;
+	FuInputStream *stream_fw;
 	gsize streamsz = 0;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -4336,7 +4347,7 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 				     GError **error)
 {
 	FuEngine *self = FU_ENGINE(user_data);
-	GInputStream *stream = xb_builder_source_ctx_get_stream(ctx);
+	GInputStream *stream = xb_builder_source_ctx_get_stream(ctx); /* nocheck:blocked */
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
@@ -4351,7 +4362,8 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
-	return g_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+	return G_INPUT_STREAM(
+	    fu_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free));
 }
 
 static XbBuilderSource *
@@ -4810,7 +4822,7 @@ static FuJcatResult *
 fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FuInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
@@ -4824,7 +4836,7 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+	if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(istream), error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -4913,7 +4925,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FuInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
@@ -4942,8 +4954,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
-	istream = g_memory_input_stream_new_from_bytes(bytes_sig);
-	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
+	if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(istream), error))
 		return FALSE;
 
 	/* distrusting RSA? */
@@ -5057,8 +5069,8 @@ fu_engine_update_metadata(FuEngine *self,
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autoptr(FuInputStream) stream_fd = NULL;
+	g_autoptr(FuInputStream) stream_sig = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -5070,8 +5082,14 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
 	if (stream_fd == NULL)
 		return FALSE;
+	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_fd),
+							error))
+		return FALSE;
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
 	if (stream_sig == NULL)
+		return FALSE;
+	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_sig),
+							error))
 		return FALSE;
 
 	/* read the entire file into memory */
@@ -5100,7 +5118,7 @@ fu_engine_update_metadata(FuEngine *self,
 /**
  * fu_engine_build_cabinet_from_stream:
  * @self: a #FuEngine
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @error: (nullable): optional return location for an error
  *
  * Creates a silo from a .cab file blob.
@@ -5108,13 +5126,13 @@ fu_engine_update_metadata(FuEngine *self,
  * Returns: (transfer container): a #XbSilo, or %NULL
  **/
 FuCabinet *
-fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
+fu_engine_build_cabinet_from_stream(FuEngine *self, FuInputStream *stream, GError **error)
 {
 	FuFirmwareParseFlags flags = FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM;
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* distrusting RSA? */
@@ -5123,7 +5141,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
-	fu_firmware_set_size_max(FU_FIRMWARE(cabinet),
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(cabinet),
 				 fu_context_get_config_u64(self->ctx, "ArchiveSizeMax"));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet), stream, 0x0, flags, error))
@@ -5259,7 +5277,7 @@ fu_engine_get_details_sort_cb(gconstpointer a, gconstpointer b)
  * fu_engine_get_details:
  * @self: a #FuEngine
  * @request: a #FuEngineRequest
- * @stream: a seekable #GInputStream
+ * @stream: a seekable #FuInputStream
  * @error: (nullable): optional return location for an error
  *
  * Gets the details about a local file.
@@ -5271,7 +5289,7 @@ fu_engine_get_details_sort_cb(gconstpointer a, gconstpointer b)
 GPtrArray *
 fu_engine_get_details(FuEngine *self,
 		      FuEngineRequest *request,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      GError **error)
 {
 	GChecksumType checksum_types[] = {
@@ -5285,7 +5303,7 @@ fu_engine_get_details(FuEngine *self,
 	g_autoptr(GPtrArray) rels_by_csum = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	cabinet = fu_engine_build_cabinet_from_stream(self, stream, error);
@@ -5692,7 +5710,7 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 	}
 
 	/* deep copy so the remote list can be kept up to date */
-	return g_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, NULL);
+	return fu_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, g_object_unref);
 }
 
 /**
@@ -6685,40 +6703,38 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 }
 
 static void
-fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
+fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
+	fu_device_set_parent(device, parent);
+	if (fu_engine_get_loaded(self)) {
+		fu_engine_ensure_device_supported(self, device);
+		fu_engine_ensure_device_supported(self, parent);
 	}
 }
 
 static void
-fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
+fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	fu_device_set_parent(device, parent);
-	fu_engine_ensure_device_supported(self, device);
-	fu_engine_ensure_device_supported(self, parent);
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
 }
 
 static void
@@ -7013,8 +7029,9 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* check if the device needs emulation-tag */
 	fu_engine_ensure_device_emulation_tag(self, device);
 
-	/* set or clear the SUPPORTED flag */
-	fu_engine_ensure_device_supported(self, device);
+	/* set or clear the SUPPORTED flag right away when doing device holdplug */
+	if (fu_engine_get_loaded(self))
+		fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
@@ -7673,9 +7690,8 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
-	g_autoptr(GFile) file = g_file_new_for_path(fn);
-	g_autoptr(GInputStream) istream_json = NULL;
-	g_autoptr(GInputStream) istream_raw = NULL;
+	g_autoptr(FuInputStream) istream_json = NULL;
+	g_autoptr(FuInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 
@@ -7692,7 +7708,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	fu_security_attrs_append(self->host_security_attrs, attr);
 
 	/* add from file */
-	istream_raw = G_INPUT_STREAM(g_file_read(file, NULL, error));
+	istream_raw = fu_input_stream_from_path(fn, error);
 	if (istream_raw == NULL)
 		return FALSE;
 	if (g_str_has_suffix(fn, ".gz")) {
@@ -8054,10 +8070,9 @@ fu_engine_cleanup_state(GError **error)
 static gboolean
 fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 {
-	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	const gchar *tmp;
 	g_autofree gchar *dirname = NULL;
-	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(pstore);
+	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(self->ctx);
 	g_autoptr(GHashTable) hashtable = NULL;
 	g_autoptr(GDir) dir = NULL;
 
@@ -8205,7 +8220,7 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 
 	/* useful for fwupdtool get-devices --show-all --force */
 	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_COLDPLUG_FORCE) > 0 &&
-	    possible_plugins->len == 0) {
+	    possible_plugins == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
 		locker = fu_device_locker_new(device, &error_local);
@@ -8219,6 +8234,10 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 		}
 		return;
 	}
+
+	/* nothing to do */
+	if (possible_plugins == NULL)
+		return;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -8313,7 +8332,7 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 
 	/* there's no point keeping this in the cache */
 	possible_plugins = fu_device_get_possible_plugins(device);
-	if (possible_plugins->len == 0) {
+	if (possible_plugins == NULL) {
 		g_debug("removing %s from backend cache as no possible plugin",
 			fu_device_get_backend_id(device));
 		fu_backend_device_removed(backend, device);
@@ -8720,7 +8739,7 @@ fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
 
 		/* there's no point keeping this in the cache */
 		possible_plugins = fu_device_get_possible_plugins(device);
-		if (possible_plugins->len == 0) {
+		if (possible_plugins == NULL) {
 			g_debug("removing %s from backend cache as no possible plugin",
 				fu_device_get_backend_id(device));
 			fu_backend_device_removed(backend, device);
@@ -8805,6 +8824,22 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 		}
 		fu_progress_step_done(progress);
 	}
+}
+
+static void
+fu_engine_ensure_devices_supported_cb(gpointer data, gpointer user_data)
+{
+	FuDevice *device = FU_DEVICE(data);
+	FuEngine *self = FU_ENGINE(user_data);
+	fu_engine_ensure_device_supported(self, device);
+}
+
+/* exported for the self tests */
+void
+fu_engine_ensure_devices_supported(FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+	g_ptr_array_foreach(devices, fu_engine_ensure_devices_supported_cb, self);
 }
 
 /**
@@ -9108,6 +9143,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_progress_step_done(progress);
 	}
 
+	/* rerun <requires> checks against the full device tree */
+	fu_engine_ensure_devices_supported(self);
+
 	/* dump plugin information to the console */
 	if (g_log_get_debug_enabled()) {
 		g_autoptr(GString) str = g_string_new(NULL);
@@ -9388,6 +9426,22 @@ fu_engine_idle_inhibit_changed_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *sel
 		 * inhibits are being set up correctly */
 		fu_engine_context_power_changed(self);
 	}
+}
+
+static void
+fu_engine_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuEngine *self = FU_ENGINE(codec);
+	g_autoptr(GHashTable) metadata = fu_engine_get_report_metadata(self, NULL);
+	if (metadata != NULL)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
+	fwupd_codec_to_json(FWUPD_CODEC(self->device_list), json_obj, flags);
+}
+
+static void
+fu_engine_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_engine_add_json;
 }
 
 static void

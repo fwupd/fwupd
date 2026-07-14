@@ -17,12 +17,12 @@ G_DEFINE_TYPE(FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_bcm57xx_stage2_image_parse(FuFirmware *image,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream_nocrc = NULL;
+	g_autoptr(FuInputStream) stream_nocrc = NULL;
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
@@ -71,7 +71,6 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 static void
 fu_bcm57xx_stage2_image_init(FuBcm57xxStage2Image *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -80,6 +79,7 @@ fu_bcm57xx_stage2_image_class_init(FuBcm57xxStage2ImageClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_bcm57xx_stage2_image_parse;
 	firmware_class->write = fu_bcm57xx_stage2_image_write;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuFirmware *

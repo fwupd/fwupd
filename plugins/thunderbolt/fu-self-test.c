@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "fu-context-private.h"
+#include "fu-file-input-stream.h"
 #include "fu-plugin-private.h"
 #include "fu-thunderbolt-plugin.h"
 #include "fu-udev-device-private.h"
@@ -222,7 +223,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 {
 	g_autoptr(GFile) nvm_device = NULL;
 	g_autoptr(GFile) nvm = NULL;
-	g_autoptr(GInputStream) is = NULL;
+	g_autoptr(FuInputStream) is = NULL;
 	g_autoptr(GChecksum) chk = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *sum_data = NULL;
@@ -238,7 +239,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	nvm_device = g_file_new_for_path(node->nvm_non_active);
 	nvm = g_file_get_child(nvm_device, "nvmem");
 
-	is = (GInputStream *)g_file_read(nvm, NULL, &error);
+	is = fu_file_input_stream_from_file(nvm, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(is);
 
@@ -246,7 +247,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 		g_autoptr(GBytes) b = NULL;
 		const guchar *d;
 
-		b = g_input_stream_read_bytes(is, 4096, NULL, &error);
+		b = g_input_stream_read_bytes(G_INPUT_STREAM(is), 4096, NULL, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(is);
 
@@ -331,7 +332,7 @@ write_controller_fw(const gchar *nvm)
 	g_autoptr(GFile) nvmem = NULL;
 	g_autofree gchar *fw_path = NULL;
 	g_autoptr(GBytes) fw_blob = NULL;
-	g_autoptr(GInputStream) is = NULL;
+	g_autoptr(FuInputStream) is = NULL;
 	g_autoptr(GOutputStream) os = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuFirmware) firmware_ctl = NULL;
@@ -356,7 +357,7 @@ write_controller_fw(const gchar *nvm)
 	g_assert_no_error(error);
 	g_assert_nonnull(os);
 
-	is = g_memory_input_stream_new_from_bytes(fw_blob);
+	is = fu_memory_input_stream_new_from_bytes(fw_blob);
 
 	n = g_output_stream_splice(os, is, G_OUTPUT_STREAM_SPLICE_NONE, NULL, &error);
 	g_assert_no_error(error);
@@ -857,7 +858,7 @@ typedef struct FuThunderboltTest {
 
 	/* if FuThunderboltTestParam::firmware_file is nonnull */
 	GBytes *fw_data;
-	GInputStream *fw_stream;
+	FuInputStream *fw_stream;
 
 } FuThunderboltTest;
 
@@ -965,7 +966,7 @@ test_set_up(FuThunderboltTest *tt, gconstpointer params)
 		tt->fw_data = fu_firmware_write(firmware, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(tt->fw_data);
-		tt->fw_stream = g_memory_input_stream_new_from_bytes(tt->fw_data);
+		tt->fw_stream = fu_memory_input_stream_new_from_bytes(tt->fw_data);
 		g_assert_nonnull(tt->fw_stream);
 	}
 }

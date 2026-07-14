@@ -202,7 +202,7 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) data_part = NULL;
 	g_autoptr(GBytes) data_xml = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;

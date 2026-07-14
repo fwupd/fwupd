@@ -59,7 +59,7 @@ fu_steelseries_device_request(FuSteelseriesDevice *self, const GByteArray *buf, 
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
+			    "only wrote %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -97,7 +97,7 @@ fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only read %" G_GSIZE_FORMAT "bytes",
+			    "only read %zu bytes",
 			    actual_len);
 		return NULL;
 	}
@@ -215,7 +215,6 @@ fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
 	priv->ep_in_size = FU_STEELSERIES_BUFFER_CONTROL_SIZE;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 }
 
@@ -226,4 +225,5 @@ fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
 	device_class->to_string = fu_steelseries_device_to_string;
 	device_class->probe = fu_steelseries_device_probe;
 	device_class->set_quirk_kv = fu_steelseries_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 }

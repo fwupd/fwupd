@@ -659,6 +659,7 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 
 	/* set flags */
 	if (g_pattern_match_simple("Base.*.ResetRequired", message_id) ||
+	    g_pattern_match_simple("iLO.*.SystemResetRequired", message_id) ||
 	    g_pattern_match_simple("IDRAC.*.JCP001", message_id) ||
 	    g_pattern_match_simple("IDRAC.*.RED014", message_id)) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -747,13 +748,67 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 	return TRUE;
 }
 
+/**
+ * fu_redfish_device_parse_message:
+ * @self: a #FuRedfishDevice
+ * @json_message: a #FwupdJsonObject holding `MessageId` and `Message` members
+ * @progress: a #FuProgress
+ * @messages_seen: (nullable): a #GHashTable used to deduplicate already-handled
+ *     messages, or %NULL to handle every message
+ * @message: (nullable): a #GString updated in-place with the `Message` string
+ *     when one is present, or %NULL to ignore it
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads the `MessageId` and `Message` members from a Redfish message object and
+ * dispatches them to fu_redfish_device_parse_message_id().
+ *
+ * When @messages_seen is set, a message that has already been handled is skipped
+ * so its side effects are not applied twice. When @message is set and the object
+ * carries a `Message` string, @message is assigned that value; otherwise it is
+ * left untouched so any default it was seeded with is preserved.
+ *
+ * Returns: %TRUE on success
+ **/
+gboolean
+fu_redfish_device_parse_message(FuRedfishDevice *self,
+				FwupdJsonObject *json_message,
+				FuProgress *progress,
+				GHashTable *messages_seen,
+				GString *message,
+				GError **error)
+{
+	const gchar *message_id;
+	const gchar *message_tmp;
+
+	message_id = fwupd_json_object_get_string(json_message, "MessageId", NULL);
+	message_tmp = fwupd_json_object_get_string(json_message, "Message", NULL);
+	if (message != NULL && message_tmp != NULL)
+		g_string_assign(message, message_tmp);
+
+	/* ignore messages we've seen before */
+	if (messages_seen != NULL) {
+		g_autofree gchar *message_key =
+		    message_tmp == NULL ? g_strdup(message_id)
+					: g_strdup_printf("%s;%s", message_id, message_tmp);
+		if (g_hash_table_contains(messages_seen, message_key)) {
+			g_debug("ignoring %s", message_key);
+			return TRUE;
+		}
+		g_hash_table_add(messages_seen, g_steal_pointer(&message_key));
+	}
+
+	/* use the message */
+	g_debug("message [%s]: %s", message_id, message_tmp);
+	return fu_redfish_device_parse_message_id(self, message_id, message_tmp, progress, error);
+}
+
 static gboolean
 fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *ctx, GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *message = "Unknown failure";
 	const gchar *state_tmp;
 	gint64 pc = 0;
+	g_autoptr(GString) message = g_string_new("Unknown failure");
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
 	g_autoptr(FwupdJsonArray) json_msgs = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
@@ -780,32 +835,18 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	json_msgs = fwupd_json_object_get_array(json_obj, "Messages", NULL);
 	if (json_msgs != NULL) {
 		for (guint i = 0; i < fwupd_json_array_get_size(json_msgs); i++) {
-			const gchar *message_id;
-			g_autofree gchar *message_key = NULL;
 			g_autoptr(FwupdJsonObject) json_message = NULL;
 
 			/* set additional device properties */
 			json_message = fwupd_json_array_get_object(json_msgs, i, error);
 			if (json_message == NULL)
 				return FALSE;
-			message_id = fwupd_json_object_get_string(json_message, "MessageId", NULL);
-			message = fwupd_json_object_get_string(json_message, "Message", NULL);
-
-			/* ignore messages we've seen before */
-			message_key = g_strdup_printf("%s;%s", message_id, message);
-			if (g_hash_table_contains(ctx->messages_seen, message_key)) {
-				g_debug("ignoring %s", message_key);
-				continue;
-			}
-			g_hash_table_add(ctx->messages_seen, g_steal_pointer(&message_key));
-
-			/* use the message */
-			g_debug("message #%u [%s]: %s", i, message_id, message);
-			if (!fu_redfish_device_parse_message_id(self,
-								message_id,
-								message,
-								ctx->progress,
-								error))
+			if (!fu_redfish_device_parse_message(self,
+							     json_message,
+							     ctx->progress,
+							     ctx->messages_seen,
+							     message,
+							     error))
 				return FALSE;
 		}
 	}
@@ -831,7 +872,7 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	}
 	if (g_strcmp0(state_tmp, "Exception") == 0 ||
 	    g_strcmp0(state_tmp, "UserIntervention") == 0) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, message);
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, message->str);
 		return FALSE;
 	}
 
@@ -999,12 +1040,6 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 }
 
 static void
@@ -1034,6 +1069,12 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	device_class->to_string = fu_redfish_device_to_string;
 	device_class->probe = fu_redfish_device_probe;
 	device_class->set_quirk_kv = fu_redfish_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
+	fu_device_register_private_flag(device_class,
+					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 
 	/**
 	 * FuRedfishDevice:backend:

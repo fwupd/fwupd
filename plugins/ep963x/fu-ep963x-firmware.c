@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuEp963xFirmware, fu_ep963x_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_ep963x_firmware_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -29,7 +29,7 @@ fu_ep963x_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ep963x_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -64,4 +64,5 @@ fu_ep963x_firmware_class_init(FuEp963xFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->validate = fu_ep963x_firmware_validate;
 	firmware_class->parse = fu_ep963x_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 }

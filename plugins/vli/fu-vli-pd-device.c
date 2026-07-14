@@ -898,8 +898,6 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_VLI_PD_FIRMWARE);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM);
 
 	/* connect up attach or detach vfuncs when kind is known */
 	g_signal_connect(FU_VLI_DEVICE(self),
@@ -928,4 +926,6 @@ fu_vli_pd_device_class_init(FuVliPdDeviceClass *klass)
 	vli_device_class->spi_write_data = fu_vli_pd_device_spi_write_data;
 	vli_device_class->spi_write_enable = fu_vli_pd_device_spi_write_enable;
 	vli_device_class->spi_write_status = fu_vli_pd_device_spi_write_status;
+	fu_device_register_private_flag(device_class, FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186);
+	fu_device_register_private_flag(device_class, FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM);
 }

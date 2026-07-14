@@ -237,7 +237,7 @@ fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
+			    "only wrote %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -269,7 +269,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 	}
 	if (actual_len != datasz) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
+			     "only read %zu bytes", actual_len);
 		return FALSE;
 	}
 	return TRUE;
@@ -377,7 +377,7 @@ fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only read %" G_GSIZE_FORMAT "bytes",
+			    "only read %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -453,7 +453,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -545,7 +545,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_rts54hub_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)

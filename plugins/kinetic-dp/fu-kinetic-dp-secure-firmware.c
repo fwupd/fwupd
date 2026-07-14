@@ -51,7 +51,7 @@ fu_kinetic_dp_secure_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_kinetic_dp_secure_firmware_parse_chip_id(GInputStream *stream,
+fu_kinetic_dp_secure_firmware_parse_chip_id(FuInputStream *stream,
 					    FuKineticDpChip *chip_id,
 					    gboolean *esm_xip_enabled,
 					    GError **error)
@@ -139,7 +139,7 @@ fu_kinetic_dp_secure_firmware_get_esm_xip_enabled(FuKineticDpSecureFirmware *sel
 
 static gboolean
 fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
-					   GInputStream *stream,
+					   FuInputStream *stream,
 					   GError **error)
 {
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -186,7 +186,7 @@ fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
 
 static gboolean
 fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -194,8 +194,8 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 	guint32 app_fw_payload_size = 0;
-	g_autoptr(GInputStream) isp_drv_stream = NULL;
-	g_autoptr(GInputStream) app_fw_stream = NULL;
+	g_autoptr(FuInputStream) isp_drv_stream = NULL;
+	g_autoptr(FuInputStream) app_fw_stream = NULL;
 	g_autoptr(FuFirmware) isp_drv_img = fu_firmware_new();
 	g_autoptr(FuFirmware) app_fw_img = fu_firmware_new();
 
@@ -260,14 +260,14 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 static void
 fu_kinetic_dp_secure_firmware_init(FuKineticDpSecureFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_kinetic_dp_secure_firmware_class_init(FuKineticDpSecureFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_kinetic_dp_secure_firmware_parse;
 	firmware_class->export = fu_kinetic_dp_secure_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

@@ -122,7 +122,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	gsize nr_chunks;
 	g_autofree gchar *nvmem = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(FU_THUNDERBOLT_DEVICE(self), TRUE, error);
@@ -138,7 +138,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 					    error);
 	if (blob == NULL)
 		return FALSE;
-	istr = g_memory_input_stream_new_from_bytes(blob);
+	istr = fu_memory_input_stream_new_from_bytes(blob);
 	firmware = fu_firmware_new_from_gtypes(istr,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
@@ -382,8 +382,6 @@ static void
 fu_thunderbolt_controller_init(FuThunderboltController *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }
 
 static void
@@ -407,4 +405,5 @@ fu_thunderbolt_controller_class_init(FuThunderboltControllerClass *klass)
 	device_class->probe = fu_thunderbolt_controller_probe;
 	device_class->to_string = fu_thunderbolt_controller_to_string;
 	device_class->write_firmware = fu_thunderbolt_controller_write_firmware;
+	fu_device_register_private_flag(device_class, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }

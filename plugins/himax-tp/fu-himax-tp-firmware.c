@@ -107,7 +107,7 @@ fu_himax_tp_firmware_checksum_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 
 static gboolean
 fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    gboolean *done,
 				    GError **error)
@@ -205,7 +205,7 @@ fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
 
 static gboolean
 fu_himax_tp_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -294,7 +294,6 @@ static void
 fu_himax_tp_firmware_init(FuHimaxTpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
@@ -306,4 +305,5 @@ fu_himax_tp_firmware_class_init(FuHimaxTpFirmwareClass *klass)
 	firmware_class->parse = fu_himax_tp_firmware_parse;
 	firmware_class->build = fu_himax_tp_firmware_build;
 	firmware_class->export = fu_himax_tp_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

@@ -27,7 +27,7 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* set appropriate limits */
 	fwupd_json_parser_set_max_depth(json_parser, 10);
@@ -39,7 +39,7 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       stream,
+						       G_INPUT_STREAM(stream),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       &error);
 	g_assert_no_error(error);
@@ -140,6 +140,7 @@ fu_usb_backend_func(void)
 	/* check the fwupd DS20 descriptor was parsed */
 	g_assert_true(fu_device_has_icon(device_tmp, "computer"));
 	possible_plugins = fu_device_get_possible_plugins(device_tmp);
+	g_assert_nonnull(possible_plugins);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
 

@@ -1,0 +1,21 @@
+{
+  "id": "org.fwupd.hsi.Mtd.Locked",
+  "name": "Locked MTD",
+  "description": [
+    "Memory Technology Devices can expose firmware data that must not be writable after startup.",
+    "fwupd can check this using MTD MEMISLOCKED when the firmware flash is exposed as NOR."
+  ],
+  "failure-impact": [
+    "Unlocked MTD devices may allow an attacker to modify firmware code or data."
+  ],
+  "failure-results": {
+    "not-locked": "MTD device is unlocked",
+    "not-supported": "MTD lock status could not be checked"
+  },
+  "success-results": {
+    "locked": "MTD device is locked"
+  },
+  "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "fwupd-version": "2.1.7"
+}

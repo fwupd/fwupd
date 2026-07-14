@@ -460,6 +460,24 @@ if get_option('tests')
     )
   endforeach
 
+  # daemon-specific
+  e = executable(
+    'fu-daemon-test',
+    fwupdengine_rs,
+    hwid_test_firmware,
+    plugins_hdr,
+    sources: ['fu-daemon-test.c', 'fu-daemon.c'],
+    include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
+    dependencies: [engine_dep],
+    link_with: [fwupdengine, libfutest, plugin_libs],
+    c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
+  )
+  test(
+    'fu-daemon-test',
+    e,
+    timeout: 180,
+    env: env,
+  )
   if libsystemd.found()
     e = executable(
       'fu-systemd-test',

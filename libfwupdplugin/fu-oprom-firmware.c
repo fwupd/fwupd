@@ -14,6 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-oprom-firmware.h"
 #include "fu-string.h"
 
@@ -105,14 +106,17 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
-fu_oprom_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_oprom_firmware_validate(FuFirmware *firmware,
+			   FuInputStream *stream,
+			   gsize offset,
+			   GError **error)
 {
 	return fu_struct_oprom_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
@@ -303,15 +307,15 @@ fu_oprom_firmware_init(FuOpromFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFWI_CPD_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_oprom_firmware_class_init(FuOpromFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_IFWI_CPD_FIRMWARE);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_oprom_firmware_validate;
 	firmware_class->export = fu_oprom_firmware_export;
 	firmware_class->parse = fu_oprom_firmware_parse;

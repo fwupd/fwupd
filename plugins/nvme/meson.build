@@ -32,6 +32,7 @@ if get_option('tests')
   env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'nvme-self-test',
+    rustgen.process('fu-nvme.rs'),
     sources: [
       'fu-self-test.c',
     ],

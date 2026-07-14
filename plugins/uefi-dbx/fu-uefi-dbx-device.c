@@ -169,7 +169,7 @@ fu_uefi_dbx_device_vendor_notify_cb(FuDevice *device, GParamSpec *pspec, gpointe
 
 static FuFirmware *
 fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -279,6 +279,8 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	fu_device_add_private_flag(FU_DEVICE(self),
+				   FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);

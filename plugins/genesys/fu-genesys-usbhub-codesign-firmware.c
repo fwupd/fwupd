@@ -28,7 +28,7 @@ fu_genesys_usbhub_codesign_firmware_get_codesign(FuGenesysUsbhubCodesignFirmware
 
 static gboolean
 fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
-					     GInputStream *stream,
+					     FuInputStream *stream,
 					     gsize offset,
 					     GError **error)
 {
@@ -56,7 +56,7 @@ fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
@@ -117,4 +117,5 @@ fu_genesys_usbhub_codesign_firmware_class_init(FuGenesysUsbhubCodesignFirmwareCl
 	firmware_class->validate = fu_genesys_usbhub_codesign_firmware_validate;
 	firmware_class->parse = fu_genesys_usbhub_codesign_firmware_parse;
 	firmware_class->export = fu_genesys_usbhub_codesign_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

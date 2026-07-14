@@ -44,3 +44,11 @@ gboolean
 fu_daemon_get_pending_stop(FuDaemon *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_daemon_device_id_valid(const gchar *device_id, GError **error);
+FwupdStatus
+fu_daemon_get_status(FuDaemon *self) G_GNUC_NON_NULL(1);
+void
+fu_daemon_set_status(FuDaemon *self, FwupdStatus status) G_GNUC_NON_NULL(1);
+gdouble
+fu_daemon_get_percentage(FuDaemon *self) G_GNUC_NON_NULL(1);
+void
+fu_daemon_set_percentage(FuDaemon *self, gdouble percentage) G_GNUC_NON_NULL(1);

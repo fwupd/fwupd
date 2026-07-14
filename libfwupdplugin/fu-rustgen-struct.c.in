@@ -519,10 +519,10 @@ void
  * {{obj.c_method('ValidateStream')}}: (skip):
  **/
 {{export.value}}gboolean
-{{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error)
+{{obj.c_method('ValidateStream')}}(FuInputStream *stream, gsize offset, GError **error)
 {
     g_autoptr({{obj.name}}) st = {{obj.c_method('NewInternal')}}();
-    g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+    g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     st->buf = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);
     if (st->buf == NULL) {
@@ -567,8 +567,10 @@ void
         g_autofree gchar *str = {{obj.c_method('ToString')}}(st);
         g_debug("%s", str);
     }
+{%- if obj.export('ValidateInternal') != Export.NONE %}
     if (!{{obj.c_method('ValidateInternal')}}(st, error))
         return FALSE;
+{%- endif %}
     return TRUE;
 }
 {%- endif %}
@@ -619,7 +621,7 @@ void
  * {{obj.c_method('ParseStream')}}: (skip):
  **/
 {{export.value}}{{obj.name}} *
-{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
+{{obj.c_method('ParseStream')}}(FuInputStream *stream, gsize offset, GError **error)
 {
     g_autoptr({{obj.name}}) st = {{obj.c_method('NewInternal')}}();
     st->buf = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);

@@ -24,7 +24,7 @@ struct _FuHuddlyUsbDevice {
 	guint bulk_ep[EP_LAST];
 	gboolean interfaces_claimed;
 	gboolean pending_verify;
-	GInputStream *input_stream;
+	FuInputStream *input_stream;
 	gchar *product_state;
 	gboolean need_reboot;
 };
@@ -293,7 +293,7 @@ fu_huddly_usb_device_reboot(FuHuddlyUsbDevice *self, GError **error)
 static gboolean
 fu_huddly_usb_device_hcp_write_file(FuHuddlyUsbDevice *self,
 				    const gchar *filename,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    GError **error)
 {

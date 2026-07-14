@@ -10,6 +10,7 @@
 #include "fu-common.h"
 #include "fu-csv-entry.h"
 #include "fu-csv-firmware-private.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -176,7 +177,7 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 
 static gboolean
 fu_csv_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -251,9 +252,6 @@ fu_csv_firmware_init(FuCsvFirmware *self)
 	priv->column_ids = g_ptr_array_new_with_free_func(g_free);
 	priv->write_column_ids = TRUE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_ENTRY);
 }
 
 static void
@@ -275,6 +273,9 @@ fu_csv_firmware_class_init(FuCsvFirmwareClass *klass)
 	firmware_class->write = fu_csv_firmware_write;
 	firmware_class->export = fu_csv_firmware_export;
 	firmware_class->build = fu_csv_firmware_build;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_ENTRY);
+	fu_firmware_set_images_max(firmware_class, 10000);
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 /**

@@ -55,7 +55,7 @@ fu_pefile_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_pefile_firmware_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -99,7 +99,7 @@ fu_pefile_firmware_region_sort_cb(gconstpointer a, gconstpointer b)
 
 static gboolean
 fu_pefile_firmware_parse_section(FuPefileFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 guint idx,
 				 gsize hdr_offset,
 				 gsize strtab_offset,
@@ -186,7 +186,7 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 	if (fu_struct_pe_coff_section_get_virtual_size(st) > 0) {
 		guint32 sect_offset = fu_struct_pe_coff_section_get_pointer_to_raw_data(st);
 		guint32 sect_size = fu_struct_pe_coff_section_get_virtual_size(st);
-		g_autoptr(GInputStream) img_stream = NULL;
+		g_autoptr(FuInputStream) img_stream = NULL;
 
 		/* use the raw data size if the section is compressed */
 		if (fu_struct_pe_coff_section_get_virtual_size(st) >
@@ -221,7 +221,7 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 
 static gboolean
 fu_pefile_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -240,7 +240,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuStructPeCoffFileHeader) st_coff = NULL;
 	g_autoptr(FuStructPeDosHeader) st_doshdr = NULL;
 	g_autoptr(GPtrArray) regions = NULL;
-	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) composite_stream = fu_composite_input_stream_new();
 
 	/* get size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -436,7 +436,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* calculate the checksum we would find in the dbx */
 	for (guint i = 0; i < regions->len; i++) {
 		FuPefileFirmwareRegion *r = g_ptr_array_index(regions, i);
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		if (r->size == 0)
 			continue;
@@ -622,11 +622,6 @@ fu_pefile_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_SBATLEVEL_SECTION);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -649,6 +644,11 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	firmware_class->write = fu_pefile_firmware_write;
 	firmware_class->export = fu_pefile_firmware_export;
 	firmware_class->get_checksum = fu_pefile_firmware_get_checksum;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_SBATLEVEL_SECTION);
+	fu_firmware_set_images_max(firmware_class, 100);
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }
 
 /**

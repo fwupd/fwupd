@@ -11,6 +11,7 @@
 #include "fu-context-private.h"
 #include "fu-efi-common.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-efi-signature-private.h"
 #include "fu-efi-x509-signature-private.h"
 
 static void
@@ -143,6 +144,31 @@ fu_efi_signature_list_func(void)
 	g_assert_cmpint(sigs_newest->len, ==, 1);
 	sig = g_ptr_array_index(sigs_newest, 0);
 	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2024);
+}
+
+static void
+fu_efi_signature_list_external_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_EXTERNAL);
+	g_autoptr(FuEfiX509Signature) sig_x509 = fu_efi_x509_signature_new();
+	g_autoptr(GError) error = NULL;
+
+	/* no sigs */
+	g_assert_false(fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)));
+
+	/* only 1 external */
+	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)));
+
+	/* 1 external, 1 certificate */
+	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig_x509), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)));
 }
 
 static void
@@ -381,6 +407,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efi/load-option/hive", fu_efi_load_option_hive_func);
 	g_test_add_func("/fwupd/efi/x509-signature", fu_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efi/signature-list", fu_efi_signature_list_func);
+	g_test_add_func("/fwupd/efi/signature-list/external", fu_efi_signature_list_external_func);
 #ifdef HAVE_GNUTLS
 	g_test_add_func("/fwupd/efi/variable-authentication2",
 			fu_efi_variable_authentication2_func);

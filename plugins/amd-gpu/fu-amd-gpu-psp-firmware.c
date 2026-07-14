@@ -13,6 +13,8 @@
 
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-psp-firmware.h"
+#include "fu-amd-gpu-psp-ish-firmware.h"
+#include "fu-amd-gpu-psp-l2-firmware.h"
 #include "fu-amd-gpu-psp-struct.h"
 
 struct _FuAmdGpuPspFirmware {
@@ -48,7 +50,7 @@ fu_amd_gpu_psp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 
 static gboolean
 fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize offset,
 				 GError **error)
 {
@@ -61,7 +63,7 @@ fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_amd_gpu_psp_firmware_parse_l2(FuAmdGpuPspFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize offset,
 				 GError **error)
 {
@@ -93,7 +95,7 @@ fu_amd_gpu_psp_firmware_parse_l2(FuAmdGpuPspFirmware *self,
 
 static gboolean
 fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -114,10 +116,10 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 		guint sz;
 		g_autoptr(FuStructPspDirTable) st_entry = NULL;
 		g_autoptr(FuStructImageSlotHeader) st_hdr = NULL;
-		g_autoptr(FuFirmware) ish_img = fu_firmware_new();
+		g_autoptr(FuFirmware) ish_img = fu_amd_gpu_psp_ish_firmware_new();
 		g_autoptr(FuFirmware) csm_img = fu_amd_gpu_atom_firmware_new();
-		g_autoptr(FuFirmware) l2_img = fu_firmware_new();
-		g_autoptr(GInputStream) l2_stream = NULL;
+		g_autoptr(FuFirmware) l2_img = fu_amd_gpu_psp_l2_firmware_new();
+		g_autoptr(FuInputStream) l2_stream = NULL;
 
 		st_entry = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
 		if (st_entry == NULL)
@@ -175,7 +177,6 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 				    fu_struct_image_slot_header_get_fw_id(st_hdr));
 			return FALSE;
 		}
-		fu_firmware_add_image_gtype(l2_img, FU_TYPE_AMD_GPU_ATOM_FIRMWARE);
 		if (!fu_firmware_add_image(l2_img, csm_img, error))
 			return FALSE;
 
@@ -185,7 +186,6 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 		fu_firmware_set_addr(l2_img, loc);
 		if (!fu_firmware_parse_stream(l2_img, l2_stream, 0x0, flags, error))
 			return FALSE;
-		fu_firmware_add_image_gtype(ish_img, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(ish_img, l2_img, error))
 			return FALSE;
 
@@ -205,7 +205,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 
 static gboolean
 fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
@@ -223,15 +223,15 @@ fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 static void
 fu_amd_gpu_psp_firmware_init(FuAmdGpuPspFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_amd_gpu_psp_firmware_class_init(FuAmdGpuPspFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_AMD_GPU_PSP_ISH_FIRMWARE);
 	firmware_class->validate = fu_amd_gpu_psp_firmware_validate;
 	firmware_class->parse = fu_amd_gpu_psp_firmware_parse;
 	firmware_class->export = fu_amd_gpu_psp_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 }

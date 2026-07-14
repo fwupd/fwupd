@@ -24,6 +24,8 @@ indent_size = 2
 
 [*.py]
 indent_size = 4
+# default for python black
+max_line_length = 88
 
 [*.{sh,{pre,post}{inst,rm}}]
 indent_size = 4

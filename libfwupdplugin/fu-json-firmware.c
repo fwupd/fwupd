@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-json-firmware.h"
 
 /**
@@ -26,7 +27,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuJsonFirmware, fu_json_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_json_firmware_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
@@ -47,7 +48,7 @@ fu_json_firmware_parse(FuFirmware *firmware,
 
 	/* just load into memory, no extraction performed */
 	priv->json_node = fwupd_json_parser_load_from_stream(json_parser,
-							     stream,
+							     G_INPUT_STREAM(stream),
 							     FWUPD_JSON_LOAD_FLAG_NONE,
 							     error);
 	if (priv->json_node == NULL)
@@ -121,7 +122,6 @@ static void
 fu_json_firmware_init(FuJsonFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
@@ -140,6 +140,7 @@ fu_json_firmware_class_init(FuJsonFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_json_firmware_finalize;
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->parse = fu_json_firmware_parse;
 	firmware_class->write = fu_json_firmware_write;
 	firmware_class->build = fu_json_firmware_build;

@@ -141,7 +141,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_mtd_ifd_device_prepare_firmware(FuDevice *device,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuProgress *progress,
 				   FuFirmwareParseFlags flags,
 				   GError **error)

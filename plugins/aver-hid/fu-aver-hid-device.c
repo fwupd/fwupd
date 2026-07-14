@@ -395,7 +395,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -517,7 +517,6 @@ fu_aver_hid_device_init(FuAverHidDevice *self)
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP);
 }
 
 static void
@@ -527,4 +526,5 @@ fu_aver_hid_device_class_init(FuAverHidDeviceClass *klass)
 	device_class->setup = fu_aver_hid_device_setup;
 	device_class->write_firmware = fu_aver_hid_device_write_firmware;
 	device_class->set_progress = fu_aver_hid_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_AVER_HID_FLAG_DUAL_ISP);
 }

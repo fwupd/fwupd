@@ -46,7 +46,7 @@ fu_bcm57xx_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 }
 
 static gboolean
-fu_bcm57xx_firmware_parse_header(FuBcm57xxFirmware *self, GInputStream *stream, GError **error)
+fu_bcm57xx_firmware_parse_header(FuBcm57xxFirmware *self, FuInputStream *stream, GError **error)
 {
 	/* verify magic and CRC */
 	if (!fu_bcm57xx_verify_magic(stream, 0x0, error))
@@ -64,7 +64,7 @@ fu_bcm57xx_firmware_parse_header(FuBcm57xxFirmware *self, GInputStream *stream, 
 
 static FuFirmware *
 fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -93,7 +93,7 @@ fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self,
 
 static FuFirmware *
 fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 guint32 *out_stage1_sz,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -104,7 +104,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 	guint32 stage1_off = 0;
 	g_autoptr(FuStructBcm57xxNvramHeader) st = NULL;
 	g_autoptr(FuFirmware) img = fu_bcm57xx_stage1_image_new();
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return NULL;
@@ -165,7 +165,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 
 static FuFirmware *
 fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 guint32 stage1_sz,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -174,7 +174,7 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 	guint32 stage2_off = 0;
 	guint32 stage2_sz = 0;
 	g_autoptr(FuFirmware) img = fu_bcm57xx_stage2_image_new();
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	stage2_off = BCM_NVRAM_STAGE1_BASE + stage1_sz;
 	if (!fu_bcm57xx_verify_magic(stream, stage2_off, error))
@@ -216,7 +216,7 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 
 static gboolean
 fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       guint idx,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -229,7 +229,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 	guint32 base = BCM_NVRAM_DIRECTORY_BASE + (idx * FU_STRUCT_BCM57XX_NVRAM_DIRECTORY_SIZE);
 	g_autoptr(FuFirmware) img = fu_bcm57xx_dict_image_new();
 	g_autoptr(FuStructBcm57xxNvramDirectory) st = NULL;
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	/* header */
 	st = fu_struct_bcm57xx_nvram_directory_parse_stream(stream, base, error);
@@ -287,7 +287,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 
 static gboolean
 fu_bcm57xx_firmware_validate(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     gsize offset,
 			     GError **error)
 {
@@ -313,7 +313,7 @@ fu_bcm57xx_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_bcm57xx_firmware_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -326,10 +326,10 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_stage1 = NULL;
 	g_autoptr(FuFirmware) img_stage2 = NULL;
 	g_autoptr(FuFirmware) img_vpd = fu_firmware_new();
-	g_autoptr(GInputStream) stream_header = NULL;
-	g_autoptr(GInputStream) stream_info2 = NULL;
-	g_autoptr(GInputStream) stream_info = NULL;
-	g_autoptr(GInputStream) stream_vpd = NULL;
+	g_autoptr(FuInputStream) stream_header = NULL;
+	g_autoptr(FuInputStream) stream_info2 = NULL;
+	g_autoptr(FuInputStream) stream_info = NULL;
+	g_autoptr(FuInputStream) stream_vpd = NULL;
 
 	/* try to autodetect the file type */
 	if (!fu_input_stream_read_u32(stream, 0x0, &magic, G_BIG_ENDIAN, error))
@@ -641,11 +641,6 @@ fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE1_IMAGE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE2_IMAGE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_DICT_IMAGE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -657,6 +652,11 @@ fu_bcm57xx_firmware_class_init(FuBcm57xxFirmwareClass *klass)
 	firmware_class->export = fu_bcm57xx_firmware_export;
 	firmware_class->write = fu_bcm57xx_firmware_write;
 	firmware_class->build = fu_bcm57xx_firmware_build;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_BCM57XX_STAGE1_IMAGE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_BCM57XX_STAGE2_IMAGE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_BCM57XX_DICT_IMAGE);
 }
 
 FuFirmware *

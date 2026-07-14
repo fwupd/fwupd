@@ -15,6 +15,10 @@
 
 gboolean
 fu_device_has_private_flag_quark(FuDevice *self, GQuark flag_quark) G_GNUC_NON_NULL(1);
+GQuark
+fu_device_register_private_flag_safe(FuDeviceClass *klass, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+GQuark
+fu_device_find_private_flag(FuDeviceClass *klass, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_remove_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
 void

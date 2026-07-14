@@ -1194,3 +1194,19 @@ LIBFWUPD_2.1.4 {
     fwupd_variant_get_uint64;
   local: *;
 } LIBFWUPD_2.1.3;
+
+LIBFWUPD_2.1.6 {
+  global:
+    fwupd_bios_setting_add_possible_value_full;
+    fwupd_bios_setting_setup;
+  local: *;
+} LIBFWUPD_2.1.4;
+
+LIBFWUPD_2.1.7 {
+  global:
+    fwupd_bios_setting_get_appstream_id;
+    fwupd_bios_setting_get_icon;
+    fwupd_bios_setting_set_appstream_id;
+    fwupd_bios_setting_set_icon;
+  local: *;
+} LIBFWUPD_2.1.6;

@@ -32,14 +32,14 @@ fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_asus_hid_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
 	g_autoptr(FuStructAsusHidDesc) st = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	st = fu_struct_asus_hid_desc_parse_stream(stream, FGA_OFFSET, error);
 	if (st == NULL)
@@ -61,8 +61,6 @@ static void
 fu_asus_hid_firmware_init(FuAsusHidFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void
@@ -80,7 +78,9 @@ fu_asus_hid_firmware_class_init(FuAsusHidFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	object_class->finalize = fu_asus_hid_firmware_finalize;
 	firmware_class->parse = fu_asus_hid_firmware_parse;
 	firmware_class->export = fu_asus_hid_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 }

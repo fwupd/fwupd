@@ -37,6 +37,8 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to parse kek: ");
 		return FALSE;
 	}
+	if (fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)))
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
@@ -46,6 +48,8 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		x509_device = fu_efi_x509_device_new(ctx, FU_EFI_X509_SIGNATURE(sig));
 		fu_device_set_physical_id(FU_DEVICE(x509_device), "kek");
 		fu_device_add_flag(FU_DEVICE(x509_device), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+		fu_device_add_private_flag(FU_DEVICE(x509_device),
+					   FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT);
 		fu_device_add_flag(FU_DEVICE(x509_device), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		fu_device_set_proxy(FU_DEVICE(x509_device), device);
 		fu_device_add_child(device, FU_DEVICE(x509_device));

@@ -140,7 +140,7 @@ fu_redfish_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       gsize offset,
 				       GError **error)
 {
@@ -211,7 +211,7 @@ fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
 
 static gboolean
 fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				GError **error)
 {
@@ -266,7 +266,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 
 static gboolean
 fu_redfish_smbios_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
@@ -282,7 +282,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "SMBIOS entry too small: %" G_GSIZE_FORMAT,
+			    "SMBIOS entry too small: %zu",
 			    streamsz);
 		return FALSE;
 	}
@@ -410,7 +410,6 @@ fu_redfish_smbios_finalize(GObject *object)
 static void
 fu_redfish_smbios_init(FuRedfishSmbios *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -423,6 +422,7 @@ fu_redfish_smbios_class_init(FuRedfishSmbiosClass *klass)
 	firmware_class->write = fu_redfish_smbios_write;
 	firmware_class->build = fu_redfish_smbios_build;
 	firmware_class->export = fu_redfish_smbios_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuRedfishSmbios *

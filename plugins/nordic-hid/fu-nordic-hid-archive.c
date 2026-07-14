@@ -181,7 +181,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id(FwupdJsonObject *obj,
 
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -324,15 +324,15 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_B0);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_nordic_hid_archive_class_init(FuNordicHidArchiveClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_NORDIC_HID_FIRMWARE_B0);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT);
 	firmware_class->parse = fu_nordic_hid_archive_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 1024);
 }

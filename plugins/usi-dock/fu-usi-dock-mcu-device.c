@@ -671,7 +671,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					       GError **error)
 {
 	guint8 cmd;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	guint8 checksum = 0xFF;
 
@@ -791,10 +791,6 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* device can self-reboot */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
 	/* success */
 	return TRUE;
 }
@@ -838,9 +834,7 @@ fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	/* device can self-reboot */
-	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
-		return TRUE;
+	fu_progress_sleep_idle(progress, 900000);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
@@ -900,6 +894,8 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
+	fu_progress_sleep_idle(progress, 180000);
+
 	/* interactive request to start the SPI write */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
@@ -940,11 +936,11 @@ static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 52, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 2, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 30, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 49, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 21, "reload");
 }
 
 static void
@@ -962,12 +958,6 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 			 "notify::private-flags",
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
 			 NULL);
-
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -989,4 +979,8 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	device_class->reload = fu_usi_dock_mcu_device_reload;
 	device_class->replace = fu_usi_dock_mcu_device_replace;
 	device_class->prepare = fu_usi_dock_mcu_device_prepare;
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 }

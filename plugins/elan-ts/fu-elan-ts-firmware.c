@@ -42,7 +42,7 @@ fu_elan_ts_firmware_get_remark_id(FuElanTsFirmware *self)
 }
 
 static gboolean
-fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, GInputStream *stream, GError **error)
+fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, FuInputStream *stream, GError **error)
 {
 	gsize last_page_offset;
 	gsize offset_in_page;
@@ -55,6 +55,13 @@ fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, GInputStream *stream
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	page_count = streamsz / FU_ELAN_TS_FIRMWARE_PAGE_SIZE;
+	if (page_count == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware too small for remark ID");
+		return FALSE;
+	}
 	last_page_offset = (page_count - 1) * FU_ELAN_TS_FIRMWARE_PAGE_SIZE;
 
 	/* last page address (the first word of the last page) */
@@ -106,7 +113,7 @@ fu_elan_ts_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 
 static gboolean
 fu_elan_ts_firmware_validate(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     gsize offset,
 			     GError **error)
 {
@@ -115,7 +122,7 @@ fu_elan_ts_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_elan_ts_firmware_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -128,7 +135,7 @@ fu_elan_ts_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuStructElanTsFwBinHeaderLvfsType1) st_header = NULL;
 	g_autoptr(GByteArray) checksum_array = g_byte_array_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* parse header */
 	st_header = fu_struct_elan_ts_fw_bin_header_lvfs_type1_parse_stream(stream, 0x0, error);
@@ -209,15 +216,15 @@ fu_elan_ts_firmware_init(FuElanTsFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_elan_ts_firmware_class_init(FuElanTsFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_elan_ts_firmware_validate;
 	firmware_class->parse = fu_elan_ts_firmware_parse;
 	firmware_class->export = fu_elan_ts_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

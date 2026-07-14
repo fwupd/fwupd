@@ -49,7 +49,7 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					GError **error)
 {
@@ -76,7 +76,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -199,4 +199,5 @@ fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 	firmware_class->export = fu_synaptics_mst_firmware_export;
 	firmware_class->write = fu_synaptics_mst_firmware_write;
 	firmware_class->build = fu_synaptics_mst_firmware_build;
+	fu_firmware_set_size_max(firmware_class, 64 * FU_MB);
 }

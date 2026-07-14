@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 #include "fu-vbe-simple-device.h"
+#include "fu-vbe-simple-firmware.h"
 
 /**
  * @skip_offset: This allows an initial part of the image to be skipped when
@@ -223,7 +224,7 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 
 static FuFirmware *
 fu_vbe_simple_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuProgress *progress,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
@@ -233,7 +234,7 @@ fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 	g_auto(GStrv) firmware_ids = NULL;
 	g_autoptr(FuFdtImage) img_cfg = NULL;
 	g_autoptr(FuFirmware) firmware = fu_fit_firmware_new();
-	g_autoptr(FuFirmware) firmware_container = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware_container = fu_vbe_simple_firmware_new();
 
 	/* parse all images */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -257,7 +258,6 @@ fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 		    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware), path, error);
 		if (img_firmware == NULL)
 			return NULL;
-		fu_firmware_add_image_gtype(firmware_container, FU_TYPE_FDT_IMAGE);
 		if (!fu_firmware_add_image(firmware_container, FU_FIRMWARE(img_firmware), error))
 			return NULL;
 	}

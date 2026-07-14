@@ -12,6 +12,8 @@
 
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
+#include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**
@@ -38,7 +40,7 @@ typedef struct {
 } FuCompositeInputStreamItem;
 
 struct _FuCompositeInputStream {
-	GInputStream parent_instance;
+	FuInputStream parent_instance;
 	GPtrArray *items;		       /* of FuCompositeInputStreamItem */
 	FuCompositeInputStreamItem *last_item; /* no-ref */
 	goffset pos;
@@ -53,7 +55,7 @@ fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuCompositeInputStream,
 			fu_composite_input_stream,
-			G_TYPE_INPUT_STREAM,
+			FU_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
 					      fu_composite_input_stream_seekable_iface_init)
 			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
@@ -103,14 +105,14 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCompositeInputStreamItem, fu_composite_input_str
 gboolean
 fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(bytes);
+	stream = fu_memory_input_stream_new_from_bytes(bytes);
 	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), error);
 	if (partial_stream == NULL)
 		return FALSE;
@@ -141,7 +143,7 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(partial_stream), FALSE);
-	g_return_val_if_fail(G_INPUT_STREAM(self) != G_INPUT_STREAM(partial_stream), FALSE);
+	g_return_val_if_fail(FU_INPUT_STREAM(self) != FU_INPUT_STREAM(partial_stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* get the last-added item */
@@ -184,7 +186,7 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 /**
  * fu_composite_input_stream_add_stream:
  * @self: a #FuCompositeInputStream
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @error: (nullable): optional return location for an error
  *
  * Adds a input stream object, which has to be seekable.
@@ -195,17 +197,17 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
  **/
 gboolean
 fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     GError **error)
 {
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
-	g_return_val_if_fail(G_INPUT_STREAM(self) != stream, FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_INPUT_STREAM(self) != stream, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* create a partial stream that is actually the size of the entire GInputStream */
+	/* create a partial stream that is actually the size of the entire FuInputStream */
 	partial_stream = fu_partial_input_stream_new(stream, 0x0, G_MAXSIZE, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to add input stream: ");
@@ -315,10 +317,10 @@ fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_composite_input_stream_new(void)
 {
-	return G_INPUT_STREAM(g_object_new(FU_TYPE_COMPOSITE_INPUT_STREAM, NULL));
+	return FU_INPUT_STREAM(g_object_new(FU_TYPE_COMPOSITE_INPUT_STREAM, NULL));
 }
 
 static gssize

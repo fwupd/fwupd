@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuAlgoltekUsbFirmware, fu_algoltek_usb_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_algoltek_usb_firmware_validate(FuFirmware *firmware,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  gsize offset,
 				  GError **error)
 {
@@ -29,7 +29,7 @@ fu_algoltek_usb_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -38,8 +38,8 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(FuStructAlgoltekProductIdentity) st = NULL;
-	g_autoptr(GInputStream) stream_isp = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_isp = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* identity */
 	st = fu_struct_algoltek_product_identity_parse_stream(stream, offset, error);
@@ -97,15 +97,15 @@ fu_algoltek_usb_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_algoltek_usb_firmware_init(FuAlgoltekUsbFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_algoltek_usb_firmware_class_init(FuAlgoltekUsbFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_algoltek_usb_firmware_validate;
 	firmware_class->parse = fu_algoltek_usb_firmware_parse;
 	firmware_class->write = fu_algoltek_usb_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 }

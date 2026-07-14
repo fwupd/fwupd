@@ -42,7 +42,7 @@ fu_raydium_tp_firmware_get_product_id(FuRaydiumTpFirmware *self)
 
 static gboolean
 fu_raydium_tp_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -50,8 +50,8 @@ fu_raydium_tp_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) firmware_desc = g_object_new(FU_TYPE_RAYDIUM_TP_IMAGE, NULL);
 	g_autoptr(FuFirmware) firmware_pram = g_object_new(FU_TYPE_RAYDIUM_TP_IMAGE, NULL);
 	g_autoptr(FuStructRaydiumTpFwHdr) st = NULL;
-	g_autoptr(GInputStream) stream_desc = NULL;
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_desc = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 
 	st = fu_struct_raydium_tp_fw_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -96,14 +96,14 @@ fu_raydium_tp_firmware_init(FuRaydiumTpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_RAYDIUM_TP_IMAGE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
 fu_raydium_tp_firmware_class_init(FuRaydiumTpFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_raydium_tp_firmware_export;
-	klass_firmware->parse = fu_raydium_tp_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_raydium_tp_firmware_export;
+	firmware_class->parse = fu_raydium_tp_firmware_parse;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_RAYDIUM_TP_IMAGE);
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

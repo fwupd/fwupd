@@ -86,6 +86,8 @@ struct FuUtil {
 	FuUtilOperation current_operation;
 	FwupdDevice *current_device;
 	GPtrArray *post_requests;
+	GPtrArray *filter_protocols_include;
+	GPtrArray *filter_protocols_exclude;
 	FwupdDeviceFlags completion_flags;
 	FwupdDeviceFlags filter_device_include;
 	FwupdDeviceFlags filter_device_exclude;
@@ -396,6 +398,8 @@ fu_util_private_free(FuUtil *self)
 	if (self->lock_fd >= 0)
 		g_close(self->lock_fd, NULL);
 	g_ptr_array_unref(self->post_requests);
+	g_ptr_array_unref(self->filter_protocols_include);
+	g_ptr_array_unref(self->filter_protocols_exclude);
 	g_free(self);
 }
 
@@ -563,35 +567,42 @@ fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
+static GPtrArray *
+fu_util_get_devices_with_filter(FuUtil *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	devices = fu_engine_get_devices(self->engine, error);
+	if (devices == NULL)
+		return NULL;
+	return fu_util_device_array_filter(devices,
+					   self->filter_device_include,
+					   self->filter_device_exclude,
+					   self->filter_protocols_include,
+					   self->filter_protocols_exclude,
+					   error);
+}
+
 static FuDevice *
 fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices_opt, GError **error)
 {
 	FuDevice *dev;
 	guint idx;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get devices from daemon */
 	if (devices_opt != NULL) {
 		devices = g_ptr_array_ref(devices_opt);
 	} else {
-		devices = fu_engine_get_devices(self->engine, error);
+		devices = fu_util_get_devices_with_filter(self, error);
 		if (devices == NULL)
 			return NULL;
 	}
 	fwupd_device_array_ensure_parents(devices);
 
-	/* filter results */
-	devices_filtered = fwupd_device_array_filter_flags(devices,
-							   self->filter_device_include,
-							   self->filter_device_exclude,
-							   error);
-	if (devices_filtered == NULL)
-		return NULL;
-
 	/* exactly one */
-	if (devices_filtered->len == 1) {
-		dev = g_ptr_array_index(devices_filtered, 0);
+	if (devices->len == 1) {
+		dev = g_ptr_array_index(devices, 0);
 		if (!self->as_json) {
 			fu_console_print(
 			    self->console,
@@ -614,14 +625,14 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices_opt, GError **error)
 
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(self->console, "0.\t%s", _("Cancel"));
-	for (guint i = 0; i < devices_filtered->len; i++) {
-		FuDevice *device_tmp = g_ptr_array_index(devices_filtered, i);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		g_autofree gchar *id_display = fu_device_get_id_display(device_tmp);
 		fu_console_print(self->console, "%u.\t%s", i + 1, id_display);
 	}
 
 	/* TRANSLATORS: get interactive prompt */
-	idx = fu_console_input_uint(self->console, devices_filtered->len, "%s", _("Choose device"));
+	idx = fu_console_input_uint(self->console, devices->len, "%s", _("Choose device"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -629,7 +640,7 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices_opt, GError **error)
 				    "Request canceled");
 		return NULL;
 	}
-	dev = g_ptr_array_index(devices_filtered, idx - 1);
+	dev = g_ptr_array_index(devices, idx - 1);
 	return g_object_ref(dev);
 }
 
@@ -716,7 +727,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
-		devices = fu_engine_get_devices(self->engine, error);
+		devices = fu_util_get_devices_with_filter(self, error);
 		if (devices == NULL)
 			return FALSE;
 	} else {
@@ -750,10 +761,6 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		/* not going to have results, so save a engine round-trip */
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
-			continue;
-		if (!fwupd_device_match_flags(dev,
-					      self->filter_device_include,
-					      self->filter_device_exclude))
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			g_ptr_array_add(devices_no_support, dev);
@@ -823,7 +830,7 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(self,
@@ -861,6 +868,10 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		child = g_node_append_data(root, g_object_ref(dev));
 		rel = fwupd_device_get_release_default(dev);
@@ -901,6 +912,10 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FuDev
 		if (!fwupd_device_match_flags(FWUPD_DEVICE(dev_tmp),
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(FWUPD_DEVICE(dev_tmp),
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		if (!self->show_all && !fu_util_is_interesting_device(devs, FWUPD_DEVICE(dev_tmp)))
 			continue;
@@ -975,7 +990,7 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 			g_ptr_array_add(devs, device);
 		}
 	} else {
-		devs = fu_engine_get_devices(self->engine, error);
+		devs = fu_util_get_devices_with_filter(self, error);
 		if (devs == NULL)
 			return FALSE;
 	}
@@ -1069,7 +1084,7 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 
 	/* progress */
 	fu_progress_set_id(self->progress, G_STRLOC);
@@ -1414,7 +1429,7 @@ fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **erro
 
 static gboolean
 fu_util_install_stream(FuUtil *self,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       GPtrArray *devices,
 		       FuProgress *progress,
 		       GError **error)
@@ -1511,7 +1526,7 @@ static gboolean
 fu_util_install(FuUtil *self, gchar **values, GError **error)
 {
 	g_autofree gchar *filename = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 
 	/* progress */
@@ -1533,7 +1548,7 @@ fu_util_install(FuUtil *self, gchar **values, GError **error)
 
 	/* handle both forms */
 	if (g_strv_length(values) == 1) {
-		devices_possible = fu_engine_get_devices(self->engine, error);
+		devices_possible = fu_util_get_devices_with_filter(self, error);
 		if (devices_possible == NULL)
 			return FALSE;
 		fwupd_device_array_ensure_parents(devices_possible);
@@ -1753,6 +1768,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 
 		rels = fu_engine_get_upgrades(self->engine, self->request, device_id, &error_local);
@@ -2110,7 +2129,7 @@ fu_util_get_report_metadata_as_json(FuUtil *self, FwupdJsonObject *json_obj, GEr
 	fwupd_json_object_add_object_map(json_obj, "daemon", metadata);
 
 	/* device metadata */
-	devices = fu_engine_get_devices(self->engine, error);
+	devices = fu_util_get_devices_with_filter(self, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
@@ -2201,7 +2220,7 @@ fu_util_get_report_metadata(FuUtil *self, gchar **values, GError **error)
 	fu_util_report_metadata_to_string(metadata, 0, str);
 
 	/* device metadata */
-	devices = fu_engine_get_devices(self->engine, error);
+	devices = fu_util_get_devices_with_filter(self, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
@@ -2505,7 +2524,7 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuFirmware) eventlog = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -2531,7 +2550,7 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NONE,
@@ -2879,7 +2898,7 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
-		devices = fu_engine_get_devices(self->engine, error);
+		devices = fu_util_get_devices_with_filter(self, error);
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length(values) == 1) {
@@ -2900,10 +2919,6 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 	/* activate anything with _NEEDS_ACTIVATION */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (!fwupd_device_match_flags(FWUPD_DEVICE(device),
-					      self->filter_device_include,
-					      self->filter_device_exclude))
-			continue;
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		has_pending = TRUE;
@@ -3281,7 +3296,7 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -3958,6 +3973,7 @@ static gboolean
 fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 
 	/* load engine */
@@ -3973,18 +3989,31 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 	if (devices == NULL)
 		return FALSE;
 
+	/* filter results */
+	devices_filtered = fu_util_device_array_filter(devices,
+						       self->filter_device_include,
+						       self->filter_device_exclude,
+						       self->filter_protocols_include,
+						       self->filter_protocols_exclude,
+						       error);
+	if (devices_filtered == NULL)
+		return FALSE;
+
 	/* not for human consumption */
 	if (self->as_json) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
-		fwupd_codec_array_to_json(devices, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_codec_array_to_json(devices_filtered,
+					  "Devices",
+					  json_obj,
+					  FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
 		return TRUE;
 	}
 
 	/* show each device */
-	for (guint i = 0; i < devices->len; i++) {
+	for (guint i = 0; i < devices_filtered->len; i++) {
 		g_autoptr(GPtrArray) rels = NULL;
-		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		FwupdDevice *dev = g_ptr_array_index(devices_filtered, i);
 		FwupdRelease *rel;
 		const gchar *remote;
 		FuUtilNode *child;
@@ -3993,6 +4022,10 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		child = g_node_append_data(root, g_object_ref(dev));
 
@@ -4539,7 +4572,7 @@ fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* check args */
 	if (g_strv_length(values) < 1) {
@@ -4574,13 +4607,13 @@ fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 
 	/* "install" archive */
 	if (values[1] != NULL) {
-		g_autoptr(GInputStream) stream_cab = NULL;
+		g_autoptr(FuInputStream) stream_cab = NULL;
 		g_autoptr(GPtrArray) devices_possible = NULL;
 
 		stream_cab = fu_input_stream_from_path(values[1], error);
 		if (stream_cab == NULL)
 			return FALSE;
-		devices_possible = fu_engine_get_devices(self->engine, error);
+		devices_possible = fu_util_get_devices_with_filter(self, error);
 		if (devices_possible == NULL)
 			return FALSE;
 		if (!fu_util_install_stream(self,
@@ -4963,7 +4996,7 @@ fu_util_reboot_cleanup(FuUtil *self, gchar **values, GError **error)
 
 	/* both arguments are optional */
 	if (g_strv_length(values) >= 1) {
-		device = fu_engine_get_device(self->engine, values[0], error);
+		device = fu_util_get_device(self, values[0], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
@@ -5570,11 +5603,11 @@ fu_util_jcat_load_filename(FuUtil *self, const gchar *filename, GError **error)
 	g_autoptr(GFile) gfile = g_file_new_for_path(filename);
 
 	if (g_file_query_exists(gfile, self->cancellable)) {
-		g_autoptr(GInputStream) istream = NULL;
-		istream = G_INPUT_STREAM(g_file_read(gfile, self->cancellable, error));
+		g_autoptr(FuFileInputStream) istream = NULL;
+		istream = fu_file_input_stream_from_file(gfile, self->cancellable, error);
 		if (istream == NULL)
 			return NULL;
-		if (!fwupd_jcat_file_import_stream(file, istream, error))
+		if (!fwupd_jcat_file_import_stream(file, G_INPUT_STREAM(istream), error))
 			return NULL;
 	}
 
@@ -6251,6 +6284,7 @@ main(int argc, char *argv[])
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
+	g_auto(GStrv) filter_protocols = NULL;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_auto(GStrv) public_keys = NULL;
 	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
@@ -6439,6 +6473,14 @@ main(int argc, char *argv[])
 	     N_("Filter with a set of release flags using a ~ prefix to "
 		"exclude, e.g. 'trusted-release,~trusted-metadata'"),
 	     NULL},
+	    {"filter-protocol",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_STRING_ARRAY,
+	     &filter_protocols,
+	     /* TRANSLATORS: command line option */
+	     N_("Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"),
+	     NULL},
 	    {"assume-yes",
 	     'y',
 	     0,
@@ -6482,6 +6524,8 @@ main(int argc, char *argv[])
 	self->loop = g_main_loop_new(self->main_ctx, FALSE);
 	self->console = fu_console_new();
 	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
+	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
 	fu_console_set_main_context(self->console, self->main_ctx);
 	self->request = fu_engine_request_new(NULL);
 
@@ -7174,6 +7218,20 @@ main(int argc, char *argv[])
 			    /* TRANSLATORS: the user didn't read the man page,
 			     * %1 is '--filter-release' */
 			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter-release");
+			g_prefix_error(&error, "%s: ", str);
+			fu_util_print_error(self, error);
+			return EXIT_FAILURE;
+		}
+	}
+	if (filter_protocols != NULL) {
+		if (!fu_util_parse_filter_protocol_flags(filter_protocols,
+							 self->filter_protocols_include,
+							 self->filter_protocols_exclude,
+							 &error)) {
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page,
+			     * %1 is '--filter-release' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter-protocol");
 			g_prefix_error(&error, "%s: ", str);
 			fu_util_print_error(self, error);
 			return EXIT_FAILURE;

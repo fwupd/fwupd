@@ -32,7 +32,7 @@ fu_fresco_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_fresco_pd_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -72,4 +72,5 @@ fu_fresco_pd_firmware_class_init(FuFrescoPdFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_fresco_pd_firmware_parse;
 	firmware_class->export = fu_fresco_pd_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }

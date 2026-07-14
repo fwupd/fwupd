@@ -22,7 +22,7 @@
 struct _FuChunkArray {
 	GObject parent_instance;
 	GBytes *blob;
-	GInputStream *stream;
+	FuInputStream *stream;
 	gsize addr_offset;
 	gsize page_sz;
 	gsize packet_sz;
@@ -157,8 +157,7 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
 		fu_chunk_array_calculate_chunk_for_offset(self, offset, NULL, NULL, &chunksz);
 		g_array_append_val(self->offsets, offset);
 		if (chunksz > G_MAXSIZE - offset) {
-			g_critical("offset overflow at offset %" G_GSIZE_FORMAT
-				   " with chunk size %" G_GSIZE_FORMAT,
+			g_critical("offset overflow at offset %zu with chunk size %zu",
 				   offset,
 				   chunksz);
 			return;
@@ -233,7 +232,7 @@ fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize 
 
 /**
  * fu_chunk_array_new_from_stream:
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @addr_offset: the hardware address offset, or %FU_CHUNK_ADDR_OFFSET_NONE
  * @page_sz: the hardware page size, typically %FU_CHUNK_PAGESZ_NONE
  * @packet_sz: the packet size, or 0x0
@@ -247,7 +246,7 @@ fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize 
  * Since: 2.0.2
  **/
 FuChunkArray *
-fu_chunk_array_new_from_stream(GInputStream *stream,
+fu_chunk_array_new_from_stream(FuInputStream *stream,
 			       gsize addr_offset,
 			       gsize page_sz,
 			       gsize packet_sz,
@@ -255,7 +254,7 @@ fu_chunk_array_new_from_stream(GInputStream *stream,
 {
 	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
 

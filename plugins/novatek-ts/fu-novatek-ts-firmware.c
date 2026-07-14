@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuNovatekTsFirmware, fu_novatek_ts_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_novatek_ts_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -58,7 +58,6 @@ fu_novatek_ts_firmware_parse(FuFirmware *firmware,
 static void
 fu_novatek_ts_firmware_init(FuNovatekTsFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1024 * 320);
 }
 
 static void
@@ -66,4 +65,5 @@ fu_novatek_ts_firmware_class_init(FuNovatekTsFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_novatek_ts_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 1024 * 320);
 }

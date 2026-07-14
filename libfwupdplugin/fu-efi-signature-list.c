@@ -12,6 +12,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-efi-common.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
@@ -28,8 +29,32 @@
 
 G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
 
-#define FU_EFI_SIGNATURE_LIST_GUID_SHA256 "c1c41626-504c-4092-aca9-41f936934328"
-#define FU_EFI_SIGNATURE_LIST_GUID_X509	  "a5c059a1-94e4-4aa7-87b5-ab155c2bf072"
+/**
+ * fu_efi_signature_list_is_external:
+ * @self: a #FuEfiSignatureList
+ *
+ * Tests if the signature list is for a platform with an external out-of-band management agent
+ * (e.g. hypervisor or service processor) that means runtime EFI updates to the KEK or db will
+ * likely fail.
+ *
+ * Returns: %TRUE if there is exactly one signature with `FuEfiSignatureKind.External`.
+ *
+ * Since: 2.1.7
+ **/
+gboolean
+fu_efi_signature_list_is_external(FuEfiSignatureList *self)
+{
+	FuEfiSignature *sig;
+	g_autoptr(GPtrArray) sigs = NULL;
+
+	g_return_val_if_fail(FU_IS_EFI_SIGNATURE_LIST(self), FALSE);
+
+	sigs = fu_firmware_get_images(FU_FIRMWARE(self));
+	if (sigs->len != 1)
+		return FALSE;
+	sig = FU_EFI_SIGNATURE(g_ptr_array_index(sigs, 0));
+	return fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_EXTERNAL;
+}
 
 /**
  * fu_efi_signature_list_get_newest:
@@ -92,7 +117,7 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 
 static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize *offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -111,10 +136,12 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		return FALSE;
 	sig_type = fwupd_guid_to_string(fu_struct_efi_signature_list_get_type(st),
 					FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_LIST_GUID_SHA256) == 0) {
+	if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_SHA256) == 0) {
 		sig_kind = FU_EFI_SIGNATURE_KIND_SHA256;
-	} else if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_LIST_GUID_X509) == 0) {
+	} else if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_X509) == 0) {
 		sig_kind = FU_EFI_SIGNATURE_KIND_X509;
+	} else if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_EXTERNAL) == 0) {
+		sig_kind = FU_EFI_SIGNATURE_KIND_EXTERNAL;
 	}
 	list_size = fu_struct_efi_signature_list_get_list_size(st);
 	if (list_size < 0x1c || list_size > FU_MB) {
@@ -194,7 +221,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 
 static gboolean
 fu_efi_signature_list_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -212,8 +239,9 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 		return FALSE;
 	}
 	sig_type = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_LIST_GUID_SHA256) != 0 &&
-	    g_strcmp0(sig_type, FU_EFI_SIGNATURE_LIST_GUID_X509) != 0) {
+	if (g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_SHA256) != 0 &&
+	    g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_X509) != 0 &&
+	    g_strcmp0(sig_type, FU_EFI_SIGNATURE_GUID_EXTERNAL) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -227,7 +255,7 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -248,6 +276,35 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 }
 
 static GByteArray *
+fu_efi_signature_list_write_external(FuEfiSignature *sig, GError **error)
+{
+	fwupd_guid_t guid = {0};
+	g_autoptr(FuStructEfiSignatureList) st = fu_struct_efi_signature_list_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	/* entry */
+	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_EXTERNAL,
+				    &guid,
+				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				    error))
+		return NULL;
+	fu_struct_efi_signature_list_set_type(st, &guid);
+
+	/* only junk for compatibility reasons; one byte of zero */
+	blob = fu_firmware_write(FU_FIRMWARE(sig), error);
+	if (blob == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(st->buf, blob);
+
+	/* fix up header */
+	fu_struct_efi_signature_list_set_size(st, g_bytes_get_size(blob));
+	fu_struct_efi_signature_list_set_list_size(st, st->buf->len);
+
+	/* success */
+	return g_steal_pointer(&st->buf);
+}
+
+static GByteArray *
 fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 {
 	fwupd_guid_t guid = {0};
@@ -255,7 +312,7 @@ fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* entry */
-	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
+	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_X509,
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
@@ -283,7 +340,7 @@ fu_efi_signature_list_write_sha256(GPtrArray *sigs, GError **error)
 	g_autoptr(FuStructEfiSignatureList) st = fu_struct_efi_signature_list_new();
 
 	/* entry */
-	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
+	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_SHA256,
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
@@ -315,6 +372,7 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GPtrArray) sigs = fu_firmware_get_images(firmware);
 	g_autoptr(GPtrArray) sigs_sha256 = g_ptr_array_new();
 	g_autoptr(GPtrArray) sigs_x509 = g_ptr_array_new();
+	g_autoptr(GPtrArray) sigs_external = g_ptr_array_new();
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* look for each type */
@@ -326,6 +384,10 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 		}
 		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_X509) {
 			g_ptr_array_add(sigs_x509, sig);
+			continue;
+		}
+		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_EXTERNAL) {
+			g_ptr_array_add(sigs_external, sig);
 			continue;
 		}
 	}
@@ -349,6 +411,16 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 		g_byte_array_append(buf, buf_tmp->data, buf_tmp->len);
 	}
 
+	/* externally managed */
+	for (guint i = 0; i < sigs_external->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs_external, i);
+		g_autoptr(GByteArray) buf_tmp = NULL;
+		buf_tmp = fu_efi_signature_list_write_external(sig, error);
+		if (buf_tmp == NULL)
+			return NULL;
+		g_byte_array_append(buf, buf_tmp->data, buf_tmp->len);
+	}
+
 	/* success */
 	return g_steal_pointer(&buf);
 }
@@ -357,12 +429,17 @@ static void
 fu_efi_signature_list_add_magic(FuFirmware *firmware)
 {
 	fwupd_guid_t guid = {0};
-	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_SHA256,
 				     &guid,
 				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				     NULL);
 	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
-	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_X509,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
+	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_EXTERNAL,
 				     &guid,
 				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				     NULL);
@@ -386,18 +463,18 @@ static void
 fu_efi_signature_list_class_init(FuEfiSignatureListClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_X509_SIGNATURE);
 	firmware_class->validate = fu_efi_signature_list_validate;
 	firmware_class->parse = fu_efi_signature_list_parse;
 	firmware_class->write = fu_efi_signature_list_write;
 	firmware_class->add_magic = fu_efi_signature_list_add_magic;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
 static void
 fu_efi_signature_list_init(FuEfiSignatureList *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_X509_SIGNATURE);
 }

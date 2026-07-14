@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuLenovoAccessoryHidBootloader,
 		     fu_lenovo_accessory_hid_bootloader,
 		     FU,
 		     LENOVO_ACCESSORY_HID_BOOTLOADER,
-		     FuHidrawDevice)
+		     FuHidDevice)

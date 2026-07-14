@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 
 #define FU_TYPE_ACPI_TABLE (fu_acpi_table_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuAcpiTable, fu_acpi_table, FU, ACPI_TABLE, FuFirmware)
@@ -25,5 +26,5 @@ const gchar *
 fu_acpi_table_get_oem_table_id(FuAcpiTable *self) G_GNUC_NON_NULL(1);
 guint32
 fu_acpi_table_get_oem_revision(FuAcpiTable *self) G_GNUC_NON_NULL(1);
-GInputStream *
+FuInputStream *
 fu_acpi_table_get_payload(FuAcpiTable *self, GError **error) G_GNUC_NON_NULL(1);

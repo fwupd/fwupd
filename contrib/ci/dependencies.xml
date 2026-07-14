@@ -22,8 +22,20 @@
     <distro id="freebsd">
       <package variant="amd64" />
     </distro>
-  </dependency>
-  <dependency id="pesign">
+   </dependency>
+   <dependency id="7zip">
+     <distro id="debian">
+       <control>
+         <exclusive>s390x</exclusive>
+       </control>
+     </distro>
+     <distro id="ubuntu">
+       <control />
+       <package variant="x86_64" />
+       <package variant="aarch64" />
+     </distro>
+   </dependency>
+   <dependency id="pesign">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -79,6 +91,16 @@
   <dependency type="build" id="noto-fonts-cjk">
     <distro id="arch">
       <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
     </distro>
   </dependency>
   <dependency id="ca-certificates">
@@ -265,6 +287,11 @@
     </distro>
     <distro id="freebsd">
       <package>noto-sans</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="dh-sequence-cruft">
+    <distro id="debian">
+      <control />
     </distro>
   </dependency>
   <dependency id="devscripts">
@@ -899,6 +926,17 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="gir1.2-glib-2.0">
+    <distro id="debian">
+      <control />
+      <multi-arch />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="gir1.2-pango-1.0">
     <distro id="centos">
       <package variant="x86_64">pango-devel</package>
@@ -1073,7 +1111,7 @@
       <package variant="x86_64">python-pip</package>
     </distro>
     <distro id="freebsd">
-      <package>py311-pip</package>
+      <package>py312-pip</package>
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">
@@ -1090,7 +1128,28 @@
       <package>virtualenv</package>
     </distro>
     <distro id="freebsd">
-      <package>py311-virtualenv</package>
+      <package>py312-virtualenv</package>
+    </distro>
+  </dependency>
+  <dependency id="python3-dbus">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-dbus</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-dbusmock">
@@ -1114,6 +1173,27 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
       <package variant="mingw64" />
+    </distro>
+  </dependency>
+  <dependency id="python3-gi">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-gobject</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">python3-gobject</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">python3-gobject</package>
+      <package variant="aarch64">python3-gobject</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-gi-cairo">
@@ -1189,19 +1269,10 @@
       <package variant="x86_64" />
     </distro>
     <distro id="debian">
-      <control>
-        <version>(>= 2021.1)</version>
-      </control>
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <version>(>= 2021.1)</version>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
+      <build-indep />
     </distro>
     <distro id="freebsd">
-      <package>py311-gi-docgen</package>
+      <package>py312-gi-docgen</package>
     </distro>
   </dependency>
   <!-- These are needed for gi-docgen -->
@@ -1269,10 +1340,10 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package>py311-pygobject</package>
+      <package>py312-pygobject</package>
     </distro>
   </dependency>
-  <dependency id="python3-requests">
+  <dependency id="python3-flask">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -1281,7 +1352,9 @@
       <package variant="aarch64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <exclusive>s390x</exclusive>
+      </control>
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1357,7 +1430,7 @@
   </dependency>
   <dependency id="python3-sqlite3">
     <distro id="freebsd">
-      <package>py311-sqlite3</package>
+      <package>py312-sqlite3</package>
     </distro>
   </dependency>
   <dependency id="efivar">

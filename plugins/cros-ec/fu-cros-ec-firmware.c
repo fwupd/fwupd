@@ -172,8 +172,6 @@ fu_cros_ec_firmware_init(FuCrosEcFirmware *self)
 	section = g_new0(FuCrosEcFirmwareSection, 1);
 	section->name = "RW";
 	g_ptr_array_add(self->sections, section);
-
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
@@ -187,8 +185,10 @@ fu_cros_ec_firmware_finalize(GObject *object)
 static void
 fu_cros_ec_firmware_class_init(FuCrosEcFirmwareClass *klass)
 {
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_cros_ec_firmware_finalize;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 }
 
 FuFirmware *

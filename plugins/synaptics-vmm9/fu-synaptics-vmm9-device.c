@@ -375,14 +375,14 @@ fu_synaptics_vmm9_device_close(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_synaptics_vmm9_firmware_new();
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 
 	/* parse */
 	stream_partial = fu_partial_input_stream_new(stream,
@@ -541,7 +541,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -669,8 +669,6 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }
 
 static void
@@ -686,4 +684,6 @@ fu_synaptics_vmm9_device_class_init(FuSynapticsVmm9DeviceClass *klass)
 	device_class->read_firmware = fu_synaptics_vmm9_device_read_firmware;
 	device_class->set_progress = fu_synaptics_vmm9_device_set_progress;
 	device_class->convert_version = fu_synaptics_vmm9_device_convert_version;
+	fu_device_register_private_flag(device_class,
+					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }

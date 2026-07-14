@@ -43,7 +43,7 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 
 static gboolean
 fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     guint8 strapping1,
 				     GError **error)
 {
@@ -128,7 +128,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 
 static gboolean
 fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -358,7 +358,6 @@ static void
 fu_vli_usbhub_firmware_init(FuVliUsbhubFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -368,4 +367,5 @@ fu_vli_usbhub_firmware_class_init(FuVliUsbhubFirmwareClass *klass)
 	firmware_class->convert_version = fu_vli_usbhub_firmware_convert_version;
 	firmware_class->parse = fu_vli_usbhub_firmware_parse;
 	firmware_class->export = fu_vli_usbhub_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

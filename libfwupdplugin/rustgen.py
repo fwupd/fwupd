@@ -7,13 +7,19 @@
 
 import os
 import sys
+import textwrap
 import uuid
 import argparse
 
 from enum import Enum
+from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+
+def file_next_to_module(file: str) -> str:
+    return str(Path(os.path.relpath(__file__)).parent / file)
 
 
 class Endian(Enum):
@@ -82,7 +88,6 @@ class EnumObj:
         self._is_force_enum = False
 
     def c_method(self, suffix: str):
-
         # override
         if suffix in self._c_methods:
             return self._c_methods[suffix]
@@ -153,7 +158,6 @@ class EnumObj:
         self._exports[derive] = Export.PRIVATE
 
     def add_export_param(self, derive: str, value: str):
-
         if derive in ["FromString", "ToString"] and value == "enum":
             self._is_force_enum = True
             return
@@ -166,7 +170,6 @@ class EnumObj:
         raise ValueError(f"derive {derive} parameter {value} unknown")
 
     def add_public_export(self, derive: str) -> None:
-
         # split out the any derive params
         idx = derive.find("(")
         if idx != -1:
@@ -341,9 +344,10 @@ class StructObj:
             self.add_private_export("Parse")
         elif derive == "ParseInternal":
             self.add_private_export("ToString")
-            self.add_private_export("ValidateInternal")
+            if self.has_constant:
+                self.add_private_export("ValidateInternal")
             for item in self.items:
-                if item.struct_obj:
+                if item.struct_obj and item.struct_obj.has_constant:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
             self.add_private_export("NewInternal")
@@ -680,6 +684,7 @@ class Generator:
         self.prefix: Optional[str] = prefix
         self.import_headers: List[str] = []
         self.modules_map: Dict[str, str] = modules_map
+        self.input_files: List[str] = []
         self.includes: List[str] = includes
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
@@ -696,8 +701,11 @@ class Generator:
             "Export": Export,
             "obj": enum_obj,
         }
-        template_h = self._env.get_template(os.path.basename("fu-rustgen-enum.h.in"))
-        template_c = self._env.get_template(os.path.basename("fu-rustgen-enum.c.in"))
+        h = "fu-rustgen-enum.h.in"
+        c = "fu-rustgen-enum.c.in"
+        template_h = self._env.get_template(os.path.basename(h))
+        template_c = self._env.get_template(os.path.basename(c))
+        self.input_files.extend([file_next_to_module(i) for i in [h, c]])
         return template_c.render(subst), template_h.render(subst)
 
     def _process_structs(self, struct_obj: StructObj) -> Tuple[str, str]:
@@ -707,20 +715,25 @@ class Generator:
             "Export": Export,
             "obj": struct_obj,
         }
-        template_h = self._env.get_template(os.path.basename("fu-rustgen-struct.h.in"))
-        template_c = self._env.get_template(os.path.basename("fu-rustgen-struct.c.in"))
+        h = "fu-rustgen-struct.h.in"
+        c = "fu-rustgen-struct.c.in"
+        template_h = self._env.get_template(os.path.basename(h))
+        template_c = self._env.get_template(os.path.basename(c))
+        self.input_files.extend([file_next_to_module(i) for i in [h, c]])
         return template_c.render(subst), template_h.render(subst)
 
     def _use_import(self, where: str, module: str, what: str) -> None:
-
         module_basename = module.replace("_", "-")
         try:
             fn = os.path.join(self.modules_map[where], f"fu-{module_basename}.rs")
         except KeyError:
             raise ValueError(f"invalid module name: {where}")
+        self.input_files.append(os.path.relpath(fn))
         child = Generator(self.basename, self.modules_map, prefix=self.prefix)
         with open(fn, "rb") as f:
             child._parse_input(f.read().decode())
+
+        self.input_files.extend(child.input_files)
 
         # header includes
         header_basename: str = f"fu-{module_basename}-struct.h"
@@ -907,7 +920,6 @@ class Generator:
                 struct_cur.items.append(item)
 
     def process_input(self, contents: str) -> Tuple[str, str]:
-
         # parse input
         self._parse_input(contents)
 
@@ -919,8 +931,11 @@ class Generator:
             "import_headers": self.import_headers,
             "includes": self.includes,
         }
-        template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
-        template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
+        h = "fu-rustgen.h.in"
+        c = "fu-rustgen.c.in"
+        template_h = self._env.get_template(os.path.basename(h))
+        template_c = self._env.get_template(os.path.basename(c))
+        self.input_files.extend([file_next_to_module(i) for i in [h, c]])
         dst_h = template_h.render(subst)
         dst_c = template_c.render(subst)
         for enum_obj in self.enum_objs.values():
@@ -945,6 +960,9 @@ if __name__ == "__main__":
     parser.add_argument("src", action="store", type=str, help="source")
     parser.add_argument("--outc", action="store", type=str, help="destination .c")
     parser.add_argument("--outh", action="store", type=str, help="destination .h")
+    parser.add_argument(
+        "--depfile", action="store", type=str, help="build system depfile"
+    )
     parser.add_argument("--prefix", action="store", type=str, default="", help="prefix")
     parser.add_argument("--use", action="append", default=[], help="module:path")
     parser.add_argument(
@@ -980,3 +998,19 @@ if __name__ == "__main__":
     if args.outh:
         with open(args.outh, "wb") as f:  # type: ignore
             f.write(dst_h.encode())
+
+    # depfiles are sort of like makefile target lines `output: inputs...`
+    if args.depfile:
+        rsgenpath = os.path.relpath(__file__)
+        inputs = set(g.input_files)
+        inputs_c = [i for i in inputs if not i.endswith((".h", ".h.in"))]
+        inputs_h = [i for i in inputs if not i.endswith((".c", ".c.in"))]
+        with open(args.depfile, "w") as f:
+            f.write(
+                textwrap.dedent(
+                    f"""\
+                    {args.outc}: {rsgenpath} {args.src} {" ".join(inputs_c)}
+                    {args.outh}: {rsgenpath} {args.src} {" ".join(inputs_h)}
+            """
+                )
+            )

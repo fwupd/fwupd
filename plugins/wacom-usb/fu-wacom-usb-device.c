@@ -333,7 +333,7 @@ fu_wacom_usb_device_write_block(FuWacomUsbDevice *self, guint32 addr, GBytes *bl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "packet was too large at %" G_GSIZE_FORMAT " bytes",
+			    "packet was too large at %zu bytes",
 			    sz);
 		return FALSE;
 	}
@@ -447,8 +447,9 @@ fu_wacom_usb_device_write_checksum_table(FuWacomUsbDevice *self, GError **error)
 gboolean
 fu_wacom_usb_device_switch_to_flash_loader(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] =
-	    {[0] = FU_WACOM_USB_REPORT_ID_SWITCH_TO_FLASH_LOADER, [1] = 0x05, [2] = 0x6a};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_SWITCH_TO_FLASH_LOADER,
+			[1] = 0x05,
+			[2] = 0x6a};
 
 	/* hit hardware */
 	return fu_wacom_usb_device_set_feature_report(self,

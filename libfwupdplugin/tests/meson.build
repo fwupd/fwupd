@@ -36,6 +36,7 @@ install_data(
     'efi-section.builder.xml',
     'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',
+    'efi-signature-list-external.builder.xml',
     'efi-variable-authentication2.builder.xml',
     'efi-volume.builder.xml',
     'efi-volume-sized.builder.xml',
@@ -198,6 +199,24 @@ install_data(
   install_dir: join_paths(
     installed_test_datadir,
     'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot',
+  ),
+  follow_symlinks: true,
+)
+
+install_data(
+  [
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/current_value',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/default_value',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/dell_modifier',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/dell_value_modifier',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/display_name',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/display_name_language_code',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/possible_values',
+    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera/type',
+  ],
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Camera',
   ),
   follow_symlinks: true,
 )

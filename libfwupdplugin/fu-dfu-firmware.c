@@ -197,7 +197,7 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 }
 
 static gboolean
-fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_dfu_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -214,7 +214,7 @@ fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -300,7 +300,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -398,16 +398,16 @@ fu_dfu_firmware_init(FuDfuFirmware *self)
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
-	priv->dfu_version = FU_DFU_FIRMARE_VERSION_DFU_1_0;
+	priv->dfu_version = FU_DFU_FIRMWARE_VERSION_DFU_1_0;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_dfu_firmware_validate;
 	firmware_class->export = fu_dfu_firmware_export;
 	firmware_class->parse = fu_dfu_firmware_parse;

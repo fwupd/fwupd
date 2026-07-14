@@ -52,8 +52,8 @@ G_DEFINE_TYPE(FuEfiLz77Decompressor, fu_efi_lz77_decompressor, FU_TYPE_FIRMWARE)
 #endif
 
 typedef struct {
-	GInputStream *stream; /* no-ref */
-	GByteArray *dst;      /* no-ref */
+	FuInputStream *stream; /* no-ref */
+	GByteArray *dst;       /* no-ref */
 
 	guint16 bit_count;
 	guint32 bit_buf;
@@ -96,7 +96,7 @@ fu_efi_lz77_decompressor_read_source_bits(FuEfiLz77DecompressHelper *helper,
 		helper->bit_buf |= (guint32)(((guint64)helper->sub_bit_buf) << number_of_bits);
 
 		/* get 1 byte into sub_bit_buf */
-		rc = g_input_stream_read(helper->stream,
+		rc = g_input_stream_read(G_INPUT_STREAM(helper->stream),
 					 &sub_bit_buf,
 					 sizeof(sub_bit_buf),
 					 NULL,
@@ -613,7 +613,7 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 
 static gboolean
 fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -706,7 +706,6 @@ static void
 fu_efi_lz77_decompressor_init(FuEfiLz77Decompressor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * FU_MB);
 }
 
 static void
@@ -714,6 +713,7 @@ fu_efi_lz77_decompressor_class_init(FuEfiLz77DecompressorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_efi_lz77_decompressor_parse;
+	fu_firmware_set_size_max(firmware_class, 64 * FU_MB);
 }
 
 /**

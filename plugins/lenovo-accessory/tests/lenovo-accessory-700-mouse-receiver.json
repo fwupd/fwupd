@@ -1,0 +1,18 @@
+{
+  "name": "Lenovo 700 Wireless Silent Mouse (via receiver)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "627e5b178920f483f1e7109d08a4dd987905d8f3e84f763d9a3913899d4485a5-Lenovo-mouse_629a-vs1.0.00.cab",
+      "emulation-url": "22db66be3db948b6cdf0f3b4ccee4871dc51d6844c63722645cc98e464afeac5-700-mouse-child-emulation.zip",
+      "components": [
+        {
+          "version": "1.0.0",
+          "guids": [
+            "325f7de4-94a6-531a-8a76-d9ec93df5575"
+          ]
+        }
+      ]
+    }
+  ]
+}

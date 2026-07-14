@@ -17,7 +17,7 @@ typedef struct {
 	guint max_depth;
 	guint max_items;
 	guint max_length;
-	GInputStream *stream; /* no ref */
+	FuInputStream *stream; /* no ref */
 	gsize offset;
 } FuCborParseHelper;
 
@@ -276,7 +276,7 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 
 /**
  * fu_cbor_parse: (skip):
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @offset: (inout) (nullable): stream position
  * @max_depth: maximum depth, or 0 for no limit
  * @max_items: maximum number of items, or 0 for no limit
@@ -290,7 +290,7 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
  * Since: 2.1.2
  **/
 FuCborItem *
-fu_cbor_parse(GInputStream *stream,
+fu_cbor_parse(FuInputStream *stream,
 	      gsize *offset,
 	      guint max_depth,
 	      guint max_items,
@@ -305,7 +305,7 @@ fu_cbor_parse(GInputStream *stream,
 	    .max_length = max_length,
 	};
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (offset != NULL)

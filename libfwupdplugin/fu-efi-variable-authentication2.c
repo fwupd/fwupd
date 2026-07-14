@@ -12,6 +12,7 @@
 #include "fu-common.h"
 #include "fu-efi-struct.h"
 #include "fu-efi-variable-authentication2.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pkcs7.h"
@@ -69,7 +70,7 @@ fu_efi_variable_authentication2_export(FuFirmware *firmware,
 
 static gboolean
 fu_efi_variable_authentication2_validate(FuFirmware *firmware,
-					 GInputStream *stream,
+					 FuInputStream *stream,
 					 gsize offset,
 					 GError **error)
 {
@@ -172,7 +173,7 @@ fu_efi_variable_authentication2_parse_pkcs7_certs(FuEfiVariableAuthentication2 *
 
 static gboolean
 fu_efi_variable_authentication2_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
@@ -180,7 +181,7 @@ fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 	gsize offset = FU_STRUCT_EFI_TIME_SIZE;
 	g_autoptr(FuStructEfiVariableAuthentication2) st = NULL;
 	g_autoptr(FuStructEfiWinCertificate) st_wincert = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 	gboolean offset_tmp = 0;
 
 	st = fu_struct_efi_variable_authentication2_parse_stream(stream, 0x0, error);
@@ -248,7 +249,6 @@ static void
 fu_efi_variable_authentication2_init(FuEfiVariableAuthentication2 *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	self->signers = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
@@ -271,4 +271,5 @@ fu_efi_variable_authentication2_class_init(FuEfiVariableAuthentication2Class *kl
 	firmware_class->export = fu_efi_variable_authentication2_export;
 	firmware_class->write = fu_efi_variable_authentication2_write;
 	firmware_class->add_magic = fu_efi_variable_authentication2_add_magic;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE_LIST);
 }

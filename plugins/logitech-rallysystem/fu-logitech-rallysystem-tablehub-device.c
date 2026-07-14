@@ -131,7 +131,7 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 
 static gboolean
 fu_logitech_rallysystem_tablehub_device_write_fw(FuLogitechRallysystemTablehubDevice *self,
-						 GInputStream *stream,
+						 FuInputStream *stream,
 						 FuProgress *progress,
 						 GError **error)
 {
@@ -212,7 +212,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
 	gsize streamsz = 0;
 	guint8 buf[FU_STRUCT_USB_FIRMWARE_DOWNLOAD_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuStructUsbFirmwareDownloadRequest) st_req =
 	    fu_struct_usb_firmware_download_request_new();
 	g_autoptr(FuStructUsbFirmwareDownloadResponse) st_res = NULL;

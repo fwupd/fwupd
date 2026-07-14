@@ -70,7 +70,7 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 
 static gboolean
 fu_jabra_file_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -130,8 +130,6 @@ static void
 fu_jabra_file_firmware_init(FuJabraFileFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
@@ -140,4 +138,6 @@ fu_jabra_file_firmware_class_init(FuJabraFileFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_jabra_file_firmware_parse;
 	firmware_class->export = fu_jabra_file_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
+	fu_firmware_set_images_max(firmware_class, 1024);
 }

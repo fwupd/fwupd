@@ -132,4 +132,5 @@ fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 	plugin_class->add_security_attrs = fu_iommu_plugin_add_security_attrs;
 	plugin_class->fix_host_security_attr = fu_iommu_plugin_fix_host_security_attr;
 	plugin_class->undo_host_security_attr = fu_iommu_plugin_undo_host_security_attr;
+	fu_plugin_register_private_flag(plugin_class, FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU);
 }

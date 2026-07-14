@@ -21,6 +21,7 @@ typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
+	gchar *mtd_type;
 
 	/* FMAP specific */
 	GPtrArray *fmap_regions;
@@ -41,6 +42,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", priv->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", priv->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", priv->metadata_size);
+	fwupd_codec_string_append(str, idt, "MtdType", priv->mtd_type);
 	fwupd_codec_string_append_hex(str, idt, "FmapOffset", priv->fmap_offset);
 	if (priv->fmap_regions->len > 0) {
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
@@ -59,13 +61,13 @@ fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
 	return NULL;
 }
 
-static GInputStream *
+static FuInputStream *
 fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceEvent *event = NULL;
 	const gchar *fn;
 	g_autofree gchar *event_id = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* need event ID */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -83,7 +85,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
 			return NULL;
-		return g_memory_input_stream_new_from_bytes(blob);
+		return fu_memory_input_stream_new_from_bytes(blob);
 	}
 
 	/* save */
@@ -123,8 +125,13 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
-	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+
+	/* fall back to a generic firmware when no specific type was detected */
+	if (firmware_gtype == G_TYPE_INVALID)
+		firmware_gtype = FU_TYPE_FIRMWARE;
+	firmware = g_object_new(firmware_gtype, NULL);
 
 	/* parse as firmware image */
 	stream = fu_mtd_device_read_stream(self, progress, error);
@@ -161,12 +168,12 @@ fu_mtd_device_metadata_ensure_version_from_image(FuMtdDevice *self,
 }
 
 static gboolean
-fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) img0 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_uswid_firmware_new();
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 
 	/* cut it down to something reasonable, then parse */
 	if (priv->metadata_offset > 0 || priv->metadata_size > 0) {
@@ -202,13 +209,13 @@ fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GErro
 }
 
 static gboolean
-fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 	g_autoptr(FuFirmware) firmware_sbom = fu_uswid_firmware_new();
 	g_autoptr(FuFirmware) img0 = NULL;
-	g_autoptr(GInputStream) stream_sbom = NULL;
+	g_autoptr(FuInputStream) stream_sbom = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* parse as firmware image */
@@ -262,7 +269,7 @@ fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError
 }
 
 static gboolean
-fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
@@ -306,7 +313,7 @@ static gboolean
 fu_mtd_device_metadata_load_versions(FuMtdDevice *self, GError **error)
 {
 	GType firmware_gtype = fu_device_get_firmware_gtype(FU_DEVICE(self));
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* read firmware from stream */
 	stream = fu_mtd_device_read_stream(self, NULL, error);
@@ -451,6 +458,105 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
 }
 
 static gboolean
+fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
+{
+#ifdef HAVE_MTD_USER_H
+	gint rc = 0;
+	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	struct erase_info_user erase = {0x0};
+	g_autoptr(FuIoctl) ioctl = NULL;
+
+	if (firmware_size_max == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "MTD device size is unknown");
+		return FALSE;
+	}
+	if (firmware_size_max > G_MAXUINT32) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "MTD device size 0x%" G_GINT64_MODIFIER
+			    "x is too large for MEMISLOCKED",
+			    firmware_size_max);
+		return FALSE;
+	}
+
+	erase.start = 0x0;
+	erase.length = firmware_size_max;
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	if (!fu_ioctl_execute(ioctl,
+			      MEMISLOCKED,
+			      (guint8 *)&erase,
+			      sizeof(erase),
+			      &rc,
+			      FU_MTD_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error_literal(error, "failed to get MTD lock status: ");
+		return FALSE;
+	}
+
+	*locked = rc != 0;
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as mtd-user.h is unavailable");
+	return FALSE;
+#endif
+}
+
+static void
+fu_mtd_device_security_attr_set_locked(FwupdSecurityAttr *attr, gboolean locked)
+{
+	if (!locked) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	gboolean locked = FALSE;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* MEMISLOCKED is only meaningful for this HSI attribute on NOR flash. */
+	if (g_strcmp0(priv->mtd_type, "nor") != 0)
+		return;
+
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+
+	locker = fu_device_locker_new(device, &error_local);
+	if (locker == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to open MTD device for lock status: %s", error_local->message);
+		return;
+	}
+	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to get MTD lock status: %s", error_local->message);
+		return;
+	}
+
+	fu_mtd_device_security_attr_set_locked(attr, locked);
+}
+
+static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
@@ -529,6 +635,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_flags = NULL;
 	g_autofree gchar *attr_size = NULL;
 	g_autofree gchar *attr_name = NULL;
+	g_autofree gchar *attr_type = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 
@@ -566,6 +673,12 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 					      NULL);
 	if (attr_name != NULL)
 		fu_device_set_name(FU_DEVICE(self), attr_name);
+	attr_type = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "type",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_type != NULL)
+		priv->mtd_type = fu_strstrip(attr_type);
 
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
@@ -663,7 +776,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_mtd_device_erase(FuMtdDevice *self,
-		    GInputStream *stream,
+		    FuInputStream *stream,
 		    gsize offset,
 		    FuProgress *progress,
 		    GError **error)
@@ -816,7 +929,7 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 
 static gboolean
 fu_mtd_device_write_verify(FuMtdDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   gsize offset,
 			   FuProgress *progress,
 			   GError **error)
@@ -886,7 +999,7 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 
 static gboolean
 fu_mtd_device_write_stream(FuMtdDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   gsize offset,
 			   FuProgress *progress,
 			   GError **error)
@@ -924,7 +1037,7 @@ fu_mtd_device_write_stream(FuMtdDevice *self,
 gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
 {
-	g_autoptr(GInputStream) img_stream = NULL;
+	g_autoptr(FuInputStream) img_stream = NULL;
 
 	img_stream = fu_firmware_get_stream(img, error);
 	if (img_stream == NULL)
@@ -941,7 +1054,7 @@ fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progre
 
 static FuFirmware *
 fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -994,7 +1107,7 @@ fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
 
 static FuFirmware *
 fu_mtd_device_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -1023,7 +1136,7 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get data to write */
 	stream = fu_firmware_get_stream(firmware, error);
@@ -1150,8 +1263,6 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
@@ -1163,6 +1274,7 @@ fu_mtd_device_finalize(GObject *object)
 	FuMtdDevice *self = FU_MTD_DEVICE(object);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_ptr_array_unref(priv->fmap_regions);
+	g_free(priv->mtd_type);
 	if (priv->fmap_firmware != NULL)
 		g_object_unref(priv->fmap_firmware);
 	G_OBJECT_CLASS(fu_mtd_device_parent_class)->finalize(object);
@@ -1184,4 +1296,6 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->prepare_firmware = fu_mtd_device_prepare_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
+	device_class->add_security_attrs = fu_mtd_device_add_security_attrs;
 }

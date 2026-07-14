@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuLogitechRdfuFirmware, fu_logitech_rdfu_firmware, FU_TYPE_FIRMWAR
 
 static gboolean
 fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -46,7 +46,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	}
 
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       stream,
+						       G_INPUT_STREAM(stream),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
 	if (json_node == NULL)
@@ -146,13 +146,13 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 static void
 fu_logitech_rdfu_firmware_init(FuLogitechRdfuFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LOGITECH_RDFU_ENTITY);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
 fu_logitech_rdfu_firmware_class_init(FuLogitechRdfuFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_LOGITECH_RDFU_ENTITY);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->parse = fu_logitech_rdfu_firmware_parse;
 }

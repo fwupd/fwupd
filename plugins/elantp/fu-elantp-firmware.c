@@ -70,7 +70,7 @@ fu_elantp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_elantp_firmware_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -97,7 +97,7 @@ fu_elantp_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_elantp_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -258,7 +258,6 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elantp_firmware_init(FuElantpFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -270,4 +269,5 @@ fu_elantp_firmware_class_init(FuElantpFirmwareClass *klass)
 	firmware_class->build = fu_elantp_firmware_build;
 	firmware_class->write = fu_elantp_firmware_write;
 	firmware_class->export = fu_elantp_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

@@ -286,7 +286,7 @@ fu_sunplus_camera_device_read_chunk(FuSunplusCameraDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid read size %" G_GSIZE_FORMAT,
+			    "invalid read size %zu",
 			    bufsz);
 		return FALSE;
 	}
@@ -565,7 +565,7 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	guint8 checksum_dev = 0;
 	guint8 finish = 0x01;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)

@@ -11,6 +11,7 @@
 #include "fu-common.h"
 #include "fu-edid-struct.h"
 #include "fu-edid.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 struct _FuEdid {
@@ -218,7 +219,7 @@ fu_edid_strsafe(const guint8 *buf, gsize bufsz)
 }
 
 static gboolean
-fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GError **error)
+fu_edid_parse_descriptor(FuEdid *self, FuInputStream *stream, gsize offset, GError **error)
 {
 	gsize buf2sz = 0;
 	const guint8 *buf2;
@@ -253,7 +254,7 @@ fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GErro
 
 static gboolean
 fu_edid_parse(FuFirmware *firmware,
-	      GInputStream *stream,
+	      FuInputStream *stream,
 	      FuFirmwareParseFlags flags,
 	      GError **error)
 {
@@ -372,7 +373,6 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 		memcpy(st->buf->data + offset_desc,
 		       st_desc->buf->data,
 		       st_desc->buf->len); /* nocheck:blocked */
-		offset_desc += st_desc->buf->len;
 	}
 
 	/* success */
@@ -472,12 +472,12 @@ fu_edid_class_init(FuEdidClass *klass)
 	firmware_class->write = fu_edid_write;
 	firmware_class->build = fu_edid_build;
 	firmware_class->export = fu_edid_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 static void
 fu_edid_init(FuEdid *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

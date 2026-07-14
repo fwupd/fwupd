@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuAmdKriaPersistentFirmware, fu_amd_kria_persistent_firmware, FU_T
 
 static gboolean
 fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
@@ -47,7 +47,6 @@ fu_amd_kria_persistent_firmware_booted_image_a(FuAmdKriaPersistentFirmware *self
 static void
 fu_amd_kria_persistent_firmware_init(FuAmdKriaPersistentFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -68,6 +67,7 @@ fu_amd_kria_persistent_firmware_class_init(FuAmdKriaPersistentFirmwareClass *kla
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_amd_kria_persistent_firmware_parse;
 	firmware_class->export = fu_amd_kria_persistent_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *

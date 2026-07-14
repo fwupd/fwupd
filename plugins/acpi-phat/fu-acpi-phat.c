@@ -30,7 +30,7 @@ fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 
 static gboolean
 fu_acpi_phat_record_parse(FuAcpiPhat *self,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  gsize *offset,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
@@ -65,7 +65,7 @@ fu_acpi_phat_record_parse(FuAcpiPhat *self,
 
 	/* supported record type */
 	if (firmware_rcd != NULL) {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		partial_stream = fu_partial_input_stream_new(stream, *offset, record_length, error);
 		if (partial_stream == NULL)
 			return FALSE;
@@ -89,14 +89,14 @@ fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 }
 
 static gboolean
-fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_acpi_phat_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_acpi_phat_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
@@ -143,7 +143,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* verify checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
-		g_autoptr(GInputStream) stream_tmp =
+		g_autoptr(FuInputStream) stream_tmp =
 		    fu_partial_input_stream_new(stream, 0, length, error);
 		if (stream_tmp == NULL)
 			return FALSE;
@@ -307,11 +307,7 @@ fu_acpi_phat_to_report_string(FuAcpiPhat *self)
 static void
 fu_acpi_phat_init(FuAcpiPhat *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 }
 
 static void
@@ -327,12 +323,16 @@ fu_acpi_phat_class_init(FuAcpiPhatClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 	object_class->finalize = fu_acpi_phat_finalize;
 	firmware_class->validate = fu_acpi_phat_validate;
 	firmware_class->parse = fu_acpi_phat_parse;
 	firmware_class->write = fu_acpi_phat_write;
 	firmware_class->export = fu_acpi_phat_export;
 	firmware_class->build = fu_acpi_phat_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
 FuFirmware *

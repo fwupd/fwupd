@@ -167,7 +167,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "only sent %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only sent %zu/%zu bytes",
 				    actual,
 				    outlen);
 			return FALSE;
@@ -192,7 +192,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
-				    "only received %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only received %zu/%zu bytes",
 				    actual,
 				    inlen);
 			return FALSE;
@@ -224,12 +224,8 @@ fu_cros_ec_usb_device_flush_cb(FuDevice *device, gpointer user_data, GError **er
 					FU_CROS_EC_FLUSH_TIMEOUT_MS,
 					NULL,
 					NULL)) {
-		g_debug("flushing %" G_GSIZE_FORMAT " bytes", actual);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "flushing %" G_GSIZE_FORMAT " bytes",
-			    actual);
+		g_debug("flushing %zu bytes", actual);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "flushing %zu bytes", actual);
 		return FALSE;
 	}
 
@@ -316,7 +312,7 @@ fu_cros_ec_usb_device_start_request_cb(FuDevice *device, gpointer user_data, GEr
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
-			    "unexpected response size %" G_GSIZE_FORMAT,
+			    "unexpected response size %zu",
 			    rxed_size);
 		return FALSE;
 	}
@@ -486,7 +482,7 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 
 	if (fu_device_has_private_flag(device,
 				       FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED)) {
-		/* sets the the first 32 bits of the SHA256 digest */
+		/* sets the first 32 bits of the SHA256 digest */
 		guint32 digest_val = 0;
 		guint8 digest[SHA256_DIGEST_LENGTH] = {0};
 		gsize out_len = SHA256_DIGEST_LENGTH;
@@ -636,7 +632,7 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 	/* smart update: trim trailing bytes */
 	while (data_len > 1 && (data_ptr[data_len - 1] == 0xff))
 		data_len--;
-	g_debug("trimmed %" G_GSIZE_FORMAT " trailing bytes", section->size - data_len);
+	g_debug("trimmed %zu trailing bytes", section->size - data_len);
 	g_debug("sending 0x%x bytes to 0x%x", (guint)data_len, section->offset);
 
 	/* send in chunks of PDU size */
@@ -918,7 +914,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       FuProgress *progress,
 				       FuFirmwareParseFlags flags,
 				       GError **error)
@@ -1048,13 +1044,6 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CROS_EC_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED);
 }
 
 static void
@@ -1106,4 +1095,10 @@ fu_cros_ec_usb_device_class_init(FuCrosEcUsbDeviceClass *klass)
 	device_class->reload = fu_cros_ec_usb_device_reload;
 	device_class->replace = fu_cros_ec_usb_device_replace;
 	device_class->cleanup = fu_cros_ec_usb_device_cleanup;
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+	fu_device_register_private_flag(device_class,
+					FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED);
 }

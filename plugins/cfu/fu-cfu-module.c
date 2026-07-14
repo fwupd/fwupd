@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-cfu-device.h"
+#include "fu-cfu-firmware.h"
 #include "fu-cfu-module.h"
 #include "fu-cfu-struct.h"
 
@@ -79,12 +80,12 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 
 static FuFirmware *
 fu_cfu_module_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_cfu_firmware_new();
 	g_autoptr(FuFirmware) firmware_archive = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) fw_offer = NULL;
 	g_autoptr(FuFirmware) fw_payload = NULL;
@@ -92,9 +93,6 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) payload = fu_cfu_payload_new();
 	g_autoptr(GBytes) blob_offer = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
-
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_CFU_OFFER);
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_CFU_PAYLOAD);
 
 	/* parse archive */
 	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))

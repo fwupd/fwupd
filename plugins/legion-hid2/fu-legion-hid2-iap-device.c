@@ -233,7 +233,7 @@ fu_legion_hid2_iap_device_write_data(FuLegionHid2IapDevice *self,
 				     FuProgress *progress,
 				     GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	stream = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
@@ -260,7 +260,7 @@ fu_legion_hid2_iap_device_write_sig(FuLegionHid2IapDevice *self,
 				    FuProgress *progress,
 				    GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	stream = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_SIGNATURE, error);

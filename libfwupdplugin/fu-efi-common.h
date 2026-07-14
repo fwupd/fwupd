@@ -8,6 +8,7 @@
 
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 
 #define FU_EFI_VOLUME_GUID_FFS1	       "7a9354d9-0468-444a-81ce-0bf617d890df"
 #define FU_EFI_VOLUME_GUID_FFS2	       "8c8ce578-8a3d-4f1c-9935-896185c32dd3"
@@ -31,11 +32,17 @@
 #define FU_EFI_SECTION_GUID_ACPI1_TABLE	   "eb9d2d30-2d88-11d3-9a16-0090273fc14d"
 #define FU_EFI_SECTION_GUID_ACPI2_TABLE	   "8868e871-e4f1-11d3-bc22-0080c73c8881"
 
+#define FU_EFI_SIGNATURE_GUID_SHA1     "826ca512-cf10-4ac9-b187-be01496631bd"
+#define FU_EFI_SIGNATURE_GUID_SHA256   "c1c41626-504c-4092-aca9-41f936934328"
+#define FU_EFI_SIGNATURE_GUID_SHA512   "093e0fae-a6c4-4f50-9f1b-d41e2b89c19a"
+#define FU_EFI_SIGNATURE_GUID_X509     "a5c059a1-94e4-4aa7-87b5-ab155c2bf072"
+#define FU_EFI_SIGNATURE_GUID_EXTERNAL "452e8ced-dfff-4b8c-ae01-5118862e682c"
+
 const gchar *
 fu_efi_guid_to_name(const gchar *guid);
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_NON_NULL(1, 2);

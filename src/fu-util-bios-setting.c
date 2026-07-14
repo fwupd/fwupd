@@ -17,10 +17,13 @@
 static void
 fu_util_bios_setting_update_description(FwupdBiosSetting *setting)
 {
+	const gchar *tmp = fwupd_bios_setting_get_description(setting);
 	const gchar *new = NULL;
 
 	/* try to look it up from translations */
-	new = gettext(fwupd_bios_setting_get_description(setting));
+	if (tmp == NULL)
+		return;
+	new = dgettext(GETTEXT_PACKAGE, tmp);
 	if (new != NULL)
 		fwupd_bios_setting_set_description(setting, new);
 }
@@ -46,16 +49,17 @@ fu_util_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
 gboolean
 fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 {
-	const gchar *name;
-
 	/* no arguments set */
 	if (g_strv_length(values) == 0)
 		return TRUE;
-	name = fwupd_bios_setting_get_name(setting);
 
 	/* check all arguments */
 	for (guint j = 0; j < g_strv_length(values); j++) {
-		if (g_strcmp0(name, values[j]) == 0)
+		if (g_strcmp0(fwupd_bios_setting_get_name(setting), values[j]) == 0)
+			return TRUE;
+		if (g_strcmp0(fwupd_bios_setting_get_id(setting), values[j]) == 0)
+			return TRUE;
+		if (g_strcmp0(fwupd_bios_setting_get_appstream_id(setting), values[j]) == 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -119,6 +123,18 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 				  /* TRANSLATORS: description of BIOS setting */
 				  _("Description"),
 				  fwupd_bios_setting_get_description(setting));
+
+	tmp = fwupd_bios_setting_get_appstream_id(setting);
+	if (tmp != NULL) {
+		/* TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting */
+		fwupd_codec_string_append(str, idt + 1, _("AppStream ID"), tmp);
+	}
+
+	tmp = fwupd_bios_setting_get_icon(setting);
+	if (tmp != NULL) {
+		/* TRANSLATORS: icon name for a BIOS setting */
+		fwupd_codec_string_append(str, idt + 1, _("Icon"), tmp);
+	}
 
 	if (fwupd_bios_setting_get_read_only(setting)) {
 		/* TRANSLATORS: item is TRUE */

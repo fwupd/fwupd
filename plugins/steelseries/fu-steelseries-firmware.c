@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuSteelseriesFirmware, fu_steelseries_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_steelseries_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
@@ -25,7 +25,7 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 	guint32 checksum_tmp = 0xFFFFFFFF;
 	guint32 checksum = 0;
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;

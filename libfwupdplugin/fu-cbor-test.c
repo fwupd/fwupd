@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-cbor-common.h"
+#include "fu-memory-input-stream.h"
 
 /* nocheck:magic-inlines=200 */
 
@@ -20,7 +21,7 @@ fu_cbor_item_depth_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_array();
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -34,7 +35,7 @@ fu_cbor_item_depth_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 3);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 2, 0, 0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
@@ -51,7 +52,7 @@ fu_cbor_item_items_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_integer(2);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_map_append(item1, item2, item3, &error);
 	g_assert_no_error(error);
@@ -65,7 +66,7 @@ fu_cbor_item_items_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 5);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 1, 0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
@@ -96,7 +97,7 @@ fu_cbor_item_boolean_func(void)
 	blob = fu_cbor_item_get_bytes(item, NULL);
 	g_assert_null(blob);
 
-	/* not in an an array or map */
+	/* not in an array or map */
 	buf = fu_cbor_item_write(item, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(buf);
@@ -112,7 +113,7 @@ fu_cbor_item_integer_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_integer(G_MAXINT64);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_map_append(item1, item2, item3, &error);
 	g_assert_no_error(error);
@@ -126,7 +127,7 @@ fu_cbor_item_integer_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 29);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -144,7 +145,7 @@ fu_cbor_item_string_func(void)
 	g_autoptr(FuCborItem) item2 = fu_cbor_item_new_string(NULL);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -154,7 +155,7 @@ fu_cbor_item_string_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 2);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -180,7 +181,7 @@ fu_cbor_item_bytes_func(void)
 	g_autoptr(FuCborItem) item2 = fu_cbor_item_new_bytes(blob);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -190,7 +191,7 @@ fu_cbor_item_bytes_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 5);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -214,7 +215,7 @@ fu_cbor_item_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuCborItem) item = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	const guint8 buf[] = {
 	    0xa7, 0x0f, 0x65, 0x65, 0x6e, 0x2d, 0x55, 0x53, 0x00, 0x64, 0x64, 0x61, 0x76, 0x65,
 	    0x08, 0xf5, 0x01, 0x6c, 0x66, 0x69, 0x72, 0x6d, 0x77, 0x61, 0x72, 0x65, 0x2e, 0x62,
@@ -231,7 +232,7 @@ fu_cbor_item_func(void)
 	 * "uSWID", "54": "def", "52": "Dave", "45": "acb"}, "2": {"31": "Hughski Ltd", "32":
 	 * "hughsie.com", "33": [1, 2, 3, 4, 5, 6]}}
 	 */
-	stream = g_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
 	g_assert_nonnull(stream);
 
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);

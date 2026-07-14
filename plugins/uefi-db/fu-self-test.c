@@ -10,9 +10,141 @@
 
 #include "fu-context-private.h"
 #include "fu-efi-x509-signature-private.h"
+<<<<<<< HEAD
 #include "fu-uefi-db-device.h"
 #include "fu-uefi-device-private.h"
 
+=======
+#include "fu-plugin-private.h"
+#include "fu-uefi-db-device.h"
+#include "fu-uefi-db-plugin.h"
+#include "fu-uefi-device-private.h"
+
+static void
+fu_uefi_db_external_locked_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device_db = NULL;
+	g_autoptr(FuDevice) device_db_child = NULL;
+	g_autoptr(FuDevice) device_kek = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+
+	/* create a db device with a child */
+	device_db = fu_device_new(ctx);
+	device_db_child = fu_device_new(ctx);
+	fu_device_set_id(device_db, "db");
+	fu_device_set_id(device_db_child, "db-child");
+	fu_device_add_child(device_db, device_db_child);
+
+	/* add db device to plugin */
+	fu_plugin_add_device(plugin, device_db);
+	fu_plugin_runner_device_added(plugin, device_db);
+
+	/* register a KEK device that is external */
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	fu_device_set_plugin(device_kek, "uefi_kek");
+	fu_device_add_private_flag(device_kek, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
+	fu_plugin_runner_device_register(plugin, device_kek);
+
+	/* db child should be locked */
+	child = g_ptr_array_index(fu_device_get_children(device_db), 0);
+	g_assert_true(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED));
+}
+
+static void
+fu_uefi_db_external_not_locked_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device_db = NULL;
+	g_autoptr(FuDevice) device_db_child = NULL;
+	g_autoptr(FuDevice) device_kek = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+
+	/* create a db device with a child */
+	device_db = fu_device_new(ctx);
+	device_db_child = fu_device_new(ctx);
+	fu_device_set_id(device_db, "db");
+	fu_device_set_id(device_db_child, "db-child");
+	fu_device_add_child(device_db, device_db_child);
+
+	/* add db device to plugin */
+	fu_plugin_add_device(plugin, device_db);
+	fu_plugin_runner_device_added(plugin, device_db);
+
+	/* register a KEK device that is NOT external */
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	fu_device_set_plugin(device_kek, "uefi_kek");
+	fu_plugin_runner_device_register(plugin, device_kek);
+
+	/* db child should NOT be locked */
+	child = g_ptr_array_index(fu_device_get_children(device_db), 0);
+	g_assert_false(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED));
+}
+
+static void
+fu_uefi_db_external_locked_device_added_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device_db = NULL;
+	g_autoptr(FuDevice) device_db_child = NULL;
+	g_autoptr(FuDevice) device_kek = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+
+	/* register KEK device as external first */
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	fu_device_set_plugin(device_kek, "uefi_kek");
+	fu_device_add_private_flag(device_kek, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
+	fu_plugin_runner_device_register(plugin, device_kek);
+
+	/* then add a db device with a child */
+	device_db = fu_device_new(ctx);
+	device_db_child = fu_device_new(ctx);
+	fu_device_set_id(device_db, "db");
+	fu_device_set_id(device_db_child, "db-child");
+	fu_device_add_child(device_db, device_db_child);
+
+	/* add db device to plugin -- child should be locked via device_added */
+	fu_plugin_add_device(plugin, device_db);
+	fu_plugin_runner_device_added(plugin, device_db);
+
+	child = g_ptr_array_index(fu_device_get_children(device_db), 0);
+	g_assert_true(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED));
+}
+
+>>>>>>> main
 static GBytes *
 fu_uefi_db_self_test_build_siglist(GBytes *der, GError **error)
 {
@@ -208,6 +340,155 @@ fu_uefi_db_no_default_ids_func(void)
 	}
 }
 
+<<<<<<< HEAD
+=======
+static void
+fu_uefi_db_modify_config_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	fwupd_plugin_add_flag(FWUPD_PLUGIN(plugin), FWUPD_PLUGIN_FLAG_TEST_ONLY);
+
+	/* valid key */
+	ret = fu_plugin_runner_modify_config(plugin, "UpdateWindowsCA", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* invalid key */
+	ret = fu_plugin_runner_modify_config(plugin, "NotAKey", "value", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
+static void
+fu_uefi_db_windows_ca_lower_priority_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_child = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	device = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+	device_child = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+
+	/* add child with Windows Production PCA instance ID */
+	fu_device_set_id(device, "parent");
+	fu_device_add_instance_id_full(device_child,
+				       "UEFI\\CRT_1A8B6903D64CC9AD09D12FCB355663A458A09EF0",
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+	fu_device_set_id(device_child, "child");
+	fu_device_add_child(device, device_child);
+
+	/* without dual-boot and without UpdateWindowsCA → lower priority */
+	fu_plugin_runner_device_added(plugin, device);
+	child = g_ptr_array_index(fu_device_get_children(device), 0);
+	g_assert_true(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
+}
+
+static void
+fu_uefi_db_windows_ca_dual_boot_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_child = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	device = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+	device_child = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+
+	/* add child with Windows Production PCA instance ID */
+	fu_device_set_id(device, "parent");
+	fu_device_add_instance_id_full(device_child,
+				       "UEFI\\CRT_1A8B6903D64CC9AD09D12FCB355663A458A09EF0",
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+	fu_device_set_id(device_child, "child");
+	fu_device_add_child(device, device_child);
+
+	/* with dual-boot Windows → NOT lower priority */
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_DUAL_BOOT_WINDOWS);
+	fu_plugin_runner_device_added(plugin, device);
+	child = g_ptr_array_index(fu_device_get_children(device), 0);
+	g_assert_false(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
+}
+
+static void
+fu_uefi_db_windows_ca_config_override_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_child = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_uefi_db_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	device = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+	device_child = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
+
+	/* add child with Windows Production PCA instance ID */
+	fu_device_set_id(device, "parent");
+	fu_device_add_instance_id_full(device_child,
+				       "UEFI\\CRT_1A8B6903D64CC9AD09D12FCB355663A458A09EF0",
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+	fu_device_set_id(device_child, "child");
+	fu_device_add_child(device, device_child);
+
+	/* with UpdateWindowsCA=true → NOT lower priority */
+	fwupd_plugin_add_flag(FWUPD_PLUGIN(plugin), FWUPD_PLUGIN_FLAG_TEST_ONLY);
+	ret = fu_plugin_runner_modify_config(plugin, "UpdateWindowsCA", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_plugin_runner_device_added(plugin, device);
+	child = g_ptr_array_index(fu_device_get_children(device), 0);
+	g_assert_false(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
+}
+
+>>>>>>> main
 int
 main(int argc, char **argv)
 {
@@ -215,5 +496,18 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-db/default-ids", fu_uefi_db_default_ids_func);
 	g_test_add_func("/uefi-db/no-default-ids", fu_uefi_db_no_default_ids_func);
+<<<<<<< HEAD
+=======
+	g_test_add_func("/uefi-db/external-locked", fu_uefi_db_external_locked_func);
+	g_test_add_func("/uefi-db/external-not-locked", fu_uefi_db_external_not_locked_func);
+	g_test_add_func("/uefi-db/external-locked-device-added",
+			fu_uefi_db_external_locked_device_added_func);
+	g_test_add_func("/uefi-db/modify-config", fu_uefi_db_modify_config_func);
+	g_test_add_func("/uefi-db/windows-ca-lower-priority",
+			fu_uefi_db_windows_ca_lower_priority_func);
+	g_test_add_func("/uefi-db/windows-ca-dual-boot", fu_uefi_db_windows_ca_dual_boot_func);
+	g_test_add_func("/uefi-db/windows-ca-config-override",
+			fu_uefi_db_windows_ca_config_override_func);
+>>>>>>> main
 	return g_test_run();
 }

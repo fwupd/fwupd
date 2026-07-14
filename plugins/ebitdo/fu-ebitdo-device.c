@@ -172,7 +172,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "outbuf size wrong, expected 4 got %" G_GSIZE_FORMAT,
+					    "outbuf size wrong, expected 4 got %zu",
 					    out_len);
 				return FALSE;
 			}
@@ -438,7 +438,7 @@ fu_ebitdo_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 
 static FuFirmware *
 fu_ebitdo_device_prepare_firmware(FuDevice *device,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  FuProgress *progress,
 				  FuFirmwareParseFlags flags,
 				  GError **error)
@@ -460,7 +460,7 @@ fu_ebitdo_device_write_image(FuEbitdoDevice *self,
 	gsize bufsz = 0;
 	guint32 serial_new[3] = {0};
 	g_autoptr(GBytes) fw_hdr = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	const guint32 app_key_index[16] = {

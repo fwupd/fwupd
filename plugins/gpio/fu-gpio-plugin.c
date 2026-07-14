@@ -122,7 +122,7 @@ fu_gpio_plugin_cleanup(FuPlugin *plugin,
 
 	/* deep copy to local to clear transaction array */
 	current_logical_ids =
-	    g_ptr_array_copy(self->current_logical_ids, (GCopyFunc)g_strdup, NULL);
+	    fu_ptr_array_copy(self->current_logical_ids, (GCopyFunc)g_strdup, g_free);
 	g_ptr_array_set_size(self->current_logical_ids, 0);
 
 	/* close the fds we opened during ->prepare */

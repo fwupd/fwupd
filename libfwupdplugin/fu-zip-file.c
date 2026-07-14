@@ -85,6 +85,7 @@ fu_zip_file_class_init(FuZipFileClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->build = fu_zip_file_build;
 	firmware_class->export = fu_zip_file_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 }
 
 static void

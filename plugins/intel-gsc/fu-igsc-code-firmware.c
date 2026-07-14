@@ -43,7 +43,7 @@ fu_igsc_code_firmware_get_arb_svn(FuIgscCodeFirmware *self)
 }
 
 static gboolean
-fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream, GError **error)
+fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, FuInputStream *stream, GError **error)
 {
 	g_autoptr(FuStructIgscFwuGwsImageInfo) st_inf = NULL;
 
@@ -57,7 +57,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -66,8 +66,8 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscFwuFwImageData) st_imgdata = NULL;
 	g_autoptr(FuStructIgscFwuImageMetadataV1) st_md1 = NULL;
-	g_autoptr(GInputStream) stream_imgi = NULL;
-	g_autoptr(GInputStream) stream_info = NULL;
+	g_autoptr(FuInputStream) stream_imgi = NULL;
+	g_autoptr(FuInputStream) stream_info = NULL;
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
@@ -122,7 +122,6 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 static void
 fu_igsc_code_firmware_init(FuIgscCodeFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 8 * FU_MB);
 }
 
 static void
@@ -131,4 +130,5 @@ fu_igsc_code_firmware_class_init(FuIgscCodeFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_igsc_code_firmware_parse;
 	firmware_class->export = fu_igsc_code_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 8 * FU_MB);
 }

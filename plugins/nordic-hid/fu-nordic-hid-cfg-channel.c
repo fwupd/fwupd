@@ -157,6 +157,18 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 			break;
 		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	}
+
+	/* the length is chosen by the device, so sanity check it before any
+	 * caller reads recv_msg->data using recv_msg->data_len as the bound */
+	if (recv_msg->data_len > sizeof(recv_msg->data)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "received %u bytes, while maximum is %u",
+			    recv_msg->data_len,
+			    (guint)sizeof(recv_msg->data));
+		return FALSE;
+	}
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
 			    0,
@@ -1502,7 +1514,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 
 static gboolean
 fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
-					      GInputStream *stream,
+					      FuInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
@@ -1558,7 +1570,7 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	guint64 val = 0;
 	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
 
 	/* select correct firmware per target board, bootloader and bank */

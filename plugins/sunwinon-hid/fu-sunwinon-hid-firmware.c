@@ -53,7 +53,7 @@ fu_sunwinon_hid_firmware_get_fw_type(FuSunwinonHidFirmware *self)
 
 static gboolean
 fu_sunwinon_hid_firmware_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -140,7 +140,6 @@ fu_sunwinon_hid_firmware_init(FuSunwinonHidFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
@@ -149,4 +148,5 @@ fu_sunwinon_hid_firmware_class_init(FuSunwinonHidFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_sunwinon_hid_firmware_parse;
 	firmware_class->export = fu_sunwinon_hid_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

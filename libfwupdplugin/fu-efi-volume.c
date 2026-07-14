@@ -51,14 +51,14 @@ fu_efi_volume_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilde
 }
 
 static gboolean
-fu_efi_volume_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_efi_volume_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_efi_volume_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -141,7 +141,7 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 
 static gboolean
 fu_efi_volume_parse(FuFirmware *firmware,
-		    GInputStream *stream,
+		    FuInputStream *stream,
 		    FuFirmwareParseFlags flags,
 		    GError **error)
 {
@@ -156,7 +156,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	guint8 alignment;
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(FuStructEfiVolume) st_hdr = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse */
 	st_hdr = fu_struct_efi_volume_parse_stream(stream, 0x0, error);
@@ -457,27 +457,27 @@ fu_efi_volume_init(FuEfiVolume *self)
 {
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
-#ifdef HAVE_FUZZER
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1000);
-#endif
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VSS2_VARIABLE_STORE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FTW_STORE);
 }
 
 static void
 fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_FILESYSTEM);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VSS2_VARIABLE_STORE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_FTW_STORE);
 	firmware_class->validate = fu_efi_volume_validate;
 	firmware_class->parse = fu_efi_volume_parse;
 	firmware_class->write = fu_efi_volume_write;
 	firmware_class->export = fu_efi_volume_export;
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 1000);
+#endif
 }
 
 /**

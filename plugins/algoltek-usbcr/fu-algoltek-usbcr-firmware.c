@@ -31,7 +31,7 @@ fu_algoltek_usbcr_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -140,7 +140,6 @@ static void
 fu_algoltek_usbcr_firmware_init(FuAlgoltekUsbcrFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
@@ -154,4 +153,5 @@ fu_algoltek_usbcr_firmware_class_init(FuAlgoltekUsbcrFirmwareClass *klass)
 	firmware_class->export = fu_algoltek_usbcr_firmware_export;
 	firmware_class->build = fu_algoltek_usbcr_firmware_build;
 	firmware_class->write = fu_algoltek_usbcr_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

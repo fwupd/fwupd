@@ -94,18 +94,18 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_ifd_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_ifd_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_ifd_fdbar_validate_stream(stream, offset, error);
 }
 
-static GInputStream *
-fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
+static FuInputStream *
+fu_ifd_firmware_fixup_stream(FuInputStream *stream, GError **error)
 {
 	const guint8 buf[] = {0xFF};
 	gsize streamsz = 0;
 	g_autoptr(GBytes) blob = g_bytes_new(buf, sizeof(buf));
-	g_autoptr(GInputStream) stream2 = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) stream2 = fu_composite_input_stream_new();
 
 	/* already aligned */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -173,7 +173,7 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 
 static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -182,7 +182,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autoptr(FuStructIfdFcba) st_fcba = NULL;
 	g_autoptr(FuStructIfdFdbar) st_fdbar = NULL;
-	g_autoptr(GInputStream) stream2 = NULL;
+	g_autoptr(FuInputStream) stream2 = NULL;
 
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -269,7 +269,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
 		guint32 freg_size;
 		g_autoptr(FuFirmware) img = NULL;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* invalid - check before subtraction */
 		if (freg_base > freg_limt)
@@ -529,11 +529,6 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	priv->flash_master[3] = 0x00800900;
 	priv->flash_ich_strap_base_addr = 0x100;
 	priv->flash_mch_strap_base_addr = 0x300;
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_BIOS);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_IMAGE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
@@ -550,7 +545,12 @@ fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_IFD_BIOS);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_IFD_IMAGE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VOLUME);
 	object_class->finalize = fu_ifd_firmware_finalize;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->validate = fu_ifd_firmware_validate;
 	firmware_class->export = fu_ifd_firmware_export;
 	firmware_class->parse = fu_ifd_firmware_parse;

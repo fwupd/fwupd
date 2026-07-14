@@ -596,7 +596,7 @@ fu_mediatek_scaler_device_run_isp(FuMediatekScalerDevice *self, guint16 chksum, 
 
 static gboolean
 fu_mediatek_scaler_device_commit_firmware(FuMediatekScalerDevice *self,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  GError **error)
 {
 	guint16 sum16 = 0;
@@ -753,7 +753,7 @@ fu_mediatek_scaler_device_write_chunk_cb(FuDevice *device, gpointer user_data, G
 
 static gboolean
 fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
-					      GInputStream *stream,
+					      FuInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
@@ -815,7 +815,7 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	gsize fw_size = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -911,7 +911,6 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_MEDIATEK_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_I2C_DEVICE);
-	fu_device_register_private_flag(FU_DEVICE(self), FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than linux_display */
 }
 
@@ -926,4 +925,5 @@ fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 	device_class->write_firmware = fu_mediatek_scaler_device_write_firmware;
 	device_class->reload = fu_mediatek_scaler_device_setup;
 	device_class->set_progress = fu_mediatek_scaler_device_set_progress;
+	fu_device_register_private_flag(device_class, FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
 }

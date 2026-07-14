@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -26,7 +26,7 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autoptr(FuFirmware) firmware_payload = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware_public_key = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 	g_autoptr(GBytes) blob_public_key = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -154,16 +154,16 @@ fu_genesys_scaler_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_genesys_scaler_firmware_init(FuGenesysScalerFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_genesys_scaler_firmware_class_init(FuGenesysScalerFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_genesys_scaler_firmware_parse;
 	firmware_class->export = fu_genesys_scaler_firmware_export;
 	firmware_class->build = fu_genesys_scaler_firmware_build;
 	firmware_class->write = fu_genesys_scaler_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

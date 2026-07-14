@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.5',
+  version: '2.1.7',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -602,6 +602,9 @@ endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
 endif
+if cc.has_header_symbol('linux/sed-opal.h', 'IOC_OPAL_GET_STATUS')
+  conf.set('HAVE_LINUX_SED_OPAL_H', '1')
+endif
 has_HIDIOCGINPUT = cc.has_header_symbol('linux/hidraw.h',
   'HIDIOCGINPUT',
    required: false,
@@ -713,7 +716,10 @@ endif
 
 # EFI
 if build_standalone
-  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  efi_app_location = get_option('efi_app_location')
+  if efi_app_location == ''
+    efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  endif
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 endif
 
@@ -882,27 +888,14 @@ endif
 rustgen = generator(
   python3,
   output: ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
-  # fake custom target to ensure the generator reruns if these input files change
-  depends: custom_target(
-    'rustgen-files-timestamp',
-    input: files(
-      'libfwupdplugin/fu-rustgen-enum.c.in',
-      'libfwupdplugin/fu-rustgen-enum.h.in',
-      'libfwupdplugin/fu-rustgen-struct.c.in',
-      'libfwupdplugin/fu-rustgen-struct.h.in',
-      'libfwupdplugin/fu-rustgen.c.in',
-      'libfwupdplugin/fu-rustgen.h.in',
-      'libfwupdplugin/rustgen.py',
-    ),
-    output: 'rustgen-files-timestamp',
-    command: [python3, '-c', 'from pathlib import Path\nPath("@OUTPUT@").touch()'],
-  ),
+  depfile: '@BASENAME@.deps',
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
     '--outc', '@OUTPUT0@',
     '--outh', '@OUTPUT1@',
+    '--depfile', '@DEPFILE@',
     '--include',
     'fwupdplugin.h',
     '--prefix',

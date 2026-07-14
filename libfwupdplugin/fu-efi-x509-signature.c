@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-x509-signature-private.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
 #include "fu-x509-certificate.h"
@@ -86,6 +87,7 @@ fu_efi_x509_signature_normalize_vendor(const gchar *text)
 	    {"ASUSTeK Notebook", "ASUSTeK"},
 	    {"Canonical Ltd.", "Canonical"},
 	    {"Dell Inc.", "Dell"},
+	    {"HP Inc.", "HP"},
 	    {"Hughski Ltd.", "Hughski"},
 	    {"Lenovo(Beijing) Ltd", "Lenovo"},
 	    {"Lenovo Ltd.", "Lenovo"},
@@ -221,7 +223,7 @@ fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
 
 static gboolean
 fu_efi_x509_signature_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

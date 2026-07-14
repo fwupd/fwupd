@@ -9,6 +9,7 @@
 #include "fu-common.h"
 #include "fu-csv-entry.h"
 #include "fu-csv-firmware-private.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -203,7 +204,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 
 static gboolean
 fu_csv_entry_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
@@ -239,7 +240,6 @@ fu_csv_entry_init(FuCsvEntry *self)
 {
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
 	priv->values = g_ptr_array_new_with_free_func(g_free);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -261,6 +261,7 @@ fu_csv_entry_class_init(FuCsvEntryClass *klass)
 	firmware_class->write = fu_csv_entry_write;
 	firmware_class->build = fu_csv_entry_build;
 	firmware_class->export = fu_csv_entry_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

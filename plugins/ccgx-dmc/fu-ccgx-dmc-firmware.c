@@ -87,7 +87,7 @@ fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
 				   FuFirmwareParseFlags flags,
@@ -176,7 +176,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 static gboolean
 fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 				 guint8 image_count,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -247,7 +247,7 @@ fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 
 static gboolean
 fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -256,7 +256,7 @@ fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -453,7 +453,6 @@ fu_ccgx_dmc_firmware_init(FuCcgxDmcFirmware *self)
 	    g_ptr_array_new_with_free_func((GFreeFunc)fu_ccgx_dmc_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -483,4 +482,5 @@ fu_ccgx_dmc_firmware_class_init(FuCcgxDmcFirmwareClass *klass)
 	firmware_class->write = fu_ccgx_dmc_firmware_write;
 	firmware_class->export = fu_ccgx_dmc_firmware_export;
 	firmware_class->add_magic = fu_ccgx_dmc_firmware_add_magic;
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }

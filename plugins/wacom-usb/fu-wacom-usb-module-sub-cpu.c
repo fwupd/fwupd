@@ -83,7 +83,7 @@ fu_wacom_usb_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware,
 					 guint32 *data_len,
 					 GError **error)
 {
-	GPtrArray *chunks = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) chunks = g_ptr_array_new_with_free_func(g_free);
 	guint record_num = 0;
 	GPtrArray *records = fu_srec_firmware_get_records(srec_firmware);
 
@@ -98,7 +98,7 @@ fu_wacom_usb_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware,
 		g_ptr_array_add(chunks, g_steal_pointer(&chunk));
 	}
 
-	return chunks;
+	return g_steal_pointer(&chunks);
 }
 
 static GBytes *
@@ -213,7 +213,7 @@ fu_wacom_usb_module_sub_cpu_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_wacom_usb_module_sub_cpu_prepare_firmware(FuDevice *device,
-					     GInputStream *stream,
+					     FuInputStream *stream,
 					     FuProgress *progress,
 					     FuFirmwareParseFlags flags,
 					     GError **error)

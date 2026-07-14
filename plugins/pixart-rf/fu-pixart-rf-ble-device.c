@@ -55,7 +55,7 @@ fu_pixart_rf_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static FuFirmware *
 fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
+					 FuInputStream *stream,
 					 FuProgress *progress,
 					 FuFirmwareParseFlags flags,
 					 GError **error)
@@ -69,7 +69,7 @@ fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
-		g_autoptr(GInputStream) stream_new = NULL;
+		g_autoptr(FuInputStream) stream_new = NULL;
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
@@ -638,7 +638,7 @@ fu_pixart_rf_ble_device_fw_upgrade(FuPixartRfBleDevice *self,
 	if (!fu_pixart_rf_ble_device_wait_notify(self, 0x1, &opcode, NULL, error)) {
 		g_prefix_error(error,
 			       "FwUpgrade command fail, "
-			       "fw-checksum: 0x%04x fw-size: %" G_GSIZE_FORMAT ": ",
+			       "fw-checksum: 0x%04x fw-size: %zu: ",
 			       checksum,
 			       g_bytes_get_size(fw));
 		return FALSE;
@@ -941,7 +941,6 @@ fu_pixart_rf_ble_device_init(FuPixartRfBleDevice *self)
 	self->retransmit_id = PIXART_RF_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PIXART_RF_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PIXART_RF_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
@@ -964,4 +963,5 @@ fu_pixart_rf_ble_device_class_init(FuPixartRfBleDeviceClass *klass)
 	device_class->write_firmware = fu_pixart_rf_ble_device_write_firmware;
 	device_class->prepare_firmware = fu_pixart_rf_ble_device_prepare_firmware;
 	device_class->set_progress = fu_pixart_rf_ble_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 }

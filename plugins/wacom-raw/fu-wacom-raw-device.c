@@ -390,8 +390,6 @@ fu_wacom_raw_device_init(FuWacomRawDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG);
 }
 
 static void
@@ -404,4 +402,6 @@ fu_wacom_raw_device_class_init(FuWacomRawDeviceClass *klass)
 	device_class->set_quirk_kv = fu_wacom_raw_device_set_quirk_kv;
 	device_class->set_progress = fu_wacom_raw_device_set_progress;
 	device_class->replace = fu_wacom_raw_device_replace;
+	fu_device_register_private_flag(device_class,
+					FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG);
 }

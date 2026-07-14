@@ -1154,6 +1154,9 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
+	if (priv->flags & FU_CONTEXT_FLAG_NO_QUIRKS)
+		return NULL;
+
 	/* exact ID */
 	return fu_quirks_lookup_by_id(priv->quirks, guid, key);
 }
@@ -1255,6 +1258,9 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 
 	g_return_if_fail(FU_IS_CONTEXT(self));
 
+	if (g_file_test("/var/lib/systemd/pcrlock.json", G_FILE_TEST_EXISTS))
+		priv->flags |= FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK;
+
 	devices = fu_common_get_block_devices(&error_local);
 	if (devices == NULL) {
 		g_info("Failed to get block devices: %s", error_local->message);
@@ -1281,12 +1287,13 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 static gboolean
 fu_context_flag_is_quirk_controlled(FuContextFlags flag)
 {
-	return (flag & (FU_CONTEXT_FLAG_SYSTEM_INHIBIT | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT |
-			FU_CONTEXT_FLAG_FDE_BITLOCKER | FU_CONTEXT_FLAG_FDE_SNAPD |
-			FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE | FU_CONTEXT_FLAG_INSECURE_UEFI |
-			FU_CONTEXT_FLAG_IS_HYPERVISOR | FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED |
-			FU_CONTEXT_FLAG_IS_CONTAINER | FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED |
-			FU_CONTEXT_FLAG_IS_SERVER)) > 0;
+	return (flag &
+		(FU_CONTEXT_FLAG_SYSTEM_INHIBIT | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT |
+		 FU_CONTEXT_FLAG_FDE_BITLOCKER | FU_CONTEXT_FLAG_FDE_SNAPD |
+		 FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK | FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE |
+		 FU_CONTEXT_FLAG_INSECURE_UEFI | FU_CONTEXT_FLAG_IS_HYPERVISOR |
+		 FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED | FU_CONTEXT_FLAG_IS_CONTAINER |
+		 FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED | FU_CONTEXT_FLAG_IS_SERVER)) > 0;
 }
 
 static void
@@ -1409,6 +1416,38 @@ fu_context_detect_hypervisor(FuContext *self)
 	}
 }
 
+static gboolean
+fu_context_load_boot_entries(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) entries = NULL;
+
+	/* skip unless UEFI is enabled in SMBIOS */
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED))
+		return TRUE;
+
+	entries = fu_efivars_get_boot_entries(priv->efivars, error);
+	if (entries == NULL)
+		return FALSE;
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		const gchar *path;
+
+		path =
+		    fu_efi_load_option_get_metadata(entry, FU_EFI_LOAD_OPTION_METADATA_PATH, NULL);
+		if (path != NULL) {
+			g_autofree gchar *path_lower = g_ascii_strdown(path, -1);
+			if (g_strstr_len(path_lower, -1, "bootmgfw.efi") != NULL) {
+				fu_context_add_flag(self, FU_CONTEXT_FLAG_DUAL_BOOT_WINDOWS);
+				break;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_context_load:
  * @self: a #FuContext
@@ -1433,6 +1472,7 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
+	g_autoptr(GError) error_efivars = NULL;
 	struct {
 		const gchar *name;
 		FuContextLoadFlags flag;
@@ -1544,6 +1584,13 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
+
+	/* is this dual booted with Windows */
+	if (!fu_context_load_boot_entries(self, &error_efivars)) {
+		if (!g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
+		    !g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			g_warning("failed to check boot entries: %s", error_efivars->message);
+	}
 
 	/* always */
 	return TRUE;
@@ -2973,7 +3020,7 @@ fu_context_init(FuContext *self)
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new(priv->pstore);
+	priv->host_bios_settings = fu_bios_settings_new(self);
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

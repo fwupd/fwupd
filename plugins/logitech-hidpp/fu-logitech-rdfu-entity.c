@@ -187,6 +187,7 @@ fu_logitech_rdfu_entity_class_init(FuLogitechRdfuEntityClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_logitech_rdfu_entity_finalize;
 	firmware_class->export = fu_logitech_rdfu_entity_export;
+	fu_firmware_set_size_max(firmware_class, 100 * FU_MB);
 }
 
 FuLogitechRdfuEntity *

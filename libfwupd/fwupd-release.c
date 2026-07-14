@@ -2160,6 +2160,11 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 	}
 	if (priv->sbom_url != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SBOM_URL, priv->sbom_url);
+	if (priv->urgency != FWUPD_RELEASE_URGENCY_UNKNOWN) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_URGENCY,
+					     fwupd_release_urgency_to_string(priv->urgency));
+	}
 	if (priv->vendor != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {

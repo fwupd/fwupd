@@ -54,16 +54,34 @@ fu_test_pci_bcr_device_add_pread(FuDevice *device, /* nocheck:name */
 static FuDevice *
 fu_test_pci_bcr_new_emulated_device(FuContext *ctx, guint8 bcr)
 {
+<<<<<<< HEAD
 	FuDevice *device;
 	device = g_object_new(FU_TYPE_PCI_DEVICE, "context", ctx, NULL);
+=======
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_PCI_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+>>>>>>> main
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
 	fu_device_set_backend_id(device, "/sys/devices/pci0000:00/0000:00:1f.5");
 	fu_udev_device_set_subsystem(FU_UDEV_DEVICE(device), "pci");
 	fu_test_pci_bcr_device_add_sysfs(device, "vendor", "0x8086");
+<<<<<<< HEAD
 	fu_test_pci_bcr_device_add_sysfs(device, "class", "0x0c8000");
 	fu_test_pci_bcr_device_add_prop(device, "PCI_SLOT_NAME", "0000:00:1f.5");
 	fu_test_pci_bcr_device_add_pread(device, 0xdc, &bcr, 1);
 	return device;
+=======
+	fu_test_pci_bcr_device_add_sysfs(device, "class", "0x0c8000"); /* FuUdevDevice */
+	fu_test_pci_bcr_device_add_sysfs(device, "class", "0x0c8000"); /* FuPciDevice */
+	fu_test_pci_bcr_device_add_prop(device, "PCI_SLOT_NAME", "0000:00:1f.5");
+	fu_test_pci_bcr_device_add_pread(device, 0xdc, &bcr, 1);
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	return g_steal_pointer(&device);
+>>>>>>> main
 }
 
 static void

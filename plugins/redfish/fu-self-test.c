@@ -471,9 +471,11 @@ fu_redfish_hpe_update_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	GPtrArray *devices;
 	gboolean ret;
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GBytes) blob_fw_reboot = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(FuFirmware) stream_fw = NULL;
+	g_autoptr(FuFirmware) stream_fw_reboot = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* progress */
@@ -502,6 +504,23 @@ fu_redfish_hpe_update_func(gconstpointer user_data)
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+	fu_progress_step_done(progress);
+
+	/* BIOS */
+	dev = g_ptr_array_index(devices, 1);
+	blob_fw_reboot = g_bytes_new_static("reboot", 6);
+	stream_fw_reboot = fu_firmware_new_from_bytes(blob_fw_reboot);
+	fu_firmware_set_filename(stream_fw_reboot, "test.fwpkg");
+	ret = fu_plugin_runner_write_firmware(self->hpe_plugin,
+					      dev,
+					      stream_fw_reboot,
+					      fu_progress_get_child(progress),
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 }
 
 static void

@@ -70,7 +70,7 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 
 static gboolean
 fu_efi_file_parse(FuFirmware *firmware,
-		  GInputStream *stream,
+		  FuInputStream *stream,
 		  FuFirmwareParseFlags flags,
 		  GError **error)
 {
@@ -79,7 +79,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	guint32 size = 0x0;
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(FuStructEfiFile) st = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse */
 	st = fu_struct_efi_file_parse_stream(stream, 0x0, error);
@@ -292,18 +292,18 @@ fu_efi_file_init(FuEfiFile *self)
 	priv->attrib = FU_EFI_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SECTION);
 }
 
 static void
 fu_efi_file_class_init(FuEfiFileClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SECTION);
 	firmware_class->parse = fu_efi_file_parse;
 	firmware_class->write = fu_efi_file_write;
 	firmware_class->build = fu_efi_file_build;
 	firmware_class->export = fu_efi_file_export;
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 }
 
 /**

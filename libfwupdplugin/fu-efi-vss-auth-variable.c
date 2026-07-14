@@ -15,6 +15,7 @@
 #include "fu-efi-struct.h"
 #include "fu-efi-vss-auth-variable.h"
 #include "fu-efivars.h"
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -97,7 +98,7 @@ fu_efi_vss_auth_variable_lookup_image_gtype(FuEfiVssAuthVariable *self)
 
 static gboolean
 fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -164,7 +165,7 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	img_gtype = fu_efi_vss_auth_variable_lookup_image_gtype(self);
 	if (img_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuFirmware) img = g_object_new(img_gtype, NULL);
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		partial_stream = fu_partial_input_stream_new(
 		    stream,
 		    offset,
@@ -296,8 +297,6 @@ static void
 fu_efi_vss_auth_variable_init(FuEfiVssAuthVariable *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -320,6 +319,8 @@ fu_efi_vss_auth_variable_class_init(FuEfiVssAuthVariableClass *klass)
 	firmware_class->export = fu_efi_vss_auth_variable_export;
 	firmware_class->write = fu_efi_vss_auth_variable_write;
 	firmware_class->build = fu_efi_vss_auth_variable_build;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

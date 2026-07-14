@@ -56,7 +56,7 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    "cannot process chunk of size %zu",
 			    ibufsz);
 		return FALSE;
 	}
@@ -98,7 +98,7 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "request not all sent, got %" G_GSIZE_FORMAT,
+			    "request not all sent, got %zu",
 			    actual_length);
 		return FALSE;
 	}
@@ -123,7 +123,7 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    "cannot process chunk of size %zu",
 			    obufsz);
 		return FALSE;
 	}
@@ -155,7 +155,7 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "request not all received, got %" G_GSIZE_FORMAT,
+			    "request not all received, got %zu",
 			    actual_length);
 		return FALSE;
 	}
@@ -601,7 +601,7 @@ fu_hughski_colorhug_device_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -677,7 +677,6 @@ fu_hughski_colorhug_device_init(FuHughskiColorhugDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE);
 	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }
@@ -693,4 +692,5 @@ fu_hughski_colorhug_device_class_init(FuHughskiColorhugDeviceClass *klass)
 	device_class->setup = fu_hughski_colorhug_device_setup;
 	device_class->probe = fu_hughski_colorhug_device_probe;
 	device_class->set_progress = fu_hughski_colorhug_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE);
 }

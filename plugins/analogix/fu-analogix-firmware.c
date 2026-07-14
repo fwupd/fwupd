@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_IHEX_FIRMWARE)
 
 static gboolean
 fu_analogix_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -121,14 +121,14 @@ fu_analogix_firmware_init(FuAnalogixFirmware *self)
 {
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_analogix_firmware_class_init(FuAnalogixFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->convert_version = fu_analogix_firmware_convert_version;
 	firmware_class->parse = fu_analogix_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

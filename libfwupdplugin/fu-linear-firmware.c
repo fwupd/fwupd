@@ -79,7 +79,6 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 				    tmp);
 			return FALSE;
 		}
-		fu_firmware_add_image_gtype(firmware, priv->image_gtype);
 	}
 
 	/* success */
@@ -88,7 +87,7 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_linear_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -101,7 +100,7 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = g_object_new(priv->image_gtype, NULL);
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
 		if (stream_tmp == NULL) {
@@ -192,7 +191,6 @@ fu_linear_firmware_set_property(GObject *object,
 	switch (prop_id) {
 	case PROP_IMAGE_GTYPE:
 		priv->image_gtype = g_value_get_gtype(value);
-		fu_firmware_add_image_gtype(FU_FIRMWARE(self), priv->image_gtype);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -203,9 +201,8 @@ fu_linear_firmware_set_property(GObject *object,
 static void
 fu_linear_firmware_init(FuLinearFirmware *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_IMAGE_TYPE_CHECK);
 }
 
 static void
@@ -215,12 +212,14 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	object_class->get_property = fu_linear_firmware_get_property;
 	object_class->set_property = fu_linear_firmware_set_property;
 	firmware_class->parse = fu_linear_firmware_parse;
 	firmware_class->write = fu_linear_firmware_write;
 	firmware_class->export = fu_linear_firmware_export;
 	firmware_class->build = fu_linear_firmware_build;
+	fu_firmware_set_images_max(firmware_class, 1024);
 
 	/**
 	 * FuLinearFirmware:image-gtype:

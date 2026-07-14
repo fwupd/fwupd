@@ -53,8 +53,8 @@ typedef struct {
 	GFileMonitor *config_monitor;
 	FuPluginData *data;
 	FuPluginVfuncs vfuncs;
-	GArray *private_flags_registered; /* (element-type GQuark) */
-	GArray *private_flags;		  /* (element-type GQuark) */
+	GArray *private_flags; /* (element-type GQuark) */
+
 } FuPluginPrivate;
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };
@@ -70,8 +70,23 @@ enum {
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuPlugin, fu_plugin, FWUPD_TYPE_PLUGIN)
+#define FU_PLUGIN_PRIVATE_FLAG_REGISTERED_MAX 32
+
+typedef struct {
+	GQuark quarks[FU_PLUGIN_PRIVATE_FLAG_REGISTERED_MAX];
+	guint quarks_cnt;
+} FuPluginClassPrivate;
+
+/* nocheck:name */
+G_DEFINE_TYPE_WITH_CODE(FuPlugin, fu_plugin, FWUPD_TYPE_PLUGIN, G_ADD_PRIVATE(FuPlugin);
+			g_type_add_class_private(g_define_type_id, sizeof(FuPluginClassPrivate)))
 #define GET_PRIVATE(o) (fu_plugin_get_instance_private(o))
+
+static FuPluginClassPrivate *
+fu_plugin_get_class_private(FuPluginClass *klass)
+{
+	return G_TYPE_CLASS_GET_PRIVATE(klass, FU_TYPE_PLUGIN, FuPluginClassPrivate);
+}
 
 typedef void (*FuPluginInitVfuncsFunc)(FuPluginVfuncs *vfuncs);
 typedef gboolean (*FuPluginDeviceFunc)(FuPlugin *self, FuDevice *device, GError **error);
@@ -400,53 +415,63 @@ fu_plugin_remove_private_flag_quark(FuPlugin *self, GQuark flag_quark)
 }
 
 static GQuark
-fu_plugin_find_private_flag_quark(FuPlugin *self, const gchar *flag)
+fu_plugin_find_private_flag(FuPluginClass *klass, const gchar *flag)
 {
-	FuPluginPrivate *priv = GET_PRIVATE(self);
+	FuPluginClassPrivate *cpriv = fu_plugin_get_class_private(klass);
 	GQuark flag_quark = g_quark_from_string(flag);
-	for (guint i = 0; i < priv->private_flags_registered->len; i++) {
-		GQuark flag_tmp = g_array_index(priv->private_flags_registered, GQuark, i);
-		if (flag_quark == flag_tmp)
-			return flag_tmp;
+	for (guint i = 0; i < cpriv->quarks_cnt; i++) {
+		if (flag_quark == cpriv->quarks[i])
+			return cpriv->quarks[i];
 	}
 	return 0;
 }
 
 /**
  * fu_plugin_register_private_flag:
- * @self: a #FuPlugin
+ * @klass: a #FuPluginClass
  * @flag: a plugin flag
  *
  * Registers a private flag so it can be used by fu_plugin_add_private_flag() and
  * fu_plugin_has_private_flag().
  *
- * Since: 2.1.5
+ * Returns: a #GQuark
+ *
+ * Since: 2.1.6
  **/
-void
-fu_plugin_register_private_flag(FuPlugin *self, const gchar *flag)
+GQuark
+fu_plugin_register_private_flag(FuPluginClass *klass, const gchar *flag)
 {
-	FuPluginPrivate *priv = GET_PRIVATE(self);
+	FuPluginClassPrivate *cpriv;
 	GQuark flag_quark;
 
-	g_return_if_fail(FU_IS_PLUGIN(self));
-	g_return_if_fail(flag != NULL);
+	g_return_val_if_fail(FU_IS_PLUGIN_CLASS(klass), 0);
+	g_return_val_if_fail(flag != NULL, 0);
 
 #ifndef SUPPORTED_BUILD
 	if (fwupd_plugin_flag_from_string(flag) != FWUPD_PLUGIN_FLAG_UNKNOWN) {
 		g_critical("%s private flag %s already exists as an exported flag",
-			   G_OBJECT_TYPE_NAME(self),
+			   G_OBJECT_CLASS_NAME(klass),
 			   flag);
-		return;
+		return 0;
 	}
 #endif
-	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
-	if (G_UNLIKELY(flag_quark != 0)) {
-		g_critical("already registered private %s flag %s", G_OBJECT_TYPE_NAME(self), flag);
-		return;
-	}
 
+	/* sanity check */
+	flag_quark = fu_plugin_find_private_flag(klass, flag);
+	if (G_UNLIKELY(flag_quark != 0))
+		return flag_quark;
+
+	/* add new */
+	cpriv = fu_plugin_get_class_private(klass);
+	if (G_UNLIKELY(cpriv->quarks_cnt >= FU_PLUGIN_PRIVATE_FLAG_REGISTERED_MAX)) {
+		g_critical("too many registered flags, limit is %i",
+			   FU_PLUGIN_PRIVATE_FLAG_REGISTERED_MAX);
+		return 0;
+	}
 	flag_quark = g_quark_from_static_string(flag);
-	g_array_append_val(priv->private_flags_registered, flag_quark);
+	cpriv->quarks[cpriv->quarks_cnt] = flag_quark;
+	cpriv->quarks_cnt++;
+	return flag_quark;
 }
 
 /**
@@ -466,7 +491,7 @@ fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag)
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(flag != NULL);
 
-	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	flag_quark = fu_plugin_find_private_flag(FU_PLUGIN_GET_CLASS(self), flag);
 	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
@@ -495,7 +520,7 @@ fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag)
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(flag != NULL);
 
-	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	flag_quark = fu_plugin_find_private_flag(FU_PLUGIN_GET_CLASS(self), flag);
 	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
@@ -526,7 +551,7 @@ fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag)
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 
-	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	flag_quark = fu_plugin_find_private_flag(FU_PLUGIN_GET_CLASS(self), flag);
 	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
@@ -2224,16 +2249,6 @@ fu_plugin_runner_verify(FuPlugin *self,
 	checksums = fu_device_get_checksums(device);
 	g_ptr_array_set_size(checksums, 0);
 
-	/* run additional detach */
-	if (!fu_plugin_runner_device_generic_progress(
-		self,
-		device,
-		progress,
-		"fu_plugin_detach",
-		vfuncs->detach != NULL ? vfuncs->detach : fu_plugin_device_detach,
-		error))
-		return FALSE;
-
 	/* run vfunc */
 	g_debug("verify(%s)", fu_plugin_get_name(self));
 	if (!vfuncs->verify(self, device, progress, flags, &error_local)) {
@@ -2250,29 +2265,8 @@ fu_plugin_runner_verify(FuPlugin *self,
 					   g_steal_pointer(&error_local),
 					   "failed to verify using %s: ",
 					   fu_plugin_get_name(self));
-		/* make the device "work" again, but don't prefix the error */
-		if (!fu_plugin_runner_device_generic_progress(
-			self,
-			device,
-			progress,
-			"fu_plugin_attach",
-			vfuncs->attach != NULL ? vfuncs->attach : fu_plugin_device_attach,
-			&error_attach)) {
-			g_warning("failed to attach whilst aborting verify(): %s",
-				  error_attach->message);
-		}
 		return FALSE;
 	}
-
-	/* run optional attach */
-	if (!fu_plugin_runner_device_generic_progress(
-		self,
-		device,
-		progress,
-		"fu_plugin_attach",
-		vfuncs->attach != NULL ? vfuncs->attach : fu_plugin_device_attach,
-		error))
-		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -3300,7 +3294,6 @@ fu_plugin_init(FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	priv->device_gtype_default = G_TYPE_INVALID;
-	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
 	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
 }
 
@@ -3335,7 +3328,6 @@ fu_plugin_finalize(GObject *object)
 		g_array_unref(priv->device_gtypes);
 	if (priv->config_monitor != NULL)
 		g_object_unref(priv->config_monitor);
-	g_array_unref(priv->private_flags_registered);
 	g_array_unref(priv->private_flags);
 	g_free(priv->data);
 

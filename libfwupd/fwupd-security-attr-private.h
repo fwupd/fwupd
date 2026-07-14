@@ -182,6 +182,22 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP "org.fwupd.hsi.Spi.SmmBwp"
 /**
+ * FWUPD_SECURITY_ATTR_ID_MTD_LOCKED: (skip)
+ *
+ * Host Security ID attribute for MTD lock status
+ *
+ * Since: 2.1.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_MTD_LOCKED "org.fwupd.hsi.Mtd.Locked"
+/**
+ * FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION: (skip)
+ *
+ * Host Security ID attribute for Hardware Disk Encryption
+ *
+ * Since: 2.1.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION "org.fwupd.hsi.HwDiskEncryption"
+/**
  * FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR: (skip)
  *
  * Host Security ID attribute for Intel SPI descriptor
@@ -403,6 +419,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION "org.fwupd.hsi.Uefi.MemoryProtection"
 /**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT: (skip)
+ *
+ * Host Security ID attribute for NX compatible
+ *
+ * Since: 2.1.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT "org.fwupd.hsi.Uefi.NxCompat"
+/**
  * FWUPD_SECURITY_ATTR_ID_UEFI_DB: (skip)
  *
  * Host Security ID attribute for UEFI db certificate store
@@ -427,6 +451,14 @@ G_BEGIN_DECLS
  * Since: 2.1.1
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT "org.fwupd.hsi.Amd.PlatformSecureBoot"
+/**
+ * FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT: (skip)
+ *
+ * Host Security ID attribute for coreboot verified boot.
+ *
+ * Since: 2.1.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT "org.fwupd.hsi.Coreboot.Vboot"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);

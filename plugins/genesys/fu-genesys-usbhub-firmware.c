@@ -24,7 +24,7 @@ G_DEFINE_TYPE(FuGenesysUsbhubFirmware, fu_genesys_usbhub_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    GError **error)
 {
 	guint8 project_ic_type[6] = {0};
@@ -136,12 +136,12 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 }
 
 gboolean
-fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
+fu_genesys_usbhub_firmware_verify_checksum(FuInputStream *stream, GError **error)
 {
 	gsize streamsz = 0;
 	guint16 fw_checksum = 0;
 	guint16 checksum = 0;
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	/* get checksum */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -182,7 +182,7 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 }
 
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GError **error)
+fu_genesys_usbhub_firmware_calculate_size(FuInputStream *stream, gsize *size, GError **error)
 {
 	guint8 kbs = 0;
 	if (!fu_input_stream_read_u8(stream, GENESYS_USBHUB_CODE_SIZE_OFFSET, &kbs, error)) {
@@ -228,7 +228,7 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 
 static gboolean
 fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -237,7 +237,7 @@ fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -246,7 +246,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
-	g_autoptr(GInputStream) stream_trunc = NULL;
+	g_autoptr(FuInputStream) stream_trunc = NULL;
 
 	/* get chip */
 	if (!fu_genesys_usbhub_firmware_get_chip(self, stream, error)) {
@@ -539,9 +539,6 @@ fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -558,6 +555,8 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
 	firmware_class->convert_version = fu_genesys_usbhub_firmware_convert_version;
 	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
 	firmware_class->validate = fu_genesys_usbhub_firmware_validate;
@@ -565,4 +564,5 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 	firmware_class->export = fu_genesys_usbhub_firmware_export;
 	firmware_class->build = fu_genesys_usbhub_firmware_build;
 	firmware_class->write = fu_genesys_usbhub_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

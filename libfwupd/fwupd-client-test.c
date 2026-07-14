@@ -11,6 +11,36 @@
 #include "fwupd-test.h"
 
 static void
+fwupd_client_download_func(void)
+{
+	const gchar *fn = "/etc/os-release";
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* sanity check */
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("no installed os-release");
+		return;
+	}
+
+	fwupd_client_set_user_agent_for_package(client, PACKAGE_NAME, PACKAGE_VERSION);
+	uri = g_strdup_printf("file://%s", fn);
+	blob1 =
+	    fwupd_client_download_bytes(client, uri, FWUPD_CLIENT_DOWNLOAD_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob1);
+
+	/* will be stopped by the download rate limiting */
+	blob2 =
+	    fwupd_client_download_bytes(client, uri, FWUPD_CLIENT_DOWNLOAD_FLAG_NONE, NULL, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE);
+	g_assert_null(blob2);
+}
+
+static void
 fwupd_client_api_undefined_setter(void)
 {
 #if GLIB_CHECK_VERSION(2, 74, 0)
@@ -357,5 +387,6 @@ main(int argc, char **argv)
 		g_test_add_func("/fwupd/client/remotes", fwupd_client_remotes_func);
 		g_test_add_func("/fwupd/client/devices", fwupd_client_devices_func);
 	}
+	g_test_add_func("/fwupd/client/download", fwupd_client_download_func);
 	return g_test_run();
 }

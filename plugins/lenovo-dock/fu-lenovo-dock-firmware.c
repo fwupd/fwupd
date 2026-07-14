@@ -79,8 +79,8 @@ fu_lenovo_dock_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 
 static gboolean
 fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
-				    GInputStream *stream_usage,
-				    GInputStream *stream_composite,
+				    FuInputStream *stream_usage,
+				    FuInputStream *stream_composite,
 				    gsize offset,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -91,7 +91,7 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 	guint32 max_size;
 	FuLenovoDockComponentId component_id;
 	g_autoptr(FuStructLenovoDockUsageItem) st_item = NULL;
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 	g_autoptr(FuFirmware) img = fu_lenovo_dock_image_new();
 
 	st_item = fu_struct_lenovo_dock_usage_item_parse_stream(stream_usage, offset, error);
@@ -153,7 +153,7 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 	target_crc32 = fu_struct_lenovo_dock_usage_item_get_target_crc32(st_item);
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 crc_calculated = G_MAXUINT32;
-		g_autoptr(GInputStream) stream_crc = NULL;
+		g_autoptr(FuInputStream) stream_crc = NULL;
 
 		stream_crc = fu_partial_input_stream_new(stream_composite,
 							 (gsize)physical_addr +
@@ -186,7 +186,7 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 
 static gboolean
 fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
@@ -195,8 +195,8 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 	guint8 usage_items;
 	g_autoptr(FuFirmware) firmware_zip = fu_zip_firmware_new();
 	g_autoptr(FuStructLenovoDockUsage) st = NULL;
-	g_autoptr(GInputStream) stream_usage = NULL;
-	g_autoptr(GInputStream) stream_composite = NULL;
+	g_autoptr(FuInputStream) stream_usage = NULL;
+	g_autoptr(FuInputStream) stream_composite = NULL;
 
 	if (!fu_firmware_parse_stream(firmware_zip, stream, 0x0, flags, error))
 		return FALSE;
@@ -299,9 +299,6 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT8);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LENOVO_DOCK_IMAGE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -320,8 +317,11 @@ fu_lenovo_dock_firmware_class_init(FuLenovoDockFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_LENOVO_DOCK_IMAGE);
 	object_class->finalize = fu_lenovo_dock_firmware_finalize;
 	firmware_class->parse = fu_lenovo_dock_firmware_parse;
 	firmware_class->export = fu_lenovo_dock_firmware_export;
 	firmware_class->convert_version = fu_lenovo_dock_firmware_convert_version;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, G_MAXUINT8);
 }

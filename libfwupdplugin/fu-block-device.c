@@ -9,10 +9,11 @@
 #include "config.h"
 
 #ifdef HAVE_SCSI_SG_H
+/* clang-format off */
 #define __need_size_t
 #include <stddef.h>
+/* clang-format on */
 #include <scsi/sg.h>
-#include <stddef.h>
 #endif
 
 #include "fu-block-device.h"

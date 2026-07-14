@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-input-stream.h"
 #include "fu-msgpack-struct.h"
 
 #define FU_TYPE_MSGPACK_ITEM (fu_msgpack_item_get_type())
@@ -23,7 +24,7 @@ fu_msgpack_item_new_float(gdouble value);
 FuMsgpackItem *
 fu_msgpack_item_new_binary(GByteArray *buf) G_GNUC_NON_NULL(1);
 FuMsgpackItem *
-fu_msgpack_item_new_binary_stream(GInputStream *stream) G_GNUC_NON_NULL(1);
+fu_msgpack_item_new_binary_stream(FuInputStream *stream) G_GNUC_NON_NULL(1);
 FuMsgpackItem *
 fu_msgpack_item_new_string(const gchar *str) G_GNUC_NON_NULL(1);
 FuMsgpackItem *

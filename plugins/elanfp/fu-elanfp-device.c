@@ -180,7 +180,7 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "only sent %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only sent %zu/%zu bytes",
 				    actual,
 				    outlen);
 			return FALSE;
@@ -204,9 +204,9 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
-				    "only received %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only received %zu/%zu bytes",
 				    actual,
-				    outlen);
+				    inlen);
 			return FALSE;
 		}
 	}
@@ -451,7 +451,6 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER);
 }
 
 static void
@@ -472,4 +471,5 @@ fu_elanfp_device_class_init(FuElanfpDeviceClass *klass)
 	device_class->setup = fu_elanfp_device_setup;
 	device_class->write_firmware = fu_elanfp_device_write_firmware;
 	device_class->set_progress = fu_elanfp_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER);
 }

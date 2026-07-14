@@ -27,8 +27,8 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryBleDevice,
 
 static gboolean
 fu_lenovo_accessory_ble_device_write_files(FuLenovoAccessoryBleDevice *self,
-					   FuLenovoDfuFileType file_type,
-					   GInputStream *stream,
+					   FuLenovoAccessoryDfuFileType file_type,
+					   FuInputStream *stream,
 					   FuProgress *progress,
 					   GError **error)
 {
@@ -70,7 +70,8 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	gsize fw_size = 0;
 	guint32 file_crc = 0xFFFFFFFF;
 	guint32 device_crc = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	FuLenovoAccessoryDeviceMode mode;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -84,10 +85,25 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &file_crc, error))
 		return FALSE;
-	if (!fu_lenovo_accessory_impl_dfu_entry(FU_LENOVO_ACCESSORY_IMPL(device), error))
+
+	/* only enter DFU mode if not already there */
+	if (!fu_lenovo_accessory_impl_get_mode(FU_LENOVO_ACCESSORY_IMPL(device), &mode, error))
+		return FALSE;
+	if (mode != FU_LENOVO_ACCESSORY_DEVICE_MODE_DFU_MODE) {
+		if (!fu_lenovo_accessory_impl_dfu_entry(FU_LENOVO_ACCESSORY_IMPL(device), error))
+			return FALSE;
+	}
+	if (!fu_lenovo_accessory_impl_dfu_attribute(FU_LENOVO_ACCESSORY_IMPL(device),
+						    NULL,
+						    NULL,
+						    NULL,
+						    NULL,
+						    NULL,
+						    NULL,
+						    error))
 		return FALSE;
 	if (!fu_lenovo_accessory_impl_dfu_prepare(FU_LENOVO_ACCESSORY_IMPL(device),
-						  FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
+						  FU_LENOVO_ACCESSORY_DFU_FILE_TYPE_BIN_FILE,
 						  0x0,
 						  (guint32)fw_size,
 						  file_crc,
@@ -95,11 +111,14 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 	if (!fu_lenovo_accessory_ble_device_write_files(self,
-							FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
+							FU_LENOVO_ACCESSORY_DFU_FILE_TYPE_BIN_FILE,
 							stream,
 							fu_progress_get_child(progress),
 							error))
 		return FALSE;
+
+	/* give the device time to finalize the flash before reading back CRC */
+	fu_device_sleep(FU_DEVICE(self), 2000);
 	if (!fu_lenovo_accessory_impl_dfu_crc(FU_LENOVO_ACCESSORY_IMPL(device),
 					      &device_crc,
 					      error)) {
@@ -125,7 +144,7 @@ static gboolean
 fu_lenovo_accessory_ble_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	if (!fu_lenovo_accessory_impl_dfu_exit(FU_LENOVO_ACCESSORY_IMPL(device),
-					       FU_LENOVO_DFU_EXIT_CODE_DFU_SUCCESS,
+					       FU_LENOVO_ACCESSORY_DFU_EXIT_CODE_DFU_SUCCESS,
 					       error)) {
 		g_prefix_error_literal(error, "failed to exit: ");
 		return FALSE;
@@ -148,7 +167,7 @@ fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 						    &micro,
 						    error))
 		return FALSE;
-	version = g_strdup_printf("%u.%u.%02u", major, minor, micro);
+	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version(device, version);
 	return TRUE;
 }
@@ -182,7 +201,7 @@ static gboolean
 fu_lenovo_accessory_ble_device_poll_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	GByteArray *buf_rsp = (GByteArray *)user_data;
-	FuLenovoStatus status;
+	FuLenovoAccessoryStatus status;
 	gsize offset = 0x0;
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = NULL;
@@ -198,11 +217,11 @@ fu_lenovo_accessory_ble_device_poll_cb(FuDevice *device, gpointer user_data, GEr
 	if (st_cmd == NULL)
 		return FALSE;
 	status = fu_struct_lenovo_accessory_cmd_get_target_status(st_cmd) & 0x0F;
-	if (status == FU_LENOVO_STATUS_COMMAND_BUSY) {
+	if (status == FU_LENOVO_ACCESSORY_STATUS_COMMAND_BUSY) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command busy");
 		return FALSE;
 	}
-	if (status != FU_LENOVO_STATUS_COMMAND_SUCCESSFUL) {
+	if (status != FU_LENOVO_ACCESSORY_STATUS_COMMAND_SUCCESSFUL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,

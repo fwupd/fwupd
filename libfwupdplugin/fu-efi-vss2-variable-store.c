@@ -13,6 +13,7 @@
 #include "fu-efi-struct.h"
 #include "fu-efi-vss-auth-variable.h"
 #include "fu-efi-vss2-variable-store.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -31,7 +32,7 @@ G_DEFINE_TYPE(FuEfiVss2VariableStore, fu_efi_vss2_variable_store, FU_TYPE_FIRMWA
 
 static gboolean
 fu_efi_vss2_variable_store_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -40,7 +41,7 @@ fu_efi_vss2_variable_store_validate(FuFirmware *firmware,
 
 static gboolean
 fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -151,16 +152,8 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-#ifdef HAVE_FUZZER
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_KB);
-#else
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
-#endif
 }
 
 static void
@@ -170,6 +163,14 @@ fu_efi_vss2_variable_store_class_init(FuEfiVss2VariableStoreClass *klass)
 	firmware_class->validate = fu_efi_vss2_variable_store_validate;
 	firmware_class->parse = fu_efi_vss2_variable_store_parse;
 	firmware_class->write = fu_efi_vss2_variable_store_write;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VSS_AUTH_VARIABLE);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(firmware_class, 4 * FU_KB);
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 10000);
+#endif
 }
 
 /**

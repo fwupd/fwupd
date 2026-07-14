@@ -310,7 +310,18 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 
 	/* whitespace */
 	if (g_ascii_isspace(data)) {
+		const guint8 *buf = helper->buf->data;
+		gsize bufsz = helper->buf->len;
+		gsize offset = helper->buf_offset + 1;
 		guint whitespace_max = FWUPD_JSON_PARSER_INDENT_MAX * (helper->depth + 1);
+
+		/* the most likely next char is another space */
+		for (; offset < bufsz; offset++) {
+			if (buf[offset] != ' ')
+				break;
+		}
+		helper->whitespacecnt += (offset - helper->buf_offset) - 1;
+		helper->buf_offset = offset - 1;
 		if (helper->whitespacecnt++ >= whitespace_max) {
 			g_set_error(error,
 				    FWUPD_ERROR,

@@ -300,6 +300,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_BATTERY_THRESHOLD "BatteryThreshold"
 /**
+ * FU_QUIRKS_APPSTREAM_ID:
+ *
+ * The quirk key for the fwupd AppStream identifier, e.g. `org.fwupd.bios.secure-boot`.
+ *
+ * Since: 2.1.7
+ **/
+#define FU_QUIRKS_APPSTREAM_ID "AppstreamId"
+/**
  * FU_QUIRKS_REMOVE_DELAY:
  *
  * The quirk key for the device removal delay in milliseconds, e.g. `2500`.

@@ -12,6 +12,7 @@
 #include "fu-device-event.h"
 #include "fu-device-struct.h"
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-progress.h"
 #include "fu-security-attrs.h"
 #include "fu-version-common.h"
@@ -42,7 +43,7 @@ struct _FuDeviceClass {
 	gboolean (*probe)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*rescan)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	FuFirmware *(*prepare_firmware)(FuDevice *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -506,6 +507,26 @@ fu_device_new(FuContext *ctx);
  * Since: 1.9.8
  */
 #define FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES "enforce-requires"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE:
+ *
+ * Updating this device changes a measured firmware component, so a
+ * systemd-pcrlock policy protecting the firmware measurements has to be
+ * regenerated for the update to be applied.
+ *
+ * Since: 2.1.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE "requires-unlock-firmware"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT:
+ *
+ * Updating this device changes a measured SecureBoot component, so a
+ * systemd-pcrlock policy protecting the SecureBoot measurements has to be
+ * regenerated for the update to be applied.
+ *
+ * Since: 2.1.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT "requires-unlock-secureboot"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE:
  *
@@ -1185,7 +1206,7 @@ fu_device_write_firmware(FuDevice *self,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   FuFirmwareParseFlags flags,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
@@ -1279,8 +1300,8 @@ GHashTable *
 fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
-void
-fu_device_register_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+GQuark
+fu_device_register_private_flag(FuDeviceClass *klass, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_add_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
@@ -1296,7 +1317,7 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id) G_GNUC_NO
 gboolean
 fu_device_set_contents(FuDevice *self,
 		       const gchar *filename,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuProgress *progress,
 		       GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean

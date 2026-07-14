@@ -45,7 +45,7 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid) G_GNUC_NON_NULL(1)
 gchar *
 fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1);
 FuCabinet *
-fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
+fu_engine_build_cabinet_from_stream(FuEngine *self, FuInputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self) G_GNUC_NON_NULL(1);
@@ -213,7 +213,7 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 GPtrArray *
 fu_engine_get_details(FuEngine *self,
 		      FuEngineRequest *request,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error) G_GNUC_NON_NULL(1, 2);
@@ -230,14 +230,14 @@ fu_engine_load_release(FuEngine *self,
 		       FwupdInstallFlags install_flags,
 		       GError **error) G_GNUC_NON_NULL(1, 2, 4);
 gchar *
-fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
+fu_engine_get_remote_id_for_stream(FuEngine *self, FuInputStream *stream) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_modify_bios_settings(FuEngine *self,
 			       GHashTable *settings,
 			       gboolean force_ro,
 			       GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
+fu_engine_emulation_load(FuEngine *self, FuInputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
@@ -250,3 +250,5 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_plugin_allows_enumeration(FuEngine *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);
+void
+fu_engine_ensure_devices_supported(FuEngine *self) G_GNUC_NON_NULL(1);

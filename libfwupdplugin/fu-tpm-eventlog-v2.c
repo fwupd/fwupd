@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-item.h"
 #include "fu-tpm-eventlog-v2.h"
@@ -45,7 +46,7 @@ fu_tpm_eventlog_v2_hash_get_size(FuTpmAlg hash_kind)
 
 static gboolean
 fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize *idx,
 			      GError **error)
 {
@@ -144,7 +145,7 @@ fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
 
 static gboolean
 fu_tpm_eventlog_v2_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -247,15 +248,15 @@ static void
 fu_tpm_eventlog_v2_class_init(FuTpmEventlogV2Class *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	firmware_class->parse = fu_tpm_eventlog_v2_parse;
 	firmware_class->write = fu_tpm_eventlog_v2_write;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_TPM_EVENTLOG_ITEM);
 }
 
 static void
 fu_tpm_eventlog_v2_init(FuTpmEventlogV2 *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_TPM_EVENTLOG_ITEM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**

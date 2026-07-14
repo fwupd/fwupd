@@ -399,7 +399,7 @@ fu_synaptics_cape_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
@@ -408,7 +408,7 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 	gsize bufsz = 0;
 	gsize offset = 0;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 
 	/* a "fw" includes two firmware data for each partition, we need to divide a 'fw' into
 	 * two equal parts */
@@ -513,7 +513,7 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 /* sends firmware image to device */
 static gboolean
 fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
-					      GInputStream *stream,
+					      FuInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
@@ -587,7 +587,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GBytes) fw_header = NULL;
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
@@ -674,8 +674,6 @@ fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.cape");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100); /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT);
 }
 
 static void
@@ -688,4 +686,6 @@ fu_synaptics_cape_device_class_init(FuSynapticsCapeDeviceClass *klass)
 	device_class->prepare_firmware = fu_synaptics_cape_device_prepare_firmware;
 	device_class->set_progress = fu_synaptics_cape_device_set_progress;
 	device_class->convert_version = fu_synaptics_cape_device_convert_version;
+	fu_device_register_private_flag(device_class,
+					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT);
 }

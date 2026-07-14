@@ -22,7 +22,7 @@ fu_test_synaptics_prometheus_firmware_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_prometheus_firmware_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -68,7 +68,7 @@ fu_test_synaptics_prometheus_firmware_func(void)
 
 	/* payload needs to exist */
 	fu_synaptics_prometheus_device_set_version(device, 10, 1, 1234);
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	firmware2 =
 	    fu_synaptics_prometheus_device_prepare_firmware(FU_DEVICE(device),
 							    stream,

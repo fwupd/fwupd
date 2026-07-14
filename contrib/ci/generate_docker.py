@@ -79,12 +79,16 @@ content = content.replace("%%%SETUP%%%", cross_setup)
 
 # insert dependencies to install
 if CROSS:
-    deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True)
-    deps += [f"crossbuild-essential-{CROSS}"]
+    deps_parsed, build_indep = parse_dependencies(
+        DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True
+    )
+    deps = deps_parsed + build_indep + [f"crossbuild-essential-{CROSS}"]
 elif VARIANT == "i386":
-    deps = parse_dependencies(DISTRO, VARIANT, False)
+    deps_parsed, build_indep = parse_dependencies(DISTRO, VARIANT, False)
+    deps = deps_parsed + build_indep
 else:
-    deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
+    deps_parsed, build_indep = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
+    deps = deps_parsed + build_indep
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)

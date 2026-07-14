@@ -50,7 +50,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
+			    "only wrote %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -69,7 +69,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only read %" G_GSIZE_FORMAT "bytes",
+			    "only read %zu bytes",
 			    actual_len);
 		return FALSE;
 	}

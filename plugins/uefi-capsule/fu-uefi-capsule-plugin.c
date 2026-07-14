@@ -324,7 +324,7 @@ fu_uefi_capsule_plugin_get_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
-	g_autoptr(GInputStream) stream_archive = NULL;
+	g_autoptr(FuInputStream) stream_archive = NULL;
 
 	/* load archive */
 	filename_archive = fu_context_build_filename(ctx,
@@ -1131,8 +1131,11 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 		/* system firmware "BIOS" can change the PCRx registers */
 		if (fu_uefi_capsule_device_get_kind(dev) ==
-		    FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE)
+		    FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
 			fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+			fu_device_add_private_flag(FU_DEVICE(dev),
+						   FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE);
+		}
 
 		/* load all configuration variables */
 		fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));

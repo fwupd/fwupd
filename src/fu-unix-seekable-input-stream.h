@@ -8,6 +8,8 @@
 
 #include <gio/gunixinputstream.h>
 
+#include "fu-input-stream.h"
+
 #define FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM (fu_unix_seekable_input_stream_get_type())
 
 G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
@@ -16,5 +18,7 @@ G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
 		     UNIX_SEEKABLE_INPUT_STREAM,
 		     GUnixInputStream)
 
-GInputStream *
+FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error);
+gboolean
+fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GError **error);

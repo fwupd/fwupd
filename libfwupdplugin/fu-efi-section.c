@@ -17,6 +17,7 @@
 #include "fu-efi-volume.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -57,7 +58,7 @@ fu_efi_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuild
 
 static gboolean
 fu_efi_section_parse_volume_image(FuEfiSection *self,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
@@ -74,13 +75,13 @@ fu_efi_section_parse_volume_image(FuEfiSection *self,
 
 static gboolean
 fu_efi_section_parse_lzma_sections(FuEfiSection *self,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_uncomp = NULL;
-	g_autoptr(GInputStream) stream_uncomp = NULL;
+	g_autoptr(FuInputStream) stream_uncomp = NULL;
 
 	/* parse all sections */
 	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
@@ -91,7 +92,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 		g_prefix_error_literal(error, "failed to decompress: ");
 		return FALSE;
 	}
-	stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
+	stream_uncomp = fu_memory_input_stream_new_from_bytes(blob_uncomp);
 	if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
 		g_prefix_error_literal(error, "failed to parse sections: ");
 		return FALSE;
@@ -101,7 +102,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 
 static gboolean
 fu_efi_section_parse_user_interface(FuEfiSection *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -127,7 +128,7 @@ fu_efi_section_parse_user_interface(FuEfiSection *self,
 
 static gboolean
 fu_efi_section_parse_version(FuEfiSection *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -156,7 +157,7 @@ fu_efi_section_parse_version(FuEfiSection *self,
 
 static gboolean
 fu_efi_section_parse_compression_sections(FuEfiSection *self,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
@@ -172,7 +173,7 @@ fu_efi_section_parse_compression_sections(FuEfiSection *self,
 		}
 	} else {
 		g_autoptr(FuFirmware) lz77_decompressor = fu_efi_lz77_decompressor_new();
-		g_autoptr(GInputStream) lz77_stream = NULL;
+		g_autoptr(FuInputStream) lz77_stream = NULL;
 		if (!fu_firmware_parse_stream(lz77_decompressor,
 					      stream,
 					      st->buf->len,
@@ -222,7 +223,7 @@ fu_efi_section_freeform_subtype_guid_to_string(const gchar *guid)
 
 static gboolean
 fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
-					   GInputStream *stream,
+					   FuInputStream *stream,
 					   FuFirmwareParseFlags flags,
 					   GError **error)
 {
@@ -248,7 +249,7 @@ fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 
 static gboolean
 fu_efi_section_parse(FuFirmware *firmware,
-		     GInputStream *stream,
+		     FuInputStream *stream,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
@@ -259,7 +260,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 	gsize stlen = 0;
 	guint32 size;
 	g_autoptr(FuStructEfiSection) st = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse */
 	st = fu_struct_efi_section_parse_stream(stream, offset, error);
@@ -280,7 +281,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 		size = fu_struct_efi_section_get_size(st);
 		stlen = st->buf->len;
 	}
-	if (size < FU_STRUCT_EFI_SECTION_SIZE) {
+	if (size < stlen) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -483,17 +484,8 @@ fu_efi_section_init(FuEfiSection *self)
 {
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
-#ifdef HAVE_FUZZER
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-#else
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SECTION);
 }
 
 static void
@@ -515,6 +507,15 @@ fu_efi_section_class_init(FuEfiSectionClass *klass)
 	firmware_class->write = fu_efi_section_write;
 	firmware_class->build = fu_efi_section_build;
 	firmware_class->export = fu_efi_section_export;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VOLUME);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SECTION);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
+	fu_firmware_set_images_max(firmware_class, 2000);
+#endif
 }
 
 /**

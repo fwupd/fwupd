@@ -11,6 +11,7 @@
 #include "fu-drm-device-private.h"
 #include "fu-engine.h"
 #include "fu-firmware-private.h"
+#include "fu-input-stream.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 
@@ -30,7 +31,7 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
-	g_autoptr(GInputStream) stream = g_memory_input_stream_new();
+	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new();
 
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", ctx, "physical-id", "/sys", NULL);
@@ -136,7 +137,8 @@ static void
 fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 {
 	gboolean ret;
-	GArray *image_gtypes;
+	guint n_gtypes = 0;
+	const GType *image_gtypes;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
@@ -203,14 +205,11 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 	}
 
 	/* check child GType's too */
-	image_gtypes = fu_firmware_get_image_gtypes(firmware);
-	if (image_gtypes != NULL) {
-		for (guint i = 0; i < image_gtypes->len; i++) {
-			GType gtype_tmp = g_array_index(image_gtypes, GType, i);
-			if (gtype_tmp == gtype || gtype_tmp == FU_TYPE_FIRMWARE)
-				continue;
-			fu_engine_plugin_firmware_gtype(gtype_map, gtype_tmp);
-		}
+	image_gtypes = fu_firmware_get_image_gtypes(firmware, &n_gtypes);
+	for (guint i = 0; i < n_gtypes; i++) {
+		if (image_gtypes[i] == gtype || image_gtypes[i] == FU_TYPE_FIRMWARE)
+			continue;
+		fu_engine_plugin_firmware_gtype(gtype_map, image_gtypes[i]);
 	}
 }
 

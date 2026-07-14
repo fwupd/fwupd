@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuLegionHidFirmware, fu_legion_hid_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_legion_hid_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -26,9 +26,9 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_mcu = fu_firmware_new();
 	g_autoptr(FuFirmware) img_right = fu_firmware_new();
 	g_autoptr(FuStructLegionHidBinHeader) st_header = NULL;
-	g_autoptr(GInputStream) stream_left = NULL;
-	g_autoptr(GInputStream) stream_mcu = NULL;
-	g_autoptr(GInputStream) stream_right = NULL;
+	g_autoptr(FuInputStream) stream_left = NULL;
+	g_autoptr(FuInputStream) stream_mcu = NULL;
+	g_autoptr(FuInputStream) stream_right = NULL;
 
 	st_header = fu_struct_legion_hid_bin_header_parse_stream(stream, 0x00, error);
 	if (st_header == NULL)
@@ -103,13 +103,13 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 static void
 fu_legion_hid_firmware_init(FuLegionHidFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_legion_hid_firmware_class_init(FuLegionHidFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_legion_hid_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

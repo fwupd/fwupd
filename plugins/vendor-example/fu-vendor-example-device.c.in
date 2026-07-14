@@ -146,7 +146,7 @@ fu_{{vendor_example}}_device_cleanup(FuDevice *device,
 
 static FuFirmware *
 fu_{{vendor_example}}_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
@@ -240,7 +240,7 @@ fu_{{vendor_example}}_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -316,8 +316,6 @@ fu_{{vendor_example}}_device_init(Fu{{VendorExample}}Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE);
 {%- if Parent == 'Usb' %}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
 {%- endif %}
@@ -355,4 +353,6 @@ fu_{{vendor_example}}_device_class_init(Fu{{VendorExample}}DeviceClass *klass)
 	device_class->write_firmware = fu_{{vendor_example}}_device_write_firmware;
 	device_class->set_quirk_kv = fu_{{vendor_example}}_device_set_quirk_kv;
 	device_class->set_progress = fu_{{vendor_example}}_device_set_progress;
+	fu_device_register_private_flag(device_class,
+					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE);
 }

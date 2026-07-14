@@ -16,6 +16,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-usb-config-descriptor-private.h"
 
 struct _FuUsbConfigDescriptor {
@@ -113,7 +114,7 @@ fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self)
 
 static gboolean
 fu_usb_config_descriptor_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -143,12 +144,12 @@ fu_usb_config_descriptor_class_init(FuUsbConfigDescriptorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_usb_config_descriptor_parse;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 static void
 fu_usb_config_descriptor_init(FuUsbConfigDescriptor *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

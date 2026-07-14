@@ -39,7 +39,7 @@ fu_blestech_tp_firmware_get_checksum(FuBlestechTpFirmware *self)
 
 static gboolean
 fu_blestech_tp_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
@@ -77,7 +77,6 @@ static void
 fu_blestech_tp_firmware_init(FuBlestechTpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -87,4 +86,5 @@ fu_blestech_tp_firmware_class_init(FuBlestechTpFirmwareClass *klass)
 
 	firmware_class->parse = fu_blestech_tp_firmware_parse;
 	firmware_class->export = fu_blestech_tp_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

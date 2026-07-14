@@ -870,7 +870,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 	gsize bufsz = 0;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree guint8 *buf = NULL;
 
 	g_return_val_if_fail(fw_type < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT, FALSE);
@@ -912,7 +912,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	if (!fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local)) {
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),
@@ -1108,6 +1108,13 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	}
 
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
+	if (project_ic_type == NULL || strlen(project_ic_type) < 6) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid mask project IC type");
+		return FALSE;
+	}
 
 	/* verify chip model and revision */
 	self->spec.chip.revision = (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
@@ -1948,7 +1955,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 					       GError **error)
 {
 	FuGenesysFwCodesign codesign_type = FU_GENESYS_FW_CODESIGN_NONE;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware), FALSE);
 
@@ -2821,7 +2828,7 @@ fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
 {
 	gsize codesize_to_hash = 0;
 	g_autoptr(FuFirmware) codesign_img = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuStructGenesysFwCodesignInfoEcdsa) st_codesign = NULL;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
@@ -3185,8 +3192,6 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.usbhub");
 	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* 30ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
-	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_HUBHID_DEVICE);
 	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_FIRMWARE);
@@ -3252,4 +3257,6 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	device_class->attach = fu_genesys_usbhub_device_attach;
 	device_class->to_string = fu_genesys_usbhub_device_to_string;
 	device_class->set_quirk_kv = fu_genesys_usbhub_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY);
 }

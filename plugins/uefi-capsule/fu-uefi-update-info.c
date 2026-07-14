@@ -144,7 +144,7 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 
 static gboolean
 fu_uefi_update_info_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -245,12 +245,12 @@ fu_uefi_update_info_class_init(FuUefiUpdateInfoClass *klass)
 	firmware_class->build = fu_uefi_update_info_build;
 	firmware_class->write = fu_uefi_update_info_write;
 	object_class->finalize = fu_uefi_update_info_finalize;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 static void
 fu_uefi_update_info_init(FuUefiUpdateInfo *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 FuUefiUpdateInfo *

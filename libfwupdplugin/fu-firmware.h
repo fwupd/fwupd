@@ -11,6 +11,7 @@
 
 #include "fu-chunk.h"
 #include "fu-firmware-struct.h"
+#include "fu-input-stream.h"
 
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
@@ -24,25 +25,25 @@ G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 struct _FuFirmwareClass {
 	GObjectClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*parse_full)(FuFirmware *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*build)(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gchar *(*get_checksum)(FuFirmware *self,
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
-	gboolean (*validate)(FuFirmware *self, GInputStream *stream, gsize offset, GError **error);
+	gboolean (*validate)(FuFirmware *self, FuInputStream *stream, gsize offset, GError **error);
 	gboolean (*check_compatible)(FuFirmware *self,
 				     FuFirmware *other,
 				     FuFirmwareParseFlags flags,
@@ -89,7 +90,7 @@ FuFirmware *
 fu_firmware_new_from_filename(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FuFirmware *
-fu_firmware_new_from_gtypes(GInputStream *stream,
+fu_firmware_new_from_gtypes(FuInputStream *stream,
 			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error,
@@ -141,11 +142,11 @@ fu_firmware_get_size(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_firmware_set_size(FuFirmware *self, gsize size) G_GNUC_NON_NULL(1);
 void
-fu_firmware_set_size_max(FuFirmware *self, gsize size_max) G_GNUC_NON_NULL(1);
+fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max) G_GNUC_NON_NULL(1);
 gsize
 fu_firmware_get_size_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_firmware_set_images_max(FuFirmware *self, guint images_max) G_GNUC_NON_NULL(1);
+fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max) G_GNUC_NON_NULL(1);
 guint
 fu_firmware_get_images_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 guint
@@ -161,8 +162,8 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error) G_GNUC_NON_
 void
 fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes) G_GNUC_NON_NULL(1);
 gboolean
-fu_firmware_set_stream(FuFirmware *self, GInputStream *stream, GError **error) G_GNUC_NON_NULL(1);
-GInputStream *
+fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error) G_GNUC_NON_NULL(1);
+FuInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error) G_GNUC_NON_NULL(1);
 FuFirmwareAlignment
 fu_firmware_get_alignment(FuFirmware *self) G_GNUC_NON_NULL(1);
@@ -182,7 +183,7 @@ fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
-		     GInputStream *stream,
+		     FuInputStream *stream,
 		     FuFirmwareParseFlags flags,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
@@ -200,7 +201,7 @@ fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
 				    GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
@@ -233,7 +234,7 @@ fu_firmware_check_compatible(FuFirmware *self,
 gboolean
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 void
-fu_firmware_add_image_gtype(FuFirmware *self, GType type) G_GNUC_NON_NULL(1);
+fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
@@ -248,7 +249,7 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error) G
 GBytes *
 fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **error)
     G_GNUC_NON_NULL(1);
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
     G_GNUC_NON_NULL(1);
 FuFirmware *
@@ -256,7 +257,7 @@ fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error) G_GN
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error)
     G_GNUC_NON_NULL(1);
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
     G_GNUC_NON_NULL(1);
 FuFirmware *

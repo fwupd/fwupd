@@ -331,7 +331,6 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-
     # libusb
     src = bld.checkout_source(
         "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"
@@ -453,6 +452,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
+        Fuzzer("ifd"),
         Fuzzer("ifd-bios", pattern="ifd-bios"),
         Fuzzer("zip"),
     ]:

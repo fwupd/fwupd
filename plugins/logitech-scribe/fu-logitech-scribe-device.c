@@ -210,7 +210,7 @@ fu_logitech_scribe_device_compute_hash_cb(const guint8 *buf,
 }
 
 static gchar *
-fu_logitech_scribe_device_compute_hash(GInputStream *stream, GError **error)
+fu_logitech_scribe_device_compute_hash(FuInputStream *stream, GError **error)
 {
 	guint8 md5buf[HASH_VALUE_SIZE] = {0};
 	gsize data_len = sizeof(md5buf);
@@ -367,7 +367,7 @@ fu_logitech_scribe_device_send_upd_init_cmd_cb(FuDevice *device, gpointer user_d
 static gboolean
 fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 				   FuUsbDevice *usb_device,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuProgress *progress,
 				   GError **error)
 {
@@ -417,7 +417,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_autofree gchar *base64hash = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
@@ -602,8 +602,8 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 		return FALSE;
 
 	/*  nocheck:endian -- MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
-	fwversion =
-	    (query_data[1] << 24) + (query_data[0] << 16) + (query_data[3] << 8) + query_data[2];
+	fwversion = ((guint32)query_data[1] << 24) + ((guint32)query_data[0] << 16) +
+		    ((guint32)query_data[3] << 8) + query_data[2];
 	fu_device_set_version_raw(FU_DEVICE(self), fwversion);
 
 	/* success */

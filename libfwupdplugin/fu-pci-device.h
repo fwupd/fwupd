@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-pci-struct.h"
 #include "fu-udev-device.h"
 
 #define FU_TYPE_PCI_DEVICE (fu_pci_device_get_type())
@@ -27,3 +28,5 @@ guint8
 fu_pci_device_get_revision(FuPciDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_pci_device_set_revision(FuPciDevice *self, guint8 revision) G_GNUC_NON_NULL(1);
+FuPciDeviceClassCode
+fu_pci_device_get_class_code(FuPciDevice *self) G_GNUC_NON_NULL(1);

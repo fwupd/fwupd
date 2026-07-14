@@ -12,11 +12,14 @@
 #include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
+#include "fu-file-input-stream.h"
 #include "fu-firmware-private.h"
 #include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
+#include "fu-ptr-array.h"
 #include "fu-string.h"
 
 /**
@@ -35,7 +38,7 @@ typedef struct {
 	guint64 version_raw;
 	FwupdVersionFormat version_format;
 	GBytes *bytes;
-	GInputStream *stream;
+	FuInputStream *stream;
 	gsize streamsz;
 	FuFirmwareAlignment alignment;
 	gchar *id;
@@ -44,30 +47,40 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
-	gsize size_max;
-	guint images_max;
-	GArray *image_gtypes; /* nullable, element-type GType */
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
+#define FU_FIRMWARE_IMAGE_GTYPES_MAX 10
+
+typedef struct {
+	guint images_max;
+	gsize size_max;
+	GType image_gtypes[FU_FIRMWARE_IMAGE_GTYPES_MAX];
+	guint image_gtypes_cnt;
+} FuFirmwareClassPrivate;
+
 static void
 fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface);
 
-G_DEFINE_TYPE_EXTENDED(FuFirmware,
-		       fu_firmware,
-		       G_TYPE_OBJECT,
-		       0,
-		       G_ADD_PRIVATE(FuFirmware)
-			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
+/* nocheck:name */
+G_DEFINE_TYPE_EXTENDED(FuFirmware, fu_firmware, G_TYPE_OBJECT, 0, G_ADD_PRIVATE(FuFirmware);
+		       g_type_add_class_private(g_define_type_id, sizeof(FuFirmwareClassPrivate));
+		       G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
 
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
+static FuFirmwareClassPrivate *
+fu_firmware_get_class_private(FuFirmwareClass *klass)
+{
+	return G_TYPE_CLASS_GET_PRIVATE(klass, FU_TYPE_FIRMWARE, FuFirmwareClassPrivate);
+}
+
 enum { PROP_0, PROP_PARENT, PROP_LAST };
 
-#define FU_FIRMWARE_IMAGE_DEPTH_MAX  50
+#define FU_FIRMWARE_IMAGE_DEPTH_MAX 50
 
 typedef struct {
 	gsize offset;
@@ -492,26 +505,25 @@ fu_firmware_get_size(FuFirmware *self)
 
 /**
  * fu_firmware_set_size_max:
- * @self: a #FuPlugin
+ * @klass: a #FuFirmwareClass
  * @size_max: integer, or 0 for no limit
  *
  * Sets the maximum size of the image allowed during parsing.
  * Implementations should query fu_firmware_get_size_max() during parsing when adding images to
  * ensure the limit is not exceeded.
  *
- * Since: 1.9.7
+ * Since: 2.1.6
  **/
 void
-fu_firmware_set_size_max(FuFirmware *self, gsize size_max)
+fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	priv->size_max = size_max;
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
+	cpriv->size_max = size_max;
 }
 
 /**
  * fu_firmware_get_size_max:
- * @self: a #FuPlugin
+ * @self: a #FuFirmware
  *
  * Gets the maximum size of the image allowed during parsing.
  *
@@ -522,9 +534,10 @@ fu_firmware_set_size_max(FuFirmware *self, gsize size_max)
 gsize
 fu_firmware_get_size_max(FuFirmware *self)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXSIZE);
-	return priv->size_max;
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	return cpriv->size_max;
 }
 
 /**
@@ -700,11 +713,11 @@ fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
  *
  * Gets the input stream which was used to parse the firmware.
  *
- * Returns: (transfer full): a #GInputStream, or %NULL if the payload has never been set
+ * Returns: (transfer full): a #FuInputStream, or %NULL if the payload has never been set
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -712,7 +725,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
 	if (priv->bytes != NULL)
-		return g_memory_input_stream_new_from_bytes(priv->bytes);
+		return fu_memory_input_stream_new_from_bytes(priv->bytes);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
 	return NULL;
 }
@@ -720,7 +733,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 /**
  * fu_firmware_set_stream:
  * @self: a #FuPlugin
- * @stream: (nullable): #GInputStream
+ * @stream: (nullable): #FuInputStream
  * @error: (nullable): optional return location for an error
  *
  * Sets the input stream.
@@ -730,11 +743,11 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
  * Since: 2.0.0
  **/
 gboolean
-fu_firmware_set_stream(FuFirmware *self, GInputStream *stream, GError **error)
+fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(stream == NULL || G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(stream == NULL || FU_IS_INPUT_STREAM(stream), FALSE);
 	if (stream != NULL) {
 		if (!fu_input_stream_size(stream, &priv->streamsz, error))
 			return FALSE;
@@ -917,7 +930,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 /**
  * fu_firmware_tokenize:
  * @self: a #FuFirmware
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -932,14 +945,14 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
  **/
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
-		     GInputStream *stream,
+		     FuInputStream *stream,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optionally subclassed */
@@ -981,7 +994,7 @@ fu_firmware_check_compatible(FuFirmware *self,
 
 static gboolean
 fu_firmware_validate_with_magic(FuFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				gsize *offset_found,
 				GError **error)
@@ -1038,7 +1051,7 @@ fu_firmware_validate_with_magic(FuFirmware *self,
 
 static gboolean
 fu_firmware_validate_for_offset(FuFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				gsize *offset_found,
 				FuFirmwareParseFlags flags,
@@ -1094,7 +1107,7 @@ fu_firmware_validate_for_offset(FuFirmware *self,
  **/
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
@@ -1102,12 +1115,12 @@ fu_firmware_parse_stream(FuFirmware *self,
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) partial_stream = NULL;
-	g_autoptr(GInputStream) seekable_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) seekable_stream = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
@@ -1124,7 +1137,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
 		if (blob == NULL)
 			return FALSE;
-		seekable_stream = g_memory_input_stream_new_from_bytes(blob);
+		seekable_stream = fu_memory_input_stream_new_from_bytes(blob);
 	} else {
 		seekable_stream = g_object_ref(stream);
 	}
@@ -1167,27 +1180,32 @@ fu_firmware_parse_stream(FuFirmware *self,
 				    "invalid firmware as zero sized");
 		return FALSE;
 	}
-	if (priv->size_max > 0 && priv->streamsz > priv->size_max) {
-		g_autofree gchar *sz_val = g_format_size(priv->streamsz);
-		g_autofree gchar *sz_max = g_format_size(priv->size_max);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "%s firmware is too large (%s, limit %s)",
-			    G_OBJECT_TYPE_NAME(self),
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->size_max > 0 && priv->streamsz > cpriv->size_max) {
+			g_autofree gchar *sz_val = g_format_size(priv->streamsz);
+			g_autofree gchar *sz_max = g_format_size(cpriv->size_max);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "%s firmware is too large (%s, limit %s)",
+				    G_OBJECT_TYPE_NAME(self),
+				    sz_val,
+				    sz_max);
+			return FALSE;
+		}
 
 #ifndef SUPPORTED_BUILD
-	/* we want all firmware subclasses to set this now */
-	if (G_OBJECT_TYPE(self) != FU_TYPE_FIRMWARE &&
-	    priv->size_max == FU_FIRMWARE_SIZE_MAX_DEFAULT) {
-		g_critical("%s did not set firmware max size with fu_firmware_set_size_max()",
-			   G_OBJECT_TYPE_NAME(self));
-	}
+		/* we want all firmware subclasses to set this now */
+		if (G_OBJECT_TYPE(self) != FU_TYPE_FIRMWARE &&
+		    cpriv->size_max == FU_FIRMWARE_SIZE_MAX_DEFAULT) {
+			g_critical(
+			    "%s did not set firmware max size with fu_firmware_set_size_max()",
+			    G_OBJECT_TYPE_NAME(self));
+		}
 #endif
+	}
 
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
@@ -1275,13 +1293,13 @@ fu_firmware_parse_bytes(FuFirmware *self,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(fw != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	return fu_firmware_parse_stream(self, stream, offset, flags, error);
 }
 
@@ -1394,7 +1412,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		fu_firmware_set_size(self, tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "size_max", NULL);
 	if (tmpval != G_MAXUINT64)
-		fu_firmware_set_size_max(self, tmpval);
+		fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "alignment", NULL);
 	if (tmpval != G_MAXUINT64) {
 		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
@@ -1631,18 +1649,18 @@ fu_firmware_new_from_filename(const gchar *filename, GError **error)
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags, GError **error)
 {
-	g_autoptr(GFileInputStream) stream = NULL;
+	g_autoptr(FuFileInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_file_read(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, NULL, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);
+	return fu_firmware_parse_stream(self, FU_INPUT_STREAM(stream), 0, flags, error);
 }
 
 /**
@@ -1856,51 +1874,60 @@ fu_firmware_get_depth(FuFirmware *self)
 
 /**
  * fu_firmware_add_image_gtype:
- * @self: a #FuFirmware
+ * @klass: a #FuFirmwareClass
  * @type: a #GType, e.g. %FU_TYPE_ELF_FIRMWARE
  *
  * Adds a possible image GType.
  *
- * Since: 2.1.1
+ * Since: 2.1.6
  **/
 void
-fu_firmware_add_image_gtype(FuFirmware *self, GType type)
+fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
 
-	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(FU_IS_FIRMWARE_CLASS(klass));
 	g_return_if_fail(type != G_TYPE_INVALID);
+	g_return_if_fail(cpriv->image_gtypes_cnt < FU_FIRMWARE_IMAGE_GTYPES_MAX);
 
 	g_type_ensure(type);
-	if (priv->image_gtypes == NULL)
-		priv->image_gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
-	g_array_append_val(priv->image_gtypes, type);
+	cpriv->image_gtypes[cpriv->image_gtypes_cnt++] = type;
 }
 
 /**
  * fu_firmware_get_image_gtypes:
  * @self: a #FuFirmware
+ * @n_gtypes: (out): the number of GTypes
  *
  * Returns all the possible image GTypes.
  *
- * Returns: (element-type GType) (transfer none) (nullable): array of #GType.
+ * Returns: (array length=n_gtypes) (transfer none): array of #GType.
  *
- * Since: 2.1.1
+ * Since: 2.1.6
  **/
-GArray *
-fu_firmware_get_image_gtypes(FuFirmware *self)
+const GType *
+fu_firmware_get_image_gtypes(FuFirmware *self, guint *n_gtypes)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-	return priv->image_gtypes;
+
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	if (n_gtypes != NULL)
+		*n_gtypes = cpriv->image_gtypes_cnt;
+	return cpriv->image_gtypes;
 }
 
 static gboolean
 fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	if (priv->image_gtypes == NULL) {
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+
+	/* certain GTypes can opt-out of this check */
+	if (fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_NO_IMAGE_TYPE_CHECK))
+		return TRUE;
+
+	if (cpriv->image_gtypes_cnt == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s did not add image GType %s with fu_firmware_add_image_gtype()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -1908,9 +1935,8 @@ fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 #endif
 		return TRUE;
 	}
-	for (guint i = 0; i < priv->image_gtypes->len; i++) {
-		GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
-		if (gtype_tmp == gtype)
+	for (guint i = 0; i < cpriv->image_gtypes_cnt; i++) {
+		if (cpriv->image_gtypes[i] == gtype)
 			return TRUE;
 	}
 	g_set_error(error,
@@ -1982,13 +2008,17 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 	}
 
 	/* sanity check */
-	if (priv->images_max > 0 && priv->images->len >= priv->images_max) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "too many images, limit is %u",
-			    priv->images_max);
-		return FALSE;
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->images_max > 0 && priv->images->len >= cpriv->images_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many images, limit is %u",
+				    cpriv->images_max);
+			return FALSE;
+		}
 	}
 
 	g_ptr_array_add(priv->images, g_object_ref(img));
@@ -2003,24 +2033,23 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 
 /**
  * fu_firmware_set_images_max:
- * @self: a #FuPlugin
+ * @klass: a #FuFirmwareClass
  * @images_max: integer, or 0 for unlimited
  *
  * Sets the maximum number of images this container can hold.
  *
- * Since: 1.9.3
+ * Since: 2.1.6
  **/
 void
-fu_firmware_set_images_max(FuFirmware *self, guint images_max)
+fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	priv->images_max = images_max;
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
+	cpriv->images_max = images_max;
 }
 
 /**
  * fu_firmware_get_images_max:
- * @self: a #FuPlugin
+ * @self: a #FuFirmware
  *
  * Gets the maximum number of images this container can hold.
  *
@@ -2031,9 +2060,10 @@ fu_firmware_set_images_max(FuFirmware *self, guint images_max)
 guint
 fu_firmware_get_images_max(FuFirmware *self)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT);
-	return priv->images_max;
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	return cpriv->images_max;
 }
 
 /**
@@ -2246,11 +2276,11 @@ fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **er
  *
  * Gets the firmware image stream using the image ID.
  *
- * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_id(self, id, error);
@@ -2365,11 +2395,11 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
  *
  * Gets the firmware image stream using the image index.
  *
- * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(self, idx, error);
@@ -2459,7 +2489,8 @@ static GPtrArray *
 fu_firmware_get_images_sorted(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
+	g_autoptr(GPtrArray) images =
+	    fu_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, g_object_unref);
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX)
 		g_ptr_array_sort(images, fu_firmware_sort_by_idx_cb);
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID)
@@ -2512,8 +2543,12 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
 	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
 	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
-	if (priv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT)
-		fu_xmlb_builder_insert_kx(bn, "size_max", priv->size_max);
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT)
+			fu_xmlb_builder_insert_kx(bn, "size_max", cpriv->size_max);
+	}
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->stream != NULL) {
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
@@ -2540,7 +2575,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 					    "data",
 					    datastr,
 					    "type",
-					    "GInputStream",
+					    "FuInputStream",
 					    "size",
 					    dataszstr,
 					    NULL);
@@ -2588,12 +2623,18 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	}
 
 	/* image gtypes */
-	if ((flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) > 0 && priv->image_gtypes != NULL &&
-	    priv->image_gtypes->len > 0) {
-		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "image_gtypes", NULL);
-		for (guint i = 0; i < priv->image_gtypes->len; i++) {
-			GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
-			xb_builder_node_insert_text(bp, "gtype", g_type_name(gtype_tmp), NULL);
+	if ((flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) > 0) {
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->image_gtypes_cnt > 0) {
+			g_autoptr(XbBuilderNode) bp =
+			    xb_builder_node_insert(bn, "image_gtypes", NULL);
+			for (guint i = 0; i < cpriv->image_gtypes_cnt; i++) {
+				xb_builder_node_insert_text(bp,
+							    "gtype",
+							    g_type_name(cpriv->image_gtypes[i]),
+							    NULL);
+			}
 		}
 	}
 
@@ -2697,7 +2738,6 @@ fu_firmware_init(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->images = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->size_max = FU_FIRMWARE_SIZE_MAX_DEFAULT;
 }
 
 static void
@@ -2729,8 +2769,6 @@ fu_firmware_finalize(GObject *object)
 		g_object_unref(priv->stream);
 	if (priv->chunks != NULL)
 		g_ptr_array_unref(priv->chunks);
-	if (priv->image_gtypes != NULL)
-		g_array_unref(priv->image_gtypes);
 	if (priv->patches != NULL)
 		g_ptr_array_unref(priv->patches);
 	if (priv->magic != NULL)
@@ -2751,6 +2789,7 @@ fu_firmware_class_init(FuFirmwareClass *klass)
 	object_class->get_property = fu_firmware_get_property;
 	object_class->set_property = fu_firmware_set_property;
 	object_class->constructed = fu_firmware_constructed;
+	fu_firmware_set_size_max(klass, FU_FIRMWARE_SIZE_MAX_DEFAULT);
 
 	/**
 	 * FuFirmware:parent:
@@ -2803,7 +2842,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
 
 /**
  * fu_firmware_new_from_gtypes:
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @offset: start offset, useful for ignoring a bootloader
  * @flags: install flags, e.g. %FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM
  * @error: (nullable): optional return location for an error
@@ -2816,7 +2855,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
  * Since: 1.5.6
  **/
 FuFirmware *
-fu_firmware_new_from_gtypes(GInputStream *stream,
+fu_firmware_new_from_gtypes(FuInputStream *stream,
 			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error,
@@ -2826,7 +2865,7 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 	g_autoptr(GArray) gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
 	g_autoptr(GError) error_all = NULL;
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* create array of GTypes */

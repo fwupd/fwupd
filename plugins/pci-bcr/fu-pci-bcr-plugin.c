@@ -199,11 +199,31 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_PCI_DEVICE(device))
 		return TRUE;
+<<<<<<< HEAD
 	if (!fu_pci_bcr_plugin_is_intel_spi(self, device, &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    error_local->message);
+=======
+	if (fu_device_get_vid(device) != FU_PCI_VENDOR_ID_INTEL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device vendor is not Intel, got 0x%x",
+			    fu_device_get_vid(device));
+		return FALSE;
+	}
+	if (fu_pci_device_get_class_code(FU_PCI_DEVICE(device)) !=
+		FU_PCI_DEVICE_CLASS_CODE_SERIAL_OTHER &&
+	    fu_pci_device_get_class_code(FU_PCI_DEVICE(device)) !=
+		FU_PCI_DEVICE_CLASS_CODE_BRIDGE_ISA) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device is not likely SPI class, got 0x%x",
+			    fu_pci_device_get_class_code(FU_PCI_DEVICE(device)));
+>>>>>>> main
 		return FALSE;
 	}
 
@@ -271,4 +291,5 @@ fu_pci_bcr_plugin_class_init(FuPciBcrPluginClass *klass)
 	plugin_class->add_security_attrs = fu_pci_bcr_plugin_add_security_attrs;
 	plugin_class->device_registered = fu_pci_bcr_plugin_device_registered;
 	plugin_class->backend_device_added = fu_pci_bcr_plugin_backend_device_added;
+	fu_plugin_register_private_flag(plugin_class, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE);
 }

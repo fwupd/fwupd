@@ -136,7 +136,7 @@ Provides: fwupdate-efi
 %endif
 
 # this was removed in 2.1.4
-Obsoletes: %{name}-plugin-flashrom
+Obsoletes: %{name}-plugin-flashrom < 2.1.4
 
 # optional, but a really good idea
 Recommends: udisks2
@@ -289,7 +289,6 @@ cd -
     -Dhsi=disabled \
 %endif
     -Dman=true \
-    -Dsystemd_unit_user="" \
     -Dbluez=enabled
 
 %meson_build
@@ -391,6 +390,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
+/usr/lib/sysusers.d/fwupd.conf
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
@@ -409,7 +409,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so
-%ghost %{_localstatedir}/lib/fwupd
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager

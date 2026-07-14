@@ -9,7 +9,9 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-common.h"
+#include "fu-efi-common.h"
 #include "fu-efi-signature-private.h"
+#include "fu-input-stream.h"
 
 /**
  * FuEfiSignature:
@@ -60,8 +62,7 @@ FuEfiSignature *
 fu_efi_signature_new(FuEfiSignatureKind kind)
 {
 	g_autoptr(FuEfiSignature) self = g_object_new(FU_TYPE_EFI_SIGNATURE, NULL);
-	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
-	priv->kind = kind;
+	fu_efi_signature_set_kind(self, kind);
 	return g_steal_pointer(&self);
 }
 
@@ -83,6 +84,15 @@ fu_efi_signature_get_kind(FuEfiSignature *self)
 	return priv->kind;
 }
 
+static void
+fu_efi_signature_set_owner(FuEfiSignature *self, const gchar *owner)
+{
+	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_EFI_SIGNATURE(self));
+	g_free(priv->owner);
+	priv->owner = g_strdup(owner);
+}
+
 /* private */
 void
 fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind)
@@ -90,6 +100,11 @@ fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind)
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_EFI_SIGNATURE(self));
 	priv->kind = kind;
+	if (priv->kind == FU_EFI_SIGNATURE_KIND_EXTERNAL) {
+		g_autoptr(GBytes) blob = g_bytes_new_static("\x00", 1);
+		fu_efi_signature_set_owner(self, FU_EFI_SIGNATURE_GUID_EXTERNAL);
+		fu_firmware_set_bytes(FU_FIRMWARE(self), blob);
+	}
 }
 
 /**
@@ -112,7 +127,7 @@ fu_efi_signature_get_owner(FuEfiSignature *self)
 
 static gboolean
 fu_efi_signature_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
@@ -143,6 +158,7 @@ fu_efi_signature_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to read signature GUID: ");
 		return FALSE;
 	}
+	g_free(priv->owner);
 	priv->owner = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
 	/* if data size is unspecified, we'll use the stream size */
@@ -194,14 +210,13 @@ static gboolean
 fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
-	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 
 	/* optional properties */
 	tmp = xb_node_query_text(n, "kind", NULL);
 	if (tmp != NULL) {
-		priv->kind = fu_efi_signature_kind_from_string(tmp);
-		if (priv->kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {
+		FuEfiSignatureKind kind = fu_efi_signature_kind_from_string(tmp);
+		if (kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -209,6 +224,7 @@ fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 				    tmp);
 			return FALSE;
 		}
+		fu_efi_signature_set_kind(self, kind);
 	}
 	tmp = xb_node_query_text(n, "owner", NULL);
 	if (tmp != NULL) {
@@ -216,8 +232,7 @@ fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 			g_prefix_error(error, "failed to parse owner %s, expected GUID: ", tmp);
 			return FALSE;
 		}
-		g_free(priv->owner);
-		priv->owner = g_strdup(tmp);
+		fu_efi_signature_set_owner(self, tmp);
 	}
 	tmp = xb_node_query_text(n, "checksum", NULL);
 	if (tmp != NULL) {
@@ -269,6 +284,7 @@ fu_efi_signature_class_init(FuEfiSignatureClass *klass)
 	firmware_class->write = fu_efi_signature_write;
 	firmware_class->build = fu_efi_signature_build;
 	firmware_class->get_checksum = fu_efi_signature_get_checksum;
+	fu_firmware_set_size_max(firmware_class, 500 * FU_KB);
 }
 
 static void
@@ -276,5 +292,4 @@ fu_efi_signature_init(FuEfiSignature *self)
 {
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	priv->kind = FU_EFI_SIGNATURE_KIND_SHA256;
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 500 * FU_KB);
 }

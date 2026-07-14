@@ -52,7 +52,7 @@ fu_focal_fp_firmware_compute_checksum_cb(const guint8 *buf,
 
 static gboolean
 fu_focal_fp_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -90,7 +90,6 @@ fu_focal_fp_firmware_parse(FuFirmware *firmware,
 static void
 fu_focal_fp_firmware_init(FuFocalFpFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -99,4 +98,5 @@ fu_focal_fp_firmware_class_init(FuFocalFpFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_focal_fp_firmware_parse;
 	firmware_class->export = fu_focal_fp_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

@@ -224,7 +224,7 @@ fu_algoltek_usb_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GE
 
 static gboolean
 fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   guint address,
 			   FuProgress *progress,
 			   GError **error)
@@ -384,7 +384,7 @@ fu_algoltek_usb_device_status_check_cb(FuDevice *device, gpointer user_data, GEr
 
 static gboolean
 fu_algoltek_usb_device_wrf(FuAlgoltekUsbDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   GError **error)
 {
@@ -480,8 +480,8 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
-	g_autoptr(GInputStream) stream_isp = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_isp = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -605,8 +605,6 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.usb");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -621,4 +619,6 @@ fu_algoltek_usb_device_class_init(FuAlgoltekUsbDeviceClass *klass)
 	device_class->setup = fu_algoltek_usb_device_setup;
 	device_class->write_firmware = fu_algoltek_usb_device_write_firmware;
 	device_class->set_progress = fu_algoltek_usb_device_set_progress;
+	fu_device_register_private_flag(device_class,
+					FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR);
 }

@@ -351,7 +351,7 @@ fu_emmc_device_check_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware data size (%" G_GSIZE_FORMAT ") is not aligned",
+			    "firmware data size (%zu) is not aligned",
 			    fu_firmware_get_size(firmware));
 		return FALSE;
 	}
@@ -376,7 +376,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	guint8 ext_csd[512] = {0};
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
@@ -523,7 +523,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware size and number of sectors written "
-				    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
+				    "mismatch (%zu/%zu):",
 				    total_done,
 				    streamsz);
 			return FALSE;

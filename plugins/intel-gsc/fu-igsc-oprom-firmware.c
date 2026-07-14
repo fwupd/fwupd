@@ -78,7 +78,7 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -178,4 +178,5 @@ fu_igsc_oprom_firmware_class_init(FuIgscOpromFirmwareClass *klass)
 	object_class->finalize = fu_igsc_oprom_firmware_finalize;
 	firmware_class->parse = fu_igsc_oprom_firmware_parse;
 	firmware_class->export = fu_igsc_oprom_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 8 * FU_MB);
 }

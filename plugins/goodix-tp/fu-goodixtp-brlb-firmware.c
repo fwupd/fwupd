@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuGoodixtpBrlbFirmware, fu_goodixtp_brlb_firmware, FU_TYPE_GOODIXT
 
 static gboolean
 fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       gsize offset,
 				       guint8 sensor_id,
 				       guint8 *cfg_ver,
@@ -35,7 +35,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 	guint16 cfg_checksum = 0;
 	g_autoptr(FuFirmware) img = fu_goodixtp_brlb_config_new();
 	g_autoptr(FuStructGoodixTpCfgGroup) st_cfg = NULL;
-	g_autoptr(GInputStream) stream_img = NULL;
+	g_autoptr(FuInputStream) stream_img = NULL;
 
 	st_cfg = fu_struct_goodix_tp_cfg_group_parse_stream(stream, offset, error);
 	if (st_cfg == NULL)
@@ -106,7 +106,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 
 gboolean
 fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				guint8 sensor_id,
 				GError **error)
 {
@@ -175,7 +175,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 		guint32 img_size;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(FuStructGoodixBrlbImg) st_img = NULL;
-		g_autoptr(GInputStream) stream_img = NULL;
+		g_autoptr(FuInputStream) stream_img = NULL;
 
 		st_img = fu_struct_goodix_brlb_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)
@@ -230,15 +230,16 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 static void
 fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GOODIXTP_BRLB_CONFIG);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
 fu_goodixtp_brlb_firmware_class_init(FuGoodixtpBrlbFirmwareClass *klass)
 {
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_GOODIXTP_BRLB_CONFIG);
+	fu_firmware_set_images_max(firmware_class, 1024);
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }
 
 FuFirmware *

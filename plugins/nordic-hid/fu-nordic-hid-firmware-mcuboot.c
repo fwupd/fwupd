@@ -61,7 +61,7 @@ fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 /* simple validation of the image */
 static gboolean
 fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					GError **error)
 {
 	guint32 magic;
@@ -127,7 +127,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
 
 static gboolean
 fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
@@ -141,7 +141,6 @@ fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_firmware_mcuboot_init(FuNordicHidFirmwareMcuboot *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -150,4 +149,5 @@ fu_nordic_hid_firmware_mcuboot_class_init(FuNordicHidFirmwareMcubootClass *klass
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_nordic_hid_firmware_mcuboot_parse;
 	firmware_class->write = fu_nordic_hid_firmware_mcuboot_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

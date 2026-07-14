@@ -12,6 +12,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
+#include "fu-ifwi-cpd-image.h"
 #include "fu-ifwi-struct.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
@@ -52,7 +53,7 @@ fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 				    FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -79,11 +80,19 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	size = fu_struct_ifwi_cpd_manifest_get_size(st_mhd);
+	if ((guint64)size * 4 > G_MAXUINT32) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "manifest size 0x%x dwords would overflow",
+			    size);
+		return FALSE;
+	}
 	if (size * 4 != streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid manifest invalid length, got 0x%x, expected 0x%x",
+			    "invalid manifest length, got 0x%x, expected 0x%x",
 			    size * 4,
 			    (guint)streamsz);
 		return FALSE;
@@ -100,7 +109,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 		guint32 extension_length = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(FuStructIfwiCpdManifestExt) st_mex = NULL;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* set the extension type as the index */
 		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse_stream(stream, offset, error);
@@ -136,7 +145,6 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
-		fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		if (!fu_size_checked_inc(&offset, extension_length, error))
@@ -149,7 +157,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 
 static gboolean
 fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -158,7 +166,7 @@ fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -192,9 +200,9 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	for (guint32 i = 0; i < num_of_entries; i++) {
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = fu_ifwi_cpd_image_new();
 		g_autoptr(FuStructIfwiCpdEntry) st_ent = NULL;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* the IDX is the position in the file */
 		fu_firmware_set_idx(img, i);
@@ -357,22 +365,22 @@ fu_ifwi_cpd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_IFWI_CPD_IMAGE);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_ifwi_cpd_firmware_validate;
 	firmware_class->export = fu_ifwi_cpd_firmware_export;
 	firmware_class->parse = fu_ifwi_cpd_firmware_parse;
 	firmware_class->write = fu_ifwi_cpd_firmware_write;
 	firmware_class->build = fu_ifwi_cpd_firmware_build;
 	firmware_class->convert_version = fu_ifwi_cpd_firmware_convert_version;
+	fu_firmware_set_images_max(firmware_class, FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 }
 
 /**

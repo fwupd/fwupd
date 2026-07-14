@@ -5,20 +5,21 @@
 # Translators:
 # Piotr Drąg <piotrdrag@gmail.com>, 2015-2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# NooB9496 <noob9496@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-04-23 15:45+0000\n"
-"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-07-02 23:01+0000\n"
+"Last-Translator: NooB9496 <noob9496@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/fwupd/fwupd/pl/>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.7.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilne oprogramowanie sprzętowe)"
@@ -115,11 +116,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Wymagane jest uwierzytelnienie, aby przywrócić konfigurację usługi do domyślnej"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Modyfikowanie właściwości urządzenia"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Do modyfikacji właściwości urządzenia wymagane jest uwierzytelnienie"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktywacja nowego oprogramowania sprzętowego na urządzeniu"
@@ -129,18 +130,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Wymagane jest uwierzytelnienie, aby przełączyć na nową wersję oprogramowania sprzętowego"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Wyczyść zapisane wyniki aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Do wyczyszczenia wyników aktualizacji oprogramowania sprzętowego wymagane jest uwierzytelnienie"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Zweryfikuj oprogramowanie układowe urządzenia"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Do weryfikacji oprogramowania sprzętowego na urządzeniu wymagane jest uwierzytelnienie"
 
 msgid "Update the stored device verification information"
 msgstr "Aktualizacja przechowywanych informacji o poprawności urządzenia"
@@ -150,25 +151,25 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować przechowywane sumy kontrolne dla urządzenia"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Pobierz konfiguracje zdalną"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Aby uzyskać listę konfiguracji zdalnych używanych do aktualizacji oprogramowania sprzętowego, wymagane jest uwierzytelnienie"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Zaktualizuj metadane dla konfiguracji zdalnej"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Do aktualizacji metadanych konfiguracji zdalnych używanych do aktualizacji oprogramowania sprzętowego wymagane jest uwierzytelnienie"
 
 msgid "Modify a configured remote"
 msgstr "Modyfikacja skonfigurowanego repozytorium"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Do włączenia lub wyłączenia konfiguracji zdalnej używanej do aktualizacji oprogramowania sprzętowego wymagane jest uwierzytelnienie"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -245,11 +246,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Wymagane jest uwierzytelnienie, aby włączyć zbieranie danych emulacji"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Zainstaluj oprogramowanie układowe na emulowanym urządzeniu"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Do zainstalowania oprogramowania sprzętowego na emulowanym urządzeniu wymagane jest uwierzytelnienie"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -302,6 +303,10 @@ msgstr "Narzędzie bazy dbx dla UEFI"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Przetworzenie parametrów się nie powiodło"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr "Nie udało się załadować kontekstu"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -727,6 +732,10 @@ msgstr "Ochrona przed odtwarzaniem SPI"
 msgid "SPI write protection"
 msgstr "Ochrona przed zapisem SPI"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr "coreboot zweryfikowany rozruch"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platforma z bezpiecznikiem"
@@ -754,6 +763,10 @@ msgstr "SMM jest zablokowane"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "Ochrona pamięci UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr "Ochrona UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -914,6 +927,10 @@ msgstr "Ochrona przed odtwarzaniem oprogramowania sprzętowego AMD"
 msgid "AMD Firmware Write Protection"
 msgstr "Ochrona przed zapisem oprogramowania sprzętowego AMD"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr "coreboot Zweryfikowany rozruch"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Platforma z bezpiecznikiem"
@@ -938,160 +955,172 @@ msgstr "Tryb zarządzania komputerem"
 msgid "UEFI Memory Protection"
 msgstr "Ochrona pamięci UEFI"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr "Ochrona UEFI NX"
+
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
 msgstr "Podpis mikrokodu AMD"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "Ochrona przed zapisem oprogramowania sprzętowego chroni pamięć oprogramowania sprzętowego urządzenia przed manipulacją."
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "Region BIOS-u oprogramowania sprzętowego chroni pamięć oprogramowania sprzętowego urządzenia przed manipulacją."
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "Deskryptor oprogramowania układowego BIOS chroni pamięć oprogramowania układowego urządzenia przed manipulacją."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr ""
+msgstr "Ochrona DMA przed uruchomieniem komputera uniemożliwia urządzeniom dostęp do pamięci systemowej po ich podłączeniu do komputera."
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
-msgstr ""
+msgstr "Intel BootGuard zapobiega uruchomieniu nieautoryzowanego oprogramowania urządzenia po jego uruchomieniu."
 
 msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
-msgstr ""
+msgstr "Zasady ochrony przed błędami Intel BootGuard zapobiegają ponownemu uruchomieniu urządzenia w przypadku modyfikacji jego oprogramowania."
 
 #. TRANSLATORS: longer description
 msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
-msgstr ""
+msgstr "Technologia Control-Flow Enforcement wykrywa i zapobiega pewnym metodom uruchamiania złośliwego oprogramowania na urządzeniu."
 
 #. TRANSLATORS: longer description
 msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
-msgstr ""
+msgstr "Funkcja zapobiegania dostępowi w trybie nadzorcy gwarantuje, że mniej bezpieczne programy nie uzyskają dostępu do krytycznych części pamięci urządzenia."
 
 msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
-msgstr ""
+msgstr "Zaszyfrowana pamięć RAM uniemożliwia odczytanie informacji zapisanych w pamięci urządzenia w przypadku wyjęcia układu pamięci i uzyskania do niego dostępu."
 
 #. TRANSLATORS: longer description
 msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
-msgstr ""
+msgstr "Ochrona IOMMU uniemożliwia podłączonym urządzeniom dostęp do nieautoryzowanych części pamięci systemowej."
 
 #. TRANSLATORS: longer description
 msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
-msgstr ""
+msgstr "Tryb blokady jądra Linuxa uniemożliwia kontom administratorów (root) dostęp do krytycznych części oprogramowania systemowego i zmianę ich."
 
 msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
-msgstr ""
+msgstr "Weryfikacja jądra Linuxa gwarantuje, że krytyczne oprogramowanie systemowe nie zostało zmodyfikowane. Korzystanie ze sterowników urządzeń, które nie są dołączone do systemu, może uniemożliwić prawidłowe działanie tej funkcji bezpieczeństwa."
 
 msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
-msgstr ""
+msgstr "Funkcja Linux Kernel Swap tymczasowo zapisuje informacje na dysku podczas pracy. Jeśli informacje nie są chronione, może być do nich dostęp po uzyskaniu dostępu przez osobę niepowołaną."
 
 #. TRANSLATORS: longer description
 msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
-msgstr ""
+msgstr "Funkcja Suspend to RAM pozwala urządzeniu szybko przejść w tryb uśpienia w celu oszczędzania energii. Po uśpieniu urządzenia można fizycznie usunąć jego pamięć i uzyskać dostęp do danych."
 
 #. TRANSLATORS: longer description
 msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
-msgstr ""
+msgstr "Funkcja Suspend to Idle pozwala urządzeniu szybko przejść w tryb uśpienia w celu oszczędzania energii. Podczas uśpienia urządzenia można fizycznie usunąć jego pamięć i uzyskać dostęp do informacji."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
-msgstr ""
+msgstr "Klucz platformy UEFI służy do ustalenia, czy oprogramowanie urządzenia pochodzi z zaufanego źródła."
 
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
-msgstr ""
+msgstr "UEFI Secure Boot zapobiega załadowaniu złośliwego oprogramowania podczas uruchamiania urządzenia."
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr ""
+msgstr "Zmiennych usługi rozruchowej UEFI nie powinno da się odczytać w trybie wykonawczym."
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "Konfiguracja platformy TPM (Trusted Platform Module) służy do sprawdzenia, czy proces uruchamiania urządzenia został zmodyfikowany."
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "Rekonstrukcja modułu TPM (Trusted Platform Module) służy do sprawdzenia, czy proces uruchamiania urządzenia został zmodyfikowany."
 
 #. TRANSLATORS: longer description
 msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
-msgstr ""
+msgstr "TPM (Trusted Platform Module) to układ scalony, który wykrywa próby ingerencji w podzespoły sprzętowe."
 
 #. TRANSLATORS: longer description
 msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
-msgstr ""
+msgstr "Tryb produkcyjny jest używany, gdy urządzenie jest już wyprodukowane, a funkcje bezpieczeństwa nie zostały jeszcze włączone."
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
-msgstr ""
+msgstr "Funkcja Intel Management Engine Override wyłącza sprawdzanie, czy oprogramowanie urządzenia nie zostało zmodyfikowane."
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
-msgstr ""
+msgstr "Klucz manifestu Intel Management Engine musi być prawidłowy, aby procesor mógł zaufać oprogramowaniu sprzętowemu urządzenia."
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
-msgstr ""
+msgstr "Oprogramowanie Intel Management Engine kontroluje komponenty urządzenia i aby uniknąć problemów z bezpieczeństwem, wymagana jest jego najnowsza wersja."
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
-msgstr ""
+msgstr "Dla tego urządzenia dostępne są aktualizacje oprogramowania."
 
 #. TRANSLATORS: longer description
 msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
-msgstr ""
+msgstr "Poświadczenie oprogramowania sprzętowego polega na sprawdzeniu oprogramowania urządzenia przy użyciu kopii referencyjnej, aby upewnić się, że nie zostało ono zmienione."
 
 msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
-msgstr ""
+msgstr "Weryfikacja narzędzia Firmware Updater sprawdza, czy oprogramowanie używane do aktualizacji nie zostało zmodyfikowane."
 
 #. TRANSLATORS: longer description
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
-msgstr ""
+msgstr "Debugowanie platformy umożliwia wyłączenie funkcji bezpieczeństwa urządzenia. Z tej opcji powinni korzystać wyłącznie producenci sprzętu."
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
-msgstr ""
+msgstr "Każdy system powinien przejść testy w celu zapewnienia bezpieczeństwa oprogramowania sprzętowego."
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr ""
+msgstr "Ochrona przed wycofaniem zapobiega instalowaniu starszej wersji oprogramowania urządzenia, która może mieć problemy z bezpieczeństwem."
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Funkcja Platform Secure Boot zapobiega ładowaniu niepodpisanego oprogramowania podczas uruchamiania urządzenia."
+
+#. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr "Funkcja coreboot zweryfikowany rozruch zapobiega załadowaniu niepodpisanego oprogramowania sprzętowego podczas uruchamiania urządzenia."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
-msgstr ""
+msgstr "Mikrokod procesora musi zostać zaktualizowany w celu rozwiązania różnych problemów związanych z bezpieczeństwem ujawniania informacji."
 
 #. TRANSLATORS: longer description
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
-msgstr ""
+msgstr "Włączenie aktualizacji oprogramowania układowego BIOS-u umożliwia rozwiązanie problemów bezpieczeństwa."
 
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
-msgstr ""
+msgstr "Tryb zarządzania systemem jest używany przez oprogramowanie sprzętowe w celu uzyskania dostępu do kodu i danych rezydentnego systemu BIOS."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
-msgstr ""
+msgstr "System UEFI może skonfigurować atrybuty pamięci podczas rozruchu, które zapobiegają uruchamianiu typowych exploitów."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr "Bootloader UEFI skompilowany z obsługą funkcji Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
-msgstr ""
+msgstr "Baza danych UEFI zawiera listę ważnych certyfikatów, które można wykorzystać do autoryzacji uruchamiania plików binarnych EFI."
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart to funkcja zabezpieczająca oprogramowanie sprzętowe, która chroni BIOS przed manipulacją."
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "Weryfikacja podpisu mikrokodu AMD gwarantuje, że mikrokod procesora jest autentyczny i nie został zmodyfikowany."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1412,7 +1441,7 @@ msgid "Manually enable specific plugins"
 msgstr "Ręcznie włącza podane wtyczki"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "Lokalizacja katalogów kluczy publicznych używanych do weryfikacji JCat"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1435,6 +1464,10 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr "Filtruje za pomocą zestawu flag wydań, przedrostek ~ wyklucza, np. „trusted-release,~trusted-metadata”"
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr "Filtruj według określonych protokołów, np. '~org.uefi.capsule' lub 'org.nvmexpress'"
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Odpowiada tak na wszystkie pytania"
 
@@ -1443,7 +1476,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Wyjście w formacie JSON (wyłącza wszystkie interaktywne zapytania)"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "Prefiks dla plików importowych i wyjściowych"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1897,59 +1930,59 @@ msgstr "Przetwarza dziennik zdarzeń PCR komputera"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "Pokaż informacje o pliku JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "ID NAZWY PLIKU ALIAS_ID"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Dodaj alias dla konkretnego elementu JCat"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Usuń alias dla konkretnego elementu JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "NAZWA PLIKU [RODZAJ]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Eksportuje wszystkie osadzone podpisy do plików"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "NAZWA PLIKU DANE ODŁĄCZONY_KLUCZ"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Importuj istniejący podpis do pliku JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "NAZWA PLIKU ŹRÓDŁO [RODZAJ[:WARIANT]] [CEL]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "Dodaj podpis podpisany przez siebie do pliku JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "NAZWA PLIKU ŹRÓDŁO CERT KLUCZ PRYWATNY [RODZAJ[:WARIANT]] [CEL]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "Dodaj podpis do pliku JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "NAZWA PLIKU [ŹRÓDŁO]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "Zweryfikuj podpis z pliku JCat"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -1969,6 +2002,8 @@ msgstr "Ignorowanie ścisłych testów SSL, aby robić to automatycznie w przys
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Przetworzenie flag dla opcji %s się nie powiodło"
@@ -2330,22 +2365,22 @@ msgstr "Pomyślnie wysłano listę urządzeń, dziękujemy!"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "Wprowadź swój adres e-mail dla zdalnego '%s'"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Aby uzyskać nowy token, przejdź do %s i kliknij 'Wygeneruj token'"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "Wprowadź swój token dla zdalnego '%s'"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Zdalne włączenie i odświeżenie przebiegło pomyślnie"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2437,11 +2472,11 @@ msgstr "Aktualizuje przechowywaną kryptograficzną sumę kontrolną bieżącą 
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[ZDALNE-ID] [NAZWA UŻYTKOWNIKA] [TOKEN]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Włącz dla zdalnego uwierzytelnienia"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2880,6 +2915,11 @@ msgstr "Aktualizacja słuchawek %s"
 #, c-format
 msgid "%s Headset Update"
 msgstr "Aktualizacja słuchawek z mikrofonem %s"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr "%s Aktualizacja ekranu dotykowego"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3527,7 +3567,7 @@ msgstr "Priorytet"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Wymaga autoryzacji"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3535,7 +3575,7 @@ msgstr "Nazwa użytkownika"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3714,20 +3754,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstrukcja PCR0 TPM jest teraz prawidłowa"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "Ochrona pamięci UEFI jest włączona, ale nie jest zablokowana"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "Ochrona pamięci UEFI jest włączona i zablokowana"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "Ochrona pamięci UEFI jest teraz zablokowana"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "Ochrona pamięci UEFI jest teraz odblokowana"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr "Ochrona bootloadera UEFI NX jest teraz włączona"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr "Ochrona bootloadera UEFI NX jest teraz wyłączona"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3832,6 +3872,12 @@ msgstr "Włączyć nowe repozytorium?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Wyrazić zgodę i włączyć repozytorium?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "Ochrona pamięci UEFI jest włączona, ale nie jest zablokowana"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "Ochrona pamięci UEFI jest włączona i zablokowana"
 
 #~ msgid "Password"
 #~ msgstr "Hasło"

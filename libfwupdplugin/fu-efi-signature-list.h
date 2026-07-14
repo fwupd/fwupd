@@ -23,3 +23,5 @@ FuFirmware *
 fu_efi_signature_list_new(void);
 GPtrArray *
 fu_efi_signature_list_get_newest(FuEfiSignatureList *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_efi_signature_list_is_external(FuEfiSignatureList *self) G_GNUC_NON_NULL(1);

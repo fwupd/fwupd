@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuGoodixtpBrlbConfig, fu_goodixtp_brlb_config, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_goodixtp_brlb_config_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
@@ -50,7 +50,6 @@ fu_goodixtp_brlb_config_init(FuGoodixtpBrlbConfig *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_idx(FU_FIRMWARE(self), 4);
 	fu_firmware_set_addr(FU_FIRMWARE(self), 0x40000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 10 * FU_KB);
 }
 
 static void
@@ -58,6 +57,7 @@ fu_goodixtp_brlb_config_class_init(FuGoodixtpBrlbConfigClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_goodixtp_brlb_config_parse;
+	fu_firmware_set_size_max(firmware_class, 10 * FU_KB);
 }
 
 FuFirmware *

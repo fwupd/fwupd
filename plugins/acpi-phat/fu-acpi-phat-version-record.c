@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
@@ -33,7 +33,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	record_count = fu_struct_acpi_phat_version_record_get_record_count(st);
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 		stream_tmp = fu_partial_input_stream_new(stream,
 							 offset + st->buf->len,
 							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,
@@ -84,18 +84,18 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 static void
 fu_acpi_phat_version_record_init(FuAcpiPhatVersionRecord *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_ELEMENT);
 }
 
 static void
 fu_acpi_phat_version_record_class_init(FuAcpiPhatVersionRecordClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_ACPI_PHAT_VERSION_ELEMENT);
 	firmware_class->parse = fu_acpi_phat_version_record_parse;
 	firmware_class->write = fu_acpi_phat_version_record_write;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
 FuFirmware *

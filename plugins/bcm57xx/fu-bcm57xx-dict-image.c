@@ -29,11 +29,11 @@ fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
-	g_autoptr(GInputStream) stream_nocrc = NULL;
+	g_autoptr(FuInputStream) stream_nocrc = NULL;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -157,7 +157,6 @@ fu_bcm57xx_dict_image_init(FuBcm57xxDictImage *self)
 {
 	self->target = 0xff;
 	self->kind = 0xff;
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -168,6 +167,7 @@ fu_bcm57xx_dict_image_class_init(FuBcm57xxDictImageClass *klass)
 	firmware_class->write = fu_bcm57xx_dict_image_write;
 	firmware_class->build = fu_bcm57xx_dict_image_build;
 	firmware_class->export = fu_bcm57xx_dict_image_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuFirmware *

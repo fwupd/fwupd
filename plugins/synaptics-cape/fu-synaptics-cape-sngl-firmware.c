@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuSynapticsCapeSnglFirmware,
 
 static gboolean
 fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
@@ -64,7 +64,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	/* check CRC */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 crc_calc = 0xFFFFFFFF;
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, 8, G_MAXSIZE, error);
 		if (stream_tmp == NULL)
@@ -129,7 +129,6 @@ static void
 fu_synaptics_cape_sngl_firmware_init(FuSynapticsCapeSnglFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -138,4 +137,5 @@ fu_synaptics_cape_sngl_firmware_class_init(FuSynapticsCapeSnglFirmwareClass *kla
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_synaptics_cape_sngl_firmware_parse;
 	firmware_class->write = fu_synaptics_cape_sngl_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

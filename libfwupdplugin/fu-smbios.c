@@ -357,7 +357,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 
 static gboolean
 fu_smbios_parse(FuFirmware *firmware,
-		GInputStream *stream,
+		FuInputStream *stream,
 		FuFirmwareParseFlags flags,
 		GError **error)
 {
@@ -734,6 +734,7 @@ fu_smbios_class_init(FuSmbiosClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_smbios_finalize;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	firmware_class->parse = fu_smbios_parse;
 	firmware_class->build = fu_smbios_build;
 	firmware_class->export = fu_smbios_export;
@@ -743,7 +744,6 @@ static void
 fu_smbios_init(FuSmbios *self)
 {
 	self->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_smbios_item_free);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**

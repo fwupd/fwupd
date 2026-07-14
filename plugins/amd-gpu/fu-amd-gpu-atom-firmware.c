@@ -63,7 +63,7 @@ fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  gsize offset,
 				  GError **error)
 {
@@ -183,6 +183,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 
 	/* make sure there is enough space for all the strings */
 	atombios_size = fu_firmware_get_size(FU_FIRMWARE(self));
+	/* NOLINTNEXTLINE(bugprone-misplaced-widening-cast)*/
 	if ((gsize)(idx + (num_str * (STRLEN_NORMAL - 1))) > atombios_size) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -272,7 +273,7 @@ fu_amd_gpu_atom_firmware_parse_config_filename(FuAmdGpuAtomFirmware *self,
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

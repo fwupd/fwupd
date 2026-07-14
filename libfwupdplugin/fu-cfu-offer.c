@@ -11,6 +11,7 @@
 #include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
 
@@ -417,7 +418,7 @@ fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
 
 static gboolean
 fu_cfu_offer_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
@@ -545,7 +546,6 @@ fu_cfu_offer_init(FuCfuOffer *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_SURFACE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -557,6 +557,7 @@ fu_cfu_offer_class_init(FuCfuOfferClass *klass)
 	firmware_class->parse = fu_cfu_offer_parse;
 	firmware_class->write = fu_cfu_offer_write;
 	firmware_class->build = fu_cfu_offer_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

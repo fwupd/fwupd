@@ -72,7 +72,7 @@ fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed)
 }
 
 typedef struct {
-	GInputStream *stream;
+	FuInputStream *stream;
 	FuFirmwareParseFlags parse_flags;
 	gsize rsvd_folder;
 	gsize rsvd_block;
@@ -166,7 +166,7 @@ static gboolean
 fu_cab_firmware_parse_data(FuCabFirmware *self,
 			   FuCabFirmwareParseHelper *helper,
 			   gsize *offset,
-			   GInputStream *folder_data,
+			   FuInputStream *folder_data,
 			   GError **error)
 {
 	gsize blob_comp;
@@ -175,7 +175,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	gsize payload_offset = *offset;
 	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
 	g_autoptr(FuStructCabData) st = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse header */
 	st = fu_struct_cab_data_parse_stream(helper->stream, *offset, error);
@@ -413,7 +413,7 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 			     FuCabFirmwareParseHelper *helper,
 			     guint idx,
 			     gsize offset,
-			     GInputStream *folder_data,
+			     FuInputStream *folder_data,
 			     GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -470,14 +470,14 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	GInputStream *folder_data;
+	FuInputStream *folder_data;
 	guint16 date;
 	guint16 index;
 	guint16 time;
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 	g_autoptr(FuStructCabFile) st = NULL;
 	g_autoptr(GDateTime) created = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);
 	g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
 
@@ -571,13 +571,13 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 }
 
 static gboolean
-fu_cab_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_cab_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_cab_header_validate_stream(stream, offset, error);
 }
 
 static FuCabFirmwareParseHelper *
-fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flags, GError **error)
+fu_cab_firmware_parse_helper_new(FuInputStream *stream, FuFirmwareParseFlags flags, GError **error)
 {
 	int zret;
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
@@ -604,7 +604,7 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flag
 
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -729,7 +729,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 
 	/* parse CFFOLDER */
 	for (guint i = 0; i < fu_struct_cab_header_get_nr_folders(st); i++) {
-		g_autoptr(GInputStream) folder_data = fu_composite_input_stream_new();
+		g_autoptr(FuInputStream) folder_data = fu_composite_input_stream_new();
 		if (!fu_cab_firmware_parse_folder(self, helper, i, offset, folder_data, error))
 			return FALSE;
 		if (!fu_input_stream_size(folder_data, &streamsz, error))
@@ -1055,26 +1055,26 @@ static void
 fu_cab_firmware_class_init(FuCabFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CAB_IMAGE);
 	firmware_class->validate = fu_cab_firmware_validate;
 	firmware_class->parse = fu_cab_firmware_parse;
 	firmware_class->write = fu_cab_firmware_write;
 	firmware_class->build = fu_cab_firmware_build;
 	firmware_class->export = fu_cab_firmware_export;
+	fu_firmware_set_images_max(firmware_class, G_MAXUINT16);
+#ifdef __x86_64__
+	fu_firmware_set_size_max(firmware_class, 16 * FU_GB);
+#else
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
+#endif
 }
 
 static void
 fu_cab_firmware_init(FuCabFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CAB_IMAGE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT16);
-#ifdef __x86_64__
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_GB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 }
 
 /**

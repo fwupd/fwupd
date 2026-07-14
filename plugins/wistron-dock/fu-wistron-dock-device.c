@@ -9,6 +9,7 @@
 
 #include "fu-wistron-dock-common.h"
 #include "fu-wistron-dock-device.h"
+#include "fu-wistron-dock-firmware.h"
 #include "fu-wistron-dock-struct.h"
 
 struct _FuWistronDockDevice {
@@ -331,14 +332,14 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 
 static FuFirmware *
 fu_wistron_dock_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) fw_cbin = NULL;
-	g_autoptr(FuFirmware) fw_new = fu_firmware_new();
+	g_autoptr(FuFirmware) fw_new = fu_wistron_dock_firmware_new();
 	g_autoptr(FuFirmware) fw_wdfl = NULL;
 	g_autoptr(FuFirmware) fw_wsig = NULL;
 
@@ -376,7 +377,6 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success */
-	fu_firmware_add_image_gtype(fw_new, FU_TYPE_ZIP_FILE);
 	fu_firmware_set_id(fw_wsig, FU_FIRMWARE_ID_SIGNATURE);
 	if (!fu_firmware_add_image(fw_new, fw_wsig, error))
 		return NULL;
@@ -397,7 +397,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
-	g_autoptr(GInputStream) stream_cbin = NULL;
+	g_autoptr(FuInputStream) stream_cbin = NULL;
 	g_autoptr(GBytes) fw_wdfl = NULL;
 	g_autoptr(GBytes) fw_wsig = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;

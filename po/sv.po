@@ -13,20 +13,21 @@
 # Anders Jonsson <anders.jonsson@norsjovallen.se>, 2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Daniel Nylander <daniel@danielnylander.se>, 2026.
+# bittin1ddc447d824349b2 <bittin@reimu.nl>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-05-30 06:41+0000\n"
-"Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-06-26 16:01+0000\n"
+"Last-Translator: bittin1ddc447d824349b2 <bittin@reimu.nl>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -310,6 +311,10 @@ msgstr "UEFI dbx-verktyg"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Misslyckades med att tolka argument"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr "Misslyckades med att läsa in sammanhang"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -727,6 +732,10 @@ msgstr "SPI-återuppspelningsskydd"
 msgid "SPI write protection"
 msgstr "SPI-skrivskydd"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr "coreboot verifierad uppstart"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Plattform med säkring"
@@ -754,6 +763,10 @@ msgstr "SMM låst"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "UEFI-minnesskydd"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr "UEFI NX skydd"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -914,6 +927,10 @@ msgstr "Återuppspelningsskydd för AMD:s fasta programvara"
 msgid "AMD Firmware Write Protection"
 msgstr "Skrivskydd för AMD:s fasta programvara"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr "coreboot Verifierad uppstart"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Plattform med säkring"
@@ -937,6 +954,10 @@ msgstr "Systemhanteringsläge"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI-minnesskydd"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr "UEFI NX Skydd"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1066,6 +1087,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Plattformssäkerhetsstart förhindrar osignerad programvara från att läsas in när enheten startas."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr "coreboot verifierad uppstart förhindrar att osignerad fast programvara laddas när enheten startas."
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "CPU-mikrokod måste uppdateras för att förmildra mot diverse informationsavslöjande säkerhetsproblem."
 
@@ -1080,6 +1105,10 @@ msgstr "Systemhanteringsläge används av den fasta programvaran för att komma 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "UEFI-systemet kan konfigurera minnesattribut vid uppstart som förhindrar vanliga attackmetoder från att köras."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr "UEFI starthanterare kompilerad med stöd för Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1433,6 +1462,10 @@ msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-p
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filtrera med en uppsättning utgåveflaggor och prefixet ~ för att exkludera, t.ex. 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr "Filtrera till specifika protokoll, t.ex. '~org.uefi.capsule' eller 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1969,6 +2002,8 @@ msgstr "Ignorerar strikta SSL-kontroller, för att göra detta automatiskt i fra
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Misslyckades med att tolka flaggor för %s"
@@ -2869,6 +2904,11 @@ msgstr "%s-hörlursuppdatering"
 msgid "%s Headset Update"
 msgstr "%s-headsetuppdatering"
 
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr "%s-pekskärmsuppdatering"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -3688,20 +3728,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0-rekonstruktion är nu giltig"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "UEFI-minnesskydd aktiverat men inte låst"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "UEFI-minnesskydd aktiverat och låst"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "UEFI-minnesskydd är nu låst"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "UEFI-minnesskydd är nu olåst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr "UEFI NX starthanterare skydd är nu aktiverat"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr "UEFI NX starthanterare skydd är nu inaktiverat"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3806,6 +3846,12 @@ msgstr "Aktivera ny fjärrkälla?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Samtyck och aktivera fjärrkällan?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "UEFI-minnesskydd aktiverat men inte låst"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "UEFI-minnesskydd aktiverat och låst"
 
 #~ msgid "Password"
 #~ msgstr "Lösenord"

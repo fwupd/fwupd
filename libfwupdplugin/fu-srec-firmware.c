@@ -14,6 +14,7 @@
 #include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-firmware-common.h"
+#include "fu-input-stream.h"
 #include "fu-srec-firmware.h"
 #include "fu-string.h"
 #include "fu-sum.h"
@@ -373,7 +374,7 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 
 static gboolean
 fu_srec_firmware_tokenize(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -397,7 +398,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware,
 
 static gboolean
 fu_srec_firmware_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
@@ -666,7 +667,6 @@ fu_srec_firmware_init(FuSrecFirmware *self)
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_srec_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void
@@ -675,6 +675,7 @@ fu_srec_firmware_class_init(FuSrecFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_srec_firmware_finalize;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 	firmware_class->parse = fu_srec_firmware_parse;
 	firmware_class->tokenize = fu_srec_firmware_tokenize;
 	firmware_class->write = fu_srec_firmware_write;

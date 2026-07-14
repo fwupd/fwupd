@@ -36,7 +36,7 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_vli_pd_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -71,7 +71,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint16 crc_actual = 0xFFFF;
 		guint16 crc_file = 0x0;
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		if (streamsz < 2) {
 			g_set_error_literal(error,
@@ -122,7 +122,6 @@ fu_vli_pd_firmware_init(FuVliPdFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -132,4 +131,5 @@ fu_vli_pd_firmware_class_init(FuVliPdFirmwareClass *klass)
 	firmware_class->convert_version = fu_vli_pd_firmware_convert_version;
 	firmware_class->parse = fu_vli_pd_firmware_parse;
 	firmware_class->export = fu_vli_pd_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }

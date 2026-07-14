@@ -223,7 +223,7 @@ fu_intel_thunderbolt_nvm_valid_pd_pointer(guint32 pointer)
  */
 static gboolean
 fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
-						GInputStream *stream,
+						FuInputStream *stream,
 						guint32 offset,
 						gsize *value,
 						GError **error)
@@ -249,7 +249,7 @@ fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
 /* assumes sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL].offset is already set */
 static gboolean
 fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       GError **error)
 {
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
@@ -363,7 +363,7 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -390,6 +390,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
 			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
 			   {0x5786, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE, 2},
+			   {0x0D9C, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE, 0},
 			   /* Maple ridge devices
 			    * NOTE: These are expected to be flashed via UEFI capsules *not*
 			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
@@ -508,6 +509,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE:
 		if (!fu_input_stream_read_u16(
 			stream,
 			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
@@ -566,7 +568,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		priv->has_pd = fu_intel_thunderbolt_nvm_valid_pd_pointer(pd_pointer);
 	}
 
-	/* as as easy-to-grab payload blob */
+	/* as easy-to-grab payload blob */
 	if (!fu_firmware_parse_stream(img_payload, stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
@@ -760,9 +762,6 @@ static void
 fu_intel_thunderbolt_nvm_init(FuIntelThunderboltNvm *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
 }
 
@@ -770,12 +769,15 @@ static void
 fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 	firmware_class->convert_version = fu_intel_thunderbolt_nvm_convert_version;
 	firmware_class->export = fu_intel_thunderbolt_nvm_export;
 	firmware_class->parse = fu_intel_thunderbolt_nvm_parse;
 	firmware_class->write = fu_intel_thunderbolt_nvm_write;
 	firmware_class->build = fu_intel_thunderbolt_nvm_build;
 	firmware_class->check_compatible = fu_intel_thunderbolt_nvm_check_compatible;
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 /**

@@ -285,15 +285,8 @@ fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError
 	if (version == NULL)
 		return FALSE;
 
-	/* some devices append a few extra non number characters to the version, which can confuse
-	 * fwupd's formats, so remove it */
-	while (!(g_str_has_suffix(version, "0") || g_str_has_suffix(version, "1") ||
-		 g_str_has_suffix(version, "2") || g_str_has_suffix(version, "3") ||
-		 g_str_has_suffix(version, "4") || g_str_has_suffix(version, "5") ||
-		 g_str_has_suffix(version, "6") || g_str_has_suffix(version, "7") ||
-		 g_str_has_suffix(version, "8") || g_str_has_suffix(version, "9")))
-		version[strlen(version) - 1] = '\0';
-
+	/* some devices append a few extra non number characters to the version; the devices set
+	 * FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER so fu_device_set_version() strips that for us */
 	fu_device_set_version(device, version);
 	return TRUE;
 }
@@ -633,7 +626,7 @@ fu_jabra_gnp_write_chunk(FuDevice *device,
 			 gsize bufsz,
 			 GError **error)
 {
-	guint8 write_length = 0x00 + bufsz + 10;
+	guint8 write_length = (guint8)(bufsz + 10);
 	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
 	    .buf = st->buf,

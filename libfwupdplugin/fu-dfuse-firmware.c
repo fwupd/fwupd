@@ -29,7 +29,7 @@ G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
 static FuChunk *
 fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize *offset,
 				    GError **error)
 {
@@ -64,7 +64,7 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 
 static FuFirmware *
 fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     gsize *offset,
 				     GError **error)
 {
@@ -121,14 +121,17 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 }
 
 static gboolean
-fu_dfuse_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_dfuse_firmware_validate(FuFirmware *firmware,
+			   FuInputStream *stream,
+			   gsize offset,
+			   GError **error)
 {
 	return fu_struct_dfuse_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
@@ -166,7 +169,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid DfuSe image size, "
 			    "got %" G_GUINT32_FORMAT ", "
-			    "expected %" G_GSIZE_FORMAT,
+			    "expected %zu",
 			    fu_struct_dfuse_hdr_get_image_size(st_hdr),
 			    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
 		return FALSE;
@@ -294,19 +297,19 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_dfuse_firmware_init(FuDfuseFirmware *self)
 {
-	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMARE_VERSION_DFUSE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 255);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
+	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMWARE_VERSION_DFUSE);
 }
 
 static void
 fu_dfuse_firmware_class_init(FuDfuseFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_dfuse_firmware_validate;
 	firmware_class->parse = fu_dfuse_firmware_parse;
 	firmware_class->write = fu_dfuse_firmware_write;
+	fu_firmware_set_images_max(firmware_class, 255);
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }
 
 /**

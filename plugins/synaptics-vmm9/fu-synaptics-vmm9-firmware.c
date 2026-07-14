@@ -35,7 +35,7 @@ fu_synaptics_vmm9_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -44,7 +44,7 @@ fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -124,6 +124,7 @@ fu_synaptics_vmm9_firmware_class_init(FuSynapticsVmm9FirmwareClass *klass)
 	firmware_class->validate = fu_synaptics_vmm9_firmware_validate;
 	firmware_class->parse = fu_synaptics_vmm9_firmware_parse;
 	firmware_class->export = fu_synaptics_vmm9_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 }
 
 FuFirmware *
