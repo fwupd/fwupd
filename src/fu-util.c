@@ -206,12 +206,10 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(self->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
-		dev = g_ptr_array_index(devices_filtered, i);
-		fu_console_print(self->console,
-				 "%u.\t%s (%s)",
-				 i + 1,
-				 fwupd_device_get_id(dev),
-				 fwupd_device_get_name(dev));
+		FwupdDevice *device_tmp = g_ptr_array_index(devices_filtered, i);
+		g_autofree gchar *id_display = fwupd_device_get_id_display(device_tmp);
+		if (id_display != NULL)
+			fu_console_print(self->console, "%u.\t%s", i + 1, id_display);
 	}
 	/* TRANSLATORS: get interactive prompt */
 	idx = fu_console_input_uint(self->console, devices_filtered->len, "%s", _("Choose device"));

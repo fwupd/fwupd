@@ -5556,29 +5556,11 @@ fu_device_to_string(FuDevice *self)
 gchar *
 fu_device_get_id_display(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GError) error_local = NULL;
-
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-
 	if (!fu_device_ensure_id(self, &error_local))
 		g_debug("ignoring: %s", error_local->message);
-	if (fu_device_get_id(self) != NULL)
-		g_string_append(str, fu_device_get_id(self));
-	/* nocheck:blocked */
-	if (priv->name != NULL) {
-		if (str->len > 0)
-			g_string_append(str, " ");
-		g_string_append_printf(str, "[%s]", priv->name);
-	} else if (fu_device_get_plugin(self) != NULL) {
-		if (str->len > 0)
-			g_string_append(str, " ");
-		g_string_append_printf(str, "{%s}", fu_device_get_plugin(self));
-	}
-	if (str->len == 0)
-		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return fwupd_device_get_id_display(FWUPD_DEVICE(self));
 }
 
 /**
