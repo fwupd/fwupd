@@ -859,6 +859,9 @@ class Checker:
                 "~g_file_input_stream_*": "Use fu_file_input_stream_*() instead",
                 "g_zlib_compressor_new": "Use fu_compressor_stream_new_compress() instead",
                 "g_zlib_decompressor_new": "Use fu_compressor_stream_new_decompress() instead",
+                "g_input_stream_read_all": "Use fu_input_stream_read_all() instead",
+                "g_input_stream_read_bytes": "Use fu_input_stream_read_bytes() instead",
+                "g_input_stream_read": "Use fu_input_stream_read() instead",
             }.items():
                 idx = node.tokens.find_fuzzy([token, "("])
                 if idx != -1:
