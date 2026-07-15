@@ -48,6 +48,90 @@ typedef struct {
 	gsize chunk_len;
 } FuPixartTpTfWritePacketCtx;
 
+typedef struct {
+	FuPixartTpUserBank bank;
+	guint8 addr;
+	guint8 expected_val;
+} FuPixartTpRegWriteVerifyCtx;
+
+static gboolean
+fu_pixart_tp_haptic_device_reg_write_verify_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDevice *proxy;
+	FuPixartTpRegWriteVerifyCtx *ctx = (FuPixartTpRegWriteVerifyCtx *)user_data;
+	guint8 val = 0;
+
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+
+	if (!fu_pixart_tp_device_register_user_write(FU_PIXART_TP_DEVICE(proxy),
+						     ctx->bank,
+						     ctx->addr,
+						     ctx->expected_val,
+						     error))
+		return FALSE;
+
+	if (!fu_pixart_tp_device_register_user_read(FU_PIXART_TP_DEVICE(proxy),
+						    ctx->bank,
+						    ctx->addr,
+						    &val,
+						    error))
+		return FALSE;
+
+	if (val != ctx->expected_val) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "register write verify failed: addr=0x%02x expected=0x%02x got=0x%02x",
+			    ctx->addr,
+			    ctx->expected_val,
+			    val);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_pixart_tp_haptic_device_reg_write_verify(FuPixartTpHapticDevice *self,
+					    FuPixartTpUserBank bank,
+					    guint8 addr,
+					    guint8 val,
+					    GError **error)
+{
+	FuPixartTpRegWriteVerifyCtx ctx = {
+	    .bank = bank,
+	    .addr = addr,
+	    .expected_val = val,
+	};
+
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_pixart_tp_haptic_device_reg_write_verify_cb,
+				    FU_PIXART_TP_TF_RETRY_COUNT,
+				    (guint)FU_PIXART_TP_TF_RETRY_INTERVAL_MS,
+				    &ctx,
+				    error);
+}
+
+static gboolean
+fu_pixart_tp_haptic_device_reg_write_verify_best_effort(FuPixartTpHapticDevice *self,
+							FuPixartTpUserBank bank,
+							guint8 addr,
+							guint8 val)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_pixart_tp_haptic_device_reg_write_verify(self, bank, addr, val, &error_local)) {
+		g_debug("ignoring failure to write register: addr=0x%02x val=0x%02x: %s",
+			addr,
+			val,
+			error_local->message);
+	}
+
+	return TRUE;
+}
+
 static gboolean
 fu_pixart_tp_haptic_device_tf_write_rmi_cmd(FuPixartTpHapticDevice *self,
 					    guint16 addr,
@@ -570,34 +654,35 @@ fu_pixart_tp_haptic_device_tf_write_firmware_process(FuPixartTpHapticDevice *sel
 						     FuProgress *progress,
 						     GError **error)
 {
-	FuDevice *proxy;
-
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-
 	/*
-	 * Workaround:
-	 * Force the TP run mode to Force Run to prevent the TP from entering sleep during TF
+	 * workaround:
+	 * force the TP run mode to Force Run to prevent the TP from entering sleep during TF
 	 * update, which can cause TF flashing to fail.
 	 *
-	 * Ideally, when the TP is switched to TF_UPDATE proxy mode it should stay awake. However,
+	 * ideally, when the TP is switched to TF_UPDATE proxy mode it should stay awake. however,
 	 * the current firmware cannot be changed, so we keep this as an AP-side workaround.
 	 */
-	if (!fu_pixart_tp_device_register_user_write(FU_PIXART_TP_DEVICE(proxy),
-						     FU_PIXART_TP_USER_BANK_BANK0,
-						     FU_PIXART_TP_REG_USER0_RUN_MODE,
-						     FU_PIXART_TP_RUN_MODE_FORCE_RUN,
-						     error)) {
+	if (!fu_pixart_tp_haptic_device_reg_write_verify(self,
+							 FU_PIXART_TP_USER_BANK_BANK0,
+							 FU_PIXART_TP_REG_USER0_RUN_MODE,
+							 FU_PIXART_TP_RUN_MODE_FORCE_RUN,
+							 error)) {
 		return FALSE;
 	}
 
-	if (!fu_pixart_tp_device_register_user_write(FU_PIXART_TP_DEVICE(proxy),
-						     FU_PIXART_TP_USER_BANK_BANK0,
-						     FU_PIXART_TP_REG_USER0_PROXY_MODE,
-						     FU_PIXART_TP_PROXY_MODE_TF_UPDATE,
-						     error))
+	if (!fu_pixart_tp_haptic_device_reg_write_verify(self,
+							 FU_PIXART_TP_USER_BANK_BANK0,
+							 FU_PIXART_TP_REG_USER0_PROXY_MODE,
+							 FU_PIXART_TP_PROXY_MODE_TF_UPDATE,
+							 error)) {
+		/* restore run mode before failing */
+		fu_pixart_tp_haptic_device_reg_write_verify_best_effort(
+		    self,
+		    FU_PIXART_TP_USER_BANK_BANK0,
+		    FU_PIXART_TP_REG_USER0_RUN_MODE,
+		    FU_PIXART_TP_RUN_MODE_AUTO);
 		return FALSE;
+	}
 
 	if (!fu_pixart_tp_haptic_device_tf_exit_upgrade_mode(self, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
@@ -647,9 +732,46 @@ fu_pixart_tp_haptic_device_setup(FuDevice *device, GError **error)
 	guint8 major = 0;
 	guint8 minor = 0;
 	guint8 patch = 0;
+	gboolean tf_version_valid = FALSE;
 	g_autofree gchar *ver_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_version = NULL;
+
+	/*
+	 * workaround:
+	 * force the TP run mode to Force Run to prevent the TP from entering sleep during TF
+	 * communication, which can cause the TF to become unresponsive.
+	 *
+	 * ideally, when the TP is switched to TF_UPDATE proxy mode it should stay awake. however,
+	 * the current firmware cannot be changed, so we keep this as an AP-side workaround.
+	 */
+	if (!fu_pixart_tp_haptic_device_reg_write_verify(self,
+							 FU_PIXART_TP_USER_BANK_BANK0,
+							 FU_PIXART_TP_REG_USER0_RUN_MODE,
+							 FU_PIXART_TP_RUN_MODE_FORCE_RUN,
+							 error)) {
+		g_prefix_error_literal(error, "failed to switch force run mode before failing: ");
+		return FALSE;
+	}
+
+	if (!fu_pixart_tp_haptic_device_reg_write_verify(self,
+							 FU_PIXART_TP_USER_BANK_BANK0,
+							 FU_PIXART_TP_REG_USER0_PROXY_MODE,
+							 FU_PIXART_TP_PROXY_MODE_TF_UPDATE,
+							 error)) {
+		g_prefix_error_literal(error, "failed to switch to proxy mode before failing: ");
+		/* restore run mode before failing */
+		if (!fu_pixart_tp_haptic_device_reg_write_verify_best_effort(
+			self,
+			FU_PIXART_TP_USER_BANK_BANK0,
+			FU_PIXART_TP_REG_USER0_RUN_MODE,
+			FU_PIXART_TP_RUN_MODE_AUTO)) {
+			g_prefix_error_literal(error,
+					       "failed to restore run mode before failing: ");
+		}
+
+		return FALSE;
+	}
 
 	/* exit TF upgrade/engineer mode (best-effort) */
 	if (!fu_pixart_tp_haptic_device_tf_exit_upgrade_mode(self, &error_local)) {
@@ -661,20 +783,34 @@ fu_pixart_tp_haptic_device_setup(FuDevice *device, GError **error)
 
 	/* best-effort: if TF is not present or not responding, or respond error code, keep device
 	 * online and need update */
-	if (!fu_pixart_tp_haptic_device_tf_read_firmware_version(self,
-								 FU_PIXART_TP_TF_FW_MODE_APP,
-								 &major,
-								 &minor,
-								 &patch,
-								 &error_version)) {
+	if (fu_pixart_tp_haptic_device_tf_read_firmware_version(self,
+								FU_PIXART_TP_TF_FW_MODE_APP,
+								&major,
+								&minor,
+								&patch,
+								&error_version)) {
+		tf_version_valid = TRUE;
+	} else {
 		g_debug("failed to read TF firmware version: %s", error_version->message);
-		fu_device_set_version(device, "0.0.0");
-		return TRUE;
 	}
 
 	/* if TF version is 255.x.x, flash is empty / bootloader state, needs update */
-	if (major == 0xFF) {
+	if (tf_version_valid && major == 0xFF) {
 		g_debug("TF in bootloader state (%u.%u.%u)", major, minor, patch);
+		tf_version_valid = FALSE;
+	}
+
+	/* restore TP run mode and proxy mode to normal */
+	fu_pixart_tp_haptic_device_reg_write_verify_best_effort(self,
+								FU_PIXART_TP_USER_BANK_BANK0,
+								FU_PIXART_TP_REG_USER0_RUN_MODE,
+								FU_PIXART_TP_RUN_MODE_AUTO);
+	fu_pixart_tp_haptic_device_reg_write_verify_best_effort(self,
+								FU_PIXART_TP_USER_BANK_BANK0,
+								FU_PIXART_TP_REG_USER0_PROXY_MODE,
+								FU_PIXART_TP_PROXY_MODE_NORMAL);
+
+	if (!tf_version_valid) {
 		fu_device_set_version(device, "0.0.0");
 		return TRUE;
 	}

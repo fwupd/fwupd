@@ -73,6 +73,20 @@ fu_pixart_tp_device_register_user_write(FuPixartTpDevice *self,
 					GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
+fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
+				       FuPixartTpUserBank bank,
+				       guint8 addr,
+				       guint8 *out_val,
+				       GError **error) G_GNUC_NON_NULL(1, 4);
+
+GByteArray *
+fu_pixart_tp_device_register_user_read_array(FuPixartTpDevice *self,
+					     FuPixartTpUserBank bank,
+					     guint8 addr,
+					     gsize len,
+					     GError **error) G_GNUC_NON_NULL(1);
+
+gboolean
 fu_pixart_tp_device_register_burst_write(FuPixartTpDevice *self,
 					 const guint8 *buf,
 					 gsize bufsz,
