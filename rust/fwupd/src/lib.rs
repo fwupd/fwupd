@@ -7,5 +7,6 @@
 //! Core components of fwupd
 
 mod bitflags;
+pub mod json;
 
 pub use crate::bitflags::Bitflags;
