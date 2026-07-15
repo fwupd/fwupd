@@ -255,11 +255,7 @@ fu_partial_input_stream_read(GInputStream *stream,
 		return -1;
 	}
 	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
-	return g_input_stream_read(G_INPUT_STREAM(self->base_stream),
-				   buffer,
-				   count,
-				   cancellable,
-				   error);
+	return fu_input_stream_read(self->base_stream, buffer, count, cancellable, error);
 }
 
 static void

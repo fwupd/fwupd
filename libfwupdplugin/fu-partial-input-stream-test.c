@@ -38,7 +38,7 @@ fu_partial_input_stream_composite_func(void)
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(partial_stream)), ==, 0x0);
 
 	/* read the 34 */
-	rc = g_input_stream_read(G_INPUT_STREAM(partial_stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(partial_stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, '3');
@@ -47,7 +47,7 @@ fu_partial_input_stream_composite_func(void)
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(partial_stream)), ==, 0x2);
 
 	/* there is no more data to read */
-	rc = g_input_stream_read(G_INPUT_STREAM(partial_stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(partial_stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x4);
@@ -76,7 +76,7 @@ fu_partial_input_stream_simple_func(void)
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x2);
 
 	/* read from offset */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, '7');
@@ -109,7 +109,7 @@ fu_partial_input_stream_closed_base_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CLOSED);
 	g_assert_cmpint(rc, ==, -1);
 }
@@ -146,7 +146,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	pos = g_seekable_tell(G_SEEKABLE(stream_file));
@@ -154,7 +154,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
@@ -164,14 +164,14 @@ fu_partial_input_stream_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 10216);
 	/* reads all return zero */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	/* END offset is negative */
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), -0x1, G_SEEK_END, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream_file), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(stream_file, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 10);
@@ -187,7 +187,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
-	rc = g_input_stream_read(G_INPUT_STREAM(base_stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(base_stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	pos = g_seekable_tell(G_SEEKABLE(base_stream));
@@ -195,7 +195,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(base_stream), pos, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(base_stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(base_stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
@@ -209,7 +209,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(base_stream), -1, G_SEEK_END, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(base_stream), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(base_stream, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, '8');
@@ -224,13 +224,13 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x2);
 
 	/* read from start */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, '5');
 	g_assert_cmpint(buf[1], ==, '6');
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x4);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
@@ -245,7 +245,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 0x8);
-	rc = g_input_stream_read(G_INPUT_STREAM(base_stream), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(base_stream, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 0x8);
@@ -255,7 +255,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x4);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
@@ -264,7 +264,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x3);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, '6');
@@ -273,7 +273,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 
@@ -290,7 +290,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream_complete), 0x8, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(G_INPUT_STREAM(stream_complete), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream_complete, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
