@@ -213,14 +213,14 @@ fu_compressor_stream_read_func(void)
 
 	orig_data = g_bytes_get_data(original, &orig_sz);
 	for (gsize i = 0; i < orig_sz; i++) {
-		rc = g_input_stream_read(G_INPUT_STREAM(dstream), buf, 1, NULL, &error);
+		rc = fu_input_stream_read(dstream, buf, 1, NULL, &error);
 		g_assert_no_error(error);
 		g_assert_cmpint(rc, ==, 1);
 		g_assert_cmpint(buf[0], ==, orig_data[i]);
 	}
 
 	/* EOF */
-	rc = g_input_stream_read(G_INPUT_STREAM(dstream), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(dstream, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 }
@@ -240,7 +240,7 @@ fu_compressor_stream_decompress_invalid_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(dstream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(dstream, buf, sizeof(buf), NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
 	g_assert_cmpint(rc, ==, -1);
 }
@@ -317,7 +317,7 @@ fu_compressor_stream_empty_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(dstream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(dstream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 }
@@ -343,7 +343,7 @@ fu_compressor_stream_format_mismatch_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(dstream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(dstream, buf, sizeof(buf), NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
 	g_assert_cmpint(rc, ==, -1);
 }
@@ -390,7 +390,7 @@ fu_compressor_stream_no_close_source_func(void)
 
 	/* the source should still be readable after the compressor is finalized */
 	g_seekable_seek(G_SEEKABLE(source), 0, G_SEEK_SET, NULL, NULL);
-	rc = g_input_stream_read(G_INPUT_STREAM(source), buf, 4, NULL, &error);
+	rc = fu_input_stream_read(source, buf, 4, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 4);
 	g_assert_cmpint(buf[0], ==, 'A');
