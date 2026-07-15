@@ -2,6 +2,8 @@ project('qt5-thread-test', 'cpp',
   license: 'LGPL-2.1-or-later',
 )
 add_project_arguments('-fPIC', language: 'cpp')
+# Prevent conflicts between Qt 'signals' define and GLib 'signals' identifiers
+add_project_arguments('-DQT_NO_KEYWORDS', language: 'cpp')
 qt5core = dependency('Qt5Core')
 qt5concurrent = dependency('Qt5Concurrent')
 glib2 = dependency('glib-2.0')
