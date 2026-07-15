@@ -28,6 +28,75 @@ fu_input_stream_init(FuInputStream *self)
 }
 
 /**
+ * fu_input_stream_read:
+ * @stream: a #FuInputStream
+ * @buffer: (not nullable): a buffer to read data into
+ * @count: the number of bytes that will be read from the stream
+ * @cancellable: (nullable): optional #GCancellable object
+ * @error: (nullable): optional return location for an error
+ *
+ * Tries to read @count bytes from the stream into the buffer starting at @buffer.
+ *
+ * Returns: number of bytes read, 0 for end of stream, or -1 on error
+ *
+ * Since: 2.1.7
+ **/
+gssize
+fu_input_stream_read(FuInputStream *stream,
+		     void *buffer,
+		     gsize count,
+		     GCancellable *cancellable,
+		     GError **error)
+{
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), -1);
+	g_return_val_if_fail(buffer != NULL, -1);
+	g_return_val_if_fail(error == NULL || *error == NULL, -1);
+	return g_input_stream_read(G_INPUT_STREAM(stream), /* nocheck:blocked */
+				   buffer,
+				   count,
+				   cancellable,
+				   error);
+}
+
+/**
+ * fu_input_stream_read_all:
+ * @stream: a #FuInputStream
+ * @buffer: (not nullable): a buffer to read data into
+ * @count: the number of bytes that will be read from the stream
+ * @bytes_read: (out) (nullable): location to store the number of bytes that was read
+ * @cancellable: (nullable): optional #GCancellable object
+ * @error: (nullable): optional return location for an error
+ *
+ * Tries to read @count bytes from the stream into the buffer starting at @buffer.
+ * Will block during this read.
+ *
+ * This function is similar to fu_input_stream_read(), except it tries to read as many bytes as
+ * requested, only stopping on an error or end of stream.
+ *
+ * Returns: %TRUE on success, %FALSE on error
+ *
+ * Since: 2.1.7
+ **/
+gboolean
+fu_input_stream_read_all(FuInputStream *stream,
+			 void *buffer,
+			 gsize count,
+			 gsize *bytes_read,
+			 GCancellable *cancellable,
+			 GError **error)
+{
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(buffer != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return g_input_stream_read_all(G_INPUT_STREAM(stream), /* nocheck:blocked */
+				       buffer,
+				       count,
+				       bytes_read,
+				       cancellable,
+				       error);
+}
+
+/**
  * fu_input_stream_from_path:
  * @path: a filename
  * @error: (nullable): optional return location for an error

@@ -107,6 +107,19 @@ gchar *
 fu_input_stream_compute_checksum(FuInputStream *stream,
 				 GChecksumType checksum_type,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gssize
+fu_input_stream_read(FuInputStream *stream,
+		     void *buffer,
+		     gsize count,
+		     GCancellable *cancellable,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_input_stream_read_all(FuInputStream *stream,
+			 void *buffer,
+			 gsize count,
+			 gsize *bytes_read,
+			 GCancellable *cancellable,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_input_stream_find(FuInputStream *stream,
 		     const guint8 *buf,
