@@ -350,11 +350,11 @@ fu_composite_input_stream_read(GInputStream *stream,
 			return -1;
 		self->last_item = item;
 	}
-	rc = g_input_stream_read(G_INPUT_STREAM(item->partial_stream),
-				 buffer,
-				 count,
-				 cancellable,
-				 error);
+	rc = fu_input_stream_read(FU_INPUT_STREAM(item->partial_stream),
+				  buffer,
+				  count,
+				  cancellable,
+				  error);
 	if (rc < 0)
 		return rc;
 

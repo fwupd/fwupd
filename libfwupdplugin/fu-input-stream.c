@@ -162,11 +162,7 @@ fu_input_stream_read_safe(FuInputStream *stream,
 		g_prefix_error(error, "seek to 0x%x: ", (guint)seek_set);
 		return FALSE;
 	}
-	rc = g_input_stream_read(G_INPUT_STREAM(stream),
-				 buf + offset,
-				 count,
-				 NULL,
-				 error); /* nocheck:blocked */
+	rc = fu_input_stream_read(stream, buf + offset, count, NULL, error);
 	if (rc == -1) {
 		g_prefix_error(error, "failed read of 0x%x: ", (guint)count);
 		return FALSE;
@@ -382,11 +378,11 @@ fu_input_stream_read_byte_array(FuInputStream *stream,
 	/* read from stream in 32kB chunks */
 	while (TRUE) {
 		gssize sz;
-		sz = g_input_stream_read(G_INPUT_STREAM(stream), /* nocheck:blocked */
-					 tmp,
-					 MIN(count - buf->len, sizeof(tmp)),
-					 NULL,
-					 &error_local);
+		sz = fu_input_stream_read(stream,
+					  tmp,
+					  MIN(count - buf->len, sizeof(tmp)),
+					  NULL,
+					  &error_local);
 		if (sz == 0)
 			break;
 		if (sz < 0) {
