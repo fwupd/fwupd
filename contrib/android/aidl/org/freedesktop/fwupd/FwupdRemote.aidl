@@ -1,6 +1,8 @@
 package org.freedesktop.fwupd;
 
 @VintfStability
+// This is an api which returns the list of all sources that Fwupd fetches the firmware from. 
+// For example, LVFS or any internal repositories.
 parcelable FwupdRemote {
     @nullable String id;
     @nullable String kind;
@@ -9,7 +11,6 @@ parcelable FwupdRemote {
     @nullable String metadataUriSig;
     @nullable String firmwareBaseUri;
     @nullable String username;
-    @nullable String password;
     @nullable String title;
     @nullable String privacyUri;
     @nullable String agreement;
@@ -25,7 +26,7 @@ parcelable FwupdRemote {
     boolean automaticSecurityReports;
     int priority;
     long mtime;
-    int refreshInterval;
+    int refreshIntervalSec;
     @nullable String remotesDir;
     @nullable String[] orderAfter;
     @nullable String[] orderBefore;
