@@ -6,6 +6,7 @@ plugin_quirks += files('pixart-tp.quirk')
 plugin_builtin_pixart_tp = static_library('fu_plugin_pixart_tp',
   rustgen.process('fu-pixart-tp.rs'),
   sources: [
+    'fu-pixart-tp-pjp360-device.c',
     'fu-pixart-tp-plp239-device.c',
     'fu-pixart-tp-haptic-device.c',
     'fu-pixart-tp-device.c',

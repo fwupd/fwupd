@@ -235,7 +235,7 @@ fu_pixart_tp_device_register_user_write(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 				       FuPixartTpUserBank bank,
 				       guint8 addr,
@@ -276,7 +276,7 @@ fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static GByteArray *
+GByteArray *
 fu_pixart_tp_device_register_user_read_array(FuPixartTpDevice *self,
 					     FuPixartTpUserBank bank,
 					     guint8 addr,
@@ -1292,8 +1292,9 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 
 	/* sync bootloader flag from hardware state */
 	if (val == FU_PIXART_TP_BOOT_STATUS_ROM) {
-		g_debug("device is in bootloader mode");
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
+			return FALSE;
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
