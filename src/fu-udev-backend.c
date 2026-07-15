@@ -39,8 +39,6 @@ G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 
 #define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
 
-#define FU_UDEV_BACKEND_SOCKET_RCV_SIZE (8 * FU_MB)
-
 static void
 fu_udev_backend_coldplug_cache_item_free(FuUdevBackendColdplugCacheItem *item)
 {
@@ -203,7 +201,7 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
-	GType gtype;
+	GType gtype = FU_TYPE_UDEV_DEVICE;
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)), "block") == 0) {
@@ -650,11 +648,8 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		       MSG_DONTWAIT,
 		       (struct sockaddr *)&sender_addr,
 		       &sender_len);
-	if (len < 0) {
-		if (errno != EAGAIN)
-			g_warning("netlink recvfrom failed: %s", fwupd_strerror(errno));
+	if (len < 0)
 		return TRUE;
-	}
 
 	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
 	if (sender_addr.nl_groups == FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL &&
@@ -686,10 +681,9 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 static gboolean
 fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 {
-	int rcvbuf = FU_UDEV_BACKEND_SOCKET_RCV_SIZE;
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
-	    .nl_pid = getpid(),
+	    .nl_pid = 0, /* let the kernel assign a unique nl_pid to avoid conflict with GUdev */
 #ifdef HAVE_UDEV_HOTPLUG
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_UDEV,
 #else
@@ -697,15 +691,6 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 #endif
 	};
 	g_autoptr(GSource) source = NULL;
-
-	/* minijail -p prevents access */
-	if (nls.nl_pid <= 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to get PID, perhaps sandboxed?");
-		return FALSE;
-	}
 
 	self->netlink_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
 	if (self->netlink_fd < 0) {
@@ -716,8 +701,6 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
-	if (setsockopt(self->netlink_fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0)
-		g_warning("failed to set SO_RCVBUF: %s", fwupd_strerror(errno));
 	if (bind(self->netlink_fd, (void *)&nls, sizeof(nls))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -880,8 +863,7 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 				return FU_DEVICE(g_steal_pointer(&device_new));
 			}
 		} else {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
-			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 				g_warning("failed to create device: %s", error_local->message);
 		}
 

@@ -1,0 +1,17 @@
+{
+  "name": "FocalTech MOC Fingerprint Sensor",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "focaltech-moc-firmware.cab",
+      "components": [
+        {
+          "version": "01.00.00.34",
+          "guids": [
+            "replace-with-real-device-guid-from-fwupdmgr-get-devices"
+          ]
+        }
+      ]
+    }
+  ]
+}

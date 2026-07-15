@@ -1,0 +1,7 @@
+# FocalTech Fingerprint sensor
+#
+# VID 0x2808 is FocalTech Systems Co., Ltd.
+# Matching on VID only so that all FocalTech fingerprint sensors are handled
+# regardless of PID — the device probe() will reject non-fingerprint products.
+[USB\VID_2808]
+Plugin = focaltech_moc
