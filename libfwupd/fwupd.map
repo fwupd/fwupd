@@ -1208,6 +1208,7 @@ LIBFWUPD_2.1.7 {
     fwupd_bios_setting_get_icon;
     fwupd_bios_setting_set_appstream_id;
     fwupd_bios_setting_set_icon;
+    fwupd_client_set_sync_impl;
     fwupd_device_get_id_display;
   local: *;
 } LIBFWUPD_2.1.6;

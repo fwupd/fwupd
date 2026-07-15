@@ -647,4 +647,12 @@ fwupd_client_build_report_security(FwupdClient *self,
 				   GHashTable *metadata,
 				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
+/* only needed when not using D-Bus in in-tree CLIs */
+typedef struct FwupdClientSyncImpl FwupdClientSyncImpl;
+void
+fwupd_client_set_sync_impl(FwupdClient *self,
+			   const FwupdClientSyncImpl *impl,
+			   gpointer userdata,
+			   GDestroyNotify userdata_destroy) G_GNUC_NON_NULL(1);
+
 G_END_DECLS
