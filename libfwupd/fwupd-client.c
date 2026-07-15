@@ -23,6 +23,7 @@
 
 #include "fwupd-bios-setting.h"
 #include "fwupd-client-private.h"
+#include "fwupd-client-sync-private.h"
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
@@ -90,6 +91,9 @@ typedef struct {
 	GStrv hwid_values;
 	GMutex download_items_mutex; /* for @download_items */
 	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
+	FwupdClientSyncImpl impl;
+	gpointer impl_userdata;
+	GDestroyNotify impl_userdata_destroy; /* nullable */
 } FwupdClientPrivate;
 
 typedef struct {
@@ -7542,6 +7546,47 @@ fwupd_client_build_report_security(FwupdClient *self,
 	return g_string_free(g_steal_pointer(&data), FALSE);
 }
 
+/**
+ * fwupd_client_set_sync_impl:
+ * @self: a #FwupdClient
+ * @impl: (not nullable): a #FwupdClientSyncImpl
+ * @userdata: (nullable): userdata to use with the #FwupdClientSyncImpl
+ * @userdata_destroy: (nullable): function to destroy @user_data when @self is finalized
+ *
+ * Sets an override for synchronous client functionality.
+ *
+ * Since: 2.1.7
+ **/
+void
+fwupd_client_set_sync_impl(FwupdClient *self,
+			   const FwupdClientSyncImpl *impl,
+			   gpointer userdata,
+			   GDestroyNotify userdata_destroy)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(impl != NULL);
+
+	if (priv->impl_userdata_destroy != NULL)
+		priv->impl_userdata_destroy(priv->impl_userdata);
+	/* nocheck:blocked */
+	memcpy(&priv->impl, impl, sizeof(priv->impl));
+	priv->impl_userdata = userdata;
+	priv->impl_userdata_destroy = userdata_destroy;
+}
+
+/* private */
+const FwupdClientSyncImpl *
+fwupd_client_get_sync_impl(FwupdClient *self, gpointer *impl_userdata)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	if (impl_userdata != NULL)
+		*impl_userdata = priv->impl_userdata;
+	return &priv->impl;
+}
+
 static void
 fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -7988,6 +8033,23 @@ static void
 fwupd_client_init(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	static FwupdClientSyncImpl impl = {
+	    .connect = fwupd_client_sync_impl_connect,
+	    .get_devices = fwupd_client_sync_impl_get_devices,
+	    .get_devices_by_guid = fwupd_client_sync_impl_get_devices_by_guid,
+	    .get_device_by_id = fwupd_client_sync_impl_get_device_by_id,
+	    .get_history = fwupd_client_sync_impl_get_history,
+	    .get_releases = fwupd_client_sync_impl_get_releases,
+	    .get_upgrades = fwupd_client_sync_impl_get_upgrades,
+	    .get_plugins = fwupd_client_sync_impl_get_plugins,
+	    .get_remotes = fwupd_client_sync_impl_get_remotes,
+	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
+	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
+	    .modify_config = fwupd_client_sync_impl_modify_config,
+	    .modify_remote = fwupd_client_sync_impl_modify_remote,
+	    .search = fwupd_client_sync_impl_search,
+	};
+	fwupd_client_set_sync_impl(self, &impl, NULL, NULL);
 	priv->percentage = FWUPD_PERCENTAGE_UNKNOWN;
 	g_mutex_init(&priv->proxy_mutex);
 	g_mutex_init(&priv->idle_mutex);
@@ -8037,6 +8099,8 @@ fwupd_client_finalize(GObject *object)
 	g_mutex_clear(&priv->proxy_mutex);
 	if (priv->proxy != NULL)
 		g_object_unref(priv->proxy);
+	if (priv->impl_userdata_destroy != NULL)
+		priv->impl_userdata_destroy(priv->impl_userdata);
 
 	G_OBJECT_CLASS(fwupd_client_parent_class)->finalize(object);
 }
