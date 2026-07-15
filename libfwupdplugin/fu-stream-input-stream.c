@@ -44,7 +44,11 @@ fu_stream_input_stream_read(GInputStream *stream,
 
 	g_return_val_if_fail(priv->base_stream != NULL, -1);
 
-	return g_input_stream_read(priv->base_stream, buffer, count, cancellable, error);
+	return g_input_stream_read(priv->base_stream, /* nocheck:blocked */
+				   buffer,
+				   count,
+				   cancellable,
+				   error);
 }
 
 static goffset

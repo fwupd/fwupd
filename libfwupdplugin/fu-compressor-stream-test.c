@@ -63,7 +63,11 @@ fu_test_decompress_gconverter(GBytes *blob, FuCompressorFormat format, GError **
 	converter_stream = g_converter_input_stream_new(base, conv);
 
 	while (TRUE) {
-		rc = g_input_stream_read(converter_stream, tmp, sizeof(tmp), NULL, error);
+		rc = g_input_stream_read(converter_stream, /* nocheck:blocked */
+					 tmp,
+					 sizeof(tmp),
+					 NULL,
+					 error);
 		if (rc < 0)
 			return NULL;
 		if (rc == 0)
