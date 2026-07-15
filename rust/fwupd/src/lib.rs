@@ -8,6 +8,7 @@
 
 mod bitflags;
 pub mod compressor;
+pub mod json;
 pub mod streams;
 
 pub use crate::bitflags::{BitflagIter, Bitflags};
