@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <fwupd.h>
-
 #include <QCoreApplication>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
+#include <fwupd.h>
 
 int
 main(int argc, char **argv)
