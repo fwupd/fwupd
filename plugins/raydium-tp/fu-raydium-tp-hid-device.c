@@ -1064,8 +1064,6 @@ fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self
 {
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
 	guint16 vid;
-	guint8 major_ver;
-	guint8 minor_ver;
 	g_autoptr(FuStructRaydiumTpFtRecordInfo) st_info = NULL;
 
 	buf[0] = FU_RAYDIUM_TP_CMD2_READ;
@@ -1084,11 +1082,9 @@ fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self
 			    vid);
 		return FALSE;
 	}
-	major_ver = fu_struct_raydium_tp_ft_record_info_get_version_major(st_info);
-	minor_ver = fu_struct_raydium_tp_ft_record_info_get_version_minor(st_info);
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), 0x0);
 	return TRUE;
 }
 
@@ -1098,8 +1094,6 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 	guint8 wbuf[RAYDIUM_I2C_BUF_SIZE] = {0};
 	guint8 rbuf[RAYDIUM_I2C_BUF_SIZE] = {0};
 	guint16 vid;
-	guint8 major_ver;
-	guint8 minor_ver;
 	g_autoptr(FuStructRaydiumTpDescRecordInfo) st_info = NULL;
 
 	/* check main area */
@@ -1135,11 +1129,9 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 		/* try harder */
 		return fu_raydium_tp_hid_device_ensure_version_bldr_fallback(self, error);
 	}
-	major_ver = fu_struct_raydium_tp_desc_record_info_get_rev(st_info) >> 8;
-	minor_ver = fu_struct_raydium_tp_desc_record_info_get_rev(st_info) & 0xFF;
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), 0x0);
 	return TRUE;
 }
 
