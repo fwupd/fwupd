@@ -34,6 +34,7 @@ fu_json_firmware_parse(FuFirmware *firmware,
 	FuJsonFirmware *self = FU_JSON_FIRMWARE(firmware);
 	FuJsonFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(GInputStream) g_stream = NULL; /* nocheck:blocked */
 
 #ifdef HAVE_FUZZER
 	/* make the fuzzer spend time on complexity, not depth or length -> OOM */
@@ -47,8 +48,9 @@ fu_json_firmware_parse(FuFirmware *firmware,
 #endif
 
 	/* just load into memory, no extraction performed */
+	g_stream = fu_input_stream_as_g_input_stream(stream);
 	priv->json_node = fwupd_json_parser_load_from_stream(json_parser,
-							     G_INPUT_STREAM(stream),
+							     g_stream,
 							     FWUPD_JSON_LOAD_FLAG_NONE,
 							     error);
 	if (priv->json_node == NULL)

@@ -271,6 +271,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	FuQuirks *self = FU_QUIRKS(user_data);
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GBytes) bytes_xml = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	bytes = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
 	if (bytes == NULL)
@@ -278,7 +279,8 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	bytes_xml = fu_quirks_convert_keyfile_to_xml(self, bytes, error);
 	if (bytes_xml == NULL)
 		return NULL;
-	return G_INPUT_STREAM(fu_memory_input_stream_new_from_bytes(bytes_xml));
+	stream = fu_memory_input_stream_new_from_bytes(bytes_xml);
+	return fu_input_stream_as_g_input_stream(stream);
 }
 
 static gint

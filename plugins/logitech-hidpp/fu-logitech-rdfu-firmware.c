@@ -31,6 +31,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonObject) json_obj_payloads = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(GInputStream) g_stream = NULL; /* nocheck:blocked */
 	g_autoptr(GPtrArray) keys = NULL;
 
 	/* set appropriate limits */
@@ -45,8 +46,9 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
+	g_stream = fu_input_stream_as_g_input_stream(stream);
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       G_INPUT_STREAM(stream),
+						       g_stream,
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
 	if (json_node == NULL)
