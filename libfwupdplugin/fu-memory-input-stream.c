@@ -25,21 +25,14 @@ struct _FuMemoryInputStream {
 	gsize pos;
 };
 
-static void
-fu_memory_input_stream_seekable_iface_init(GSeekableIface *iface);
-
-G_DEFINE_TYPE_WITH_CODE(FuMemoryInputStream,
-			fu_memory_input_stream,
-			FU_TYPE_INPUT_STREAM,
-			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_memory_input_stream_seekable_iface_init))
+G_DEFINE_TYPE(FuMemoryInputStream, fu_memory_input_stream, FU_TYPE_INPUT_STREAM)
 
 static gssize
-fu_memory_input_stream_read(GInputStream *stream,
-			    void *buffer,
-			    gsize count,
-			    GCancellable *cancellable,
-			    GError **error)
+fu_memory_input_stream_read_fn(FuInputStream *stream,
+			       void *buffer,
+			       gsize count,
+			       GCancellable *cancellable,
+			       GError **error)
 {
 	FuMemoryInputStream *self = FU_MEMORY_INPUT_STREAM(stream);
 	gsize data_sz = 0;
@@ -60,26 +53,26 @@ fu_memory_input_stream_read(GInputStream *stream,
 }
 
 static goffset
-fu_memory_input_stream_tell(GSeekable *seekable)
+fu_memory_input_stream_tell(FuInputStream *stream)
 {
-	FuMemoryInputStream *self = FU_MEMORY_INPUT_STREAM(seekable);
+	FuMemoryInputStream *self = FU_MEMORY_INPUT_STREAM(stream);
 	return (goffset)self->pos;
 }
 
 static gboolean
-fu_memory_input_stream_can_seek(GSeekable *seekable)
+fu_memory_input_stream_can_seek(FuInputStream *stream)
 {
 	return TRUE;
 }
 
 static gboolean
-fu_memory_input_stream_seek(GSeekable *seekable,
+fu_memory_input_stream_seek(FuInputStream *stream,
 			    goffset offset,
 			    GSeekType type,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	FuMemoryInputStream *self = FU_MEMORY_INPUT_STREAM(seekable);
+	FuMemoryInputStream *self = FU_MEMORY_INPUT_STREAM(stream);
 	gsize data_sz = g_bytes_get_size(self->bytes);
 	goffset new_pos;
 
@@ -116,35 +109,6 @@ fu_memory_input_stream_seek(GSeekable *seekable,
 	return TRUE;
 }
 
-static gboolean
-fu_memory_input_stream_can_truncate(GSeekable *seekable)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_memory_input_stream_truncate(GSeekable *seekable,
-				goffset offset,
-				GCancellable *cancellable,
-				GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot truncate FuMemoryInputStream");
-	return FALSE;
-}
-
-static void
-fu_memory_input_stream_seekable_iface_init(GSeekableIface *iface)
-{
-	iface->tell = fu_memory_input_stream_tell;
-	iface->can_seek = fu_memory_input_stream_can_seek;
-	iface->seek = fu_memory_input_stream_seek;
-	iface->can_truncate = fu_memory_input_stream_can_truncate;
-	iface->truncate_fn = fu_memory_input_stream_truncate;
-}
-
 static void
 fu_memory_input_stream_finalize(GObject *object)
 {
@@ -157,9 +121,12 @@ static void
 fu_memory_input_stream_class_init(FuMemoryInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GInputStreamClass *istream_class = G_INPUT_STREAM_CLASS(klass); /* nocheck:blocked */
+	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
 	object_class->finalize = fu_memory_input_stream_finalize;
-	istream_class->read_fn = fu_memory_input_stream_read;
+	istream_class->read_fn = fu_memory_input_stream_read_fn;
+	istream_class->tell = fu_memory_input_stream_tell;
+	istream_class->can_seek = fu_memory_input_stream_can_seek;
+	istream_class->seek = fu_memory_input_stream_seek;
 }
 
 static void

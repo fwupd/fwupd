@@ -49,17 +49,13 @@ struct _FuCompositeInputStream {
 };
 
 static void
-fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface);
-static void
 fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuCompositeInputStream,
 			fu_composite_input_stream,
 			FU_TYPE_INPUT_STREAM,
-			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_composite_input_stream_seekable_iface_init)
-			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						  fu_composite_input_stream_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					      fu_composite_input_stream_codec_iface_init))
 
 static void
 fu_composite_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
@@ -221,15 +217,15 @@ fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 }
 
 static goffset
-fu_composite_input_stream_tell(GSeekable *seekable)
+fu_composite_input_stream_tell(FuInputStream *stream)
 {
-	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(seekable);
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), -1);
 	return self->pos;
 }
 
 static gboolean
-fu_composite_input_stream_can_seek(GSeekable *seekable)
+fu_composite_input_stream_can_seek(FuInputStream *stream)
 {
 	return TRUE;
 }
@@ -254,13 +250,13 @@ fu_composite_input_stream_get_item_for_offset(FuCompositeInputStream *self,
 }
 
 static gboolean
-fu_composite_input_stream_seek(GSeekable *seekable,
+fu_composite_input_stream_seek(FuInputStream *stream,
 			       goffset offset,
 			       GSeekType type,
 			       GCancellable *cancellable,
 			       GError **error)
 {
-	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(seekable);
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -279,35 +275,6 @@ fu_composite_input_stream_seek(GSeekable *seekable,
 	return TRUE;
 }
 
-static gboolean
-fu_composite_input_stream_can_truncate(GSeekable *seekable)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_composite_input_stream_truncate(GSeekable *seekable,
-				   goffset offset,
-				   GCancellable *cancellable,
-				   GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot truncate FuCompositeInputStream");
-	return FALSE;
-}
-
-static void
-fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface)
-{
-	iface->tell = fu_composite_input_stream_tell;
-	iface->can_seek = fu_composite_input_stream_can_seek;
-	iface->seek = fu_composite_input_stream_seek;
-	iface->can_truncate = fu_composite_input_stream_can_truncate;
-	iface->truncate_fn = fu_composite_input_stream_truncate;
-}
-
 /**
  * fu_composite_input_stream_new:
  *
@@ -324,11 +291,11 @@ fu_composite_input_stream_new(void)
 }
 
 static gssize
-fu_composite_input_stream_read(GInputStream *stream,
-			       void *buffer,
-			       gsize count,
-			       GCancellable *cancellable,
-			       GError **error)
+fu_composite_input_stream_read_fn(FuInputStream *stream,
+				  void *buffer,
+				  gsize count,
+				  GCancellable *cancellable,
+				  GError **error)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
 	FuCompositeInputStreamItem *item;
@@ -376,8 +343,11 @@ static void
 fu_composite_input_stream_class_init(FuCompositeInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GInputStreamClass *istream_class = G_INPUT_STREAM_CLASS(klass);
-	istream_class->read_fn = fu_composite_input_stream_read;
+	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
+	istream_class->read_fn = fu_composite_input_stream_read_fn;
+	istream_class->tell = fu_composite_input_stream_tell;
+	istream_class->can_seek = fu_composite_input_stream_can_seek;
+	istream_class->seek = fu_composite_input_stream_seek;
 	object_class->finalize = fu_composite_input_stream_finalize;
 }
 
