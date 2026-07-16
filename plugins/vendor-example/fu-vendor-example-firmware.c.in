@@ -44,7 +44,7 @@ fu_{{vendor_example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **e
 
 static gboolean
 fu_{{vendor_example}}_firmware_validate(FuFirmware *firmware,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					GError **error)
 {
@@ -55,7 +55,7 @@ fu_{{vendor_example}}_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_{{vendor_example}}_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream, FuFirmwareParseFlags flags,
+				 FuInputStream *stream, FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);

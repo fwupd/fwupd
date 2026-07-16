@@ -53,7 +53,7 @@ fu_sunwinon_hid_firmware_get_fw_type(FuSunwinonHidFirmware *self)
 
 static gboolean
 fu_sunwinon_hid_firmware_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

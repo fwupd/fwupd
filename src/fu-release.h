@@ -53,10 +53,10 @@ FuDevice *
 fu_release_get_device(FuRelease *self) G_GNUC_NON_NULL(1);
 FwupdRemote *
 fu_release_get_remote(FuRelease *self) G_GNUC_NON_NULL(1);
-GInputStream *
+FuInputStream *
 fu_release_get_stream(FuRelease *self) G_GNUC_NON_NULL(1);
 void
-fu_release_set_stream(FuRelease *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
+fu_release_set_stream(FuRelease *self, FuInputStream *stream) G_GNUC_NON_NULL(1, 2);
 FuEngineRequest *
 fu_release_get_request(FuRelease *self) G_GNUC_NON_NULL(1);
 GPtrArray *

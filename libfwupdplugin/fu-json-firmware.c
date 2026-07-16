@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-json-firmware.h"
 
 /**
@@ -26,7 +27,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuJsonFirmware, fu_json_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_json_firmware_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
@@ -47,7 +48,7 @@ fu_json_firmware_parse(FuFirmware *firmware,
 
 	/* just load into memory, no extraction performed */
 	priv->json_node = fwupd_json_parser_load_from_stream(json_parser,
-							     stream,
+							     G_INPUT_STREAM(stream),
 							     FWUPD_JSON_LOAD_FLAG_NONE,
 							     error);
 	if (priv->json_node == NULL)

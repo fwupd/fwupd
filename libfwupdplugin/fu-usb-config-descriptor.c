@@ -16,6 +16,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-usb-config-descriptor-private.h"
 
 struct _FuUsbConfigDescriptor {
@@ -113,7 +114,7 @@ fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self)
 
 static gboolean
 fu_usb_config_descriptor_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuLogitechRdfuFirmware, fu_logitech_rdfu_firmware, FU_TYPE_FIRMWAR
 
 static gboolean
 fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -46,7 +46,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	}
 
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       stream,
+						       G_INPUT_STREAM(stream),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
 	if (json_node == NULL)

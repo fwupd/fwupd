@@ -42,7 +42,12 @@ Recommends: python3,
 	    udisks2,
 	    fwupd-signed,
 	    jq
-Suggests: gir1.2-fwupd-2.0
+Suggests: 7zip,
+	  gir1.2-fwupd-2.0,
+	  gir1.2-glib-2.0,
+	  python3-dbus,
+	  python3-gi,
+	  python3-jinja2
 Provides: fwupdate,
 	  ${gir:Provides}
 Conflicts: fwupdate-amd64-signed,
@@ -76,8 +81,8 @@ Depends: ${misc:Depends},
          ieee-data,
          polkitd | policykit-1,
          python3,
-         python3-gi,
-         python3-requests,
+         python3-flask,
+         python3-gi
 Breaks: fwupd (<< 0.9.4-1)
 Replaces: fwupd (<< 0.9.4-1)
 Multi-Arch: foreign
@@ -111,11 +116,11 @@ Package: libfwupd-dev
 Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd3 (= ${binary:Version}),
-	 gir1.2-fwupd-2.0 (= ${binary:Version}),
-	 libcurl4-gnutls-dev,
-	 libglib2.0-dev (>= 2.45.8),
-	 libjcat-dev,
-	 ${misc:Depends}
+         gir1.2-fwupd-2.0 (= ${binary:Version}),
+         libcurl4-gnutls-dev,
+         libglib2.0-dev (>= 2.45.8),
+         libjcat-dev,
+         ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
 Section: libdevel

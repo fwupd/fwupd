@@ -991,7 +991,7 @@ fu_logitech_bulkcontroller_device_upd_send_init_cmd_cb(FuDevice *device,
 
 static gboolean
 fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
-					   GInputStream *stream,
+					   FuInputStream *stream,
 					   FuProgress *progress,
 					   GError **error)
 {
@@ -1148,7 +1148,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) md5_buf = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GBytes) end_pkt_blob = NULL;
 	g_autoptr(GBytes) start_pkt_blob = NULL;
 

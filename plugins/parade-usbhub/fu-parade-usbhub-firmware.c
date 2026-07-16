@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuParadeUsbhubFirmware, fu_parade_usbhub_firmware, FU_TYPE_FIRMWAR
 
 static gboolean
 fu_parade_usbhub_firmware_validate(FuFirmware *firmware,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   gsize offset,
 				   GError **error)
 {
@@ -27,7 +27,7 @@ fu_parade_usbhub_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_parade_usbhub_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -65,6 +65,7 @@ static void
 fu_parade_usbhub_firmware_init(FuParadeUsbhubFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void

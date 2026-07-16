@@ -830,7 +830,7 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(self,
@@ -1084,7 +1084,7 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 
 	/* progress */
 	fu_progress_set_id(self->progress, G_STRLOC);
@@ -1429,7 +1429,7 @@ fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **erro
 
 static gboolean
 fu_util_install_stream(FuUtil *self,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       GPtrArray *devices,
 		       FuProgress *progress,
 		       GError **error)
@@ -1526,7 +1526,7 @@ static gboolean
 fu_util_install(FuUtil *self, gchar **values, GError **error)
 {
 	g_autofree gchar *filename = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 
 	/* progress */
@@ -2524,7 +2524,7 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuFirmware) eventlog = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -2550,7 +2550,7 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NONE,
@@ -3296,7 +3296,7 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -4572,7 +4572,7 @@ fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* check args */
 	if (g_strv_length(values) < 1) {
@@ -4607,7 +4607,7 @@ fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 
 	/* "install" archive */
 	if (values[1] != NULL) {
-		g_autoptr(GInputStream) stream_cab = NULL;
+		g_autoptr(FuInputStream) stream_cab = NULL;
 		g_autoptr(GPtrArray) devices_possible = NULL;
 
 		stream_cab = fu_input_stream_from_path(values[1], error);
@@ -5603,11 +5603,11 @@ fu_util_jcat_load_filename(FuUtil *self, const gchar *filename, GError **error)
 	g_autoptr(GFile) gfile = g_file_new_for_path(filename);
 
 	if (g_file_query_exists(gfile, self->cancellable)) {
-		g_autoptr(GInputStream) istream = NULL;
-		istream = G_INPUT_STREAM(g_file_read(gfile, self->cancellable, error));
+		g_autoptr(FuFileInputStream) istream = NULL;
+		istream = fu_file_input_stream_from_file(gfile, self->cancellable, error);
 		if (istream == NULL)
 			return NULL;
-		if (!fwupd_jcat_file_import_stream(file, istream, error))
+		if (!fwupd_jcat_file_import_stream(file, G_INPUT_STREAM(istream), error))
 			return NULL;
 	}
 

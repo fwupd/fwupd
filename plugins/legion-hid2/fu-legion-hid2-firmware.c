@@ -19,14 +19,14 @@ G_DEFINE_TYPE(FuLegionHid2Firmware, fu_legion_hid2_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_legion_hid2_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(FuFirmware) img_sig = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
-	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_sig = NULL;
 	g_autoptr(FuStructLegionHid2Header) st_header = NULL;
 	g_autoptr(FuStructLegionHid2Version) st_version = NULL;
 

@@ -601,7 +601,7 @@ fu_hughski_colorhug_device_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

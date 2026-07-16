@@ -866,7 +866,7 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware,
 
 static FuFirmware *
 fu_steelseries_sonic_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuProgress *progress,
 				      FuFirmwareParseFlags flags,
 				      GError **error)

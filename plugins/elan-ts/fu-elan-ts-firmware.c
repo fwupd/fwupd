@@ -42,7 +42,7 @@ fu_elan_ts_firmware_get_remark_id(FuElanTsFirmware *self)
 }
 
 static gboolean
-fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, GInputStream *stream, GError **error)
+fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, FuInputStream *stream, GError **error)
 {
 	gsize last_page_offset;
 	gsize offset_in_page;
@@ -113,7 +113,7 @@ fu_elan_ts_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 
 static gboolean
 fu_elan_ts_firmware_validate(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     gsize offset,
 			     GError **error)
 {
@@ -122,7 +122,7 @@ fu_elan_ts_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_elan_ts_firmware_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -135,7 +135,7 @@ fu_elan_ts_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuStructElanTsFwBinHeaderLvfsType1) st_header = NULL;
 	g_autoptr(GByteArray) checksum_array = g_byte_array_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* parse header */
 	st_header = fu_struct_elan_ts_fw_bin_header_lvfs_type1_parse_stream(stream, 0x0, error);

@@ -10,6 +10,7 @@
 
 #include "fu-efi-variable-authentication2.h"
 #include "fu-efi-x509-device.h"
+#include "fu-input-stream.h"
 #include "fu-version-common.h"
 #include "fu-zip-firmware.h"
 
@@ -84,7 +85,7 @@ fu_efi_x509_device_convert_version(FuDevice *device, guint64 version_raw)
 
 static FuFirmware *
 fu_efi_x509_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)

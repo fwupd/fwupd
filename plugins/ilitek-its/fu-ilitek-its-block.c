@@ -24,13 +24,13 @@ fu_ilitek_its_block_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 
 static gboolean
 fu_ilitek_its_block_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuIlitekItsBlock *self = FU_ILITEK_ITS_BLOCK(firmware);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* calculate CRC of block minus the CRC16 itself */
 	if (!fu_input_stream_size(stream, &streamsz, error))

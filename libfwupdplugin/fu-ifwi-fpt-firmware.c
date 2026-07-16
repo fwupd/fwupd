@@ -15,6 +15,7 @@
 #include "fu-common.h"
 #include "fu-ifwi-fpt-firmware.h"
 #include "fu-ifwi-struct.h"
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -36,7 +37,7 @@ G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_ifwi_fpt_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -45,7 +46,7 @@ fu_ifwi_fpt_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -104,7 +105,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		data_length = fu_struct_ifwi_fpt_entry_get_length(st_ent);
 		if (data_length != 0x0) {
 			guint32 data_offset = fu_struct_ifwi_fpt_entry_get_offset(st_ent);
-			g_autoptr(GInputStream) partial_stream = NULL;
+			g_autoptr(FuInputStream) partial_stream = NULL;
 			partial_stream =
 			    fu_partial_input_stream_new(stream, data_offset, data_length, error);
 			if (partial_stream == NULL) {

@@ -55,7 +55,7 @@ fu_pixart_rf_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static FuFirmware *
 fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
+					 FuInputStream *stream,
 					 FuProgress *progress,
 					 FuFirmwareParseFlags flags,
 					 GError **error)
@@ -69,7 +69,7 @@ fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
-		g_autoptr(GInputStream) stream_new = NULL;
+		g_autoptr(FuInputStream) stream_new = NULL;
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;

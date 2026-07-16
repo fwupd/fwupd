@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-qc-firehose-firmware.h"
 #include "fu-qc-firehose-impl.h"
 #include "fu-qc-firehose-raw-device.h"
 #include "fu-qc-firehose-struct.h"
@@ -51,19 +50,19 @@ fu_qc_firehose_raw_device_impl_add_function(FuQcFirehoseImpl *impl, FuQcFirehose
 
 static FuFirmware *
 fu_qc_firehose_raw_device_impl_prepare_firmware(FuDevice *device,
-						GInputStream *stream,
+						FuInputStream *stream,
 						FuProgress *progress,
 						FuFirmwareParseFlags flags,
 						GError **error)
 {
-	g_autoptr(FuQcFirehoseFirmware) firmware = fu_qc_firehose_firmware_new();
-	if (!fu_firmware_parse_stream(FU_FIRMWARE(firmware),
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	if (!fu_firmware_parse_stream(firmware,
 				      stream,
 				      0x0,
 				      flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
 				      error))
 		return NULL;
-	return FU_FIRMWARE(g_steal_pointer(&firmware));
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -226,7 +225,7 @@ fu_qc_firehose_raw_device_init(FuQcFirehoseRawDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_QC_FIREHOSE_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 90000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

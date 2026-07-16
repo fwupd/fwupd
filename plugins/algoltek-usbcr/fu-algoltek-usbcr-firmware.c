@@ -31,7 +31,7 @@ fu_algoltek_usbcr_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {

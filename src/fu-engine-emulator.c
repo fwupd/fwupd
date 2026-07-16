@@ -12,6 +12,7 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-emulator.h"
+#include "fu-input-stream.h"
 
 struct _FuEngineEmulator {
 	GObject parent_instance;
@@ -273,7 +274,7 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 }
 
 gboolean
-fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **error)
+fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **error)
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
@@ -282,7 +283,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	g_autoptr(GError) error_archive = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* unload any existing devices */

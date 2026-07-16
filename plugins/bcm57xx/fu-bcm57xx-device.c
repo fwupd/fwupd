@@ -323,7 +323,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 
 static FuFirmware *
 fu_bcm57xx_device_prepare_firmware(FuDevice *device,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuProgress *progress,
 				   FuFirmwareParseFlags flags,
 				   GError **error)

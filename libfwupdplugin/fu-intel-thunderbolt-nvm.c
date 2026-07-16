@@ -223,7 +223,7 @@ fu_intel_thunderbolt_nvm_valid_pd_pointer(guint32 pointer)
  */
 static gboolean
 fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
-						GInputStream *stream,
+						FuInputStream *stream,
 						guint32 offset,
 						gsize *value,
 						GError **error)
@@ -249,7 +249,7 @@ fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
 /* assumes sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL].offset is already set */
 static gboolean
 fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       GError **error)
 {
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
@@ -363,7 +363,7 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

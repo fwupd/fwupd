@@ -266,7 +266,7 @@ fu_blestech_tp_hid_device_program(FuBlestechTpHidDevice *self,
 				  GError **error)
 {
 	guint boot_pack_nums = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	stream = fu_firmware_get_stream(firmware, error);

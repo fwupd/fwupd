@@ -10,6 +10,7 @@
 
 #include "fu-dump.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ds20.h"
 
@@ -72,7 +73,7 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	gsize total_length = fu_firmware_get_size(FU_FIRMWARE(self));
 	guint8 vendor_code = fu_firmware_get_idx(FU_FIRMWARE(self));
 	g_autofree guint8 *buf = g_malloc0(total_length);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE_DS20(self), FALSE);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(device), FALSE);
@@ -109,13 +110,13 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	fu_dump_raw(G_LOG_DOMAIN, "PlatformCapabilityOs20", buf, actual_length);
 
 	/* FuUsbDeviceDs20->parse */
-	stream = g_memory_input_stream_new_from_data(buf, actual_length, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf, actual_length, NULL);
 	return klass->parse(self, stream, device, error);
 }
 
 static gboolean
 fu_usb_device_ds20_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -154,7 +155,7 @@ fu_usb_device_ds20_sort_by_platform_ver_cb(gconstpointer a, gconstpointer b)
 
 static gboolean
 fu_usb_device_ds20_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

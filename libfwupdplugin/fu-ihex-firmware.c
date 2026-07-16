@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-sum.h"
@@ -211,7 +212,7 @@ fu_ihex_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 
 static gboolean
 fu_ihex_firmware_tokenize(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -222,7 +223,7 @@ fu_ihex_firmware_tokenize(FuFirmware *firmware,
 
 static gboolean
 fu_ihex_firmware_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

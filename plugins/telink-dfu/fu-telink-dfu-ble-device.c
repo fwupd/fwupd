@@ -198,7 +198,7 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);

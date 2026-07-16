@@ -657,9 +657,9 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
-	g_autoptr(GInputStream) stream_sig = NULL;
-	g_autoptr(GInputStream) stream_pubkey = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_sig = NULL;
+	g_autoptr(FuInputStream) stream_pubkey = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 	g_autoptr(FuChunkArray) chunks_pubkey = NULL;
 	g_autoptr(FuChunkArray) chunks_sig = NULL;
 	g_autoptr(FuChunkArray) chunks_payload = NULL;

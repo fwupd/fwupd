@@ -24,7 +24,7 @@ G_DEFINE_TYPE(FuGenesysUsbhubFirmware, fu_genesys_usbhub_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    GError **error)
 {
 	guint8 project_ic_type[6] = {0};
@@ -136,12 +136,12 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 }
 
 gboolean
-fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
+fu_genesys_usbhub_firmware_verify_checksum(FuInputStream *stream, GError **error)
 {
 	gsize streamsz = 0;
 	guint16 fw_checksum = 0;
 	guint16 checksum = 0;
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	/* get checksum */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -182,7 +182,7 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 }
 
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GError **error)
+fu_genesys_usbhub_firmware_calculate_size(FuInputStream *stream, gsize *size, GError **error)
 {
 	guint8 kbs = 0;
 	if (!fu_input_stream_read_u8(stream, GENESYS_USBHUB_CODE_SIZE_OFFSET, &kbs, error)) {
@@ -228,7 +228,7 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 
 static gboolean
 fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -237,7 +237,7 @@ fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -246,7 +246,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
-	g_autoptr(GInputStream) stream_trunc = NULL;
+	g_autoptr(FuInputStream) stream_trunc = NULL;
 
 	/* get chip */
 	if (!fu_genesys_usbhub_firmware_get_chip(self, stream, error)) {

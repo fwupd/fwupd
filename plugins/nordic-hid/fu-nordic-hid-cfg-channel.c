@@ -1514,7 +1514,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 
 static gboolean
 fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
-					      GInputStream *stream,
+					      FuInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
@@ -1570,7 +1570,7 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	guint64 val = 0;
 	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
 
 	/* select correct firmware per target board, bootloader and bank */

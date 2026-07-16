@@ -41,7 +41,7 @@ fu_pixart_rf_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_pixart_rf_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -105,7 +105,7 @@ fu_pixart_rf_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_pixart_rf_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

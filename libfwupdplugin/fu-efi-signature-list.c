@@ -117,7 +117,7 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 
 static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize *offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -221,7 +221,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 
 static gboolean
 fu_efi_signature_list_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -255,7 +255,7 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

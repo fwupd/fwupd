@@ -40,9 +40,9 @@ typedef struct {
 } FuBcm57xxVeritem;
 
 gboolean
-fu_bcm57xx_verify_crc(GInputStream *stream, GError **error);
+fu_bcm57xx_verify_crc(FuInputStream *stream, GError **error);
 gboolean
-fu_bcm57xx_verify_magic(GInputStream *stream, gsize offset, GError **error);
+fu_bcm57xx_verify_magic(FuInputStream *stream, gsize offset, GError **error);
 
 /* parses stage1 version */
 void

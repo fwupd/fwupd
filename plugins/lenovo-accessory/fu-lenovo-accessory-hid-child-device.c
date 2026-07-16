@@ -276,7 +276,7 @@ fu_lenovo_accessory_hid_child_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_lenovo_accessory_hid_child_device_write_files(FuLenovoAccessoryHidChildDevice *self,
 						 FuLenovoAccessoryDfuFileType file_type,
-						 GInputStream *stream,
+						 FuInputStream *stream,
 						 FuProgress *progress,
 						 GError **error)
 {
@@ -319,7 +319,7 @@ fu_lenovo_accessory_hid_child_device_write_firmware(FuDevice *device,
 	guint32 file_crc = 0xFFFFFFFF;
 	guint32 device_crc = 0;
 	FuLenovoAccessoryDeviceMode mode;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

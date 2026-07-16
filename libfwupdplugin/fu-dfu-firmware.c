@@ -197,7 +197,7 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 }
 
 static gboolean
-fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_dfu_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -214,7 +214,7 @@ fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -300,7 +300,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

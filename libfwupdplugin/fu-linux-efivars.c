@@ -25,6 +25,8 @@
 #include "fwupd-error.h"
 
 #include "fu-efivars-private.h"
+#include "fu-file-input-stream.h"
+#include "fu-input-stream.h"
 #include "fu-linux-efivars.h"
 #include "fu-path.h"
 
@@ -253,24 +255,22 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	FuEfiVariableAttrs attr_tmp;
 	guint64 sz;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	/* open file as stream */
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
 	if (fn == NULL)
 		return FALSE;
-	file = g_file_new_for_path(fn);
-	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
+	istr = fu_input_stream_from_path(fn, error);
 	if (istr == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	info = g_file_input_stream_query_info(G_FILE_INPUT_STREAM(istr),
-					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
-					      NULL,
-					      error);
+	info = fu_file_input_stream_query_info(FU_FILE_INPUT_STREAM(istr),
+					       G_FILE_ATTRIBUTE_STANDARD_SIZE,
+					       NULL,
+					       error);
 	if (info == NULL) {
 		g_prefix_error_literal(error, "failed to get stream info: ");
 		fwupd_error_convert(error);
@@ -289,7 +289,8 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	}
 
 	/* read out the attributes */
-	attr_sz = g_input_stream_read(istr, &attr_tmp, sizeof(attr_tmp), NULL, error);
+	attr_sz =
+	    g_input_stream_read(G_INPUT_STREAM(istr), &attr_tmp, sizeof(attr_tmp), NULL, error);
 	if (attr_sz == -1) {
 		g_prefix_error_literal(error, "failed to read attr: ");
 		fwupd_error_convert(error);
@@ -311,7 +312,12 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		*data_sz = data_sz_tmp;
 	if (data != NULL) {
 		g_autofree guint8 *data_tmp = g_malloc0(data_sz_tmp);
-		if (!g_input_stream_read_all(istr, data_tmp, data_sz_tmp, NULL, NULL, error)) {
+		if (!g_input_stream_read_all(G_INPUT_STREAM(istr),
+					     data_tmp,
+					     data_sz_tmp,
+					     NULL,
+					     NULL,
+					     error)) {
 			g_prefix_error_literal(error, "failed to read data: ");
 			return FALSE;
 		}

@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuSynapticsCapeSnglFirmware,
 
 static gboolean
 fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
@@ -64,7 +64,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	/* check CRC */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 crc_calc = 0xFFFFFFFF;
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, 8, G_MAXSIZE, error);
 		if (stream_tmp == NULL)

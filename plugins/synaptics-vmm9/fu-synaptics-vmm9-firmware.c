@@ -35,7 +35,7 @@ fu_synaptics_vmm9_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -44,7 +44,7 @@ fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -114,6 +114,7 @@ static void
 fu_synaptics_vmm9_firmware_init(FuSynapticsVmm9Firmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void

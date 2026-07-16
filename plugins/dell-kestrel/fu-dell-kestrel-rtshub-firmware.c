@@ -37,7 +37,7 @@ fu_dell_kestrel_rtshub_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_firmware_set_offset(GInputStream *stream,
+fu_dell_kestrel_rtshub_firmware_set_offset(FuInputStream *stream,
 					   guint16 *version_offset,
 					   guint16 *pid_offset,
 					   GError **error)
@@ -62,7 +62,7 @@ fu_dell_kestrel_rtshub_firmware_set_offset(GInputStream *stream,
 }
 static gboolean
 fu_dell_kestrel_rtshub_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
@@ -99,6 +99,7 @@ fu_dell_kestrel_rtshub_firmware_init(FuDellKestrelRtshubFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * FU_MB);
 }
 
 static void

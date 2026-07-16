@@ -14,6 +14,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-input-stream.h"
 #include "fu-unix-seekable-input-stream.h"
 
 static void
@@ -25,7 +26,7 @@ fu_unix_seekable_input_stream_func(void)
 	guint8 buf[6] = {0};
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
 	g_assert_nonnull(fn);
@@ -37,13 +38,13 @@ fu_unix_seekable_input_stream_func(void)
 	g_assert_nonnull(stream);
 
 	/* first chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
 
 	/* second chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, " vers");
@@ -52,7 +53,7 @@ fu_unix_seekable_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 1);
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
@@ -67,7 +68,7 @@ fu_unix_seekable_input_stream_non_regular_func(void)
 #ifdef HAVE_GIO_UNIX
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	fd = g_open("/dev/zero", O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
@@ -87,7 +88,7 @@ fu_unix_seekable_input_stream_sealed_memfd_func(void)
 	gboolean ret;
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	const gchar data[] = "hello";
 
 	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
@@ -118,7 +119,7 @@ fu_unix_seekable_input_stream_unsealed_memfd_func(void)
 	gboolean ret;
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	const gchar data[] = "hello";
 
 	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);

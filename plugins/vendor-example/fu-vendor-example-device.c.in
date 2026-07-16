@@ -146,7 +146,7 @@ fu_{{vendor_example}}_device_cleanup(FuDevice *device,
 
 static FuFirmware *
 fu_{{vendor_example}}_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
@@ -240,7 +240,7 @@ fu_{{vendor_example}}_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

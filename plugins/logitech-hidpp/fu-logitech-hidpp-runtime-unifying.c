@@ -174,7 +174,7 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_logitech_hidpp_runtime_unifying_prepare_firmware(FuDevice *device,
-						    GInputStream *stream,
+						    FuInputStream *stream,
 						    FuProgress *progress,
 						    FuFirmwareParseFlags flags,
 						    GError **error)

@@ -94,6 +94,7 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 static void
 fu_iommu_plugin_init(FuIommuPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU);
 }
 
 static void
