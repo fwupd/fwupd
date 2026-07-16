@@ -120,6 +120,9 @@ fu_input_stream_read_all(FuInputStream *stream,
 			 gsize *bytes_read,
 			 GCancellable *cancellable,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+GInputStream *
+fu_input_stream_as_g_input_stream(FuInputStream *stream) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_input_stream_find(FuInputStream *stream,
 		     const guint8 *buf,
