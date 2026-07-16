@@ -959,18 +959,24 @@
     </distro>
   </dependency>
   <dependency id="pkg-config">
+    <distro id="arch">
+      <package variant="x86_64">pkgconf</package>
+    </distro>
     <distro id="debian">
       <control />
+      <package>pkgconf</package>
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
+      <package variant="x86_64">pkgconf</package>
+      <package variant="aarch64">pkgconf</package>
     </distro>
     <distro id="centos">
-      <package variant="x86_64" />
+      <package variant="x86_64">pkgconf-pkg-config</package>
     </distro>
     <distro id="fedora">
+      <package variant="x86_64">pkgconf-pkg-config</package>
+      <package variant="aarch64">pkgconf-pkg-config</package>
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
     <distro id="freebsd">
