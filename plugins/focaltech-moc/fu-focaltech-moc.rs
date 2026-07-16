@@ -70,3 +70,13 @@ struct FuStructFocaltechMocDlHdr {
     magic: FuFocaltechMocMagic,
     seq: u8,                   // incrementing sequence number
 }
+
+// GetFwVersion response (CMD 0x30): header followed by NUL-terminated version string
+#[derive(Parse, Getters)]
+#[repr(C, packed)]
+struct FuStructFocaltechMocVersionRsp {
+    head: u8,
+    ln: u16be,
+    cmd: FuFocaltechMocCmd,
+    version: [char; 60],
+}

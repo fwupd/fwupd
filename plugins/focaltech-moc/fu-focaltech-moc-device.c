@@ -243,13 +243,16 @@ fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
 	guint16 ln;
 	guint8 bcc;
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
+	g_autoptr(FuStructFocaltechMocCmdReq) hdr = NULL;
 
 	/* LEN = payload bytes + 1 (for BCC) */
 	ln = (guint16)(payload_len + 1);
 
-	fu_byte_array_append_uint8(pkt, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_byte_array_append_uint16(pkt, ln, G_BIG_ENDIAN);
-	fu_byte_array_append_uint8(pkt, (guint8)cmd);
+	hdr = fu_struct_focaltech_moc_cmd_req_new();
+	fu_struct_focaltech_moc_cmd_req_set_head(hdr, FU_FOCALTECH_MOC_MSG_MAGIC);
+	fu_struct_focaltech_moc_cmd_req_set_ln(hdr, ln);
+	fu_struct_focaltech_moc_cmd_req_set_cmd(hdr, cmd);
+	g_byte_array_append(pkt, hdr->buf->data, hdr->buf->len);
 	if (payload != NULL && payload_len > 0)
 		g_byte_array_append(pkt, payload, payload_len);
 
@@ -284,20 +287,22 @@ static gboolean
 fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **error)
 {
 	gsize actual = 0;
-	guint16 pkt_ln;
-	gsize ver_len;
 	guint8 bcc_calc, bcc_recv;
-	gchar version_buf[64] = {0};
 	guint8 rx_buf[64] = {0};
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
-	guint16 ln;
+	g_autoptr(FuStructFocaltechMocVersionRsp) rsp = NULL;
+	g_autoptr(FuStructFocaltechMocCmdReq) hdr = NULL;
+	g_autofree gchar *version = NULL;
+	guint16 ln, pkt_ln;
 	guint8 bcc;
 
 	/* Build: [ 0x02 | 0x00 0x01 | 0x30 | BCC ] */
 	ln = 1; /* no data payload, just BCC */
-	fu_byte_array_append_uint8(pkt, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_byte_array_append_uint16(pkt, ln, G_BIG_ENDIAN);
-	fu_byte_array_append_uint8(pkt, (guint8)FU_FOCALTECH_MOC_CMD_GET_FW_VERSION);
+	hdr = fu_struct_focaltech_moc_cmd_req_new();
+	fu_struct_focaltech_moc_cmd_req_set_head(hdr, FU_FOCALTECH_MOC_MSG_MAGIC);
+	fu_struct_focaltech_moc_cmd_req_set_ln(hdr, ln);
+	fu_struct_focaltech_moc_cmd_req_set_cmd(hdr, FU_FOCALTECH_MOC_CMD_GET_FW_VERSION);
+	g_byte_array_append(pkt, hdr->buf->data, hdr->buf->len);
 	bcc = fu_focaltech_moc_bcc(pkt->data + 1, pkt->len - 1);
 	fu_byte_array_append_uint8(pkt, bcc);
 
@@ -331,9 +336,18 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 		return FALSE;
 	}
 
-	/* BCC check */
-	bcc_calc = fu_focaltech_moc_bcc(rx_buf + 1, actual - 2);
-	bcc_recv = rx_buf[actual - 1];
+	/* Read LN from the wire header to find BCC; using 'actual' is unsafe
+	 * because USB bulk transfers may pad the buffer to max-packet-size. */
+	pkt_ln = (guint16)(((guint16)rx_buf[1] << 8) | rx_buf[2]);
+	if (pkt_ln < 1 || (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "version response LN out of range");
+		return FALSE;
+	}
+	bcc_calc = fu_focaltech_moc_bcc(rx_buf + 1, 2 + pkt_ln);
+	bcc_recv = rx_buf[3 + pkt_ln];
 	if (bcc_calc != bcc_recv) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -344,39 +358,24 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 		return FALSE;
 	}
 
-	/* Check ACK */
-	if (rx_buf[3] != (guint8)FU_FOCALTECH_MOC_CMD_ACK) {
+	/* NUL-terminate at the BCC position so fu_strsafe stops before it */
+	rx_buf[3 + pkt_ln] = '\0';
+
+	/* Parse response: char[60] guarantees NUL-termination and safe printing */
+	rsp = fu_struct_focaltech_moc_version_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
+	if (rsp == NULL)
+		return FALSE;
+	if (fu_struct_focaltech_moc_version_rsp_get_cmd(rsp) != FU_FOCALTECH_MOC_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "version: expected ACK, got 0x%02x",
-			    rx_buf[3]);
+			    fu_struct_focaltech_moc_version_rsp_get_cmd(rsp));
 		return FALSE;
 	}
 
-	/*
-	 * Extract version string.
-	 * From ff_update.c: memcpy(version, rx_buf->data, len-1)
-	 *   where len = (rx_buffer[1]<<8) + rx_buffer[2]   (the LN field, big-endian)
-	 * data starts at rx_buf[4], version is (len-1) bytes long.
-	 *
-	 * Packet: magic(1) + ln(2) + cmd(1) + version(ln-1 bytes) + bcc(1)
-	 * total actual = 4 + (ln-1) + 1 = 4 + ln
-	 */
-	pkt_ln = (((guint16)rx_buf[1]) << 8) | rx_buf[2];
-	ver_len = (pkt_ln > 0) ? (gsize)(pkt_ln - 1) : 0;
-	if (ver_len == 0 || ver_len >= sizeof(version_buf)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "version string length %zu out of range",
-			    ver_len);
-		return FALSE;
-	}
-	memcpy(version_buf, rx_buf + 4, ver_len);
-	version_buf[ver_len] = '\0';
-
-	fu_device_set_version(FU_DEVICE(self), version_buf);
+	version = fu_struct_focaltech_moc_version_rsp_get_version(rsp);
+	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
 
@@ -426,6 +425,7 @@ fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
 	guint16 ln;
 	guint8 bcc;
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
+	g_autoptr(FuStructFocaltechMocDlHdr) hdr = NULL;
 
 	/*
 	 * LN field from ff_update.c: tx_buf->ln = u16_swap_endian(1 + 2 + dlen)
@@ -434,11 +434,13 @@ fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
 	 */
 	ln = (guint16)(3 + data_len);
 
-	fu_byte_array_append_uint8(pkt, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_byte_array_append_uint16(pkt, ln, G_BIG_ENDIAN);
-	fu_byte_array_append_uint8(pkt, (guint8)FU_FOCALTECH_MOC_CMD_FW_DOWNLOAD);
-	fu_byte_array_append_uint8(pkt, (guint8)magic);
-	fu_byte_array_append_uint8(pkt, seq);
+	hdr = fu_struct_focaltech_moc_dl_hdr_new();
+	fu_struct_focaltech_moc_dl_hdr_set_head(hdr, FU_FOCALTECH_MOC_MSG_MAGIC);
+	fu_struct_focaltech_moc_dl_hdr_set_ln(hdr, ln);
+	fu_struct_focaltech_moc_dl_hdr_set_cmd(hdr, FU_FOCALTECH_MOC_CMD_FW_DOWNLOAD);
+	fu_struct_focaltech_moc_dl_hdr_set_magic(hdr, magic);
+	fu_struct_focaltech_moc_dl_hdr_set_seq(hdr, seq);
+	g_byte_array_append(pkt, hdr->buf->data, hdr->buf->len);
 	if (data != NULL && data_len > 0)
 		g_byte_array_append(pkt, data, data_len);
 
@@ -571,7 +573,7 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware size %zu out of valid range (1..%u)",
 			    fw_size,
-			    FU_FOCALTECH_MOC_FW_MAX_SIZE);
+			    (guint)FU_FOCALTECH_MOC_FW_MAX_SIZE);
 		return FALSE;
 	}
 
