@@ -1484,6 +1484,14 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	self->hpi_addrsz = mode & 0x80 ? 2 : 1;
 	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
 	self->fw_mode = (FuCcgxFwMode)(mode & 0x03);
+	if (self->fw_mode >= FU_CCGX_FW_MODE_LAST) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid device mode 0x%x",
+			    (guint)self->fw_mode);
+		return FALSE;
+	}
 	fu_device_set_logical_id(device, fu_ccgx_fw_mode_to_string(self->fw_mode));
 	fu_device_add_instance_str(device, "MODE", fu_device_get_logical_id(device));
 
