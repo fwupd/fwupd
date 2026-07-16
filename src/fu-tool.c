@@ -5604,10 +5604,12 @@ fu_util_jcat_load_filename(FuUtil *self, const gchar *filename, GError **error)
 
 	if (g_file_query_exists(gfile, self->cancellable)) {
 		g_autoptr(FuFileInputStream) istream = NULL;
+		g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 		istream = fu_file_input_stream_from_file(gfile, self->cancellable, error);
 		if (istream == NULL)
 			return NULL;
-		if (!fwupd_jcat_file_import_stream(file, G_INPUT_STREAM(istream), error))
+		g_istream = fu_input_stream_as_g_input_stream(FU_INPUT_STREAM(istream));
+		if (!fwupd_jcat_file_import_stream(file, g_istream, error))
 			return NULL;
 	}
 
