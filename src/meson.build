@@ -289,7 +289,53 @@ if build_daemon
     install_dir: daemon_dir,
   )
 
+endif
+
 if host_machine.system() == 'android' and binder_ndk.found()
+  add_languages('cpp', native: false)
+
+  aidl_prog = find_program('aidl', required: true)
+  aidl_dir = join_paths(meson.project_source_root(), 'contrib', 'android', 'aidl',)
+
+  aidl_files = [
+    'IFwupd',
+    'IFwupdEventListener',
+    'FwupdUpdate',
+    'FwupdDevice',
+    'FwupdHwid',
+    'FwupdRemote',
+    'FwupdInstallRequest',
+    'FwupdInstallOptions',
+    'FwupdRequest',
+    'FwupdMetadata',
+    'FwupdProperties',
+  ]
+
+  aidl_generated_src = []
+  foreach a : aidl_files
+    aidl_generated_src += custom_target(
+      'aidl_gen_' + a,
+      input: join_paths(aidl_dir, 'org', 'freedesktop', 'fwupd', a + '.aidl'),
+      output: [a + '.cpp', a + '.h'],
+      command: [
+        'sh', '-c',
+        # Run AIDL with VINTF stability flags, then copy to root
+        '"$2" --lang=ndk --structured --stability vintf -I"$3" --out="$1" --header_out="$1" "$4" && ' +
+        'cp "$1/org/freedesktop/fwupd/$5.cpp" "$1/" && ' +
+        'cp "$1/aidl/org/freedesktop/fwupd/$5.h" "$1/"',
+        'sh',
+        '@OUTDIR@',
+        aidl_prog,
+        aidl_dir,
+        '@INPUT@',
+        a
+      ]
+    )
+  endforeach
+
+  # Include the root build directory so C++ #includes route correctly
+  aidl_inc = include_directories('.')
+
   executable(
     'fwupd-binder',
     fwupdengine_rs,
@@ -298,14 +344,14 @@ if host_machine.system() == 'android' and binder_ndk.found()
       daemon_loader_src,
       'fu-daemon.c',
       'fu-binder-daemon.c',
-      'fu-binder-common.c',
-      'gparcelable.c',
-    ],
+      'fu-binder-daemon-bridge.cpp',
+    ] + aidl_generated_src,
     include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
+      aidl_inc,
     ],
     dependencies: [
       valgrind,
@@ -317,23 +363,28 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdengine,
       plugin_libs,
     ],
+    link_language: 'c',
     install: true,
     install_rpath: libdir_pkg,
-    install_dir: daemon_dir
+    install_dir: daemon_dir,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
+
   fwupdmgr = executable(
     'fwupdmgr-binder',
     sources: [
       'fu-binder-client.c',
-      'fu-binder-common.c',
       'fu-debug.c',
-      'gparcelable.c',
-    ],
+      'fu-binder-client-bridge.cpp',
+    ] + aidl_generated_src,
     include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
+      aidl_inc,
     ],
     dependencies: [
       libfwupd_deps,
@@ -345,30 +396,12 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdplugin,
       fwupdutil,
     ],
+    link_language: 'c',
     install: true,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
-  gparcelable_test = executable(
-    'fwupd-gparcelable-test',
-    sources: [
-      'gparcelable-test.c',
-      'gparcelable.c',
-    ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      binder_ndk_platform_incdir,
-    ],
-    dependencies: [
-      libfwupd_deps,
-      binder_ndk,
-    ],
-    link_with: [
-      fwupd,
-    ],
-    install: true,
-  )
-endif
-
 endif
 
 if get_option('tests')

@@ -119,6 +119,11 @@ option('binder',
   description: 'Android binder support',
 )
 option(
+  'binder',
+  type: 'feature',
+  description: 'Android binder support',
+)
+option(
   'metainfo',
   type: 'boolean',
   value: true,

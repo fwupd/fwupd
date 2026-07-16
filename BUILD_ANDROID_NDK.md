@@ -49,24 +49,24 @@ adb -e shell setenforce permissive
 ndk_path = '/opt/android/android-ndk-r27/'
 ```
 
-#### platform libbinder_ndk
+#### Configure Android SDK
 
-The NDK version of `libbinder_ndk.so` doesn't contain service management symbols. So you need to get it from the android version you're targeting.
+Install JAVA and Android SDK and configure it in your PATH
 
 ```bash
-adb pull /system/lib64/libbinder_ndk.so ./contrib/android/lib_ndk/
+ENV ANDROID_SDK_ROOT=/opt/android/sdk
+ENV PATH=${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools/bin:${ANDROID_SDK_ROOT}/build-tools/35.0.0
 ```
-
-Headers for the `libbinder_ndk.so` platform components are included using as a subproject using `subprojects/android_frameworks.wrap` and can be browsed here:
-<https://cs.android.com/android/platform/superproject/main/+/main:frameworks/native/libs/binder/ndk/include_platform/>
 
 ### 2. Configure
 
-Setting the prefix to a directory that is writable on the device is important as fwupd will exit if the prefix cache path is not writable ignoring the value of the `CACHE_DIRECTORY` environment variable.
+Setting the prefix to a directory that is writeable on the device is important as fwupd will exit if the prefix cache path is not writeable ignoring the value of the `CACHE_DIRECTORY` environment variable.
 
 ```bash
 meson setup --cross-file contrib/android/android_arm64-cross-file.ini --prefix=/data/fwupd _android_build
 ```
+
+This also disables libjcat features to sidestep the gpgme and gnutls dependencies.
 
 ### 3. Build
 
@@ -84,18 +84,7 @@ This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` t
 
 #### Setup config
 
-Currently we don't have a way to verify signatures using NDK. Therefore we must configure fwupd to not validate firmware signatures:
-
-```toml
-[fwupd]
-OnlyTrusted=false
-```
-
-One option for this is adding the line to `src/tests/fwupd.conf` and pushing it to the device with:
-
-```bash
-adb push src/tests/fwupd.conf /data/fwupd/etc/fwupd/fwupd.conf`
-```
+There is new an OpenSSL backend for pkcs7/cms signatures in `libjcat`. So we don't need to disable signature verification and can leave `OnlyTrusted` set to its default value.
 
 ### 5. Run the daemon
 

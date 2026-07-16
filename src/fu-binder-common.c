@@ -6,11 +6,12 @@
 
 #define G_LOG_DOMAIN "FuBinderCommon"
 
-#include "fu-binder-common.h"
+#include "config.h"
 
 #include <android/binder_process.h>
 #include <android/binder_status.h>
 
+#include "fu-binder-common.h"
 #include "fu-common.h"
 #include "gparcelable.h"
 
@@ -61,36 +62,34 @@ typedef struct _FuBinderFdSource {
 } FuBinderFdSource;
 
 static gboolean
-binder_fd_source_check(GSource *source)
+fu_binder_fd_source_check(GSource *source)
 {
 	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
 	return g_source_query_unix_fd(source, binder_fd_source->fd_tag) & G_IO_IN;
 }
 
 static gboolean
-binder_fd_source_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
+fu_binder_fd_source_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
 {
 	binder_status_t nstatus = ABinderProcess_handlePolledCommands();
 
 	if (nstatus != STATUS_OK) {
 		AStatus *status = AStatus_fromStatus(nstatus);
 		g_warning("failed to handle polled commands %s", AStatus_getDescription(status));
-		// TODO: Should we stop polling?
-		// return G_SOURCE_REMOVE;
+		/* TODO: Should we stop polling with G_SOURCE_REMOVE */
 	}
 
 	return G_SOURCE_CONTINUE;
 }
 
-static GSourceFuncs binder_fd_source_funcs = {
-    NULL,
-    binder_fd_source_check,
-    binder_fd_source_dispatch,
-};
-
 GSource *
 fu_binder_fd_source_new(gint fd)
 {
+	static GSourceFuncs binder_fd_source_funcs = {
+	    NULL,
+	    fu_binder_fd_source_check,
+	    fu_binder_fd_source_dispatch,
+	};
 	GSource *source = g_source_new(&binder_fd_source_funcs, sizeof(FuBinderFdSource));
 	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
 	binder_fd_source->fd_tag = g_source_add_unix_fd(source, fd, G_IO_IN | G_IO_ERR);
@@ -133,7 +132,7 @@ fu_binder_daemon_method_invocation_return_variant(AParcel *out, GVariant *value,
 
 	AParcel_writeStatusHeader(out, AStatus_newOk());
 
-	// TODO: Improve error checking
+	/* TODO: Improve error checking */
 	if (value) {
 		if (gp_parcel_write_variant(out, value, error) != STATUS_OK) {
 			AParcel_setDataPosition(out, out_start);

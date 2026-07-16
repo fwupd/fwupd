@@ -167,6 +167,7 @@ class Checker:
             "fu_self_test": "fu_test",
             "fu_string": "fu_str,fu_utf",
             "fu_tool": "fu_util",
+            "fu_binder_client": "fu_util",
             "fu_windows_efivars": "fu_efivars",
         }.items():
             if prefix == key:
@@ -768,6 +769,7 @@ class Checker:
         # no console output expected
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-console.c",
+            "fu-binder-client.c",
             "fu-daemon.c",
             "fu-dbxtool.c",
             "fu-debug.c",
