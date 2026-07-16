@@ -13,10 +13,22 @@
 #include "fu-progress.h"
 
 #define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GInputStream)
+G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GObject)
 
 struct _FuInputStreamClass {
-	GInputStreamClass parent_class;
+	GObjectClass parent_class;
+	gssize (*read_fn)(FuInputStream *stream,
+			  void *buffer,
+			  gsize count,
+			  GCancellable *cancellable,
+			  GError **error);
+	goffset (*tell)(FuInputStream *stream);
+	gboolean (*can_seek)(FuInputStream *stream);
+	gboolean (*seek)(FuInputStream *stream,
+			 goffset offset,
+			 GSeekType type,
+			 GCancellable *cancellable,
+			 GError **error);
 };
 
 FuInputStream *
