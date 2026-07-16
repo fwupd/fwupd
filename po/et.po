@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-07-15 22:45+0000\n"
+"PO-Revision-Date: 2026-07-16 23:01+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -540,11 +540,11 @@ msgstr ""
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI lock"
-msgstr ""
+msgstr "SPI lukustus"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
-msgstr ""
+msgstr "SPI BIOS-i piirkond"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -556,12 +556,12 @@ msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
-msgstr ""
+msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
-msgstr ""
+msgstr "Intel BootGuardi abil verifitseeritud alglaadimine"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -934,15 +934,15 @@ msgstr ""
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS Firmware Updates"
-msgstr ""
+msgstr "BIOS-i püsivara uuendused"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "System Management Mode"
-msgstr ""
+msgstr "Süsteemi haldusrežiim"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
-msgstr ""
+msgstr "UEFI mälukaitse"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
@@ -2140,7 +2140,7 @@ msgid "Enable this remote?"
 msgstr "Kas võtad antud andmeallika kasutusele?"
 
 msgid "Updating"
-msgstr "Uuendamisel"
+msgstr "Uuendamisel on"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
@@ -2903,7 +2903,7 @@ msgstr "Puuteekraani uuendus: %s"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Update"
-msgstr ""
+msgstr "Uuendus „%s“ seadmes"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -2991,7 +2991,7 @@ msgstr "Peale uuenduse lõpetamist pole seade enam nähtav"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
-msgstr ""
+msgstr "Saadaval on kontrollimine krüptograafilise räsi alusel"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -3034,7 +3034,7 @@ msgstr "Lubatud on vaid versiooniuuendused"
 #. TRANSLATORS: currently unreachable, perhaps because it is in a lower power state
 #. * or is out of wireless range
 msgid "Device is unreachable"
-msgstr ""
+msgstr "Seade pole leitav"
 
 #. TRANSLATORS: we might ask the user the recovery key when next booting Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
@@ -3071,109 +3071,109 @@ msgstr "Sündmused on märgistatavad emuleerimiseks"
 
 #. TRANSLATORS: ask the user to do a simple task which should be translated
 msgid "Message"
-msgstr ""
+msgstr "Sõnum"
 
 #. TRANSLATORS: show the user a generic image that can be themed
 msgid "Image"
-msgstr ""
+msgstr "Pilt"
 
 #. TRANSLATORS: ask the user a question, and it will not be translated
 msgid "Message (custom)"
-msgstr ""
+msgstr "Sõnum (kohandatud)"
 
 #. TRANSLATORS: show the user a random image from the internet
 msgid "Image (custom)"
-msgstr ""
+msgstr "Pilt (kohandatud)"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
-msgstr ""
+msgstr "Ootel"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
-msgstr ""
+msgstr "Õnnestunud"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
-msgstr ""
+msgstr "Ebaõnenstunud"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
-msgstr ""
+msgstr "Mööduv/ajutine viga"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
-msgstr ""
+msgstr "Eeldab uuesti käivitamist"
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low"
-msgstr ""
+msgstr "Süsteemi aku täituvus on liiga madal"
 
 #. TRANSLATORS: as in laptop battery power
 #, c-format
 msgid "System power is too low (%u%%, requires %u%%)"
-msgstr ""
+msgstr "Süsteemi aku täituvus on liiga madal (%u%%, aga peaks olema %u%%)"
 
 #. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
 msgid "Device is unreachable, or out of wireless range"
-msgstr ""
+msgstr "Seade pole leitav või asub väljastpool traadita võrgu leviala"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
-msgstr ""
+msgstr "Seadme akutäituvus on liiga madal"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 #, c-format
 msgid "Device battery power is too low (%u%%, requires %u%%)"
-msgstr ""
+msgstr "Seadme akutäituvus on liiga madal (%u%%, aga peaks oelma %u%%)"
 
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
-msgstr ""
+msgstr "Seade on uuenduse rakendamise ootel"
 
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
-msgstr ""
+msgstr "Seade peab olema ühendatud elektritoitega"
 
 #. TRANSLATORS: lid means "laptop top cover"
 msgid "Device cannot be updated while the lid is closed"
-msgstr ""
+msgstr "Seadet ei saa uuendada, kui kaas on kinni"
 
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
-msgstr ""
+msgstr "Tegemist on emuleeritud seadmega"
 
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license.
 msgid "Device requires a software license to update"
-msgstr ""
+msgstr "Seade eeldab uuendamiseks tarkvaralitsentsi olemasolu"
 
 #. TRANSLATORS: an application is preventing system updates
 msgid "All devices are prevented from update by system inhibit"
-msgstr ""
+msgstr "Süsteemipoolse blokeerimise tõttu ei saa ühtegi seadet uuendada"
 
 #. TRANSLATORS: another application is updating the device already
 msgid "An update is in progress"
-msgstr ""
+msgstr "Uuendamine on hetkel pooleli"
 
 #. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
 msgid "Device is in use"
-msgstr ""
+msgstr "Seade on kasutuses"
 
 #. TRANSLATORS: device does not have a display connected
 msgid "Device requires a display to be plugged in"
-msgstr ""
+msgstr "Seade eeldab, et monitor on lülitatud sisse"
 
 #. TRANSLATORS: we have two ways of communicating with the device, so we hide one
 msgid "Device is lower priority than an equivalent device"
-msgstr ""
+msgstr "Seade on madalama olulisusega kui üks võrdväärne seade"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "Süsteemi allkirjastamisel on kasutatud ebaturvalist võtit"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "Seadme püsivara on lukustatud"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
