@@ -68,7 +68,7 @@ G_DEFINE_TYPE(FuFocaltechMocDevice, fu_focaltech_moc_device, FU_TYPE_USB_DEVICE)
 
 /* Delays matching UpgradeTool (ff_util_msleep calls) */
 #define FU_FOCALTECH_MOC_DELAY_CMD_MS   5   /* after version/mode commands */
-#define FU_FOCALTECH_MOC_DELAY_DL_MS   100  /* between download packets */
+#define FU_FOCALTECH_MOC_DELAY_DL_MS   10   /* between download packets */
 #define FU_FOCALTECH_MOC_DELAY_FINAL_MS 200 /* before reading final ACK */
 
 /* Maximum receive buffer (covers any response packet) */
@@ -152,6 +152,7 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self,
 				 GError **error)
 {
 	gsize actual = 0;
+	guint16 pkt_ln;
 	guint8 rsp_cmd;
 	guint8 bcc_calc;
 	guint8 bcc_recv;
@@ -196,9 +197,21 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self,
 		return FALSE;
 	}
 
-	/* verify BCC: covers buf[1..actual-2] */
-	bcc_calc = fu_focaltech_moc_bcc(buf + 1, actual - 2);
-	bcc_recv = buf[actual - 1];
+	/* Use LN field to locate BCC; actual may include USB padding bytes.
+	 * Device sends [MAGIC|LN_HI|LN_LO|CMD...|BCC] where BCC is at buf[3+LN].
+	 * actual-1 is wrong when USB pads the response. */
+	pkt_ln = (guint16)(((guint16)buf[1] << 8) | buf[2]);
+	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "response truncated: LN=%u but only %zu bytes",
+			    (guint)pkt_ln,
+			    actual);
+		return FALSE;
+	}
+	bcc_calc = fu_focaltech_moc_bcc(buf + 1, 2 + pkt_ln);
+	bcc_recv = buf[3 + pkt_ln];
 	if (bcc_calc != bcc_recv) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -339,7 +352,7 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	/* Read LN from the wire header to find BCC; using 'actual' is unsafe
 	 * because USB bulk transfers may pad the buffer to max-packet-size. */
 	pkt_ln = (guint16)(((guint16)rx_buf[1] << 8) | rx_buf[2]);
-	if (pkt_ln < 1 || (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
+	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual || (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -559,7 +572,6 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
 
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -723,12 +735,11 @@ static void
 fu_focaltech_moc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 19, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 57, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 24, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
