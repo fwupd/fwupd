@@ -33,7 +33,7 @@ endif
 CONFARGS += -Dplugin_modem_manager=enabled
 
 %:
-	dh $@ --with gir
+	dh $@ --with gir --with python3
 
 override_dh_auto_clean:
 	rm -fr obj-*
@@ -82,6 +82,11 @@ override_dh_install:
 
 	# the below step is automatic with debhelper >= 14
 	dh_installsysusers
+
+override_dh_python3:
+	dh_python3 -pfwupd
+	dh_python3 -pfwupd-tests /usr/share/installed-tests/fwupd
+	dh_python3 -pfwupd-tests /usr/libexec/installed-tests/fwupd
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz

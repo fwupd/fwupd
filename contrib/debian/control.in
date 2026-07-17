@@ -33,10 +33,10 @@ Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libfwupd3 (= ${binary:Version}),
+         ${python3:Depends},
          shared-mime-info,
          systemd-sysusers
-Recommends: python3,
-	    bolt,
+Recommends: bolt,
 	    default-dbus-system-bus | dbus-system-bus,
 	    ${recommends:secureboot-db},
 	    udisks2,
@@ -74,13 +74,13 @@ Package: fwupd-tests
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         ${python3:Depends},
          ca-certificates,
          default-dbus-system-bus | dbus-system-bus,
          fwupd,
          gnome-desktop-testing,
          ieee-data,
          polkitd | policykit-1,
-         python3,
          python3-flask,
          python3-gi
 Breaks: fwupd (<< 0.9.4-1)

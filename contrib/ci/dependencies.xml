@@ -343,6 +343,16 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="dh-python">
+    <distro id="debian">
+      <control />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="dh-strip-nondeterminism">
     <distro id="debian">
       <control />
@@ -1179,6 +1189,15 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
       <package variant="mingw64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-gi">
