@@ -167,6 +167,7 @@ class Checker:
             "fu_self_test": "fu_test",
             "fu_string": "fu_str,fu_utf",
             "fu_tool": "fu_util",
+            "fu_binder_client": "fu_util",
             "fu_windows_efivars": "fu_efivars",
         }.items():
             if prefix == key:
@@ -768,6 +769,7 @@ class Checker:
         # no console output expected
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-console.c",
+            "fu-binder-client.c",
             "fu-daemon.c",
             "fu-dbxtool.c",
             "fu-debug.c",
@@ -857,6 +859,8 @@ class Checker:
                 "~g_memory_input_stream_new*": "Use fu_memory_input_stream_new*() instead",
                 "g_file_read": "Use fu_file_input_stream_from_file() instead",
                 "~g_file_input_stream_*": "Use fu_file_input_stream_*() instead",
+                "g_zlib_compressor_new": "Use fu_compressor_stream_new_compress() instead",
+                "g_zlib_decompressor_new": "Use fu_compressor_stream_new_decompress() instead",
             }.items():
                 idx = node.tokens.find_fuzzy([token, "("])
                 if idx != -1:
@@ -899,6 +903,20 @@ class Checker:
                         f"contains blocked token {token.data}: {msg}",
                         linecnt=token.linecnt,
                     )
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
+            for search, msg in {
+                "GInputStream": "Use FuInputStream instead",
+                "GMemoryInputStream": "Use FuMemoryInputStream instead",
+                "GFileInputStream": "Use FuFileInputStream instead",
+            }.items():
+                for token in node.tokens:
+                    if token.data == search:
+                        self.add_failure(
+                            f"contains blocked token {token.data}: {msg}",
+                            linecnt=token.linecnt,
+                        )
+
         # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
             for search, msg in {

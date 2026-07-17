@@ -14,6 +14,7 @@
 #include <sys/utsname.h>
 #endif
 
+#include "fu-compressor-stream.h"
 #include "fu-input-stream.h"
 #include "fu-kernel.h"
 #include "fu-path.h"
@@ -241,15 +242,16 @@ fu_kernel_get_config(FuPathStore *pstore, GError **error)
 	    fu_path_store_build_filename(pstore, NULL, FU_PATH_KIND_PROCFS, "config.gz", NULL);
 	if (config_fngz != NULL && g_file_test(config_fngz, G_FILE_TEST_EXISTS)) {
 		g_autoptr(GBytes) payload = NULL;
-		g_autoptr(GConverter) conv = NULL;
 		g_autoptr(FuInputStream) istream1 = NULL;
 		g_autoptr(FuInputStream) istream2 = NULL;
 
 		istream1 = fu_input_stream_from_path(config_fngz, error);
 		if (istream1 == NULL)
 			return NULL;
-		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-		istream2 = g_converter_input_stream_new(G_INPUT_STREAM(istream1), conv);
+		istream2 =
+		    fu_compressor_stream_new_decompress(istream1, FU_COMPRESSOR_FORMAT_GZIP, error);
+		if (istream2 == NULL)
+			return NULL;
 		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return NULL;

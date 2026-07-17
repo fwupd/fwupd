@@ -206,12 +206,10 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(self->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
-		dev = g_ptr_array_index(devices_filtered, i);
-		fu_console_print(self->console,
-				 "%u.\t%s (%s)",
-				 i + 1,
-				 fwupd_device_get_id(dev),
-				 fwupd_device_get_name(dev));
+		FwupdDevice *device_tmp = g_ptr_array_index(devices_filtered, i);
+		g_autofree gchar *id_display = fwupd_device_get_id_display(device_tmp);
+		if (id_display != NULL)
+			fu_console_print(self->console, "%u.\t%s", i + 1, id_display);
 	}
 	/* TRANSLATORS: get interactive prompt */
 	idx = fu_console_input_uint(self->console, devices_filtered->len, "%s", _("Choose device"));
@@ -1836,8 +1834,8 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* write each device report as a new file */
-	for (guint i = 0; i < devices->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devices, i);
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices_filtered, i);
 		g_autofree gchar *data = NULL;
 		g_autofree gchar *filename = NULL;
 		g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
@@ -1849,7 +1847,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		/* convert single device to JSON */
 		g_ptr_array_add(devices_tmp, dev);
 		data = fwupd_client_build_report_history(self->client,
-							 devices,
+							 devices_tmp,
 							 NULL, /* remote */
 							 metadata,
 							 error);

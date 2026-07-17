@@ -30,8 +30,8 @@ parcelable FwupdUpdate {
     @nullable String updateImage;
     long size;
     long created;
-    long flags;        
-    long trustFlags;   
-    int urgency;       
+    long flags;
+    long trustFlags;
+    int urgency;
     int installDuration;
 }

@@ -222,9 +222,12 @@ static void
 fu_path_store_ensure_lockdir(FuPathStore *self)
 {
 	const gchar *dirs[] = {
+#ifdef __ANDROID__
+	    "/data/vendor/fwupd/run",
+#else
 	    "/run/lock",
 	    "/var/run",
-	    "/data/vendor/fwupd/run", /* android */
+#endif
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(dirs); i++) {
 		if (g_file_test(dirs[i], G_FILE_TEST_EXISTS)) {

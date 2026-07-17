@@ -1,3 +1,11 @@
+/*
+ * Copyright 2026 Harsha Muttavarapu <harshams@google.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+ #include "config.h"
+
 #include <aidl/org/freedesktop/fwupd/BnFwupdEventListener.h>
 #include <aidl/org/freedesktop/fwupd/IFwupd.h>
 #include <aidl/org/freedesktop/fwupd/FwupdDevice.h>

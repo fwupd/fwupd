@@ -384,7 +384,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupd_incdir,
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
-      aidl_inc, 
+      aidl_inc,
     ],
     dependencies: [
       libfwupd_deps,
@@ -396,7 +396,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdplugin,
       fwupdutil,
     ],
-    link_language: 'c', 
+    link_language: 'c',
     install: true,
     c_args: ['-DBINDER_STABILITY_SUPPORT'],
     cpp_args: ['-DBINDER_STABILITY_SUPPORT'],

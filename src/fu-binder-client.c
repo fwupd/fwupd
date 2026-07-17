@@ -14,26 +14,24 @@
 #include <android/binder_parcel.h>
 #include <android/binder_process.h>
 #include <android/binder_status.h>
-#include <glib.h>
-#include <glib/gi18n.h>
 #include <gio/gunixinputstream.h>
+#include <glib/gi18n.h>
 #include <stdlib.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-error.h"
-#include "fu-util-common.h"
+
 #include "fu-binder-client-bridge.h"
 #include "fu-debug.h"
-
-/* Include the new header for strict 64-bit pointer safety */
-//#include "fu-binder-client-bridge.h"
+#include "fu-util-common.h"
 
 /* Forward declare the C++ remotes function (ensure it matches your .h file) */
-GVariant* fu_binder_client_get_remotes_aidl(AIBinder* binder, GError** error);
+GVariant *
+fu_binder_client_get_remotes_aidl(AIBinder *binder, GError **error);
 
 /* Custom return codes */
 #define EXIT_NOTHING_TO_DO 2
-#define EXIT_NOT_FOUND     3
+#define EXIT_NOT_FOUND	   3
 
 /* Private addition to binder_flag_t for vendor-to-vendor stability */
 #define FLAG_PRIVATE_VENDOR 0x10000000
@@ -165,7 +163,7 @@ fu_util_get_devices_call(FuUtil *self, GError **error)
 	GVariant *val = NULL;
 	GVariant *tuple = NULL;
 	g_autoptr(GPtrArray) devs = NULL;
-	
+
 	val = fu_binder_client_get_devices_aidl(self->fwupd_binder, error);
 	if (val == NULL)
 		return NULL;
@@ -173,7 +171,7 @@ fu_util_get_devices_call(FuUtil *self, GError **error)
 	tuple = g_variant_ref_sink(g_variant_new_tuple(&val, 1));
 	devs = fwupd_codec_array_from_variant(tuple, FWUPD_TYPE_DEVICE, error);
 	g_variant_unref(tuple);
-	
+
 	if (devs == NULL)
 		return NULL;
 
@@ -186,25 +184,27 @@ static gboolean
 fu_util_get_hwids_call(FuUtil *self, GStrv *keys, GStrv *values, GError **error)
 {
 	g_autoptr(GVariant) val = fu_binder_client_get_hwids_aidl(self->fwupd_binder, error);
+	g_autoptr(GVariant) val_hwids = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
+	const gchar *hwid_key;
+	GVariant *hwid_value_v;
+	guint size;
+
+	val = fu_binder_client_get_hwids_aidl(self->fwupd_binder, error);
 	if (val == NULL)
 		return FALSE;
 
-	g_autoptr(GVariant) val_hwids = NULL;
 	if (g_variant_is_of_type(val, G_VARIANT_TYPE_TUPLE)) {
 		val_hwids = g_variant_get_child_value(val, 0);
 	} else {
 		val_hwids = g_variant_ref(val);
 	}
 
-	g_autoptr(GVariantIter) iter = NULL;
-	const gchar *hwid_key;
-	GVariant *hwid_value_v;
-	guint size = g_variant_n_children(val_hwids);
-
+	size = g_variant_n_children(val_hwids);
 	*keys = g_new0(gchar *, size + 1);
 	*values = g_new0(gchar *, size + 1);
 	g_variant_get(val_hwids, "a{sv}", &iter);
-	
+
 	for (guint i = 0; g_variant_iter_next(iter, "{&sv}", &hwid_key, &hwid_value_v); i++) {
 		(*keys)[i] = g_strdup(hwid_key);
 		(*values)[i] = g_variant_dup_string(hwid_value_v, NULL);
@@ -253,7 +253,8 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 		/* add all releases that could be applied */
 		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
 		if (rels == NULL) {
-			g_debug("not adding releases to device: %s", error_local ? error_local->message : "unknown error");
+			g_debug("not adding releases to device: %s",
+				error_local ? error_local->message : "unknown error");
 		} else {
 			for (guint j = 0; j < rels->len; j++) {
 				FwupdRelease *rel = g_ptr_array_index(rels, j);
@@ -287,17 +288,16 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 	if (self->as_json)
 		return fu_util_get_devices_as_json(self, devs, error);
 
-	/* Standard Print Path */
 	if (devs->len > 0)
 		fu_util_build_device_tree(self, root, devs, NULL);
-	
+
 	if (g_node_n_children(root) == 0) {
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: nothing attached that can be upgraded */
 					 _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	
+
 	fu_util_print_node(self->console, self->client, root);
 
 	return TRUE;
@@ -328,7 +328,8 @@ fu_util_get_upgrades_as_json(FuUtil *self, GPtrArray *devices, GError **error)
 		/* get the releases for this device and filter for validity */
 		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
 		if (rels == NULL) {
-			if (error_local) g_debug("%s", error_local->message);
+			if (error_local)
+				g_debug("%s", error_local->message);
 			continue;
 		}
 
@@ -366,15 +367,21 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length(values) == 1) {
-		FwupdDevice *device = NULL; // fu_util_get_device_by_id(self, values[0], error);
+		FwupdDevice *device = NULL; /* fu_util_get_device_by_id(self, values[0], error); */
 		if (device == NULL) {
-			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "Device ID lookup not yet migrated");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "Device ID lookup not yet migrated");
 			return FALSE;
 		}
 		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(devices, device);
 	} else {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "Invalid arguments");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
 		return FALSE;
 	}
 
@@ -382,7 +389,6 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 	if (self->as_json)
 		return fu_util_get_upgrades_as_json(self, devices, error);
 
-	/* Standard Print Path */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
@@ -392,7 +398,9 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
 			continue;
-		if (!fwupd_device_match_flags(dev, self->filter_device_include, self->filter_device_exclude))
+		if (!fwupd_device_match_flags(dev,
+					      self->filter_device_include,
+					      self->filter_device_exclude))
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			g_ptr_array_add(devices_no_support, dev);
@@ -401,31 +409,36 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 		supported = TRUE;
 
 		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
-		
+
 		if (rels == NULL) {
 			g_ptr_array_add(devices_no_upgrades, dev);
-			if (error_local) g_debug("%s", error_local->message);
+			if (error_local)
+				g_debug("%s", error_local->message);
 			continue;
 		}
 		child = g_node_append_data(root, g_object_ref(dev));
 
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, j);
-			if (!fwupd_release_match_flags(rel, self->filter_release_include, self->filter_release_exclude))
+			if (!fwupd_release_match_flags(rel,
+						       self->filter_release_include,
+						       self->filter_release_exclude))
 				continue;
 			g_node_append_data(child, g_object_ref(rel));
 		}
 	}
 
 	if (devices_no_support->len > 0) {
-		fu_console_print_literal(self->console, _("Devices with no available firmware updates: "));
+		fu_console_print_literal(self->console,
+					 _("Devices with no available firmware updates: "));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
 	if (devices_no_upgrades->len > 0) {
-		fu_console_print_literal(self->console, _("Devices with the latest available firmware version:"));
+		fu_console_print_literal(self->console,
+					 _("Devices with the latest available firmware version:"));
 		for (guint i = 0; i < devices_no_upgrades->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -433,11 +446,17 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 	}
 
 	if (!supported) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, _("No updatable devices"));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    _("No updatable devices"));
 		return FALSE;
 	}
 	if (g_node_n_nodes(root, G_TRAVERSE_ALL) <= 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, _("No updates available"));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    _("No updates available"));
 		return FALSE;
 	}
 
@@ -472,7 +491,6 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	/* Standard Print Path */
 	fu_console_print_literal(self->console, "Computer Information");
 	fu_console_print_literal(self->console, "--------------------");
 	for (guint i = 0; hwids_keys[i] != NULL; i++) {
@@ -501,8 +519,10 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 {
-	g_autoptr(GPtrArray) remotes = fu_util_get_remotes_call(self, error);
+	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 
+	remotes = fu_util_get_remotes_call(self, error);
 	if (remotes == NULL)
 		return FALSE;
 
@@ -514,7 +534,9 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 		for (guint i = 0; i < remotes->len; i++) {
 			FwupdRemote *remote = g_ptr_array_index(remotes, i);
 			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(remote), json_obj_tmp, FWUPD_CODEC_FLAG_NONE);
+			fwupd_codec_to_json(FWUPD_CODEC(remote),
+					    json_obj_tmp,
+					    FWUPD_CODEC_FLAG_NONE);
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 		fwupd_json_object_add_array(json_obj, "Remotes", json_arr);
@@ -522,13 +544,11 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	/* Standard Print Path */
 	if (remotes->len == 0) {
 		fu_console_print_literal(self->console, _("No remotes found"));
 		return TRUE;
 	}
 
-	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote));
@@ -556,23 +576,37 @@ fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 
 	filename = g_strdup(values[0]);
 	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "Local file not found: %s", filename);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "Local file not found: %s",
+			    filename);
 		return FALSE;
 	}
 
 	istr = fwupd_unix_input_stream_from_fn(filename, error);
-	if (istr == NULL) return FALSE;
+	if (istr == NULL)
+		return FALSE;
 
 	fd = g_unix_input_stream_get_fd(istr);
 
 	{
 		g_auto(GVariantBuilder) builder;
 		g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-		g_variant_builder_add(&builder, "{sv}", "reason", g_variant_new_string("user-action"));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "reason",
+				      g_variant_new_string("user-action"));
 		if (filename != NULL) {
-			g_variant_builder_add(&builder, "{sv}", "filename", g_variant_new_string(filename));
+			g_variant_builder_add(&builder,
+					      "{sv}",
+					      "filename",
+					      g_variant_new_string(filename));
 		}
-		g_variant_builder_add(&builder, "{sv}", "install-flags", g_variant_new_uint64(install_flags));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "install-flags",
+				      g_variant_new_uint64(install_flags));
 		options = g_variant_builder_end(&builder);
 	}
 
@@ -584,12 +618,18 @@ fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 {
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Not migrated to AIDL yet.");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not migrated to AIDL yet.");
 	return FALSE;
 }
 
 static void
-fu_binder_client_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+fu_binder_client_log_handler(const gchar *log_domain,
+			     GLogLevelFlags log_level,
+			     const gchar *message,
+			     gpointer user_data)
 {
 	g_printerr("%s: %s\n", log_domain, message);
 }
@@ -779,7 +819,7 @@ main(int argc, char *argv[])
 		self->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* connect to the daemon */
-	self->client = fwupd_client_new(); 
+	self->client = fwupd_client_new();
 
 	self->fwupd_binder = fu_binder_client_get_service_handle_aidl(&error);
 
@@ -794,7 +834,7 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* Hook up the listener for progress updates */
+	/* hook up the listener for progress updates */
 	if (!fu_binder_client_setup_listener_aidl(self->fwupd_binder)) {
 		g_prefix_error(&error, _("Failed to attach listener to daemon: "));
 		fu_util_print_error(self, error);

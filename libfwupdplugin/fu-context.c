@@ -1331,6 +1331,7 @@ fu_context_hwid_quirk_cb(FuContext *self,
 static void
 fu_context_detect_container(FuContext *self)
 {
+#ifndef __ANDROID__
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 
@@ -1344,6 +1345,7 @@ fu_context_detect_container(FuContext *self)
 		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_CONTAINER);
 		return;
 	}
+#endif
 }
 
 static void
