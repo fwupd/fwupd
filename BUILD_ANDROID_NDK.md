@@ -42,11 +42,11 @@ adb -e shell setenforce permissive
 
 ## Building and running on Android
 
-### 1. Point the `ndk_path` field to your `ANDROID_NDK_HOME` in `contrib/android/android_arm64-cross-file.ini`
+### 1. Set up your Android environment
 
-```ini
-[constants]
-ndk_path = '/opt/android/android-ndk-r27/'
+```
+chmod +x ./contrib/android/android-env-setup.sh
+./contrib/android/android-env-setup.sh
 ```
 
 #### Configure Android SDK
