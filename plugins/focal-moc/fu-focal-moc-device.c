@@ -763,7 +763,7 @@ fu_focal_moc_device_init(FuFocalMocDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
-	fu_device_add_protocol(FU_DEVICE(self), "com.focaltech.moc");
+	fu_device_add_protocol(FU_DEVICE(self), "com.focal.moc");
 	fu_device_set_name(FU_DEVICE(self), "Fingerprint Sensor");
 	fu_device_set_summary(FU_DEVICE(self), "Match-On-Chip fingerprint sensor");
 	fu_device_set_install_duration(FU_DEVICE(self), 15);

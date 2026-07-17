@@ -61,7 +61,7 @@ blocks and written sequentially.
 
 This plugin supports the following protocol ID:
 
-* `com.focaltech.moc`
+* `com.focal.moc`
 
 ## GUID Generation
 
