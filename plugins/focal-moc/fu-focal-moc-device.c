@@ -478,6 +478,23 @@ fu_focal_moc_device_dl_pkt(FuFocalMocDevice *self,
 static gboolean
 fu_focal_moc_device_probe(FuDevice *device, GError **error)
 {
+	static const guint16 supported_pids[] = {
+		0x9E48,
+		0xD979,
+		0xA27A,
+		0xA959,
+		0xA99A,
+		0xA57A,
+		0xA78A,
+		0xA97A,
+		0x1579,
+		0x077A,
+		0x079A,
+		0x5158,
+		0x6553,
+	};
+	guint16 pid;
+
 	if (!FU_DEVICE_CLASS(fu_focal_moc_device_parent_class)->probe(device, error))
 		return FALSE;
 
@@ -490,7 +507,18 @@ fu_focal_moc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	return TRUE;
+	pid = fu_device_get_pid(device);
+	for (guint i = 0; i < G_N_ELEMENTS(supported_pids); i++) {
+		if (pid == supported_pids[i])
+			return TRUE;
+	}
+
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "unsupported FocalTech PID 0x%04x",
+		    pid);
+	return FALSE;
 }
 
 static gboolean
