@@ -3090,95 +3090,6 @@ fu_util_self_sign(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
-static void
-fu_util_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
-{
-	FuUtil *self = (FuUtil *)user_data;
-	g_autofree gchar *tmp = NULL;
-
-	if (self->as_json)
-		return;
-
-	tmp = fu_util_device_to_string(self->client, device, 0);
-
-	/* TRANSLATORS: this is when a device is hotplugged */
-	fu_console_print(self->console, "%s\n%s", _("Device added:"), tmp);
-}
-
-static void
-fu_util_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
-{
-	FuUtil *self = (FuUtil *)user_data;
-	g_autofree gchar *tmp = NULL;
-
-	if (self->as_json)
-		return;
-
-	tmp = fu_util_device_to_string(self->client, device, 0);
-
-	/* TRANSLATORS: this is when a device is hotplugged */
-	fu_console_print(self->console, "%s\n%s", _("Device removed:"), tmp);
-}
-
-static void
-fu_util_device_changed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
-{
-	FuUtil *self = (FuUtil *)user_data;
-	g_autofree gchar *tmp = NULL;
-
-	if (self->as_json)
-		return;
-
-	tmp = fu_util_device_to_string(self->client, device, 0);
-
-	/* TRANSLATORS: this is when a device has been updated */
-	fu_console_print(self->console, "%s\n%s", _("Device changed:"), tmp);
-}
-
-static void
-fu_util_changed_cb(FwupdClient *client, gpointer user_data)
-{
-	FuUtil *self = (FuUtil *)user_data;
-
-	if (self->as_json)
-		return;
-
-	/* TRANSLATORS: this is when the daemon state changes */
-	fu_console_print_literal(self->console, _("Changed"));
-}
-
-static gboolean
-fu_util_monitor(FuUtil *self, gchar **values, GError **error)
-{
-	/* get all the devices */
-	if (!fwupd_client_connect(self->client, self->cancellable, error))
-		return FALSE;
-
-	/* watch for any hotplugged device */
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "changed",
-			 G_CALLBACK(fu_util_changed_cb),
-			 self);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "device-added",
-			 G_CALLBACK(fu_util_device_added_cb),
-			 self);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "device-removed",
-			 G_CALLBACK(fu_util_device_removed_cb),
-			 self);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_device_changed_cb),
-			 self);
-	g_signal_connect(G_CANCELLABLE(self->cancellable),
-			 "cancelled",
-			 G_CALLBACK(fu_util_cancelled_cb),
-			 self);
-	g_main_loop_run(self->loop);
-	return TRUE;
-}
-
 static gboolean
 fu_util_get_firmware_types(FuUtil *self, gchar **values, GError **error)
 {
@@ -6833,12 +6744,6 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Save a file that allows generation of hardware IDs"),
 			      fu_util_export_hwids);
-	fu_util_cmd_array_add(cmd_array,
-			      "monitor",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Monitor the daemon for events"),
-			      fu_util_monitor);
 	fu_util_cmd_array_add(cmd_array,
 			      "update,upgrade",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
