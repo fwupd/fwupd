@@ -144,10 +144,10 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 {
 	gsize actual = 0;
 	guint16 pkt_ln;
-	guint8 rsp_cmd;
 	guint8 bcc_calc;
 	guint8 bcc_recv;
 	guint8 buf[FU_FOCALTECH_MOC_MAX_RSP_SIZE] = {0};
+	g_autoptr(FuStructFocaltechMocCmdRsp) rsp = NULL;
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_FOCALTECH_MOC_USB_EP_IN,
@@ -173,20 +173,25 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 
 	fu_dump_full(G_LOG_DOMAIN, "RECV", buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
+	/* Parse the 4-byte response header */
+	rsp = fu_struct_focaltech_moc_cmd_rsp_parse(buf, sizeof(buf), 0, error);
+	if (rsp == NULL)
+		return FALSE;
+
 	/* validate magic */
-	if (buf[0] != FU_FOCALTECH_MOC_MSG_MAGIC) {
+	if (fu_struct_focaltech_moc_cmd_rsp_get_head(rsp) != FU_FOCALTECH_MOC_MSG_MAGIC) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "bad magic: 0x%02x",
-			    buf[0]);
+			    fu_struct_focaltech_moc_cmd_rsp_get_head(rsp));
 		return FALSE;
 	}
 
 	/* Use LN field to locate BCC; actual may include USB padding bytes.
 	 * Device sends [MAGIC|LN_HI|LN_LO|CMD...|BCC] where BCC is at buf[3+LN].
 	 * actual-1 is wrong when USB pads the response. */
-	pkt_ln = (guint16)(((guint16)buf[1] << 8) | buf[2]);
+	pkt_ln = fu_struct_focaltech_moc_cmd_rsp_get_ln(rsp);
 	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -208,14 +213,13 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 		return FALSE;
 	}
 
-	/* check ACK command byte (offset 3) */
-	rsp_cmd = buf[3];
-	if (rsp_cmd != (guint8)FU_FOCALTECH_MOC_CMD_ACK) {
+	/* check ACK command byte */
+	if (fu_struct_focaltech_moc_cmd_rsp_get_cmd(rsp) != FU_FOCALTECH_MOC_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "expected ACK (0x04), got 0x%02x",
-			    rsp_cmd);
+			    fu_struct_focaltech_moc_cmd_rsp_get_cmd(rsp));
 		return FALSE;
 	}
 
@@ -289,6 +293,7 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
 	g_autoptr(FuStructFocaltechMocVersionRsp) rsp = NULL;
 	g_autoptr(FuStructFocaltechMocCmdReq) hdr = NULL;
+	g_autoptr(FuStructFocaltechMocCmdRsp) rsp_hdr = NULL;
 	g_autofree gchar *version = NULL;
 	guint16 ln, pkt_ln;
 	guint8 bcc;
@@ -324,8 +329,8 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 
 	fu_dump_full(G_LOG_DOMAIN, "VERSION-RSP", rx_buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
-	/* Minimum: magic+len+cmd+bcc = 5 bytes */
-	if (actual < 5 || rx_buf[0] != FU_FOCALTECH_MOC_MSG_MAGIC) {
+	/* Minimum: magic(1)+len(2)+cmd(1)+bcc(1) = 5 bytes */
+	if (actual < 5) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -333,9 +338,20 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 		return FALSE;
 	}
 
-	/* Read LN from the wire header to find BCC; using 'actual' is unsafe
-	 * because USB bulk transfers may pad the buffer to max-packet-size. */
-	pkt_ln = (guint16)(((guint16)rx_buf[1] << 8) | rx_buf[2]);
+	/* Parse the 4-byte response header to obtain LN and validate magic */
+	rsp_hdr = fu_struct_focaltech_moc_cmd_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
+	if (rsp_hdr == NULL)
+		return FALSE;
+	if (fu_struct_focaltech_moc_cmd_rsp_get_head(rsp_hdr) != FU_FOCALTECH_MOC_MSG_MAGIC) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bad version response");
+		return FALSE;
+	}
+
+	/* Use LN from the header struct to locate BCC accurately */
+	pkt_ln = fu_struct_focaltech_moc_cmd_rsp_get_ln(rsp_hdr);
 	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual ||
 	    (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
 		g_set_error_literal(error,
