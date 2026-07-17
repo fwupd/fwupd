@@ -152,7 +152,7 @@ fu_efi_load_option_set_metadata(FuEfiLoadOption *self, const gchar *key, const g
 
 static gboolean
 fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       gsize offset,
 				       GError **error)
 {
@@ -247,7 +247,7 @@ fu_efi_load_option_parse_optional_path(FuEfiLoadOption *self, GBytes *opt_blob, 
 
 static gboolean
 fu_efi_load_option_parse_optional(FuEfiLoadOption *self,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  gsize offset,
 				  GError **error)
 {
@@ -289,7 +289,7 @@ fu_efi_load_option_parse_optional(FuEfiLoadOption *self,
 
 static gboolean
 fu_efi_load_option_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

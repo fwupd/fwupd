@@ -44,6 +44,8 @@ gboolean
 fu_daemon_get_update_in_progress(FuDaemon *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_daemon_get_pending_stop(FuDaemon *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_daemon_device_id_valid(const gchar *device_id, GError **error);
 FwupdStatus
 fu_daemon_get_status(FuDaemon *self) G_GNUC_NON_NULL(1);
 void

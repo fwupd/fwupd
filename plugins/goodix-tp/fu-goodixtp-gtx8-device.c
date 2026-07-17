@@ -467,7 +467,7 @@ fu_goodixtp_gtx8_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_goodixtp_gtx8_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
+					 FuInputStream *stream,
 					 FuProgress *progress,
 					 FuFirmwareParseFlags flags,
 					 GError **error)
@@ -490,7 +490,7 @@ fu_goodixtp_gtx8_device_write_image(FuGoodixtpGtx8Device *self,
 				    GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(img, error);
 	if (stream == NULL)

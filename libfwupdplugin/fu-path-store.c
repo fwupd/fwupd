@@ -224,6 +224,7 @@ fu_path_store_ensure_lockdir(FuPathStore *self)
 	const gchar *dirs[] = {
 	    "/run/lock",
 	    "/var/run",
+	    "/data/vendor/fwupd/run", /* android */
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(dirs); i++) {
 		if (g_file_test(dirs[i], G_FILE_TEST_EXISTS)) {

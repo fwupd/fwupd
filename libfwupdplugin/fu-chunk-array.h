@@ -9,6 +9,7 @@
 #include <fwupd.h>
 
 #include "fu-chunk.h"
+#include "fu-input-stream.h"
 
 #define FU_TYPE_CHUNK_ARRAY (fu_chunk_array_get_type())
 
@@ -20,7 +21,7 @@ FuChunkArray *
 fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gsize packet_sz)
     G_GNUC_NON_NULL(1);
 FuChunkArray *
-fu_chunk_array_new_from_stream(GInputStream *stream,
+fu_chunk_array_new_from_stream(FuInputStream *stream,
 			       gsize addr_offset,
 			       gsize page_sz,
 			       gsize packet_sz,

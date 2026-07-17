@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuGoodixtpBrlbFirmware, fu_goodixtp_brlb_firmware, FU_TYPE_GOODIXT
 
 static gboolean
 fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       gsize offset,
 				       guint8 sensor_id,
 				       guint8 *cfg_ver,
@@ -35,7 +35,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 	guint16 cfg_checksum = 0;
 	g_autoptr(FuFirmware) img = fu_goodixtp_brlb_config_new();
 	g_autoptr(FuStructGoodixTpCfgGroup) st_cfg = NULL;
-	g_autoptr(GInputStream) stream_img = NULL;
+	g_autoptr(FuInputStream) stream_img = NULL;
 
 	st_cfg = fu_struct_goodix_tp_cfg_group_parse_stream(stream, offset, error);
 	if (st_cfg == NULL)
@@ -106,7 +106,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 
 gboolean
 fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				guint8 sensor_id,
 				GError **error)
 {
@@ -175,7 +175,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 		guint32 img_size;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(FuStructGoodixBrlbImg) st_img = NULL;
-		g_autoptr(GInputStream) stream_img = NULL;
+		g_autoptr(FuInputStream) stream_img = NULL;
 
 		st_img = fu_struct_goodix_brlb_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)

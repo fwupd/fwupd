@@ -1,3 +1,4 @@
+/subprojects/android_frameworks/
 gusb
 gi-docgen
 libjcat
@@ -8,6 +9,7 @@ android_frameworks/
 curl-8.10.1/
 glib-2.84.2/
 gvdb.wrap
+json-glib/
 libffi/
 libusb-1.0.27/
 openssl-3.0.8/

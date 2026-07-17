@@ -289,7 +289,6 @@ cd -
     -Dhsi=disabled \
 %endif
     -Dman=true \
-    -Dsystemd_unit_user="" \
     -Dbluez=enabled
 
 %meson_build
@@ -391,6 +390,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
+/usr/lib/sysusers.d/fwupd.conf
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d

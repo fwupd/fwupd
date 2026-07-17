@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuSynapticsCapeHidFirmware,
 
 static gboolean
 fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
@@ -30,8 +30,8 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(FuStructSynapticsCapeHidHdr) st = NULL;
-	g_autoptr(GInputStream) stream_hdr = NULL;
-	g_autoptr(GInputStream) stream_body = NULL;
+	g_autoptr(FuInputStream) stream_hdr = NULL;
+	g_autoptr(FuInputStream) stream_body = NULL;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))

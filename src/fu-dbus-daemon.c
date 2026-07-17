@@ -269,7 +269,7 @@ typedef struct {
 	GPtrArray *checksums;
 	GPtrArray *errors;
 	guint64 flags;
-	GInputStream *stream;
+	FuInputStream *stream;
 	FuDbusDaemon *self;
 	gchar *device_id;
 	gchar *remote_id;
@@ -1048,14 +1048,14 @@ fu_dbus_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMai
 }
 #endif
 
-static GInputStream *
+static FuInputStream *
 fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
@@ -1667,7 +1667,7 @@ fu_dbus_daemon_authorize_emulation_load_cb(GObject *source, GAsyncResult *res, g
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
 	/* get result */
@@ -2538,7 +2538,7 @@ fu_dbus_daemon_method_get_details(FuDbusDaemon *self,
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	gint32 fd_handle = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 
 	/* get parameters */

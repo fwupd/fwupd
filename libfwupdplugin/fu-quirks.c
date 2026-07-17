@@ -20,6 +20,8 @@
 #include "fwupd-error.h"
 
 #include "fu-context-private.h"
+#include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-quirks.h"
@@ -276,7 +278,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	bytes_xml = fu_quirks_convert_keyfile_to_xml(self, bytes, error);
 	if (bytes_xml == NULL)
 		return NULL;
-	return g_memory_input_stream_new_from_bytes(bytes_xml);
+	return G_INPUT_STREAM(fu_memory_input_stream_new_from_bytes(bytes_xml));
 }
 
 static gint
@@ -953,7 +955,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 		g_autofree gchar *fn = NULL;
 		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
 		g_autoptr(GFile) file = NULL;
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(FuInputStream) stream = NULL;
 
 		fn = fu_context_build_filename(self->ctx,
 					       NULL,
@@ -970,7 +972,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 			continue;
 		}
 		g_debug("indexing vendor IDs from %s", fn);
-		stream = G_INPUT_STREAM(g_file_read(file, NULL, error));
+		stream = fu_input_stream_from_path(fn, error);
 		if (stream == NULL)
 			return FALSE;
 		helper->self = self;

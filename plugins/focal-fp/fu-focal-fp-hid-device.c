@@ -441,7 +441,7 @@ fu_focal_fp_hid_device_write_firmware(FuDevice *device,
 	FuFocalFpHidDevice *self = FU_FOCAL_FP_HID_DEVICE(device);
 	guint16 us_ic_id = 0;
 	guint32 checksum = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

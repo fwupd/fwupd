@@ -1334,8 +1334,8 @@ fu_context_detect_container(FuContext *self)
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 
-	if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
-		return;
+	// if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
+		// return;
 	if (g_strstr_len(buf, (gssize)bufsz, "docker") != NULL) {
 		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_CONTAINER);
 		return;

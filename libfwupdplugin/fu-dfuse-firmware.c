@@ -29,7 +29,7 @@ G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
 static FuChunk *
 fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize *offset,
 				    GError **error)
 {
@@ -64,7 +64,7 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 
 static FuFirmware *
 fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     gsize *offset,
 				     GError **error)
 {
@@ -121,14 +121,17 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 }
 
 static gboolean
-fu_dfuse_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_dfuse_firmware_validate(FuFirmware *firmware,
+			   FuInputStream *stream,
+			   gsize offset,
+			   GError **error)
 {
 	return fu_struct_dfuse_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {

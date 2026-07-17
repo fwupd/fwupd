@@ -61,7 +61,7 @@ fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 /* simple validation of the image */
 static gboolean
 fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					GError **error)
 {
 	guint32 magic;
@@ -127,7 +127,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
 
 static gboolean
 fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {

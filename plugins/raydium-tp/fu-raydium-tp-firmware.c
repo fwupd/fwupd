@@ -42,7 +42,7 @@ fu_raydium_tp_firmware_get_product_id(FuRaydiumTpFirmware *self)
 
 static gboolean
 fu_raydium_tp_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -50,8 +50,8 @@ fu_raydium_tp_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) firmware_desc = g_object_new(FU_TYPE_RAYDIUM_TP_IMAGE, NULL);
 	g_autoptr(FuFirmware) firmware_pram = g_object_new(FU_TYPE_RAYDIUM_TP_IMAGE, NULL);
 	g_autoptr(FuStructRaydiumTpFwHdr) st = NULL;
-	g_autoptr(GInputStream) stream_desc = NULL;
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_desc = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 
 	st = fu_struct_raydium_tp_fw_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)

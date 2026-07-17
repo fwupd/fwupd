@@ -622,7 +622,7 @@ fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 }
 
 gboolean
-fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error)
+fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, FuInputStream *stream, GError **error)
 {
 	g_autoptr(FuStructDellKestrelEcDatabytes) st_req =
 	    fu_struct_dell_kestrel_ec_databytes_new();

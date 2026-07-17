@@ -80,7 +80,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 
 static FuFirmware *
 fu_cfu_module_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)

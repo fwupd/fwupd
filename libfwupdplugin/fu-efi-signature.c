@@ -11,6 +11,7 @@
 #include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-signature-private.h"
+#include "fu-input-stream.h"
 
 /**
  * FuEfiSignature:
@@ -126,7 +127,7 @@ fu_efi_signature_get_owner(FuEfiSignature *self)
 
 static gboolean
 fu_efi_signature_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

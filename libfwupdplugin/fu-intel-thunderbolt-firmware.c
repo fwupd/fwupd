@@ -38,14 +38,14 @@ fu_intel_thunderbolt_firmware_nvm_valid_farb_pointer(guint32 pointer)
 
 static gboolean
 fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	const guint32 farb_offsets[] = {0x0, 0x1000};
 	gboolean valid = FALSE;
 	guint32 farb_pointer = 0x0;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* get header offset */
 	for (guint i = 0; i < G_N_ELEMENTS(farb_offsets); i++) {

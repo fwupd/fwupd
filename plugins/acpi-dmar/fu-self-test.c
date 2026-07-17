@@ -14,7 +14,7 @@ fu_acpi_dmar_opt_in_func(void)
 	gboolean ret;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR", NULL);
@@ -41,7 +41,7 @@ fu_acpi_dmar_opt_out_func(void)
 	gboolean ret;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR-OPTOUT", NULL);

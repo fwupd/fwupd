@@ -81,7 +81,7 @@ static gboolean
 fu_igsc_aux_firmware_parse_info(FuIgscAuxFirmware *self, GError **error)
 {
 	g_autoptr(FuStructIgscFwdataVersion) st = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),
 						     FU_IFWI_FPT_FIRMWARE_IDX_INFO,
@@ -104,7 +104,7 @@ fu_igsc_aux_firmware_parse_info(FuIgscAuxFirmware *self, GError **error)
 
 static gboolean
 fu_igsc_aux_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -112,7 +112,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	gboolean has_manifest_ext = FALSE;
 	g_autoptr(FuFirmware) fw_cpd = fu_ifwi_cpd_firmware_new();
 	g_autoptr(FuFirmware) fw_manifest = NULL;
-	g_autoptr(GInputStream) stream_dataimg = NULL;
+	g_autoptr(FuInputStream) stream_dataimg = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* FuIfwiFptFirmware->parse */
@@ -206,6 +206,7 @@ fu_igsc_aux_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_igsc_aux_firmware_init(FuIgscAuxFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 8 * FU_MB);
 	self->device_infos =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_igsc_fwdata_device_info4_unref);
 }

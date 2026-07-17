@@ -81,7 +81,8 @@ fu_msgpack_binary_stream_func(void)
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new(data, sizeof(data));
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = G_INPUT_STREAM(g_memory_input_stream_new_from_bytes(blob));
+	g_autoptr(FuInputStream) stream =
+	    FU_INPUT_STREAM(fu_memory_input_stream_new_from_bytes(blob));
 	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_ptr_array_add(items, fu_msgpack_item_new_binary_stream(stream));

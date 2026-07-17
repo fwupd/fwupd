@@ -22,8 +22,20 @@
     <distro id="freebsd">
       <package variant="amd64" />
     </distro>
-  </dependency>
-  <dependency id="pesign">
+   </dependency>
+   <dependency id="7zip">
+     <distro id="debian">
+       <control>
+         <exclusive>s390x</exclusive>
+       </control>
+     </distro>
+     <distro id="ubuntu">
+       <control />
+       <package variant="x86_64" />
+       <package variant="aarch64" />
+     </distro>
+   </dependency>
+   <dependency id="pesign">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -914,6 +926,17 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="gir1.2-glib-2.0">
+    <distro id="debian">
+      <control />
+      <multi-arch />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="gir1.2-pango-1.0">
     <distro id="centos">
       <package variant="x86_64">pango-devel</package>
@@ -1108,6 +1131,27 @@
       <package>py312-virtualenv</package>
     </distro>
   </dependency>
+  <dependency id="python3-dbus">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-dbus</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="python3-dbusmock">
     <distro id="debian" />
     <distro id="arch">
@@ -1129,6 +1173,27 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
       <package variant="mingw64" />
+    </distro>
+  </dependency>
+  <dependency id="python3-gi">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-gobject</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">python3-gobject</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">python3-gobject</package>
+      <package variant="aarch64">python3-gobject</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-gi-cairo">
@@ -1278,7 +1343,7 @@
       <package>py312-pygobject</package>
     </distro>
   </dependency>
-  <dependency id="python3-requests">
+  <dependency id="python3-flask">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -1287,7 +1352,9 @@
       <package variant="aarch64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <exclusive>s390x</exclusive>
+      </control>
     </distro>
     <distro id="ubuntu">
       <control />

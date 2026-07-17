@@ -9,6 +9,7 @@
 #include <fwupd.h>
 
 #include "fu-endian.h"
+#include "fu-input-stream.h"
 
 typedef enum {
 	FU_INTEGER_BASE_AUTO = 0,
@@ -74,7 +75,7 @@ fu_strsplit_full(const gchar *str,
 		 gpointer user_data,
 		 GError **error) G_GNUC_NON_NULL(1, 3);
 gboolean
-fu_strsplit_stream(GInputStream *stream,
+fu_strsplit_stream(FuInputStream *stream,
 		   gsize offset,
 		   const gchar *delimiter,
 		   FuStrsplitFunc callback,

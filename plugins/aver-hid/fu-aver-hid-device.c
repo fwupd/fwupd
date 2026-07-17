@@ -395,7 +395,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

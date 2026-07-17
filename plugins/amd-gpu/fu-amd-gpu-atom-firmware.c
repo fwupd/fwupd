@@ -63,7 +63,7 @@ fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  gsize offset,
 				  GError **error)
 {
@@ -273,7 +273,7 @@ fu_amd_gpu_atom_firmware_parse_config_filename(FuAmdGpuAtomFirmware *self,
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

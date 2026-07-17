@@ -409,7 +409,7 @@ fu_sunwinon_hid_device_dfu_program_start_cmd(FuSunwinonHidDevice *self,
 	gsize streamsz = 0;
 	g_autoptr(FuStructSunwinonDfuPayloadProgramStart) st_prog_start =
 	    fu_struct_sunwinon_dfu_payload_program_start_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuStructSunwinonDfuImageInfo) st_info = NULL;
 
 	stream = fu_firmware_get_stream(FU_FIRMWARE(firmware_sh), error);
@@ -457,7 +457,7 @@ fu_sunwinon_hid_device_dfu_do_update_normal(FuSunwinonHidDevice *self,
 					    GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* chunkify */
 	stream = fu_firmware_get_stream(FU_FIRMWARE(firmware_sh), error);

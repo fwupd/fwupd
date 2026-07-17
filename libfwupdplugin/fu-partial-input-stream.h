@@ -8,14 +8,16 @@
 
 #include <fwupd.h>
 
+#include "fu-input-stream.h"
+
 #define FU_TYPE_PARTIAL_INPUT_STREAM (fu_partial_input_stream_get_type())
 
 G_DECLARE_FINAL_TYPE(FuPartialInputStream,
 		     fu_partial_input_stream,
 		     FU,
 		     PARTIAL_INPUT_STREAM,
-		     GInputStream)
+		     FuInputStream)
 
-GInputStream *
-fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GError **error)
+FuInputStream *
+fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GError **error)
     G_GNUC_NON_NULL(1);

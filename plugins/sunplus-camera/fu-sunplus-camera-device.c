@@ -565,7 +565,7 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	guint8 checksum_dev = 0;
 	guint8 finish = 0x01;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)

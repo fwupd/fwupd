@@ -242,15 +242,14 @@ fu_kernel_get_config(FuPathStore *pstore, GError **error)
 	if (config_fngz != NULL && g_file_test(config_fngz, G_FILE_TEST_EXISTS)) {
 		g_autoptr(GBytes) payload = NULL;
 		g_autoptr(GConverter) conv = NULL;
-		g_autoptr(GFile) file = g_file_new_for_path(config_fngz);
-		g_autoptr(GInputStream) istream1 = NULL;
-		g_autoptr(GInputStream) istream2 = NULL;
+		g_autoptr(FuInputStream) istream1 = NULL;
+		g_autoptr(FuInputStream) istream2 = NULL;
 
-		istream1 = G_INPUT_STREAM(g_file_read(file, NULL, error));
+		istream1 = fu_input_stream_from_path(config_fngz, error);
 		if (istream1 == NULL)
 			return NULL;
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-		istream2 = g_converter_input_stream_new(istream1, conv);
+		istream2 = g_converter_input_stream_new(G_INPUT_STREAM(istream1), conv);
 		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return NULL;

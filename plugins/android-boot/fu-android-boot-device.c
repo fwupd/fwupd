@@ -275,7 +275,7 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get data to write */

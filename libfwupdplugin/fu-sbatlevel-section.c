@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuSbatlevelSection, fu_sbatlevel_section, FU_TYPE_FIRMWARE);
 
 static gboolean
 fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       const gchar *entry_name,
 			       guint64 entry_idx,
@@ -29,7 +29,7 @@ fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 {
 	gsize streamsz = 0;
 	g_autoptr(FuFirmware) entry_fw = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* stop at the null terminator */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -80,7 +80,7 @@ fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 
 static gboolean
 fu_sbatlevel_section_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {

@@ -357,7 +357,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 
 static gboolean
 fu_smbios_parse(FuFirmware *firmware,
-		GInputStream *stream,
+		FuInputStream *stream,
 		FuFirmwareParseFlags flags,
 		GError **error)
 {

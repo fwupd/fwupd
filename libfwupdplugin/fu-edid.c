@@ -11,6 +11,7 @@
 #include "fu-common.h"
 #include "fu-edid-struct.h"
 #include "fu-edid.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 struct _FuEdid {
@@ -218,7 +219,7 @@ fu_edid_strsafe(const guint8 *buf, gsize bufsz)
 }
 
 static gboolean
-fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GError **error)
+fu_edid_parse_descriptor(FuEdid *self, FuInputStream *stream, gsize offset, GError **error)
 {
 	gsize buf2sz = 0;
 	const guint8 *buf2;
@@ -253,7 +254,7 @@ fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GErro
 
 static gboolean
 fu_edid_parse(FuFirmware *firmware,
-	      GInputStream *stream,
+	      FuInputStream *stream,
 	      FuFirmwareParseFlags flags,
 	      GError **error)
 {

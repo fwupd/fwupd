@@ -54,6 +54,7 @@ typedef struct {
 	FuPluginData *data;
 	FuPluginVfuncs vfuncs;
 	GArray *private_flags; /* (element-type GQuark) */
+
 } FuPluginPrivate;
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };

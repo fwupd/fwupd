@@ -61,13 +61,13 @@ fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
 	return NULL;
 }
 
-static GInputStream *
+static FuInputStream *
 fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceEvent *event = NULL;
 	const gchar *fn;
 	g_autofree gchar *event_id = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* need event ID */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -85,7 +85,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
 			return NULL;
-		return g_memory_input_stream_new_from_bytes(blob);
+		return fu_memory_input_stream_new_from_bytes(blob);
 	}
 
 	/* save */
@@ -126,7 +126,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* fall back to a generic firmware when no specific type was detected */
 	if (firmware_gtype == G_TYPE_INVALID)
@@ -168,12 +168,12 @@ fu_mtd_device_metadata_ensure_version_from_image(FuMtdDevice *self,
 }
 
 static gboolean
-fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) img0 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_uswid_firmware_new();
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 
 	/* cut it down to something reasonable, then parse */
 	if (priv->metadata_offset > 0 || priv->metadata_size > 0) {
@@ -209,13 +209,13 @@ fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GErro
 }
 
 static gboolean
-fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 	g_autoptr(FuFirmware) firmware_sbom = fu_uswid_firmware_new();
 	g_autoptr(FuFirmware) img0 = NULL;
-	g_autoptr(GInputStream) stream_sbom = NULL;
+	g_autoptr(FuInputStream) stream_sbom = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* parse as firmware image */
@@ -269,7 +269,7 @@ fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError
 }
 
 static gboolean
-fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, GInputStream *stream, GError **error)
+fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
@@ -313,7 +313,7 @@ static gboolean
 fu_mtd_device_metadata_load_versions(FuMtdDevice *self, GError **error)
 {
 	GType firmware_gtype = fu_device_get_firmware_gtype(FU_DEVICE(self));
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* read firmware from stream */
 	stream = fu_mtd_device_read_stream(self, NULL, error);
@@ -776,7 +776,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_mtd_device_erase(FuMtdDevice *self,
-		    GInputStream *stream,
+		    FuInputStream *stream,
 		    gsize offset,
 		    FuProgress *progress,
 		    GError **error)
@@ -929,7 +929,7 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 
 static gboolean
 fu_mtd_device_write_verify(FuMtdDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   gsize offset,
 			   FuProgress *progress,
 			   GError **error)
@@ -999,7 +999,7 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 
 static gboolean
 fu_mtd_device_write_stream(FuMtdDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   gsize offset,
 			   FuProgress *progress,
 			   GError **error)
@@ -1037,7 +1037,7 @@ fu_mtd_device_write_stream(FuMtdDevice *self,
 gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
 {
-	g_autoptr(GInputStream) img_stream = NULL;
+	g_autoptr(FuInputStream) img_stream = NULL;
 
 	img_stream = fu_firmware_get_stream(img, error);
 	if (img_stream == NULL)
@@ -1054,7 +1054,7 @@ fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progre
 
 static FuFirmware *
 fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -1107,7 +1107,7 @@ fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
 
 static FuFirmware *
 fu_mtd_device_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -1136,7 +1136,7 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get data to write */
 	stream = fu_firmware_get_stream(firmware, error);
