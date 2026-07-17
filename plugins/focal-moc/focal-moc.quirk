@@ -4,4 +4,4 @@
 # Matching on VID only so that all FocalTech fingerprint sensors are handled
 # regardless of PID — the device probe() will reject non-fingerprint products.
 [USB\VID_2808]
-Plugin = focaltech_moc
+Plugin = focal_moc

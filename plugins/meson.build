@@ -53,7 +53,7 @@ plugins = {
   'fastboot': false,
   'focal-fp': false,
   'focal-touch': false,
-  'focaltech-moc': false,
+  'focal-moc': false,
   'fpc': false,
   'framework-qmk': false,
   'fresco-pd': false,

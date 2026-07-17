@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-focaltech-moc-device.h"
-#include "fu-focaltech-moc-struct.h"
+#include "fu-focal-moc-device.h"
+#include "fu-focal-moc-struct.h"
 
 /*
  * FocalTech MOC fingerprint sensor — USB firmware-update plugin.
@@ -43,48 +43,48 @@
  *      [wait for replug]
  */
 
-struct _FuFocaltechMocDevice {
+struct _FuFocalMocDevice {
 	FuUsbDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuFocaltechMocDevice, fu_focaltech_moc_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuFocalMocDevice, fu_focal_moc_device, FU_TYPE_USB_DEVICE)
 
 /* USB bulk endpoints (UpgradeTool detects these at runtime; standard values) */
-#define FU_FOCALTECH_MOC_USB_EP_IN     (1 | 0x80)
-#define FU_FOCALTECH_MOC_USB_EP_OUT    (2 | 0x00)
-#define FU_FOCALTECH_MOC_USB_INTERFACE 0
+#define FU_FOCAL_MOC_USB_EP_IN     (1 | 0x80)
+#define FU_FOCAL_MOC_USB_EP_OUT    (2 | 0x00)
+#define FU_FOCAL_MOC_USB_INTERFACE 0
 
-#define FU_FOCALTECH_MOC_USB_TIMEOUT	    1000 /* ms — send */
-#define FU_FOCALTECH_MOC_RECV_TIMEOUT	    1000 /* ms — receive (1 s, matching UpgradeTool) */
-#define FU_FOCALTECH_MOC_RECV_FINAL_TIMEOUT 2000 /* ms — longer wait after EOT */
+#define FU_FOCAL_MOC_USB_TIMEOUT	    1000 /* ms — send */
+#define FU_FOCAL_MOC_RECV_TIMEOUT	    1000 /* ms — receive (1 s, matching UpgradeTool) */
+#define FU_FOCAL_MOC_RECV_FINAL_TIMEOUT 2000 /* ms — longer wait after EOT */
 
 /* MSG_MAGIC from ff_trans.h */
-#define FU_FOCALTECH_MOC_MSG_MAGIC 0x02
+#define FU_FOCAL_MOC_MSG_MAGIC 0x02
 
 /* Firmware-download packet constants (ff_update.c) */
-#define FU_FOCALTECH_MOC_DL_BLOCK_SIZE 1024	    /* bytes per STX/EOT data block */
-#define FU_FOCALTECH_MOC_FW_MAX_SIZE   (256 * 1024) /* 256 KiB hard limit */
-#define FU_FOCALTECH_MOC_FILENAME_LEN  64	    /* filename field in SHO packet */
+#define FU_FOCAL_MOC_DL_BLOCK_SIZE 1024	    /* bytes per STX/EOT data block */
+#define FU_FOCAL_MOC_FW_MAX_SIZE   (256 * 1024) /* 256 KiB hard limit */
+#define FU_FOCAL_MOC_FILENAME_LEN  64	    /* filename field in SHO packet */
 
 /* Delays matching UpgradeTool (ff_util_msleep calls) */
-#define FU_FOCALTECH_MOC_DELAY_CMD_MS	5   /* after version/mode commands */
-#define FU_FOCALTECH_MOC_DELAY_DL_MS	10  /* between download packets */
-#define FU_FOCALTECH_MOC_DELAY_FINAL_MS 200 /* before reading final ACK */
+#define FU_FOCAL_MOC_DELAY_CMD_MS	5   /* after version/mode commands */
+#define FU_FOCAL_MOC_DELAY_DL_MS	10  /* between download packets */
+#define FU_FOCAL_MOC_DELAY_FINAL_MS 200 /* before reading final ACK */
 
 /* Maximum receive buffer (covers any response packet) */
-#define FU_FOCALTECH_MOC_MAX_RSP_SIZE 256
+#define FU_FOCAL_MOC_MAX_RSP_SIZE 256
 
 /* --------------------------------------------------------------------------
  * Low-level helpers
  * -------------------------------------------------------------------------- */
 
 /*
- * fu_focaltech_moc_device_bcc:
+ * fu_focal_moc_device_bcc:
  * BCC = XOR of every byte in buf[0..len-1].
  * Covers the slice starting at LEN_HI (i.e. skip the leading 0x02 magic).
  */
 static guint8
-fu_focaltech_moc_device_bcc(const guint8 *buf, gsize len)
+fu_focal_moc_device_bcc(const guint8 *buf, gsize len)
 {
 	guint8 bcc = 0;
 	for (gsize i = 0; i < len; i++)
@@ -97,22 +97,22 @@ fu_focaltech_moc_device_bcc(const guint8 *buf, gsize len)
  * -------------------------------------------------------------------------- */
 
 /*
- * fu_focaltech_moc_device_send:
+ * fu_focal_moc_device_send:
  * Transmit @pkt over the bulk-OUT endpoint.
  */
 static gboolean
-fu_focaltech_moc_device_send(FuFocaltechMocDevice *self, GByteArray *pkt, GError **error)
+fu_focal_moc_device_send(FuFocalMocDevice *self, GByteArray *pkt, GError **error)
 {
 	gsize actual = 0;
 
 	fu_dump_full(G_LOG_DOMAIN, "SEND", pkt->data, pkt->len, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_FOCALTECH_MOC_USB_EP_OUT,
+					 FU_FOCAL_MOC_USB_EP_OUT,
 					 pkt->data,
 					 pkt->len,
 					 &actual,
-					 FU_FOCALTECH_MOC_USB_TIMEOUT,
+					 FU_FOCAL_MOC_USB_TIMEOUT,
 					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "send failed: ");
@@ -131,7 +131,7 @@ fu_focaltech_moc_device_send(FuFocaltechMocDevice *self, GByteArray *pkt, GError
 }
 
 /*
- * fu_focaltech_moc_device_recv_ack:
+ * fu_focal_moc_device_recv_ack:
  * Read one response packet and verify it is an ACK (CMD == 0x04).
  * Uses @timeout_ms to allow a longer wait for the final EOT response.
  *
@@ -140,17 +140,17 @@ fu_focaltech_moc_device_send(FuFocaltechMocDevice *self, GByteArray *pkt, GError
  * Success = CMD == 0x04.  No in-band status byte.
  */
 static gboolean
-fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, GError **error)
+fu_focal_moc_device_recv_ack(FuFocalMocDevice *self, guint timeout_ms, GError **error)
 {
 	gsize actual = 0;
 	guint16 pkt_ln;
 	guint8 bcc_calc;
 	guint8 bcc_recv;
-	guint8 buf[FU_FOCALTECH_MOC_MAX_RSP_SIZE] = {0};
-	g_autoptr(FuStructFocaltechMocCmdRsp) st_res = NULL;
+	guint8 buf[FU_FOCAL_MOC_MAX_RSP_SIZE] = {0};
+	g_autoptr(FuStructFocalMocCmdRsp) st_res = NULL;
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_FOCALTECH_MOC_USB_EP_IN,
+					 FU_FOCAL_MOC_USB_EP_IN,
 					 buf,
 					 sizeof(buf),
 					 &actual,
@@ -174,24 +174,24 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 	fu_dump_full(G_LOG_DOMAIN, "RECV", buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	/* parse the 4-byte response header */
-	st_res = fu_struct_focaltech_moc_cmd_rsp_parse(buf, sizeof(buf), 0, error);
+	st_res = fu_struct_focal_moc_cmd_rsp_parse(buf, sizeof(buf), 0, error);
 	if (st_res == NULL)
 		return FALSE;
 
 	/* validate magic */
-	if (fu_struct_focaltech_moc_cmd_rsp_get_head(st_res) != FU_FOCALTECH_MOC_MSG_MAGIC) {
+	if (fu_struct_focal_moc_cmd_rsp_get_head(st_res) != FU_FOCAL_MOC_MSG_MAGIC) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "bad magic: 0x%02x",
-			    fu_struct_focaltech_moc_cmd_rsp_get_head(st_res));
+			    fu_struct_focal_moc_cmd_rsp_get_head(st_res));
 		return FALSE;
 	}
 
 	/* Use LN field to locate BCC; actual may include USB padding bytes.
 	 * Device sends [MAGIC|LN_HI|LN_LO|CMD...|BCC] where BCC is at buf[3+LN].
 	 * actual-1 is wrong when USB pads the response. */
-	pkt_ln = fu_struct_focaltech_moc_cmd_rsp_get_ln(st_res);
+	pkt_ln = fu_struct_focal_moc_cmd_rsp_get_ln(st_res);
 	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -201,7 +201,7 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 			    actual);
 		return FALSE;
 	}
-	bcc_calc = fu_focaltech_moc_device_bcc(buf + 1, 2 + pkt_ln);
+	bcc_calc = fu_focal_moc_device_bcc(buf + 1, 2 + pkt_ln);
 	bcc_recv = buf[3 + pkt_ln];
 	if (bcc_calc != bcc_recv) {
 		g_set_error(error,
@@ -214,12 +214,12 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 	}
 
 	/* check ACK command byte */
-	if (fu_struct_focaltech_moc_cmd_rsp_get_cmd(st_res) != FU_FOCALTECH_MOC_CMD_ACK) {
+	if (fu_struct_focal_moc_cmd_rsp_get_cmd(st_res) != FU_FOCAL_MOC_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "expected ACK (0x04), got 0x%02x",
-			    fu_struct_focaltech_moc_cmd_rsp_get_cmd(st_res));
+			    fu_struct_focal_moc_cmd_rsp_get_cmd(st_res));
 		return FALSE;
 	}
 
@@ -227,7 +227,7 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
 }
 
 /*
- * fu_focaltech_moc_device_cmd_xfer:
+ * fu_focal_moc_device_cmd_xfer:
  * Send a standard command packet and receive the ACK.
  *
  * Builds:  [ 0x02 | ln(BE) | cmd | payload... | BCC ]
@@ -236,8 +236,8 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, G
  * @delay_ms: sleep between send and recv (matches UpgradeTool's ff_util_msleep)
  */
 static gboolean
-fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
-				 FuFocaltechMocCmd cmd,
+fu_focal_moc_device_cmd_xfer(FuFocalMocDevice *self,
+				 FuFocalMocCmd cmd,
 				 const guint8 *payload,
 				 gsize payload_len,
 				 guint delay_ms,
@@ -246,29 +246,29 @@ fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
 	guint16 ln;
 	guint8 bcc;
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
-	g_autoptr(FuStructFocaltechMocCmdReq) st_req = NULL;
+	g_autoptr(FuStructFocalMocCmdReq) st_req = NULL;
 
 	/* LEN = payload bytes + 1 (for BCC) */
 	ln = (guint16)(payload_len + 1);
 
-	st_req = fu_struct_focaltech_moc_cmd_req_new();
-	fu_struct_focaltech_moc_cmd_req_set_head(st_req, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_struct_focaltech_moc_cmd_req_set_ln(st_req, ln);
-	fu_struct_focaltech_moc_cmd_req_set_cmd(st_req, cmd);
+	st_req = fu_struct_focal_moc_cmd_req_new();
+	fu_struct_focal_moc_cmd_req_set_head(st_req, FU_FOCAL_MOC_MSG_MAGIC);
+	fu_struct_focal_moc_cmd_req_set_ln(st_req, ln);
+	fu_struct_focal_moc_cmd_req_set_cmd(st_req, cmd);
 	g_byte_array_append(pkt, st_req->buf->data, st_req->buf->len);
 	if (payload != NULL && payload_len > 0)
 		g_byte_array_append(pkt, payload, payload_len);
 
 	/* BCC covers pkt[1..] (skip magic byte) */
-	bcc = fu_focaltech_moc_device_bcc(pkt->data + 1, pkt->len - 1);
+	bcc = fu_focal_moc_device_bcc(pkt->data + 1, pkt->len - 1);
 	fu_byte_array_append_uint8(pkt, bcc);
 
-	if (!fu_focaltech_moc_device_send(self, pkt, error))
+	if (!fu_focal_moc_device_send(self, pkt, error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), delay_ms);
 
-	return fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_TIMEOUT, error);
+	return fu_focal_moc_device_recv_ack(self, FU_FOCAL_MOC_RECV_TIMEOUT, error);
 }
 
 /* --------------------------------------------------------------------------
@@ -276,7 +276,7 @@ fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
  * -------------------------------------------------------------------------- */
 
 /*
- * fu_focaltech_moc_device_ensure_version:
+ * fu_focal_moc_device_ensure_version:
  *
  * CMD 0x30 — ff_update.c:ff_get_firmware_version()
  *
@@ -285,42 +285,42 @@ fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
  * No status byte precedes the string.
  */
 static gboolean
-fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **error)
+fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 {
 	gsize actual = 0;
 	guint8 bcc_calc, bcc_recv;
 	guint8 rx_buf[64] = {0};
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
-	g_autoptr(FuStructFocaltechMocVersionRsp) st_res = NULL;
-	g_autoptr(FuStructFocaltechMocCmdReq) st_req = NULL;
-	g_autoptr(FuStructFocaltechMocCmdRsp) st_hdr = NULL;
+	g_autoptr(FuStructFocalMocVersionRsp) st_res = NULL;
+	g_autoptr(FuStructFocalMocCmdReq) st_req = NULL;
+	g_autoptr(FuStructFocalMocCmdRsp) st_hdr = NULL;
 	g_autofree gchar *version = NULL;
 	guint16 ln, pkt_ln;
 	guint8 bcc;
 
 	/* build: [ 0x02 | 0x00 0x01 | 0x30 | BCC ] */
 	ln = 1; /* no data payload, just BCC */
-	st_req = fu_struct_focaltech_moc_cmd_req_new();
-	fu_struct_focaltech_moc_cmd_req_set_head(st_req, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_struct_focaltech_moc_cmd_req_set_ln(st_req, ln);
-	fu_struct_focaltech_moc_cmd_req_set_cmd(st_req, FU_FOCALTECH_MOC_CMD_GET_FW_VERSION);
+	st_req = fu_struct_focal_moc_cmd_req_new();
+	fu_struct_focal_moc_cmd_req_set_head(st_req, FU_FOCAL_MOC_MSG_MAGIC);
+	fu_struct_focal_moc_cmd_req_set_ln(st_req, ln);
+	fu_struct_focal_moc_cmd_req_set_cmd(st_req, FU_FOCAL_MOC_CMD_GET_FW_VERSION);
 	g_byte_array_append(pkt, st_req->buf->data, st_req->buf->len);
-	bcc = fu_focaltech_moc_device_bcc(pkt->data + 1, pkt->len - 1);
+	bcc = fu_focal_moc_device_bcc(pkt->data + 1, pkt->len - 1);
 	fu_byte_array_append_uint8(pkt, bcc);
 
-	if (!fu_focaltech_moc_device_send(self, pkt, error)) {
+	if (!fu_focal_moc_device_send(self, pkt, error)) {
 		g_prefix_error_literal(error, "version: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_CMD_MS);
+	fu_device_sleep(FU_DEVICE(self), FU_FOCAL_MOC_DELAY_CMD_MS);
 
 	/* receive response */
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_FOCALTECH_MOC_USB_EP_IN,
+					 FU_FOCAL_MOC_USB_EP_IN,
 					 rx_buf,
 					 sizeof(rx_buf),
 					 &actual,
-					 FU_FOCALTECH_MOC_RECV_TIMEOUT,
+					 FU_FOCAL_MOC_RECV_TIMEOUT,
 					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "version recv: ");
@@ -339,10 +339,10 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	}
 
 	/* parse the 4-byte response header to obtain LN and validate magic */
-	st_hdr = fu_struct_focaltech_moc_cmd_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
+	st_hdr = fu_struct_focal_moc_cmd_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
 	if (st_hdr == NULL)
 		return FALSE;
-	if (fu_struct_focaltech_moc_cmd_rsp_get_head(st_hdr) != FU_FOCALTECH_MOC_MSG_MAGIC) {
+	if (fu_struct_focal_moc_cmd_rsp_get_head(st_hdr) != FU_FOCAL_MOC_MSG_MAGIC) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -351,7 +351,7 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	}
 
 	/* use LN from the header struct to locate BCC accurately */
-	pkt_ln = fu_struct_focaltech_moc_cmd_rsp_get_ln(st_hdr);
+	pkt_ln = fu_struct_focal_moc_cmd_rsp_get_ln(st_hdr);
 	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual ||
 	    (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
 		g_set_error_literal(error,
@@ -360,7 +360,7 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 				    "version response LN out of range");
 		return FALSE;
 	}
-	bcc_calc = fu_focaltech_moc_device_bcc(rx_buf + 1, 2 + pkt_ln);
+	bcc_calc = fu_focal_moc_device_bcc(rx_buf + 1, 2 + pkt_ln);
 	bcc_recv = rx_buf[3 + pkt_ln];
 	if (bcc_calc != bcc_recv) {
 		g_set_error(error,
@@ -376,25 +376,25 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	rx_buf[3 + pkt_ln] = '\0';
 
 	/* parse response: char[60] guarantees NUL-termination and safe printing */
-	st_res = fu_struct_focaltech_moc_version_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
+	st_res = fu_struct_focal_moc_version_rsp_parse(rx_buf, sizeof(rx_buf), 0, error);
 	if (st_res == NULL)
 		return FALSE;
-	if (fu_struct_focaltech_moc_version_rsp_get_cmd(st_res) != FU_FOCALTECH_MOC_CMD_ACK) {
+	if (fu_struct_focal_moc_version_rsp_get_cmd(st_res) != FU_FOCAL_MOC_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "version: expected ACK, got 0x%02x",
-			    fu_struct_focaltech_moc_version_rsp_get_cmd(st_res));
+			    fu_struct_focal_moc_version_rsp_get_cmd(st_res));
 		return FALSE;
 	}
 
-	version = fu_struct_focaltech_moc_version_rsp_get_version(st_res);
+	version = fu_struct_focal_moc_version_rsp_get_version(st_res);
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
 
 /*
- * fu_focaltech_moc_device_set_boot_mode:
+ * fu_focal_moc_device_set_boot_mode:
  *
  * CMD 0x32 — ff_update.c:ff_set_bootloader_mode()
  *
@@ -402,21 +402,21 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
  *   LEN = 2  (1 data byte + 1 BCC)
  */
 static gboolean
-fu_focaltech_moc_device_set_boot_mode(FuFocaltechMocDevice *self,
-				      FuFocaltechMocBootMode mode,
+fu_focal_moc_device_set_boot_mode(FuFocalMocDevice *self,
+				      FuFocalMocBootMode mode,
 				      GError **error)
 {
 	guint8 payload = (guint8)mode;
-	return fu_focaltech_moc_device_cmd_xfer(self,
-						FU_FOCALTECH_MOC_CMD_SET_BOOT_MODE,
+	return fu_focal_moc_device_cmd_xfer(self,
+						FU_FOCAL_MOC_CMD_SET_BOOT_MODE,
 						&payload,
 						1,
-						FU_FOCALTECH_MOC_DELAY_CMD_MS,
+						FU_FOCAL_MOC_DELAY_CMD_MS,
 						error);
 }
 
 /*
- * fu_focaltech_moc_device_dl_pkt:
+ * fu_focal_moc_device_dl_pkt:
  * Build and send one firmware-download packet (ff_down_buf_t layout).
  *
  * Wire format:
@@ -429,8 +429,8 @@ fu_focaltech_moc_device_set_boot_mode(FuFocaltechMocDevice *self,
  * BCC covers pkt[1..tx_len-1].
  */
 static gboolean
-fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
-			       FuFocaltechMocMagic magic,
+fu_focal_moc_device_dl_pkt(FuFocalMocDevice *self,
+			       FuFocalMocMagic magic,
 			       guint8 seq,
 			       const guint8 *data,
 			       gsize data_len,
@@ -439,7 +439,7 @@ fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
 	guint16 ln;
 	guint8 bcc;
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
-	g_autoptr(FuStructFocaltechMocDlHdr) st_req = NULL;
+	g_autoptr(FuStructFocalMocDlHdr) st_req = NULL;
 
 	/*
 	 * LN field from ff_update.c: tx_buf->ln = u16_swap_endian(1 + 2 + dlen)
@@ -448,21 +448,21 @@ fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
 	 */
 	ln = (guint16)(3 + data_len);
 
-	st_req = fu_struct_focaltech_moc_dl_hdr_new();
-	fu_struct_focaltech_moc_dl_hdr_set_head(st_req, FU_FOCALTECH_MOC_MSG_MAGIC);
-	fu_struct_focaltech_moc_dl_hdr_set_ln(st_req, ln);
-	fu_struct_focaltech_moc_dl_hdr_set_cmd(st_req, FU_FOCALTECH_MOC_CMD_FW_DOWNLOAD);
-	fu_struct_focaltech_moc_dl_hdr_set_magic(st_req, magic);
-	fu_struct_focaltech_moc_dl_hdr_set_seq(st_req, seq);
+	st_req = fu_struct_focal_moc_dl_hdr_new();
+	fu_struct_focal_moc_dl_hdr_set_head(st_req, FU_FOCAL_MOC_MSG_MAGIC);
+	fu_struct_focal_moc_dl_hdr_set_ln(st_req, ln);
+	fu_struct_focal_moc_dl_hdr_set_cmd(st_req, FU_FOCAL_MOC_CMD_FW_DOWNLOAD);
+	fu_struct_focal_moc_dl_hdr_set_magic(st_req, magic);
+	fu_struct_focal_moc_dl_hdr_set_seq(st_req, seq);
 	g_byte_array_append(pkt, st_req->buf->data, st_req->buf->len);
 	if (data != NULL && data_len > 0)
 		g_byte_array_append(pkt, data, data_len);
 
 	/* BCC: covers pkt[1..] */
-	bcc = fu_focaltech_moc_device_bcc(pkt->data + 1, pkt->len - 1);
+	bcc = fu_focal_moc_device_bcc(pkt->data + 1, pkt->len - 1);
 	fu_byte_array_append_uint8(pkt, bcc);
 
-	return fu_focaltech_moc_device_send(self, pkt, error);
+	return fu_focal_moc_device_send(self, pkt, error);
 }
 
 /* --------------------------------------------------------------------------
@@ -470,15 +470,15 @@ fu_focaltech_moc_device_dl_pkt(FuFocaltechMocDevice *self,
  * -------------------------------------------------------------------------- */
 
 /*
- * fu_focaltech_moc_device_probe:
+ * fu_focal_moc_device_probe:
  *
  * Chain up to parent FIRST (sets VID/PID from USB descriptor),
  * then guard against non-FocalTech devices.
  */
 static gboolean
-fu_focaltech_moc_device_probe(FuDevice *device, GError **error)
+fu_focal_moc_device_probe(FuDevice *device, GError **error)
 {
-	if (!FU_DEVICE_CLASS(fu_focaltech_moc_device_parent_class)->probe(device, error))
+	if (!FU_DEVICE_CLASS(fu_focal_moc_device_parent_class)->probe(device, error))
 		return FALSE;
 
 	if (fu_device_get_vid(device) != 0x2808) {
@@ -494,14 +494,14 @@ fu_focaltech_moc_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_focaltech_moc_device_setup(FuDevice *device, GError **error)
+fu_focal_moc_device_setup(FuDevice *device, GError **error)
 {
-	FuFocaltechMocDevice *self = FU_FOCALTECH_MOC_DEVICE(device);
+	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
 
-	if (!FU_DEVICE_CLASS(fu_focaltech_moc_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_focal_moc_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_focaltech_moc_device_ensure_version(self, error)) {
+	if (!fu_focal_moc_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "failed to read firmware version: ");
 		return FALSE;
 	}
@@ -510,16 +510,16 @@ fu_focaltech_moc_device_setup(FuDevice *device, GError **error)
 }
 
 /*
- * fu_focaltech_moc_device_detach:
+ * fu_focal_moc_device_detach:
  * CMD 0x32(mode=1) — enter bootloader, then wait for device re-enumeration.
  */
 static gboolean
-fu_focaltech_moc_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_focal_moc_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuFocaltechMocDevice *self = FU_FOCALTECH_MOC_DEVICE(device);
+	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
 
-	if (!fu_focaltech_moc_device_set_boot_mode(self,
-						   FU_FOCALTECH_MOC_BOOT_MODE_ENTER_BOOT,
+	if (!fu_focal_moc_device_set_boot_mode(self,
+						   FU_FOCAL_MOC_BOOT_MODE_ENTER_BOOT,
 						   error)) {
 		g_prefix_error_literal(error, "failed to enter bootloader mode: ");
 		return FALSE;
@@ -530,7 +530,7 @@ fu_focaltech_moc_device_detach(FuDevice *device, FuProgress *progress, GError **
 }
 
 /*
- * fu_focaltech_moc_device_write_firmware:
+ * fu_focal_moc_device_write_firmware:
  *
  * CMD 0x33 — ff_update.c:ff_download_firmware()
  *
@@ -544,13 +544,13 @@ fu_focaltech_moc_device_detach(FuDevice *device, FuProgress *progress, GError **
  * block uses magic=EOT instead of STX to signal end-of-data.
  */
 static gboolean
-fu_focaltech_moc_device_write_firmware(FuDevice *device,
+fu_focal_moc_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
 				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
-	FuFocaltechMocDevice *self = FU_FOCALTECH_MOC_DEVICE(device);
+	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
 	const guint8 *fw_data;
 	gsize fw_size;
 	guint total_blocks;
@@ -578,18 +578,18 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	fw_data = g_bytes_get_data(fw, &fw_size);
-	if (fw_size == 0 || fw_size > FU_FOCALTECH_MOC_FW_MAX_SIZE) {
+	if (fw_size == 0 || fw_size > FU_FOCAL_MOC_FW_MAX_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware size %zu out of valid range (1..%u)",
 			    fw_size,
-			    (guint)FU_FOCALTECH_MOC_FW_MAX_SIZE);
+			    (guint)FU_FOCAL_MOC_FW_MAX_SIZE);
 		return FALSE;
 	}
 
-	total_blocks = (guint)(fw_size / FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
-	remain = (guint)(fw_size % FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
+	total_blocks = (guint)(fw_size / FU_FOCAL_MOC_DL_BLOCK_SIZE);
+	remain = (guint)(fw_size % FU_FOCAL_MOC_DL_BLOCK_SIZE);
 
 	/* the original tool rejects firmwares smaller than 2 full blocks */
 	if (total_blocks < 2) {
@@ -606,24 +606,24 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 	crc32 = fu_crc32(FU_CRC_KIND_B32_STANDARD, fw_data, fw_size);
 
 	/* filename field: use a fixed placeholder (device ignores actual name) */
-	g_strlcpy((gchar *)sho_data, "firmware.bin", FU_FOCALTECH_MOC_FILENAME_LEN);
+	g_strlcpy((gchar *)sho_data, "firmware.bin", FU_FOCAL_MOC_FILENAME_LEN);
 	if (!fu_memwrite_uint32_safe(sho_data,
 				     sizeof(sho_data),
-				     FU_FOCALTECH_MOC_FILENAME_LEN,
+				     FU_FOCAL_MOC_FILENAME_LEN,
 				     (guint32)fw_size,
 				     G_BIG_ENDIAN,
 				     error))
 		return FALSE;
 	if (!fu_memwrite_uint32_safe(sho_data,
 				     sizeof(sho_data),
-				     FU_FOCALTECH_MOC_FILENAME_LEN + 4,
+				     FU_FOCAL_MOC_FILENAME_LEN + 4,
 				     crc32,
 				     G_BIG_ENDIAN,
 				     error))
 		return FALSE;
 
-	if (!fu_focaltech_moc_device_dl_pkt(self,
-					    FU_FOCALTECH_MOC_MAGIC_SHO,
+	if (!fu_focal_moc_device_dl_pkt(self,
+					    FU_FOCAL_MOC_MAGIC_SHO,
 					    seq++,
 					    sho_data,
 					    sizeof(sho_data),
@@ -631,8 +631,8 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "SHO packet send failed: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_DL_MS);
-	if (!fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_TIMEOUT, error)) {
+	fu_device_sleep(FU_DEVICE(self), FU_FOCAL_MOC_DELAY_DL_MS);
+	if (!fu_focal_moc_device_recv_ack(self, FU_FOCAL_MOC_RECV_TIMEOUT, error)) {
 		g_prefix_error_literal(error, "SHO ACK failed: ");
 		return FALSE;
 	}
@@ -646,21 +646,21 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 	 * then the final ACK collection below handles the end-of-download response.
 	 */
 	for (guint i = 0; i < total_blocks; i++) {
-		const guint8 *block = fw_data + (gsize)i * FU_FOCALTECH_MOC_DL_BLOCK_SIZE;
+		const guint8 *block = fw_data + (gsize)i * FU_FOCAL_MOC_DL_BLOCK_SIZE;
 
-		if (!fu_focaltech_moc_device_dl_pkt(self,
-						    FU_FOCALTECH_MOC_MAGIC_STX,
+		if (!fu_focal_moc_device_dl_pkt(self,
+						    FU_FOCAL_MOC_MAGIC_STX,
 						    seq++,
 						    block,
-						    FU_FOCALTECH_MOC_DL_BLOCK_SIZE,
+						    FU_FOCAL_MOC_DL_BLOCK_SIZE,
 						    error)) {
 			g_prefix_error(error, "block %u send failed: ", i);
 			return FALSE;
 		}
-		fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_DL_MS);
+		fu_device_sleep(FU_DEVICE(self), FU_FOCAL_MOC_DELAY_DL_MS);
 
 		/* per-block ACK for every STX packet, matching ff_update.c */
-		if (!fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_TIMEOUT, error)) {
+		if (!fu_focal_moc_device_recv_ack(self, FU_FOCAL_MOC_RECV_TIMEOUT, error)) {
 			g_prefix_error(error, "block %u ACK failed: ", i);
 			return FALSE;
 		}
@@ -676,22 +676,22 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 		 * Original tool sends a full-sized buffer (1024) even for the tail;
 		 * the unused bytes are zero from memset.  Mirror that exactly.
 		 */
-		guint8 tail_buf[FU_FOCALTECH_MOC_DL_BLOCK_SIZE] = {0};
+		guint8 tail_buf[FU_FOCAL_MOC_DL_BLOCK_SIZE] = {0};
 		if (!fu_memcpy_safe(tail_buf,
 				    sizeof(tail_buf),
 				    0,
 				    fw_data,
 				    fw_size,
-				    (gsize)total_blocks * FU_FOCALTECH_MOC_DL_BLOCK_SIZE,
+				    (gsize)total_blocks * FU_FOCAL_MOC_DL_BLOCK_SIZE,
 				    remain,
 				    error))
 			return FALSE;
 
-		if (!fu_focaltech_moc_device_dl_pkt(self,
-						    FU_FOCALTECH_MOC_MAGIC_EOT,
+		if (!fu_focal_moc_device_dl_pkt(self,
+						    FU_FOCAL_MOC_MAGIC_EOT,
 						    seq++,
 						    tail_buf,
-						    FU_FOCALTECH_MOC_DL_BLOCK_SIZE,
+						    FU_FOCAL_MOC_DL_BLOCK_SIZE,
 						    error)) {
 			g_prefix_error_literal(error, "EOT packet send failed: ");
 			return FALSE;
@@ -699,8 +699,8 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 	}
 
 	/* ── Final ACK (covers the last block whether STX-promoted-to-EOT or a separate EOT) */
-	fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_FINAL_MS);
-	if (!fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_FINAL_TIMEOUT, error)) {
+	fu_device_sleep(FU_DEVICE(self), FU_FOCAL_MOC_DELAY_FINAL_MS);
+	if (!fu_focal_moc_device_recv_ack(self, FU_FOCAL_MOC_RECV_FINAL_TIMEOUT, error)) {
 		g_prefix_error_literal(error, "final ACK failed: ");
 		return FALSE;
 	}
@@ -716,7 +716,7 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 }
 
 /*
- * fu_focaltech_moc_device_attach:
+ * fu_focal_moc_device_attach:
  * CMD 0x32(mode=0) — return to application mode, then wait for re-enumeration.
  *
  * Some firmware images trigger an automatic reboot after the EOT+ACK; others
@@ -724,13 +724,13 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
  * If the device has already rebooted, the transfer may fail — that is not fatal.
  */
 static gboolean
-fu_focaltech_moc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_focal_moc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuFocaltechMocDevice *self = FU_FOCALTECH_MOC_DEVICE(device);
+	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_focaltech_moc_device_set_boot_mode(self,
-						   FU_FOCALTECH_MOC_BOOT_MODE_ENTER_APP,
+	if (!fu_focal_moc_device_set_boot_mode(self,
+						   FU_FOCAL_MOC_BOOT_MODE_ENTER_APP,
 						   &error_local)) {
 		/* Device may have already started rebooting — treat as non-fatal */
 		g_info("ENTER_APP command failed (device may have already rebooted): %s",
@@ -742,7 +742,7 @@ fu_focaltech_moc_device_attach(FuDevice *device, FuProgress *progress, GError **
 }
 
 static void
-fu_focaltech_moc_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_focal_moc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -753,7 +753,7 @@ fu_focaltech_moc_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static void
-fu_focaltech_moc_device_init(FuFocaltechMocDevice *self)
+fu_focal_moc_device_init(FuFocalMocDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -767,19 +767,19 @@ fu_focaltech_moc_device_init(FuFocaltechMocDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Fingerprint Sensor");
 	fu_device_set_summary(FU_DEVICE(self), "Match-On-Chip fingerprint sensor");
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
-	fu_device_set_firmware_size_min(FU_DEVICE(self), 2 * FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
-	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_FOCALTECH_MOC_FW_MAX_SIZE);
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_FOCALTECH_MOC_USB_INTERFACE);
+	fu_device_set_firmware_size_min(FU_DEVICE(self), 2 * FU_FOCAL_MOC_DL_BLOCK_SIZE);
+	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_FOCAL_MOC_FW_MAX_SIZE);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_FOCAL_MOC_USB_INTERFACE);
 }
 
 static void
-fu_focaltech_moc_device_class_init(FuFocaltechMocDeviceClass *klass)
+fu_focal_moc_device_class_init(FuFocalMocDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->probe = fu_focaltech_moc_device_probe;
-	device_class->setup = fu_focaltech_moc_device_setup;
-	device_class->detach = fu_focaltech_moc_device_detach;
-	device_class->write_firmware = fu_focaltech_moc_device_write_firmware;
-	device_class->attach = fu_focaltech_moc_device_attach;
-	device_class->set_progress = fu_focaltech_moc_device_set_progress;
+	device_class->probe = fu_focal_moc_device_probe;
+	device_class->setup = fu_focal_moc_device_setup;
+	device_class->detach = fu_focal_moc_device_detach;
+	device_class->write_firmware = fu_focal_moc_device_write_firmware;
+	device_class->attach = fu_focal_moc_device_attach;
+	device_class->set_progress = fu_focal_moc_device_set_progress;
 }
