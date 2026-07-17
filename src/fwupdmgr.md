@@ -215,6 +215,8 @@ See `man fwupd.conf` for the full list of variables.
 **hwids**: Return all the hardware IDs for the machine.
 These GUIDs are sometimes called CHIDs when using Microsoft Windows, and the values returned by fwupd should also match those from `ComputerHardwareIds.exe`.
 
+**monitor**: Monitor the daemon for events.
+
 ## EXIT STATUS
 
 Commands that successfully execute will return "0", with generic failure as "1".
