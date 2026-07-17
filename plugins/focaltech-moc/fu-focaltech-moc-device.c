@@ -50,25 +50,25 @@ struct _FuFocaltechMocDevice {
 G_DEFINE_TYPE(FuFocaltechMocDevice, fu_focaltech_moc_device, FU_TYPE_USB_DEVICE)
 
 /* USB bulk endpoints (UpgradeTool detects these at runtime; standard values) */
-#define FU_FOCALTECH_MOC_USB_EP_IN	  (1 | 0x80)
-#define FU_FOCALTECH_MOC_USB_EP_OUT	  (2 | 0x00)
-#define FU_FOCALTECH_MOC_USB_INTERFACE	  0
+#define FU_FOCALTECH_MOC_USB_EP_IN     (1 | 0x80)
+#define FU_FOCALTECH_MOC_USB_EP_OUT    (2 | 0x00)
+#define FU_FOCALTECH_MOC_USB_INTERFACE 0
 
-#define FU_FOCALTECH_MOC_USB_TIMEOUT	  1000  /* ms — send */
-#define FU_FOCALTECH_MOC_RECV_TIMEOUT	  1000  /* ms — receive (1 s, matching UpgradeTool) */
+#define FU_FOCALTECH_MOC_USB_TIMEOUT	    1000 /* ms — send */
+#define FU_FOCALTECH_MOC_RECV_TIMEOUT	    1000 /* ms — receive (1 s, matching UpgradeTool) */
 #define FU_FOCALTECH_MOC_RECV_FINAL_TIMEOUT 2000 /* ms — longer wait after EOT */
 
 /* MSG_MAGIC from ff_trans.h */
 #define FU_FOCALTECH_MOC_MSG_MAGIC 0x02
 
 /* Firmware-download packet constants (ff_update.c) */
-#define FU_FOCALTECH_MOC_DL_BLOCK_SIZE 1024 /* bytes per STX/EOT data block */
+#define FU_FOCALTECH_MOC_DL_BLOCK_SIZE 1024	    /* bytes per STX/EOT data block */
 #define FU_FOCALTECH_MOC_FW_MAX_SIZE   (256 * 1024) /* 256 KiB hard limit */
-#define FU_FOCALTECH_MOC_FILENAME_LEN  64   /* filename field in SHO packet */
+#define FU_FOCALTECH_MOC_FILENAME_LEN  64	    /* filename field in SHO packet */
 
 /* Delays matching UpgradeTool (ff_util_msleep calls) */
-#define FU_FOCALTECH_MOC_DELAY_CMD_MS   5   /* after version/mode commands */
-#define FU_FOCALTECH_MOC_DELAY_DL_MS   10   /* between download packets */
+#define FU_FOCALTECH_MOC_DELAY_CMD_MS	5   /* after version/mode commands */
+#define FU_FOCALTECH_MOC_DELAY_DL_MS	10  /* between download packets */
 #define FU_FOCALTECH_MOC_DELAY_FINAL_MS 200 /* before reading final ACK */
 
 /* Maximum receive buffer (covers any response packet) */
@@ -101,18 +101,11 @@ fu_focaltech_moc_bcc(const guint8 *buf, gsize len)
  * Transmit @pkt over the bulk-OUT endpoint.
  */
 static gboolean
-fu_focaltech_moc_device_send(FuFocaltechMocDevice *self,
-			     GByteArray *pkt,
-			     GError **error)
+fu_focaltech_moc_device_send(FuFocaltechMocDevice *self, GByteArray *pkt, GError **error)
 {
 	gsize actual = 0;
 
-	fu_dump_full(G_LOG_DOMAIN,
-		     "SEND",
-		     pkt->data,
-		     pkt->len,
-		     16,
-		     FU_DUMP_FLAG_SHOW_ADDRESSES);
+	fu_dump_full(G_LOG_DOMAIN, "SEND", pkt->data, pkt->len, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_FOCALTECH_MOC_USB_EP_OUT,
@@ -147,9 +140,7 @@ fu_focaltech_moc_device_send(FuFocaltechMocDevice *self,
  * Success = CMD == 0x04.  No in-band status byte.
  */
 static gboolean
-fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self,
-				 guint timeout_ms,
-				 GError **error)
+fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self, guint timeout_ms, GError **error)
 {
 	gsize actual = 0;
 	guint16 pkt_ln;
@@ -180,12 +171,7 @@ fu_focaltech_moc_device_recv_ack(FuFocaltechMocDevice *self,
 		return FALSE;
 	}
 
-	fu_dump_full(G_LOG_DOMAIN,
-		     "RECV",
-		     buf,
-		     actual,
-		     16,
-		     FU_DUMP_FLAG_SHOW_ADDRESSES);
+	fu_dump_full(G_LOG_DOMAIN, "RECV", buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	/* validate magic */
 	if (buf[0] != FU_FOCALTECH_MOC_MSG_MAGIC) {
@@ -278,9 +264,7 @@ fu_focaltech_moc_device_cmd_xfer(FuFocaltechMocDevice *self,
 
 	fu_device_sleep(FU_DEVICE(self), delay_ms);
 
-	return fu_focaltech_moc_device_recv_ack(self,
-						FU_FOCALTECH_MOC_RECV_TIMEOUT,
-						error);
+	return fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_TIMEOUT, error);
 }
 
 /* --------------------------------------------------------------------------
@@ -352,7 +336,8 @@ fu_focaltech_moc_device_ensure_version(FuFocaltechMocDevice *self, GError **erro
 	/* Read LN from the wire header to find BCC; using 'actual' is unsafe
 	 * because USB bulk transfers may pad the buffer to max-packet-size. */
 	pkt_ln = (guint16)(((guint16)rx_buf[1] << 8) | rx_buf[2]);
-	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual || (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
+	if (pkt_ln < 1 || (gsize)(3 + pkt_ln + 1) > actual ||
+	    (gsize)(3 + pkt_ln) >= sizeof(rx_buf)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -590,7 +575,7 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 	}
 
 	total_blocks = (guint)(fw_size / FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
-	remain       = (guint)(fw_size % FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
+	remain = (guint)(fw_size % FU_FOCALTECH_MOC_DL_BLOCK_SIZE);
 
 	/* The original tool rejects firmwares smaller than 2 full blocks */
 	if (total_blocks < 2) {
@@ -604,15 +589,15 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 	/* ── Phase 1: SHO packet ──────────────────────────────────────────── */
 
 	/* CRC32 over the full firmware image (UpgradeTool polynomial 0xedb88320) */
-	crc32    = fu_crc32(FU_CRC_KIND_B32_STANDARD, fw_data, fw_size);
+	crc32 = fu_crc32(FU_CRC_KIND_B32_STANDARD, fw_data, fw_size);
 	crc32_be = GUINT32_TO_BE(crc32);
 	fw_size_be = GUINT32_TO_BE((guint32)fw_size);
 
 	memset(sho_data, 0, sizeof(sho_data));
 	/* filename field: use a fixed placeholder (device ignores actual name) */
 	g_strlcpy((gchar *)sho_data, "firmware.bin", FU_FOCALTECH_MOC_FILENAME_LEN);
-	memcpy(sho_data + FU_FOCALTECH_MOC_FILENAME_LEN,     &fw_size_be, 4);
-	memcpy(sho_data + FU_FOCALTECH_MOC_FILENAME_LEN + 4, &crc32_be,   4);
+	memcpy(sho_data + FU_FOCALTECH_MOC_FILENAME_LEN, &fw_size_be, 4);
+	memcpy(sho_data + FU_FOCALTECH_MOC_FILENAME_LEN + 4, &crc32_be, 4);
 
 	if (!fu_focaltech_moc_device_dl_pkt(self,
 					    FU_FOCALTECH_MOC_MAGIC_SHO,
@@ -652,9 +637,7 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 		fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_DL_MS);
 
 		/* Per-block ACK for every STX packet, matching ff_update.c */
-		if (!fu_focaltech_moc_device_recv_ack(self,
-						      FU_FOCALTECH_MOC_RECV_TIMEOUT,
-						      error)) {
+		if (!fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_TIMEOUT, error)) {
 			g_prefix_error(error, "block %u ACK failed: ", i);
 			return FALSE;
 		}
@@ -688,9 +671,7 @@ fu_focaltech_moc_device_write_firmware(FuDevice *device,
 
 	/* ── Final ACK (covers the last block whether STX-promoted-to-EOT or a separate EOT) */
 	fu_device_sleep(FU_DEVICE(self), FU_FOCALTECH_MOC_DELAY_FINAL_MS);
-	if (!fu_focaltech_moc_device_recv_ack(self,
-					      FU_FOCALTECH_MOC_RECV_FINAL_TIMEOUT,
-					      error)) {
+	if (!fu_focaltech_moc_device_recv_ack(self, FU_FOCALTECH_MOC_RECV_FINAL_TIMEOUT, error)) {
 		g_prefix_error_literal(error, "final ACK failed: ");
 		return FALSE;
 	}
@@ -766,10 +747,10 @@ static void
 fu_focaltech_moc_device_class_init(FuFocaltechMocDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->probe	      = fu_focaltech_moc_device_probe;
-	device_class->setup	      = fu_focaltech_moc_device_setup;
-	device_class->detach	      = fu_focaltech_moc_device_detach;
-	device_class->write_firmware  = fu_focaltech_moc_device_write_firmware;
-	device_class->attach	      = fu_focaltech_moc_device_attach;
-	device_class->set_progress    = fu_focaltech_moc_device_set_progress;
+	device_class->probe = fu_focaltech_moc_device_probe;
+	device_class->setup = fu_focaltech_moc_device_setup;
+	device_class->detach = fu_focaltech_moc_device_detach;
+	device_class->write_firmware = fu_focaltech_moc_device_write_firmware;
+	device_class->attach = fu_focaltech_moc_device_attach;
+	device_class->set_progress = fu_focaltech_moc_device_set_progress;
 }
