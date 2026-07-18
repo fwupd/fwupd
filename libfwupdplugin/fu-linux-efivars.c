@@ -255,7 +255,6 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	FuEfiVariableAttrs attr_tmp;
 	guint64 sz;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
 	/* open file as stream */
@@ -267,18 +266,13 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	info = fu_file_input_stream_query_info(FU_FILE_INPUT_STREAM(istr),
-					       G_FILE_ATTRIBUTE_STANDARD_SIZE,
-					       NULL,
-					       error);
-	if (info == NULL) {
-		g_prefix_error_literal(error, "failed to get stream info: ");
+	sz = fu_file_input_stream_get_file_size(FU_FILE_INPUT_STREAM(istr), NULL, error);
+	if (sz == 0 && error != NULL && *error != NULL) {
+		g_prefix_error_literal(error, "failed to get file size: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
 
-	/* get total stream size */
-	sz = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 	if (sz < 4) {
 		g_set_error(error,
 			    FWUPD_ERROR,

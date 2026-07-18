@@ -82,30 +82,38 @@ fu_file_input_stream_from_file(GFile *file, GCancellable *cancellable, GError **
 }
 
 /**
- * fu_file_input_stream_query_info:
+ * fu_file_input_stream_get_file_size:
  * @stream: a #FuFileInputStream
- * @attributes: a file attribute query string
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Queries a file input stream for the given @attributes.
+ * Return the size of the file, in bytes. Returns zero if an error
+ * occurs, a caller that needs to distinguish between zero-sized
+ * files and zero-means-error must provide a GError.
  *
- * Returns: (transfer full): a #GFileInfo, or %NULL on error
+ * Returns: The file size in bytes or zero on error
  *
  * Since: 2.1.7
  **/
-GFileInfo *
-fu_file_input_stream_query_info(FuFileInputStream *stream,
-				const gchar *attributes,
-				GCancellable *cancellable,
-				GError **error)
+guint64
+fu_file_input_stream_get_file_size(FuFileInputStream *stream,
+				   GCancellable *cancellable,
+				   GError **error)
 {
-	g_return_val_if_fail(FU_IS_FILE_INPUT_STREAM(stream), NULL);
-	g_return_val_if_fail(attributes != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return g_file_input_stream_query_info(/* nocheck:blocked */
+	g_autoptr(GFileInfo) info = NULL;
+
+	g_return_val_if_fail(FU_IS_FILE_INPUT_STREAM(stream), 0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0);
+
+	info = g_file_input_stream_query_info(/* nocheck:blocked */
 					      stream->file_stream,
-					      attributes,
+					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					      cancellable,
 					      error);
+	if (info == NULL) {
+		fwupd_error_convert(error);
+		return 0;
+	}
+
+	return g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 }
