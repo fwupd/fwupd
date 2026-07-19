@@ -52,6 +52,14 @@ fu_logitech_hidpp_bootloader_parse_pkts(FuLogitechHidppBootloader *self,
 
 		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EOF)
 			break;
+		if (rcd->byte_cnt > FU_STRUCT_LOGITECH_HIDPP_BOOTLOADER_PKT_N_ELEMENTS_DATA) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware data invalid: too large %u bytes",
+				    rcd->byte_cnt);
+			return NULL;
+		}
 
 		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE) {
 			fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(
