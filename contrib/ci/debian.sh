@@ -27,12 +27,12 @@ sed -i 's/quilt/native/' debian/source/format
 #generate control file
 ./contrib/ci/generate_debian.py
 
-# check if we have all deps available; except on cross builds where this will remove cross lib
-# packages we installed in the Dockerfile that are not multi-arch parallel installable
-if [ -z "${CROSS:-}" ]; then
-    apt update -qq && apt install python3-apt -y
-    ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
-fi
+# check if we have all deps available
+apt update -qq && apt install python3-apt -y
+./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes \
+    ${CROSS:+--variant "$CROSS" --cross} ||
+    true
+
 dpkg --print-architecture
 dpkg --print-foreign-architectures
 dpkg-checkbuilddeps ${CROSS:+-a $CROSS}
