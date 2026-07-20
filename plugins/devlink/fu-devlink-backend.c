@@ -67,6 +67,68 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 }
 
 static FuDevice *
+fu_devlink_backend_create_mdio_parent(FuDevlinkBackend *self,
+				      const gchar *bus_name,
+				      const gchar *dev_name,
+				      GError **error)
+{
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	FuBackend *udev_backend = NULL;
+	g_autofree gchar *mdio_sysfs_path = NULL;
+	g_autofree gchar *mdio_sysfs_real = NULL;
+	g_autoptr(FuDevice) mdio_device = NULL;
+	g_autoptr(GBytes) compatible_blob = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	udev_backend = fu_context_get_backend_by_name(ctx, "udev", &error_local);
+	if (udev_backend == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "udev backend not available: %s",
+			    error_local->message);
+		return NULL;
+	}
+
+	mdio_sysfs_path = g_strdup_printf("/sys/bus/mdio_bus/devices/%s", dev_name);
+	mdio_sysfs_real = fu_path_make_absolute(mdio_sysfs_path, error);
+	if (mdio_sysfs_real == NULL)
+		return NULL;
+
+	mdio_device = fu_backend_create_device(udev_backend, mdio_sysfs_real, &error_local);
+	if (mdio_device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to create MDIO device for %s: %s",
+			    mdio_sysfs_path,
+			    error_local->message);
+		return NULL;
+	}
+
+	if (!fu_device_probe(mdio_device, error)) {
+		g_prefix_error_literal(error, "failed to probe MDIO device: ");
+		return NULL;
+	}
+
+	/* of_node/compatible is a NUL-separated string list, so read it as raw bytes */
+	compatible_blob = fu_udev_device_read_sysfs_bytes(FU_UDEV_DEVICE(mdio_device),
+							  "of_node/compatible",
+							  -1,
+							  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+							  NULL);
+	if (compatible_blob != NULL && g_bytes_get_size(compatible_blob) > 0) {
+		g_autofree gchar *compatible = g_strndup(g_bytes_get_data(compatible_blob, NULL),
+							 g_bytes_get_size(compatible_blob));
+		g_auto(GStrv) parts = g_strsplit(compatible, ",", 2);
+		if (g_strv_length(parts) == 2)
+			fu_device_build_vendor_id(mdio_device, "DT", parts[0]);
+	}
+
+	return g_steal_pointer(&mdio_device);
+}
+
+static FuDevice *
 fu_devlink_backend_create_netdevsim_parent(FuDevlinkBackend *self,
 					   const gchar *bus_name,
 					   const gchar *dev_name,
@@ -104,10 +166,15 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 	g_return_val_if_fail(dev_name != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* only support PCI and netdevsim buses */
+	/* create a bus-specific parent device */
 	if (g_strcmp0(bus_name, "pci") == 0) {
 		parent_device =
 		    fu_devlink_backend_create_pci_parent(self, bus_name, dev_name, error);
+		if (parent_device == NULL)
+			return NULL;
+	} else if (g_strcmp0(bus_name, "mdio_bus") == 0) {
+		parent_device =
+		    fu_devlink_backend_create_mdio_parent(self, bus_name, dev_name, error);
 		if (parent_device == NULL)
 			return NULL;
 	} else if (g_strcmp0(bus_name, "netdevsim") == 0) {
@@ -119,7 +186,8 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unsupported bus type: %s (only 'pci' and 'netdevsim' are supported)",
+			    "unsupported bus type: %s (only 'pci', 'mdio_bus' and 'netdevsim' are "
+			    "supported)",
 			    bus_name);
 		return NULL;
 	}

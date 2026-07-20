@@ -524,13 +524,7 @@ fu_devlink_device_add_component_instance_strs(FuDevlinkComponent *component,
 			}
 			key = g_ascii_strup(names[j], -1);
 			g_strv_builder_add(keys_builder, key);
-
-			/* avoid re-insertion of the same key */
-			if (fu_device_get_instance_str(FU_DEVICE(component), key) == NULL) {
-				fu_device_add_instance_str(FU_DEVICE(component),
-							   key,
-							   version_info->fixed);
-			}
+			fu_device_add_instance_str(FU_DEVICE(component), key, version_info->fixed);
 		}
 		/* In case all keys are present in version table obtained from kernel,
 		   add the set to component to build instance id for it during probe. */
@@ -596,6 +590,32 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	g_debug("added component %s (version: %s)", name, version);
 }
 
+/* add quirk-only instance IDs for each fixed version, e.g. DEVLINK\ASIC.ID_foo */
+static void
+fu_devlink_device_add_fixed_version_instance_ids(FuDevlinkDevice *self, GHashTable *version_table)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	g_hash_table_iter_init(&iter, version_table);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		FuDevlinkVersionInfo *version_info = value;
+		g_autofree gchar *name = NULL;
+
+		if (version_info->fixed == NULL)
+			continue;
+		name = g_ascii_strup((const gchar *)key, -1);
+		fu_device_add_instance_strsafe(FU_DEVICE(self), name, version_info->fixed);
+		fu_device_build_instance_id_full(FU_DEVICE(self),
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "DEVLINK",
+						 name,
+						 NULL);
+	}
+}
+
 /* callback for parsing devlink dev info response */
 static gint
 fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
@@ -615,6 +635,9 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
 
 	version_table = fu_devlink_device_populate_attrs_map(nlh);
+
+	/* match quirk entries before any component is created */
+	fu_devlink_device_add_fixed_version_instance_ids(self, version_table);
 
 	/* remove components that are not in the attrs map */
 	for (guint i = 0; i < children->len; i++) {

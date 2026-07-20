@@ -9,7 +9,8 @@ This is a generic plugin that can work with any device that implements devlink f
 
 ## Supported Devices
 
-The plugin supports any device that implements the devlink interface, regardless the bus it resides on.
+The plugin supports devices implementing the devlink interface on the PCI and
+MDIO buses, as well as emulated netdevsim devices for testing.
 
 ## Firmware Format
 
@@ -25,8 +26,16 @@ This plugin supports the following protocol ID:
 These devices use custom instance IDs consisting of the component name.
 
 * `PCI\VEN_15B3&DEV_1021&COMPONENT_fw`
+* `MDIO_BUS\COMPONENT_fw`
 
-Optionally, additional GUID might get generated as specified in the squirk file, see below.
+Optionally, additional GUIDs might be generated as specified in the quirk file, see below.
+
+In addition, the devlink device itself gets a quirk-only instance ID for every
+"fixed version" reported by the kernel, e.g. `DEVLINK\ASIC.ID_MaxLinear-MxL86252`.
+The values are sanitised like all instance ID components, replacing spaces and
+other problematic characters with dashes. These IDs are not exported as GUIDs
+but can be used to match quirk entries for devices on buses without vendor and
+device IDs, for example to set `DevlinkFixedVersions`, a name or a vendor ID.
 
 ### Device Identification
 
@@ -131,7 +140,8 @@ The plugin handles various error conditions:
 
 ## Vendor ID Security
 
-The vendor ID is set from the PCI vendor.
+The vendor ID is set from the PCI vendor, or for devices on the MDIO bus, from
+the devicetree vendor prefix, e.g. `DT:maxlinear`.
 
 ## External Interface Access
 
