@@ -142,10 +142,7 @@ static void
 fu_amd_kria_som_eeprom_init(FuAmdKriaSomEeprom *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-<<<<<<< Updated upstream
-=======
 	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 256 * FU_MB);
->>>>>>> Stashed changes
 }
 
 static void

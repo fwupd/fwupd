@@ -114,10 +114,7 @@ static void
 fu_synaptics_vmm9_firmware_init(FuSynapticsVmm9Firmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-<<<<<<< Updated upstream
-=======
 	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 32 * FU_MB);
->>>>>>> Stashed changes
 }
 
 static void

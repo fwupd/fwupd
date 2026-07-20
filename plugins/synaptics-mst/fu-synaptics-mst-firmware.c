@@ -188,10 +188,7 @@ fu_synaptics_mst_firmware_init(FuSynapticsMstFirmware *self)
 {
 	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-<<<<<<< Updated upstream
-=======
 	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 64 * FU_MB);
->>>>>>> Stashed changes
 }
 
 static void
