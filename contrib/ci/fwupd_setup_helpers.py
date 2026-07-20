@@ -75,10 +75,12 @@ def detect_profile():
 def pip_install_package(debug, name):
     import subprocess
 
+    env = os.environ.copy()
+    env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
     cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
     if debug:
         print(cmd)
-    subprocess.call(cmd)
+    subprocess.call(cmd, env=env)
 
 
 def test_jinja2(debug):
