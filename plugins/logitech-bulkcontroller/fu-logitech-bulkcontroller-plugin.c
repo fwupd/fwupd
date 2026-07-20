@@ -21,6 +21,8 @@ G_DEFINE_TYPE(FuLogitechBulkcontrollerPlugin, fu_logitech_bulkcontroller_plugin,
 static void
 fu_logitech_bulkcontroller_plugin_init(FuLogitechBulkcontrollerPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self),
+					FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 }
 
 static gboolean

@@ -10,6 +10,11 @@
 
 #include "fu-context-private.h"
 #include "fu-efi-x509-signature-private.h"
+<<<<<<< HEAD
+#include "fu-uefi-db-device.h"
+#include "fu-uefi-device-private.h"
+
+=======
 #include "fu-plugin-private.h"
 #include "fu-uefi-db-device.h"
 #include "fu-uefi-db-plugin.h"
@@ -139,6 +144,7 @@ fu_uefi_db_external_locked_device_added_func(void)
 	g_assert_true(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED));
 }
 
+>>>>>>> main
 static GBytes *
 fu_uefi_db_self_test_build_siglist(GBytes *der, GError **error)
 {
@@ -334,6 +340,8 @@ fu_uefi_db_no_default_ids_func(void)
 	}
 }
 
+<<<<<<< HEAD
+=======
 static void
 fu_uefi_db_modify_config_func(void)
 {
@@ -480,6 +488,7 @@ fu_uefi_db_windows_ca_config_override_func(void)
 	g_assert_false(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
 }
 
+>>>>>>> main
 int
 main(int argc, char **argv)
 {
@@ -487,6 +496,8 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-db/default-ids", fu_uefi_db_default_ids_func);
 	g_test_add_func("/uefi-db/no-default-ids", fu_uefi_db_no_default_ids_func);
+<<<<<<< HEAD
+=======
 	g_test_add_func("/uefi-db/external-locked", fu_uefi_db_external_locked_func);
 	g_test_add_func("/uefi-db/external-not-locked", fu_uefi_db_external_not_locked_func);
 	g_test_add_func("/uefi-db/external-locked-device-added",
@@ -497,5 +508,6 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-db/windows-ca-dual-boot", fu_uefi_db_windows_ca_dual_boot_func);
 	g_test_add_func("/uefi-db/windows-ca-config-override",
 			fu_uefi_db_windows_ca_config_override_func);
+>>>>>>> main
 	return g_test_run();
 }

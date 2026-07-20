@@ -903,6 +903,19 @@ class Checker:
                         f"contains blocked token {token.data}: {msg}",
                         linecnt=token.linecnt,
                     )
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
+            for search, msg in {
+                "GInputStream": "Use FuInputStream instead",
+                "GMemoryInputStream": "Use FuMemoryInputStream instead",
+                "GFileInputStream": "Use FuFileInputStream instead",
+            }.items():
+                for token in node.tokens:
+                    if token.data == search:
+                        self.add_failure(
+                            f"contains blocked token {token.data}: {msg}",
+                            linecnt=token.linecnt,
+                        )
 
         # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):

@@ -739,6 +739,13 @@ fu_msr_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *val
 static void
 fu_msr_plugin_init(FuMsrPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_DEBUG);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_TME);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_ARCH_CAPABILITIES);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_SEV);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_HWCFG);
 }
 
 static void

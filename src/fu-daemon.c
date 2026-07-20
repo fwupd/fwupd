@@ -157,11 +157,30 @@ fu_daemon_set_update_in_progress(FuDaemon *self, gboolean update_in_progress)
 }
 
 gboolean
+fu_daemon_get_update_in_progress(FuDaemon *self)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
+	return priv->update_in_progress;
+}
+
+gboolean
 fu_daemon_get_pending_stop(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
 	return priv->pending_stop;
+}
+
+gboolean
+fu_daemon_device_id_valid(const gchar *device_id, GError **error)
+{
+	if (g_strcmp0(device_id, FWUPD_DEVICE_ID_ANY) == 0)
+		return TRUE;
+	if (device_id != NULL && strlen(device_id) >= 4)
+		return TRUE;
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid device ID: %s", device_id);
+	return FALSE;
 }
 
 static gboolean
@@ -423,6 +442,32 @@ fu_daemon_finalize(GObject *obj)
 		g_object_unref(priv->engine);
 
 	G_OBJECT_CLASS(fu_daemon_parent_class)->finalize(obj);
+}
+
+void
+fu_daemon_add_string(FwupdCodec *codec, guint idt, GString *str)
+{
+	FuDaemon *self = FU_DAEMON(codec);
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
+	fwupd_codec_string_append(str, idt + 1, "DaemonVersion", PACKAGE_VERSION);
+	if (priv->engine != NULL) {
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  "HostVendor",
+					  fu_engine_get_host_vendor(priv->engine));
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  "HostProduct",
+					  fu_engine_get_host_product(priv->engine));
+	}
+	fwupd_codec_string_append_bool(str, idt + 1, "UpdateInProgress", priv->update_in_progress);
+}
+
+static void
+fu_daemon_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_daemon_add_string;
 }
 
 static void
