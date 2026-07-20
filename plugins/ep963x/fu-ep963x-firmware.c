@@ -55,6 +55,10 @@ fu_ep963x_firmware_parse(FuFirmware *firmware,
 static void
 fu_ep963x_firmware_init(FuEp963xFirmware *self)
 {
+<<<<<<< Updated upstream
+=======
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 32 * FU_MB);
+>>>>>>> Stashed changes
 }
 
 static void

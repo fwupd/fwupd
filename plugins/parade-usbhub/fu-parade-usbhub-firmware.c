@@ -65,6 +65,10 @@ static void
 fu_parade_usbhub_firmware_init(FuParadeUsbhubFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+<<<<<<< Updated upstream
+=======
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 4 * FU_MB);
+>>>>>>> Stashed changes
 }
 
 static void

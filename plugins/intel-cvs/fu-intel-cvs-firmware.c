@@ -101,6 +101,10 @@ fu_intel_cvs_firmware_init(FuIntelCvsFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+<<<<<<< Updated upstream
+=======
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), 8 * FU_MB);
+>>>>>>> Stashed changes
 }
 
 static void
