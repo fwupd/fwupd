@@ -910,6 +910,34 @@
       <package variant="amd64" />
     </distro>
   </dependency>
+  <dependency id="rustc">
+    <distro id="arch">
+      <package variant="x86_64">rust</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+      <package variant="mingw64" />
+    </distro>
+    <distro id="freebsd">
+      <package variant="amd64">rust</package>
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="rust-std-static-x86_64-pc-windows-gnu">
+    <distro id="fedora">
+      <package variant="mingw64" />
+    </distro>
+  </dependency>
   <dependency id="mingw-w64-tools">
     <distro id="centos">
       <package variant="x86_64" />

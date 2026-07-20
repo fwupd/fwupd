@@ -20,6 +20,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |-
+          apt-get update -qq
+          apt-get install -qq --yes --no-install-recommends rustc
       - name: configure
         env:
           # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
