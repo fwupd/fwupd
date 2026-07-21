@@ -12,11 +12,36 @@ jobs:
       deploy: true
     secrets: inherit
 
-  matrix:
-    uses: ./.github/workflows/matrix.yml
+  bsd:
+    uses: ./.github/workflows/bsd.yml
+    permissions:
+      contents: read
+
+  linux:
+    uses: ./.github/workflows/linux.yml
     with:
       publish: false
     secrets: inherit
+    permissions:
+      contents: read
+
+  macos:
+    uses: ./.github/workflows/macos.yml
+    permissions:
+      contents: read
+
+  openbmc:
+    uses: ./.github/workflows/openbmc.yml
+    permissions:
+      contents: read
+
+  windows:
+    uses: ./.github/workflows/windows.yml
+    with:
+      publish: false
+    secrets: inherit
+    permissions:
+      contents: write
 
   static-analysis:
     uses: ./.github/workflows/static-analysis.yml

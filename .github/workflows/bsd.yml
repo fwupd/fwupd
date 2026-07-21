@@ -1,0 +1,29 @@
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build
+        id: test
+        uses: vmactions/freebsd-vm@77ed28d336d03fe19a3f4f7266c1d2c4714dd79d # v1.5.2
+        env:
+          CC: gcc
+          CI: true
+        with:
+          usesh: true
+          mem: 8192
+          sync: rsync
+          envs: "CI CC"
+          prepare: |
+            pkg install -y bash python3 git ninja cmake gcc
+          run: |
+            ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
+            ./contrib/setup
+            bash -c "source ./venv/bin/activate && build-fwupd"

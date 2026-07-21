@@ -42,15 +42,44 @@ jobs:
       deploy: false
     secrets: inherit
 
-  matrix:
+  bsd:
+    permissions:
+      contents: read
     needs: pre-commit
-    uses: ./.github/workflows/matrix.yml
+    uses: ./.github/workflows/bsd.yml
+
+  linux:
+    permissions:
+      contents: read
+    needs: pre-commit
+    uses: ./.github/workflows/linux.yml
+    with:
+      publish: false
+    secrets: inherit
+
+  macos:
+    permissions:
+      contents: read
+    needs: pre-commit
+    uses: ./.github/workflows/macos.yml
+
+  openbmc:
+    permissions:
+      contents: read
+    needs: pre-commit
+    uses: ./.github/workflows/openbmc.yml
+
+  windows:
+    permissions:
+      contents: write
+    needs: pre-commit
+    uses: ./.github/workflows/windows.yml
     with:
       publish: false
     secrets: inherit
 
   static-analysis:
-    needs: pre-commit
-    uses: ./.github/workflows/static-analysis.yml
     permissions:
       contents: read
+    needs: pre-commit
+    uses: ./.github/workflows/static-analysis.yml
