@@ -1,0 +1,60 @@
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest # zizmor: ignore[unpinned-images]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |-
+          apt-get update -qq
+          apt-get install -qq --yes --no-install-recommends clang-tidy
+      - name: configure
+        run: |-
+          meson setup -Dwerror=true build
+      - name: build
+        run: |-
+          ninja -C build
+      - name: clang-tidy
+        run: |-
+          ninja -C build clang-tidy
+
+  gcc:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/fwupd/fwupd/fwupd-debian-amd64:latest # zizmor: ignore[unpinned-images]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: configure
+        env:
+          # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
+          # can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
+          # `g_assert_nonnull()` doesn't affect control flow.
+          CFLAGS: -D__COVERITY__
+        run: |-
+          meson setup -Dwerror=true -Dstatic_analysis=true build
+      - name: build with `-fanalyzer`
+        run: |-
+          ninja -C build
+
+  gobject-linter:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/bilelmoussaoui/gobject-linter:latest # zizmor: ignore[unpinned-images]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: run gobject-linter
+        run: gobject-linter
