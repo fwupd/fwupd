@@ -487,6 +487,9 @@ const gchar *
 fwupd_client_get_host_security_id(FwupdClient *self) G_GNUC_NON_NULL(1);
 void
 fwupd_client_get_hwids(FwupdClient *self, GStrv *keys, GStrv *values) G_GNUC_NON_NULL(1);
+void
+fwupd_client_add_hwid(FwupdClient *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 guint32
 fwupd_client_get_battery_level(FwupdClient *self) G_GNUC_NON_NULL(1);
 guint32

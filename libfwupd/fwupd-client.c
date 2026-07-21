@@ -87,8 +87,7 @@ typedef struct {
 	gchar *user_agent;
 	GHashTable *hints;		/* str:str */
 	GHashTable *immediate_requests; /* str:FwupdRequest */
-	GStrv hwid_keys;
-	GStrv hwid_values;
+	GPtrArray *hwids;		/* FwupdClientHwid */
 	GMutex download_items_mutex; /* for @download_items */
 	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
 	FwupdClientSyncImpl impl;
@@ -102,6 +101,11 @@ typedef struct {
 	curl_mime *mime;
 	struct curl_slist *headers;
 } FwupdCurlHelper;
+
+typedef struct {
+	gchar *key;
+	gchar *value;
+} FwupdClientHwid;
 
 enum {
 	SIGNAL_CHANGED,
@@ -140,6 +144,14 @@ G_DEFINE_TYPE_WITH_PRIVATE(FwupdClient, fwupd_client, G_TYPE_OBJECT)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 typedef char CURLSTR;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLSTR, curl_free)
+
+static void
+fwupd_client_hwid_free(FwupdClientHwid *hwid)
+{
+	g_free(hwid->key);
+	g_free(hwid->value);
+	g_free(hwid);
+}
 
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
@@ -983,6 +995,31 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 	g_task_return_boolean(task, TRUE);
 }
 
+/**
+ * fwupd_client_add_hwid:
+ * @self: a #FwupdClient
+ * @key: (not nullable): the key
+ * @value: (nullable): the value
+ *
+ * Adds a HwID entry.
+ *
+ * Since: 2.1.7
+ **/
+void
+fwupd_client_add_hwid(FwupdClient *self, const gchar *key, const gchar *value)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	FwupdClientHwid *hwid;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(key != NULL);
+
+	hwid = g_new0(FwupdClientHwid, 1);
+	hwid->key = g_strdup(key);
+	hwid->value = g_strdup(value);
+	g_ptr_array_add(priv->hwids, hwid);
+}
+
 static void
 fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -1071,14 +1108,11 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
 	if (val_hwids != NULL) {
 		guint size = g_variant_n_children(val_hwids);
-		priv->hwid_keys = g_new0(gchar *, size + 1);
-		priv->hwid_values = g_new0(gchar *, size + 1);
 		for (guint i = 0; i < size; i++) {
 			const gchar *hwid_value;
 			const gchar *hwid_key;
 			g_variant_get_child(val_hwids, i, "(&s&s)", &hwid_key, &hwid_value);
-			priv->hwid_keys[i] = g_strdup(hwid_key);
-			priv->hwid_values[i] = g_strdup(hwid_value);
+			fwupd_client_add_hwid(self, hwid_key, hwid_value);
 		}
 	}
 
@@ -4293,10 +4327,20 @@ fwupd_client_get_hwids(FwupdClient *self, GStrv *keys, GStrv *values)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
-	if (keys != NULL)
-		*keys = g_strdupv(priv->hwid_keys);
-	if (values != NULL)
-		*values = g_strdupv(priv->hwid_values);
+	if (keys != NULL) {
+		*keys = g_new0(gchar *, priv->hwids->len + 1);
+		for (guint i = 0; i < priv->hwids->len; i++) {
+			FwupdClientHwid *hwid = g_ptr_array_index(priv->hwids, i);
+			(*keys)[i] = g_strdup(hwid->key);
+		}
+	}
+	if (values != NULL) {
+		*values = g_new0(gchar *, priv->hwids->len + 1);
+		for (guint i = 0; i < priv->hwids->len; i++) {
+			FwupdClientHwid *hwid = g_ptr_array_index(priv->hwids, i);
+			(*values)[i] = g_strdup(hwid->value);
+		}
+	}
 }
 
 /**
@@ -8075,6 +8119,7 @@ fwupd_client_init(FwupdClient *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->immediate_requests =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+	priv->hwids = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_hwid_free);
 
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
@@ -8086,8 +8131,7 @@ fwupd_client_finalize(GObject *object)
 	FwupdClient *self = FWUPD_CLIENT(object);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
-	g_strfreev(priv->hwid_keys);
-	g_strfreev(priv->hwid_values);
+	g_ptr_array_unref(priv->hwids);
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->package_name);
