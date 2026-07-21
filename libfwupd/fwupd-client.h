@@ -486,6 +486,9 @@ fwupd_client_get_host_machine_id(FwupdClient *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_security_id(FwupdClient *self) G_GNUC_NON_NULL(1);
 void
+fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_id)
+    G_GNUC_NON_NULL(1);
+void
 fwupd_client_get_hwids(FwupdClient *self, GStrv *keys, GStrv *values) G_GNUC_NON_NULL(1);
 void
 fwupd_client_add_hwid(FwupdClient *self, const gchar *key, const gchar *value)
