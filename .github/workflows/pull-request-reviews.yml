@@ -23,8 +23,8 @@ jobs:
           restore-keys: pre-commit-${{ runner.os }}-
       - name: Set up pre-commit
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
+          sudo apt-get update -qq
+          sudo apt-get install -qq --yes --no-install-recommends \
             clang-format \
             git \
             meson \
