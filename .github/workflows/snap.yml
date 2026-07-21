@@ -23,9 +23,9 @@ jobs:
       - id: channel
         run: |
           if git describe --exact-match; then
-            echo "channel=candidate" >> $GITHUB_OUTPUT
+            echo "channel=candidate" >>"$GITHUB_OUTPUT"
           else
-            echo "channel=edge" >> $GITHUB_OUTPUT
+            echo "channel=edge" >>"$GITHUB_OUTPUT"
           fi
       - id: prep
         run: |
@@ -47,9 +47,11 @@ jobs:
         with:
           name: snap
       - id: install-snap
+        env:
+          SNAP_NAME: ${{ needs.build-snap.outputs.snap_name }}
         run: |
           sudo apt remove fwupd -y
-          sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
+          sudo snap install --dangerous "$SNAP_NAME"
           sudo snap connect fwupd:polkit :polkit
           sudo fwupd.fwupdtool enable-test-devices
       - name: Set up snap specific environment
