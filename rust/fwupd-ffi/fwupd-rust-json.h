@@ -62,9 +62,9 @@ void
 fwupd_rs_json_node_free(FwupdRsJsonNode *ptr);
 guint
 fwupd_rs_json_node_get_kind(const FwupdRsJsonNode *ptr);
-gchar *
+GRefString *
 fwupd_rs_json_node_get_raw(FwupdRsJsonNode *ptr, GError **error);
-gchar *
+GRefString *
 fwupd_rs_json_node_get_string(FwupdRsJsonNode *ptr, GError **error);
 FwupdRsJsonObject *
 fwupd_rs_json_node_get_object(const FwupdRsJsonNode *ptr, GError **error);
