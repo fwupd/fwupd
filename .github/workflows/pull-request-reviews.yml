@@ -48,3 +48,9 @@ jobs:
     with:
       publish: false
     secrets: inherit
+
+  static-analysis:
+    needs: pre-commit
+    uses: ./.github/workflows/static-analysis.yml
+    permissions:
+      contents: read

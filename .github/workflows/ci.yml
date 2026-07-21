@@ -18,6 +18,11 @@ jobs:
       publish: false
     secrets: inherit
 
+  static-analysis:
+    uses: ./.github/workflows/static-analysis.yml
+    permissions:
+      contents: read
+
   fuzzing:
     permissions:
       actions: read # to fetch the artifacts (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
