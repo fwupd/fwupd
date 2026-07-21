@@ -24,8 +24,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |-
-          apt-get update
-          apt-get install --yes --no-install-recommends clang-tidy
+          apt-get update -qq
+          apt-get install -qq --yes --no-install-recommends clang-tidy
       - name: configure
         run: |-
           meson setup -Dwerror=true build
