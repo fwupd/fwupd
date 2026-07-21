@@ -114,12 +114,27 @@ def get_minimum_meson_version():
                 return re.search(r"(\d+\.\d+\.\d+)", line).group(1)
 
 
+def _version_tuple(ver):
+    import re
+
+    def version_part(s):
+        """Returns a tuple with the integer or the string,
+        with strings sorthing lower so that 1.rc0 < 1.0
+        """
+        try:
+            return (1, int(s))
+        except ValueError:
+            return (0, s)
+
+    return tuple(version_part(x) for x in re.split(r"[.\-]", ver))
+
+
 def test_meson(debug):
     from importlib.metadata import version, PackageNotFoundError
 
     minimum = get_minimum_meson_version()
     try:
-        new_enough = version("meson") >= minimum
+        new_enough = _version_tuple(version("meson")) >= _version_tuple(minimum)
     except PackageNotFoundError:
         import subprocess
 
@@ -127,7 +142,7 @@ def test_meson(debug):
             ver = (
                 subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
             )
-            new_enough = ver >= minimum
+            new_enough = _version_tuple(ver) >= _version_tuple(minimum)
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
