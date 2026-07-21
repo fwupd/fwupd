@@ -446,6 +446,62 @@ fwupd_guid_hash_string(const gchar *str)
 }
 
 #ifdef HAVE_GIO_UNIX
+/* create a new writable memfd, or an unlinked temporary file where memfd is not available */
+static gint
+fwupd_unix_input_stream_memfd_new(GError **error)
+{
+	g_autofd gint fd = -1;
+#ifdef HAVE_MEMFD_CREATE
+	fd = memfd_create("fwupd", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+#else
+	/* emulate in-memory file by an unlinked temporary file */
+	gchar tmp_file[] = "/tmp/fwupd.XXXXXX";
+	fd = g_mkstemp(tmp_file);
+	if (fd != -1) {
+		if (g_unlink(tmp_file) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "failed to unlink temporary file");
+			return -1;
+		}
+	}
+#endif
+	if (fd < 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to create memfd");
+		return -1;
+	}
+	return g_steal_fd(&fd);
+}
+
+/* rewind and seal the memfd so the received fd is an immutable snapshot */
+static gboolean
+fwupd_unix_input_stream_memfd_seal(gint fd, GError **error)
+{
+	if (lseek(fd, 0, SEEK_SET) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to seek: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+#ifdef HAVE_MEMFD_CREATE
+	if (fcntl(fd, F_ADD_SEALS, F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_SEAL) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to seal memfd: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+#endif
+	return TRUE;
+}
+
 /**
  * fwupd_unix_input_stream_from_bytes: (skip):
  **/
@@ -454,34 +510,10 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 {
 	g_autofd gint fd = -1;
 	gssize rc;
-#ifndef HAVE_MEMFD_CREATE
-	gchar tmp_file[] = "/tmp/fwupd.XXXXXX";
-#endif
 
-#ifdef HAVE_MEMFD_CREATE
-	fd = memfd_create("fwupd", MFD_CLOEXEC | MFD_ALLOW_SEALING);
-#else
-	/* emulate in-memory file by an unlinked temporary file */
-	fd = g_mkstemp(tmp_file);
-	if (fd != -1) {
-		rc = g_unlink(tmp_file);
-		if (rc != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "failed to unlink temporary file");
-			return NULL;
-		}
-	}
-#endif
-
-	if (fd < 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to create memfd");
+	fd = fwupd_unix_input_stream_memfd_new(error);
+	if (fd < 0)
 		return NULL;
-	}
 	rc = write(fd, g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
 	if (rc < 0) {
 		g_set_error(error,
@@ -491,24 +523,8 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 			    rc);
 		return NULL;
 	}
-	if (lseek(fd, 0, SEEK_SET) < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to seek: %s",
-			    fwupd_strerror(errno));
+	if (!fwupd_unix_input_stream_memfd_seal(fd, error))
 		return NULL;
-	}
-#ifdef HAVE_MEMFD_CREATE
-	if (fcntl(fd, F_ADD_SEALS, F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_SEAL) < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to seal memfd: %s",
-			    fwupd_strerror(errno));
-		return NULL;
-	}
-#endif
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
@@ -518,8 +534,14 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 GUnixInputStream *
 fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 {
-	g_autofd gint fd = open(fn, O_RDONLY);
-	if (fd < 0) {
+	g_autofd gint fd = -1;
+	g_autofd gint src_fd = -1;
+	guint8 buf[0x8000] = {0};
+	gssize rc;
+
+	/* open the file for reading */
+	src_fd = open(fn, O_RDONLY);
+	if (src_fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -528,6 +550,35 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
+
+	/* copy the contents into a sealed memfd rather than passing the plain file fd directly; a
+	 * regular fd is mutable (and on a tmpfs is even reported as partially sealed) so the daemon
+	 * cannot trust it and would be open to a TOCTOU attack, whereas a sealed memfd is an
+	 * immutable snapshot */
+	fd = fwupd_unix_input_stream_memfd_new(error);
+	if (fd < 0)
+		return NULL;
+	while ((rc = read(src_fd, buf, sizeof(buf))) > 0) {
+		if (write(fd, buf, (gsize)rc) != rc) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to write to memfd: %s",
+				    fwupd_strerror(errno));
+			return NULL;
+		}
+	}
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to read %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	if (!fwupd_unix_input_stream_memfd_seal(fd, error))
+		return NULL;
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
