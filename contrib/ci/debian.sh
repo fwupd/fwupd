@@ -28,7 +28,7 @@ sed -i 's/quilt/native/' debian/source/format
 ./contrib/ci/generate_debian.py
 
 # check if we have all deps available
-apt update -qq && apt install python3-apt -y
+apt update -qq && apt install python3-apt -qq -y
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes \
     ${CROSS:+--variant "$CROSS" --cross} ||
     true

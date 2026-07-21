@@ -113,7 +113,7 @@ jobs:
       - name: Refresh dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt update
+          sudo apt update -qq
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
@@ -135,7 +135,7 @@ jobs:
       - name: Refresh dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt update
+          sudo apt update -qq
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
