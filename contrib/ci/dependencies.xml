@@ -22,20 +22,19 @@
     <distro id="freebsd">
       <package variant="amd64" />
     </distro>
-   </dependency>
-   <dependency id="7zip">
-     <distro id="debian">
-       <control>
-         <exclusive>s390x</exclusive>
-       </control>
-     </distro>
-     <distro id="ubuntu">
-       <control />
-       <package variant="x86_64" />
-       <package variant="aarch64" />
-     </distro>
-   </dependency>
-   <dependency id="pesign">
+  </dependency>
+  <dependency id="7zip">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="pesign">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -1355,10 +1354,11 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-flask</package>
+    </distro>
     <distro id="debian">
-      <control>
-        <exclusive>s390x</exclusive>
-      </control>
+      <control />
     </distro>
     <distro id="ubuntu">
       <control />
