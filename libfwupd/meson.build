@@ -146,7 +146,8 @@ fwupd = library(
   version: libfwupd_lt_version,
   dependencies: libfwupd_deps,
   c_args: ['-DG_LOG_DOMAIN="Fwupd"', '-DLOCALSTATEDIR="' + localstatedir + '"'],
-  include_directories: root_incdir,
+  include_directories: [root_incdir, fwupd_rust_ffi_incdir],
+  link_whole: [fwupd_ffi_lib],
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupd_mapfile,
   install: true,
@@ -284,7 +285,8 @@ if get_option('tests')
     'fwupd-test',
     fwupd_rs_targets,
     sources: ['fwupd-test.c'] + libfwupd_src,
-    include_directories: [root_incdir],
+    include_directories: [root_incdir, fwupd_rust_ffi_incdir],
+    link_with: [fwupd_ffi_lib],
     dependencies: [libfwupd_deps],
   )
   foreach test_name: [

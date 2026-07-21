@@ -867,6 +867,7 @@ rustmod = import('rust')
 cargo_ws = rustmod.workspace()
 
 subdir('generate-build')
+subdir('rust')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')
@@ -875,7 +876,6 @@ if build_standalone
   man_md = []
   md_targets = []
   plugin_quirks = []
-  subdir('rust')
   subdir('libfwupdplugin')
   subdir('po')
   subdir('contrib')
