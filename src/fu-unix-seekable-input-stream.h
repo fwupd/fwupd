@@ -20,5 +20,3 @@ G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
 
 FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error);
-gboolean
-fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GError **error);
