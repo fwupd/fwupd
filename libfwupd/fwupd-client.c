@@ -468,7 +468,16 @@ fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id
 	fwupd_client_object_notify(self, "host-machine-id");
 }
 
-static void
+/**
+ * fwupd_client_set_host_security_id:
+ * @self: a #FwupdClient
+ * @host_security_id: A semantic version, e.g. "1.2.3"
+ *
+ * Sets the string that represents the host machine ID.
+ *
+ * Since: 2.1.7
+ **/
+void
 fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
