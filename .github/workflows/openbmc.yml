@@ -1,0 +1,26 @@
+# This is more of an approximation for the sensible set of build options for openbmc but still
+# hosted on just plain ubuntu.
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Refresh dependencies
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt update
+      - name: Install dependencies
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
+      - name: Build
+        run: |
+          ./contrib/build-openbmc.sh --prefix=/home/runner/.root
