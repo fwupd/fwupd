@@ -8,7 +8,6 @@
 
 #include "fwupd-error.h"
 #include "fwupd-json-array-private.h"
-#include "fwupd-json-common-private.h"
 #include "fwupd-json-node-private.h"
 #include "fwupd-json-object-private.h"
 
@@ -22,8 +21,39 @@
 
 struct FwupdJsonArray {
 	grefcount refcount;
-	GPtrArray *nodes; /* of FwupdJsonNode */
+	FwupdRsJsonArray *rs;
 };
+
+/**
+ * fwupd_json_array_new_from_rust:
+ * @rs: (not nullable): a Rust-side array handle (ownership transferred)
+ *
+ * Creates a new #FwupdJsonArray wrapping a Rust handle.
+ *
+ * Returns: (transfer full): a #FwupdJsonArray
+ **/
+FwupdJsonArray *
+fwupd_json_array_new_from_rust(FwupdRsJsonArray *rs)
+{
+	FwupdJsonArray *self = g_new0(FwupdJsonArray, 1);
+	g_ref_count_init(&self->refcount);
+	self->rs = rs;
+	return self;
+}
+
+/**
+ * fwupd_json_array_get_rust:
+ * @self: a #FwupdJsonArray
+ *
+ * Gets the Rust-side handle.
+ *
+ * Returns: (transfer none): a #FwupdRsJsonArray
+ **/
+FwupdRsJsonArray *
+fwupd_json_array_get_rust(FwupdJsonArray *self)
+{
+	return self->rs;
+}
 
 /**
  * fwupd_json_array_new: (skip):
@@ -37,10 +67,7 @@ struct FwupdJsonArray {
 FwupdJsonArray *
 fwupd_json_array_new(void)
 {
-	FwupdJsonArray *self = g_new0(FwupdJsonArray, 1);
-	g_ref_count_init(&self->refcount);
-	self->nodes = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_json_node_unref);
-	return self;
+	return fwupd_json_array_new_from_rust(fwupd_rs_json_array_new());
 }
 
 /**
@@ -77,7 +104,7 @@ fwupd_json_array_unref(FwupdJsonArray *self)
 	g_return_val_if_fail(self != NULL, NULL);
 	if (!g_ref_count_dec(&self->refcount))
 		return self;
-	g_ptr_array_unref(self->nodes);
+	fwupd_rs_json_array_free(self->rs);
 	g_free(self);
 	return NULL;
 }
@@ -96,7 +123,7 @@ guint
 fwupd_json_array_get_size(FwupdJsonArray *self)
 {
 	g_return_val_if_fail(self != NULL, G_MAXUINT);
-	return self->nodes->len;
+	return fwupd_rs_json_array_get_size(self->rs);
 }
 
 /**
@@ -114,19 +141,15 @@ fwupd_json_array_get_size(FwupdJsonArray *self)
 FwupdJsonNode *
 fwupd_json_array_get_node(FwupdJsonArray *self, guint idx, GError **error)
 {
+	FwupdRsJsonNode *rs;
+
 	g_return_val_if_fail(self != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* sanity check */
-	if (idx >= self->nodes->len) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "index %u is larger than array size",
-			    idx);
+	rs = fwupd_rs_json_array_get_node(self->rs, idx, error);
+	if (rs == NULL)
 		return NULL;
-	}
-	return fwupd_json_node_ref(g_ptr_array_index(self->nodes, idx));
+	return fwupd_json_node_new_from_rust(rs);
 }
 
 /**
@@ -144,15 +167,15 @@ fwupd_json_array_get_node(FwupdJsonArray *self, guint idx, GError **error)
 GRefString *
 fwupd_json_array_get_raw(FwupdJsonArray *self, guint idx, GError **error)
 {
-	g_autoptr(FwupdJsonNode) json_node = NULL;
+	const gchar *str;
 
 	g_return_val_if_fail(self != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_node = fwupd_json_array_get_node(self, idx, error);
-	if (json_node == NULL)
+	str = fwupd_rs_json_array_get_raw(self->rs, idx, error);
+	if (str == NULL)
 		return NULL;
-	return fwupd_json_node_get_raw(json_node, error);
+	return g_ref_string_new(str);
 }
 
 /**
@@ -170,15 +193,15 @@ fwupd_json_array_get_raw(FwupdJsonArray *self, guint idx, GError **error)
 GRefString *
 fwupd_json_array_get_string(FwupdJsonArray *self, guint idx, GError **error)
 {
-	g_autoptr(FwupdJsonNode) json_node = NULL;
+	const gchar *str;
 
 	g_return_val_if_fail(self != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_node = fwupd_json_array_get_node(self, idx, error);
-	if (json_node == NULL)
+	str = fwupd_rs_json_array_get_string(self->rs, idx, error);
+	if (str == NULL)
 		return NULL;
-	return fwupd_json_node_get_string(json_node, error);
+	return g_ref_string_new(str);
 }
 
 /**
@@ -196,15 +219,15 @@ fwupd_json_array_get_string(FwupdJsonArray *self, guint idx, GError **error)
 FwupdJsonObject *
 fwupd_json_array_get_object(FwupdJsonArray *self, guint idx, GError **error)
 {
-	g_autoptr(FwupdJsonNode) json_node = NULL;
+	FwupdRsJsonObject *rs;
 
 	g_return_val_if_fail(self != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_node = fwupd_json_array_get_node(self, idx, error);
-	if (json_node == NULL)
+	rs = fwupd_rs_json_array_get_object(self->rs, idx, error);
+	if (rs == NULL)
 		return NULL;
-	return fwupd_json_node_get_object(json_node, error);
+	return fwupd_json_object_new_from_rust(rs);
 }
 
 /**
@@ -222,21 +245,15 @@ fwupd_json_array_get_object(FwupdJsonArray *self, guint idx, GError **error)
 FwupdJsonArray *
 fwupd_json_array_get_array(FwupdJsonArray *self, guint idx, GError **error)
 {
-	g_autoptr(FwupdJsonNode) json_node = NULL;
+	FwupdRsJsonArray *rs;
 
 	g_return_val_if_fail(self != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_node = fwupd_json_array_get_node(self, idx, error);
-	if (json_node == NULL)
+	rs = fwupd_rs_json_array_get_array(self->rs, idx, error);
+	if (rs == NULL)
 		return NULL;
-	return fwupd_json_node_get_array(json_node, error);
-}
-
-void
-fwupd_json_array_add_string_internal(FwupdJsonArray *self, GRefString *value)
-{
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_string_internal(value));
+	return fwupd_json_array_new_from_rust(rs);
 }
 
 /**
@@ -253,7 +270,7 @@ fwupd_json_array_add_node(FwupdJsonArray *self, FwupdJsonNode *json_node)
 {
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(json_node != NULL);
-	g_ptr_array_add(self->nodes, fwupd_json_node_ref(json_node));
+	fwupd_rs_json_array_add_node(self->rs, fwupd_json_node_get_rust(json_node));
 }
 
 /**
@@ -270,13 +287,7 @@ fwupd_json_array_add_string(FwupdJsonArray *self, const gchar *value)
 {
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(value != NULL);
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_string(value));
-}
-
-void
-fwupd_json_array_add_raw_internal(FwupdJsonArray *self, GRefString *value)
-{
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_raw_internal(value));
+	fwupd_rs_json_array_add_string(self->rs, value);
 }
 
 /**
@@ -293,7 +304,7 @@ fwupd_json_array_add_raw(FwupdJsonArray *self, const gchar *value)
 {
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(value != NULL);
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_raw(value));
+	fwupd_rs_json_array_add_raw(self->rs, value);
 }
 
 /**
@@ -310,7 +321,7 @@ fwupd_json_array_add_object(FwupdJsonArray *self, FwupdJsonObject *json_obj)
 {
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(json_obj != NULL);
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_object(json_obj));
+	fwupd_rs_json_array_add_object(self->rs, fwupd_json_object_get_rust(json_obj));
 }
 
 /**
@@ -328,7 +339,7 @@ fwupd_json_array_add_array(FwupdJsonArray *self, FwupdJsonArray *json_arr)
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(json_arr != NULL);
 	g_return_if_fail(self != json_arr);
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_array(json_arr));
+	fwupd_rs_json_array_add_array(self->rs, fwupd_json_array_get_rust(json_arr));
 }
 
 /**
@@ -343,7 +354,6 @@ fwupd_json_array_add_array(FwupdJsonArray *self, FwupdJsonArray *json_arr)
 void
 fwupd_json_array_add_bytes(FwupdJsonArray *self, GBytes *value)
 {
-	g_autofree gchar *b64data = NULL;
 	const guint8 *buf;
 	gsize bufsz = 0;
 
@@ -352,59 +362,13 @@ fwupd_json_array_add_bytes(FwupdJsonArray *self, GBytes *value)
 
 	buf = g_bytes_get_data(value, &bufsz);
 	if (buf == NULL) {
-		g_ptr_array_add(self->nodes, fwupd_json_node_new_string(""));
-		return;
+		fwupd_rs_json_array_add_string(self->rs, "");
+	} else {
+		g_autofree gchar *b64data = NULL;
+		/* nocheck:blocked */
+		b64data = g_base64_encode(buf, bufsz);
+		fwupd_rs_json_array_add_string(self->rs, b64data);
 	}
-	/* nocheck:blocked */
-	b64data = g_base64_encode(buf, bufsz);
-
-	g_ptr_array_add(self->nodes, fwupd_json_node_new_string(b64data));
-}
-
-/**
- * fwupd_json_array_append_string:
- * @self: a #FwupdJsonArray
- * @str: a #GString
- * @depth: current depth, where 0 is the root json_node
- * @flags: some #FwupdJsonExportFlags e.g. #FWUPD_JSON_EXPORT_FLAG_INDENT
- *
- * Appends the JSON array to existing string.
- *
- * Since: 2.1.1
- **/
-void
-fwupd_json_array_append_string(FwupdJsonArray *self,
-			       GString *str,
-			       guint depth,
-			       FwupdJsonExportFlags flags)
-{
-	g_return_if_fail(self != NULL);
-	g_return_if_fail(str != NULL);
-
-	/* start */
-	g_string_append_c(str, '[');
-	if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT)
-		g_string_append_c(str, '\n');
-
-	for (guint i = 0; i < self->nodes->len; i++) {
-		FwupdJsonNode *json_node = g_ptr_array_index(self->nodes, i);
-		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT)
-			fwupd_json_indent(str, depth + 1);
-		fwupd_json_node_append_string(json_node, str, depth + 1, flags);
-		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT) {
-			if (i != self->nodes->len - 1)
-				g_string_append_c(str, ',');
-			g_string_append_c(str, '\n');
-		} else {
-			if (i != self->nodes->len - 1)
-				g_string_append(str, ", ");
-		}
-	}
-
-	/* end */
-	if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT)
-		fwupd_json_indent(str, depth);
-	g_string_append_c(str, ']');
 }
 
 /**
@@ -421,7 +385,6 @@ fwupd_json_array_append_string(FwupdJsonArray *self,
 GString *
 fwupd_json_array_to_string(FwupdJsonArray *self, FwupdJsonExportFlags flags)
 {
-	GString *str = g_string_new(NULL);
-	fwupd_json_array_append_string(self, str, 0, flags);
-	return str;
+	g_return_val_if_fail(self != NULL, NULL);
+	return fwupd_rs_json_array_to_string(self->rs, (guint)flags);
 }

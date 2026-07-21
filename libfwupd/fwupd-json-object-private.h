@@ -7,31 +7,9 @@
 #pragma once
 
 #include "fwupd-json-object.h"
+#include "fwupd-rs-json.h"
 
-void
-fwupd_json_object_append_string(FwupdJsonObject *self,
-				GString *str,
-				guint depth,
-				FwupdJsonExportFlags flags) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_json_object_add_null_internal(FwupdJsonObject *self,
-				    GRefString *key,
-				    FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_json_object_add_raw_internal(FwupdJsonObject *self,
-				   GRefString *key,
-				   GRefString *value,
-				   FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2, 3);
-void
-fwupd_json_object_add_string_internal(FwupdJsonObject *self,
-				      GRefString *key,
-				      GRefString *value,
-				      FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_json_object_add_object_internal(FwupdJsonObject *self,
-				      GRefString *key,
-				      FwupdJsonObject *json_obj) G_GNUC_NON_NULL(1, 2, 3);
-void
-fwupd_json_object_add_array_internal(FwupdJsonObject *self,
-				     GRefString *key,
-				     FwupdJsonArray *json_arr) G_GNUC_NON_NULL(1, 2, 3);
+FwupdJsonObject *
+fwupd_json_object_new_from_rust(FwupdRsJsonObject *rs) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+FwupdRsJsonObject *
+fwupd_json_object_get_rust(FwupdJsonObject *self) G_GNUC_NON_NULL(1);

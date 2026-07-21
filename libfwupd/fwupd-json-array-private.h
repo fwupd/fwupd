@@ -7,17 +7,9 @@
 #pragma once
 
 #include "fwupd-json-array.h"
+#include "fwupd-rs-json.h"
 
-G_BEGIN_DECLS
-
-void
-fwupd_json_array_append_string(FwupdJsonArray *self,
-			       GString *str,
-			       guint depth,
-			       FwupdJsonExportFlags flags) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_json_array_add_string_internal(FwupdJsonArray *self, GRefString *value) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_json_array_add_raw_internal(FwupdJsonArray *self, GRefString *value) G_GNUC_NON_NULL(1, 2);
-
-G_END_DECLS
+FwupdJsonArray *
+fwupd_json_array_new_from_rust(FwupdRsJsonArray *rs) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+FwupdRsJsonArray *
+fwupd_json_array_get_rust(FwupdJsonArray *self) G_GNUC_NON_NULL(1);
