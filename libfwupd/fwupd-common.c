@@ -477,6 +477,61 @@ fwupd_unix_input_stream_memfd_new(GError **error)
 	return g_steal_fd(&fd);
 }
 
+/* copy the entire contents of @src_fd into @dst_fd, preferring an in-kernel copy */
+static gboolean
+fwupd_unix_input_stream_copy_fd(gint src_fd, gint dst_fd, GError **error)
+{
+	guint8 buf[0x8000] = {0};
+	gssize rc;
+
+#ifdef HAVE_COPY_FILE_RANGE
+	/* copy in-kernel with no userspace bounce buffer where supported */
+	gboolean copied_any = FALSE;
+	while ((rc = copy_file_range(src_fd, NULL, dst_fd, NULL, G_MAXSSIZE, 0)) > 0)
+		copied_any = TRUE;
+	if (rc == 0)
+		return TRUE;
+	/* only fall back to a userspace copy if the kernel or filesystem never supported
+	 * copy_file_range() for this pair, i.e. nothing has been copied yet */
+	if (copied_any ||
+	    (errno != EXDEV && errno != EINVAL && errno != ENOSYS && errno != EOPNOTSUPP)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to copy fd: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	if (lseek(src_fd, 0, SEEK_SET) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to seek: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+#endif
+	while ((rc = read(src_fd, buf, sizeof(buf))) > 0) {
+		if (write(dst_fd, buf, (gsize)rc) != rc) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to write to memfd: %s",
+				    fwupd_strerror(errno));
+			return FALSE;
+		}
+	}
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to read fd: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* rewind and seal the memfd so the received fd is an immutable snapshot */
 static gboolean
 fwupd_unix_input_stream_memfd_seal(gint fd, GError **error)
@@ -509,18 +564,28 @@ GUnixInputStream *
 fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 {
 	g_autofd gint fd = -1;
+	gsize bufsz = g_bytes_get_size(bytes);
 	gssize rc;
 
 	fd = fwupd_unix_input_stream_memfd_new(error);
 	if (fd < 0)
 		return NULL;
-	rc = write(fd, g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
+	rc = write(fd, g_bytes_get_data(bytes, NULL), bufsz);
 	if (rc < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to write %" G_GSSIZE_FORMAT,
-			    rc);
+			    "failed to write: %s",
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	if ((gsize)rc != bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "only wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT " bytes",
+			    rc,
+			    bufsz);
 		return NULL;
 	}
 	if (!fwupd_unix_input_stream_memfd_seal(fd, error))
@@ -536,8 +601,6 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 {
 	g_autofd gint fd = -1;
 	g_autofd gint src_fd = -1;
-	guint8 buf[0x8000] = {0};
-	gssize rc;
 
 	/* open the file for reading */
 	src_fd = open(fn, O_RDONLY);
@@ -558,25 +621,8 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 	fd = fwupd_unix_input_stream_memfd_new(error);
 	if (fd < 0)
 		return NULL;
-	while ((rc = read(src_fd, buf, sizeof(buf))) > 0) {
-		if (write(fd, buf, (gsize)rc) != rc) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to write to memfd: %s",
-				    fwupd_strerror(errno));
-			return NULL;
-		}
-	}
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to read %s: %s",
-			    fn,
-			    fwupd_strerror(errno));
+	if (!fwupd_unix_input_stream_copy_fd(src_fd, fd, error))
 		return NULL;
-	}
 	if (!fwupd_unix_input_stream_memfd_seal(fd, error))
 		return NULL;
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
