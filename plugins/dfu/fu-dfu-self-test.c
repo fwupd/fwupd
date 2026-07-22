@@ -123,6 +123,12 @@ fu_dfu_target_dfuse_func(void)
 	g_assert_false(ret);
 	ret = fu_dfu_target_parse_sectors(target, "@Internal Flash /0x08000000/12*001a", NULL);
 	g_assert_false(ret);
+
+	/* absent-sector-size device reporting a sector with a size but no type must be
+	 * rejected without reading past the end of the tokenised string */
+	fu_device_add_private_flag(FU_DEVICE(device), FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE);
+	ret = fu_dfu_target_parse_sectors(target, "@Internal Flash /0x08000000/2*016", NULL);
+	g_assert_false(ret);
 }
 
 int
