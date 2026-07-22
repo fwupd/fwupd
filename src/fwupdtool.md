@@ -26,7 +26,7 @@ For example, you can convert DFU or Intel HEX firmware into the vendor-specific 
 
 The fwupdtool command takes various options depending on the action.
 Run **fwupdtool \-\-help** for the full list.
-Note that some runtimes failures can be ignored using **\-\-force**.
+Note that some runtimes failures can be ignored using **--force** or **--ignore-requirements**.
 
 ## EXIT STATUS
 
