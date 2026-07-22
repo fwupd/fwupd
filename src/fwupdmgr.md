@@ -31,6 +31,14 @@ These applications may be more useful to many users compared to using the comman
 
 * **System76 Firmware Manager**: <https://github.com/pop-os/firmware-manager>
 
+For automated configuration management and reactive automation,
+<https://mgmtconfig.com/> provides
+[resources](https://mgmtconfig.com/docs/resources/) for managing fwupd remotes,
+individual devices, and system-wide updates, as well as a
+[function](https://mgmtconfig.com/docs/functions/) that reports when a reboot is
+needed. It communicates with fwupd over D-Bus; firmware verification and
+installation remain handled by fwupd.
+
 On most systems fwupd is configured to download metadata from the Linux Vendor Firmware Service
 <https://fwupd.org/> and more information about the LVFS is available here: <https://lvfs.readthedocs.io/>
 

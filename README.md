@@ -178,6 +178,10 @@ Additionally, the list of approved firmware can be supplemented using
 
 fwupdmgr is a command line client, but various additional graphical frontends are enumerated in the [fwupdmgr man page](https://fwupd.github.io/libfwupdplugin/fwupdmgr.html#description).
 
+For configuration management and reactive automation,
+[mgmt](https://mgmtconfig.com/) provides declarative resources and functions for
+fwupd.
+
 ## SAST Tools
 
 - [Coverity](https://scan.coverity.com/) - static analyzer for Java, C/C++, C#, JavaScript, Ruby, and Python code.
