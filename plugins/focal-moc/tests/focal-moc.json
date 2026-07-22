@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/focal-moc-emulation.zip",
+      "emulation-url": "fd19fb15078bc72e29120aa4e95f84e11269842a40dc7c34289e6435ce0d07f2-focal-moc-emulation.zip",
       "components": [
         {
           "version": "FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396",

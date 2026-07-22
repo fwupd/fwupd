@@ -14,4 +14,3 @@ plugin_builtins += static_library('fu_plugin_focal_moc',
   dependencies: plugin_deps,
 )
 device_tests += files('tests/focal-moc.json')
-enumeration_data += files('tests/focal-moc-emulation.zip')
