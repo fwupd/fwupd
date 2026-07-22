@@ -821,9 +821,13 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		return TRUE;
 	}
 
-	/* sync update message from CAB */
-	fu_device_ensure_from_component(device, component);
-	fu_device_incorporate_from_component(device, component);
+	/* sync update message from CAB, but only if the metadata is trusted */
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
+		fu_device_ensure_from_component(device, component);
+		fu_device_incorporate_from_component(device, component);
+	} else {
+		g_debug("not using untrusted metadata");
+	}
 
 	/* post-ensure checks */
 	if (!fu_release_check_version(release, component, helper->flags, &error_local)) {
