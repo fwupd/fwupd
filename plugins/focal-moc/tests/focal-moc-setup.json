@@ -1,0 +1,125 @@
+{
+  "FwupdVersion": "2.1.7",
+  "UsbDevices": [
+    {
+      "Created": "2026-07-22T03:29:41Z",
+      "GType": "FuUsbDevice",
+      "PlatformId": "2-2.1",
+      "IdVendor": 10248,
+      "IdProduct": 1946,
+      "Device": 29590,
+      "USB": 272,
+      "Manufacturer": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 220,
+          "InterfaceSubClass": 160,
+          "InterfaceProtocol": 176,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 2,
+              "MaxPacketSize": 64
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "MaxPacketSize": 64
+            }
+          ]
+        }
+      ],
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=190\nDEVNAME=bus/usb/002/063\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=2808/79a/7396\nTYPE=0/0/0\nBUSNUM=002\nDEVNUM=063"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/002/063"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "002"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=190\nDEVNAME=bus/usb/002/063\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=2808/79a/7396\nTYPE=0/0/0\nBUSNUM=002\nDEVNUM=063"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "063"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEQAQAAAEAIKJoHlnMBAgMBCQIgAAEBAKAyCQQAAALcoLAABwUCAkAAAAcFgQJAAAA="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "002"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=190\nDEVNAME=bus/usb/002/063\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=2808/79a/7396\nTYPE=0/0/0\nBUSNUM=002\nDEVNUM=063"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "063"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x01",
+          "Data": "Q0NvcmUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Data": "MTIzNDU2Nzg5MEFCQ0RFRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x02,Data=AgABMDE=,Length=0x5",
+          "Data": "AgABMDE="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "AgAnBEZUOTc2OURMX0FQUF9GVDkwMDFfVVNCX0RFQ19TVjAuMV83Mzk2RAA="
+        }
+      ]
+    }
+  ]
+}

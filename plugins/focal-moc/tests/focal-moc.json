@@ -3,12 +3,13 @@
   "interactive": false,
   "steps": [
     {
-      "url": "focal-moc-firmware.cab",
+      "emulation-file": "@enumeration_datadir@/focal-moc-setup.json",
       "components": [
         {
-          "version": "01.00.00.34",
+          "version": "FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396",
+          "protocol": "com.focal.moc",
           "guids": [
-            "replace-with-real-device-guid-from-fwupdmgr-get-devices"
+            "0561579a-6745-57b5-8593-f981a90a99af"
           ]
         }
       ]
