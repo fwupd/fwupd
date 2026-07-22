@@ -288,14 +288,16 @@ static gboolean
 fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 {
 	gsize actual = 0;
-	guint8 bcc_calc, bcc_recv;
+	guint8 bcc_calc;
+	guint8 bcc_recv;
 	guint8 rx_buf[64] = {0};
 	g_autoptr(GByteArray) pkt = g_byte_array_new();
 	g_autoptr(FuStructFocalMocVersionRsp) st_res = NULL;
 	g_autoptr(FuStructFocalMocCmdReq) st_req = NULL;
 	g_autoptr(FuStructFocalMocCmdRsp) st_hdr = NULL;
 	g_autofree gchar *version = NULL;
-	guint16 ln, pkt_ln;
+	guint16 ln;
+	guint16 pkt_ln;
 	guint8 bcc;
 
 	/* build: [ 0x02 | 0x00 0x01 | 0x30 | BCC ] */
@@ -508,7 +510,7 @@ fu_focal_moc_device_probe(FuDevice *device, GError **error)
 	}
 
 	pid = fu_device_get_pid(device);
-	for (guint i = 0; i < G_N_ELEMENTS(supported_pids); i++) {
+	for (gsize i = 0; i < G_N_ELEMENTS(supported_pids); i++) {
 		if (pid == supported_pids[i])
 			return TRUE;
 	}
