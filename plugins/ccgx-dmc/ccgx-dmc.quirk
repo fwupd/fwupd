@@ -3,7 +3,7 @@
 Plugin = ccgx_dmc
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_17EF&PID_310D
-GType=FuCcgxDmcDevice
+GType = FuCcgxDmcDevice
 Name = ThinkPad Thunderbolt 5 Smart Dock 7500
 CcgxDmcTriggerCode = 0x01
 InstallDuration = 1200
