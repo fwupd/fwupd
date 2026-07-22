@@ -479,6 +479,25 @@ fu_amd_gpu_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_amd_gpu_device_parent_class)->finalize(object);
 }
 
+static FuFirmware *
+fu_amd_gpu_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+
+	/* the VBIOS read from /sys/bus/pci/.../rom is raw GOP UEFI data,
+	 * not the PSP container format used for flashing. Parse with ATOM */
+	fw = fu_device_dump_firmware(device, progress, error);
+	if (fw == NULL)
+		return NULL;
+	firmware = fu_amd_gpu_atom_firmware_new();
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
+		g_prefix_error_literal(error, "failed to parse VBIOS: ");
+		return NULL;
+	}
+	return g_steal_pointer(&firmware);
+}
+
 static void
 fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 {
@@ -489,6 +508,7 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	device_class->setup = fu_amd_gpu_device_setup;
 	device_class->set_progress = fu_amd_gpu_device_set_progress;
 	device_class->write_firmware = fu_amd_gpu_device_write_firmware;
+	device_class->read_firmware = fu_amd_gpu_device_read_firmware;
 	device_class->check_firmware = fu_amd_gpu_device_check_firmware;
 	device_class->to_string = fu_amd_gpu_device_to_string;
 	device_class->convert_version = fu_amd_gpu_device_convert_version;
