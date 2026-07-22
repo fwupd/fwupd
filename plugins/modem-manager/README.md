@@ -33,6 +33,12 @@ Firehose program file to use during the QCDM switch to EDL (Emergency Download) 
 
 Since: 1.8.10
 
+### ModemManagerLibFirmwarePath
+
+The system firmware path to use during the mhi driver switch to EDL (Emergency Download) mode.
+
+Since: 2.1.5
+
 ### `Flags=use-branch`
 
 Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade

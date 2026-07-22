@@ -1,0 +1,34 @@
+{
+  "FwupdVersion": "2.1.7",
+  "UsbDevices": [
+    {
+      "Created": "2026-07-09T03:36:55.564294Z",
+      "GType": "FuMmMhiFirehoseDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:74:00.0",
+      "Vendor": 6091,
+      "Model": 282,
+      "Version": "89602.0000.00.02.02.13_5003.0000.004.002.006_C13",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:74:00.0",
+      "DeviceIds": [
+        "PCI\\VID_17CB&PID_011A",
+        "PCI\\VID_17CB&PID_011A&SUBSYS_20991301",
+        "PCI\\VID_17CB&PID_011A&REV_0000",
+        "PCI\\VID_17CB&PID_011A&SUBSYS_20991301&REV_0000",
+        "PCI\\VID_17CB&PID_011A&CARRIER_VOLTE_OPENMKT-COMMERCIAL-CMCC",
+        "PCI\\VID_17CB&PID_011A&REV_0000&CARRIER_VOLTE_OPENMKT-COMMERCIAL-CMCC",
+        "PCI\\VID_17CB&PID_011A&SUBSYS_20991301&REV_0000&CARRIER_VOLTE_OPENMKT-COMMERCIAL-CMCC",
+        "PCI\\VEN_17CB"
+      ],
+      "Ports": {
+        "net": "/dev/mhi_hwip0",
+        "mbim": "/dev/wwan0mbim0"
+      },
+      "Events": [
+        {
+          "Id": "ListAttr",
+          "Data": "uevent\nmhi0\npower_state\nwakeup\nbroken_parity_status\nsubsystem_device\ndma_mask_bits\nvendor\niommu_group\nlocal_cpus\nfirmware_node\npower\nclass\nreset\nnuma_node\nresource\nrescan\nmax_link_width\nmsi_bus\ndevice\naer_dev_nonfatal\naer\ncurrent_link_width\ndriver\nmax_link_speed\nlocal_cpulist\ndriver_override\nsubsystem\nd3cold_allowed\nirq\nrevision\nresource2\ncurrent_link_speed\nreset_method\naer_dev_correctable\nconsistent_dma_mask_bits\nresource0\nconfig\nari_enabled\nmsi_irqs\nremove\niommu\naer_dev_fatal\nenable\nlink\nmodalias\nsubsystem_vendor"
+        }
+      ]
+    }
+  ]
+}
