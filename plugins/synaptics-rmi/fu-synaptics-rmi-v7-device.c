@@ -32,6 +32,7 @@ fu_synaptics_rmi_v7_device_detach(FuSynapticsRmiDevice *self, FuProgress *progre
 	/* enter SBL */
 	if (flash->has_sbl) {
 		FuSynapticsRmiFunction *f01;
+		guint16 sbl_version = 0;
 		g_autoptr(GByteArray) f01_basic = NULL;
 
 		if (!fu_synaptics_rmi_v7_device_enter_sbl(self, error)) {
@@ -49,9 +50,14 @@ fu_synaptics_rmi_v7_device_detach(FuSynapticsRmiDevice *self, FuProgress *progre
 			g_prefix_error_literal(error, "failed to read the basic query: ");
 			return FALSE;
 		}
-		fu_synaptics_rmi_device_set_previous_sbl_version(self,
-								 f01_basic->data[2] << 8 |
-								     f01_basic->data[3]);
+		if (!fu_memread_uint16_safe(f01_basic->data,
+					    f01_basic->len,
+					    0x2,
+					    &sbl_version,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+		fu_synaptics_rmi_device_set_previous_sbl_version(self, sbl_version);
 		g_debug("SBL version: %d.%d",
 			fu_synaptics_rmi_device_get_previous_sbl_version(self) >> 8,
 			fu_synaptics_rmi_device_get_previous_sbl_version(self) & 0xff);
@@ -906,6 +912,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 	g_autoptr(GByteArray) req_transfer_length = g_byte_array_new();
 	g_autoptr(GByteArray) res = NULL;
 	gsize partition_size = FU_STRUCT_RMI_PARTITION_TBL_SIZE;
+	guint8 flash_cfg0 = 0;
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -968,11 +975,13 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 		g_prefix_error_literal(error, "failed to read: ");
 		return FALSE;
 	}
+	if (!fu_memread_uint8_safe(res->data, res->len, 0x0, &flash_cfg0, error))
+		return FALSE;
 
 	/* debugging */
 	fu_dump_full(G_LOG_DOMAIN, "FlashConfig", res->data, res->len, 80, FU_DUMP_FLAG_NONE);
 
-	if ((res->data[0] & 0x0f) == 1)
+	if ((flash_cfg0 & 0x0f) == 1)
 		partition_size += 0x2;
 
 	/* parse the config length */
@@ -1013,6 +1022,7 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
+	guint8 f34_query0 = 0;
 	guint8 offset;
 	g_autoptr(FuStructSynapticsRmiV7F34x) st_f34x = NULL;
 	g_autoptr(GByteArray) f34_data0 = NULL;
@@ -1028,8 +1038,10 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
-	flash->has_security = (f34_data0->data[0] & 0x40) ? TRUE : FALSE;
-	offset = (f34_data0->data[0] & 0b00000111) + 1;
+	if (!fu_memread_uint8_safe(f34_data0->data, f34_data0->len, 0x0, &f34_query0, error))
+		return FALSE;
+	flash->has_security = (f34_query0 & 0x40) ? TRUE : FALSE;
+	offset = (f34_query0 & 0b00000111) + 1;
 	f34_data = fu_synaptics_rmi_device_read(self, f34->query_base + offset, 21, error);
 	if (f34_data == NULL)
 		return FALSE;
@@ -1095,7 +1107,8 @@ fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **err
 		g_prefix_error_literal(error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
-	status = f34_data->data[0];
+	if (!fu_memread_uint8_safe(f34_data->data, f34_data->len, 0x0, &status, error))
+		return FALSE;
 	if (status & 0x80) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
