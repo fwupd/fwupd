@@ -14,7 +14,7 @@ code provided by FocalTech Systems Co., Ltd.
 
 Every transaction uses a simple framed packet format:
 
-```
+```text
 | 0x02 | LEN_HI | LEN_LO | CMD | data... | BCC |
 ```
 
@@ -42,7 +42,7 @@ the ACK (`data[0]`) is a status code: `0x01` = success.
 
 ### Firmware Update Sequence
 
-```
+```text
 1. GET_FW_VERSION  → read current version (for fwupd version comparison)
 2. ENTER_BOOT_MODE → switch device to bootloader
    (device re-enumerates — wait for replug)

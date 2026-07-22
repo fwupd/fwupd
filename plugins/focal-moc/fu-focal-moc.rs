@@ -22,7 +22,7 @@ enum FuFocalMocCmd {
     GetFwVersion = 0x30,  // request firmware version string
     SetBootMode  = 0x32,  // switch device mode; data[0] = FuFocalMocBootMode
     FwDownload   = 0x33,  // firmware download (3-phase: SHO → STX×N → EOT)
-    Ack          = 0x04,  // device acknowledgement (response to all commands)
+    Ack          = 0x04,  // device acknowledgment (response to all commands)
 }
 
 // Boot mode argument for CMD_SET_BOOT_MODE (ff_update.h: boot_mode_t)
