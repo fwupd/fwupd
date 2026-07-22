@@ -1356,11 +1356,19 @@ fwupd_client_quit_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_quit_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Quit",
 			  NULL,
@@ -1494,11 +1502,19 @@ fwupd_client_get_host_security_attrs_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_host_security_attrs_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHostSecurityAttrs",
 			  NULL,
@@ -1579,17 +1595,26 @@ fwupd_client_modify_bios_setting_async(FwupdClient *self,
 	g_return_if_fail(settings != NULL);
 	g_return_if_fail(g_hash_table_size(settings) > 0);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_modify_bios_setting_async);
+
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
 	g_hash_table_iter_init(&iter, settings);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		if (value == NULL)
 			continue;
 		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+	}
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
 	}
 	g_dbus_proxy_call(priv->proxy,
 			  "SetBiosSettings",
@@ -1671,11 +1696,19 @@ fwupd_client_get_bios_settings_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_bios_settings_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetBiosSettings",
 			  NULL,
@@ -1758,11 +1791,19 @@ fwupd_client_get_host_security_events_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_host_security_events_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHostSecurityEvents",
 			  g_variant_new("(u)", limit),
@@ -1855,11 +1896,19 @@ fwupd_client_get_report_metadata_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_report_metadata_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetReportMetadata",
 			  NULL,
@@ -1941,11 +1990,19 @@ fwupd_client_get_devices_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_devices_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetDevices",
 			  NULL,
@@ -2026,11 +2083,19 @@ fwupd_client_get_plugins_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_plugins_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetPlugins",
 			  NULL,
@@ -2112,11 +2177,19 @@ fwupd_client_get_history_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_history_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHistory",
 			  NULL,
@@ -2219,13 +2292,11 @@ fwupd_client_get_device_by_id_async(FwupdClient *self,
 				    GAsyncReadyCallback callback,
 				    gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -2319,13 +2390,11 @@ fwupd_client_get_devices_by_guid_async(FwupdClient *self,
 				       GAsyncReadyCallback callback,
 				       gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(guid != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -2410,11 +2479,19 @@ fwupd_client_get_releases_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_releases_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetReleases",
 			  g_variant_new("(s)", device_id),
@@ -2498,11 +2575,19 @@ fwupd_client_search_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(token != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_search_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Search",
 			  g_variant_new("(s)", token),
@@ -2586,11 +2671,19 @@ fwupd_client_get_downgrades_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_downgrades_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetDowngrades",
 			  g_variant_new("(s)", device_id),
@@ -2674,11 +2767,19 @@ fwupd_client_get_upgrades_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_upgrades_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetUpgrades",
 			  g_variant_new("(s)", device_id),
@@ -2760,11 +2861,19 @@ fwupd_client_modify_config_async(FwupdClient *self,
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_modify_config_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyConfig",
 			  g_variant_new("(sss)", section, key, value),
@@ -2840,11 +2949,19 @@ fwupd_client_reset_config_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(section != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_reset_config_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "ResetConfig",
 			  g_variant_new("(s)", section),
@@ -2920,11 +3037,19 @@ fwupd_client_activate_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_activate_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Activate",
 			  g_variant_new("(s)", device_id),
@@ -2999,11 +3124,19 @@ fwupd_client_verify_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_verify_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Verify",
 			  g_variant_new("(s)", device_id),
@@ -3078,11 +3211,19 @@ fwupd_client_verify_update_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_verify_update_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "VerifyUpdate",
 			  g_variant_new("(s)", device_id),
@@ -3157,11 +3298,19 @@ fwupd_client_unlock_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_unlock_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Unlock",
 			  g_variant_new("(s)", device_id),
@@ -3236,11 +3385,19 @@ fwupd_client_clear_results_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_clear_results_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "ClearResults",
 			  g_variant_new("(s)", device_id),
@@ -3323,11 +3480,19 @@ fwupd_client_get_results_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_results_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetResults",
 			  g_variant_new("(s)", device_id),
@@ -3471,13 +3636,11 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 				 gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* move to a thread if this ever takes more than a few ms */
 	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
@@ -3556,7 +3719,6 @@ fwupd_client_install_async(FwupdClient *self,
 			   gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
@@ -3564,7 +3726,6 @@ fwupd_client_install_async(FwupdClient *self,
 	g_return_if_fail(device_id != NULL);
 	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* move to a thread if this ever takes more than a few ms */
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
@@ -3902,7 +4063,6 @@ fwupd_client_install_release_async(FwupdClient *self,
 				   GAsyncReadyCallback callback,
 				   gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 	FwupdClientInstallReleaseData *data;
 	const gchar *remote_id;
@@ -3911,7 +4071,6 @@ fwupd_client_install_release_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_DEVICE(device));
 	g_return_if_fail(FWUPD_IS_RELEASE(release));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -4056,13 +4215,11 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 				     gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* move to a thread if this ever takes more than a few ms */
 	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
@@ -4126,14 +4283,12 @@ fwupd_client_get_details_async(FwupdClient *self,
 			       gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* move to a thread if this ever takes more than a few ms */
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
@@ -4565,7 +4720,6 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 					 gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 	g_autoptr(GUnixInputStream) istr_sig = NULL;
@@ -4575,7 +4729,6 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 	g_return_if_fail(metadata != NULL);
 	g_return_if_fail(signature != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* move to a thread if this ever takes more than a few ms */
 	istr = fwupd_unix_input_stream_from_bytes(metadata, &error);
@@ -4941,11 +5094,19 @@ fwupd_client_get_remotes_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_remotes_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetRemotes",
 			  NULL,
@@ -5026,11 +5187,19 @@ fwupd_client_get_approved_firmware_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_approved_firmware_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "GetApprovedFirmware",
 			  NULL,
@@ -5105,7 +5274,6 @@ fwupd_client_set_approved_firmware_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -5114,6 +5282,15 @@ fwupd_client_set_approved_firmware_async(FwupdClient *self,
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *tmp = g_ptr_array_index(checksums, i);
 		strv[i] = g_strdup(tmp);
+	}
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
 	}
 	g_dbus_proxy_call(priv->proxy,
 			  "SetApprovedFirmware",
@@ -5166,12 +5343,10 @@ fwupd_client_get_blocked_firmware_async(FwupdClient *self,
 					GAsyncReadyCallback callback,
 					gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -5222,12 +5397,10 @@ fwupd_client_set_blocked_firmware_async(FwupdClient *self,
 					GAsyncReadyCallback callback,
 					gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_set_blocked_firmware_async);
@@ -5302,11 +5475,19 @@ fwupd_client_set_feature_flags_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_set_feature_flags_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "SetFeatureFlags",
 			  g_variant_new("(t)", (guint64)feature_flags),
@@ -5389,7 +5570,6 @@ fwupd_client_self_sign_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* set options */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
@@ -5406,6 +5586,15 @@ fwupd_client_self_sign_async(FwupdClient *self,
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_self_sign_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "SelfSign",
 			  g_variant_new("(sa{sv})", value, &builder),
@@ -5486,11 +5675,19 @@ fwupd_client_modify_remote_async(FwupdClient *self,
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_modify_remote_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyRemote",
 			  g_variant_new("(sss)", remote_id, key, value),
@@ -5565,11 +5762,19 @@ fwupd_client_clean_remote_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(remote_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_clean_remote_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "CleanRemote",
 			  g_variant_new("(s)", remote_id),
@@ -5651,11 +5856,19 @@ fwupd_client_modify_device_async(FwupdClient *self,
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_modify_device_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyDevice",
 			  g_variant_new("(sss)", device_id, key, value),
@@ -5746,13 +5959,11 @@ fwupd_client_get_remote_by_id_async(FwupdClient *self,
 				    GAsyncReadyCallback callback,
 				    gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(remote_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -6418,7 +6629,6 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 				GAsyncReadyCallback callback,
 				gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 	g_autoptr(FwupdCurlHelper) helper = NULL;
 	g_autoptr(GError) error = NULL;
@@ -6427,7 +6637,6 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 	g_return_if_fail(url != NULL);
 	g_return_if_fail(payload != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* ensure networking set up */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -6619,14 +6828,12 @@ fwupd_client_upload_report_async(FwupdClient *self,
 				 GAsyncReadyCallback callback,
 				 gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(url != NULL);
 	g_return_if_fail(payload != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_upload_report_async);
@@ -6709,11 +6916,19 @@ fwupd_client_inhibit_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(reason != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_inhibit_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Inhibit",
 			  g_variant_new("(s)", reason),
@@ -6789,11 +7004,19 @@ fwupd_client_uninhibit_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(inhibit_id != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_uninhibit_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "Uninhibit",
 			  g_variant_new("(s)", inhibit_id),
@@ -6905,7 +7128,6 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* tag for debugging */
 	g_task_set_source_tag(task, fwupd_client_emulation_load_async);
@@ -6913,6 +7135,15 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
 		return;
 	}
 
@@ -7033,7 +7264,6 @@ fwupd_client_emulation_save_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* tag for debugging */
 	g_task_set_source_tag(task, fwupd_client_emulation_save_async);
@@ -7041,6 +7271,15 @@ fwupd_client_emulation_save_async(FwupdClient *self,
 	istr = fwupd_unix_output_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
 		return;
 	}
 
@@ -7137,11 +7376,19 @@ fwupd_client_fix_host_security_attr_async(FwupdClient *self,
 	g_return_if_fail(appstream_id != NULL);
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_fix_host_security_attr_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "FixHostSecurityAttr",
 			  g_variant_new("(s)", appstream_id),
@@ -7216,11 +7463,19 @@ fwupd_client_undo_host_security_attr_async(FwupdClient *self,
 	g_return_if_fail(appstream_id != NULL);
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_undo_host_security_attr_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
 	g_dbus_proxy_call(priv->proxy,
 			  "UndoHostSecurityAttr",
 			  g_variant_new("(s)", appstream_id),
