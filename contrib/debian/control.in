@@ -48,8 +48,7 @@ Suggests: 7zip,
 	  python3-dbus,
 	  python3-gi,
 	  python3-jinja2
-Provides: fwupdate,
-	  ${gir:Provides}
+Provides: fwupdate
 Conflicts: fwupdate-amd64-signed,
 	   fwupdate-i386-signed,
 	   fwupdate-arm64-signed,
