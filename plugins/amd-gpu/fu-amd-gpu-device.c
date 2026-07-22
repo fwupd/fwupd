@@ -240,6 +240,14 @@ fu_amd_gpu_device_parse_version_string(FuAmdGpuDevice *self, const gchar *str, G
 	guint64 ver;
 	g_autoptr(GError) error_parse = NULL;
 
+	/* if the string doesn't start with a digit, don't try to parse */
+	if (!g_ascii_isdigit(str[0])) {
+		g_debug("version string '%s' does not start with a digit, using as-is", str);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version(FU_DEVICE(self), str);
+		return TRUE;
+	}
+
 	if (!fu_strtoull(str, &ver, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_parse)) {
 		if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE)) {
 			g_propagate_error(error, g_steal_pointer(&error_parse));
