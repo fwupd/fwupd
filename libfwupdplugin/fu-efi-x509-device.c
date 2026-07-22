@@ -11,6 +11,7 @@
 #include "fu-efi-variable-authentication2.h"
 #include "fu-efi-x509-device.h"
 #include "fu-input-stream.h"
+#include "fu-uefi-device.h"
 #include "fu-version-common.h"
 #include "fu-zip-firmware.h"
 
@@ -200,6 +201,7 @@ fu_efi_x509_device_class_init(FuEfiX509DeviceClass *klass)
 	device_class->prepare_firmware = fu_efi_x509_device_prepare_firmware;
 	device_class->write_firmware = fu_efi_x509_device_write_firmware;
 	device_class->set_progress = fu_efi_x509_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }
 
 /**
