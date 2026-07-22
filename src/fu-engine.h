@@ -20,8 +20,8 @@ G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)
 
 FuEngine *
 fu_engine_new(FuContext *ctx) G_GNUC_NON_NULL(1);
-gboolean
-fu_engine_get_loaded(FuEngine *self) G_GNUC_NON_NULL(1);
+FuEnginePhase
+fu_engine_get_phase(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob) G_GNUC_NON_NULL(1, 2);
 void

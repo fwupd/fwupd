@@ -6,10 +6,10 @@
 
 #include "config.h"
 
-#include "fu-util-common.h"
+#include "fu-cli-common.h"
 
 static void
-fu_util_func(void)
+fu_cli_func(void)
 {
 	const gchar *tmp;
 	g_autoptr(FwupdClient) client = fwupd_client_new();
@@ -20,20 +20,20 @@ fu_util_func(void)
 		tmp = fwupd_device_problem_to_string(i);
 		if (tmp == NULL)
 			break;
-		str = fu_util_device_problem_to_string(client, device, i);
+		str = fu_cli_device_problem_to_string(client, device, i);
 		g_assert_nonnull(str);
 	}
 	for (FwupdReleaseFlags i = 1; i < G_MAXUINT64; i <<= 1) {
 		tmp = fwupd_release_flag_to_string(i);
 		if (tmp == NULL)
 			break;
-		g_assert_nonnull(fu_util_release_flag_to_string(i));
+		g_assert_nonnull(fu_cli_release_flag_to_string(i));
 	}
 	for (FwupdRequestFlags i = 1; i < G_MAXUINT64; i <<= 1) {
 		tmp = fwupd_request_flag_to_string(i);
 		if (tmp == NULL)
 			break;
-		g_assert_nonnull(fu_util_request_flag_to_string(i));
+		g_assert_nonnull(fu_cli_request_flag_to_string(i));
 	}
 	for (FwupdPluginFlags i = 1; i < G_MAXUINT64; i <<= 1) {
 		g_autofree gchar *str = NULL;
@@ -42,13 +42,13 @@ fu_util_func(void)
 		tmp = fwupd_plugin_flag_to_string(i);
 		if (tmp == NULL)
 			break;
-		str = fu_util_plugin_flag_to_string(i);
+		str = fu_cli_plugin_flag_to_string(i);
 		g_assert_nonnull(str);
 	}
 }
 
 static void
-fu_util_interesting_device_func(void)
+fu_cli_interesting_device_func(void)
 {
 	struct {
 		const gchar *name;
@@ -130,9 +130,7 @@ fu_util_interesting_device_func(void)
 			g_ptr_array_add(devices, g_object_ref(child));
 		}
 
-		g_assert_cmpint(fu_util_is_interesting_device(devices, device),
-				==,
-				map[i].expected);
+		g_assert_cmpint(fu_cli_is_interesting_device(devices, device), ==, map[i].expected);
 	}
 }
 
@@ -140,7 +138,7 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/fwupd/util", fu_util_func);
-	g_test_add_func("/fwupd/util/interesting-device", fu_util_interesting_device_func);
+	g_test_add_func("/fwupd/cli", fu_cli_func);
+	g_test_add_func("/fwupd/cli/interesting-device", fu_cli_interesting_device_func);
 	return g_test_run();
 }
