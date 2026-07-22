@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/focal-moc-setup.json",
+      "emulation-file": "@enumeration_datadir@/focal-moc-emulation.zip",
       "components": [
         {
           "version": "FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396",
