@@ -2441,8 +2441,8 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 		if (g_strcmp0(prop_key, "install-flags") == 0) {
 			const guint64 allowed_mask =
 			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
-			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
-			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_NO_HISTORY |
+			    FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
 		}
 
