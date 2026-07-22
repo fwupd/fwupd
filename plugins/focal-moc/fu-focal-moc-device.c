@@ -676,7 +676,7 @@ fu_focal_moc_device_write_firmware(FuDevice *device,
 	 * then the final ACK collection below handles the end-of-download response.
 	 */
 	for (guint i = 0; i < total_blocks; i++) {
-		const guint8 *block = fw_data + (gsize)i * FU_FOCAL_MOC_DL_BLOCK_SIZE;
+		const guint8 *block = fw_data + ((gsize)i * FU_FOCAL_MOC_DL_BLOCK_SIZE);
 
 		if (!fu_focal_moc_device_dl_pkt(self,
 						    FU_FOCAL_MOC_MAGIC_STX,
