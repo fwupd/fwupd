@@ -918,6 +918,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="debian">
+      <native />
       <package />
     </distro>
     <distro id="fedora">
@@ -931,6 +932,12 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="libstd-rust-dev">
+    <distro id="debian">
+      <multi-arch />
+      <package />
     </distro>
   </dependency>
   <dependency id="rust-std-static-x86_64-pc-windows-gnu">
