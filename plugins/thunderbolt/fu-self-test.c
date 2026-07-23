@@ -228,7 +228,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *sum_data = NULL;
 	const gchar *sum_disk = NULL;
-	gsize s;
+	gssize s;
 
 	sum_data = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
 	chk = g_checksum_new(G_CHECKSUM_SHA1);
@@ -244,16 +244,14 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	g_assert_nonnull(is);
 
 	do {
-		g_autoptr(GBytes) b = NULL;
-		const guchar *d;
+		guint8 tmpbuf[4096] = {0};
 
-		b = g_input_stream_read_bytes(G_INPUT_STREAM(is), 4096, NULL, &error);
+		s = fu_input_stream_read(is, tmpbuf, sizeof(tmpbuf), NULL, &error);
 		g_assert_no_error(error);
-		g_assert_nonnull(is);
+		g_assert_cmpint(s, >=, 0);
 
-		d = g_bytes_get_data(b, &s);
 		if (s > 0)
-			g_checksum_update(chk, d, (gssize)s);
+			g_checksum_update(chk, tmpbuf, s);
 
 	} while (s > 0);
 

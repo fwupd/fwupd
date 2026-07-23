@@ -9,15 +9,17 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <gio/gunixinputstream.h>
 #include <glib/gstdio.h>
 
 #include "fwupd-error.h"
 
-#include "fu-input-stream.h"
+#include "fu-stream-input-stream-private.h"
 #include "fu-unix-seekable-input-stream.h"
 
 struct _FuUnixSeekableInputStream {
-	GUnixInputStream parent_instance;
+	FuStreamInputStream parent_instance;
+	gint fd;
 };
 
 static void
@@ -26,14 +28,15 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface);
 /* see https://gitlab.gnome.org/GNOME/glib/-/issues/3200 for why this is needed */
 G_DEFINE_TYPE_WITH_CODE(FuUnixSeekableInputStream,
 			fu_unix_seekable_input_stream,
-			G_TYPE_UNIX_INPUT_STREAM,
+			FU_TYPE_STREAM_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
 					      fu_unix_seekable_input_stream_seekable_iface_init))
 
 static goffset
 fu_unix_seekable_input_stream_tell(GSeekable *seekable)
 {
-	goffset rc = lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(seekable)), 0, SEEK_CUR);
+	FuUnixSeekableInputStream *self = FU_UNIX_SEEKABLE_INPUT_STREAM(seekable);
+	goffset rc = lseek(self->fd, 0, SEEK_CUR);
 	if (rc < 0)
 		g_critical("cannot tell FuUnixSeekableInputStream: %s", fwupd_strerror(errno));
 	return rc;
@@ -42,7 +45,8 @@ fu_unix_seekable_input_stream_tell(GSeekable *seekable)
 static gboolean
 fu_unix_seekable_input_stream_can_seek(GSeekable *seekable)
 {
-	return lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(seekable)), 0, SEEK_CUR) >= 0;
+	FuUnixSeekableInputStream *self = FU_UNIX_SEEKABLE_INPUT_STREAM(seekable);
+	return lseek(self->fd, 0, SEEK_CUR) >= 0;
 }
 
 /* from glocalfileinputstream.c */
@@ -73,9 +77,7 @@ fu_unix_seekable_input_stream_seek(GSeekable *seekable,
 	g_return_val_if_fail(FU_IS_UNIX_SEEKABLE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	rc = lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(self)),
-		   offset,
-		   fu_unix_seekable_input_stream_seek_type_to_lseek(type));
+	rc = lseek(self->fd, offset, fu_unix_seekable_input_stream_seek_type_to_lseek(type));
 	if (rc < 0) {
 		g_set_error(error,
 			    G_IO_ERROR, /* nocheck:error */
@@ -135,11 +137,12 @@ FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 {
 	GStatBuf st = {0};
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuUnixSeekableInputStream) self = NULL;
+	g_autoptr(GUnixInputStream) stream = NULL;
 
-	/* create wrapper */
-	stream =
-	    g_object_new(FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM, "fd", fd, "close-fd", close_fd, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	stream = G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, close_fd)); /* nocheck:blocked */
 
 	/* check for a regular file */
 	if (fstat(fd, &st) != 0) {
@@ -159,8 +162,14 @@ fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 		return NULL;
 	}
 
+	/* create wrapper */
+	self = g_object_new(FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM, NULL);
+	self->fd = fd;
+	fu_stream_input_stream_set_base_stream(FU_STREAM_INPUT_STREAM(self),
+					       G_INPUT_STREAM(stream)); /* nocheck:blocked */
+
 	/* success */
-	return g_steal_pointer(&stream);
+	return FU_INPUT_STREAM(g_steal_pointer(&self));
 }
 
 /**
@@ -184,7 +193,7 @@ fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GE
 	g_return_val_if_fail(FU_IS_UNIX_SEEKABLE_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	fd = g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(stream));
+	fd = stream->fd;
 	seals = fcntl(fd, F_GET_SEALS);
 	if (seals < 0) {
 		/* not supported on this fd */

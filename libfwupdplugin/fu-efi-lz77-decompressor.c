@@ -96,11 +96,11 @@ fu_efi_lz77_decompressor_read_source_bits(FuEfiLz77DecompressHelper *helper,
 		helper->bit_buf |= (guint32)(((guint64)helper->sub_bit_buf) << number_of_bits);
 
 		/* get 1 byte into sub_bit_buf */
-		rc = g_input_stream_read(G_INPUT_STREAM(helper->stream),
-					 &sub_bit_buf,
-					 sizeof(sub_bit_buf),
-					 NULL,
-					 error);
+		rc = fu_input_stream_read(helper->stream,
+					  &sub_bit_buf,
+					  sizeof(sub_bit_buf),
+					  NULL,
+					  error);
 		if (rc < 0)
 			return FALSE;
 		if (rc == 0) {

@@ -15,6 +15,212 @@
 #include "fu-mem-private.h"
 #include "fu-sum.h"
 
+static void
+fu_input_stream_seekable_iface_init(GSeekableIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(FuInputStream,
+			fu_input_stream,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE, fu_input_stream_seekable_iface_init))
+
+static goffset
+fu_input_stream_default_tell(FuInputStream *stream)
+{
+	return 0;
+}
+
+static gboolean
+fu_input_stream_default_can_seek(FuInputStream *stream)
+{
+	return FALSE;
+}
+
+static gboolean
+fu_input_stream_default_seek(FuInputStream *stream,
+			     goffset offset,
+			     GSeekType type,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "stream is not seekable");
+	return FALSE;
+}
+
+static goffset
+fu_input_stream_seekable_tell(GSeekable *seekable)
+{
+	FuInputStream *self = FU_INPUT_STREAM(seekable);
+	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
+	return klass->tell(self);
+}
+
+static gboolean
+fu_input_stream_seekable_can_seek(GSeekable *seekable)
+{
+	FuInputStream *self = FU_INPUT_STREAM(seekable);
+	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
+	return klass->can_seek(self);
+}
+
+static gboolean
+fu_input_stream_seekable_seek(GSeekable *seekable,
+			      goffset offset,
+			      GSeekType type,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	FuInputStream *self = FU_INPUT_STREAM(seekable);
+	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
+	return klass->seek(self, offset, type, cancellable, error);
+}
+
+static gboolean
+fu_input_stream_seekable_can_truncate(GSeekable *seekable)
+{
+	return FALSE;
+}
+
+static gboolean
+fu_input_stream_seekable_truncate(GSeekable *seekable,
+				  goffset offset,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot truncate FuInputStream");
+	return FALSE;
+}
+
+static void
+fu_input_stream_seekable_iface_init(GSeekableIface *iface)
+{
+	iface->tell = fu_input_stream_seekable_tell;
+	iface->can_seek = fu_input_stream_seekable_can_seek;
+	iface->seek = fu_input_stream_seekable_seek;
+	iface->can_truncate = fu_input_stream_seekable_can_truncate;
+	iface->truncate_fn = fu_input_stream_seekable_truncate;
+}
+
+static void
+fu_input_stream_constructed(GObject *object)
+{
+	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(object);
+
+	G_OBJECT_CLASS(fu_input_stream_parent_class)->constructed(object);
+
+	/* every FuInputStream subclass must implement read_fn */
+	g_assert(klass->read_fn != NULL); /* nocheck:blocked */
+}
+
+static void
+fu_input_stream_class_init(FuInputStreamClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->constructed = fu_input_stream_constructed;
+	klass->tell = fu_input_stream_default_tell;
+	klass->can_seek = fu_input_stream_default_can_seek;
+	klass->seek = fu_input_stream_default_seek;
+}
+
+static void
+fu_input_stream_init(FuInputStream *self)
+{
+}
+
+/**
+ * fu_input_stream_read:
+ * @stream: a #FuInputStream
+ * @buffer: (not nullable): a buffer to read data into
+ * @count: the number of bytes that will be read from the stream
+ * @cancellable: (nullable): optional #GCancellable object
+ * @error: (nullable): optional return location for an error
+ *
+ * Tries to read @count bytes from the stream into the buffer starting at @buffer.
+ *
+ * Returns: number of bytes read, 0 for end of stream, or -1 on error
+ *
+ * Since: 2.1.7
+ **/
+gssize
+fu_input_stream_read(FuInputStream *stream,
+		     void *buffer,
+		     gsize count,
+		     GCancellable *cancellable,
+		     GError **error)
+{
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), -1);
+	g_return_val_if_fail(buffer != NULL, -1);
+	g_return_val_if_fail(error == NULL || *error == NULL, -1);
+	return FU_INPUT_STREAM_GET_CLASS(stream)->read_fn(stream,
+							  buffer,
+							  count,
+							  cancellable,
+							  error);
+}
+
+/**
+ * fu_input_stream_read_all:
+ * @stream: a #FuInputStream
+ * @buffer: (not nullable): a buffer to read data into
+ * @count: the number of bytes that will be read from the stream
+ * @bytes_read: (out) (nullable): location to store the number of bytes that was read
+ * @cancellable: (nullable): optional #GCancellable object
+ * @error: (nullable): optional return location for an error
+ *
+ * Tries to read @count bytes from the stream into the buffer starting at @buffer.
+ * Will block during this read.
+ *
+ * This function is similar to fu_input_stream_read(), except it tries to read as many bytes as
+ * requested, only stopping on an error or end of stream.
+ *
+ * Returns: %TRUE on success, %FALSE on error
+ *
+ * Since: 2.1.7
+ **/
+gboolean
+fu_input_stream_read_all(FuInputStream *stream,
+			 void *buffer,
+			 gsize count,
+			 gsize *bytes_read,
+			 GCancellable *cancellable,
+			 GError **error)
+{
+	gsize total = 0;
+	guint8 *buf = buffer;
+
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(buffer != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	while (total < count) {
+		gssize rc;
+
+		if (cancellable && g_cancellable_set_error_if_cancelled(cancellable, error)) {
+			if (bytes_read != NULL)
+				*bytes_read = total;
+			return FALSE;
+		}
+
+		rc = fu_input_stream_read(stream, buf + total, count - total, cancellable, error);
+		if (rc == -1) {
+			if (bytes_read != NULL)
+				*bytes_read = total;
+			return FALSE;
+		}
+		if (rc == 0)
+			break;
+		total += rc;
+	}
+	if (bytes_read != NULL)
+		*bytes_read = total;
+	return TRUE;
+}
+
 /**
  * fu_input_stream_from_path:
  * @path: a filename
@@ -81,11 +287,7 @@ fu_input_stream_read_safe(FuInputStream *stream,
 		g_prefix_error(error, "seek to 0x%x: ", (guint)seek_set);
 		return FALSE;
 	}
-	rc = g_input_stream_read(G_INPUT_STREAM(stream),
-				 buf + offset,
-				 count,
-				 NULL,
-				 error); /* nocheck:blocked */
+	rc = fu_input_stream_read(stream, buf + offset, count, NULL, error);
 	if (rc == -1) {
 		g_prefix_error(error, "failed read of 0x%x: ", (guint)count);
 		return FALSE;
@@ -301,11 +503,11 @@ fu_input_stream_read_byte_array(FuInputStream *stream,
 	/* read from stream in 32kB chunks */
 	while (TRUE) {
 		gssize sz;
-		sz = g_input_stream_read(G_INPUT_STREAM(stream), /* nocheck:blocked */
-					 tmp,
-					 MIN(count - buf->len, sizeof(tmp)),
-					 NULL,
-					 &error_local);
+		sz = fu_input_stream_read(stream,
+					  tmp,
+					  MIN(count - buf->len, sizeof(tmp)),
+					  NULL,
+					  &error_local);
 		if (sz == 0)
 			break;
 		if (sz < 0) {

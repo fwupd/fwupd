@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-compressor-stream.h"
+#include "fu-input-stream.h"
 #include "fu-stream-input-stream-private.h"
 
 /**
@@ -77,6 +78,7 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
 				    GError **error)
 {
 	g_autoptr(FuCompressorStream) self = NULL;
+	g_autoptr(GInputStream) g_source = NULL; /* nocheck:blocked */
 
 	g_return_val_if_fail(FU_IS_INPUT_STREAM(source), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -85,7 +87,9 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
 
 	self->conv = G_CONVERTER(g_zlib_decompressor_new(
 	    fu_compressor_stream_format_to_glib(format))); /* nocheck:blocked */
-	self->converter_stream = g_converter_input_stream_new(G_INPUT_STREAM(source), self->conv);
+
+	g_source = fu_input_stream_as_g_input_stream(source);
+	self->converter_stream = g_converter_input_stream_new(g_source, self->conv);
 	g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(self->converter_stream),
 						    FALSE);
 	fu_stream_input_stream_set_base_stream(FU_STREAM_INPUT_STREAM(self),
@@ -110,6 +114,7 @@ FuInputStream *
 fu_compressor_stream_new_compress(FuInputStream *source, FuCompressorFormat format, GError **error)
 {
 	g_autoptr(FuCompressorStream) self = NULL;
+	g_autoptr(GInputStream) g_source = NULL; /* nocheck:blocked */
 
 	g_return_val_if_fail(FU_IS_INPUT_STREAM(source), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -118,7 +123,8 @@ fu_compressor_stream_new_compress(FuInputStream *source, FuCompressorFormat form
 
 	self->conv = G_CONVERTER(g_zlib_compressor_new(fu_compressor_stream_format_to_glib(format),
 						       -1)); /* nocheck:blocked */
-	self->converter_stream = g_converter_input_stream_new(G_INPUT_STREAM(source), self->conv);
+	g_source = fu_input_stream_as_g_input_stream(source);
+	self->converter_stream = g_converter_input_stream_new(g_source, self->conv);
 	g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(self->converter_stream),
 						    FALSE);
 	fu_stream_input_stream_set_base_stream(FU_STREAM_INPUT_STREAM(self),

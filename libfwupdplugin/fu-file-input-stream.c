@@ -9,6 +9,43 @@
 #include "config.h"
 
 #include "fu-file-input-stream.h"
+#include "fu-stream-input-stream-private.h"
+
+/**
+ * FuFileInputStream:
+ *
+ * An input stream that replaces #GFileInputStream, providing file-specific
+ * operations within the #FuInputStream type hierarchy. This implementation
+ * is a drop-in replacement for #GFileInputStream for the needs
+ * within fwupd.
+ */
+
+struct _FuFileInputStream {
+	FuStreamInputStream parent_instance;
+	GFileInputStream *file_stream; /* nocheck:blocked */
+};
+
+G_DEFINE_TYPE(FuFileInputStream, fu_file_input_stream, FU_TYPE_STREAM_INPUT_STREAM)
+
+static void
+fu_file_input_stream_finalize(GObject *object)
+{
+	FuFileInputStream *self = FU_FILE_INPUT_STREAM(object);
+	g_clear_object(&self->file_stream);
+	G_OBJECT_CLASS(fu_file_input_stream_parent_class)->finalize(object);
+}
+
+static void
+fu_file_input_stream_class_init(FuFileInputStreamClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_file_input_stream_finalize;
+}
+
+static void
+fu_file_input_stream_init(FuFileInputStream *self)
+{
+}
 
 /**
  * fu_file_input_stream_from_file:
@@ -26,35 +63,57 @@
 FuFileInputStream *
 fu_file_input_stream_from_file(GFile *file, GCancellable *cancellable, GError **error)
 {
+	g_autoptr(GFileInputStream) file_stream = NULL; /* nocheck:blocked */
+	g_autoptr(FuFileInputStream) self = NULL;
+
 	g_return_val_if_fail(G_IS_FILE(file), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return g_file_read(file, cancellable, error); /* nocheck:blocked */
+
+	file_stream = g_file_read(file, cancellable, error); /* nocheck:blocked */
+	if (file_stream == NULL)
+		return NULL;
+
+	self = g_object_new(FU_TYPE_FILE_INPUT_STREAM, NULL);
+	fu_stream_input_stream_set_base_stream(FU_STREAM_INPUT_STREAM(self),
+					       G_INPUT_STREAM(file_stream));
+	self->file_stream = g_object_ref(file_stream);
+
+	return g_steal_pointer(&self);
 }
 
 /**
- * fu_file_input_stream_query_info:
+ * fu_file_input_stream_get_file_size:
  * @stream: a #FuFileInputStream
- * @attributes: a file attribute query string
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Queries a file input stream for the given @attributes.
+ * Return the size of the file, in bytes. Returns zero if an error
+ * occurs, a caller that needs to distinguish between zero-sized
+ * files and zero-means-error must provide a GError.
  *
- * Returns: (transfer full): a #GFileInfo, or %NULL on error
+ * Returns: The file size in bytes or zero on error
  *
  * Since: 2.1.7
  **/
-GFileInfo *
-fu_file_input_stream_query_info(FuFileInputStream *stream,
-				const gchar *attributes,
-				GCancellable *cancellable,
-				GError **error)
+guint64
+fu_file_input_stream_get_file_size(FuFileInputStream *stream,
+				   GCancellable *cancellable,
+				   GError **error)
 {
-	g_return_val_if_fail(FU_IS_FILE_INPUT_STREAM(stream), NULL);
-	g_return_val_if_fail(attributes != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return g_file_input_stream_query_info(G_FILE_INPUT_STREAM(stream), /* nocheck:blocked */
-					      attributes,
+	g_autoptr(GFileInfo) info = NULL;
+
+	g_return_val_if_fail(FU_IS_FILE_INPUT_STREAM(stream), 0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0);
+
+	info = g_file_input_stream_query_info(/* nocheck:blocked */
+					      stream->file_stream,
+					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					      cancellable,
 					      error);
+	if (info == NULL) {
+		fwupd_error_convert(error);
+		return 0;
+	}
+
+	return g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 }

@@ -12,14 +12,24 @@
 #include "fu-endian.h"
 #include "fu-progress.h"
 
-typedef GInputStream FuInputStream;	      /* nocheck:blocked */
-typedef GInputStreamClass FuInputStreamClass; /* nocheck:blocked */
+#define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GObject)
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuInputStream, g_object_unref) /* nocheck:blocked */
-#define FU_INPUT_STREAM	      G_INPUT_STREAM		     /* nocheck:blocked */
-#define FU_TYPE_INPUT_STREAM  G_TYPE_INPUT_STREAM	     /* nocheck:blocked */
-#define FU_IS_INPUT_STREAM    G_IS_INPUT_STREAM		     /* nocheck:blocked */
-#define FU_INPUT_STREAM_CLASS G_INPUT_STREAM_CLASS	     /* nocheck:blocked */
+struct _FuInputStreamClass {
+	GObjectClass parent_class;
+	gssize (*read_fn)(FuInputStream *stream,
+			  void *buffer,
+			  gsize count,
+			  GCancellable *cancellable,
+			  GError **error);
+	goffset (*tell)(FuInputStream *stream);
+	gboolean (*can_seek)(FuInputStream *stream);
+	gboolean (*seek)(FuInputStream *stream,
+			 goffset offset,
+			 GSeekType type,
+			 GCancellable *cancellable,
+			 GError **error);
+};
 
 FuInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -109,6 +119,22 @@ gchar *
 fu_input_stream_compute_checksum(FuInputStream *stream,
 				 GChecksumType checksum_type,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gssize
+fu_input_stream_read(FuInputStream *stream,
+		     void *buffer,
+		     gsize count,
+		     GCancellable *cancellable,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_input_stream_read_all(FuInputStream *stream,
+			 void *buffer,
+			 gsize count,
+			 gsize *bytes_read,
+			 GCancellable *cancellable,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+GInputStream *
+fu_input_stream_as_g_input_stream(FuInputStream *stream) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_input_stream_find(FuInputStream *stream,
 		     const guint8 *buf,

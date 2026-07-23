@@ -22,35 +22,31 @@ typedef struct {
 	GInputStream *base_stream; /* nocheck:blocked */
 } FuStreamInputStreamPrivate;
 
-static void
-fu_stream_input_stream_seekable_iface_init(GSeekableIface *iface);
-
-G_DEFINE_TYPE_WITH_CODE(FuStreamInputStream,
-			fu_stream_input_stream,
-			FU_TYPE_INPUT_STREAM,
-			G_ADD_PRIVATE(FuStreamInputStream)
-			    G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-						  fu_stream_input_stream_seekable_iface_init))
+G_DEFINE_TYPE_WITH_PRIVATE(FuStreamInputStream, fu_stream_input_stream, FU_TYPE_INPUT_STREAM)
 
 static gssize
-fu_stream_input_stream_read(GInputStream *stream,
-			    void *buffer,
-			    gsize count,
-			    GCancellable *cancellable,
-			    GError **error)
+fu_stream_input_stream_read_fn(FuInputStream *stream,
+			       void *buffer,
+			       gsize count,
+			       GCancellable *cancellable,
+			       GError **error)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
 	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
 	g_return_val_if_fail(priv->base_stream != NULL, -1);
 
-	return g_input_stream_read(priv->base_stream, buffer, count, cancellable, error);
+	return g_input_stream_read(priv->base_stream, /* nocheck:blocked */
+				   buffer,
+				   count,
+				   cancellable,
+				   error);
 }
 
 static goffset
-fu_stream_input_stream_tell(GSeekable *seekable)
+fu_stream_input_stream_tell(FuInputStream *stream)
 {
-	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(seekable);
+	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
 	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
 	if (!G_IS_SEEKABLE(priv->base_stream))
@@ -60,9 +56,9 @@ fu_stream_input_stream_tell(GSeekable *seekable)
 }
 
 static gboolean
-fu_stream_input_stream_can_seek(GSeekable *seekable)
+fu_stream_input_stream_can_seek(FuInputStream *stream)
 {
-	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(seekable);
+	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
 	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
 	if (!G_IS_SEEKABLE(priv->base_stream))
@@ -72,13 +68,13 @@ fu_stream_input_stream_can_seek(GSeekable *seekable)
 }
 
 static gboolean
-fu_stream_input_stream_seek(GSeekable *seekable,
+fu_stream_input_stream_seek(FuInputStream *stream,
 			    goffset offset,
 			    GSeekType type,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(seekable);
+	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
 	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
 	if (!G_IS_SEEKABLE(priv->base_stream)) {
@@ -90,35 +86,6 @@ fu_stream_input_stream_seek(GSeekable *seekable,
 	}
 
 	return g_seekable_seek(G_SEEKABLE(priv->base_stream), offset, type, cancellable, error);
-}
-
-static gboolean
-fu_stream_input_stream_can_truncate(GSeekable *seekable)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_stream_input_stream_truncate(GSeekable *seekable,
-				goffset offset,
-				GCancellable *cancellable,
-				GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot truncate FuStreamInputStream");
-	return FALSE;
-}
-
-static void
-fu_stream_input_stream_seekable_iface_init(GSeekableIface *iface)
-{
-	iface->tell = fu_stream_input_stream_tell;
-	iface->can_seek = fu_stream_input_stream_can_seek;
-	iface->seek = fu_stream_input_stream_seek;
-	iface->can_truncate = fu_stream_input_stream_can_truncate;
-	iface->truncate_fn = fu_stream_input_stream_truncate;
 }
 
 static void
@@ -134,9 +101,12 @@ static void
 fu_stream_input_stream_class_init(FuStreamInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GInputStreamClass *istream_class = G_INPUT_STREAM_CLASS(klass); /* nocheck:blocked */
+	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
 	object_class->finalize = fu_stream_input_stream_finalize;
-	istream_class->read_fn = fu_stream_input_stream_read;
+	istream_class->read_fn = fu_stream_input_stream_read_fn;
+	istream_class->tell = fu_stream_input_stream_tell;
+	istream_class->can_seek = fu_stream_input_stream_can_seek;
+	istream_class->seek = fu_stream_input_stream_seek;
 }
 
 static void
