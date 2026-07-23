@@ -373,7 +373,19 @@ if __name__ == "__main__":
             install_packages(args.os, args.variant, args.yes, args.debug, ["python"])
         elif args.os == "freebsd":
             install_packages(args.os, args.variant, args.yes, args.debug, ["py312-pip"])
+        elif args.os == "arch":
+            install_packages(
+                args.os,
+                args.variant,
+                args.yes,
+                args.debug,
+                ["python-pip", "python-pipx"],
+            )
+        elif args.os == "centos":
+            install_packages(
+                args.os, args.variant, args.yes, args.debug, ["python3-pip"]  # no pipx
+            )
         else:
             install_packages(
-                args.os, args.variant, args.yes, args.debug, ["python3-pip"]
+                args.os, args.variant, args.yes, args.debug, ["python3-pip", "pipx"]
             )
