@@ -13,6 +13,8 @@ if [[ "${VARIANT:-}" == cross-* ]]; then
     export CROSS=${VARIANT#cross-}
 fi
 
+./contrib/ci/fwupd_setup_helpers.py test-meson
+
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"

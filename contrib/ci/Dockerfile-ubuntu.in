@@ -11,4 +11,5 @@ RUN set -euxo pipefail; \
     sudo \
 %%%DEPENDENCIES%%%; \
     apt-get clean
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/bin pipx install --force meson
 WORKDIR /github/workspace

@@ -3,6 +3,7 @@ set -eux
 
 # check for and install missing dependencies
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
+./contrib/ci/fwupd_setup_helpers.py test-meson
 
 # make sure gnutls is not available
 dnf remove -y gnutls-devel

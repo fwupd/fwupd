@@ -84,6 +84,10 @@ def pip_install_package(debug, name, use_pipx=False):
     else:
         env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
         cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
+        # Install to /usr/bin when not in a virtualenv so meson lands
+        # where rpmbuild and debuild expect to find it
+        if not (hasattr(sys, "real_prefix") or sys.prefix != sys.base_prefix):
+            cmd.insert(4, "--prefix=/usr")
     if debug:
         print(cmd)
     rc = subprocess.call(cmd, env=env)
@@ -156,7 +160,7 @@ def test_meson(debug):
             new_enough = False
     if not new_enough:
         print("meson must be installed/upgraded")
-        pip_install_package(debug, "meson")
+        pip_install_package(debug, "meson", use_pipx=True)
 
 
 def parse_dependencies(OS, variant, add_control, cross: bool = False):

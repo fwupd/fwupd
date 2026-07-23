@@ -39,7 +39,7 @@ jobs:
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update -qq
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
-          python3 -m pip install --user "meson >= 0.62.0"
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
 
       - name: Build
         run: |
