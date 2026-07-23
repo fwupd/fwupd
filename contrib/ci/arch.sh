@@ -8,6 +8,7 @@ pacman -Syu --noconfirm
 
 #install anything missing from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
+./contrib/ci/fwupd_setup_helpers.py test-meson
 
 # check that we got the bare minimum
 if [ ! -f /usr/bin/git ]; then

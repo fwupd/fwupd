@@ -177,7 +177,8 @@ parts:
       - meson
       - modemmanager
       - pkg-config
-      - python3-pip
+      - pipx
+      - rustc
       - python3-cairo
       - python3-gi
       - python3-jinja2

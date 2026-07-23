@@ -18,6 +18,7 @@ RUN set -euxo pipefail; \
 %%%DEPENDENCIES%%%; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/bin pipx install --force meson
 RUN set -euxo pipefail; \
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100; \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100; \

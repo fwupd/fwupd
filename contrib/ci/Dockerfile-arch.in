@@ -10,4 +10,5 @@ RUN locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
 %%%DEPENDENCIES%%%
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/bin pipx install --force meson
 WORKDIR /github/workspace

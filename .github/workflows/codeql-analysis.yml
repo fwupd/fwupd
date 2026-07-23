@@ -12,7 +12,7 @@ permissions:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -37,16 +37,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
-          python3 -m pip install --user "meson >= 0.62.0"
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
 
       - name: Build
         run: |
-          mkdir -p $GITHUB_WORKSPACE/build
-          cd $GITHUB_WORKSPACE/build
-          meson setup .. -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
-          ninja
+          meson setup build -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
+          ninja -C build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3.29.5

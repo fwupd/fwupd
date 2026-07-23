@@ -4,6 +4,10 @@ set -x
 
 # get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o centos
+# Remove the rpm package lib to avoid conflicts with newer meson
+# We cannot dnf remove it because we rely on rpmmacros
+mv /usr/lib/python3.9/site-packages/mesonbuild/ /usr/lib/python3.9/site-packages/mesonbuild.rpm || true
+./contrib/ci/fwupd_setup_helpers.py test-meson
 
 # disable the safe directory feature
 git config --global safe.directory "*"

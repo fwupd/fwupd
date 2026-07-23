@@ -1,10 +1,10 @@
 project(
   'fwupd',
-  'c',
+  'c', 'rust',
   version: '2.1.7',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.63.0', # limited by RHEL-9
-  default_options: ['warning_level=2', 'c_std=c17'],
+  meson_version: '>=1.11.0',
+  default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
 
 fwupd_version = meson.project_version()
@@ -863,6 +863,9 @@ umockdev = dependency(
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
+rustmod = import('rust')
+cargo_ws = rustmod.workspace()
+
 subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
@@ -872,6 +875,7 @@ if build_standalone
   man_md = []
   md_targets = []
   plugin_quirks = []
+  subdir('rust')
   subdir('libfwupdplugin')
   subdir('po')
   subdir('contrib')

@@ -4,6 +4,7 @@ set -x
 
 #get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
+./contrib/ci/fwupd_setup_helpers.py test-meson
 
 # disable the safe directory feature
 git config --global safe.directory "*"

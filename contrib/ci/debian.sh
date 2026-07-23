@@ -13,6 +13,8 @@ if [[ "${VARIANT:-}" == cross-* ]]; then
     export CROSS=${VARIANT#cross-}
 fi
 
+./contrib/ci/fwupd_setup_helpers.py test-meson
+
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
@@ -26,6 +28,15 @@ mv contrib/debian .
 sed -i 's/quilt/native/' debian/source/format
 #generate control file
 ./contrib/ci/generate_debian.py
+
+# generate a Rust cross file for cross builds
+if [ -n "${CROSS:-}" ]; then
+    # Map Debian GNU type (e.g. s390x-linux-gnu) to Rust target (s390x-unknown-linux-gnu)
+    GNU_TYPE=$(dpkg-architecture -a"${CROSS}" -qDEB_HOST_GNU_TYPE)
+    RUST_TARGET=$(echo "$GNU_TYPE" | sed 's/-linux-/-unknown-linux-/')
+    printf '[binaries]\nrust = ['\''rustc'\'', '\''--target'\'', '\''%s'\'']\n' "$RUST_TARGET" \
+        >debian/rust-cross.ini
+fi
 
 # check if we have all deps available
 apt update -qq && apt install python3-apt -y

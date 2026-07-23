@@ -104,7 +104,7 @@ jobs:
   openbmc:
     permissions:
       contents: read
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ !inputs.publish }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -217,7 +217,7 @@ jobs:
           sync: rsync
           envs: "CI CC"
           prepare: |
-            pkg install -y bash python3 git ninja cmake gcc
+            pkg install -y bash python3 git ninja cmake gcc rust
           run: |
             ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
             ./contrib/setup

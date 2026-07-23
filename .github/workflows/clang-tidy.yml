@@ -24,8 +24,10 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |-
-          apt-get update
-          apt-get install --yes --no-install-recommends clang-tidy
+          apt-get update -qq
+          apt-get install -qq --yes --no-install-recommends clang-tidy rustc
+          ./contrib/ci/fwupd_setup_helpers.py install-pip --yes -o ubuntu
+          ./contrib/ci/fwupd_setup_helpers.py test-meson
       - name: configure
         run: |-
           meson setup -Dwerror=true build

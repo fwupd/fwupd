@@ -72,13 +72,28 @@ def detect_profile():
     return ""
 
 
-def pip_install_package(debug, name):
+def pip_install_package(debug, name, use_pipx=False):
+    import shutil
     import subprocess
 
-    cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
+    env = os.environ.copy()
+    if use_pipx and shutil.which("pipx"):
+        env["PIPX_HOME"] = "/opt/pipx"
+        env["PIPX_BIN_DIR"] = "/usr/bin"
+        cmd = ["pipx", "install", "--force", name]
+    else:
+        env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
+        cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
+        # Install to /usr/bin when not in a virtualenv so meson lands
+        # where rpmbuild and debuild expect to find it
+        if not (hasattr(sys, "real_prefix") or sys.prefix != sys.base_prefix):
+            cmd.insert(4, "--prefix=/usr")
     if debug:
         print(cmd)
-    subprocess.call(cmd)
+    rc = subprocess.call(cmd, env=env)
+    if rc != 0:
+        print(f"ERROR: Failed to install {name}")
+        sys.exit(1)
 
 
 def test_jinja2(debug):
@@ -112,12 +127,27 @@ def get_minimum_meson_version():
                 return re.search(r"(\d+\.\d+\.\d+)", line).group(1)
 
 
+def _version_tuple(ver):
+    import re
+
+    def version_part(s):
+        """Returns a tuple with the integer or the string,
+        with strings sorthing lower so that 1.rc0 < 1.0
+        """
+        try:
+            return (1, int(s))
+        except ValueError:
+            return (0, s)
+
+    return tuple(version_part(x) for x in re.split(r"[.\-]", ver))
+
+
 def test_meson(debug):
     from importlib.metadata import version, PackageNotFoundError
 
     minimum = get_minimum_meson_version()
     try:
-        new_enough = version("meson") >= minimum
+        new_enough = _version_tuple(version("meson")) >= _version_tuple(minimum)
     except PackageNotFoundError:
         import subprocess
 
@@ -125,12 +155,12 @@ def test_meson(debug):
             ver = (
                 subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
             )
-            new_enough = ver >= minimum
+            new_enough = _version_tuple(ver) >= _version_tuple(minimum)
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
         print("meson must be installed/upgraded")
-        pip_install_package(debug, "meson")
+        pip_install_package(debug, "meson", use_pipx=True)
 
 
 def parse_dependencies(OS, variant, add_control, cross: bool = False):
@@ -234,7 +264,7 @@ def _get_installer_cmd(profile: str, yes: bool):
     if profile == "darwin":
         return ["brew", "install"]
     if profile in ["debian", "ubuntu"]:
-        installer = ["apt-get", "install", "-q"]
+        installer = ["apt-get", "install", "-qq"]
     elif profile in ["fedora", "centos"]:
         installer = ["dnf", "install"]
     elif profile == "arch":
@@ -356,7 +386,19 @@ if __name__ == "__main__":
             install_packages(args.os, args.variant, args.yes, args.debug, ["python"])
         elif args.os == "freebsd":
             install_packages(args.os, args.variant, args.yes, args.debug, ["py312-pip"])
+        elif args.os == "arch":
+            install_packages(
+                args.os,
+                args.variant,
+                args.yes,
+                args.debug,
+                ["python-pip", "python-pipx"],
+            )
+        elif args.os == "centos":
+            install_packages(
+                args.os, args.variant, args.yes, args.debug, ["python3-pip"]  # no pipx
+            )
         else:
             install_packages(
-                args.os, args.variant, args.yes, args.debug, ["python3-pip"]
+                args.os, args.variant, args.yes, args.debug, ["python3-pip", "pipx"]
             )

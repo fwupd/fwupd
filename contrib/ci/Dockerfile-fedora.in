@@ -8,4 +8,5 @@ RUN dnf -y update
 RUN echo fubar > /etc/machine-id
 RUN dnf --enablerepo=updates-testing -y install \
 %%%DEPENDENCIES%%%
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/bin pipx install --force meson
 WORKDIR /github/workspace
