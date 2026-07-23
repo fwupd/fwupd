@@ -86,7 +86,10 @@ def pip_install_package(debug, name, use_pipx=False):
         cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
     if debug:
         print(cmd)
-    subprocess.call(cmd, env=env)
+    rc = subprocess.call(cmd, env=env)
+    if rc != 0:
+        print(f"ERROR: Failed to install {name}")
+        sys.exit(1)
 
 
 def test_jinja2(debug):
