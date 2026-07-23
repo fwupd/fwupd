@@ -72,12 +72,18 @@ def detect_profile():
     return ""
 
 
-def pip_install_package(debug, name):
+def pip_install_package(debug, name, use_pipx=False):
+    import shutil
     import subprocess
 
     env = os.environ.copy()
-    env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
-    cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
+    if use_pipx and shutil.which("pipx"):
+        env["PIPX_HOME"] = "/opt/pipx"
+        env["PIPX_BIN_DIR"] = "/usr/bin"
+        cmd = ["pipx", "install", "--force", name]
+    else:
+        env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
+        cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
     if debug:
         print(cmd)
     subprocess.call(cmd, env=env)
