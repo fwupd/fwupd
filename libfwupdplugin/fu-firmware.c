@@ -517,7 +517,9 @@ fu_firmware_get_size(FuFirmware *self)
 void
 fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max)
 {
-	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
+	FuFirmwareClassPrivate *cpriv;
+	g_return_if_fail(FU_IS_FIRMWARE_CLASS(klass));
+	cpriv = fu_firmware_get_class_private(klass);
 	cpriv->size_max = size_max;
 }
 
