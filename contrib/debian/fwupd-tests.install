@@ -1,7 +1,0 @@
-#These are in a generic looking directory because
-#that is where gnome-desktop-testing expects to
-#find them. for more information see:
-#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
-usr/share/installed-tests/*
-usr/libexec/installed-tests/fwupd/*-test
-usr/share/fwupd/remotes.d/fwupd-tests.conf

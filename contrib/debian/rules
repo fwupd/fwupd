@@ -65,6 +65,15 @@ override_dh_install:
 	#install devices-tests (maybe)
 	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
 
+	#install installed-tests (maybe)
+	#These are in a generic looking directory because
+	#that is where gnome-desktop-testing expects to
+	#find them. for more information see:
+	#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
+	[ ! -d debian/tmp/usr/share/installed-tests ] || dh_install -pfwupd-tests usr/share/installed-tests
+	[ ! -d debian/tmp/usr/libexec/installed-tests/fwupd ] || dh_install -pfwupd-tests "usr/libexec/installed-tests/fwupd/*-test"
+	[ ! -f debian/tmp/usr/share/fwupd/remotes.d/fwupd-tests.conf ] || dh_install -pfwupd-tests usr/share/fwupd/remotes.d/fwupd-tests.conf
+
 	#/usr merge or not (make backporting easier)
 	[ ! -d debian/tmp/lib/systemd ] || dh_install -pfwupd lib/systemd
 	[ ! -d debian/tmp/usr/lib/systemd ] || dh_install -pfwupd usr/lib/systemd
