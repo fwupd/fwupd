@@ -32,6 +32,13 @@ endif
 
 CONFARGS += -Dplugin_modem_manager=enabled
 
+ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
+	CONFARGS += -Defi_os_dir=ubuntu -Dpassim=disabled
+
+else ifeq (yes,$(shell dpkg-vendor --derives-from Debian && echo yes))
+	CONFARGS += -Defi_os_dir=debian
+endif
+
 %:
 	dh $@ --with gir --with python3
 
@@ -55,17 +62,17 @@ override_dh_install:
 	#install docs (maybe)
 	[ ! -d debian/tmp/usr/share/doc ] || dh_install -pfwupd-doc usr/share/doc
 
-	#install tests (unless -Dtests=false)
-	#The install-tests dir is in a generic looking directory because
+	#install devices-tests (maybe)
+	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
+
+	#install installed-tests (maybe)
+	#These are in a generic looking directory because
 	#that is where gnome-desktop-testing expects to
 	#find them. for more information see:
 	#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
-	[ ! -d debian/tmp/usr/share/installed-tests ] || dh_install -pfwupd-tests "usr/share/installed-tests/*"
+	[ ! -d debian/tmp/usr/share/installed-tests ] || dh_install -pfwupd-tests usr/share/installed-tests
 	[ ! -d debian/tmp/usr/libexec/installed-tests/fwupd ] || dh_install -pfwupd-tests "usr/libexec/installed-tests/fwupd/*-test"
 	[ ! -f debian/tmp/usr/share/fwupd/remotes.d/fwupd-tests.conf ] || dh_install -pfwupd-tests usr/share/fwupd/remotes.d/fwupd-tests.conf
-
-	#install devices-tests (maybe)
-	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
 
 	#/usr merge or not (make backporting easier)
 	[ ! -d debian/tmp/lib/systemd ] || dh_install -pfwupd lib/systemd
@@ -75,6 +82,10 @@ override_dh_install:
 
 	#this is placed in fwupd-tests
 	rm -f debian/fwupd/usr/share/fwupd/remotes.d/fwupd-tests.conf
+
+	#use ieee-data
+	rm -f debian/fwupd-tests/usr/share/installed-tests/fwupd/tests/oui.txt
+	[ ! -d debian/fwupd-tests/usr/share/installed-tests/fwupd/tests ] || ln -s /usr/share/ieee-data/oui.txt debian/fwupd-tests/usr/share/installed-tests/fwupd/tests/oui.txt
 
 	# avoid shipping an empty directory
 	[ ! -d debian/fwupd/lib/systemd ] || find debian/fwupd/lib/systemd -type d -empty -delete
@@ -87,6 +98,13 @@ override_dh_python3:
 	dh_python3 -pfwupd
 	dh_python3 -pfwupd-tests /usr/share/installed-tests/fwupd
 	dh_python3 -pfwupd-tests /usr/libexec/installed-tests/fwupd
+
+override_dh_gencontrol:
+	if dpkg-vendor --derives-from ubuntu; then \
+		dh_gencontrol -- -Vrecommends:secureboot-db="secureboot-db,"; \
+	else \
+		dh_gencontrol -- -Vrecommends:secureboot-db=""; \
+	fi
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
