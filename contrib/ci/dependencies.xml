@@ -933,6 +933,12 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="libstd-rust-dev">
+    <distro id="debian">
+      <multi-arch />
+      <package />
+    </distro>
+  </dependency>
   <dependency id="rust-std-static-x86_64-pc-windows-gnu">
     <distro id="fedora">
       <package variant="mingw64" />

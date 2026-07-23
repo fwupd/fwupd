@@ -20,6 +20,7 @@ endif
 
 ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
 	CONFARGS += -Dtests=false
+	CONFARGS += --cross-file=$(CURDIR)/debian/rust-cross.ini
 endif
 
 ifneq ($(QUBES_OPTION),)
