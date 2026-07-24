@@ -134,3 +134,16 @@ fu_redfish_common_parse_version_lenovo(const gchar *version,
 		*out_version = g_strdup(versplit[1]);
 	return TRUE;
 }
+
+gchar *
+fu_redfish_common_normalize_software_id(const gchar *software_id)
+{
+	g_autofree gchar *software_id_lower = NULL;
+	if (software_id == NULL)
+		return NULL;
+	/* GUIDs compare case-insensitively, everything else stays exact */
+	software_id_lower = g_ascii_strdown(software_id, -1);
+	if (fwupd_guid_is_valid(software_id_lower))
+		return g_steal_pointer(&software_id_lower);
+	return g_strdup(software_id);
+}
