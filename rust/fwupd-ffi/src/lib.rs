@@ -17,4 +17,5 @@
 
 pub mod compressor;
 pub mod glib;
+pub mod json;
 pub mod streams;
