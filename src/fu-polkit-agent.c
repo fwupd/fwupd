@@ -36,7 +36,9 @@ struct _FuPolkitAgent {
 
 G_DEFINE_TYPE(FuPolkitAgent, fu_polkit_agent, G_TYPE_OBJECT)
 
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic ignored "-Wanalyzer-fd-leak"
+#endif
 
 static int
 fu_polkit_agent_fork_agent(FuPolkitAgent *self, const char *path, ...)
