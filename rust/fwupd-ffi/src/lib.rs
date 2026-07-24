@@ -20,4 +20,5 @@
 pub(crate) mod glib;
 pub mod compressor;
 pub mod cstream;
+pub mod json;
 pub mod streams;
