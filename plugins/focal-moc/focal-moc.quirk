@@ -1,0 +1,42 @@
+# FocalTech Fingerprint sensor
+#
+# VID 0x2808 is FocalTech Systems Co., Ltd.
+# Each entry matches a specific PID that is a known MOC fingerprint sensor.
+[USB\VID_2808&PID_9E48]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_D979]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A27A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A959]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A99A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A57A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A78A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A97A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_1579]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_077A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_079A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_5158]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_6553]
+Plugin = focal_moc
