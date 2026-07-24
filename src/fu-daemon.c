@@ -100,14 +100,13 @@ fu_daemon_set_status(FuDaemon *self, FwupdStatus status)
 	if (priv->status == status)
 		return;
 
-	/* starting or stopping */
-	if ((priv->status == FWUPD_STATUS_IDLE && status != FWUPD_STATUS_WAITING_FOR_AUTH) ||
-	    status == FWUPD_STATUS_IDLE) {
+	/* only defer auth prompts to avoid a short-lived spinner */
+	if (status != FWUPD_STATUS_WAITING_FOR_AUTH) {
 		fu_daemon_set_status_internal(self, status);
 		return;
 	}
 
-	/* defer all updates to avoid flickering the UI */
+	/* defer waiting-for-auth updates to avoid flickering the UI */
 	helper = g_new0(FuDaemonSetStatusHelper, 1);
 	helper->self = self;
 	helper->status = status;
