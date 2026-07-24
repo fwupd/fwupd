@@ -6,6 +6,13 @@
 
 #include "config.h"
 
+#ifdef HAVE_GIO_UNIX
+#include <fcntl.h>
+#include <gio/gunixinputstream.h>
+#include <glib/gstdio.h>
+#include <unistd.h>
+#endif
+
 #include "fwupd-client.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device.h"
@@ -25,6 +32,40 @@ fwupd_variant_func(void)
 	g_assert_cmpint(fwupd_variant_get_uint32(v_i32), ==, 1234);
 	g_assert_cmpint(fwupd_variant_get_uint64(v_i64), ==, 1234);
 	g_assert_cmpint(fwupd_variant_get_uint64(v_u64), ==, 1234);
+}
+
+static void
+fwupd_common_input_stream_sealed_func(void)
+{
+#if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
+	gint fd;
+	gint seals;
+	const gint required = F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_SEAL;
+	g_autofree gchar *fn = g_build_filename(g_get_tmp_dir(), "fwupd-XXXXXX", NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* fwupd_unix_input_stream_from_fn() must always hand the daemon a sealed, immutable memfd,
+	 * whatever filesystem the source file lives on -- a plain file (especially on a tmpfs, where
+	 * it is reported as F_SEAL_SEAL) would otherwise be rejected by
+	 * fu_unix_seekable_input_stream_require_seal() and is mutable, i.e. open to a TOCTOU attack */
+	fd = g_mkstemp(fn);
+	g_assert_cmpint(fd, >=, 0);
+	g_assert_cmpint(write(fd, "hello", 5), ==, 5);
+	(void)g_close(fd, NULL);
+
+	stream = G_INPUT_STREAM(fwupd_unix_input_stream_from_fn(fn, &error));
+	(void)g_unlink(fn);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+
+	fd = g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(stream));
+	seals = fcntl(fd, F_GET_SEALS);
+	g_assert_cmpint(seals, >=, 0);
+	g_assert_cmpint(seals & required, ==, required);
+#else
+	g_test_skip("No gio-unix-2.0 or memfd_create support, skipping");
+#endif
 }
 
 static void
@@ -190,6 +231,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/device-id", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common/guid", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/common/history-report", fwupd_common_history_report_func);
+	g_test_add_func("/fwupd/common/input-stream-sealed", fwupd_common_input_stream_sealed_func);
 	g_test_add_func("/fwupd/common/variant", fwupd_variant_func);
 	return g_test_run();
 }

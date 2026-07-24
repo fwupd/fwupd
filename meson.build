@@ -603,6 +603,12 @@ endif
 if cc.has_function('memfd_create')
   conf.set('HAVE_MEMFD_CREATE', '1')
 endif
+if cc.has_function(
+  'copy_file_range',
+  prefix: '#define _GNU_SOURCE\n#include <unistd.h>',
+)
+  conf.set('HAVE_COPY_FILE_RANGE', '1')
+endif
 if cc.has_function('strerrordesc_np')
   conf.set('HAVE_STRERRORDESC_NP', '1')
 endif
