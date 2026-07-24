@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-07-05 16:01+0000\n"
+"PO-Revision-Date: 2026-07-24 08:01+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 2026.7.1.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -163,18 +163,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "Pro získání seznamu konfigurovaných vzdálených zdrojů používaných pro aktualizace firmwaru je zapotřebí vaše heslo"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Aktualizovat metadata pro nastavené vzdálené"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Pro aktualizaci metadat pro nastavené vzdálené, sloužící pro aktualizace firmwarů, je zapotřebí se ověřit"
 
 msgid "Modify a configured remote"
 msgstr "Upravit nastavený vzdálený zdroj"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Pro povolení/zakázání nastavených vzdálených, sloužících pro aktualizace firmwarů, je zapotřebí se ověřit"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
