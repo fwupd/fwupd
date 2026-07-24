@@ -5,3 +5,7 @@
  */
 
 //! Core components of fwupd
+
+mod bitflags;
+
+pub use crate::bitflags::Bitflags;
