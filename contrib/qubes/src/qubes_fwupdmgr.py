@@ -16,7 +16,6 @@ import sys
 import xml.etree.ElementTree as ET
 
 from pathlib import Path
-from packaging import version as pversion
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
 
@@ -315,6 +314,29 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 except ValueError:
                     print("Invalid choice.")
 
+    def _parse_lvfs_version(self, version_specifier):
+        """Parses an LVFS-standard version specifier into a packaging.version.Version.
+
+        Keywords arguments:
+        version_specifier - a string following any format listed in the LVFS version specifier standard: https://fwupd.org/lvfs/docs/metainfo/version
+        """
+        # returns a 2-tuple where either:
+        # 1) the first element is a tuple of the numerical components of the version specifier and the second is an empty string, or
+        # 2) the first element is an empty tuple and the second is the raw version specifier passed into this function
+        # this format of 2-tuple can represent any valid LVFS version specifier, including the "plain" format (arbitrary ASCII string),
+        # and defines a total ordering over them that's a strict superset of the semver ordering (because the numerical components are the first element of the tuple)
+        if version_specifier == "":
+            raise ValueError("empty version specifier")
+        numerical_components = []
+        for component in version_specifier.split("."):
+            try:
+                if component == "":
+                    raise ValueError()
+                numerical_components.append(int(component.lstrip("0") or "0", 0))
+            except ValueError:
+                return ((), version_specifier)
+        return (tuple(numerical_components), "")
+
     def _parse_parameters(self, updates_list, choice):
         """Parses device name, url, version and SHA256 checksum of the file list.
 
@@ -325,7 +347,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.name = updates_list[choice]["Name"]
         self.version = updates_list[choice]["Releases"][0]["Version"]
         for ver_check in updates_list[choice]["Releases"]:
-            if pversion.parse(ver_check["Version"]) >= pversion.parse(self.version):
+            if self._parse_lvfs_version(ver_check["Version"]) >= self._parse_lvfs_version(self.version):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -366,7 +388,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and pversion.parse(version) <= pversion.parse(
+        if not downgrade and self._parse_lvfs_version(version) <= self._parse_lvfs_version(
             self.dmi_version
         ):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
@@ -440,8 +462,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                                 "Checksum": downgrade["Checksum"][-1],
                             }
                             for downgrade in device["Releases"]
-                            if pversion.parse(downgrade["Version"])
-                            < pversion.parse(version)
+                            if self._parse_lvfs_version(downgrade["Version"])
+                            < self._parse_lvfs_version(version)
                         ],
                     }
                 )
@@ -545,7 +567,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         ]
         if not candidates:
             raise Exception(f"No eligible release found for device '{device_id}'")
-        best = max(candidates, key=lambda r: pversion.Version(r["Version"]))
+        best = max(candidates, key=lambda r: self._parse_lvfs_version(r["Version"]))
         uri = self._release_uri(best)
         if not uri:
             raise Exception(
@@ -890,8 +912,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not rel_ver_str:
             return False
         try:
-            rv = pversion.parse(rel_ver_str)
-            cv = pversion.parse(cur_ver_str or "0")
+            rv = self._parse_lvfs_version(rel_ver_str)
+            cv = self._parse_lvfs_version(cur_ver_str or "0")
         except Exception:
             return False
         if rv > cv:

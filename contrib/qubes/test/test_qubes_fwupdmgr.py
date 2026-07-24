@@ -228,6 +228,22 @@ class TestQubesFwupdmgr(unittest.TestCase):
             choice = self.q._user_input(self.q.dom0_updates_list)
         self.assertEqual(choice, 0)
 
+    def test_parse_lvfs_version(self):
+        self.assertLess(self.q._parse_lvfs_version("09"), self.q._parse_lvfs_version("010"))
+        self.assertLess(self.q._parse_lvfs_version("0.4"), self.q._parse_lvfs_version("0.10"))
+        self.assertLess(self.q._parse_lvfs_version("0.000.00004"), self.q._parse_lvfs_version("0.000.000010"))
+        self.assertLess(self.q._parse_lvfs_version("9.0"), self.q._parse_lvfs_version("10.0"))
+        self.assertLess(self.q._parse_lvfs_version("10..0"), self.q._parse_lvfs_version("9..0")) # NOTE: "plain" format due to invalid formatting
+        self.assertLess(self.q._parse_lvfs_version("10a"), self.q._parse_lvfs_version("9a")) # NOTE: "plain" format due to non-digit characters
+        self.assertLess(self.q._parse_lvfs_version("A"), self.q._parse_lvfs_version("B")) # NOTE: "plain" format due to non-digit characters
+        self.assertLess(self.q._parse_lvfs_version("0.20.30.40"), self.q._parse_lvfs_version("1.2.3.4"))
+        self.assertLess(self.q._parse_lvfs_version("0.1001"), self.q._parse_lvfs_version("1.0"))
+        self.assertLess(self.q._parse_lvfs_version("0xABC"), self.q._parse_lvfs_version("0xABD"))
+        self.assertLess(self.q._parse_lvfs_version("0xabc"), self.q._parse_lvfs_version("0xabd"))
+        self.assertLess(self.q._parse_lvfs_version("123456789012345678901234567890123456789012345678901234567890"), self.q._parse_lvfs_version("123456789012345678901234567890123456789012345678901234567891"))
+        with self.assertRaises(ValueError):
+            self.q._parse_lvfs_version("")
+
     def test_parse_parameters(self):
         self.q._parse_dom0_updates_info(UPDATE_INFO)
         self.q._parse_parameters(self.q.dom0_updates_list, 0)
