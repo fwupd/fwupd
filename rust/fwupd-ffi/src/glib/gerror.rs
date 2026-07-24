@@ -11,7 +11,10 @@
 //! function that the linker resolves from the GLib shared library already
 //! loaded by the host process.
 
+use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
+
+use fwupd::json::JsonError;
 
 /// Opaque GError -- we never look inside, only pass pointers.
 #[repr(C)]
@@ -36,4 +39,23 @@ unsafe extern "C" {
         code: c_int,
         message: *const c_char,
     );
+}
+
+/// Set a `GError` from a [`JsonError`], if `error` is non-null.
+pub(crate) unsafe fn set_gerror(error: *mut *mut GError, e: &JsonError) {
+    if error.is_null() {
+        return;
+    }
+    let (code, msg) = match e {
+        JsonError::InvalidData(m) => (crate::FwupdErrorCode::InvalidData, m.as_str()),
+        JsonError::WrongType(m) => (crate::FwupdErrorCode::InvalidData, m.as_str()),
+        JsonError::IoError(m) => (crate::FwupdErrorCode::InvalidData, m.as_str()),
+        JsonError::NotFound(m) => (crate::FwupdErrorCode::NotFound, m.as_str()),
+        JsonError::NothingToDo(m) => (crate::FwupdErrorCode::NothingToDo, m.as_str()),
+    };
+    let c_msg =
+        CString::new(msg).unwrap_or_else(|_| CString::new("(invalid error message)").unwrap());
+    unsafe {
+        g_set_error_literal(error, fwupd_error_quark(), code as c_int, c_msg.as_ptr());
+    }
 }

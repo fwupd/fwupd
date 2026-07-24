@@ -16,3 +16,33 @@
 //! `libfwupdplugin.so` to replace the C implementations.
 
 pub mod glib;
+pub mod json;
+
+/// FwupdError enum values matching the C `FwupdError` enum order from
+/// `fwupd-error.rs` (the DSL file, not Rust code).
+#[repr(C)]
+#[allow(dead_code)]
+pub(crate) enum FwupdErrorCode {
+    Internal = 0,
+    VersionNewer = 1,
+    VersionSame = 2,
+    AlreadyPending = 3,
+    AuthFailed = 4,
+    Read = 5,
+    Write = 6,
+    InvalidFile = 7,
+    NotFound = 8,
+    NothingToDo = 9,
+    NotSupported = 10,
+    SignatureInvalid = 11,
+    AcPowerRequired = 12,
+    PermissionDenied = 13,
+    BrokenSystem = 14,
+    BatteryLevelTooLow = 15,
+    NeedsUserAction = 16,
+    AuthExpired = 17,
+    InvalidData = 18,
+    TimedOut = 19,
+    Busy = 20,
+    NotReachable = 21,
+}
