@@ -42,7 +42,7 @@ use fwupd::streams::{
 /// The `ReadSeek` is implemented by each stream, Send is just
 /// there to shut clippy up, we don't really need it since fwupd
 /// is single-threaded.
-type StreamImpl = Arc<Mutex<dyn ReadSeek + Send>>;
+pub(crate) type StreamImpl = Arc<Mutex<dyn ReadSeek + Send>>;
 
 /// EINVAL — same value (22) on Linux, BSD, and macOS.
 /// Only ever used as emergency fallback so should be good enough.
