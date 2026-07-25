@@ -326,6 +326,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         # 2) the first element is an empty tuple and the second is the raw version specifier passed into this function
         # this format of 2-tuple can represent any valid LVFS version specifier, including the "plain" format (arbitrary ASCII string),
         # and defines a total ordering over them that's a strict superset of the semver ordering (because the numerical components are the first element of the tuple)
+        version_specifier = version_specifier.strip()
         if version_specifier == "":
             raise ValueError("empty version specifier")
         if not re.fullmatch(r"0[xX][0-9a-fA-F]+|\d+(?:\.\d+)*", version_specifier):

@@ -255,8 +255,8 @@ class TestQubesFwupdmgr(unittest.TestCase):
             self.q._parse_lvfs_version("10_0"), self.q._parse_lvfs_version("9_0")
         )  # NOTE: "plain" format due to non-digit characters
         self.assertLess(
-            self.q._parse_lvfs_version(" 10"), self.q._parse_lvfs_version(" 9")
-        )  # NOTE: "plain" format due to whitespace
+            self.q._parse_lvfs_version(" 9"), self.q._parse_lvfs_version(" 10")
+        )
         self.assertLess(
             self.q._parse_lvfs_version("0.20.30.40"),
             self.q._parse_lvfs_version("1.2.3.4"),
@@ -280,6 +280,8 @@ class TestQubesFwupdmgr(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             self.q._parse_lvfs_version("")
+        with self.assertRaises(ValueError):
+            self.q._parse_lvfs_version("      \r\n")
 
     def test_parse_parameters(self):
         self.q._parse_dom0_updates_info(UPDATE_INFO)
