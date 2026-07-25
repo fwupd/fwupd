@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-07-24 08:01+0000\n"
+"PO-Revision-Date: 2026-07-25 20:01+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
@@ -311,7 +311,7 @@ msgstr "Zpracování argumentů se nezdařilo"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Nepodařilo se načíst kontext"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -739,7 +739,7 @@ msgstr "Ochrana zápisu do SPI"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "coreboot verified boot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -771,7 +771,7 @@ msgstr "UEFI ochrana paměti"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "Ochrana UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -934,7 +934,7 @@ msgstr "AMD – ochrana zápisu firmware"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "coreboot Verified Boot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -962,7 +962,7 @@ msgstr "UEFI ochrana paměti"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "Ochrana UEFI NX"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1093,7 +1093,7 @@ msgstr "Platforma zabezpečeného spuštění zabrání zavedení nepodepsaného
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "coreboot verified boot brání načtení nepodepsaného firmware při spuštění zařízení."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1113,7 +1113,7 @@ msgstr "UEFI systém může nastavovat atributy paměti při startu, které brá
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "UEFI zavaděč zkompilován s podporou pro Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1470,7 +1470,7 @@ msgstr "Filtrovat podle sady příznaků vydání (s tím, že předpona ~ slou�
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Filtrovat pro konkrétní protokoly, např.. '~org.uefi.capsule' nebo 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -2924,7 +2924,7 @@ msgstr "Aktualizace pro náhlavní soupravu %s"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "%s aktualizace dotykové vrstvy obrazovky"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3768,11 +3768,11 @@ msgstr "UEFI ochrana paměti je nyní odemčena"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "UEFI NX ochrana zavaděče je nyní zapnutá"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "UEFI NX ochrana zavaděče je nyní vypnutá"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
