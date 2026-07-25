@@ -14,3 +14,5 @@
 //! This crate provides `#[no_mangle] extern "C"` wrappers around the pure-Rust
 //! `fwupd` crate, producing a static library that can be linked into
 //! `libfwupdplugin.so` to replace the C implementations.
+
+pub mod glib;
