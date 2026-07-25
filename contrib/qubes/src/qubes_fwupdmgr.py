@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 import sys
 import xml.etree.ElementTree as ET
+import re
 
 from pathlib import Path
 
@@ -327,15 +328,17 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         # and defines a total ordering over them that's a strict superset of the semver ordering (because the numerical components are the first element of the tuple)
         if version_specifier == "":
             raise ValueError("empty version specifier")
-        numerical_components = []
-        for component in version_specifier.split("."):
-            try:
-                if component == "":
-                    raise ValueError()
-                numerical_components.append(int(component.lstrip("0") or "0", 0))
-            except ValueError:
-                return ((), version_specifier)
-        return (tuple(numerical_components), "")
+        if not re.fullmatch(r"0[xX][0-9a-fA-F]+|\d+(?:\.\d+)*", version_specifier):
+            return ((), version_specifier)  # "plain" format
+        numerical_components = tuple(
+            (
+                int(component, 16)
+                if component.lower().startswith("0x")
+                else int(component, 10)
+            )
+            for component in version_specifier.split(".")
+        )
+        return (numerical_components, "")
 
     def _parse_parameters(self, updates_list, choice):
         """Parses device name, url, version and SHA256 checksum of the file list.
@@ -347,7 +350,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.name = updates_list[choice]["Name"]
         self.version = updates_list[choice]["Releases"][0]["Version"]
         for ver_check in updates_list[choice]["Releases"]:
-            if self._parse_lvfs_version(ver_check["Version"]) >= self._parse_lvfs_version(self.version):
+            if self._parse_lvfs_version(
+                ver_check["Version"]
+            ) >= self._parse_lvfs_version(self.version):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -388,9 +393,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and self._parse_lvfs_version(version) <= self._parse_lvfs_version(
-            self.dmi_version
-        ):
+        if not downgrade and self._parse_lvfs_version(
+            version
+        ) <= self._parse_lvfs_version(self.dmi_version):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
 
     def _get_dom0_devices(self):
