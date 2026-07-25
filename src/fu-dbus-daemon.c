@@ -1056,6 +1056,8 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
 	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream_safe = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
@@ -1084,9 +1086,19 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	if (stream == NULL)
 		return NULL;
 	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							error))
-		return NULL;
-	return g_steal_pointer(&stream);
+							&error_local)) {
+		g_autoptr(GBytes) blob = NULL;
+		g_debug("fd not sealed, falling back to copy: %s", error_local->message);
+		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		if (blob == NULL)
+			return NULL;
+		stream_safe = fu_memory_input_stream_new_from_bytes(blob);
+	} else {
+		stream_safe = g_object_ref(stream);
+	}
+
+	/* success */
+	return g_steal_pointer(&stream_safe);
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
