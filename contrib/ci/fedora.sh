@@ -14,8 +14,8 @@ fi
 
 # do the full-fat build
 RPMVERSION=${VERSION//-/.}
-mkdir -p $HOME/rpmbuild/SOURCES/
-mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
+mkdir -p "$HOME/rpmbuild/SOURCES/"
+mv "fwupd-$VERSION.tar.xz" "$HOME/rpmbuild/SOURCES/"
 
 #generate a spec file
 mkdir -p build
@@ -35,4 +35,4 @@ fi
 rpmbuild -ba "${QUBES_MACRO[@]}" build/fwupd.spec
 
 mkdir -p dist
-cp $HOME/rpmbuild/RPMS/*/*.rpm dist
+cp "$HOME"/rpmbuild/RPMS/*/*.rpm dist

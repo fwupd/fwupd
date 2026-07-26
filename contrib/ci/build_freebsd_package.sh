@@ -66,4 +66,4 @@ make clean
 make package
 make install
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.pkg \
-    ~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg || exit 1
+    ~/work/fwupd/fwupd/"fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg" || exit 1

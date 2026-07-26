@@ -17,11 +17,11 @@ fi
 #prep
 export LC_ALL=C.UTF-8
 root=$(pwd)
-export DESTDIR=${root}/dist
+export DESTDIR="${root}/dist"
 build=$root/build-win32
 
-rm -rf $DESTDIR $build
-mkdir -p $build $DESTDIR && cd $build
+rm -rf "$DESTDIR" "$build"
+mkdir -p "$build" "$DESTDIR" && cd "$build"
 
 # Hack for Fedora bug
 if [ "$(id -u)" -eq 0 ]; then
@@ -29,7 +29,7 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 # run before using meson
-export WINEPREFIX=$build/.wine
+export WINEPREFIX="$build/.wine"
 
 # try to keep this and ../contrib/build-windows.sh in sync as much as makes sense
 xvfb-run meson setup .. \
@@ -49,12 +49,12 @@ xvfb-run meson setup .. \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
     -Dpassim=disabled \
-    $@
+    "$@"
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja --verbose -C "$build" -v install
 
 #disable motd for Windows
-cd $root
+cd "$root"
 sed -i 's,UpdateMotd=.*,UpdateMotd=false,' "$DESTDIR/etc/fwupd/fwupd.conf"
 
 # create a setup binary
@@ -62,7 +62,7 @@ CERTDIR=/etc/pki/ca-trust/extracted/pem
 MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 # deps
-find $MINGW32BINDIR \
+find "$MINGW32BINDIR" \
     -name gspawn-win64-helper-console.exe \
     -o -name gspawn-win64-helper.exe \
     -o -name iconv.dll \
@@ -103,21 +103,21 @@ find $MINGW32BINDIR \
     -o -name wldap32.dll \
     -o -name zlib1.dll |
     wixl-heat \
-        -p $MINGW32BINDIR/ \
+        -p "$MINGW32BINDIR/" \
         --win64 \
         --directory-ref BINDIR \
         --var "var.MINGW32BINDIR" \
         --component-group "CG.fwupd-deps" |
-    tee $build/contrib/fwupd-deps.wxs
+    tee "$build/contrib/fwupd-deps.wxs"
 
-echo $CERTDIR/tls-ca-bundle.pem |
+echo "$CERTDIR/tls-ca-bundle.pem" |
     wixl-heat \
-        -p $CERTDIR/ \
+        -p "$CERTDIR/" \
         --win64 \
         --directory-ref BINDIR \
         --var "var.CERTDIR" \
         --component-group "CG.fwupd-crts" |
-    tee $build/contrib/fwupd-crts.wxs
+    tee "$build/contrib/fwupd-crts.wxs"
 
 # no static libraries
 find "$DESTDIR/" -type f -name "*.a" -print0 | xargs rm -f
@@ -159,6 +159,6 @@ wixl -v \
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
-ls -R ${WINEPREFIX}/drive_c/Program\ Files/fwupd/
-wine ${WINEPREFIX}/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
+ls -R "${WINEPREFIX}/drive_c/Program Files/fwupd/"
+wine "${WINEPREFIX}/drive_c/Program Files/fwupd/bin/fwupdtool.exe" get-plugins --json
 wine msiexec /x "${MSI_FILENAME}"
