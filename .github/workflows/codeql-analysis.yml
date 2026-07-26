@@ -43,9 +43,9 @@ jobs:
 
       - name: Build
         run: |
-          mkdir -p $GITHUB_WORKSPACE/build
-          cd $GITHUB_WORKSPACE/build
-          meson setup .. -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
+          mkdir -p "$GITHUB_WORKSPACE/build"
+          cd "$GITHUB_WORKSPACE/build"
+          meson setup .. -Dman=false --prefix="$GITHUB_WORKSPACE/dist" -Dlibxmlb:gtkdoc=false
           ninja
 
       - name: Perform CodeQL Analysis

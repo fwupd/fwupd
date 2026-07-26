@@ -70,9 +70,9 @@ jobs:
         id: supported
         run: |
           if [ -x "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh" ]; then
-            echo "supported=true" >> $GITHUB_OUTPUT
+            echo "supported=true" >>"$GITHUB_OUTPUT"
           else
-            echo "supported=false" >> $GITHUB_OUTPUT
+            echo "supported=false" >>"$GITHUB_OUTPUT"
           fi
       - name: Test in container
         if: steps.supported.outputs.supported == 'true'
@@ -130,7 +130,7 @@ jobs:
       - name: Save version
         id: version
         run: |
-          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
+          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >>"$GITHUB_OUTPUT"
       - name: Save tarball
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -167,7 +167,7 @@ jobs:
           git config credential.helper 'cache --timeout=120'
           git config user.email "info@fwupd.org"
           git config user.name "Documentation deployment Bot"
-          rm -rf *
+          rm -rf ./*
           cp ../../libfwupd* ../*html . -R
           git add .
           git commit -a --allow-empty -m "Trigger deployment"
