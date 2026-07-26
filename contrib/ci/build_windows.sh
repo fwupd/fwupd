@@ -58,7 +58,7 @@ cd $root
 sed -i 's,UpdateMotd=.*,UpdateMotd=false,' "$DESTDIR/etc/fwupd/fwupd.conf"
 
 # create a setup binary
-CERTDIR=/etc/pki/tls/certs
+CERTDIR=/etc/pki/ca-trust/extracted/pem
 MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 # deps
@@ -110,7 +110,7 @@ find $MINGW32BINDIR \
         --component-group "CG.fwupd-deps" |
     tee $build/contrib/fwupd-deps.wxs
 
-echo $CERTDIR/ca-bundle.crt |
+echo $CERTDIR/tls-ca-bundle.pem |
     wixl-heat \
         -p $CERTDIR/ \
         --win64 \
