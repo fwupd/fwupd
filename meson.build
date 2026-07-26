@@ -141,6 +141,16 @@ add_project_arguments(
   language: 'c',
 )
 
+# FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
+# can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
+# `g_assert_nonnull()` doesn't affect control flow.
+if static_analysis
+  add_project_arguments(
+    ['-D__COVERITY__'],
+    language: 'c',
+  )
+endif
+
 if not meson.is_cross_build()
   add_project_arguments(
     '-fstack-protector-strong',
