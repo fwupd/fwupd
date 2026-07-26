@@ -18,6 +18,9 @@ jobs:
         run: |-
           apt-get update -qq
           apt-get install -qq --yes --no-install-recommends clang-tidy
+      - name: ensure up-to-date dependencies are installed
+        run: |-
+          ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
       - name: configure
         run: |-
           meson setup -Dwerror=true build
@@ -36,6 +39,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: ensure up-to-date dependencies are installed
+        run: |-
+          ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
       - name: configure
         env:
           # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
