@@ -628,6 +628,42 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_uefi_capsule_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	if (priv->kind != FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE)
+		return;
+
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs, attr);
+
+	if (priv->fw_version == 0 || priv->fw_version_lowest == 0 ||
+	    priv->fw_version_lowest > priv->fw_version) {
+		g_debug("ESRT rollback protection data invalid: 0x%x/0x%x",
+			priv->fw_version,
+			priv->fw_version_lowest);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+	if (priv->fw_version != priv->fw_version_lowest) {
+		g_debug("ESRT rollback protection not enforced: 0x%x/0x%x",
+			priv->fw_version,
+			priv->fw_version_lowest);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_uefi_capsule_device_capture_efi_debugging(FuUefiCapsuleDevice *self)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
@@ -943,6 +979,7 @@ fu_uefi_capsule_device_class_init(FuUefiCapsuleDeviceClass *klass)
 	device_class->report_metadata_pre = fu_uefi_capsule_device_report_metadata_pre;
 	device_class->report_metadata_post = fu_uefi_capsule_device_report_metadata_post;
 	device_class->get_results = fu_uefi_capsule_device_get_results;
+	device_class->add_security_attrs = fu_uefi_capsule_device_add_security_attrs;
 	device_class->set_progress = fu_uefi_capsule_device_set_progress;
 	device_class->convert_version = fu_uefi_capsule_device_convert_version;
 	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);

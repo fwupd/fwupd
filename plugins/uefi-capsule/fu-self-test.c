@@ -10,6 +10,7 @@
 #include "fu-context-private.h"
 #include "fu-efivars-private.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-capsule-backend.h"
 #include "fu-uefi-capsule-plugin.h"
@@ -1040,6 +1041,118 @@ fu_uefi_update_info_func(void)
 			"/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
+static FwupdSecurityAttr *
+fu_uefi_capsule_test_get_bios_rollback_attr(FuUefiCapsuleDeviceKind kind,
+					    guint32 fw_version,
+					    guint32 fw_version_lowest)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+	dev = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE,
+			   "context",
+			   ctx,
+			   "fw-class",
+			   "ddc0ee61-e7f0-4e7d-acc5-c070a398838e",
+			   "kind",
+			   kind,
+			   "fw-version",
+			   fw_version,
+			   "fw-version-lowest",
+			   fw_version_lowest,
+			   NULL);
+	fu_device_set_plugin(FU_DEVICE(dev), "uefi_capsule");
+	fu_device_add_security_attrs(FU_DEVICE(dev), attrs);
+	return fu_security_attrs_get_by_appstream_id(
+	    attrs,
+	    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+	    NULL);
+}
+
+static void
+fu_uefi_capsule_security_attrs_func(void)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+							65586,
+							65586);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_clear_object(&attr);
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+							65586,
+							65582);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_clear_object(&attr);
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+							65582,
+							65586);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+	g_assert_false(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_clear_object(&attr);
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+							0,
+							65586);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+	g_assert_false(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_clear_object(&attr);
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+							65586,
+							0);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+	g_assert_false(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_clear_object(&attr);
+
+	attr =
+	    fu_uefi_capsule_test_get_bios_rollback_attr(FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE,
+							65586,
+							65586);
+	g_assert_null(attr);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1059,6 +1172,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-capsule/cod-device", fu_uefi_cod_device_func);
 	g_test_add_func("/uefi-capsule/update-info", fu_uefi_update_info_func);
 	g_test_add_func("/uefi-capsule/update-info/xml", fu_uefi_update_info_xml_func);
+	g_test_add_func("/uefi-capsule/security-attrs", fu_uefi_capsule_security_attrs_func);
 	g_test_add_func("/uefi-capsule/no-coalesce", fu_uefi_capsule_no_coalesce_func);
 	g_test_add_func("/uefi-capsule/no-flashes-left", fu_uefi_capsule_no_flashes_func);
 	g_test_add_func("/uefi-capsule/nvram", fu_uefi_capsule_nvram_func);
