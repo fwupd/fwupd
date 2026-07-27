@@ -117,6 +117,23 @@ fwupd_client_sync_impl_get_report_metadata(FwupdClient *self,
 					   GCancellable *cancellable,
 					   GError **error);
 gboolean
+fwupd_client_sync_impl_install(FwupdClient *self,
+			       const gchar *device_id,
+			       const gchar *filename,
+			       FwupdInstallFlags install_flags,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error);
+gboolean
+fwupd_client_sync_impl_install_release(FwupdClient *self,
+				       FwupdDevice *device,
+				       FwupdRelease *release,
+				       FwupdInstallFlags install_flags,
+				       FwupdClientDownloadFlags download_flags,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error);
+gboolean
 fwupd_client_sync_impl_modify_bios_setting(FwupdClient *self,
 					   GHashTable *settings,
 					   gpointer user_data,
@@ -139,6 +156,13 @@ fwupd_client_sync_impl_modify_remote(FwupdClient *self,
 				     GCancellable *cancellable,
 				     GError **error);
 gboolean
+fwupd_client_sync_impl_refresh_remote(FwupdClient *self,
+				      FwupdRemote *remote,
+				      FwupdClientDownloadFlags download_flags,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error);
+gboolean
 fwupd_client_sync_impl_reset_config(FwupdClient *self,
 				    const gchar *section,
 				    gpointer user_data,
@@ -156,5 +180,25 @@ fwupd_client_sync_impl_set_feature_flags(FwupdClient *self,
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+gboolean
+fwupd_client_sync_impl_update_metadata(FwupdClient *self,
+				       const gchar *remote_id,
+				       const gchar *metadata_fn,
+				       const gchar *signature_fn,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error);
+gboolean
+fwupd_client_sync_impl_verify(FwupdClient *self,
+			      const gchar *device_id,
+			      gpointer user_data,
+			      GCancellable *cancellable,
+			      GError **error);
+gboolean
+fwupd_client_sync_impl_verify_update(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
 
 G_END_DECLS

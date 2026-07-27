@@ -8361,12 +8361,18 @@ fwupd_client_init(FwupdClient *self)
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
+	    .install = fwupd_client_sync_impl_install,
+	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
+	    .refresh_remote = fwupd_client_sync_impl_refresh_remote,
 	    .reset_config = fwupd_client_sync_impl_reset_config,
 	    .search = fwupd_client_sync_impl_search,
 	    .set_feature_flags = fwupd_client_sync_impl_set_feature_flags,
+	    .update_metadata = fwupd_client_sync_impl_update_metadata,
+	    .verify = fwupd_client_sync_impl_verify,
+	    .verify_update = fwupd_client_sync_impl_verify_update,
 	};
 	fwupd_client_set_sync_impl(self, &impl, NULL, NULL);
 	priv->percentage = FWUPD_PERCENTAGE_UNKNOWN;
