@@ -170,10 +170,9 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
-			   GError **error) G_GNUC_NON_NULL(1, 2, 3, 4, 5);
+			   GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
 fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);

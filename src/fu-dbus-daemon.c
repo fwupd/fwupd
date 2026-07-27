@@ -747,7 +747,6 @@ fu_dbus_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	ret = fu_engine_install_releases(engine,
 					 helper->request,
 					 helper->releases,
-					 helper->cabinet,
 					 helper->progress,
 					 helper->flags,
 					 &error);

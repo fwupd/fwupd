@@ -2205,7 +2205,6 @@ fu_engine_multiple_rels_func(void)
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
-					 cabinet,
 					 progress,
 					 FWUPD_INSTALL_FLAG_NONE,
 					 &error);
@@ -3085,7 +3084,6 @@ fu_engine_plugin_composite_func(void)
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
-					 cabinet,
 					 progress,
 					 FWUPD_INSTALL_FLAG_NONE,
 					 &error);
