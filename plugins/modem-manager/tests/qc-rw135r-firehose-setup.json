@@ -2,13 +2,13 @@
   "FwupdVersion": "2.1.7",
   "UsbDevices": [
     {
-      "Created": "2026-07-09T03:36:55.564294Z",
+      "Created": "2026-07-25T06:42:20.766283Z",
       "GType": "FuMmMhiFirehoseDevice",
-      "BackendId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:74:00.0",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:71:00.0",
       "Vendor": 6091,
       "Model": 282,
-      "Version": "89602.0000.00.02.02.13_5003.0000.004.002.006_C13",
-      "PhysicalId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:74:00.0",
+      "Version": "89602.0000.00.02.02.16_5003.0000.005.002.008_D01",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:71:00.0",
       "DeviceIds": [
         "PCI\\VID_17CB&PID_011A",
         "PCI\\VID_17CB&PID_011A&SUBSYS_20991301",

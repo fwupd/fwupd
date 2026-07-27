@@ -1,8 +1,5 @@
 /*
- * Copyright 2020 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright 2021 Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
- * Copyright 2025 Richard Hughes <richard@hughsie.com>
- *
+ * Copyright 2026 HongXing Xu <qifeng.liu@rollingwireless.com>
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
@@ -20,19 +17,18 @@ struct _FuMmMhiFirehoseDevice {
 G_DEFINE_TYPE(FuMmMhiFirehoseDevice, fu_mm_mhi_firehose_device, FU_TYPE_MM_DEVICE)
 
 static gboolean
-fu_mm_mhi_firehose_device_trigger_edl(FuDevice *device, GError **error)
+fu_mm_mhi_firehose_device_trigger_edl(FuMmMhiFirehoseDevice *self, GError **error)
 {
 	const gchar *mhi_name = NULL;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autofree gchar *trigger_path = NULL;
 
-	attrs = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(device), error);
+	attrs = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(self), error);
 	if (attrs == NULL) {
-		g_prefix_error(error, "failed to list sysfs entries: ");
+		g_prefix_error_literal(error, "failed to list sysfs entries: ");
 		return FALSE;
 	}
 
-	/* Find the first MHI port (only one expected) */
 	for (guint i = 0; i < attrs->len; i++) {
 		const gchar *name = g_ptr_array_index(attrs, i);
 		if (g_str_has_prefix(name, "mhi")) {
@@ -40,20 +36,21 @@ fu_mm_mhi_firehose_device_trigger_edl(FuDevice *device, GError **error)
 			break;
 		}
 	}
-
 	if (mhi_name == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				    "No MHI port found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no mhi device found");
 		return FALSE;
 	}
 
 	trigger_path = g_strdup_printf("%s/trigger_edl", mhi_name);
-	if (fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), trigger_path, "1", 3000, error))
-		return TRUE;
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(self), trigger_path, "1", 3000, error)) {
+		g_prefix_error_literal(error, "write trigger_edl fail: ");
+		return FALSE;
+	}
 
-	/* write_sysfs already set a detailed error, just add context */
-	g_prefix_error(error, "failed to trigger EDL for MHI port '%s': ", mhi_name);
-	return FALSE;
+	return TRUE;
 }
 
 static gboolean
@@ -87,13 +84,12 @@ fu_mm_mhi_firehose_device_detach(FuDevice *device, FuProgress *progress, GError 
 		return FALSE;
 	}
 
-	/* trigger emergency download mode; this takes us to the EDL execution environment */
-	if (!fu_mm_mhi_firehose_device_trigger_edl(device, error)) {
-		g_prefix_error_literal(error, "rebooting into firehose port not supported: ");
+	/* trigger emergency download mode */
+	if (!fu_mm_mhi_firehose_device_trigger_edl(self, error)) {
+		g_prefix_error_literal(error, "switch to firehose port fail: ");
 		return FALSE;
 	}
 
-	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -107,12 +103,12 @@ fu_mm_mhi_firehose_device_search_path_locker_new(FuMmMhiFirehoseDevice *self, GE
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
         if (self->lib_firmware_path == NULL) {
-                g_set_error_literal(error,
-                                    FWUPD_ERROR,
-                                    FWUPD_ERROR_NOT_FOUND,
-                                    "system firmware path is not set for the device");
-                return NULL;
-        }
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "system firmware path not set");
+		return NULL;
+	}
 
 	mm_fw_dir = g_build_filename(self->lib_firmware_path, NULL);
 	if (g_mkdir_with_parents(mm_fw_dir, 0777) == -1) {
@@ -202,11 +198,13 @@ fu_mm_mhi_firehose_device_set_quirk_kv(FuDevice *device,
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 
 	if (g_strcmp0(key, "ModemManagerFirehoseProgFile") == 0) {
+		g_free(self->firehose_prog_file);
 		self->firehose_prog_file = g_strdup(value);
 		return TRUE;
 	}
 
 	if (g_strcmp0(key, "ModemManagerLibFirmwarePath") == 0) {
+		g_free(self->lib_firmware_path);
 		self->lib_firmware_path = g_strdup(value);
 		return TRUE;
 	}
@@ -219,6 +217,58 @@ fu_mm_mhi_firehose_device_set_quirk_kv(FuDevice *device,
 	return FALSE;
 }
 
+static gboolean
+fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
+{
+	const gchar *sysfs_path;
+	g_autoptr(GPtrArray) attrs = NULL;
+	const gchar *mhi_name = NULL;
+	g_autofree gchar *devnode = NULL;
+
+	sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	if (sysfs_path == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to get sysfs path");
+		return FALSE;
+	}
+
+	attrs = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(device), error);
+	if (attrs == NULL) {
+		g_prefix_error_literal(error, "failed to list sysfs entries: ");
+		return FALSE;
+	}
+
+	for (guint i = 0; i < attrs->len; i++) {
+		const gchar *name = g_ptr_array_index(attrs, i);
+		if (g_str_has_prefix(name, "mhi")) {
+			mhi_name = name;
+			break;
+		}
+	}
+	if (mhi_name == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no mhi device found");
+		return FALSE;
+	}
+
+	/* In the mhi_pci_generic driver,
+	 * mbim channel name definitely be configured as MBIM */
+	devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
+	if (!g_file_test(devnode, G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no mbim port found");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static void
 fu_mm_mhi_firehose_device_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -229,53 +279,6 @@ fu_mm_mhi_firehose_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
-}
-
-static gboolean
-fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
-{
-    const gchar *sysfs_path;
-    g_autoptr(GPtrArray) attrs = NULL;
-    const gchar *mhi_name = NULL;
-    g_autofree gchar *devnode = NULL;  
-
-    sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-    if (sysfs_path == NULL) {
-        g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-                            "failed to get sysfs path");
-        return FALSE;
-    }
-
-    attrs = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(device), error);
-    if (attrs == NULL) {
-        g_prefix_error(error, "failed to list sysfs entries: ");
-        return FALSE;
-    }
-
-    for (guint i = 0; i < attrs->len; i++) {
-        const gchar *name = g_ptr_array_index(attrs, i);
-        if (g_str_has_prefix(name, "mhi")) {
-            mhi_name = name;
-            break;
-        }
-    }
-
-    if (mhi_name == NULL) {
-        g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-                            "No MHI device found");
-        return FALSE;
-    }
-
-    devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
-
-    if (!g_file_test(devnode, G_FILE_TEST_EXISTS)) {
-        g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-                            "No MBIM port found");
-        return FALSE;
-    }
-
-    g_info("found MBIM port at %s", devnode);
-    return TRUE;
 }
 
 static void

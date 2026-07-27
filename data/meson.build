@@ -86,8 +86,7 @@ if build_daemon
 
     if get_option('plugin_modem_manager').allowed()
       rw_directories += [
-        '-/lib/firmware/qcom/sdx35/rolling',
-        '-/lib/firmware/qcom/sdx75/rolling',
+        '-/lib/firmware',
       ]
     endif
 
