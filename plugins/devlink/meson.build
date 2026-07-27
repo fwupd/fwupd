@@ -35,7 +35,12 @@ plugin_builtin_devlink = static_library(
 )
 plugin_builtins += plugin_builtin_devlink
 
-device_tests += files('tests/devlink-netdevsim.json')
+enumeration_data += files('tests/devlink-mxl86252-setup.json')
+device_tests += files(
+  'tests/devlink-mxl86252.json',
+  'tests/devlink-mxl86252-update.json',
+  'tests/devlink-netdevsim.json',
+)
 
 if get_option('tests')
   e = executable(
