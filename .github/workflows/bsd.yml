@@ -15,7 +15,6 @@ jobs:
         uses: vmactions/freebsd-vm@77ed28d336d03fe19a3f4f7266c1d2c4714dd79d # v1.5.2
         env:
           CC: gcc
-          CI: true
         with:
           usesh: true
           mem: 8192
