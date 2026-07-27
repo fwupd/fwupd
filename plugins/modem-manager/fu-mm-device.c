@@ -142,13 +142,13 @@ fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError
 
 gboolean
 fu_mm_device_get_device_file(FuMmDevice *self,
-                             MMModemPortType port_type,
-                             gchar **out_device_file, 
-                             GError **error)
+			     MMModemPortType port_type,
+			     gchar **out_device_file,
+			     GError **error)
 {
     FuMmDevicePrivate *priv = GET_PRIVATE(self);
     g_return_val_if_fail(FU_IS_MM_DEVICE(self), FALSE);
-    g_return_val_if_fail(out_device_file != NULL, FALSE); 
+    g_return_val_if_fail(out_device_file != NULL, FALSE);
 
     for (guint i = 0; i < priv->ports->len; i++) {
         FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
