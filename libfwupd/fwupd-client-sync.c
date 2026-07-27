@@ -770,6 +770,25 @@ fwupd_client_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 	g_main_loop_quit(helper->loop);
 }
 
+gboolean
+fwupd_client_sync_impl_verify(FwupdClient *self,
+			      const gchar *device_id,
+			      gpointer user_data,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_verify_async(self, device_id, cancellable, fwupd_client_verify_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fwupd_client_verify:
  * @self: a #FwupdClient
@@ -789,7 +808,8 @@ fwupd_client_verify(FwupdClient *self,
 		    GCancellable *cancellable,
 		    GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -800,15 +820,14 @@ fwupd_client_verify(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_verify_async(self, device_id, cancellable, fwupd_client_verify_cb, helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->verify == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->verify");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->verify(self, device_id, impl_userdata, cancellable, error);
 }
 
 static void
@@ -817,6 +836,29 @@ fwupd_client_verify_update_cb(GObject *source, GAsyncResult *res, gpointer user_
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
 	helper->ret = fwupd_client_verify_update_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
+}
+
+gboolean
+fwupd_client_sync_impl_verify_update(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_verify_update_async(self,
+					 device_id,
+					 cancellable,
+					 fwupd_client_verify_update_cb,
+					 helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /**
@@ -838,7 +880,8 @@ fwupd_client_verify_update(FwupdClient *self,
 			   GCancellable *cancellable,
 			   GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -849,19 +892,14 @@ fwupd_client_verify_update(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_verify_update_async(self,
-					 device_id,
-					 cancellable,
-					 fwupd_client_verify_update_cb,
-					 helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->verify_update == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->verify_update");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->verify_update(self, device_id, impl_userdata, cancellable, error);
 }
 
 static void
@@ -1804,6 +1842,48 @@ fwupd_client_install_fd_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 }
 #endif
 
+gboolean
+fwupd_client_sync_impl_install(FwupdClient *self,
+			       const gchar *device_id,
+			       const gchar *filename,
+			       FwupdInstallFlags install_flags,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_fn(filename, error);
+	if (istr == NULL)
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	fwupd_client_install_stream_async(self,
+					  device_id,
+					  istr,
+					  filename,
+					  install_flags,
+					  cancellable,
+					  fwupd_client_install_fd_cb,
+					  helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Install CAB only supported on Linux");
+	return FALSE;
+#endif
+}
+
 /**
  * fwupd_client_install:
  * @self: a #FwupdClient
@@ -1827,9 +1907,8 @@ fwupd_client_install(FwupdClient *self,
 		     GCancellable *cancellable,
 		     GError **error)
 {
-#ifdef HAVE_GIO_UNIX
-	g_autoptr(GUnixInputStream) istr = NULL;
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -1841,34 +1920,15 @@ fwupd_client_install(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_fn(filename, error);
-	if (istr == NULL)
-		return FALSE;
-
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_install_stream_async(self,
-					  device_id,
-					  istr,
-					  filename,
-					  install_flags,
-					  cancellable,
-					  fwupd_client_install_fd_cb,
-					  helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->install == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->install");
 		return FALSE;
 	}
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Install CAB only supported on Linux");
-	return FALSE;
-#endif
+	return impl
+	    ->install(self, device_id, filename, install_flags, impl_userdata, cancellable, error);
 }
 
 static void
@@ -1939,6 +1999,35 @@ fwupd_client_install_release_cb(GObject *source, GAsyncResult *res, gpointer use
 	g_main_loop_quit(helper->loop);
 }
 
+gboolean
+fwupd_client_sync_impl_install_release(FwupdClient *self,
+				       FwupdDevice *device,
+				       FwupdRelease *release,
+				       FwupdInstallFlags install_flags,
+				       FwupdClientDownloadFlags download_flags,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_install_release_async(self,
+					   device,
+					   release,
+					   install_flags,
+					   download_flags,
+					   cancellable,
+					   fwupd_client_install_release_cb,
+					   helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fwupd_client_install_release:
  * @self: a #FwupdClient
@@ -1964,7 +2053,8 @@ fwupd_client_install_release(FwupdClient *self,
 			     GCancellable *cancellable,
 			     GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_DEVICE(device), FALSE);
@@ -1976,22 +2066,21 @@ fwupd_client_install_release(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_install_release_async(self,
-					   device,
-					   release,
-					   install_flags,
-					   download_flags,
-					   cancellable,
-					   fwupd_client_install_release_cb,
-					   helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->install_release == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->install_release");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->install_release(self,
+				     device,
+				     release,
+				     install_flags,
+				     download_flags,
+				     impl_userdata,
+				     cancellable,
+				     error);
 }
 
 #ifdef HAVE_GIO_UNIX
@@ -2004,6 +2093,50 @@ fwupd_client_update_metadata_cb(GObject *source, GAsyncResult *res, gpointer use
 	g_main_loop_quit(helper->loop);
 }
 #endif
+
+gboolean
+fwupd_client_sync_impl_update_metadata(FwupdClient *self,
+				       const gchar *remote_id,
+				       const gchar *metadata_fn,
+				       const gchar *signature_fn,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(GUnixInputStream) istr_sig = NULL;
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	istr = fwupd_unix_input_stream_from_fn(metadata_fn, error);
+	if (istr == NULL)
+		return FALSE;
+	istr_sig = fwupd_unix_input_stream_from_fn(signature_fn, error);
+	if (istr_sig == NULL)
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	fwupd_client_update_metadata_stream_async(self,
+						  remote_id,
+						  istr,
+						  istr_sig,
+						  cancellable,
+						  fwupd_client_update_metadata_cb,
+						  helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Update metadata only supported on Linux");
+	return FALSE;
+#endif
+}
 
 /**
  * fwupd_client_update_metadata:
@@ -2033,10 +2166,8 @@ fwupd_client_update_metadata(FwupdClient *self,
 			     GCancellable *cancellable,
 			     GError **error)
 {
-#ifdef HAVE_GIO_UNIX
-	g_autoptr(GUnixInputStream) istr = NULL;
-	g_autoptr(GUnixInputStream) istr_sig = NULL;
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -2049,35 +2180,20 @@ fwupd_client_update_metadata(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	istr = fwupd_unix_input_stream_from_fn(metadata_fn, error);
-	if (istr == NULL)
-		return FALSE;
-	istr_sig = fwupd_unix_input_stream_from_fn(signature_fn, error);
-	if (istr_sig == NULL)
-		return FALSE;
-
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_update_metadata_stream_async(self,
-						  remote_id,
-						  istr,
-						  istr_sig,
-						  cancellable,
-						  fwupd_client_update_metadata_cb,
-						  helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->update_metadata == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->update_metadata");
 		return FALSE;
 	}
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Update metadata only supported on Linux");
-	return FALSE;
-#endif
+	return impl->update_metadata(self,
+				     remote_id,
+				     metadata_fn,
+				     signature_fn,
+				     impl_userdata,
+				     cancellable,
+				     error);
 }
 
 static void
@@ -2155,6 +2271,31 @@ fwupd_client_refresh_remote_cb(GObject *source, GAsyncResult *res, gpointer user
 	g_main_loop_quit(helper->loop);
 }
 
+gboolean
+fwupd_client_sync_impl_refresh_remote(FwupdClient *self,
+				      FwupdRemote *remote,
+				      FwupdClientDownloadFlags download_flags,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_refresh_remote_async(self,
+					  remote,
+					  download_flags,
+					  cancellable,
+					  fwupd_client_refresh_remote_cb,
+					  helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fwupd_client_refresh_remote:
  * @self: a #FwupdClient
@@ -2176,27 +2317,27 @@ fwupd_client_refresh_remote(FwupdClient *self,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(remote), FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_refresh_remote_async(self,
-					  remote,
-					  download_flags,
-					  cancellable,
-					  fwupd_client_refresh_remote_cb,
-					  helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	if (impl->refresh_remote == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->refresh_remote");
 		return FALSE;
 	}
-	return TRUE;
+	return impl
+	    ->refresh_remote(self, remote, download_flags, impl_userdata, cancellable, error);
 }
 
 static void
