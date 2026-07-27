@@ -2559,7 +2559,6 @@ fu_engine_install_release_version_check(FuEngine *self,
  * @self: a #FuEngine
  * @request: a #FuEngineRequest
  * @releases: (element-type FuRelease): a device
- * @cabinet: a #FuCabinet
  * @flags: install flags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: (nullable): optional return location for an error
  *
@@ -2575,7 +2574,6 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
