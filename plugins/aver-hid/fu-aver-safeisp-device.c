@@ -338,7 +338,10 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(cx3_fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       512);
+					       512,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_aver_safeisp_device_upload(self,
 					   chunks,
 					   fu_progress_get_child(progress),
@@ -365,7 +368,10 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(m12_fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       512);
+					       512,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_aver_safeisp_device_upload(self,
 					   chunks,
 					   fu_progress_get_child(progress),

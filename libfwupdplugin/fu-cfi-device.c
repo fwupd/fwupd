@@ -898,7 +898,10 @@ fu_cfi_device_write_firmware(FuDevice *device,
 	pages = fu_chunk_array_new_from_bytes(fw,
 					      FU_CHUNK_ADDR_OFFSET_NONE,
 					      FU_CHUNK_PAGESZ_NONE,
-					      fu_cfi_device_get_page_size(self));
+					      fu_cfi_device_get_page_size(self),
+					      error);
+	if (pages == NULL)
+		return FALSE;
 	if (!fu_cfi_device_write_pages(self, pages, fu_progress_get_child(progress), error)) {
 		g_prefix_error_literal(error, "failed to write pages: ");
 		return FALSE;

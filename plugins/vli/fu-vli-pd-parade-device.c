@@ -505,7 +505,10 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	blocks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       0x10000);
+					       0x10000,
+					       error);
+	if (blocks == NULL)
+		return FALSE;
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i, error);
 		if (chk == NULL)

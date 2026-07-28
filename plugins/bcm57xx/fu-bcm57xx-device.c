@@ -468,7 +468,10 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_BCM57XX_BLOCK_SZ);
+					       FU_BCM57XX_BLOCK_SZ,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_bcm57xx_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);

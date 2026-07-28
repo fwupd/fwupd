@@ -366,11 +366,17 @@ fu_synaptics_rmi_v5_device_write_firmware(FuSynapticsRmiDevice *self,
 	chunks_bin = fu_chunk_array_new_from_bytes(firmware_bin,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
-						   flash->block_size);
+						   flash->block_size,
+						   error);
+	if (chunks_bin == NULL)
+		return FALSE;
 	chunks_cfg = fu_chunk_array_new_from_bytes(bytes_cfg,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
-						   flash->block_size);
+						   flash->block_size,
+						   error);
+	if (chunks_cfg == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks_bin); i++) {
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_bin, i, error);
 		if (chk == NULL)
@@ -399,7 +405,10 @@ fu_synaptics_rmi_v5_device_write_firmware(FuSynapticsRmiDevice *self,
 		chunks_sig = fu_chunk_array_new_from_bytes(signature_bin,
 							   FU_CHUNK_ADDR_OFFSET_NONE,
 							   FU_CHUNK_PAGESZ_NONE,
-							   flash->block_size);
+							   flash->block_size,
+							   error);
+		if (chunks_sig == NULL)
+			return FALSE;
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base,
 						   req_addr,

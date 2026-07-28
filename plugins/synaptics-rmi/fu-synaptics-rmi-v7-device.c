@@ -234,7 +234,10 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       flash->block_size);
+					       flash->block_size,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
@@ -315,7 +318,10 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 	    fu_chunk_array_new_from_bytes(bytes,
 					  FU_CHUNK_ADDR_OFFSET_NONE,
 					  FU_CHUNK_PAGESZ_NONE,
-					  (gsize)flash->payload_length * (gsize)flash->block_size);
+					  (gsize)flash->payload_length * (gsize)flash->block_size,
+					  error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
@@ -403,7 +409,10 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	    fu_chunk_array_new_from_bytes(bytes,
 					  FU_CHUNK_ADDR_OFFSET_NONE,
 					  FU_CHUNK_PAGESZ_NONE,
-					  (gsize)flash->payload_length * (gsize)flash->block_size);
+					  (gsize)flash->payload_length * (gsize)flash->block_size,
+					  error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
