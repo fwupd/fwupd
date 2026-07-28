@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-06-29 19:01+0000\n"
+"PO-Revision-Date: 2026-07-28 08:02+0000\n"
 "Last-Translator: Andrei Stepanov <adem4ik@gmail.com>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/fwupd/fwupd/ru/>\n"
 "Language: ru\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (стабильная прошивка)"
@@ -60,49 +60,49 @@ msgid "Enabled"
 msgstr "Активировано"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Безопасная загрузка"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Согласие на обновление прошивки"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Пробуждение по LAN"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Шифрование памяти"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "Видеопамять"
 
 msgid "Camera"
-msgstr ""
+msgstr "Камера"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Микрофон"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Беспроводная сеть"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Сканер отпечатков пальцев"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Сенсорный экран"
 
 msgid "Audio"
-msgstr ""
+msgstr "Аудио"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Кардридер"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Подсветка клавиатуры"
 
 msgid "Stop the fwupd service"
 msgstr "Остановить сервис fwupd"
@@ -614,11 +614,11 @@ msgstr "Дескриптор SPI BIOS"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "Заблокированное MTD-устройство"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Аппаратное шифрование диска"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -857,7 +857,7 @@ msgstr "Дескриптор BIOS в прошивке"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Аппаратное шифрование диска"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -1040,11 +1040,11 @@ msgstr "Дескриптор BIOS в прошивке предохраняет �
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "Заблокированное MTD-устройство предотвращает изменение прошивки устройства после его запуска."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Аппаратное шифрование диска означает, что злоумышленник с физическим доступом не сможет прочитать данные с извлечённых NVMe-накопителей."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -2689,11 +2689,11 @@ msgstr "Описание"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "Идентификатор AppStream"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Значок"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
