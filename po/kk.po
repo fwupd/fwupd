@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2026-03-02 15:26+0000\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh <https://hosted.weblate.org/projects/fwupd/fwupd/kk/>\n"
@@ -50,6 +50,51 @@ msgstr "Іске қосу"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Іске қосылған"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "fwupd қызметін тоқтату"
@@ -547,6 +592,14 @@ msgstr "SPI BIOS аймағы"
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS дескрипторы"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Жүктеу алдындағы DMA қорғанысы"
@@ -782,6 +835,10 @@ msgstr "Микробағдарлама BIOS аймағы"
 msgid "Firmware BIOS Descriptor"
 msgstr "Микробағдарлама BIOS дескрипторы"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Жүктеу алдындағы DMA қорғанысы"
@@ -960,6 +1017,14 @@ msgstr "Микробағдарлама BIOS аймағы құрылғы микр
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "Микробағдарлама BIOS дескрипторы құрылғы микробағдарламасының жадын бұрмалаудан қорғайды."
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1234,22 +1299,6 @@ msgstr "Сынақ құрылғылары сәтті іске қосылды"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "Микробағдарлама жаңартуы белсендірілуде"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "Құрылғы қосылды:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "Құрылғы өшірілді:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "Құрылғы өзгертілді:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "Өзгертілген"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1571,10 +1620,6 @@ msgstr "HWIDS-FILE"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Жабдық ID-лерін генерациялауға мүмкіндік беретін файлды сақтау"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Демонды оқиғаларға бақылау"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2350,6 +2395,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Құрылғы қосылды:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Құрылғы өшірілді:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Құрылғы өзгертілді:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Өзгертілген"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Уақытша қателер үшін жүктеп алу әрекеттерінің санын орнату"
@@ -2530,6 +2591,10 @@ msgstr "Бір немесе бірнеше BIOS баптауларын орна�
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "Жаңартылатын құрылғылар тізімін қашықтағы серверге жүктеп салу"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Демонды оқиғаларға бақылау"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "Бұл сайман әкімшіге fwupd демонына сұрау салуға және оны басқаруға, микробағдарламаны орнату немесе нұсқасын төмендету сияқты әрекеттерді орындауға мүмкіндік береді."
@@ -2583,6 +2648,14 @@ msgstr "Ағымдағы мән"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Сипаттама"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
