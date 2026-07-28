@@ -113,11 +113,12 @@ jobs:
       - name: Refresh dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11
           sudo apt update -qq
       - name: Install dependencies
         run: |
+          sudo apt install -qq --yes meson
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
       - name: Build
         run: |
           meson setup build \
