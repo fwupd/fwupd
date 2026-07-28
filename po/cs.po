@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2026-07-25 20:01+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
@@ -57,6 +57,51 @@ msgstr "Zapnout"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Povoleno"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "Zastavit službu fwupd"
@@ -566,6 +611,14 @@ msgstr "Oblast v SPI pro BIOS"
 msgid "SPI BIOS Descriptor"
 msgstr "Popisovač v SPI pro BIOS"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Ochrana přímého přístupu do paměti před startem operačního systému"
@@ -801,6 +854,10 @@ msgstr "Oblast ve firmware pro BIOS"
 msgid "Firmware BIOS Descriptor"
 msgstr "Popisovač ve firmware pro BIOS"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Ochrana přímého přístupu do paměti před startem operačního systému"
@@ -979,6 +1036,14 @@ msgstr "Firmware BIOS Region chrání paměť firmware zařízení proti úprav�
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "Firmware BIOS Descriptor chrání paměť firmware zařízení proti úpravám."
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1253,22 +1318,6 @@ msgstr "Testovací zařízení úspěšně povoleny"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "Aktivuje se aktualizovaný firmware"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "Přidáno zařízení:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "Odebráno zařízení:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "Změněno zařízení:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "Změněno"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1590,10 +1639,6 @@ msgstr "SOUBOR-S-IDENTIF-HARDWARE"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Uložit soubor který umožňuje vytváření identifikátorů hardware"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Sledovat události v procesu služby"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2387,6 +2432,22 @@ msgstr "Zadejte váš token pro vzdálený server '%s'"
 msgid "Remote enabled and refreshed successfully"
 msgstr "Vzdálený server byl povolen a obnoven úspěšně"
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Přidáno zařízení:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Odebráno zařízení:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Změněno zařízení:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Změněno"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Nastavit opakované pokusy o stažení pro přechodné chyby"
@@ -2567,6 +2628,10 @@ msgstr "Nastaví jedno nebo více nastavení v BIOS"
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "Odeslat seznam zařízení, která je možné aktualizovat, na vzdálený server"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Sledovat události v procesu služby"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "Tento nástroj správci umožňuje dotazovat a ovládat proces služby fwupd a tím provádět akce jako např. instalaci nebo návrat ke starší verzi firmware."
@@ -2620,6 +2685,14 @@ msgstr "Stávající hodnota"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Popis"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
