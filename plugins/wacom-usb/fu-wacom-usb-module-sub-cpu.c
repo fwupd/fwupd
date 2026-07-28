@@ -83,13 +83,14 @@ fu_wacom_usb_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware,
 					 guint32 *data_len,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) chunks =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	guint record_num = 0;
 	GPtrArray *records = fu_srec_firmware_get_records(srec_firmware);
 
 	*data_len = 0;
 	while (record_num < records->len) {
-		g_autofree FuChunk *chunk =
+		g_autoptr(FuChunk) chunk =
 		    fu_wacom_usb_module_sub_cpu_create_chunk(records, &record_num, error);
 		if (chunk == NULL)
 			return NULL;

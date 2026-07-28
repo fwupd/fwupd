@@ -33,7 +33,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -113,11 +113,12 @@ jobs:
       - name: Refresh dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11
           sudo apt update -qq
       - name: Install dependencies
         run: |
+          sudo apt install -qq --yes meson
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
       - name: Build
         run: |
           meson setup build \

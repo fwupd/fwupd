@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2026-02-01 06:01+0000\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://hosted.weblate.org/projects/fwupd/fwupd/ka/>\n"
@@ -51,6 +51,51 @@ msgstr "ჩართვა"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "ჩართულია"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr ""
@@ -552,6 +597,14 @@ msgstr "SPI BIOS-ის რეგიონი"
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS-ის დესკრიპტორი"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr ""
@@ -787,6 +840,10 @@ msgstr "მიკროკოდის BIOS-ის რეგიონი"
 msgid "Firmware BIOS Descriptor"
 msgstr "მიკროკოდის BIOS-ის დესკრიპტორი"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "ჩატვირთვამდელი DMA-ის დაცვა"
@@ -964,6 +1021,14 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1239,22 +1304,6 @@ msgstr ""
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "მიკროკოდის განახლების აქტივაცია"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "მოწყობილობა დაემატა:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "მოწყობილობა წაშლილია:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "მოწყობილობა შეიცვალა:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "შეცვლილია"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1575,10 +1624,6 @@ msgstr "HWIDS-FILE"
 
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
-msgstr ""
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -2361,6 +2406,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "მოწყობილობა დაემატა:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "მოწყობილობა წაშლილია:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "მოწყობილობა შეიცვალა:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "შეცვლილია"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2541,6 +2602,10 @@ msgstr ""
 msgid "Upload the list of updatable devices to a remote server"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr ""
@@ -2594,6 +2659,14 @@ msgstr "მიმდინარე მნიშვნელობა"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "აღწერილობა"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
