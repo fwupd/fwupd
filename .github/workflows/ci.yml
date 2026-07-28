@@ -98,27 +98,33 @@ jobs:
 
   fuzzing:
     permissions:
-      actions: read # to fetch the artifacts (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
-      contents: read # to clone the repo (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
+      security-events: write
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - name: Build Fuzzers
         id: build
         uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
         with:
           oss-fuzz-project-name: "fwupd"
-          dry-run: false
+          output-sarif: true
       - name: Run Fuzzers
         uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
         with:
+          fuzz-seconds: 600
           oss-fuzz-project-name: "fwupd"
-          fuzz-seconds: 150
-          dry-run: false
+          output-sarif: true
       - name: Upload Crash
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure() && steps.build.outcome == 'success'
         with:
           name: artifacts
           path: ./out/artifacts
+      - name: Upload Sarif
+        if: always() && steps.build.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@e58424170fb0262c8d7ed60a2e84b9bffe205c67 # codeql-bundle-v2.26.1
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: cifuzz-sarif/results.sarif
+          checkout_path: cifuzz-sarif
