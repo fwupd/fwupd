@@ -612,7 +612,10 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       32);
+					       32,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_pixart_tp_haptic_device_tf_write_packets(self,
 							 chunks,
 							 send_interval,

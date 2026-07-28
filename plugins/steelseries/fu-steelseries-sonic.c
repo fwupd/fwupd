@@ -267,7 +267,10 @@ fu_steelseries_sonic_write_to_ram(FuSteelseriesSonic *self,
 	    fu_chunk_array_new_from_bytes(fw,
 					  FU_CHUNK_ADDR_OFFSET_NONE,
 					  FU_CHUNK_PAGESZ_NONE,
-					  FU_STRUCT_STEELSERIES_SONIC_WRITE_TO_RAM_REQ_SIZE_DATA);
+					  FU_STRUCT_STEELSERIES_SONIC_WRITE_TO_RAM_REQ_SIZE_DATA,
+					  error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -336,7 +339,10 @@ fu_steelseries_sonic_write_to_flash(FuSteelseriesSonic *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
+					       FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));

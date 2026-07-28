@@ -172,21 +172,36 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
  * @addr_offset: the hardware address offset, or %FU_CHUNK_ADDR_OFFSET_NONE
  * @page_sz: the hardware page size, typically %FU_CHUNK_PAGESZ_NONE
  * @packet_sz: the packet size, or 0x0
+ * @error: (nullable): optional return location for an error
  *
  * Chunks a linear blob of memory into packets, ensuring each packet is less that a specific
  * transfer size.
  *
- * Returns: (transfer full): a #FuChunkArray
+ * Returns: (transfer full): a #FuChunkArray, or %NULL on error
  *
  * Since: 1.9.6
  **/
 FuChunkArray *
-fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gsize packet_sz)
+fu_chunk_array_new_from_bytes(GBytes *blob,
+			      gsize addr_offset,
+			      gsize page_sz,
+			      gsize packet_sz,
+			      GError **error)
 {
 	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
 
 	g_return_val_if_fail(blob != NULL, NULL);
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (packet_sz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "packet size cannot be zero");
+		return NULL;
+	}
 
 	self->addr_offset = addr_offset;
 	self->page_sz = page_sz;
@@ -257,6 +272,15 @@ fu_chunk_array_new_from_stream(FuInputStream *stream,
 	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+
+	/* sanity check */
+	if (packet_sz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "packet size cannot be zero");
+		return NULL;
+	}
 
 	if (!fu_input_stream_size(stream, &self->total_size, error))
 		return NULL;

@@ -140,7 +140,10 @@ fu_mm_qdu_mbim_device_write(FuMmQduMbimDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       out_max_transfer_size);
+					       out_max_transfer_size,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_mm_qdu_mbim_device_write_chunks(self,
 						chunks,
 						fu_progress_get_child(progress),

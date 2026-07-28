@@ -624,7 +624,10 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 		    fu_chunk_array_new_from_bytes(buf_blob,
 						  fu_firmware_get_addr(firmware),
 						  FU_CHUNK_PAGESZ_NONE,
-						  64);
+						  64,
+						  error);
+		if (chunks == NULL)
+			return NULL;
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = NULL;
 

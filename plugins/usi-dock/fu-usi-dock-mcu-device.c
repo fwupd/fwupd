@@ -548,7 +548,10 @@ fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, G
 	chunks = fu_chunk_array_new_from_bytes(chk_blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
+					       FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

@@ -711,7 +711,10 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_ESM_OFFSET,
 						       FU_CHUNK_PAGESZ_NONE,
-						       BLOCK_UNIT);
+						       BLOCK_UNIT,
+						       error);
+	if (helper->chunks == NULL)
+		return FALSE;
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_esm_cb,
 			       MAX_RETRY_COUNTS,
@@ -803,7 +806,10 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 	helper->chunks = fu_chunk_array_new_from_bytes(fw,
 						       FU_CHUNK_ADDR_OFFSET_NONE,
 						       FU_CHUNK_PAGESZ_NONE,
-						       BLOCK_UNIT);
+						       BLOCK_UNIT,
+						       error);
+	if (helper->chunks == NULL)
+		return FALSE;
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_tesla_leaf_firmware_cb,
 			       MAX_RETRY_COUNTS,
@@ -1088,7 +1094,10 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
 						       FU_CHUNK_PAGESZ_NONE,
-						       BLOCK_UNIT);
+						       BLOCK_UNIT,
+						       error);
+	if (helper->chunks == NULL)
+		return FALSE;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_synaptics_mst_device_update_panamera_firmware_cb,
 				  MAX_RETRY_COUNTS,
@@ -1313,7 +1322,10 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       FU_CHUNK_ADDR_OFFSET_NONE,
 						       FU_CHUNK_PAGESZ_NONE,
-						       BLOCK_UNIT);
+						       BLOCK_UNIT,
+						       error);
+	if (helper->chunks == NULL)
+		return FALSE;
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_synaptics_mst_device_update_firmware_cb,
 			     MAX_RETRY_COUNTS,

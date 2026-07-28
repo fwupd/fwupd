@@ -503,7 +503,10 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
-						   DDC_DATA_FRAGEMENT_SIZE);
+						   DDC_DATA_FRAGEMENT_SIZE,
+						   error);
+	if (chk_slices == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chk_slices); i++) {
 		g_autoptr(FuChunk) chk_slice = NULL;
 		g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();

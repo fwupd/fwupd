@@ -302,7 +302,10 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		chunks = fu_chunk_array_new_from_bytes(chk_blob,
 						       fu_chunk_get_address(chk2),
 						       FU_CHUNK_PAGESZ_NONE,
-						       FU_EP963_TRANSFER_CHUNK_SIZE);
+						       FU_EP963_TRANSFER_CHUNK_SIZE,
+						       error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GError) error_loop = NULL;

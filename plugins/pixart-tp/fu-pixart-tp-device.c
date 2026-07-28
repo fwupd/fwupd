@@ -1009,7 +1009,10 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 	g_autoptr(GBytes) blob = fu_chunk_get_bytes(chk_sector);
 
 	/* pages 1..15 */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_PIXART_TP_DEVICE_PAGE_SIZE);
+	chunks =
+	    fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_PIXART_TP_DEVICE_PAGE_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (fu_chunk_array_length(chunks) > G_MAXUINT8) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

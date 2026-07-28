@@ -369,7 +369,10 @@ fu_goodix_moc_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       GX_FLASH_TRANSFER_BLOCK_SIZE);
+					       GX_FLASH_TRANSFER_BLOCK_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* don't auto-boot firmware */
 	if (!fu_goodix_moc_device_update_init(self, &error_local)) {

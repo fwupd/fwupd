@@ -340,7 +340,10 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       chunk_sz);
+					       chunk_sz,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -365,7 +368,10 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 		pages = fu_chunk_array_new_from_bytes(buf,
 						      FU_CHUNK_ADDR_OFFSET_NONE,
 						      FU_CHUNK_PAGESZ_NONE,
-						      FU_DELL_KESTREL_HID_DATA_PAGE_SZ);
+						      FU_DELL_KESTREL_HID_DATA_PAGE_SZ,
+						      error);
+		if (pages == NULL)
+			return FALSE;
 
 		/* write pages */
 		if (!fu_dell_kestrel_hid_device_write_firmware_pages(
