@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-07-17 16:26+0000\n"
+"PO-Revision-Date: 2026-07-28 08:02+0000\n"
 "Last-Translator: Américo Monteiro <a_monteiro@gmx.com>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/fwupd/fwupd/pt/>\n"
 "Language: pt\n"
@@ -57,49 +57,49 @@ msgid "Enabled"
 msgstr "Ativado"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Arranque Seguro"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Atualização de Firmware Opt-in"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Wake on LAN (Acordar pela Rede)"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Encriptação de Memória"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "Memória de Vídeo"
 
 msgid "Camera"
-msgstr ""
+msgstr "Câmera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Microfone"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "LAN sem fios"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Leitor de Impressão Digital"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Ecrã Táctil"
 
 msgid "Audio"
-msgstr ""
+msgstr "Áudio"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Leitor de Cartão de Média"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Retro-Iluminação do Teclado"
 
 msgid "Stop the fwupd service"
 msgstr "Parar o serviço do fwupd"
@@ -607,11 +607,11 @@ msgstr "Descritor de BIOS do SPI"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "MTD Trancado"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Encriptação de disco por hardware"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -850,7 +850,7 @@ msgstr "Descritor da BIOS do firmware"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Encriptação de Disco por Hardware"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -1033,11 +1033,11 @@ msgstr "O descritor da BIOS do firmware protege a memória do firmware do dispos
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "MTD Trancado previne que o firmware do dispositivo seja alterado após o dispositivos ter arrancado."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Encriptação de disco por hardware significa que um atacante com acesso físico não consegue ler dados de drives NVMe removidas."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -2676,11 +2676,11 @@ msgstr "Descrição"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "ID de AppStream"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Ícone"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
