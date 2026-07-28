@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-03-02 15:26+0000\n"
+"PO-Revision-Date: 2026-07-28 08:02+0000\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh <https://hosted.weblate.org/projects/fwupd/fwupd/kk/>\n"
 "Language: kk\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (тұрақты микробағдарлама)"
@@ -52,49 +52,49 @@ msgid "Enabled"
 msgstr "Іске қосылған"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Қауіпсіз жүктеу"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Микробағдарламаны жаңартуға келісім беру"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Wake on LAN"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Жадыны шифрлеу"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "Видео жады"
 
 msgid "Camera"
-msgstr ""
+msgstr "Камера"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Микрофон"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Сымсыз желі (WLAN)"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Саусақ ізі оқығышы"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Сенсорлық экран"
 
 msgid "Audio"
-msgstr ""
+msgstr "Аудио"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Медиакарта оқығышы"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Пернетақта жарығы"
 
 msgid "Stop the fwupd service"
 msgstr "fwupd қызметін тоқтату"
@@ -159,11 +159,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Демон конфигурациясын әдепкі мәндерге ысыру үшін түпнұсқалықты растау қажет"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Құрылғы қасиетін өзгерту"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Құрылғы қасиетін өзгерту үшін аутентификация қажет"
 
 msgid "Activate the new firmware on the device"
 msgstr "Құрылғыда жаңа микробағдарламаны белсендіру"
@@ -173,18 +173,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Жаңа микробағдарлама нұсқасына ауысу үшін түпнұсқалықты растау қажет"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Сақталған микробағдарлама жаңартуларының нәтижелерін тазарту"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Микробағдарлама жаңартуларының нәтижелерін тазарту үшін аутентификация қажет"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Құрылғы микробағдарламасын тексеру"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Құрылғыдағы микробағдарламаны тексеру үшін аутентификация қажет"
 
 msgid "Update the stored device verification information"
 msgstr "Сақталған құрылғыны тексеру ақпаратын жаңарту"
@@ -194,25 +194,25 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Құрылғы үшін сақталған бақылау сомаларын жаңарту үшін түпнұсқалықты растау қажет"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Бапталған қашықтағы дереккөздерді алу"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Микробағдарламаны жаңарту үшін пайдаланылатын бапталған қашықтағы дереккөздер тізімін алу үшін аутентификация қажет"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Бапталған қашықтағы дереккөздің метадеректерін жаңарту"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Микробағдарламаны жаңарту үшін пайдаланылатын бапталған қашықтағы дереккөздің метадеректерін жаңарту үшін аутентификация қажет"
 
 msgid "Modify a configured remote"
 msgstr "Бапталған қашықтағы дереккөзді өзгерту"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Микробағдарламаны жаңарту үшін пайдаланылатын бапталған қашықтағы дереккөзді іске қосу немеде сөндіру үшін аутентификация қажет"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -289,11 +289,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Эмуляция деректерін жинауды іске қосу үшін түпнұсқалықты растау қажет"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Эмуляцияланған құрылғыға микробағдарламаны орнату"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Эмуляцияланған құрылғыға микробағдарламаны орнату үшін аутентификация қажет"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -349,7 +349,7 @@ msgstr "Аргументтерді талдау сәтсіз аяқталды"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Контекстті жүктеу сәтсіз аяқталды"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -594,11 +594,11 @@ msgstr "SPI BIOS дескрипторы"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "Құлыпталған MTD"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Аппараттық дискіні шифрлеу"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -773,7 +773,7 @@ msgstr "SPI жазудан қорғау"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "coreboot verified boot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -805,7 +805,7 @@ msgstr "UEFI жадын қорғау"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "UEFI NX қорғауы"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -817,7 +817,7 @@ msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
-msgstr ""
+msgstr "AMD микрокод қолтаңбасы"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -837,7 +837,7 @@ msgstr "Микробағдарлама BIOS дескрипторы"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Аппараттық дискіні шифрлеу"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -972,7 +972,7 @@ msgstr "AMD микробағдарламасын жазудан қорғау"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "coreboot Verified Boot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -1000,11 +1000,11 @@ msgstr "UEFI жадын қорғау"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "UEFI NX қорғауы"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
-msgstr ""
+msgstr "AMD микрокод қолтаңбасы"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -1020,11 +1020,11 @@ msgstr "Микробағдарлама BIOS дескрипторы құрылғ�
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "Құлыпталған MTD құрылғы іске қосылғаннан кейін құрылғы микробағдарламасының өзгертілуіне жол бермейді."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Аппараттық дискіні шифрлеу физикалық рұқсаты бар шабуылдаушының өшірілген NVMe дискілерінен деректерді оқи алмайтынын білдіреді."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1139,7 +1139,7 @@ msgstr "Платформаның қауіпсіз жүктелуі (Platform Sec
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "coreboot verified boot құрылғы іске қосылған кезде қол қойылмаған микробағдарламаның жүктелуіне жол бермейді."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1159,7 +1159,7 @@ msgstr "UEFI жүйесі жүктелу кезінде жалпы экспло�
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "UEFI жүктеуіші деректердің орындалуын болдырмау (DEP) қолдауымен компиляцияланған."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1171,7 +1171,7 @@ msgstr "HP SureStart — BIOS-ты рұқсатсыз өзгертуден қо�
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "AMD микрокод қолтаңбасын тексеру процессор микрокодының түпнұсқа екеніне және оған бөгде өзгерістер енгізілмегеніне кепілдік береді."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1476,7 +1476,7 @@ msgid "Manually enable specific plugins"
 msgstr "Арнайы плагиндерді қолмен іске қосу"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "JCat тексеруі үшін пайдаланылатын ашық кілттер бумаларының орналасуы"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1500,7 +1500,7 @@ msgstr "Шығарып тастау үшін ~ префиксін пайдала
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Арнайы хаттамалар бойынша сүзгілеу, мысалы, '~org.uefi.capsule' немесе 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1511,7 +1511,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "JSON пішімінде шығару (барлық интерактивті сұрауларды сөндіреді)"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "Импорттау және шығыс файлдарына арналған префикс"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1949,7 +1949,7 @@ msgstr "CRC ФАЙЛ_АТЫ"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
-msgstr ""
+msgstr "Файлдың CRC мәніне сәйкес келетін алгоритмді табады"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -1961,59 +1961,59 @@ msgstr "Жүйелік PCR оқиғалар журналын талдау"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "JCat файлы туралы ақпаратты көрсету"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ ИДЕНТИФИКАТОР БҮРКЕНШІК_АТ_ИД"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Арнайы JCat элементі үшін бүркеншік ат қосу"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Арнайы JCat элементі үшін бүркеншік атты өшіру"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ [ТҮРІ]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Барлық ендірілген қолтаңбаларды файлдарға экспорттайды"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ ДЕРЕКТЕР БӨЛЕК_КІЛТ"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Бар қолтаңбаны JCat файлына импорттау"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ ДЕРЕККӨЗ [ТҮРІ[:НҰСҚА]] [МАҚСАТ]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "JCat файлына өздігінен қол қойылған қолтаңбаны қосу"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ ДЕРЕККӨЗ СЕРТИФИКАТ ЖЕКЕ_КІЛТ [ТҮРІ[:НҰСҚА]] [МАҚСАТ]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "JCat файлына қолтаңба қосу"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "ФАЙЛ_АТАУЫ [ДЕРЕККӨЗ]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "JCat файлындағы қолтаңбаны тексеру"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2378,22 +2378,22 @@ msgstr "Құрылғылар тізімі сәтті жүктеп салынды
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "'%s' қашықтағы дереккөзі үшін эл. пошта адресін енгізіңіз"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Жаңа токен алу үшін %s адресіне өтіп, 'Токенді генерациялау' батырмасын шертіңіз"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "'%s' қашықтағы дереккөзі үшін токенді енгізіңіз"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Қашықтағы дереккөз сәтті іске қосылды және жаңартылды"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -2501,11 +2501,11 @@ msgstr "Сақталған криптографиялық хэшті ағымд�
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[ҚАШЫҚТАҒЫ-ИД] [ПАЙДАЛАНУШЫ_АТЫ] [ТОКЕН]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Аутентификацияланған қашықтағы дереккөзді іске қосу"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2651,11 +2651,11 @@ msgstr "Сипаттама"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "AppStream идентификаторы"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Таңбаша"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -2960,7 +2960,7 @@ msgstr "%s гарнитурасын жаңарту"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "%s сенсорлық экранды жаңарту"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3261,7 +3261,7 @@ msgstr "Минималды нұсқа"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Максималды нұсқа"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3273,7 +3273,7 @@ msgstr "Өндіруші"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3587,7 +3587,7 @@ msgstr "Басымдық"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Аутентификацияны талап етеді"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3595,7 +3595,7 @@ msgstr "Пайдаланушы аты"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Токен"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3783,11 +3783,11 @@ msgstr "UEFI жадын қорғау құлпы қазір ашылған"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "UEFI NX жүктеуіш қорғауы қазір іске қосылған"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "UEFI NX жүктеуіш қорғауы қазір сөндірілген"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3799,7 +3799,7 @@ msgstr "HP SureStart іске қосылған"
 
 #. TRANSLATORS: HSI event title
 msgid "AMD microcode signature vulnerability fixed"
-msgstr ""
+msgstr "AMD микрокод қолтаңбасының осалдығы түзетілді"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
