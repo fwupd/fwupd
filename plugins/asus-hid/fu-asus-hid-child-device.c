@@ -78,10 +78,9 @@ fu_asus_hid_child_device_ensure_manufacturer(FuAsusHidChildDevice *self, GError 
 		return FALSE;
 
 	man = fu_struct_asus_man_result_get_data(st_result);
-	/* FIXME? I think this was supposed to be "ASUS Tech.Inc." i.e. with a space --
-	 * it appears that we set the short string in FuStructAsusManCommand which the
-	 * device seems to copy back in FuStructAsusManResult ¯\_ (ツ)_/¯ */
-	if (g_strcmp0(man, "ASUSTech.Inc.") != 0) {
+	/* the device echoes back whatever was sent, so this only proves it is
+	 * listening -- the vendor tool compares against the same fixed string */
+	if (g_strcmp0(man, "ASUS Tech.Inc.") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
