@@ -8,6 +8,7 @@
 
 #include "fu-asus-hid-child-device.h"
 #include "fu-asus-hid-device.h"
+#include "fu-asus-hid-firmware.h"
 #include "fu-asus-hid-struct.h"
 
 struct _FuAsusHidDevice {
@@ -22,9 +23,9 @@ G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HIDRAW_DEVICE)
 #define FU_ASUS_HID_DEVICE_PRE_UPDATE_DELAY 50	/* ms */
 #define FU_ASUS_HID_DEVICE_RETRIES	    50
 #define FU_ASUS_HID_DEVICE_ERASE_DELAY	    200 /* ms */
-#define FU_ASUS_HID_DEVICE_BLOCK_START_DELAY 5	 /* ms */
-#define FU_ASUS_HID_DEVICE_CHUNK_DELAY	     2	 /* ms */
-#define FU_ASUS_HID_DEVICE_COMMIT_DELAY	     50	 /* ms */
+#define FU_ASUS_HID_DEVICE_BLOCK_START_DELAY 5	/* ms */
+#define FU_ASUS_HID_DEVICE_CHUNK_DELAY	    2	/* ms */
+#define FU_ASUS_HID_DEVICE_COMMIT_DELAY	    50	/* ms */
 #define FU_ASUS_HID_DEVICE_BLOCK_SIZE	    0x400
 
 static gboolean
@@ -210,6 +211,32 @@ fu_asus_hid_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/* the vendor tool flashes the part as a whole rather than per-microcontroller,
+ * so the version of the primary one is what gets compared against the release */
+static gboolean
+fu_asus_hid_device_ensure_version(FuAsusHidDevice *self, GError **error)
+{
+	g_autofree gchar *version = NULL;
+	g_autoptr(FuStructAsusHidCommand) st = fu_struct_asus_hid_command_new();
+	g_autoptr(FuStructAsusHidDesc) st_desc = NULL;
+	g_autoptr(FuStructAsusHidFwInfo) st_result = fu_struct_asus_hid_fw_info_new();
+
+	fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_FW_VERSION);
+	fu_struct_asus_hid_command_set_length(st, FU_STRUCT_ASUS_HID_RESULT_SIZE);
+	if (!fu_asus_hid_device_transfer_feature(self,
+						 st->buf,
+						 st_result->buf,
+						 FU_ASUS_HID_REPORT_ID_INFO,
+						 error))
+		return FALSE;
+	st_desc = fu_struct_asus_hid_fw_info_get_description(st_result);
+	version = fu_struct_asus_hid_desc_get_version(st_desc);
+	fu_device_set_version(FU_DEVICE(self), version);
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_asus_hid_device_setup(FuDevice *device, GError **error)
 {
@@ -225,8 +252,17 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_asus_hid_device_init_seq(self, error))
 		return FALSE;
 
+	if (!fu_asus_hid_device_ensure_version(self, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_asus_hid_device_reload(FuDevice *device, GError **error)
+{
+	return fu_asus_hid_device_ensure_version(FU_ASUS_HID_DEVICE(device), error);
 }
 
 static gboolean
@@ -450,8 +486,7 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 	guint blocks;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuStructAsusEraseFlashCommand) st_erase =
-	    fu_struct_asus_erase_flash_command_new();
+	g_autoptr(FuStructAsusEraseFlashCommand) st_erase = fu_struct_asus_erase_flash_command_new();
 
 	img = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (img == NULL)
@@ -549,6 +584,11 @@ fu_asus_hid_device_init(FuAsusHidDevice *self)
 	/* TODO: automatic backup */
 	/* fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL); */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_protocol(FU_DEVICE(self), "com.asus.hid");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ASUS_HID_FIRMWARE);
 	/* the device comes back with the counterpart GUID rather than the one
 	 * it left with, so the replug is only matched with this */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
@@ -568,6 +608,7 @@ fu_asus_hid_device_class_init(FuAsusHidDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->dispose = fu_asus_hid_device_dispose;
 	device_class->setup = fu_asus_hid_device_setup;
+	device_class->reload = fu_asus_hid_device_reload;
 	device_class->probe = fu_asus_hid_device_probe;
 	device_class->set_quirk_kv = fu_asus_hid_device_set_quirk_kv;
 	device_class->detach = fu_asus_hid_device_detach;
