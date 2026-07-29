@@ -1,0 +1,18 @@
+# Copyright 2026 NVIDIA Corporation
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+# Galaxy GB300 BMC USB virtual NIC for Redfish access
+[USB\VID_0955&PID_7020]
+Plugin = nvidia_oob_redfish
+Flags = internal,no-probe
+
+# BMC firmware inventory names
+[NvidiaOob\Name=BMC_FW]
+Summary = Baseboard Management Controller firmware
+
+[NvidiaOob\Name=SBIOS]
+Summary = System BIOS
+
+[NvidiaOob\Name=HPM_PLDM_BUNDLE]
+Summary = NVIDIA HPM PLDM firmware bundle (GPU/CX9/FPGA/MCU)
