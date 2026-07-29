@@ -18,8 +18,11 @@ G_DECLARE_FINAL_TYPE(FuChunkArray, fu_chunk_array, FU, CHUNK_ARRAY, GObject)
 FuChunkArray *
 fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize packet_sz);
 FuChunkArray *
-fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gsize packet_sz)
-    G_GNUC_NON_NULL(1);
+fu_chunk_array_new_from_bytes(GBytes *blob,
+			      gsize addr_offset,
+			      gsize page_sz,
+			      gsize packet_sz,
+			      GError **error) G_GNUC_NON_NULL(1);
 FuChunkArray *
 fu_chunk_array_new_from_stream(FuInputStream *stream,
 			       gsize addr_offset,

@@ -569,7 +569,10 @@ fu_wacom_usb_device_write_firmware(FuDevice *device,
 		chunks = fu_chunk_array_new_from_bytes(blob_block,
 						       fd->start_addr,
 						       FU_CHUNK_PAGESZ_NONE,
-						       self->write_block_sz);
+						       self->write_block_sz,
+						       error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GBytes) blob_chunk = NULL;

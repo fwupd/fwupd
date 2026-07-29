@@ -10,8 +10,8 @@ Environment="G_DEBUG=fatal-criticals"
 EOF
 
 # install
-apt update
-apt install -y gcovr ./dist/*.deb
+apt update -qq
+apt install -qq -y gcovr ./dist/*.deb
 
 fwupdtool enable-test-devices
 fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018

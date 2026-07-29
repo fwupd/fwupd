@@ -310,7 +310,10 @@ fu_telink_dfu_hid_device_write_blob(FuTelinkDfuHidDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_TELINK_DFU_HID_DEVICE_START_ADDR,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STRUCT_TELINK_DFU_HID_PKT_PAYLOAD_SIZE_OTA_DATA);
+					       FU_STRUCT_TELINK_DFU_HID_PKT_PAYLOAD_SIZE_OTA_DATA,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_telink_dfu_hid_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

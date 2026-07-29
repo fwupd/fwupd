@@ -574,6 +574,7 @@ if __name__ == "__main__":
             [
                 "apt-get",
                 "install",
+                "-qq",
                 "-y",
                 "liblzma-dev",
                 "libzstd-dev",

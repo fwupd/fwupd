@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-05-30 06:41+0000\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
+"PO-Revision-Date: 2026-07-29 19:02+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/fwupd/fwupd/uk/>\n"
 "Language: uk\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Служба надання мікропрограм для Linux від виробника (стабільна мікропрограма)"
@@ -51,6 +51,51 @@ msgstr "Увімкнути"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Увімкнено"
+
+msgid "Secure Boot"
+msgstr "Secure Boot"
+
+msgid "Firmware Update Opt-in"
+msgstr "Підписка на оновлення мікропрограми"
+
+msgid "Wake on LAN"
+msgstr "Wake on LAN"
+
+msgid "Num Lock"
+msgstr "Num Lock"
+
+msgid "Memory Encryption"
+msgstr "Шифрування пам'яті"
+
+msgid "Video Memory"
+msgstr "Відеопам'ять"
+
+msgid "Camera"
+msgstr "Камера"
+
+msgid "Microphone"
+msgstr "Мікрофон"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Wireless LAN"
+msgstr "Бездротова локальна мережа"
+
+msgid "Fingerprint Reader"
+msgstr "Зчитувач відбитків"
+
+msgid "Touchscreen"
+msgstr "Сенсорний екран"
+
+msgid "Audio"
+msgstr "Звук"
+
+msgid "Media Card Reader"
+msgstr "Зчитувач карток пам'яті"
+
+msgid "Keyboard Backlight"
+msgstr "Підсвічування клавіатури"
 
 msgid "Stop the fwupd service"
 msgstr "Зупинити службу fwupd"
@@ -305,7 +350,7 @@ msgstr "Не вдалося обробити аргументи"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Не вдалося завантажити контекст"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -560,6 +605,14 @@ msgstr "Регіон BIOS SPI"
 msgid "SPI BIOS Descriptor"
 msgstr "Дескриптор SPI BIOS"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr "Заблокований MTD"
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr "Апаратне шифрування диска"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Захист DMA до завантаження"
@@ -733,7 +786,7 @@ msgstr "Захист від запису SPI"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "перевірене завантаження coreboot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -765,7 +818,7 @@ msgstr "Захист пам'яті UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "Захист NX UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -794,6 +847,10 @@ msgstr "Регіон BIOS мікропрограми"
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
 msgstr "Дескриптор BIOS мікропрограми"
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr "Апаратне шифрування диска"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -928,7 +985,7 @@ msgstr "Захист від запису мікропрограми AMD"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "Перевірене завантаження coreboot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -956,7 +1013,7 @@ msgstr "Захист пам'яті UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "Захист NX UEFI"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -973,6 +1030,14 @@ msgstr "Захист регіону BIOS захищає пам'ять мікро
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "Захист lдескриптора BIOS захищає пам'ять мікропрограми пристрою від внесення змін."
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr "Заблокований MTD запобігає змінам у мікропрограмі пристрою після запуску пристрою."
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr "Апаратне шифрування диска означає, що зловмисник із фізичним доступом до диска не зможе прочитати дані з від'єднаного від комп'ютера диска NVMe."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1087,7 +1152,7 @@ msgstr "Механізм безпечного завантаження плат�
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "Перевірене завантаження coreboot запобігає завантаженню непідписаної мікропрограми при запуску пристрою."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1107,7 +1172,7 @@ msgstr "Система UEFI може встановлювати атрибути
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "Завантажувач UEFI зібрано з підтримкою запобігання виконанню даних (Data Execution Prevention)."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1247,22 +1312,6 @@ msgstr "Успішно увімкнено тестові пристрої"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "Активуємо оновлення мікропрограми"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "Додано пристрій:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "Вилучено пристрій:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "Змінено пристрій:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "Змінено"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1464,7 +1513,7 @@ msgstr "Фільтрувати за набором прапорців випус
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Фільтрувати за вказаними протоколами, наприклад «~org.uefi.capsule» або «org.nvmexpress»"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1584,10 +1633,6 @@ msgstr "ФАЙЛ-HWIDS"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Зберегти файл, за допомогою якого можна буде створити апаратні ідентифікатори"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Стежити за подіями у фоновій службі"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2381,6 +2426,22 @@ msgstr "Введіть ваш жетон для віддаленого схов�
 msgid "Remote enabled and refreshed successfully"
 msgstr "Віддалене сховище увімкнено і освіжено"
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Додано пристрій:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Вилучено пристрій:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Змінено пристрій:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Змінено"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Встановити кількість повторних спроб отримання при тимчасових помилках"
@@ -2561,6 +2622,10 @@ msgstr "Встановити один або декілька параметрі
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "Вивантажити список придатних до оновлення пристроїв на віддалений сервер"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Стежити за подіями у фоновій службі"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "За допомогою цього інструмента адміністратор може опитувати фонову службу fwupd і керувати нею. Це уможливлює виконання таких дій, як встановлення мікропрограм або зниження версії мікропрограм."
@@ -2614,6 +2679,14 @@ msgstr "Поточне значення"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr "Ідентифікатор AppStream"
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr "Піктограма"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -2918,7 +2991,7 @@ msgstr "%s Оновлення для гарнітури"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "Оновлення сенсорного екрана %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3762,11 +3835,11 @@ msgstr "Захист пам'яті UEFI тепер розблоковано"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "Увімкнено захист завантажувача NX UEFI"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "Вимкнено захист завантажувача NX UEFI"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"

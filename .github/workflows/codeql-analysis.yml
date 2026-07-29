@@ -12,7 +12,7 @@ permissions:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -25,28 +25,28 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3.29.5
+        uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           languages: ${{ matrix.language }}
 
       - name: Install dependencies
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
           python3 -m pip install --user "meson >= 0.62.0"
 
       - name: Build
         run: |
-          mkdir -p $GITHUB_WORKSPACE/build
-          cd $GITHUB_WORKSPACE/build
-          meson setup .. -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
+          mkdir -p "$GITHUB_WORKSPACE/build"
+          cd "$GITHUB_WORKSPACE/build"
+          meson setup .. -Dman=false --prefix="$GITHUB_WORKSPACE/dist" -Dlibxmlb:gtkdoc=false
           ninja
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3.29.5
+        uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3

@@ -187,8 +187,12 @@ fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GE
 	fd = g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(stream));
 	seals = fcntl(fd, F_GET_SEALS);
 	if (seals < 0) {
-		/* not supported on this fd */
-		return TRUE;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "F_GET_SEALS not supported: %s",
+			    strerror(errno));
+		return FALSE;
 	}
 	if ((seals & F_SEAL_SEAL) == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "fd not sealed");
@@ -206,8 +210,14 @@ fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GE
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no GROW seal");
 		return FALSE;
 	}
-#endif
 	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "F_GET_SEALS not supported");
+	return FALSE;
+#endif
 }
 
 static void

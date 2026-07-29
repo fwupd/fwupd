@@ -815,7 +815,10 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       0x8000);
+					       0x8000,
+					       error);
+	if (chunks == NULL)
+		return NULL;
 	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,

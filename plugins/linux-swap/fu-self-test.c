@@ -78,6 +78,36 @@ fu_linux_swap_encrypted_func(void)
 	g_assert_nonnull(swap);
 }
 
+/* a /dev/mapper/<name> swap partition unknown to udisks must not abort the
+ * parse, and encryption below it must still be detected via the sysfs dm walk */
+static void
+fu_linux_swap_dm_mapper_partition_func(void)
+{
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "lvm-on-luks", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	swap = fu_linux_swap_new(
+	    pstore,
+	    "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
+	    "/dev/zram0                              partition\t12296188\t0\t12008\n"
+	    "/dev/mapper/mrow-swap                   partition\t34603004\t0\t-2\n",
+	    0,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(swap);
+	g_assert_true(fu_linux_swap_get_enabled(swap));
+	g_assert_true(fu_linux_swap_get_encrypted(swap));
+}
+
 static void
 fu_linux_swap_dm_walker_lvm_on_luks_func(void)
 {
@@ -152,6 +182,7 @@ main(int argc, char **argv)
 	g_test_add_func("/linux-swap/none", fu_linux_swap_none_func);
 	g_test_add_func("/linux-swap/plain", fu_linux_swap_plain_func);
 	g_test_add_func("/linux-swap/encrypted", fu_linux_swap_encrypted_func);
+	g_test_add_func("/linux-swap/dm-mapper-partition", fu_linux_swap_dm_mapper_partition_func);
 	g_test_add_func("/linux-swap/dm-walker/lvm-on-luks",
 			fu_linux_swap_dm_walker_lvm_on_luks_func);
 	g_test_add_func("/linux-swap/dm-walker/direct", fu_linux_swap_dm_walker_direct_func);

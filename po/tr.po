@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2026-06-10 11:01+0000\n"
 "Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/fwupd/fwupd/tr/>\n"
@@ -60,6 +60,51 @@ msgstr "Etkinleştir"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Etkinleştirildi"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "fwupd hizmetini durdur"
@@ -561,6 +606,14 @@ msgstr "SPI BIOS bölgesi"
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS açıklayıcısı"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Önyükleme öncesi DMA koruması"
@@ -796,6 +849,10 @@ msgstr "Donanım Yazılımı BIOS Bölgesi"
 msgid "Firmware BIOS Descriptor"
 msgstr "Donanım Yazılımı BIOS Açıklayıcısı"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Önyükleme Öncesi DMA Koruması"
@@ -973,6 +1030,14 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1248,22 +1313,6 @@ msgstr "Test aygıtları başarıyla etkinleştirildi"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "Donanım yazılımı güncellemesini etkinleştir"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "Aygıt eklendi:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "Aygıt çıkarıldı:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "Aygıt değişti:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "Değişti"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1585,10 +1634,6 @@ msgstr "HWIDS-FILE"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr ""
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Olaylar için art alan hizmetini gözetle"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2370,6 +2415,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Aygıt eklendi:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Aygıt çıkarıldı:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Aygıt değişti:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Değişti"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2550,6 +2611,10 @@ msgstr ""
 msgid "Upload the list of updatable devices to a remote server"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Olaylar için art alan hizmetini gözetle"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "Bu araç, yöneticinin fwupd art alan hizmetini sorgulamasına ve denetlemesine izin vererek, yöneticinin donanım yazılımı kurulması ya da düşürülmesi gibi eylemleri gerçekleştirmesini sağlar."
@@ -2603,6 +2668,14 @@ msgstr ""
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Açıklama"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

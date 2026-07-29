@@ -821,9 +821,13 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		return TRUE;
 	}
 
-	/* sync update message from CAB */
-	fu_device_ensure_from_component(device, component);
-	fu_device_incorporate_from_component(device, component);
+	/* sync update message from CAB, but only if the metadata is trusted */
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
+		fu_device_ensure_from_component(device, component);
+		fu_device_incorporate_from_component(device, component);
+	} else {
+		g_debug("not using untrusted metadata");
+	}
 
 	/* post-ensure checks */
 	if (!fu_release_check_version(release, component, helper->flags, &error_local)) {
@@ -1056,6 +1060,8 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
 	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream_safe = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
@@ -1084,9 +1090,19 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	if (stream == NULL)
 		return NULL;
 	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							error))
-		return NULL;
-	return g_steal_pointer(&stream);
+							&error_local)) {
+		g_autoptr(GBytes) blob = NULL;
+		g_debug("fd not sealed, falling back to copy: %s", error_local->message);
+		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		if (blob == NULL)
+			return NULL;
+		stream_safe = fu_memory_input_stream_new_from_bytes(blob);
+	} else {
+		stream_safe = g_object_ref(stream);
+	}
+
+	/* success */
+	return g_steal_pointer(&stream_safe);
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
@@ -2437,8 +2453,8 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 		if (g_strcmp0(prop_key, "install-flags") == 0) {
 			const guint64 allowed_mask =
 			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
-			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
-			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_NO_HISTORY |
+			    FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
 		}
 

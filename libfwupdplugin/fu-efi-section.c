@@ -322,6 +322,15 @@ fu_efi_section_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def));
 			return FALSE;
 		}
+		if (fu_struct_efi_section_guid_defined_get_offset(st_def) > size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid section offset 0x%x, greater than size 0x%x",
+				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def),
+				    (guint)size);
+			return FALSE;
+		}
 		offset_delta = fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
 		if (!fu_size_checked_inc(&offset, offset_delta, error)) {
 			g_prefix_error_literal(error, "section offset overflow: ");

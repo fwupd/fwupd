@@ -366,11 +366,17 @@ fu_synaptics_rmi_v5_device_write_firmware(FuSynapticsRmiDevice *self,
 	chunks_bin = fu_chunk_array_new_from_bytes(firmware_bin,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
-						   flash->block_size);
+						   flash->block_size,
+						   error);
+	if (chunks_bin == NULL)
+		return FALSE;
 	chunks_cfg = fu_chunk_array_new_from_bytes(bytes_cfg,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
-						   flash->block_size);
+						   flash->block_size,
+						   error);
+	if (chunks_cfg == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks_bin); i++) {
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_bin, i, error);
 		if (chk == NULL)
@@ -399,7 +405,10 @@ fu_synaptics_rmi_v5_device_write_firmware(FuSynapticsRmiDevice *self,
 		chunks_sig = fu_chunk_array_new_from_bytes(signature_bin,
 							   FU_CHUNK_ADDR_OFFSET_NONE,
 							   FU_CHUNK_PAGESZ_NONE,
-							   flash->block_size);
+							   flash->block_size,
+							   error);
+		if (chunks_sig == NULL)
+			return FALSE;
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base,
 						   req_addr,
@@ -475,6 +484,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
+	guint8 flash_properties1 = 0;
 	guint8 flash_properties2 = 0;
 	g_autoptr(GByteArray) f34_data0 = NULL;
 	g_autoptr(GByteArray) f34_data2 = NULL;
@@ -491,15 +501,27 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
-	flash->bootloader_id[0] = f34_data0->data[0];
-	flash->bootloader_id[1] = f34_data0->data[1];
+	if (!fu_memread_uint8_safe(f34_data0->data,
+				   f34_data0->len,
+				   0x0,
+				   &flash->bootloader_id[0],
+				   error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(f34_data0->data,
+				   f34_data0->len,
+				   0x1,
+				   &flash->bootloader_id[1],
+				   error))
+		return FALSE;
 
 	/* get flash properties1 */
 	f34_data2 = fu_synaptics_rmi_device_read(self, f34->query_base + 0x2, 0x7, error);
 	if (f34_data2 == NULL)
 		return FALSE;
 
-	if (f34_data2->data[0] & 0x80) {
+	if (!fu_memread_uint8_safe(f34_data2->data, f34_data2->len, 0x0, &flash_properties1, error))
+		return FALSE;
+	if (flash_properties1 & 0x80) {
 		/* get flash properties2 */
 		buf_flash_properties2 =
 		    fu_synaptics_rmi_device_read(self, f34->query_base + 0x9, 1, error);
@@ -571,6 +593,7 @@ gboolean
 fu_synaptics_rmi_v5_device_query_status(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFunction *f01;
+	guint8 f01_data = 0;
 	g_autoptr(GByteArray) f01_db = NULL;
 
 	/* f01 */
@@ -582,7 +605,9 @@ fu_synaptics_rmi_v5_device_query_status(FuSynapticsRmiDevice *self, GError **err
 		g_prefix_error_literal(error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
-	if (f01_db->data[0] & 0x40) {
+	if (!fu_memread_uint8_safe(f01_db->data, f01_db->len, 0x0, &f01_data, error))
+		return FALSE;
+	if (f01_data & 0x40) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);

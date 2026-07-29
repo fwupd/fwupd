@@ -1887,7 +1887,8 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 
 	g_debug("checking trust of %s", str);
 	if (fu_context_get_config_bool(self->ctx, "OnlyTrusted") &&
-	    !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)) {
+	    (!fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD) ||
+	     !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA))) {
 		g_autofree gchar *fn = NULL;
 		fn = fu_context_build_filename(self->ctx,
 					       error,
@@ -1899,7 +1900,7 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware signature missing or not trusted; "
+			    "firmware or metadata signature missing or not trusted; "
 			    "set OnlyTrusted=false in %s ONLY if you are a firmware developer",
 			    fn);
 		return FALSE;
@@ -5083,14 +5084,8 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
 	if (stream_fd == NULL)
 		return FALSE;
-	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_fd),
-							error))
-		return FALSE;
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
 	if (stream_sig == NULL)
-		return FALSE;
-	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_sig),
-							error))
 		return FALSE;
 
 	/* read the entire file into memory */

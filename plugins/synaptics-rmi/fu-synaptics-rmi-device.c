@@ -362,6 +362,10 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	guint16 addr;
 	guint16 prod_info_addr;
+	guint8 f01_query1 = 0;
+	guint8 f01_query43 = 0;
+	guint8 fw_version_major = 0;
+	guint8 fw_version_minor = 0;
 	guint8 product_sub_id = 0;
 	gboolean has_build_id_query = FALSE;
 	gboolean has_dds4_queries = FALSE;
@@ -402,9 +406,15 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to read the basic query: ");
 		return FALSE;
 	}
-	has_lts = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_LTS) > 0;
-	has_sensor_id = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_SENSOR_ID) > 0;
-	has_query42 = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_PROPS_2) > 0;
+	if (!fu_memread_uint8_safe(f01_basic->data, f01_basic->len, 0x1, &f01_query1, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(f01_basic->data, f01_basic->len, 0x2, &fw_version_major, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(f01_basic->data, f01_basic->len, 0x3, &fw_version_minor, error))
+		return FALSE;
+	has_lts = (f01_query1 & RMI_DEVICE_F01_QRY1_HAS_LTS) > 0;
+	has_sensor_id = (f01_query1 & RMI_DEVICE_F01_QRY1_HAS_SENSOR_ID) > 0;
+	has_query42 = (f01_query1 & RMI_DEVICE_F01_QRY1_HAS_PROPS_2) > 0;
 
 	/* get the product ID */
 	addr += 11;
@@ -447,12 +457,15 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	/* read package ids */
 	if (has_query42) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
+		guint8 f01_query42 = 0;
 		f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
 		if (f01_tmp == NULL) {
 			g_prefix_error_literal(error, "failed to read query 42: ");
 			return FALSE;
 		}
-		has_dds4_queries = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
+		if (!fu_memread_uint8_safe(f01_tmp->data, f01_tmp->len, 0x0, &f01_query42, error))
+			return FALSE;
+		has_dds4_queries = (f01_query42 & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
 	}
 	if (has_dds4_queries) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
@@ -467,8 +480,10 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to read F01 Query43: ");
 		return FALSE;
 	}
-	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
-	has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
+	if (!fu_memread_uint8_safe(f01_ds4->data, f01_ds4->len, 0x0, &f01_query43, error))
+		return FALSE;
+	has_package_id_query = (f01_query43 & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
+	has_build_id_query = (f01_query43 & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
 	if (has_package_id_query)
 		prod_info_addr++;
 	if (has_build_id_query) {
@@ -536,10 +551,8 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* set versions */
-	fw_ver = g_strdup_printf("%u.%u.%u",
-				 f01_basic->data[2],
-				 f01_basic->data[3],
-				 priv->flash.build_id);
+	fw_ver =
+	    g_strdup_printf("%u.%u.%u", fw_version_major, fw_version_minor, priv->flash.build_id);
 	fu_device_set_version(device, fw_ver);
 	if (priv->f34->function_version == 0x0 || priv->f34->function_version == 0x1) {
 		bl_ver = g_strdup_printf("%c.0.0", priv->flash.bootloader_id[1]);
@@ -608,6 +621,7 @@ static gboolean
 fu_synaptics_rmi_device_poll(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
+	guint8 f34_data = 0;
 	g_autoptr(GByteArray) f34_db = NULL;
 
 	/* get if the last flash read completed successfully */
@@ -616,12 +630,14 @@ fu_synaptics_rmi_device_poll(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error_literal(error, "failed to read f34_db: ");
 		return FALSE;
 	}
-	if ((f34_db->data[0] & 0x1f) != 0x0) {
+	if (!fu_memread_uint8_safe(f34_db->data, f34_db->len, 0x0, &f34_data, error))
+		return FALSE;
+	if ((f34_data & 0x1f) != 0x0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "flash status invalid: 0x%x",
-			    (guint)(f34_db->data[0] & 0x1f));
+			    (guint)(f34_data & 0x1f));
 		return FALSE;
 	}
 
@@ -689,6 +705,8 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 f34_command;
 	guint8 f34_enabled;
+	guint8 f34_raw0 = 0;
+	guint8 f34_raw1 = 0;
 	guint8 f34_status;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -725,16 +743,22 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 		res = fu_synaptics_rmi_device_read(self, priv->flash.status_addr, 0x2, error);
 		if (res == NULL)
 			return FALSE;
-		f34_command = res->data[0] & RMI_F34_COMMAND_V1_MASK;
-		f34_status = res->data[1] & RMI_F34_STATUS_V1_MASK;
-		f34_enabled = !!(res->data[1] & RMI_F34_ENABLED_MASK);
+		if (!fu_memread_uint8_safe(res->data, res->len, 0x0, &f34_raw0, error))
+			return FALSE;
+		if (!fu_memread_uint8_safe(res->data, res->len, 0x1, &f34_raw1, error))
+			return FALSE;
+		f34_command = f34_raw0 & RMI_F34_COMMAND_V1_MASK;
+		f34_status = f34_raw1 & RMI_F34_STATUS_V1_MASK;
+		f34_enabled = !!(f34_raw1 & RMI_F34_ENABLED_MASK);
 	} else {
 		res = fu_synaptics_rmi_device_read(self, priv->flash.status_addr, 0x1, error);
 		if (res == NULL)
 			return FALSE;
-		f34_command = res->data[0] & RMI_F34_COMMAND_MASK;
-		f34_status = (res->data[0] >> RMI_F34_STATUS_SHIFT) & RMI_F34_STATUS_MASK;
-		f34_enabled = !!(res->data[0] & RMI_F34_ENABLED_MASK);
+		if (!fu_memread_uint8_safe(res->data, res->len, 0x0, &f34_raw0, error))
+			return FALSE;
+		f34_command = f34_raw0 & RMI_F34_COMMAND_MASK;
+		f34_status = (f34_raw0 >> RMI_F34_STATUS_SHIFT) & RMI_F34_STATUS_MASK;
+		f34_enabled = !!(f34_raw0 & RMI_F34_ENABLED_MASK);
 	}
 
 	/* PS/2 */

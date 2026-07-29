@@ -613,6 +613,24 @@ fu_mm_device_at_cmd_full(FuMmDevice *self, const gchar *cmd, gsize count, GError
 }
 
 static gboolean
+fu_mm_device_at_cmd_supported(FuMmDevice *self, const gchar *cmd)
+{
+	FuMmDeviceAtCmdHelper helper = {.cmd = cmd, .count = 64, .has_response = TRUE};
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_mm_device_at_cmd_cb(FU_DEVICE(self), &helper, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("AT command %s not supported: %s", cmd, error_local->message);
+			return FALSE;
+		}
+		/* assume supported for other errors */
+	}
+	if (helper.blob != NULL)
+		g_bytes_unref(helper.blob);
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_ensure_branch(FuMmDevice *self, GError **error)
 {
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
@@ -656,46 +674,51 @@ fu_mm_device_ensure_payload_quectel(FuMmDevice *self)
 					  "EM05CEFCR08A16M1G_LNV"};
 
 	/* newer firmware */
-	blob = fu_mm_device_at_cmd_full(self, "AT+QSECBOOT=\"status\"", 64, &error_qsec);
-	if (blob == NULL) {
-		g_debug("ignoring: %s", error_qsec->message);
-	} else {
-		/* AT+QSECBOOT="status" response: `\r\n+QSECBOOT: "STATUS",1\r\n\r\nOK\r\n` */
-		g_auto(GStrv) parts = fu_strsplit_bytes(blob, "\r\n", -1);
-		for (guint i = 0; parts[i] != NULL; i++) {
-			if (g_strcmp0(parts[i], "+QSECBOOT: \"status\",1") == 0) {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-				break;
+	if (fu_mm_device_at_cmd_supported(self, "AT+QSECBOOT=\"status\"")) {
+		blob = fu_mm_device_at_cmd_full(self, "AT+QSECBOOT=\"status\"", 64, &error_qsec);
+		if (blob == NULL) {
+			g_debug("ignoring: %s", error_qsec->message);
+		} else {
+			/* AT+QSECBOOT="status" response: `\r\n+QSECBOOT: "STATUS",1\r\n\r\nOK\r\n`
+			 */
+			g_auto(GStrv) parts = fu_strsplit_bytes(blob, "\r\n", -1);
+			for (guint i = 0; parts[i] != NULL; i++) {
+				if (g_strcmp0(parts[i], "+QSECBOOT: \"status\",1") == 0) {
+					fu_device_add_flag(FU_DEVICE(self),
+							   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+					break;
+				}
+				if (g_strcmp0(parts[i], "+QSECBOOT: \"status\",0") == 0) {
+					fu_device_add_flag(FU_DEVICE(self),
+							   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+					break;
+				}
 			}
-			if (g_strcmp0(parts[i], "+QSECBOOT: \"status\",0") == 0) {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-				break;
-			}
+			return;
 		}
-		return;
 	}
 
 	/* older firmware */
-	blob = fu_mm_device_at_cmd_full(self, "AT+QCFG=\"secbootstat\"", 64, &error_qcfg);
-	if (blob == NULL) {
-		g_debug("ignoring: %s", error_qcfg->message);
-	} else {
-		g_auto(GStrv) parts = fu_strsplit_bytes(blob, "\r\n", -1);
-		for (guint i = 0; parts[i] != NULL; i++) {
-			if (g_strcmp0(parts[i], "+QCFG: \"secbootstat\",1") == 0) {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-				break;
+	if (fu_mm_device_at_cmd_supported(self, "AT+QCFG=\"secbootstat\"")) {
+		blob = fu_mm_device_at_cmd_full(self, "AT+QCFG=\"secbootstat\"", 64, &error_qcfg);
+		if (blob == NULL) {
+			g_debug("ignoring: %s", error_qcfg->message);
+		} else {
+			g_auto(GStrv) parts = fu_strsplit_bytes(blob, "\r\n", -1);
+			for (guint i = 0; parts[i] != NULL; i++) {
+				if (g_strcmp0(parts[i], "+QCFG: \"secbootstat\",1") == 0) {
+					fu_device_add_flag(FU_DEVICE(self),
+							   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+					break;
+				}
+				if (g_strcmp0(parts[i], "+QCFG: \"secbootstat\",0") == 0) {
+					fu_device_add_flag(FU_DEVICE(self),
+							   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+					break;
+				}
 			}
-			if (g_strcmp0(parts[i], "+QCFG: \"secbootstat\",0") == 0) {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-				break;
-			}
+			return;
 		}
-		return;
 	}
 
 	/* find model name and compare with table from Quectel */

@@ -651,7 +651,10 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 
 	/* write data */
 	blob_padded = fu_bytes_pad(blob, num_sectors * sector_size, 0xFF);
-	chunks = fu_chunk_array_new_from_bytes(blob_padded, 0x0, 0x0, helper->max_payload_size);
+	chunks =
+	    fu_chunk_array_new_from_bytes(blob_padded, 0x0, 0x0, helper->max_payload_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_qc_firehose_impl_write_blocks(self, chunks, progress, error))
 		return FALSE;
 	if (!fu_qc_firehose_impl_read_xml(self, 30000, helper, error))

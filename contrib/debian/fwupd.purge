@@ -1,0 +1,4 @@
+/var/cache/fwupd/
+/var/cache/fwupdmgr/
+/var/lib/fwupd/
+/var/cache/app-info/xmls/fwupd.xml

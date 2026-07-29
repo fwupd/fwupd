@@ -285,6 +285,19 @@ fu_logitech_hidpp_bootloader_nordic_write_pkts(FuLogitechHidppBootloader *self,
 	return TRUE;
 }
 
+static FuFirmware *
+fu_logitech_hidpp_bootloader_nordic_prepare_firmware(FuDevice *device,
+						     FuInputStream *stream,
+						     FuProgress *progress,
+						     FuFirmwareParseFlags flags,
+						     GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
+	if (!fu_firmware_tokenize(firmware, stream, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
 static gboolean
 fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 						   FuFirmware *firmware,
@@ -364,6 +377,7 @@ fu_logitech_hidpp_bootloader_nordic_class_init(FuLogitechHidppBootloaderNordicCl
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->write_firmware = fu_logitech_hidpp_bootloader_nordic_write_firmware;
+	device_class->prepare_firmware = fu_logitech_hidpp_bootloader_nordic_prepare_firmware;
 	device_class->setup = fu_logitech_hidpp_bootloader_nordic_setup;
 }
 

@@ -165,7 +165,10 @@ fu_wch_ch347_device_send_command(FuWchCh347Device *self,
 		    fu_chunk_array_new_from_bytes(wblob,
 						  FU_CHUNK_ADDR_OFFSET_NONE,
 						  FU_CHUNK_PAGESZ_NONE,
-						  FU_WCH_CH347_PAYLOAD_SIZE);
+						  FU_WCH_CH347_PAYLOAD_SIZE,
+						  error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			guint8 buf[1] = {0x0};
 			g_autoptr(FuChunk) chk = NULL;

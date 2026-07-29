@@ -78,7 +78,10 @@ def pip_install_package(debug, name):
     cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
     if debug:
         print(cmd)
-    subprocess.call(cmd)
+    rc = subprocess.call(cmd)
+    if rc != 0:
+        print(f"ERROR: Failed to install {name}")
+        sys.exit(1)
 
 
 def test_jinja2(debug):
@@ -112,12 +115,32 @@ def get_minimum_meson_version():
                 return re.search(r"(\d+\.\d+\.\d+)", line).group(1)
 
 
+def _version_tuple(ver):
+    """Convert a meson version string to a comparable tuple.
+
+    Meson versions follow x.y.z but for rcs we have
+    meson --version as x.y.z.rcN but importlib.metadata
+    returns x.y.zrcN (no dot before rc, see PEP440).
+
+    Returns (major, minor, micro, N, rc) where N is
+    -1 for rcs and 0 otherwise so we sort correctly.
+    """
+    import re
+
+    m = re.match(r"^(\d+)\.(\d+)\.(\d+)(?:[.]?rc(\d+))?$", ver)
+    assert m, f"Unknown meson version format: '{ver}'"
+    major, minor, micro = int(m[1]), int(m[2]), int(m[3])
+    if m[4] is not None:
+        return (major, minor, micro, -1, int(m[4]))
+    return (major, minor, micro, 0, 0)
+
+
 def test_meson(debug):
     from importlib.metadata import version, PackageNotFoundError
 
     minimum = get_minimum_meson_version()
     try:
-        new_enough = version("meson") >= minimum
+        new_enough = _version_tuple(version("meson")) >= _version_tuple(minimum)
     except PackageNotFoundError:
         import subprocess
 
@@ -125,7 +148,7 @@ def test_meson(debug):
             ver = (
                 subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
             )
-            new_enough = ver >= minimum
+            new_enough = _version_tuple(ver) >= _version_tuple(minimum)
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
