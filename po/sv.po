@@ -19,15 +19,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-06-26 16:01+0000\n"
-"Last-Translator: bittin1ddc447d824349b2 <bittin@reimu.nl>\n"
+"PO-Revision-Date: 2026-07-29 19:01+0000\n"
+"Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -62,49 +62,49 @@ msgid "Enabled"
 msgstr "Aktiverad"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Säkerhetsstart"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Ja-krav för uppdatering av fast programvara"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Wake on LAN"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Minneskryptering"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "Videominne"
 
 msgid "Camera"
-msgstr ""
+msgstr "Kamera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Trådlöst LAN"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Fingeravtrycksläsare"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Pekskärm"
 
 msgid "Audio"
-msgstr ""
+msgstr "Ljud"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Mediakortsläsare"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Tangentbordsbakgrundsbelysning"
 
 msgid "Stop the fwupd service"
 msgstr "Stoppa fwupd-tjänsten"
@@ -608,11 +608,11 @@ msgstr "SPI BIOS-beskrivare"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "Låst MTD"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Diskkryptering i hårdvaran"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -819,7 +819,7 @@ msgstr "UEFI-minnesskydd"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr "UEFI NX skydd"
+msgstr "UEFI NX-skydd"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -851,7 +851,7 @@ msgstr "BIOS-beskrivare för fast programvara"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Diskkryptering i hårdvaran"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -986,7 +986,7 @@ msgstr "Skrivskydd för AMD:s fasta programvara"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr "coreboot Verifierad uppstart"
+msgstr "coreboot verifierad uppstart"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -1014,7 +1014,7 @@ msgstr "UEFI-minnesskydd"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr "UEFI NX Skydd"
+msgstr "UEFI NX-skydd"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1034,11 +1034,11 @@ msgstr "BIOS-beskrivare för fast programvara skyddar enhetens minne för fast p
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "Låst MTD förhindrar enhetens fasta programvara från att ändras efter att enheten har startats."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Diskkryptering i hårdvaran betyder att en angripare med fysisk åtkomst inte kan läsa data från borttagna NVMe-enheter."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1153,7 +1153,7 @@ msgstr "Plattformssäkerhetsstart förhindrar osignerad programvara från att l�
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr "coreboot verifierad uppstart förhindrar att osignerad fast programvara laddas när enheten startas."
+msgstr "coreboot verifierad uppstart förhindrar att osignerad fast programvara läses in när enheten startas."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1173,7 +1173,7 @@ msgstr "UEFI-systemet kan konfigurera minnesattribut vid uppstart som förhindra
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr "UEFI starthanterare kompilerad med stöd för Data Execution Prevention."
+msgstr "UEFI-starthanteraren kompilerad med stöd för Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1506,7 +1506,7 @@ msgstr "Ignorera strikta SSL-kontroller vid hämtning av filer"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. ”internal,~needs-reboot”"
+msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. 'internal,~needs-reboot'"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
@@ -2671,11 +2671,11 @@ msgstr "Beskrivning"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "AppStream-ID"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Ikon"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -3810,11 +3810,11 @@ msgstr "UEFI-minnesskydd är nu olåst"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr "UEFI NX starthanterare skydd är nu aktiverat"
+msgstr "UEFI NX-starthanterarskydd är nu aktiverat"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr "UEFI NX starthanterare skydd är nu inaktiverat"
+msgstr "UEFI NX-starthanterarskydd är nu inaktiverat"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
