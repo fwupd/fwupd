@@ -57,7 +57,7 @@ struct FuStructAsusHidCommand {
     length: u8,
 }
 
-#[derive(Default, New)]
+#[derive(Default, New, Getters)]
 #[repr(C, packed)]
 struct FuStructAsusHidResult {
     report_id: FuAsusHidReportId == Info,
