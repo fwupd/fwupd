@@ -213,7 +213,7 @@ GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
 Flags = disable-zlp
 
-# Rolling RW101
+# Rolling RW101-CAT6
 [USB\VID_33F8&PID_0301]
 GType = FuMmFastbootDevice
 Summary = Rolling RW101-GL Module
