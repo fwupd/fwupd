@@ -97,6 +97,7 @@ struct FuStructAsusHidPreUpdateCommand {
 #[derive(Default, New)]
 #[repr(C, packed)]
 struct FuStructAsusFlashReset {
+    report_id: FuAsusHidReportId == Flashing,
     command: u8 == 0xc4,
     reserved: [u8; 62],
 }
@@ -104,6 +105,7 @@ struct FuStructAsusFlashReset {
 #[derive(Default, New, Getters)]
 #[repr(C, packed)]
 struct FuStructAsusReadFlashCommand {
+    report_id: FuAsusHidReportId == Flashing,
     command: u8 == 0xd1,
     offset: u24le,
     datasz: u8,
