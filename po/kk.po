@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-07-28 08:02+0000\n"
+"PO-Revision-Date: 2026-07-29 19:01+0000\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh <https://hosted.weblate.org/projects/fwupd/fwupd/kk/>\n"
 "Language: kk\n"
@@ -773,7 +773,7 @@ msgstr "SPI жазудан қорғау"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr "coreboot verified boot"
+msgstr "coreboot тексерілген жүктеуі"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -864,11 +864,11 @@ msgstr "Intel BootGuard сақтандырғышы"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
-msgstr "Control-flow Enforcement Technology"
+msgstr "Командалар ағынын басқару технологиясы"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Supervisor Mode Access Prevention"
-msgstr "Supervisor Mode Access Prevention"
+msgstr "Супервизор режиміндегі қол жеткізуді болдырмау"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -960,7 +960,7 @@ msgstr "AMD Secure Processor қайтарудан қорғау"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr "AMD Platform Secure Boot"
+msgstr "AMD платформасының қауіпсіз жүктелуі"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -972,7 +972,7 @@ msgstr "AMD микробағдарламасын жазудан қорғау"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr "coreboot Verified Boot"
+msgstr "coreboot тексерілген жүктелуі"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -2284,7 +2284,7 @@ msgstr "%s үшін нұсқаны төмендету мүмкіндігі жо�
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update for"
-msgstr "Микробағдарлама жаңартуын келесі үшін белсендіру:"
+msgstr "Микробағдарлама жаңартуын келесі үшін белсендіру"
 
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
