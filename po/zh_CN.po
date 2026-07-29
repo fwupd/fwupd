@@ -19,7 +19,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-06-26 16:01+0000\n"
+"PO-Revision-Date: 2026-07-29 19:02+0000\n"
 "Last-Translator: Hosted Weblate user 54392 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -62,49 +62,49 @@ msgid "Enabled"
 msgstr "已启用"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "安全启动"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "固件更新手动加入"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "局域网唤醒"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "数字锁定键"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "内存加密"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "视频内存"
 
 msgid "Camera"
-msgstr ""
+msgstr "相机"
 
 msgid "Microphone"
-msgstr ""
+msgstr "麦克风"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "蓝牙"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "无线局域网"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "指纹读取器"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "触摸屏"
 
 msgid "Audio"
-msgstr ""
+msgstr "音频"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "多媒体卡读取器"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "键盘背光"
 
 msgid "Stop the fwupd service"
 msgstr "停止 fwupd 服务"
@@ -604,11 +604,11 @@ msgstr "SPI BIOS 描述符"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "锁定的 MTD"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "硬件磁盘加密"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -847,7 +847,7 @@ msgstr "固件 BIOS 描述符"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "硬件磁盘加密"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -1030,11 +1030,11 @@ msgstr "固件 BIOS 描述符保护设备固件内存免遭篡改。"
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "锁定的 MTD 防止设备固件在设备启动后被更改。"
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "硬件磁盘加密意味着有物理访问权限的攻击者无法从已移除的 NVMe 驱动器中读取数据。"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -2661,11 +2661,11 @@ msgstr "描述"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "AppStream ID"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "图标"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
