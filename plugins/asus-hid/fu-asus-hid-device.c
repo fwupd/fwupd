@@ -262,6 +262,8 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_asus_hid_device_reload(FuDevice *device, GError **error)
 {
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
 	return fu_asus_hid_device_ensure_version(FU_ASUS_HID_DEVICE(device), error);
 }
 
@@ -502,6 +504,15 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "payload of 0x%x bytes is not a multiple of the 0x%x block size",
 			    (guint)bufsz,
+			    (guint)FU_ASUS_HID_DEVICE_BLOCK_SIZE);
+		return FALSE;
+	}
+	if (address % FU_ASUS_HID_DEVICE_BLOCK_SIZE != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "payload address 0x%x is not aligned to the 0x%x block size",
+			    address,
 			    (guint)FU_ASUS_HID_DEVICE_BLOCK_SIZE);
 		return FALSE;
 	}
