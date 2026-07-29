@@ -549,7 +549,12 @@ fu_asus_hid_device_init(FuAsusHidDevice *self)
 	/* TODO: automatic backup */
 	/* fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL); */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
+	/* the device comes back with the counterpart GUID rather than the one
+	 * it left with, so the replug is only matched with this */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	/* switching modes takes about eight seconds on a RC73XA, in either
+	 * direction, so ten was not enough of a margin */
+	fu_device_set_remove_delay(FU_DEVICE(self), 30000);
 	self->child_added_id = g_signal_connect(FU_DEVICE(self),
 						"child-added",
 						G_CALLBACK(fu_asus_hid_device_child_added_cb),
