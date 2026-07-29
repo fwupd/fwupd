@@ -3406,6 +3406,8 @@ fu_util_firmware_extract_image(FuUtil *self,
 	} else {
 		fn = g_strdup_printf("img-%s.fw", idxstr);
 	}
+	if (!fu_path_verify_safe(fn, error))
+		return FALSE;
 
 	/* TRANSLATORS: decompressing images from a container firmware */
 	fu_console_print(self->console, "%s : %s", _("Writing file:"), fn);
