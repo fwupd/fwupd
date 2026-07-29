@@ -21,6 +21,11 @@ G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HIDRAW_DEVICE)
 #define FU_ASUS_HID_DEVICE_TIMEOUT	    200 /* ms */
 #define FU_ASUS_HID_DEVICE_PRE_UPDATE_DELAY 50	/* ms */
 #define FU_ASUS_HID_DEVICE_RETRIES	    50
+#define FU_ASUS_HID_DEVICE_ERASE_DELAY	    200 /* ms */
+#define FU_ASUS_HID_DEVICE_BLOCK_START_DELAY 5	 /* ms */
+#define FU_ASUS_HID_DEVICE_CHUNK_DELAY	     2	 /* ms */
+#define FU_ASUS_HID_DEVICE_COMMIT_DELAY	     50	 /* ms */
+#define FU_ASUS_HID_DEVICE_BLOCK_SIZE	    0x400
 
 static gboolean
 fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
@@ -365,6 +370,142 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 }
 
 static gboolean
+fu_asus_hid_device_write_block(FuAsusHidDevice *self,
+			       guint32 address,
+			       const guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(FuStructAsusCommitFlashCommand) st_commit =
+	    fu_struct_asus_commit_flash_command_new();
+	g_autoptr(FuStructAsusFlashBlockStart) st_start = fu_struct_asus_flash_block_start_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static(buf, bufsz);
+
+	if (!fu_asus_hid_device_transfer_feature(self,
+						 st_start->buf,
+						 NULL,
+						 FU_ASUS_HID_REPORT_ID_FLASHING,
+						 error))
+		return FALSE;
+	fu_device_sleep(FU_DEVICE(self), FU_ASUS_HID_DEVICE_BLOCK_START_DELAY);
+
+	/* the block is filled a fragment at a time before being committed */
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       0x0,
+					       0x0,
+					       FU_STRUCT_ASUS_WRITE_FLASH_COMMAND_SIZE_DATA,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(FuStructAsusWriteFlashCommand) st =
+		    fu_struct_asus_write_flash_command_new();
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		fu_struct_asus_write_flash_command_set_offset(st, fu_chunk_get_address(chk));
+		fu_struct_asus_write_flash_command_set_datasz(st, fu_chunk_get_data_sz(chk));
+		if (!fu_struct_asus_write_flash_command_set_data(st,
+								 fu_chunk_get_data(chk),
+								 fu_chunk_get_data_sz(chk),
+								 error))
+			return FALSE;
+		if (!fu_asus_hid_device_transfer_feature(self,
+							 st->buf,
+							 NULL,
+							 FU_ASUS_HID_REPORT_ID_FLASHING,
+							 error))
+			return FALSE;
+		fu_device_sleep(FU_DEVICE(self), FU_ASUS_HID_DEVICE_CHUNK_DELAY);
+	}
+
+	fu_struct_asus_commit_flash_command_set_offset(st_commit, address);
+	fu_struct_asus_commit_flash_command_set_datasz(st_commit, bufsz);
+	if (!fu_asus_hid_device_transfer_feature(self,
+						 st_commit->buf,
+						 NULL,
+						 FU_ASUS_HID_REPORT_ID_FLASHING,
+						 error))
+		return FALSE;
+	fu_device_sleep(FU_DEVICE(self), FU_ASUS_HID_DEVICE_COMMIT_DELAY);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_asus_hid_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
+	const guint8 *buf;
+	gsize bufsz = 0;
+	guint32 address;
+	guint blocks;
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuStructAsusEraseFlashCommand) st_erase =
+	    fu_struct_asus_erase_flash_command_new();
+
+	img = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
+	if (img == NULL)
+		return FALSE;
+	blob = fu_firmware_get_bytes(img, error);
+	if (blob == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(blob, &bufsz);
+	address = fu_firmware_get_addr(img);
+	if (bufsz % FU_ASUS_HID_DEVICE_BLOCK_SIZE != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "payload of 0x%x bytes is not a multiple of the 0x%x block size",
+			    (guint)bufsz,
+			    (guint)FU_ASUS_HID_DEVICE_BLOCK_SIZE);
+		return FALSE;
+	}
+	blocks = bufsz / FU_ASUS_HID_DEVICE_BLOCK_SIZE;
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
+
+	/* the whole region goes in one command, and the count is in blocks */
+	fu_struct_asus_erase_flash_command_set_offset(st_erase, address);
+	fu_struct_asus_erase_flash_command_set_blocks(st_erase, blocks);
+	if (!fu_asus_hid_device_transfer_feature(self,
+						 st_erase->buf,
+						 NULL,
+						 FU_ASUS_HID_REPORT_ID_FLASHING,
+						 error))
+		return FALSE;
+	fu_device_sleep(FU_DEVICE(self), FU_ASUS_HID_DEVICE_ERASE_DELAY);
+	fu_progress_step_done(progress);
+
+	fu_progress_set_id(fu_progress_get_child(progress), G_STRLOC);
+	fu_progress_set_steps(fu_progress_get_child(progress), blocks);
+	for (guint i = 0; i < blocks; i++) {
+		if (!fu_asus_hid_device_write_block(self,
+						    address + (i * FU_ASUS_HID_DEVICE_BLOCK_SIZE),
+						    buf + (i * FU_ASUS_HID_DEVICE_BLOCK_SIZE),
+						    FU_ASUS_HID_DEVICE_BLOCK_SIZE,
+						    error))
+			return FALSE;
+		fu_progress_step_done(fu_progress_get_child(progress));
+	}
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_asus_hid_device_set_quirk_kv(FuDevice *device,
 				const gchar *key,
 				const gchar *value,
@@ -427,4 +568,5 @@ fu_asus_hid_device_class_init(FuAsusHidDeviceClass *klass)
 	device_class->detach = fu_asus_hid_device_detach;
 	device_class->attach = fu_asus_hid_device_attach;
 	device_class->dump_firmware = fu_asus_hid_device_dump_firmware;
+	device_class->write_firmware = fu_asus_hid_device_write_firmware;
 }
