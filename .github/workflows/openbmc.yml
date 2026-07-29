@@ -1,7 +1,12 @@
 # This is more of an approximation for the sensible set of build options for openbmc but still
 # hosted on just plain ubuntu.
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      ubuntu-image:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -10,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest # zizmor: ignore[unpinned-images]
+      image: ${{ inputs.ubuntu-image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -6,12 +6,27 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
+  containers:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/containers.yml
+
   linux:
     permissions:
       contents: read
+    needs: containers
     uses: ./.github/workflows/linux.yml
     with:
       publish: true
+      arch-image: ${{ needs.containers.outputs.arch-image }}
+      centos-image: ${{ needs.containers.outputs.centos-image }}
+      debian-image: ${{ needs.containers.outputs.debian-image }}
+      debian-i386-image: ${{ needs.containers.outputs.debian-i386-image }}
+      debian-arm64-image: ${{ needs.containers.outputs.debian-arm64-image }}
+      debian-cross-s390x-image: ${{ needs.containers.outputs.debian-cross-s390x-image }}
+      fedora-image: ${{ needs.containers.outputs.fedora-image }}
+      ubuntu-image: ${{ needs.containers.outputs.ubuntu-image }}
     secrets: inherit
 
   windows:

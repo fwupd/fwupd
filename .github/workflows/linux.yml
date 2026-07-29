@@ -4,30 +4,56 @@ on:
       publish:
         required: true
         type: boolean
+      arch-image:
+        required: true
+        type: string
+      centos-image:
+        required: true
+        type: string
+      debian-image:
+        required: true
+        type: string
+      debian-i386-image:
+        required: true
+        type: string
+      debian-arm64-image:
+        required: true
+        type: string
+      debian-cross-s390x-image:
+        required: true
+        type: string
+      fedora-image:
+        required: true
+        type: string
+      ubuntu-image:
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
+    runs-on: ${{ case(matrix.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     needs: library
     strategy:
       fail-fast: false
       matrix:
-        env:
-          # NOTE: values are joined by '-' for name of container image, unless `CONTAINER` overrides it
-          - { DISTRO: arch, ARCH: amd64 }
-          - { DISTRO: centos, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
-          # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
-          - { DISTRO: debian, ARCH: arm64 }
-          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
-          - { DISTRO: fedora, ARCH: amd64 }
-          - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
-          - { DISTRO: ubuntu, ARCH: amd64 }
-    env: ${{ matrix.env }}
+        include:
+          - { DISTRO: arch, ARCH: amd64, IMAGE_KEY: arch-image }
+          - { DISTRO: centos, ARCH: amd64, IMAGE_KEY: centos-image }
+          - { DISTRO: debian, ARCH: amd64, IMAGE_KEY: debian-image }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: i386, IMAGE_KEY: debian-i386-image }
+          # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan, IMAGE_KEY: debian-tartan-image }
+          - { DISTRO: debian, ARCH: arm64, IMAGE_KEY: debian-arm64-image }
+          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x, IMAGE_KEY: debian-cross-s390x-image }
+          - { DISTRO: fedora, ARCH: amd64, IMAGE_KEY: fedora-image }
+          - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, IMAGE_KEY: fedora-image }
+          - { DISTRO: ubuntu, ARCH: amd64, IMAGE_KEY: ubuntu-image }
+    env:
+      DISTRO: ${{ matrix.DISTRO }}
+      ARCH: ${{ matrix.ARCH }}
+      VARIANT: ${{ matrix.VARIANT }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -39,7 +65,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download tarball
-        if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
+        if: matrix.DISTRO == 'fedora' || matrix.DISTRO == 'centos'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: tarball
@@ -54,13 +80,13 @@ jobs:
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "${{ inputs[matrix.IMAGE_KEY] }}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ join(matrix.env.*, '-') }}
+          name: ${{ matrix.DISTRO }}-${{ matrix.ARCH }}${{ matrix.VARIANT && format('-{0}', matrix.VARIANT) || '' }}
           path: |
             ${{ github.workspace }}/build/meson-logs/scanbuild/*
             ${{ github.workspace }}/dist/*
@@ -84,19 +110,19 @@ jobs:
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "${{ inputs[matrix.IMAGE_KEY] }}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
       - name: Save any coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-${{ join(matrix.env.*, '-') }}
+          name: coverage-${{ matrix.DISTRO }}-${{ matrix.ARCH }}${{ matrix.VARIANT && format('-{0}', matrix.VARIANT) || '' }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
         if: steps.supported.outputs.supported == 'true' &&
-          matrix.env.VARIANT != 'tartan' && (
-          matrix.env.DISTRO == 'arch' ||
-          matrix.env.DISTRO == 'debian' ||
-          matrix.env.DISTRO == 'fedora')
+          matrix.VARIANT != 'tartan' && (
+          matrix.DISTRO == 'arch' ||
+          matrix.DISTRO == 'debian' ||
+          matrix.DISTRO == 'fedora')
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

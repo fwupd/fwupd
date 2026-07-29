@@ -1,0 +1,268 @@
+# Container image builds for CI.
+# Tags are defined here as env vars — bump a tag when its deps change.
+#
+# This workflow triggers on push when this file changes (so fork
+# contributors can build images in their fork's registry) and is
+# also callable from ci.yml via workflow_call.
+#
+# Package lists come from contrib/ci/dependencies.xml via the
+# fwupd_setup_helpers.py script.
+#
+# Uses whot/container-prep for container-prep.
+
+name: Containers
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - '.github/workflows/containers.yml'
+
+  workflow_call:
+    outputs:
+      arch-image:
+        value: ${{ jobs.build-arch.outputs.image }}
+      centos-image:
+        value: ${{ jobs.build-centos.outputs.image }}
+      debian-image:
+        value: ${{ jobs.build-debian.outputs.image }}
+      debian-i386-image:
+        value: ${{ jobs.build-debian-i386.outputs.image }}
+      debian-tartan-image:
+        value: ${{ jobs.build-debian-tartan.outputs.image }}
+      debian-arm64-image:
+        value: ${{ jobs.build-debian-arm64.outputs.image }}
+      debian-cross-s390x-image:
+        value: ${{ jobs.build-debian-cross-s390x.outputs.image }}
+      fedora-image:
+        value: ${{ jobs.build-fedora.outputs.image }}
+      ubuntu-image:
+        value: ${{ jobs.build-ubuntu.outputs.image }}
+
+permissions:
+  contents: read
+  packages: write
+
+# ── All tags in one place ────────────────────────────────────────────────
+env:
+  ARCH_TAG: '2026-07-31.0'
+  CENTOS_TAG: '2026-07-31.0'
+  DEBIAN_TAG: '2026-07-31.0'
+  DEBIAN_I386_TAG: '2026-07-31.0'
+  DEBIAN_TARTAN_TAG: '2026-07-31.0'
+  DEBIAN_ARM64_TAG: '2026-07-31.0'
+  DEBIAN_CROSS_S390X_TAG: '2026-07-31.1'
+  FEDORA_TAG: '2026-07-31.0'
+  UBUNTU_TAG: '2026-07-31.0'
+
+jobs:
+  build-arch:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o arch | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'archlinux:latest'
+          tag: ${{ env.ARCH_TAG }}
+          packages: ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+            sed -i 's,#en_US.UTF-8,en_US.UTF-8,' /etc/locale.gen
+            echo "LANG=en_US.UTF-8" > /etc/locale.conf
+            locale-gen
+
+  build-centos:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o centos | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'quay.io/centos/centos:stream9'
+          tag: ${{ env.CENTOS_TAG }}
+          exec: |
+            echo fubar > /etc/machine-id
+            dnf copr enable rhughes/fwupd-epel-9 -y
+            dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+            crb enable
+            dnf -y install ${{ steps.deps.outputs.packages }}
+            wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
+            wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
+
+  build-debian:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o debian | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'debian:testing'
+          tag: ${{ env.DEBIAN_TAG }}
+          packages: build-essential dpkg-dev python3-apt ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+
+  build-debian-i386:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o debian -v i386 | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'debian:testing'
+          tag: ${{ env.DEBIAN_I386_TAG }}
+          platform: 'linux/386'
+          packages: build-essential dpkg-dev python3-apt ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+
+  build-debian-tartan:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o debian | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'debian:unstable'
+          tag: ${{ env.DEBIAN_TARTAN_TAG }}
+          packages: >-
+            build-essential
+            clang-18
+            clang-tools-18
+            dpkg-dev
+            libclang-18-dev
+            libgirepository-2.0-dev
+            llvm-18-dev
+            python3-apt
+            ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+            update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+            update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+            update-alternatives --install /usr/bin/scan-build scan-build /usr/bin/scan-build-18 100
+            tmpclone=$(mktemp -d)
+            git clone https://gitlab.freedesktop.org/tartan/tartan.git "$tmpclone"
+            cd "$tmpclone"
+            meson setup --prefix /usr build
+            ninja -vC build install
+            tartan-build --help
+
+  build-debian-arm64:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o debian | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'debian:testing'
+          tag: ${{ env.DEBIAN_ARM64_TAG }}
+          suffix: debian/testing-arm64
+          packages: build-essential dpkg-dev python3-apt ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+
+  build-debian-cross-s390x:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o debian -v s390x --cross | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'debian:testing'
+          tag: ${{ env.DEBIAN_CROSS_S390X_TAG }}
+          suffix: debian/testing-cross-s390x
+          exec: |
+            echo fubar > /etc/machine-id
+            sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources
+            dpkg --add-architecture s390x
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get -qq update
+            apt-get -qq -y dist-upgrade
+            apt-get -qq -y install \
+              build-essential dpkg-dev python3-apt crossbuild-essential-s390x \
+              ${{ steps.deps.outputs.packages }}
+
+  build-fedora:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o fedora | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'fedora:44'
+          tag: ${{ env.FEDORA_TAG }}
+          packages: ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+            dnf --enablerepo=updates-testing -y upgrade
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.prep.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Generate package list
+        id: deps
+        run: |
+          echo "packages=$(./contrib/ci/fwupd_setup_helpers.py get-dependencies -o ubuntu | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - id: prep
+        uses: whot/container-prep@main
+        with:
+          base-image: 'ubuntu:rolling'
+          tag: ${{ env.UBUNTU_TAG }}
+          packages: software-properties-common sudo python3-apt ${{ steps.deps.outputs.packages }}
+          exec: |
+            echo fubar > /etc/machine-id
+            add-apt-repository -y ppa:peter-hutterer/meson1.11
+            apt-get -qq update
+            apt-get -qq -y install meson
