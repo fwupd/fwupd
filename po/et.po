@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-22 16:58+0100\n"
-"PO-Revision-Date: 2026-07-19 19:01+0000\n"
+"PO-Revision-Date: 2026-07-29 19:02+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -51,49 +51,49 @@ msgid "Enabled"
 msgstr "Kasutusel"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Secure Boot"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Püsivara uuenduse lubamine/keelamine"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "WOL (seadme äratamine kohtvõrgus)"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Klahvistiku numbrilukustus"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Mälu krüptimine"
 
 msgid "Video Memory"
-msgstr ""
+msgstr "Videomälu"
 
 msgid "Camera"
-msgstr ""
+msgstr "Kaamera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Traadita kohtvõrk"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Sõrmejäljelugeja"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Puuteekraan"
 
 msgid "Audio"
-msgstr ""
+msgstr "Heliseade"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Mälukaardilugeja"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Klahvistiku taustavalgus"
 
 msgid "Stop the fwupd service"
 msgstr "Lõpeta fwupd taustateenuse töö"
@@ -172,11 +172,11 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Seadmes uue püsivara aktiveerimiseks on vajalik autentimine"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Kustuta salvestatud püsivara uuendamise tulemused"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Püsivara uuenduste ajaloo tühjendamine eeldab autentimist"
 
 msgid "Verify device firmware"
 msgstr "Seadme püsivara verifitseerimine"
@@ -226,7 +226,7 @@ msgstr "Seadistatud andmeallikast metaandmete kustutamiseks on vajalik autentimi
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
-msgstr ""
+msgstr "Määratle heakskiidetud püsivara loend"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -2522,7 +2522,7 @@ msgstr "Aktiveeri seadmed"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware"
-msgstr ""
+msgstr "Laadi heakskiidetud püsivara loend"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
@@ -2530,7 +2530,7 @@ msgstr "FAILINIMI|KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
-msgstr ""
+msgstr "Paigalda praegune püsivara seadmesse uuesti"
 
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the chosen configuration"
@@ -2538,7 +2538,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
-msgstr ""
+msgstr "ASUKOHT"
 
 #. TRANSLATORS: command description
 msgid "Download a file"
@@ -2594,7 +2594,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
-msgstr ""
+msgstr "Määratle üks või enam BIOS-i seadistusi"
 
 #. TRANSLATORS: command description
 msgid "Upload the list of updatable devices to a remote server"
