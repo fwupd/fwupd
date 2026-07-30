@@ -6158,7 +6158,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
 	fwupd_client_set_percentage(self, 100.0);
-	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR || res == CURLE_HTTP2_STREAM) {
+	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR || res == CURLE_HTTP2_STREAM ||
+	    res == CURLE_SSL_CONNECT_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_TIMED_OUT,
