@@ -1,5 +1,6 @@
 host_machine.system() == 'linux' or subdir_done()
 libsystemd.found() or subdir_done()
+libsystemd.version().version_compare('>= 258') or subdir_done()
 cc.has_header('systemd/sd-varlink.h', dependencies: libsystemd) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginSystemdPcrlock"']
