@@ -1002,7 +1002,7 @@ fu_device_get_contents_bytes(FuDevice *self,
  * @progress: (nullable): optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
- * Reads a blob of ASCII text from the file, emulating if required.
+ * Reads a blob of UTF-8 text from the file, emulating if required.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
  *
@@ -1018,7 +1018,6 @@ fu_device_get_contents(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
@@ -1049,17 +1048,9 @@ fu_device_get_contents(FuDevice *self,
 	istr = fu_input_stream_from_path(filename, error);
 	if (istr == NULL)
 		return NULL;
-	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
-	if (blob == NULL)
+	str = fu_input_stream_read_string(istr, 0, count, error);
+	if (str == NULL)
 		return NULL;
-	str = fu_strsafe_bytes(blob, G_MAXSIZE);
-	if (str == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid ASCII data");
-		return NULL;
-	}
 
 	/* save response */
 	if (event != NULL)
