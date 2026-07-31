@@ -31,6 +31,7 @@ fu_device_list_finalize(GObject *obj);
 
 struct _FuDeviceList {
 	GObject parent_instance;
+	FuContext *ctx;
 	GPtrArray *devices; /* of FuDeviceItem */
 	GRWLock devices_mutex;
 };
@@ -1209,6 +1210,7 @@ fu_device_list_finalize(GObject *obj)
 {
 	FuDeviceList *self = FU_DEVICE_LIST(obj);
 
+	g_clear_object(&self->ctx);
 	g_rw_lock_clear(&self->devices_mutex);
 	g_ptr_array_unref(self->devices);
 
@@ -1217,17 +1219,18 @@ fu_device_list_finalize(GObject *obj)
 
 /**
  * fu_device_list_new:
+ * @ctx: a #FuContext
  *
  * Creates a new device list.
  *
  * Returns: (transfer full): a device list
- *
- * Since: 1.0.2
  **/
 FuDeviceList *
-fu_device_list_new(void)
+fu_device_list_new(FuContext *ctx)
 {
 	FuDeviceList *self;
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 	self = g_object_new(FU_TYPE_DEVICE_LIST, NULL);
+	self->ctx = g_object_ref(ctx);
 	return FU_DEVICE_LIST(self);
 }

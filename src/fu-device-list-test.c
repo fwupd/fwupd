@@ -21,9 +21,10 @@ fu_device_list_count_cb(FuDeviceList *device_list, FuDevice *device, gpointer us
 static void
 fu_device_list_no_auto_remove_children_func(void)
 {
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuDevice) parent = fu_device_new(NULL);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(GPtrArray) active1 = NULL;
 	g_autoptr(GPtrArray) active2 = NULL;
 	g_autoptr(GPtrArray) active3 = NULL;
@@ -56,7 +57,7 @@ fu_device_list_delay_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	guint added_cnt = 0;
 	guint changed_cnt = 0;
 	guint removed_cnt = 0;
@@ -138,10 +139,11 @@ static void
 fu_device_list_replug_auto_func(void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
 	g_autoptr(FuDevice) parent = fu_device_new(NULL);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(GError) error = NULL;
 	FuDeviceListReplugHelper helper;
 
@@ -204,7 +206,7 @@ fu_device_list_replug_user_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(GError) error = NULL;
 	FuDeviceListReplugHelper helper;
 
@@ -279,7 +281,7 @@ fu_device_list_compatible_func(void)
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_old = NULL;
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(GPtrArray) devices_all = NULL;
 	g_autoptr(GPtrArray) devices_active = NULL;
 	FuDevice *device;
@@ -356,8 +358,8 @@ fu_device_list_compatible_func(void)
 static void
 fu_device_list_remove_chain_func(void)
 {
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(FuDevice) device_child = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_parent = fu_device_new(ctx);
 
@@ -408,7 +410,7 @@ fu_device_list_explicit_order_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device_child = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_root = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 
 	/* add both */
 	fu_device_set_id(device_root, "device");
@@ -430,7 +432,7 @@ fu_device_list_explicit_order_post_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device_child = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_root = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 
 	/* add both */
 	fu_device_set_id(device_root, "device");
@@ -456,7 +458,7 @@ fu_device_list_install_parent_first_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device_child = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_root = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 
 	/* add both */
 	fu_device_set_id(device_root, "device");
@@ -478,7 +480,7 @@ fu_device_list_install_parent_first_child_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device_child = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_root = fu_device_new(ctx);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 
 	/* add both */
 	fu_device_set_id(device_root, "device");
@@ -498,7 +500,7 @@ static void
 fu_device_list_counterpart_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
 
@@ -536,7 +538,7 @@ fu_device_list_equivalent_id_func(void)
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuDevice) device4 = NULL;
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(GError) error = NULL;
 
 	fu_device_set_id(device1, "8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
@@ -563,7 +565,7 @@ static void
 fu_device_list_unconnected_no_delay_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
 
@@ -597,7 +599,7 @@ static void
 fu_device_list_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new(ctx);
 	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
 	g_autoptr(GPtrArray) devices = NULL;
