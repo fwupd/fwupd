@@ -22,6 +22,7 @@ struct _FuElantpHidMcuDevice {
 	guint16 iap_ver;
 	guint16 module_id;
 	guint16 fw_page_size;
+	guint16 fw_page_delay;
 	guint16 fw_section_size;
 	guint16 fw_no_of_sections;
 	gboolean force_table_support;
@@ -327,6 +328,8 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 			    self->ic_type);
 		return FALSE;
 	}
+	if (self->fw_page_delay == 0x0)
+		self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK;
 
 	/* ic_page_count is based on 64 bytes/page */
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
@@ -473,9 +476,7 @@ fu_elantp_hid_mcu_device_write_chunk(FuElantpHidMcuDevice *self,
 	*fw_section_cnt += 1;
 	if (self->fw_section_size == self->fw_page_size ||
 	    *fw_section_cnt == self->fw_no_of_sections) {
-		fu_device_sleep(FU_DEVICE(self),
-				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
-							  : ELANTP_DELAY_WRITE_BLOCK);
+		fu_device_sleep(FU_DEVICE(self), self->fw_page_delay);
 
 		if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, error))
 			return FALSE;
@@ -734,6 +735,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	if (ic_type >= 0x10 && iap_ver >= 1) {
 		if (iap_ver >= 2 && (ic_type == FU_ETP_IC_NUM14 || ic_type == FU_ETP_IC_NUM15)) {
 			self->fw_page_size = 512;
+			self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK_512;
 			if (iap_ver >= 3) {
 				if (!fu_elantp_hid_mcu_device_read_iap_type(self,
 									    &self->iap_type,
@@ -909,6 +911,12 @@ fu_elantp_hid_mcu_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "ElantpFwPageDelay") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->fw_page_delay = (guint16)tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error,
