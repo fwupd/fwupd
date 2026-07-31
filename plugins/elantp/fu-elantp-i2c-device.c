@@ -22,6 +22,7 @@ struct _FuElantpI2cDevice {
 	guint16 iap_password;
 	guint16 module_id;
 	guint16 fw_page_size;
+	guint16 fw_page_delay;
 	guint8 pattern;
 	gchar *bind_path;
 	gchar *bind_id;
@@ -375,6 +376,8 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 			    ic_type);
 		return FALSE;
 	}
+	if (self->fw_page_delay == 0x0)
+		self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK;
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
 
 	/* is in bootloader mode */
@@ -506,9 +509,7 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 
 		if (!fu_elantp_i2c_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;
-		fu_device_sleep(device,
-				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
-							  : ELANTP_DELAY_WRITE_BLOCK);
+		fu_device_sleep(device, self->fw_page_delay);
 
 		if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 			return FALSE;
@@ -609,6 +610,7 @@ fu_elantp_i2c_device_detach(FuElantpI2cDevice *self, FuProgress *progress, GErro
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
+		ic_type = tmp & 0xFF;
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
 	}
@@ -641,6 +643,7 @@ fu_elantp_i2c_device_detach(FuElantpI2cDevice *self, FuProgress *progress, GErro
 		if (iap_ver >= 1) {
 			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type == 0x15)) {
 				self->fw_page_size = 512;
+				self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK_512;
 			} else {
 				self->fw_page_size = 128;
 			}
@@ -774,6 +777,12 @@ fu_elantp_i2c_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->i2c_addr = (guint16)tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "ElantpFwPageDelay") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->fw_page_delay = (guint16)tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error,

@@ -1511,7 +1511,6 @@ fu_util_install_stream(FuUtil *self,
 	return fu_engine_install_releases(self->engine,
 					  self->request,
 					  releases,
-					  cabinet,
 					  fu_progress_get_child(self->progress),
 					  self->flags,
 					  error);

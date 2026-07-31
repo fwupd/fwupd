@@ -23,6 +23,7 @@ struct _FuElantpHidDevice {
 	guint16 iap_ver;
 	guint16 module_id;
 	guint16 fw_page_size;
+	guint16 fw_page_delay;
 	gboolean force_table_support;
 	guint32 force_table_addr;
 	guint8 pattern;
@@ -424,6 +425,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 			    self->ic_type);
 		return FALSE;
 	}
+	if (self->fw_page_delay == 0x0)
+		self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK;
 
 	/* ic_page_count is based on 64 bytes/page */
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
@@ -762,9 +765,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 						  FU_IOCTL_FLAG_NONE,
 						  error))
 			return FALSE;
-		fu_device_sleep(device,
-				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
-							  : ELANTP_DELAY_WRITE_BLOCK);
+		fu_device_sleep(device, self->fw_page_delay);
 
 		if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 			return FALSE;
@@ -875,6 +876,7 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 			if (iap_ver >= 2 &&
 			    (ic_type == FU_ETP_IC_NUM14 || ic_type == FU_ETP_IC_NUM15)) {
 				self->fw_page_size = 512;
+				self->fw_page_delay = ELANTP_DELAY_WRITE_BLOCK_512;
 			} else {
 				self->fw_page_size = 128;
 			}
@@ -991,6 +993,12 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "ElantpFwPageDelay") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->fw_page_delay = (guint16)tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error,
