@@ -87,6 +87,7 @@ typedef struct {
 	gchar *user_agent;
 	GHashTable *hints;		/* str:str */
 	GHashTable *immediate_requests; /* str:FwupdRequest */
+	GMutex immediate_requests_mutex; /* for @immediate_requests */
 	GPtrArray *hwids;		/* FwupdClientHwid */
 	GMutex download_items_mutex; /* for @download_items */
 	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
@@ -725,6 +726,108 @@ fwupd_client_name_owner_changed_cb(GDBusProxy *proxy, GParamSpec *pspec, FwupdCl
 	fwupd_client_update_proxy_name_owner(self);
 }
 
+/**
+ * fwupd_client_emit_device_request:
+ * @self: a #FwupdClient
+ * @req: a #FwupdRequest
+ *
+ * Emits a `::device-request` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_REQUEST(req));
+
+	g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
+
+	/* we may need to invalidate this later */
+	if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
+	    fwupd_request_get_device_id(req) != NULL) {
+		g_autoptr(GMutexLocker) locker =
+		    g_mutex_locker_new(&priv->immediate_requests_mutex);
+		g_hash_table_insert(priv->immediate_requests,
+				    g_strdup(fwupd_request_get_device_id(req)),
+				    g_object_ref(req));
+	}
+}
+
+/**
+ * fwupd_client_emit_device_added:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-added` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
+{
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
+}
+
+/**
+ * fwupd_client_emit_device_removed:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-removed` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
+{
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
+}
+
+/**
+ * fwupd_client_emit_device_changed:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-changed` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
+
+	/* invalidate request */
+	if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
+		g_autoptr(GMutexLocker) locker =
+		    g_mutex_locker_new(&priv->immediate_requests_mutex);
+		FwupdRequest *req =
+		    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
+		if (req != NULL) {
+			fwupd_client_request_invalidate(self, req);
+			g_hash_table_remove(priv->immediate_requests, fwupd_device_get_id(dev));
+		}
+	}
+}
+
 static void
 fwupd_client_signal_cb(GDBusProxy *proxy,
 		       const gchar *sender_name,
@@ -732,7 +835,6 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		       GVariant *parameters,
 		       FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
@@ -746,8 +848,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
+		fwupd_client_emit_device_added(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRemoved") == 0) {
@@ -756,8 +857,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
+		fwupd_client_emit_device_removed(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceChanged") == 0) {
@@ -766,19 +866,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
-
-		/* invalidate request */
-		if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
-			FwupdRequest *req =
-			    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
-			if (req != NULL) {
-				fwupd_client_request_invalidate(self, req);
-				g_hash_table_remove(priv->immediate_requests,
-						    fwupd_device_get_id(dev));
-			}
-		}
+		fwupd_client_emit_device_changed(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRequest") == 0) {
@@ -787,16 +875,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to convert DeviceRequest: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
-
-		/* we may need to invalidate this later */
-		if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
-		    fwupd_request_get_device_id(req) != NULL) {
-			g_hash_table_insert(priv->immediate_requests,
-					    g_strdup(fwupd_request_get_device_id(req)),
-					    g_object_ref(req));
-		}
+		fwupd_client_emit_device_request(self, req);
 		return;
 	}
 	g_debug("unknown signal name '%s' from %s", signal_name, sender_name);
@@ -8390,6 +8469,7 @@ fwupd_client_init(FwupdClient *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->immediate_requests =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+	g_mutex_init(&priv->immediate_requests_mutex);
 	priv->hwids = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_hwid_free);
 
 	/* we get this one for free */
@@ -8418,6 +8498,7 @@ fwupd_client_finalize(GObject *object)
 	g_hash_table_unref(priv->immediate_requests);
 	g_mutex_clear(&priv->idle_mutex);
 	g_mutex_clear(&priv->download_items_mutex);
+	g_mutex_clear(&priv->immediate_requests_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);
 	g_ptr_array_unref(priv->idle_sources);

@@ -653,6 +653,15 @@ fwupd_client_build_report_security(FwupdClient *self,
 				   GHashTable *metadata,
 				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
+void
+fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req) G_GNUC_NON_NULL(1, 2);
+
 /* only needed when not using D-Bus in in-tree CLIs */
 typedef struct FwupdClientSyncImpl FwupdClientSyncImpl;
 void
