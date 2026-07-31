@@ -37,6 +37,7 @@
  */
 
 typedef struct {
+	GMainContext *main_ctx;
 	FuContextFlags flags;
 	FuPathStore *pstore;
 	FuHwids *hwids;
@@ -297,6 +298,45 @@ fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
 	g_return_if_fail(FU_IS_SMBIOS(smbios));
 	g_set_object(&priv->smbios, smbios);
 	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
+}
+
+/**
+ * fu_context_get_main_context:
+ * @self: a #FuContext
+ *
+ * Gets the main context.
+ *
+ * Returns: (transfer none): a #GMainContextm or %NULL if unset
+ *
+ * Since: 2.1.8
+ **/
+GMainContext *
+fu_context_get_main_context(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->main_ctx;
+}
+
+/**
+ * fu_context_set_main_context:
+ * @self: a #FuContext
+ * @main_ctx: (nullable): a #GMainContext
+ *
+ * Sets or clears the main context. This is only required by fwupdtool.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_context_set_main_context(FuContext *self, GMainContext *main_ctx)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	if (main_ctx == priv->main_ctx)
+		return;
+	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
+	if (main_ctx != NULL)
+		priv->main_ctx = g_main_context_ref(main_ctx);
 }
 
 /**
@@ -2821,6 +2861,7 @@ fu_context_finalize(GObject *object)
 	FuContext *self = FU_CONTEXT(object);
 	FuContextPrivate *priv = GET_PRIVATE(self);
 
+	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
 	if (priv->efivars != NULL)

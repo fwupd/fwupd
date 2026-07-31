@@ -24,6 +24,8 @@ fu_context_new(void);
 FuContext *
 fu_context_new_full(FuContextFlags flags);
 void
+fu_context_set_main_context(FuContext *self, GMainContext *main_ctx) G_GNUC_NON_NULL(1);
+void
 fu_context_housekeeping(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_reload_bios_settings(FuContext *self, GError **error);
