@@ -1129,7 +1129,7 @@ fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 	guint sector_count;
 	guint first_idx;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* nothing to do */
 	if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)

@@ -30,7 +30,7 @@ fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 
 static gboolean
 fu_acpi_phat_record_parse(FuAcpiPhat *self,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  gsize *offset,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
@@ -65,7 +65,7 @@ fu_acpi_phat_record_parse(FuAcpiPhat *self,
 
 	/* supported record type */
 	if (firmware_rcd != NULL) {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		partial_stream = fu_partial_input_stream_new(stream, *offset, record_length, error);
 		if (partial_stream == NULL)
 			return FALSE;
@@ -89,14 +89,14 @@ fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 }
 
 static gboolean
-fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_acpi_phat_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_acpi_phat_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
@@ -143,7 +143,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* verify checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
-		g_autoptr(GInputStream) stream_tmp =
+		g_autoptr(FuInputStream) stream_tmp =
 		    fu_partial_input_stream_new(stream, 0, length, error);
 		if (stream_tmp == NULL)
 			return FALSE;

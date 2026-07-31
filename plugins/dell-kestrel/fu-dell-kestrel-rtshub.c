@@ -178,7 +178,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

@@ -33,9 +33,6 @@ device_tests += files(
 if get_option('tests')
   install_data(['tests/synaptics-rmi-0x.builder.xml','tests/synaptics-rmi-10.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'synaptics-rmi-self-test',
     sources: [
@@ -55,5 +52,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('synaptics-rmi-self-test', e, env: env)
+  test(
+    'synaptics-rmi-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

@@ -1162,7 +1162,7 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GByteArray) blob = NULL;
 	guint32 checksum;
 	guint32 checksum_new;

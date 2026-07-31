@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2025-12-02 23:02+0000\n"
 "Last-Translator: Xusi Fons <xusi@keemail.me>\n"
 "Language-Team: Catalan <https://hosted.weblate.org/projects/fwupd/fwupd/ca/>\n"
@@ -53,6 +53,51 @@ msgstr "Habilita"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Habilitat"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "Atura el servei del «fwupd»"
@@ -554,6 +599,14 @@ msgstr "Regió del BIOS per a l'SPI"
 msgid "SPI BIOS Descriptor"
 msgstr "Descriptor del BIOS per a l'SPI"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Protecció DMA durant la prearrencada"
@@ -789,6 +842,10 @@ msgstr "Regió de microprogramari del BIOS"
 msgid "Firmware BIOS Descriptor"
 msgstr "Descriptor del BIOS per al microprogramari"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Protecció DMA durant la prearrencada"
@@ -967,6 +1024,14 @@ msgstr "La regió de microprogramari del BIOS protegeix que la memòria de micro
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "El descriptor del BIOS per al microprogramari protegeix que la memòria de microprogramari del dispositiu es mantingui sense alterar."
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1241,22 +1306,6 @@ msgstr "Els dispositius de prova s'han habilitat amb èxit"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "Activació de l'actualització del microprogramari"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "S'ha afegit el dispositiu:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "S'ha eliminat el dispositiu:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "S'ha canviat el dispositiu:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "S'ha canviat"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1578,10 +1627,6 @@ msgstr "FITXER-HWIDS"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Desa un fitxer que permet la generació dels ID de maquinari"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Monitora el dimoni per als esdeveniments"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2363,6 +2408,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "S'ha afegit el dispositiu:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "S'ha eliminat el dispositiu:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "S'ha canviat el dispositiu:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "S'ha canviat"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Estableix els reintents de baixada per als errors transitoris"
@@ -2543,6 +2604,10 @@ msgstr "Estableix una o més opcions de configuració del BIOS"
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "Publica la llista dels dispositius actualitzables a un servidor remot"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Monitora el dimoni per als esdeveniments"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "Aquesta eina permet que un administrador consulti i controli el dimoni «fwupd», el qual li permetrà realitzar accions com instal·lar o degradar la versió de microprogramari."
@@ -2596,6 +2661,14 @@ msgstr "Valor actual"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descripció"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

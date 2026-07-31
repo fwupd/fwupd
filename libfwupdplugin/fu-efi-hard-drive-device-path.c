@@ -12,6 +12,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-struct.h"
 #include "fu-firmware-common.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 
@@ -91,7 +92,7 @@ fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
 
 static gboolean
 fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {

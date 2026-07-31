@@ -38,6 +38,53 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.7" date="2026-07-27">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add "well known" AppStream IDs for common BIOS settings</li>
+          <li>Add MTD lock security attribute</li>
+          <li>Add support for "externally managed" EFI signature lists</li>
+          <li>Add systemd-pcrlock plugin and hook up to UEFI updates</li>
+          <li>Add TCG disk encryption security attribute</li>
+          <li>Enable more plugins when compiling for Android</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add wrappers for input streams for future Rust implementations</li>
+          <li>Allow overriding some methods in FwupdClient for a future refactor</li>
+          <li>Allow plain string versions for some AMD GPUs</li>
+          <li>Allow suspend-to-ram with encrypted RAM</li>
+          <li>Always test Dell dock type when connected</li>
+          <li>Avoid possible out-of-bounds read in when parsing the DFU sector</li>
+          <li>Do not abort when udisks cannot resolve a device</li>
+          <li>Do not allow force installs over D-Bus</li>
+          <li>Do not fail to start when a pre-group comment has no keys set</li>
+          <li>Fall back to copying the file descriptor contents when not sealed</li>
+          <li>Fix dropped status updates during updates</li>
+          <li>Fix FW update for Lenovo TBT5 Smart Dock 7500</li>
+          <li>Fix fwupd-refresh.service polkit auth errors</li>
+          <li>Fix segfault parsing some logitech-hidpp bootloader records</li>
+          <li>Fix the seal self tests when building on a tmpfs</li>
+          <li>Fix update failure when the TP IC is in bootloader-only mode</li>
+          <li>Mark Coreboot VBOOT as obsoleting BootGuard verified</li>
+          <li>Move more per-class limits to the class instances to reduce RSS</li>
+          <li>Prepare modem-manager firmware after firehose detach</li>
+          <li>Reject out-of-range CCGX device mode before indexing versions</li>
+          <li>Require trusted metadata for device updates</li>
+          <li>Require trusted metadata when using OnlyTrusted</li>
+          <li>Skip modem-manager secboot status when unsupported</li>
+          <li>Use safe reads for synaptics-rmi device responses</li>
+          <li>Validate GUID-defined section offset against EFI section size</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>PixArt PJP360 device</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.6" date="2026-07-01">
       <description>
         <p>

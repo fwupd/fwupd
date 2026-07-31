@@ -5,14 +5,14 @@
 # Translators:
 # A S Alam, 2021
 # A S Alam, 2025
-# Aman Alam <aalam@users.noreply.hosted.weblate.org>, 2025.
+# Aman Alam <aalam@users.noreply.hosted.weblate.org>, 2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2025-10-24 10:23+0000\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
+"PO-Revision-Date: 2026-07-09 13:01+0000\n"
 "Last-Translator: Aman Alam <aalam@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Punjabi <https://hosted.weblate.org/projects/fwupd/fwupd/pa/>\n"
 "Language: pa\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 2026.7.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "ਲੀਨਕਸ ਵੇਂਡਰ ਫਿਰਮਵੇਅਰ ਸਰਵਿਸ (ਸਟੇਬਲ ਫਿਰਮਵੇਅਰ)"
@@ -53,6 +53,51 @@ msgstr "ਸਮਰੱਥ"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "ਸਮਰੱਥ ਹੈ"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "fwupd ਸੇਵਾ ਨੂੰ ਰੋਕੋ"
@@ -107,85 +152,85 @@ msgstr "ਡੈਮਨ ਸੰਰਚਨਾ ਸੋਧੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr ""
+msgstr "ਡੈਮਨ ਸੰਰਚਨਾ ਨੂੰ ਸੋਧਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Reset daemon configuration"
 msgstr "ਡੈਮਨ ਸੰਰਚਨਾ ਨੂੰ ਮੁੜ-ਸੈੱਟ ਕਰੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "ਡੈਮਨ ਸੰਰਚਨਾ ਨੂੰ ਮੂਲ ਵਾਸਤੇ ਮੁੜ-ਸੈੱਟ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "ਡਿਵਾਈਸ ਦੀ ਵਿਸ਼ੇਸ਼ਤਾ ਨੂੰ ਸੋਧੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "ਡਿਵਾਈਸ ਦੀ ਵਿਸ਼ੇਸ਼ਤਾ ਨੂੰ ਸੋਧਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Activate the new firmware on the device"
 msgstr "ਡਿਵਾਈਸ ਉੱਤੇ ਨਵਾਂ ਫਿਰਮਵੇਅਰ ਸਰਗਰਮ ਕਰੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr ""
+msgstr "ਨਵੇਂ ਫਿਰਮਵੇਅਰ ਵਰਜ਼ਨ ਵਾਸਤੇ ਬਦਲਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "ਸੰਭਾਲੇ ਹੋਏ ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਨਤੀਜਿਆਂ ਨੂੰ ਮਿਟਾਓ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਨਤੀਜਿਆਂ ਨੂੰ ਮਿਟਾਉਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "ਡਿਵਾਈਸ ਫਿਰਮਵੇਅਰ ਨੂੰ ਤਸਦੀਕ ਕਰੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "ਡਿਵਾਈਸ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਨੂੰ ਤਸਦੀਕ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Update the stored device verification information"
 msgstr "ਸਟੋਰ ਕੀਤੀ ਡਿਵਾਈਸ ਤਸਦੀਕ ਜਾਣਕਾਰੀ ਨੂੰ ਅੱਪਡੇਟ ਕਰੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr ""
+msgstr "ਡਿਵਾਈਸ ਲਈ ਸੰਭਾਲੇ ਹੋਏ ਚੈਕ-ਸਮ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "ਸੰਰਚਨਾ ਰਿਮੋਟ ਲਵੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟਾਂ ਵਾਸਤੇ ਵਰਤੇ ਹੋਏ ਸੰਰਚਿਤ ਰਿਮੋਟ ਦੀ ਸੂਚੀ ਲੈਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "ਸੰਰਚਿਤ ਰਿਮੋਟ ਲਈ ਮੇਟਾਡਾਟੇ ਨੂੰ ਅੱਪਡੇਟ ਕਰੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਲਈ ਵਰਤੇ ਇੱਕ ਸੰਰਚਿਤ ਰਿਮੋਟ ਵਾਸਤੇ ਮੇਟਾਡਾਟੇ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Modify a configured remote"
 msgstr "ਸੰਰਚਿਤ ਰਿਮੋਟ ਨੂੰ ਸੋਧੋ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟਾਂ ਲਈ ਵਰਤੇ ਇੱਕ ਸੰਰਚਿਤ ਰਿਮੋਟ ਨੂੰ ਸਮਰੱਥ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਲਈ ਵਰਤੇ ਇੱਕ ਸੰਰਚਿਤ ਰਿਮੋਟ ਨੂੰ ਬਦਲਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "ਸੰਰਚਿਤ ਰਿਮੋਟ ਨੂੰ ਮਿਟਾਓ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "ਕਿਸੇ ਰਿਮੋਟ ਤੋਂ ਮੇਟਾਡਾਟੇ ਨੂੰ ਹਟਾਉਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
-msgstr ""
+msgstr "ਮਨਜ਼ੂਰ ਫਿਰਮਵੇਅਰ ਦੀ ਸੂਚੀ ਸੈੱਟ ਕਰਦਾ ਹੈ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -196,7 +241,7 @@ msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr ""
+msgstr "ਕਲਾਈਟ ਸਰਟੀਫਿਕੇਟ ਵਰਤ ਕੇ ਡਾਟੇ ਨੂੰ ਸਾਈਨ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Get BIOS settings"
 msgstr "BIOS ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ"
@@ -213,15 +258,15 @@ msgid "Authentication is required to modify BIOS settings"
 msgstr "BIOS ਸੈਟਿੰਗਾਂ ਨੂੰ ਸੋਧਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "HSI ਲਈ ਸੁਰੱਖਿਆ ਮਜ਼ਬੂਤੀ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
-msgstr ""
+msgstr "ਹੋਸਟ ਸੁਰੱਖਿਆ ਮਸਲੇ ਨੂੰ ਠੀਕ ਕਰਨ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr ""
+msgstr "ਇੱਕ ਹੋਸਟ ਸੁਰੱਖਿਆ ਮਸਲੇ ਲਈ ਫਿਕਸ ਨੂੰ ਵਾਪਸ ਲੈਣ ਲਈ ਪਰਮਾਣਿਤ ਹੋਣ ਦੀ ਲੋੜ ਹੈ"
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
@@ -374,13 +419,13 @@ msgstr "ਕੋਈ ਕਾਰਵਾਈ ਨਹੀਂ ਦਿੱਤੀ ਗਈ!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "0 ਤੋਂ ਲੈ ਕੇ %u ਤੱਕ ਇੱਕ ਨੰਬਰ ਦਿਓ:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "%s ਜਾਂ %s ਦਿਓ:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -480,13 +525,13 @@ msgstr ""
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u ਡਿਵਾਈਸ ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ ਗਿਆ ਹੈ ਅਤੇ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਲੋੜ ਹੈ।"
+msgstr[1] "%u ਡਿਵਾਈਸਾਂ ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ ਗਿਆ ਹੈ ਅਤੇ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਲੋੜ ਹੈ।"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "ਅੱਪਡੇਟ ਪੂਰਾ ਕਰਨ ਲਈ ਮੁੜ-ਚਾਲੂ ਕਰੋ।"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -548,10 +593,18 @@ msgstr "SPI ਲਾਕ"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
-msgstr ""
+msgstr "SPI BIOS ਖੇਤਰ"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
+msgstr ""
+
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
 msgstr ""
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
@@ -560,37 +613,37 @@ msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ਨੇ ਬੂਟ ਨੂੰ ਤਸਦੀਕ ਕੀਤਾ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ACM ਸੁਰੱਖਿਅਤ ਹੈ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ਗਲਤੀ ਨੀਤੀ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ OTP ਫਿਊਜ਼"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "CET Platform"
-msgstr ""
+msgstr "CET ਪਲੇਟਫਾਰਮ"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
 msgid "CET OS Support"
-msgstr ""
+msgstr "CET OS ਸਹਿਯੋਗ"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
@@ -598,7 +651,7 @@ msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
-msgstr ""
+msgstr "ਇੰਕ੍ਰਿਪਟ ਕੀਤੀ RAM"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -619,7 +672,7 @@ msgstr "ਲੀਨਕਸ ਸਵੈਪ"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
-msgstr ""
+msgstr "ਰੈਮ ਉੱਤੇ ਸਸਪੈਂਡ"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
@@ -635,7 +688,7 @@ msgstr "UEFI ਸਕਿਉਰ ਬੂਟ"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
-msgstr ""
+msgstr "UEFI ਬੂਟ-ਸਰਵਿਸ ਵੇਰੀਬਲ"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM empty PCRs"
@@ -643,7 +696,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
-msgstr ""
+msgstr "TPM PCR0 ਮੁੜ-ਨਿਰਮਾਣ"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
@@ -652,23 +705,23 @@ msgstr "TPM v2.0"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
-msgstr ""
+msgstr "%s ਨਿਰਮਾਤਾ ਢੰਗ"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
-msgstr ""
+msgstr "MEI ਨਿਰਮਾਤਾ ਢੰਗ"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
-msgstr ""
+msgstr "%s ਓਵਰ-ਰਾਈਡ"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the
 #. * "override" is the physical PIN that can be driven to
 #. * logic high -- luckily it is probably not accessible to
 #. * end users on consumer boards
 msgid "MEI override"
-msgstr ""
+msgstr "MEI ਓਵਰ-ਰਾਈਡ"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
 #. * to the private/public key used to secure loading of firmware
@@ -695,7 +748,7 @@ msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਤਸਦੀਕ"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "fwupd plugins"
@@ -715,7 +768,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "ਪਲੇਟਫਾਰਮ ਸੁਰੱਖਿਅਤ ਬੂਟ"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -739,7 +792,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
-msgstr ""
+msgstr "BIOS ਰੋਲਬੈਕ ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
@@ -759,7 +812,7 @@ msgstr "UEFI ਮੈਮੋਰੀ ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "UEFI NX ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -771,7 +824,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
-msgstr ""
+msgstr "AMD ਮਾਈਕਰੋਕੋਡ ਦਸਤਖ਼ਤ"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -789,28 +842,32 @@ msgstr "ਫਿਰਮਵੇਅਰ BIOS ਖੇਤਰ"
 msgid "Firmware BIOS Descriptor"
 msgstr ""
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
-msgstr ""
+msgstr "ਪ੍ਰੀ-ਬੂਟ DMA ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard Verified Boot"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ਨੇ ਬੂਟ ਨੂੰ ਤਸਦੀਕ ਕੀਤਾ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM Protected"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ACM ਸੁਰੱਖਿਅਤ ਹੈ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard Error Policy"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ਗਲਤੀ ਨੀਤੀ"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
-msgstr ""
+msgstr "Intel ਬੂਟਗਾਰਡ ਫਿਊਜ਼"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
@@ -855,7 +912,7 @@ msgstr "UEFI ਸਕਿਉਰ ਬੂਟ"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI Bootservice Variables"
-msgstr ""
+msgstr "UEFI ਬੂਟ-ਸਰਵਿਸ ਵੇਰੀਬਲ"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM Platform Configuration"
@@ -863,7 +920,7 @@ msgstr "TPM ਪਲੇਟਫਾਰਮ ਸੰਰਚਨਾ"
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM Reconstruction"
-msgstr ""
+msgstr "TPM ਮੁੜ-ਨਿਰਮਾਣ"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
@@ -890,7 +947,7 @@ msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
-msgstr ""
+msgstr "ਫਿਰਮਵੇਅਰ ਤਸਦੀਕ"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "Firmware Updater Verification"
@@ -902,7 +959,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
-msgstr ""
+msgstr "ਪ੍ਰੋਸੈਸਰ ਸੁਰੱਖਿਆ ਜਾਂਚ"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
@@ -910,7 +967,7 @@ msgstr "AMD ਸਕਿਉਰ ਪ੍ਰੋਸੈਸਰ ਰੋਲਬੈਕ ਸੁ�
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "AMD ਪਲੇਟਫਾਰਮ ਸੁਰੱਖਿਅਤ ਬੂਟ"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -922,11 +979,11 @@ msgstr "AMD ਫਿਰਮਵੇਅਰ ਲਿਖਣ ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "ਕੋਰ-ਬੂਟ ਨੇ ਬੂਟ ਨੂੰ ਤਸਦੀਕ ਕੀਤਾ"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
-msgstr ""
+msgstr "ਫਿਊਜ਼ ਪਲੇਟਫਾਰਮ"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
@@ -950,11 +1007,11 @@ msgstr "UEFI ਮੈਮੋਰੀ ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "UEFI NX ਸੁਰੱਖਿਆ"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
-msgstr ""
+msgstr "AMD ਮਾਈਕਰੋ-ਕੋਡ ਦਸਤਖ਼ਤ"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -966,6 +1023,14 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1240,22 +1305,6 @@ msgstr ""
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
-msgstr ""
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "ਡਿਵਾਈਸ ਜੋੜਿਆ:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "ਡਿਵਾਈਸ ਨੂੰ ਹਟਾਇਆ:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "ਡਿਵਾਈਸ ਨੂੰ ਬਦਲਿਆ:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
 msgstr ""
 
 #. TRANSLATORS: nothing found
@@ -1577,10 +1626,6 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
-msgstr ""
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -2363,6 +2408,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "ਡਿਵਾਈਸ ਜੋੜਿਆ:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "ਡਿਵਾਈਸ ਨੂੰ ਹਟਾਇਆ:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "ਡਿਵਾਈਸ ਨੂੰ ਬਦਲਿਆ:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2543,6 +2604,10 @@ msgstr ""
 msgid "Upload the list of updatable devices to a remote server"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr ""
@@ -2596,6 +2661,14 @@ msgstr ""
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "ਵਰਣਨ"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

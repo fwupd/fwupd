@@ -23,9 +23,6 @@ plugin_builtins += plugin_builtin_gpio
 if get_option('tests')
   install_data(['tests/quirks.d/gpio.quirk'],
     install_dir: join_paths(installed_test_datadir, 'tests', 'quirks.d'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'gpio-self-test',
     sources: [
@@ -45,5 +42,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('gpio-self-test', e, env: env)
+  test(
+    'gpio-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

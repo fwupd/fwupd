@@ -94,10 +94,51 @@ fu_config_func(void)
 	g_assert_true(g_strstr_len(composite_data, -1, "# key comment") != NULL);
 }
 
+/* verifies that a pre-group comment in a config file with no keys set does not
+ * prevent the daemon from starting, see https://github.com/fwupd/fwupd/issues/10656 */
+static void
+fu_config_comment_no_keys_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *sysconfdir = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuConfig) config = fu_config_new(pstore);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("config", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	sysconfdir = fu_temporary_directory_build(tmpdir, "etc", "fwupd", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSCONFDIR_PKG, sysconfdir);
+
+	/* a config stub with a comment before the group and no keys set */
+	fn = g_build_filename(sysconfdir, "fwupd.conf", NULL);
+	g_assert_nonnull(fn);
+	ret = fu_path_mkdir_parent(fn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_set_contents(fn,
+				  "# Ansible managed\n"
+				  "[fwupd]\n"
+				  "# use `man 5 fwupd.conf` for documentation\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/config", fu_config_func);
+	g_test_add_func("/fwupd/config{comment-no-keys}", fu_config_comment_no_keys_func);
 	return g_test_run();
 }

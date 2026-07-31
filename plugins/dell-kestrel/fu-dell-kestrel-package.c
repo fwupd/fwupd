@@ -58,7 +58,7 @@ fu_dell_kestrel_package_write(FuDevice *device,
 {
 	FuDevice *proxy;
 	guint32 pkg_version = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *dynamic_version = NULL;
 
 	g_return_val_if_fail(device != NULL, FALSE);

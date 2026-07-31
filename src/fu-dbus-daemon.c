@@ -39,11 +39,8 @@ struct _FuDbusDaemon {
 	FuClientList *client_list;
 	guint32 clients_inhibit_id;
 	FuPolkitAuthority *authority;
-	FwupdStatus status; /* last emitted */
-	gdouble percentage; /* last emitted */
 	guint owner_id;
 	GPtrArray *system_inhibits;
-	guint set_status_id;
 };
 
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
@@ -174,69 +171,9 @@ fu_dbus_daemon_emit_property_changed(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_set_status_internal(FuDbusDaemon *self, FwupdStatus status)
-{
-	/* sanity check */
-	if (self->status == status)
-		return;
-	self->status = status;
-
-	g_debug("emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
-	fu_dbus_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
-}
-
-typedef struct {
-	FuDbusDaemon *self;
-	FwupdStatus status;
-} FuDbusDaemonSetStatusHelper;
-
-static gboolean
-fu_dbus_daemon_set_status_cb(gpointer user_data)
-{
-	FuDbusDaemonSetStatusHelper *helper = (FuDbusDaemonSetStatusHelper *)user_data;
-	FuDbusDaemon *self = FU_DBUS_DAEMON(helper->self);
-	self->set_status_id = 0;
-	fu_dbus_daemon_set_status_internal(self, helper->status);
-	return G_SOURCE_REMOVE;
-}
-
-static void
-fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
-{
-	FuDbusDaemonSetStatusHelper *helper;
-
-	/* cancel anything pending */
-	if (self->set_status_id != 0) {
-		g_source_remove(self->set_status_id);
-		self->set_status_id = 0;
-	}
-
-	/* sanity check */
-	if (self->status == status)
-		return;
-
-	/* starting or stopping */
-	if ((self->status == FWUPD_STATUS_IDLE && status != FWUPD_STATUS_WAITING_FOR_AUTH) ||
-	    status == FWUPD_STATUS_IDLE) {
-		fu_dbus_daemon_set_status_internal(self, status);
-		return;
-	}
-
-	/* defer all updates to avoid flickering the UI */
-	helper = g_new0(FuDbusDaemonSetStatusHelper, 1);
-	helper->self = self;
-	helper->status = status;
-	self->set_status_id = g_timeout_add_full(G_PRIORITY_DEFAULT,
-						 250, /* ms */
-						 fu_dbus_daemon_set_status_cb,
-						 helper,
-						 g_free);
-}
-
-static void
 fu_dbus_daemon_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuDbusDaemon *self)
 {
-	fu_dbus_daemon_set_status(self, status);
+	fu_daemon_set_status(FU_DAEMON(self), status);
 
 	/* engine has gone idle */
 	if (status == FWUPD_STATUS_SHUTDOWN)
@@ -332,7 +269,7 @@ typedef struct {
 	GPtrArray *checksums;
 	GPtrArray *errors;
 	guint64 flags;
-	GInputStream *stream;
+	FuInputStream *stream;
 	FuDbusDaemon *self;
 	gchar *device_id;
 	gchar *remote_id;
@@ -349,7 +286,7 @@ static void
 fu_dbus_daemon_auth_helper_free(FuMainAuthHelper *helper)
 {
 	/* always return to IDLE even in event of an auth error */
-	fu_dbus_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
+	fu_daemon_set_status(FU_DAEMON(helper->self), FWUPD_STATUS_IDLE);
 
 	if (helper->cabinet != NULL)
 		g_object_unref(helper->cabinet);
@@ -607,19 +544,7 @@ fu_dbus_daemon_progress_percentage_changed_cb(FuProgress *progress,
 					      gdouble percentage,
 					      FuDbusDaemon *self)
 {
-	gboolean notify = fwupd_percentage_delta_notify(self->percentage, percentage);
-	self->percentage = percentage;
-	if (notify) {
-		g_debug("emitting PropertyChanged('Percentage'='%.1f%%')", percentage);
-		fu_dbus_daemon_emit_property_changed(
-		    self,
-		    "Percentage",
-		    g_variant_new_uint32(fwupd_percentage_is_valid(percentage) ? (guint32)percentage
-									       : 0));
-		fu_dbus_daemon_emit_property_changed(self,
-						     "PercentageFull",
-						     g_variant_new_double(percentage));
-	}
+	fu_daemon_set_percentage(FU_DAEMON(self), percentage);
 }
 
 static void
@@ -627,7 +552,7 @@ fu_dbus_daemon_progress_status_changed_cb(FuProgress *progress,
 					  FwupdStatus status,
 					  FuDbusDaemon *self)
 {
-	fu_dbus_daemon_set_status(self, status);
+	fu_daemon_set_status(FU_DAEMON(self), status);
 }
 
 static void
@@ -896,9 +821,13 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		return TRUE;
 	}
 
-	/* sync update message from CAB */
-	fu_device_ensure_from_component(device, component);
-	fu_device_incorporate_from_component(device, component);
+	/* sync update message from CAB, but only if the metadata is trusted */
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
+		fu_device_ensure_from_component(device, component);
+		fu_device_incorporate_from_component(device, component);
+	} else {
+		g_debug("not using untrusted metadata");
+	}
 
 	/* post-ensure checks */
 	if (!fu_release_check_version(release, component, helper->flags, &error_local)) {
@@ -1054,7 +983,7 @@ fu_dbus_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	}
 
 	/* authenticate all things in the action_ids */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_dbus_daemon_authorize_install_queue(g_steal_pointer(&helper));
 	return TRUE;
 }
@@ -1123,14 +1052,16 @@ fu_dbus_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMai
 }
 #endif
 
-static GInputStream *
+static FuInputStream *
 fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream_safe = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
@@ -1159,9 +1090,19 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	if (stream == NULL)
 		return NULL;
 	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							error))
-		return NULL;
-	return g_steal_pointer(&stream);
+							&error_local)) {
+		g_autoptr(GBytes) blob = NULL;
+		g_debug("fd not sealed, falling back to copy: %s", error_local->message);
+		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		if (blob == NULL)
+			return NULL;
+		stream_safe = fu_memory_input_stream_new_from_bytes(blob);
+	} else {
+		stream_safe = g_object_ref(stream);
+	}
+
+	/* success */
+	return g_steal_pointer(&stream_safe);
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
@@ -1370,7 +1311,7 @@ fu_dbus_daemon_method_set_approved_firmware(FuDbusDaemon *self,
 	g_variant_get(parameters, "(^as)", &checksums);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->flags = FU_FIRMWARE_PARSE_FLAG_NO_SEARCH;
@@ -1421,7 +1362,7 @@ fu_dbus_daemon_method_quit(FuDbusDaemon *self,
 	}
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -1463,7 +1404,7 @@ fu_dbus_daemon_method_self_sign(FuDbusDaemon *self,
 	}
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper->self = self;
 	helper->value = g_steal_pointer(&value);
 	helper->request = g_object_ref(request);
@@ -1585,7 +1526,7 @@ fu_dbus_daemon_method_get_remotes(FuDbusDaemon *self,
 	helper->self = self;
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  "org.freedesktop.fwupd.get-remotes",
@@ -1700,7 +1641,7 @@ fu_dbus_daemon_method_clear_results(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &device_id);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -1742,7 +1683,7 @@ fu_dbus_daemon_authorize_emulation_load_cb(GObject *source, GAsyncResult *res, g
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
 	/* get result */
@@ -1783,7 +1724,7 @@ fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
 
 	g_variant_get(parameters, "(h)", &fd_handle);
 
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -1839,7 +1780,7 @@ fu_dbus_daemon_method_emulation_save(FuDbusDaemon *self,
 
 	g_variant_get(parameters, "(h)", &fd_handle);
 
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -1938,7 +1879,7 @@ fu_dbus_daemon_method_modify_device(FuDbusDaemon *self,
 	helper->device_id = g_strdup(device_id);
 	helper->key = g_strdup(key);
 	helper->value = g_strdup(value);
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  action_id,
@@ -2049,7 +1990,7 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2082,7 +2023,7 @@ fu_dbus_daemon_method_unlock(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &device_id);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2109,7 +2050,7 @@ fu_dbus_daemon_method_activate(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &device_id);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2235,7 +2176,7 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 	helper->self = self;
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  action_id,
@@ -2265,7 +2206,7 @@ fu_dbus_daemon_method_clean_remote(FuDbusDaemon *self,
 	helper->self = self;
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  "org.freedesktop.fwupd.clean-remote",
@@ -2295,7 +2236,7 @@ fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 	helper->self = self;
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  "org.freedesktop.fwupd.verify-update",
@@ -2359,7 +2300,7 @@ fu_dbus_daemon_method_verify(FuDbusDaemon *self,
 	helper->self = self;
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
 				  "org.freedesktop.fwupd.verify",
@@ -2512,8 +2453,8 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 		if (g_strcmp0(prop_key, "install-flags") == 0) {
 			const guint64 allowed_mask =
 			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
-			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
-			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_NO_HISTORY |
+			    FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
 		}
 
@@ -2613,7 +2554,7 @@ fu_dbus_daemon_method_get_details(FuDbusDaemon *self,
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	gint32 fd_handle = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 
 	/* get parameters */
@@ -2667,7 +2608,7 @@ fu_dbus_daemon_method_get_bios_settings(FuDbusDaemon *self,
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 
 		/* authenticate */
-		fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0(FuMainAuthHelper, 1);
 		helper->self = self;
 		helper->request = g_object_ref(request);
@@ -2697,7 +2638,7 @@ fu_dbus_daemon_method_set_bios_settings(FuDbusDaemon *self,
 	g_variant_get(parameters, "(a{ss})", &iter);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2727,7 +2668,7 @@ fu_dbus_daemon_method_fix_host_security_attr(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &appstream_id);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2755,7 +2696,7 @@ fu_dbus_daemon_method_undo_host_security_attr(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &appstream_id);
 
 	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
 	helper->request = g_object_ref(request);
@@ -2931,14 +2872,16 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_boolean(FALSE);
 
 	if (g_strcmp0(property_name, "Status") == 0)
-		return g_variant_new_uint32(self->status);
+		return g_variant_new_uint32(fu_daemon_get_status(FU_DAEMON(self)));
 
-	if (g_strcmp0(property_name, "Percentage") == 0)
+	if (g_strcmp0(property_name, "Percentage") == 0) {
+		gdouble percentage = fu_daemon_get_percentage(FU_DAEMON(self));
 		return g_variant_new_uint32(
-		    fwupd_percentage_is_valid(self->percentage) ? (guint32)self->percentage : 0);
+		    fwupd_percentage_is_valid(percentage) ? (guint32)percentage : 0);
+	}
 
 	if (g_strcmp0(property_name, "PercentageFull") == 0)
-		return g_variant_new_double(self->percentage);
+		return g_variant_new_double(fu_daemon_get_percentage(FU_DAEMON(self)));
 
 	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0)
 		return g_variant_new_uint32(fu_context_get_battery_level(ctx));
@@ -3282,11 +3225,43 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 }
 
 static void
+fu_dbus_daemon_status_notify_cb(FuDaemon *daemon, GParamSpec *pspec, gpointer user_data)
+{
+	FuDbusDaemon *self = FU_DBUS_DAEMON(daemon);
+	FwupdStatus status = fu_daemon_get_status(daemon);
+	g_debug("emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
+	fu_dbus_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
+}
+
+static void
+fu_dbus_daemon_percentage_notify_cb(FuDaemon *daemon, GParamSpec *pspec, gpointer user_data)
+{
+	FuDbusDaemon *self = FU_DBUS_DAEMON(daemon);
+	gdouble percentage = fu_daemon_get_percentage(daemon);
+
+	g_debug("emitting PropertyChanged('Percentage'='%.1f%%')", percentage);
+	fu_dbus_daemon_emit_property_changed(
+	    self,
+	    "Percentage",
+	    g_variant_new_uint32(fwupd_percentage_is_valid(percentage) ? (guint32)percentage : 0));
+	fu_dbus_daemon_emit_property_changed(self,
+					     "PercentageFull",
+					     g_variant_new_double(percentage));
+}
+
+static void
 fu_dbus_daemon_init(FuDbusDaemon *self)
 {
-	self->status = FWUPD_STATUS_IDLE;
 	self->system_inhibits =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_dbus_daemon_system_inhibit_free);
+	g_signal_connect(FU_DAEMON(self),
+			 "notify::status",
+			 G_CALLBACK(fu_dbus_daemon_status_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DAEMON(self),
+			 "notify::percentage",
+			 G_CALLBACK(fu_dbus_daemon_percentage_notify_cb),
+			 NULL);
 }
 
 static void
@@ -3295,8 +3270,6 @@ fu_dbus_daemon_finalize(GObject *obj)
 	FuDbusDaemon *self = FU_DBUS_DAEMON(obj);
 
 	g_ptr_array_unref(self->system_inhibits);
-	if (self->set_status_id != 0)
-		g_source_remove(self->set_status_id);
 	if (self->client_list != NULL)
 		g_object_unref(self->client_list);
 	if (self->owner_id > 0)

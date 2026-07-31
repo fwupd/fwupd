@@ -391,7 +391,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 {
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
 	g_autofree gchar *old_firmware_version = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* for troubleshooting purpose */

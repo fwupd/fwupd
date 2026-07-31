@@ -234,7 +234,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) blocks = NULL;
 
@@ -302,7 +302,10 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		chunks = fu_chunk_array_new_from_bytes(chk_blob,
 						       fu_chunk_get_address(chk2),
 						       FU_CHUNK_PAGESZ_NONE,
-						       FU_EP963_TRANSFER_CHUNK_SIZE);
+						       FU_EP963_TRANSFER_CHUNK_SIZE,
+						       error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GError) error_loop = NULL;

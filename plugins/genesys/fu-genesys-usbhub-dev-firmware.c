@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuGenesysUsbhubDevFirmware, fu_genesys_usbhub_dev_firmware, FU_TYP
 
 static gboolean
 fu_genesys_usbhub_dev_firmware_validate(FuFirmware *firmware,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					GError **error)
 {
@@ -28,12 +28,12 @@ fu_genesys_usbhub_dev_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	gsize code_size = 0;
-	g_autoptr(GInputStream) stream_trunc = NULL;
+	g_autoptr(FuInputStream) stream_trunc = NULL;
 
 	fu_firmware_set_id(firmware, fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_DEV_BRIDGE));
 	fu_firmware_set_idx(firmware, FU_GENESYS_FW_TYPE_DEV_BRIDGE);

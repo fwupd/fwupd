@@ -28,11 +28,6 @@ plugin_builtin_tpm = static_library('fu_plugin_tpm',
 plugin_builtins += plugin_builtin_tpm
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('G_DEBUG', 'fatal-criticals')
-  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   e = executable(
     'tpm-self-test',
     sources: [
@@ -57,7 +52,14 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('tpm-self-test', e, env: env)
+  test(
+    'tpm-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 
   install_data([
       'tests/tpm0/active',

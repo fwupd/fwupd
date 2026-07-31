@@ -22,7 +22,7 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* only Intel */

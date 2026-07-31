@@ -68,12 +68,27 @@ enum FuPixartTpRegSys6 {
 // user bank 0 (part id + crc registers)
 #[repr(u8)]
 enum FuPixartTpRegUser0 {
-    BootStaus  = 0x00,
-    RunMode    = 0x16,
-    ProxyMode  = 0x56,
-    CrcCtrl    = 0x82,
-    CrcResult  = 0x84,
+    BootStaus       = 0x00,
+    InternalVersion = 0x02,
+    RunMode         = 0x16,
+    ProxyMode       = 0x56,
+    CrcCtrl         = 0x82,
+    CrcResult       = 0x84,
 }
+
+// user bank 0 HID version address (PJP360)
+#[repr(u8)]
+enum FuPixartTpRegUser0HidVersionPjp360 {
+    MajorOne    = 0x7E,
+    Other       = 0x80,
+}
+
+// PJP360 major version values
+#[repr(u8)]
+enum FuPixartTpVersionMajorPjp360 {
+    One = 1,
+}
+
 // ------------------- Register Definition (PLP239) -----------------// 
 // system bank 0 for PLP239
 #[repr(u8)]
@@ -192,7 +207,8 @@ enum FuPixartTpFlashExecState {
 // 0x00: BootStaus
 #[repr(u8)]
 enum FuPixartTpBootStatus{
-    Rom = 0x8c,
+    Rom         = 0x8c,
+    Flashless   = 0x9c,
 }
 
 // 0x16: RunMode
@@ -207,6 +223,10 @@ enum FuPixartTpRunMode {
 enum FuPixartTpPartId {
     Plp239 = 0x0239,
     Pjp274 = 0x0274,
+    Pjp360 = 0x0360,
+}
+
+// 0x84: CrcResult
 }
 
 // 0x82: CrcCtrl
@@ -551,4 +571,12 @@ struct FuStructPixartTpFirmwareSectionHdr {
     section_crc:         u32le,
     shared:              [u8; 12],
     extname:             [char; 34],
+}
+
+// PJP360 ROM Code version format: bits 0-11 = minor, bits 12-15 = major
+#[derive(Parse, Getters)]
+#[repr(C, packed)]
+struct FuStructPixartTpPjp360RomCodeVersion {
+    minor: u12le,
+    major: u4le,
 }

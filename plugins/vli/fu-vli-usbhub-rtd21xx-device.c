@@ -288,7 +288,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	guint8 project_id_count;
 	guint8 read_buf[10] = {0};
 	guint8 write_buf[ISP_PACKET_SIZE] = {0};
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

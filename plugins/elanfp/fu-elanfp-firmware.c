@@ -40,7 +40,7 @@ fu_elanfp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_elanfp_firmware_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -49,7 +49,7 @@ fu_elanfp_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_elanfp_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -72,7 +72,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		guint32 length = 0;
 		guint32 fwtype = 0;
 		g_autoptr(FuFirmware) img = NULL;
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		/* type, reserved, start-addr, len */
 		if (!fu_input_stream_read_u32(stream,

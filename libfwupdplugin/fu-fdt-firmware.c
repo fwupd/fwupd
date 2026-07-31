@@ -283,7 +283,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 
 static gboolean
 fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize offset,
 				 GError **error)
 {
@@ -319,14 +319,14 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 }
 
 static gboolean
-fu_fdt_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_fdt_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_fdt_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_fdt_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

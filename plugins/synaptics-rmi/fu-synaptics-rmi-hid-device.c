@@ -476,6 +476,7 @@ static gboolean
 fu_synaptics_rmi_hid_device_disable_sleep(FuSynapticsRmiDevice *rmi_device, GError **error)
 {
 	FuSynapticsRmiFunction *f01;
+	guint8 f01_control = 0;
 	g_autoptr(GByteArray) f01_control0 = NULL;
 
 	f01 = fu_synaptics_rmi_device_get_function(rmi_device, 0x34, error);
@@ -486,9 +487,11 @@ fu_synaptics_rmi_hid_device_disable_sleep(FuSynapticsRmiDevice *rmi_device, GErr
 		g_prefix_error_literal(error, "failed to write get f01_control0: ");
 		return FALSE;
 	}
-	f01_control0->data[0] |= RMI_F01_CRTL0_NOSLEEP_BIT;
-	f01_control0->data[0] =
-	    (f01_control0->data[0] & ~RMI_F01_CTRL0_SLEEP_MODE_MASK) | RMI_SLEEP_MODE_NORMAL;
+	if (!fu_memread_uint8_safe(f01_control0->data, f01_control0->len, 0x0, &f01_control, error))
+		return FALSE;
+	f01_control |= RMI_F01_CRTL0_NOSLEEP_BIT;
+	f01_control = (f01_control & ~RMI_F01_CTRL0_SLEEP_MODE_MASK) | RMI_SLEEP_MODE_NORMAL;
+	f01_control0->data[0] = f01_control;
 	if (!fu_synaptics_rmi_device_write(rmi_device,
 					   f01->control_base,
 					   f01_control0,

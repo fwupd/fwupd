@@ -26,7 +26,7 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidBootloader,
 static gboolean
 fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *self,
 					       FuLenovoAccessoryDfuFileType file_type,
-					       GInputStream *stream,
+					       FuInputStream *stream,
 					       FuProgress *progress,
 					       GError **error)
 {
@@ -155,7 +155,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 {
 	gsize fw_size = 0;
 	guint32 file_crc = 0xFFFFFFFF;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

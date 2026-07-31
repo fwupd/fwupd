@@ -87,7 +87,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_igsc_aux_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -145,7 +145,7 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 {
 	FuDevice *proxy;
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* get image */
 	fw_info =

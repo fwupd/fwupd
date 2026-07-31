@@ -190,11 +190,147 @@ fu_security_attrs_hsi_func(void)
 	g_clear_object(&attr);
 }
 
+static void
+fu_security_attrs_test_add_attr(FuSecurityAttrs *attrs,
+				const gchar *appstream_id,
+				const gchar *plugin,
+				FwupdSecurityAttrResult result,
+				gboolean success)
+{
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(appstream_id);
+
+	fwupd_security_attr_set_plugin(attr, plugin);
+	fwupd_security_attr_set_result(attr, result);
+	if (success)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr);
+}
+
+static void
+fu_security_attrs_hsi_suspend_to_ram_func(void)
+{
+	/* suspend-to-ram with encrypted RAM replaces s2idle */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_s2idle = NULL;
+		g_autoptr(FwupdSecurityAttr) attr_s3 = NULL;
+
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+						"acpi-facp",
+						FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						TRUE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+						"linux-sleep",
+						FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						FALSE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
+						"msr",
+						FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED,
+						TRUE);
+		attr_s2idle =
+		    fu_security_attrs_get_by_appstream_id(attrs,
+							  FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+							  NULL);
+		attr_s3 =
+		    fu_security_attrs_get_by_appstream_id(attrs,
+							  FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+							  NULL);
+		g_assert_nonnull(attr_s2idle);
+		g_assert_nonnull(attr_s3);
+		fwupd_security_attr_add_flag(attr_s3, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fwupd_security_attr_add_flag(attr_s3, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attrs_depsolve(attrs);
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_s3, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_s3,
+						 FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_s3,
+						 FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_s2idle, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* RAM must be encrypted */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_s2idle = NULL;
+		g_autoptr(FwupdSecurityAttr) attr_s3 = NULL;
+
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+						"acpi-facp",
+						FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						TRUE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+						"linux-sleep",
+						FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						FALSE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
+						"msr",
+						FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED,
+						FALSE);
+		attr_s2idle =
+		    fu_security_attrs_get_by_appstream_id(attrs,
+							  FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+							  NULL);
+		attr_s3 =
+		    fu_security_attrs_get_by_appstream_id(attrs,
+							  FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+							  NULL);
+		g_assert_nonnull(attr_s2idle);
+		g_assert_nonnull(attr_s3);
+		fu_security_attrs_depsolve(attrs);
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_s3, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_s2idle, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* encrypted RAM still requires suspend-to-ram to be configured */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_s2idle = NULL;
+
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+						"acpi-facp",
+						FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						TRUE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+						"linux-sleep",
+						FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+						TRUE);
+		fu_security_attrs_test_add_attr(attrs,
+						FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
+						"msr",
+						FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED,
+						TRUE);
+		attr_s2idle =
+		    fu_security_attrs_get_by_appstream_id(attrs,
+							  FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+							  NULL);
+		g_assert_nonnull(attr_s2idle);
+		fu_security_attrs_depsolve(attrs);
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_s2idle, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/security-attrs", fu_security_attrs_func);
 	g_test_add_func("/fwupd/security-attrs/hsi", fu_security_attrs_hsi_func);
+	g_test_add_func("/fwupd/security-attrs/hsi-suspend-to-ram",
+			fu_security_attrs_hsi_suspend_to_ram_func);
 	return g_test_run();
 }

@@ -1,0 +1,78 @@
+# Maps vendor-specific BIOS setting IDs to a registered fwupd AppStream ID.
+#
+# The hardware group key is the BIOS setting ID as constructed by fwupd, i.e.
+# `com.<driver>.<Name>`, and points at an abstract `org.fwupd.bios.*` ID. The
+# name and icon for each abstract ID are defined in fu-bios-settings.c so the
+# name can be marked for translation.
+#
+# The group key is automatically converted to a GUID on load.
+
+# Secure Boot
+[com.dell-wmi-sysman.SecureBoot]
+AppstreamId = org.fwupd.bios.secure-boot
+[com.thinklmi.SecureBoot]
+AppstreamId = org.fwupd.bios.secure-boot
+
+# Firmware update opt-in (BIOS updates delivered via LVFS or the OS)
+[com.dell-wmi-sysman.CapsuleFirmwareUpdate]
+AppstreamId = org.fwupd.bios.firmware-update-opt-in
+[com.thinklmi.WindowsUEFIFirmwareUpdate]
+AppstreamId = org.fwupd.bios.firmware-update-opt-in
+
+# Wake on LAN
+[com.dell-wmi-sysman.WakeOnLan]
+AppstreamId = org.fwupd.bios.wake-on-lan
+[com.thinklmi.WakeonLAN]
+AppstreamId = org.fwupd.bios.wake-on-lan
+
+# Boot-up Num Lock state
+[com.dell-wmi-sysman.NumLock]
+AppstreamId = org.fwupd.bios.num-lock
+[com.thinklmi.BootUpNumLockStatus]
+AppstreamId = org.fwupd.bios.num-lock
+
+# Memory encryption
+[com.thinklmi.AMDMemoryGuard]
+AppstreamId = org.fwupd.bios.memory-encryption
+
+# Video memory (UMA / dedicated graphics memory allocation)
+[com.hp-bioscfg.Dedicated_Graphics_Memory]
+AppstreamId = org.fwupd.bios.video-memory
+
+# Camera
+[com.dell-wmi-sysman.Camera]
+AppstreamId = org.fwupd.bios.camera.enabled
+
+# Microphone
+[com.dell-wmi-sysman.Microphone]
+AppstreamId = org.fwupd.bios.microphone.enabled
+
+# Bluetooth
+[com.dell-wmi-sysman.BluetoothDevice]
+AppstreamId = org.fwupd.bios.bluetooth.enabled
+
+# Wireless LAN
+[com.dell-wmi-sysman.WirelessLan]
+AppstreamId = org.fwupd.bios.wireless-lan.enabled
+
+# Fingerprint reader
+[com.dell-wmi-sysman.FingerprintReader]
+AppstreamId = org.fwupd.bios.fingerprint-reader.enabled
+
+# Touchscreen
+[com.dell-wmi-sysman.Touchscreen]
+AppstreamId = org.fwupd.bios.touchscreen.enabled
+
+# Integrated audio
+[com.dell-wmi-sysman.IntegratedAudio]
+AppstreamId = org.fwupd.bios.audio.enabled
+
+# Media/SD card reader
+[com.dell-wmi-sysman.SdCard]
+AppstreamId = org.fwupd.bios.media-card-reader.enabled
+[com.thinklmi.MediaCardReader]
+AppstreamId = org.fwupd.bios.media-card-reader.enabled
+
+# Keyboard backlight / illumination
+[com.dell-wmi-sysman.KeyboardIllumination]
+AppstreamId = org.fwupd.bios.keyboard-backlight.enabled

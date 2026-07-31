@@ -171,7 +171,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 	g_autoptr(FuIOChannel) io_payload = NULL;
 	g_autoptr(FuStructIntelCvsWrite) st_write = fu_struct_intel_cvs_write_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);

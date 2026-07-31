@@ -8,7 +8,7 @@ set -eux
 dnf remove -y gnutls-devel
 
 root=$(pwd)
-export BUILD=${root}/build
+export BUILD="${root}/build"
 
 rm -rf "$BUILD"
 meson "$BUILD" \

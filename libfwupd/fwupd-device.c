@@ -448,6 +448,40 @@ fwupd_device_get_id(FwupdDevice *self)
 }
 
 /**
+ * fwupd_device_get_id_display:
+ * @self: a #FuDevice
+ *
+ * Gets the device ID suffixed with the display name if set.
+ *
+ * Returns: a string value, or %NULL if invalid.
+ *
+ * Since: 2.1.7
+ **/
+gchar *
+fwupd_device_get_id_display(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+
+	if (priv->id != NULL)
+		g_string_append(str, priv->id);
+	if (priv->name != NULL) {
+		if (str->len > 0)
+			g_string_append(str, " ");
+		g_string_append_printf(str, "[%s]", priv->name);
+	} else if (priv->plugin != NULL) {
+		if (str->len > 0)
+			g_string_append(str, " ");
+		g_string_append_printf(str, "{%s}", priv->plugin);
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/**
  * fwupd_device_set_id:
  * @self: a #FwupdDevice
  * @id: (nullable): the device ID, usually a SHA1 hash

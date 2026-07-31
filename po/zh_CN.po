@@ -18,8 +18,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-06-26 16:01+0000\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
+"PO-Revision-Date: 2026-07-29 19:02+0000\n"
 "Last-Translator: Hosted Weblate user 54392 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -60,6 +60,51 @@ msgstr "启用"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "已启用"
+
+msgid "Secure Boot"
+msgstr "安全启动"
+
+msgid "Firmware Update Opt-in"
+msgstr "固件更新手动加入"
+
+msgid "Wake on LAN"
+msgstr "局域网唤醒"
+
+msgid "Num Lock"
+msgstr "数字锁定键"
+
+msgid "Memory Encryption"
+msgstr "内存加密"
+
+msgid "Video Memory"
+msgstr "视频内存"
+
+msgid "Camera"
+msgstr "相机"
+
+msgid "Microphone"
+msgstr "麦克风"
+
+msgid "Bluetooth"
+msgstr "蓝牙"
+
+msgid "Wireless LAN"
+msgstr "无线局域网"
+
+msgid "Fingerprint Reader"
+msgstr "指纹读取器"
+
+msgid "Touchscreen"
+msgstr "触摸屏"
+
+msgid "Audio"
+msgstr "音频"
+
+msgid "Media Card Reader"
+msgstr "多媒体卡读取器"
+
+msgid "Keyboard Backlight"
+msgstr "键盘背光"
 
 msgid "Stop the fwupd service"
 msgstr "停止 fwupd 服务"
@@ -557,6 +602,14 @@ msgstr "SPI BIOS 区域"
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS 描述符"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr "锁定的 MTD"
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr "硬件磁盘加密"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "预启动 DMA 保护"
@@ -792,6 +845,10 @@ msgstr "固件 BIOS 区域"
 msgid "Firmware BIOS Descriptor"
 msgstr "固件 BIOS 描述符"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr "硬件磁盘加密"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "启动前 DMA 保护"
@@ -970,6 +1027,14 @@ msgstr "固件 BIOS 区域保护设备固件内存免遭篡改。"
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "固件 BIOS 描述符保护设备固件内存免遭篡改。"
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr "锁定的 MTD 防止设备固件在设备启动后被更改。"
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr "硬件磁盘加密意味着有物理访问权限的攻击者无法从已移除的 NVMe 驱动器中读取数据。"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1244,22 +1309,6 @@ msgstr "成功启用了测试设备"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "正在激活固件更新"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "已添加设备："
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "已移除设备："
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "已更改设备："
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "已变更"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1581,10 +1630,6 @@ msgstr "HWIDS文件"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "保存允许生成硬件 ID 的文件"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "监视守护程序里的事件"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2360,6 +2405,22 @@ msgstr "输入远端 \"%s\" 的令牌"
 msgid "Remote enabled and refreshed successfully"
 msgstr "成功启用并刷新了远端"
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "已添加设备："
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "已移除设备："
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "已更改设备："
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "已变更"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "设置短暂错误的下载重试次数"
@@ -2540,6 +2601,10 @@ msgstr "设置一个或多个 BIOS 设置"
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "上传可更新列表到远程服务器"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "监视守护程序里的事件"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "此工具允许管理员查询和控制 fwupd daemon，让其执行如安装或者降级固件等操作。"
@@ -2593,6 +2658,14 @@ msgstr "当前值"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr "AppStream ID"
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr "图标"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

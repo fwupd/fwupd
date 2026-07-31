@@ -16,6 +16,16 @@ ENDC = "\033[0m"
 # Minimum version of markdown required
 MINIMUM_MARKDOWN = (3, 2, 0)
 
+# translate debian architecture names (similar to docker/golang names) to the naming in
+# the dependencies file, which is closer to gcc/fedora naming.
+ARCH_TO_DEPS_MAP = {
+    "amd64": "x86_64",
+    "arm": "armhf",
+    "arm64": "aarch64",
+    "i386": "i386",
+    "s390x": "s390x",
+}
+
 
 def get_possible_profiles():
     return [
@@ -65,10 +75,15 @@ def detect_profile():
 def pip_install_package(debug, name):
     import subprocess
 
+    env = os.environ.copy()
+    env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
     cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
     if debug:
         print(cmd)
-    subprocess.call(cmd)
+    rc = subprocess.call(cmd, env=env)
+    if rc != 0:
+        print(f"ERROR: Failed to install {name}")
+        sys.exit(1)
 
 
 def test_jinja2(debug):
@@ -102,12 +117,32 @@ def get_minimum_meson_version():
                 return re.search(r"(\d+\.\d+\.\d+)", line).group(1)
 
 
+def _version_tuple(ver):
+    """Convert a meson version string to a comparable tuple.
+
+    Meson versions follow x.y.z but for rcs we have
+    meson --version as x.y.z.rcN but importlib.metadata
+    returns x.y.zrcN (no dot before rc, see PEP440).
+
+    Returns (major, minor, micro, N, rc) where N is
+    -1 for rcs and 0 otherwise so we sort correctly.
+    """
+    import re
+
+    m = re.match(r"^(\d+)\.(\d+)\.(\d+)(?:[.]?rc(\d+))?$", ver)
+    assert m, f"Unknown meson version format: '{ver}'"
+    major, minor, micro = int(m[1]), int(m[2]), int(m[3])
+    if m[4] is not None:
+        return (major, minor, micro, -1, int(m[4]))
+    return (major, minor, micro, 0, 0)
+
+
 def test_meson(debug):
     from importlib.metadata import version, PackageNotFoundError
 
     minimum = get_minimum_meson_version()
     try:
-        new_enough = version("meson") >= minimum
+        new_enough = _version_tuple(version("meson")) >= _version_tuple(minimum)
     except PackageNotFoundError:
         import subprocess
 
@@ -115,7 +150,7 @@ def test_meson(debug):
             ver = (
                 subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
             )
-            new_enough = ver >= minimum
+            new_enough = _version_tuple(ver) >= _version_tuple(minimum)
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
@@ -164,7 +199,10 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     control = f" [{inclusive}{exclusive}]"
 
             if cross and distro.findall("multi-arch"):
-                arch_suffix = f":{variant}"
+                deb_arch = {v: k for k, v in ARCH_TO_DEPS_MAP.items()}.get(
+                    variant, variant
+                )
+                arch_suffix = f":{deb_arch}"
             elif distro.findall("native"):
                 arch_suffix = ":native"
             else:
@@ -212,8 +250,8 @@ def _validate_deps(profile: str, deps):
     return validated
 
 
-def get_build_dependencies(profile: str, variant: str):
-    parsed, build_indep = parse_dependencies(profile, variant, False)
+def get_build_dependencies(profile: str, variant: str, cross: bool = False):
+    parsed, build_indep = parse_dependencies(profile, variant, False, cross)
     return _validate_deps(profile, parsed + build_indep)
 
 
@@ -239,13 +277,20 @@ def _get_installer_cmd(profile: str, yes: bool):
     return installer
 
 
-def install_packages(profile: str, variant: str, yes: bool, debugging: bool, packages):
+def install_packages(
+    profile: str,
+    variant: str,
+    yes: bool,
+    debugging: bool,
+    packages,
+    cross: bool = False,
+):
     import subprocess
 
     if profile == "nixos":
         return
     if packages == "build-dependencies":
-        packages = get_build_dependencies(profile, variant)
+        packages = get_build_dependencies(profile, variant, cross)
     installer = _get_installer_cmd(profile, yes)
     installer += packages
     if debugging:
@@ -290,6 +335,11 @@ if __name__ == "__main__":
         "-v", "--variant", help="optional machine variant for the OS profile"
     )
     parser.add_argument(
+        "--cross",
+        action="store_true",
+        help="indicate that variant describes a cross build target",
+    )
+    parser.add_argument(
         "-y", "--yes", action="store_true", help="Don't prompt to install"
     )
     parser.add_argument(
@@ -303,6 +353,8 @@ if __name__ == "__main__":
     if not command:
         command = args.command
 
+    args.variant = ARCH_TO_DEPS_MAP.get(args.variant, args.variant)
+
     # command to run
     if command == "test-markdown":
         test_markdown(args.debug)
@@ -313,11 +365,16 @@ if __name__ == "__main__":
     elif command == "detect-profile":
         print(detect_profile())
     elif command == "get-dependencies":
-        dependencies = get_build_dependencies(args.os, args.variant)
+        dependencies = get_build_dependencies(args.os, args.variant, args.cross)
         print(*dependencies, sep="\n")
     elif command == "install-dependencies":
         install_packages(
-            args.os, args.variant, args.yes, args.debug, "build-dependencies"
+            args.os,
+            args.variant,
+            args.yes,
+            args.debug,
+            "build-dependencies",
+            args.cross,
         )
     elif command == "install-pip":
         if args.os == "darwin":

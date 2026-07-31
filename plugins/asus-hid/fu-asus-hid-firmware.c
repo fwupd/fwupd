@@ -32,14 +32,14 @@ fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_asus_hid_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
 	g_autoptr(FuStructAsusHidDesc) st = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	st = fu_struct_asus_hid_desc_parse_stream(stream, FGA_OFFSET, error);
 	if (st == NULL)

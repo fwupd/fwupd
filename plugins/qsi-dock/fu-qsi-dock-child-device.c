@@ -32,7 +32,7 @@ fu_qsi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 /* use the parents parser */
 static FuFirmware *
 fu_qsi_dock_child_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FuFirmwareParseFlags flags,
 					  GError **error)

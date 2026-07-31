@@ -87,7 +87,7 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_linear_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -100,7 +100,7 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = g_object_new(priv->image_gtype, NULL);
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
 		if (stream_tmp == NULL) {

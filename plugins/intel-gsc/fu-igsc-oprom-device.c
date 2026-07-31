@@ -118,14 +118,14 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuProgress *progress,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuDevice *proxy;
-	g_autoptr(GInputStream) stream_igsc = NULL;
+	g_autoptr(FuInputStream) stream_igsc = NULL;
 	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
 	g_autoptr(FuFirmware) firmware_oprom = NULL;
 	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
@@ -243,8 +243,8 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 	FuDevice *proxy;
 	g_autoptr(FuStructIgscFwuHeciImageMetadata) st_md = NULL;
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get image, with no padding bytes */
 	stream = fu_firmware_get_stream(firmware, error);

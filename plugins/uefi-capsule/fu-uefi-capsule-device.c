@@ -80,19 +80,8 @@ fu_uefi_capsule_device_to_string(FuDevice *device, guint idt, GString *str)
 	    "LastAttemptStatus",
 	    fu_uefi_capsule_device_status_to_string(priv->last_attempt_status));
 	fwupd_codec_string_append_hex(str, idt, "LastAttemptVersion", priv->last_attempt_version);
-	if (priv->esp != NULL) {
-		g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
-		g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
-		fwupd_codec_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
-		if (mount_point != NULL)
-			fwupd_codec_string_append(str, idt, "EspPath", mount_point);
-		if (kind != NULL) {
-			const gchar *guid = fu_volume_kind_convert_to_gpt(kind);
-			fwupd_codec_string_append(str, idt, "EspKind", kind);
-			if (g_strcmp0(kind, guid) != 0)
-				fwupd_codec_string_append(str, idt, "EspGuid", guid);
-		}
-	}
+	if (priv->esp != NULL)
+		fwupd_codec_add_string(FWUPD_CODEC(priv->esp), idt, str);
 	fwupd_codec_string_append_int(str,
 				      idt,
 				      "RequireESPFreeSpace",
@@ -798,7 +787,7 @@ fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
 
 static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)

@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-chunk-array.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
@@ -486,7 +487,7 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
 
 /**
  * fu_strsplit_stream:
- * @stream: a #GInputStream to split
+ * @stream: a #FuInputStream to split
  * @offset: offset into @stream
  * @delimiter: a string which specifies the places at which to split the string
  * @callback: (scope call) (closure user_data): a #FuStrsplitFunc.
@@ -504,7 +505,7 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
  * Since: 2.0.0
  */
 gboolean
-fu_strsplit_stream(GInputStream *stream,
+fu_strsplit_stream(FuInputStream *stream,
 		   gsize offset,
 		   const gchar *delimiter,
 		   FuStrsplitFunc callback,
@@ -513,7 +514,7 @@ fu_strsplit_stream(GInputStream *stream,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 	FuStrsplitHelper helper = {
 	    .callback = callback,
 	    .user_data = user_data,
@@ -521,7 +522,7 @@ fu_strsplit_stream(GInputStream *stream,
 	    .token_idx = 0,
 	};
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(delimiter != NULL && delimiter[0] != '\0', FALSE);
 	g_return_val_if_fail(callback != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);

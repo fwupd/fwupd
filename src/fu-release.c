@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-device-private.h"
+#include "fu-input-stream.h"
 #include "fu-release-common.h"
 #include "fu-release.h"
 
@@ -26,7 +27,7 @@ struct _FuRelease {
 	FuDevice *device;
 	FwupdRemote *remote;
 	FuConfig *config;
-	GInputStream *stream;
+	FuInputStream *stream;
 	gchar *update_request_id;
 	gchar *device_version_old;
 	gchar *firmware_basename;
@@ -198,7 +199,7 @@ fu_release_get_device(FuRelease *self)
  *
  * Returns: (transfer none) (nullable): data
  **/
-GInputStream *
+FuInputStream *
 fu_release_get_stream(FuRelease *self)
 {
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
@@ -207,10 +208,10 @@ fu_release_get_stream(FuRelease *self)
 
 /* private: for tests */
 void
-fu_release_set_stream(FuRelease *self, GInputStream *stream)
+fu_release_set_stream(FuRelease *self, FuInputStream *stream)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
-	g_return_if_fail(G_IS_INPUT_STREAM(stream));
+	g_return_if_fail(FU_IS_INPUT_STREAM(stream));
 	g_set_object(&self->stream, stream);
 }
 

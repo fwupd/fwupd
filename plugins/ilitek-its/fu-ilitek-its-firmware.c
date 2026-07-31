@@ -31,7 +31,7 @@ fu_ilitek_its_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 
 static gboolean
 fu_ilitek_its_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

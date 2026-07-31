@@ -1,46 +1,130 @@
-name: Continuous Integration
+name: CI
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 
 jobs:
+  pre-commit:
+    permissions:
+      contents: read
+    if: ${{ github.ref != 'refs/heads/main' }}
+    runs-on: ubuntu-24.04-arm
+    env:
+      SKIP: no-commit-to-branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pre-commit caching
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: pre-commit-${{ runner.os }}-
+      - name: Set up pre-commit
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq --yes --no-install-recommends \
+            clang-format \
+            git \
+            meson \
+            patch \
+            pre-commit \
+            shellcheck \
+            shfmt
+      - name: Run pre-commit hooks
+        run: pre-commit run -v --show-diff-on-failure --hook-stage commit --all-files
+
+  bsd:
+    permissions:
+      contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/bsd.yml
+
+  linux:
+    permissions:
+      contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/linux.yml
+    with:
+      publish: false
+    secrets: inherit
+
+  macos:
+    permissions:
+      contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/macos.yml
+
+  openbmc:
+    permissions:
+      contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/openbmc.yml
+
   snap:
     permissions:
       contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
     uses: ./.github/workflows/snap.yml
     with:
-      deploy: true
+      deploy: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
 
-  matrix:
-    uses: ./.github/workflows/matrix.yml
+  static-analysis:
+    permissions:
+      contents: read
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/static-analysis.yml
+
+  windows:
+    permissions:
+      contents: write
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/windows.yml
     with:
       publish: false
     secrets: inherit
 
   fuzzing:
     permissions:
-      actions: read # to fetch the artifacts (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
-      contents: read # to clone the repo (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
-
+      security-events: write
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - name: Build Fuzzers
         id: build
         uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
         with:
           oss-fuzz-project-name: "fwupd"
-          dry-run: false
+          output-sarif: true
       - name: Run Fuzzers
         uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
         with:
+          fuzz-seconds: 600
           oss-fuzz-project-name: "fwupd"
-          fuzz-seconds: 150
-          dry-run: false
+          output-sarif: true
       - name: Upload Crash
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure() && steps.build.outcome == 'success'
         with:
           name: artifacts
           path: ./out/artifacts
+      - name: Upload Sarif
+        if: always() && steps.build.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@e58424170fb0262c8d7ed60a2e84b9bffe205c67 # codeql-bundle-v2.26.1
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: cifuzz-sarif/results.sarif
+          checkout_path: cifuzz-sarif

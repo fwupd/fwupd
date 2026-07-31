@@ -212,7 +212,7 @@ fu_fit_firmware_verify_hash(FuFitFirmware *self,
 
 static gboolean
 fu_fit_firmware_verify_image(FuFitFirmware *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmware *img,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
@@ -290,7 +290,7 @@ fu_fit_firmware_verify_configuration(FuFitFirmware *self,
 
 static gboolean
 fu_fit_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

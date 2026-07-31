@@ -172,7 +172,6 @@ fu_cros_ec_firmware_init(FuCrosEcFirmware *self)
 	section = g_new0(FuCrosEcFirmwareSection, 1);
 	section->name = "RW";
 	g_ptr_array_add(self->sections, section);
-
 }
 
 static void

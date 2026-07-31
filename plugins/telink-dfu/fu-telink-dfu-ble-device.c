@@ -170,7 +170,10 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_TELINK_DFU_HID_DEVICE_START_ADDR,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STRUCT_TELINK_DFU_BLE_PKT_SIZE_PAYLOAD);
+					       FU_STRUCT_TELINK_DFU_BLE_PKT_SIZE_PAYLOAD,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_telink_dfu_ble_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),
@@ -198,7 +201,7 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);

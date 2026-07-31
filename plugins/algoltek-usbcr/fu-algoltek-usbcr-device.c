@@ -568,7 +568,7 @@ fu_algoltek_usbcr_device_write_firmware(FuDevice *device,
 {
 	FuAlgoltekUsbcrDevice *self = FU_ALGOLTEK_USBCR_DEVICE(device);
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

@@ -70,7 +70,7 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 
 static gboolean
 fu_efi_file_parse(FuFirmware *firmware,
-		  GInputStream *stream,
+		  FuInputStream *stream,
 		  FuFirmwareParseFlags flags,
 		  GError **error)
 {
@@ -79,7 +79,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	guint32 size = 0x0;
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(FuStructEfiFile) st = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse */
 	st = fu_struct_efi_file_parse_stream(stream, 0x0, error);

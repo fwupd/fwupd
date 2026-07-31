@@ -26,6 +26,8 @@ fwupd_bios_setting_finalize(GObject *object);
 typedef struct {
 	FwupdBiosSettingKind kind;
 	gchar *id;
+	gchar *appstream_id;
+	gchar *icon;
 	gchar *name;
 	gchar *description;
 	gchar *path;
@@ -91,6 +93,93 @@ fwupd_bios_setting_set_id(FwupdBiosSetting *self, const gchar *id)
 
 	g_free(priv->id);
 	priv->id = g_strdup(id);
+}
+
+/**
+ * fwupd_bios_setting_get_appstream_id
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the vendor-neutral fwupd AppStream identifier for this setting,
+ * e.g. `org.fwupd.bios.secure-boot`.
+ *
+ * This is a registered identifier documented by fwupd that allows software to
+ * treat the same conceptual setting consistently even though vendors name and
+ * value it differently.
+ *
+ * Returns: AppStream ID if set otherwise NULL
+ *
+ * Since: 2.1.7
+ **/
+const gchar *
+fwupd_bios_setting_get_appstream_id(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
+	return priv->appstream_id;
+}
+
+/**
+ * fwupd_bios_setting_set_appstream_id
+ * @self: a #FwupdBiosSetting
+ * @appstream_id: (nullable): the fwupd AppStream identifier
+ *
+ * Sets the vendor-neutral fwupd AppStream identifier for this setting.
+ *
+ * Since: 2.1.7
+ **/
+void
+fwupd_bios_setting_set_appstream_id(FwupdBiosSetting *self, const gchar *appstream_id)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->appstream_id, appstream_id) == 0)
+		return;
+
+	g_free(priv->appstream_id);
+	priv->appstream_id = g_strdup(appstream_id);
+}
+
+/**
+ * fwupd_bios_setting_get_icon
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the icon name for this setting, e.g. `application-certificate`.
+ *
+ * Returns: icon name if set otherwise NULL
+ *
+ * Since: 2.1.7
+ **/
+const gchar *
+fwupd_bios_setting_get_icon(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
+	return priv->icon;
+}
+
+/**
+ * fwupd_bios_setting_set_icon
+ * @self: a #FwupdBiosSetting
+ * @icon: (nullable): the icon name
+ *
+ * Sets the icon name for this setting.
+ *
+ * Since: 2.1.7
+ **/
+void
+fwupd_bios_setting_set_icon(FwupdBiosSetting *self, const gchar *icon)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->icon, icon) == 0)
+		return;
+
+	g_free(priv->icon);
+	priv->icon = g_strdup(icon);
 }
 
 /**
@@ -946,6 +1035,18 @@ fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwup
 				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				      g_variant_new_string(priv->id));
 	}
+	if (priv->appstream_id != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_APPSTREAM_ID,
+				      g_variant_new_string(priv->appstream_id));
+	}
+	if (priv->icon != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_SETTING_ICON,
+				      g_variant_new_string(priv->icon));
+	}
 	if (priv->name != NULL) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -1023,6 +1124,14 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 		fwupd_bios_setting_set_id(self, fwupd_variant_get_string(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
+		fwupd_bios_setting_set_appstream_id(self, fwupd_variant_get_string(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ICON) == 0) {
+		fwupd_bios_setting_set_icon(self, fwupd_variant_get_string(value));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
 		fwupd_bios_setting_set_name(self, fwupd_variant_get_string(value));
 		return;
@@ -1085,6 +1194,12 @@ fwupd_bios_setting_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErro
 	fwupd_bios_setting_set_id(
 	    self,
 	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, NULL));
+	fwupd_bios_setting_set_appstream_id(
+	    self,
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_APPSTREAM_ID, NULL));
+	fwupd_bios_setting_set_icon(
+	    self,
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ICON, NULL));
 
 	fwupd_bios_setting_set_name(
 	    self,
@@ -1161,6 +1276,15 @@ fwupd_bios_setting_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->path);
 	if (priv->id != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	if (priv->appstream_id != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_APPSTREAM_ID,
+					     priv->appstream_id);
+	}
+	if (priv->icon != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_ICON,
+					     priv->icon);
 	if (priv->current_value != NULL) {
 		fwupd_json_object_add_string(json_obj,
 					     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
@@ -1212,6 +1336,8 @@ fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_ICON, priv->icon);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_FILENAME, priv->path);
 	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
@@ -1293,6 +1419,8 @@ fwupd_bios_setting_finalize(GObject *object)
 
 	g_free(priv->current_value);
 	g_free(priv->id);
+	g_free(priv->appstream_id);
+	g_free(priv->icon);
 	g_free(priv->name);
 	g_free(priv->description);
 	g_free(priv->path);

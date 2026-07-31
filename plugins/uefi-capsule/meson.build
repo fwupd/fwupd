@@ -103,9 +103,6 @@ if get_option('plugin_uefi_capsule_splash')
 endif
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'uefi-self-test',
     rustgen.process('fu-uefi.rs'),
@@ -130,7 +127,14 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('uefi-self-test', e, env: env)
+  test(
+    'uefi-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 
 # to use these do `sudo systemctl edit fwupd.service` and set
 # Environment="FWUPD_SYSFSFWDIR=/usr/share/installed-tests/fwupd"

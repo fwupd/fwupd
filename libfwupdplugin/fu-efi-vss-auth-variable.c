@@ -15,6 +15,7 @@
 #include "fu-efi-struct.h"
 #include "fu-efi-vss-auth-variable.h"
 #include "fu-efivars.h"
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -97,7 +98,7 @@ fu_efi_vss_auth_variable_lookup_image_gtype(FuEfiVssAuthVariable *self)
 
 static gboolean
 fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -164,7 +165,7 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	img_gtype = fu_efi_vss_auth_variable_lookup_image_gtype(self);
 	if (img_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuFirmware) img = g_object_new(img_gtype, NULL);
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		partial_stream = fu_partial_input_stream_new(
 		    stream,
 		    offset,

@@ -447,8 +447,9 @@ fu_wacom_usb_device_write_checksum_table(FuWacomUsbDevice *self, GError **error)
 gboolean
 fu_wacom_usb_device_switch_to_flash_loader(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] =
-	    {[0] = FU_WACOM_USB_REPORT_ID_SWITCH_TO_FLASH_LOADER, [1] = 0x05, [2] = 0x6a};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_SWITCH_TO_FLASH_LOADER,
+			[1] = 0x05,
+			[2] = 0x6a};
 
 	/* hit hardware */
 	return fu_wacom_usb_device_set_feature_report(self,
@@ -568,7 +569,10 @@ fu_wacom_usb_device_write_firmware(FuDevice *device,
 		chunks = fu_chunk_array_new_from_bytes(blob_block,
 						       fd->start_addr,
 						       FU_CHUNK_PAGESZ_NONE,
-						       self->write_block_sz);
+						       self->write_block_sz,
+						       error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GBytes) blob_chunk = NULL;

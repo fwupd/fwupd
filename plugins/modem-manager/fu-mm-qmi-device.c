@@ -798,7 +798,7 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 	FuMmQmiDevice *self = FU_MM_QMI_DEVICE(device);
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) file_infos =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_qmi_device_file_info_free);
 	g_autoptr(GPtrArray) imgs = NULL;

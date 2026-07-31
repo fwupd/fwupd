@@ -262,7 +262,7 @@ fu_wacom_usb_firmware_tokenize_cb(GString *token,
 
 static gboolean
 fu_wacom_usb_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -271,7 +271,7 @@ fu_wacom_usb_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_wacom_usb_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

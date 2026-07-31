@@ -12,6 +12,172 @@
 #include <gio/gunixinputstream.h>
 #endif
 
+/* allow overrides for synchronous clients that are not using DBus */
+struct FwupdClientSyncImpl {
+	gboolean (*activate)(FwupdClient *self,
+			     const gchar *device_id,
+			     gpointer user_data,
+			     GCancellable *cancellable,
+			     GError **error);
+	gboolean (*connect)(FwupdClient *self,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
+	gboolean (*emulation_load)(FwupdClient *self,
+				   const gchar *filename,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error);
+	gboolean (*emulation_save)(FwupdClient *self,
+				   const gchar *filename,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error);
+	GPtrArray *(*get_bios_settings)(FwupdClient *self,
+					gpointer user_data,
+					GCancellable *cancellable,
+					GError **error);
+	GPtrArray *(*get_details)(FwupdClient *self,
+				  const gchar *filename,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	GPtrArray *(*get_devices)(FwupdClient *self,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	GPtrArray *(*get_devices_by_guid)(FwupdClient *self,
+					  const gchar *guid,
+					  gpointer user_data,
+					  GCancellable *cancellable,
+					  GError **error);
+	FwupdDevice *(*get_device_by_id)(FwupdClient *self,
+					 const gchar *device_id,
+					 gpointer user_data,
+					 GCancellable *cancellable,
+					 GError **error);
+	GPtrArray *(*get_history)(FwupdClient *self,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	GPtrArray *(*get_host_security_attrs)(FwupdClient *self,
+					      gpointer user_data,
+					      GCancellable *cancellable,
+					      GError **error);
+	GPtrArray *(*get_host_security_events)(FwupdClient *self,
+					       guint limit,
+					       gpointer user_data,
+					       GCancellable *cancellable,
+					       GError **error);
+	GPtrArray *(*get_releases)(FwupdClient *self,
+				   const gchar *device_id,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error);
+	FwupdDevice *(*get_results)(FwupdClient *self,
+				    const gchar *device_id,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+	GPtrArray *(*get_upgrades)(FwupdClient *self,
+				   const gchar *device_id,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error);
+	GPtrArray *(*get_plugins)(FwupdClient *self,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	GPtrArray *(*get_remotes)(FwupdClient *self,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	GHashTable *(*get_report_metadata)(FwupdClient *self,
+					   gpointer user_data,
+					   GCancellable *cancellable,
+					   GError **error);
+	FwupdRemote *(*get_remote_by_id)(FwupdClient *self,
+					 const gchar *remote_id,
+					 gpointer user_data,
+					 GCancellable *cancellable,
+					 GError **error);
+	gboolean (*install)(FwupdClient *self,
+			    const gchar *device_id,
+			    const gchar *filename,
+			    FwupdInstallFlags install_flags,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
+	gboolean (*install_release)(FwupdClient *self,
+				    FwupdDevice *device,
+				    FwupdRelease *release,
+				    FwupdInstallFlags install_flags,
+				    FwupdClientDownloadFlags download_flags,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+	gboolean (*modify_bios_setting)(FwupdClient *self,
+					GHashTable *settings,
+					gpointer user_data,
+					GCancellable *cancellable,
+					GError **error);
+	gboolean (*modify_config)(FwupdClient *self,
+				  const gchar *section,
+				  const gchar *key,
+				  const gchar *value,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	gboolean (*modify_remote)(FwupdClient *self,
+				  const gchar *remote_id,
+				  const gchar *key,
+				  const gchar *value,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	gboolean (*refresh_remote)(FwupdClient *self,
+				   FwupdRemote *remote,
+				   FwupdClientDownloadFlags download_flags,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error);
+	gboolean (*reset_config)(FwupdClient *self,
+				 const gchar *section,
+				 gpointer user_data,
+				 GCancellable *cancellable,
+				 GError **error);
+	GPtrArray *(*search)(FwupdClient *self,
+			     const gchar *token,
+			     gpointer user_data,
+			     GCancellable *cancellable,
+			     GError **error);
+	gboolean (*set_feature_flags)(FwupdClient *self,
+				      FwupdFeatureFlags feature_flags,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error);
+	gboolean (*update_metadata)(FwupdClient *self,
+				    const gchar *remote_id,
+				    const gchar *metadata_fn,
+				    const gchar *signature_fn,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+	gboolean (*verify)(FwupdClient *self,
+			   const gchar *device_id,
+			   gpointer user_data,
+			   GCancellable *cancellable,
+			   GError **error);
+	gboolean (*verify_update)(FwupdClient *self,
+				  const gchar *device_id,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+};
+
+const FwupdClientSyncImpl *
+fwupd_client_get_sync_impl(FwupdClient *self, gpointer *impl_userdata) G_GNUC_NON_NULL(1);
+
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
 				   GPtrArray *urls,

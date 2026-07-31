@@ -371,7 +371,7 @@ fu_firmware_new_from_gtypes_func(void)
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware3 = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
@@ -381,7 +381,7 @@ fu_firmware_new_from_gtypes_func(void)
 	fw = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fw);
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 
@@ -639,6 +639,29 @@ fu_firmware_efi_section_extended_size_func(void)
 	blob = g_bytes_new(buf->data, buf->len);
 	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
+static void
+fu_firmware_efi_section_guid_offset_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_efi_section_new();
+	g_autoptr(FuStructEfiSection) st = fu_struct_efi_section_new();
+	g_autoptr(FuStructEfiSectionGuidDefined) st_def = fu_struct_efi_section_guid_defined_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* the data offset cannot be larger than the declared section size */
+	fu_struct_efi_section_set_size(st, 0x18);
+	fu_struct_efi_section_set_type(st, FU_EFI_SECTION_TYPE_GUID_DEFINED);
+	fu_struct_efi_section_guid_defined_set_offset(st_def, 0x19);
+	fu_byte_array_append_array(st->buf, st_def->buf);
+
+	blob = g_bytes_new(st->buf->data, st->buf->len);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_cmpstr(error->message, ==, "invalid section offset 0x19, greater than size 0x18");
 	g_assert_false(ret);
 }
 
@@ -1225,6 +1248,8 @@ main(int argc, char **argv)
 			fu_firmware_ifwi_cpd_manifest_overflow_func);
 	g_test_add_func("/fwupd/firmware/efi-section-extended-size",
 			fu_firmware_efi_section_extended_size_func);
+	g_test_add_func("/fwupd/firmware/efi-section-guid-offset",
+			fu_firmware_efi_section_guid_offset_func);
 	g_test_add_func("/fwupd/firmware/ifwi-fpt", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware/oprom", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware/dfu", fu_firmware_dfu_func);

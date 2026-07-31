@@ -26,9 +26,6 @@ device_tests += files(
 if get_option('tests')
   install_data(['tests/ccgx-dmc.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'ccgx-dmc-self-test',
     rustgen.process('fu-ccgx-dmc.rs'),
@@ -49,5 +46,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('ccgx-dmc-self-test', e, env: env)
+  test(
+    'ccgx-dmc-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

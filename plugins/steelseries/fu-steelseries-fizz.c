@@ -138,7 +138,10 @@ fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STEELSERIES_BUFFER_TRANSFER_SIZE);
+					       FU_STEELSERIES_BUFFER_TRANSFER_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

@@ -23,10 +23,6 @@ enumeration_data += files('tests/samsung-ssd-870-evo-setup.json')
 device_tests += files('tests/samsung-ssd-870-evo.json')
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'ata-self-test',
     sources: [
@@ -46,5 +42,13 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('ata-self-test', e, env: env)  # added to installed-tests
+  test(
+    'ata-self-test',
+    e,
+    env: {
+      'FWUPD_DATADIR_QUIRKS': meson.current_source_dir(),
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif
