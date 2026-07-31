@@ -686,6 +686,7 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 static gboolean
 fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 {
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	int rcvbuf = FU_UDEV_BACKEND_SOCKET_RCV_SIZE;
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
@@ -730,7 +731,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	g_source_set_static_name(source, "netlink");
 	g_source_set_callback(source, (GSourceFunc)fu_udev_backend_netlink_cb, self, NULL);
 	g_source_set_can_recurse(source, TRUE);
-	g_source_attach(source, NULL);
+	g_source_attach(source, fu_context_get_main_context(ctx));
 
 	/* success */
 	return TRUE;
