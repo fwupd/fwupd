@@ -9,9 +9,27 @@
 import os
 import sys
 import argparse
+import logging
 
-WARNING = "\033[93m"
 ENDC = "\033[0m"
+LEVEL_COLORS = {
+    logging.DEBUG: "\033[94m",  # blue
+    logging.INFO: "\033[92m",  # green
+    logging.WARNING: "\033[93m",  # yellow
+    logging.ERROR: "\033[91m",  # red
+    logging.CRITICAL: "\033[91m",  # red
+}
+
+
+class _ColorFormatter(logging.Formatter):
+    def format(self, record):
+        message = super().format(record)
+        color = LEVEL_COLORS.get(record.levelno, "")
+        return f"{color}{record.levelname}:{ENDC} {message}"
+
+
+logger = logging.getLogger(__name__)
+
 
 # Minimum version of markdown required
 MINIMUM_MARKDOWN = (3, 2, 0)
@@ -72,29 +90,28 @@ def detect_profile():
     return ""
 
 
-def pip_install_package(debug, name):
+def pip_install_package(name):
     import subprocess
 
     env = os.environ.copy()
     env["PIP_BREAK_SYSTEM_PACKAGES"] = "1"
     cmd = ["python3", "-m", "pip", "install", "--upgrade", name]
-    if debug:
-        print(cmd)
+    logger.debug(cmd)
     rc = subprocess.call(cmd, env=env)
     if rc != 0:
-        print(f"ERROR: Failed to install {name}")
+        logger.error(f"Failed to install {name}")
         sys.exit(1)
 
 
-def test_jinja2(debug):
+def test_jinja2():
     try:
         import jinja2
     except ModuleNotFoundError:
-        print("python3-jinja2 must be installed/upgraded")
-        pip_install_package(debug, "jinja2")
+        logger.info("python3-jinja2 must be installed/upgraded")
+        pip_install_package("jinja2")
 
 
-def test_markdown(debug):
+def test_markdown():
     try:
         import markdown
 
@@ -102,8 +119,8 @@ def test_markdown(debug):
     except ModuleNotFoundError:
         new_enough = False
     if not new_enough:
-        print("python3-markdown must be installed/upgraded")
-        pip_install_package(debug, "markdown")
+        logger.info("python3-markdown must be installed/upgraded")
+        pip_install_package("markdown")
 
 
 def get_minimum_meson_version():
@@ -137,7 +154,7 @@ def _version_tuple(ver):
     return (major, minor, micro, 0, 0)
 
 
-def test_meson(debug):
+def test_meson():
     from importlib.metadata import version, PackageNotFoundError
 
     minimum = get_minimum_meson_version()
@@ -154,8 +171,8 @@ def test_meson(debug):
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
-        print("meson must be installed/upgraded")
-        pip_install_package(debug, "meson")
+        logger.info("meson must be installed/upgraded")
+        pip_install_package("meson")
 
 
 def parse_dependencies(OS, variant, add_control, cross: bool = False):
@@ -239,13 +256,11 @@ def _validate_deps(profile: str, deps):
             cache = cache.Cache()
             for pkg in deps:
                 if not cache.has_key(pkg) and not cache.is_virtual_package(pkg):
-                    print(
-                        f"{WARNING}WARNING:{ENDC} ignoring unavailable package %s" % pkg
-                    )
+                    logger.warning("ignoring unavailable package %s", pkg)
                     validated.remove(pkg)
         except ModuleNotFoundError:
-            print(
-                f"{WARNING}WARNING:{ENDC} Unable to validate package dependency list without python3-apt"
+            logger.warning(
+                "Unable to validate package dependency list without python3-apt"
             )
     return validated
 
@@ -267,10 +282,11 @@ def _get_installer_cmd(profile: str, yes: bool):
     elif profile == "freebsd":
         installer = ["pkg", "install"]
     else:
-        print("unable to detect OS profile, use --os= to specify")
-        print(f"\tsupported profiles: {get_possible_profiles()}")
+        logger.error("unable to detect OS profile, use --os= to specify")
+        logger.info(f"\tsupported profiles: {get_possible_profiles()}")
         sys.exit(1)
     if os.geteuid() != 0:
+        logger.info("Using sudo to install packages")
         installer.insert(0, "sudo")
     if yes:
         installer += ["-y"]
@@ -281,7 +297,6 @@ def install_packages(
     profile: str,
     variant: str,
     yes: bool,
-    debugging: bool,
     packages,
     cross: bool = False,
 ):
@@ -293,17 +308,19 @@ def install_packages(
         packages = get_build_dependencies(profile, variant, cross)
     installer = _get_installer_cmd(profile, yes)
     installer += packages
-    if debugging:
-        print(installer)
+    logger.debug(installer)
     try:
         subprocess.check_output(installer, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        print("ERROR: Failed to install packages:")
-        print(e.output.decode("utf-8"))
+        logger.error("Failed to install packages:")
+        logger.error(e.output.decode("utf-8"))
         sys.exit(1)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger().handlers[0].setFormatter(_ColorFormatter())
+
     command = None
     # compat mode for old training documentation
     if "generate_dependencies.py" in sys.argv[0]:
@@ -347,6 +364,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     # fall back in all cases
     if not args.variant:
         args.variant = os.uname().machine
@@ -357,11 +377,11 @@ if __name__ == "__main__":
 
     # command to run
     if command == "test-markdown":
-        test_markdown(args.debug)
+        test_markdown()
     elif command == "test-jinja2":
-        test_jinja2(args.debug)
+        test_jinja2()
     elif command == "test-meson":
-        test_meson(args.debug)
+        test_meson()
     elif command == "detect-profile":
         print(detect_profile())
     elif command == "get-dependencies":
@@ -372,16 +392,13 @@ if __name__ == "__main__":
             args.os,
             args.variant,
             args.yes,
-            args.debug,
             "build-dependencies",
             args.cross,
         )
     elif command == "install-pip":
         if args.os == "darwin":
-            install_packages(args.os, args.variant, args.yes, args.debug, ["python"])
+            install_packages(args.os, args.variant, args.yes, ["python"])
         elif args.os == "freebsd":
-            install_packages(args.os, args.variant, args.yes, args.debug, ["py312-pip"])
+            install_packages(args.os, args.variant, args.yes, ["py312-pip"])
         else:
-            install_packages(
-                args.os, args.variant, args.yes, args.debug, ["python3-pip"]
-            )
+            install_packages(args.os, args.variant, args.yes, ["python3-pip"])
