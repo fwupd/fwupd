@@ -164,10 +164,10 @@ fu_mm_mhi_firehose_device_cleanup(FuDevice *device,
 
 static FuFirmware *
 fu_mm_mhi_firehose_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
-				       FuProgress *progress,
-				       FuFirmwareParseFlags flags,
-				       GError **error)
+					   FuInputStream *stream,
+					   FuProgress *progress,
+					   FuFirmwareParseFlags flags,
+					   GError **error)
 {
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
