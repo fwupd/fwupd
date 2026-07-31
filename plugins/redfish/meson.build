@@ -28,6 +28,7 @@ plugin_builtin_redfish = static_library(
     'fu-redfish-multipart-device.c',
     'fu-redfish-network.c',
     'fu-redfish-network-device.c',
+    'fu-redfish-nvidia-device.c',
     'fu-redfish-request.c',
     'fu-redfish-smbios.c', # fuzzing
     ipmi_src,

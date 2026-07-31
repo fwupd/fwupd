@@ -949,6 +949,23 @@ fu_redfish_device_get_reset_post_delay(FuRedfishDevice *self)
 	return priv->reset_post_delay;
 }
 
+/**
+ * fu_redfish_device_get_json_obj_member:
+ * @self: a #FuRedfishDevice
+ *
+ * Returns the raw FirmwareInventory JSON member object passed to this device
+ * at construction time.  Subclasses may call this in their probe() override to
+ * read vendor-specific fields that the base probe() does not expose.
+ *
+ * Returns: (transfer none) (nullable): a #FwupdJsonObject, or %NULL.
+ */
+FwupdJsonObject *
+fu_redfish_device_get_json_obj_member(FuRedfishDevice *self)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->json_obj_member;
+}
+
 static gboolean
 fu_redfish_device_set_quirk_kv(FuDevice *device,
 			       const gchar *key,
