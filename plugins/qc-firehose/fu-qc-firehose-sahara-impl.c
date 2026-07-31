@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-qc-firehose-firmware.h"
+#include "fu-qc-firehose-sahara-firmware.h"
 #include "fu-qc-firehose-sahara-impl.h"
 #include "fu-qc-firehose-struct.h"
 
@@ -133,7 +133,7 @@ fu_qc_firehose_sahara_impl_read64(FuQcFirehoseSaharaImpl *self,
 static gboolean
 fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self,
 			       GByteArray *buf,
-			       FuQcFirehoseFirmware *firmware,
+			       FuQcFirehoseSaharaFirmware *firmware,
 			       GError **error)
 {
 	FuQcFirehoseSaharaStatus status;
@@ -155,7 +155,7 @@ fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self,
 		return FALSE;
 	}
 
-	fu_qc_firehose_firmware_set_image_id(
+	fu_qc_firehose_sahara_firmware_set_image_id(
 	    firmware,
 	    fu_qc_firehose_sahara_pkt_end_of_image_get_image_id(st));
 	return fu_qc_firehose_sahara_impl_write(self, st_resp->buf->data, st_resp->buf->len, error);
@@ -164,7 +164,7 @@ fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self,
 static gboolean
 fu_qc_firehose_sahara_impl_done(FuQcFirehoseSaharaImpl *self,
 				GByteArray *buf,
-				FuQcFirehoseFirmware *firmware,
+				FuQcFirehoseSaharaFirmware *firmware,
 				GError **error)
 {
 	FuQcFirehoseSaharaImageTxStatus status;
@@ -179,7 +179,7 @@ fu_qc_firehose_sahara_impl_done(FuQcFirehoseSaharaImpl *self,
 	if (status == FU_QC_FIREHOSE_SAHARA_IMAGE_TX_STATUS_COMPLETE)
 		return TRUE;
 	if (status == FU_QC_FIREHOSE_SAHARA_IMAGE_TX_STATUS_PENDING &&
-	    fu_qc_firehose_firmware_allows_pending_image(firmware))
+	    fu_qc_firehose_sahara_firmware_allows_pending_image(firmware))
 		return TRUE;
 
 	g_set_error(error,
@@ -248,17 +248,19 @@ fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_END_OF_IMAGE:
-			if (!fu_qc_firehose_sahara_impl_eoi(self,
-							    buf,
-							    FU_QC_FIREHOSE_FIRMWARE(firmware),
-							    error))
+			if (!fu_qc_firehose_sahara_impl_eoi(
+				self,
+				buf,
+				FU_QC_FIREHOSE_SAHARA_FIRMWARE(firmware),
+				error))
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_DONE_RESPONSE:
-			if (!fu_qc_firehose_sahara_impl_done(self,
-							     buf,
-							     FU_QC_FIREHOSE_FIRMWARE(firmware),
-							     error))
+			if (!fu_qc_firehose_sahara_impl_done(
+				self,
+				buf,
+				FU_QC_FIREHOSE_SAHARA_FIRMWARE(firmware),
+				error))
 				return FALSE;
 			done = TRUE;
 			break;

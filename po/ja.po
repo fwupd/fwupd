@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"POT-Creation-Date: 2026-07-22 16:58+0100\n"
 "PO-Revision-Date: 2026-03-18 00:09+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
@@ -58,6 +58,51 @@ msgstr "有効"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "有効"
+
+msgid "Secure Boot"
+msgstr ""
+
+msgid "Firmware Update Opt-in"
+msgstr ""
+
+msgid "Wake on LAN"
+msgstr ""
+
+msgid "Num Lock"
+msgstr ""
+
+msgid "Memory Encryption"
+msgstr ""
+
+msgid "Video Memory"
+msgstr ""
+
+msgid "Camera"
+msgstr ""
+
+msgid "Microphone"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Wireless LAN"
+msgstr ""
+
+msgid "Fingerprint Reader"
+msgstr ""
+
+msgid "Touchscreen"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Media Card Reader"
+msgstr ""
+
+msgid "Keyboard Backlight"
+msgstr ""
 
 msgid "Stop the fwupd service"
 msgstr "fwupd サービスを停止する"
@@ -555,6 +600,14 @@ msgstr "SPI BIOS リージョン"
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS ディスクリプタ"
 
+#. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
+msgid "Locked MTD"
+msgstr ""
+
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware disk encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "プリブート DMA 保護"
@@ -790,6 +843,10 @@ msgstr "ファームウェア BIOS リージョン"
 msgid "Firmware BIOS Descriptor"
 msgstr "ファームウェア BIOS ディスクリプタ"
 
+#. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
+msgid "Hardware Disk Encryption"
+msgstr ""
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "プリブート DMA 保護"
@@ -968,6 +1025,14 @@ msgstr "ファームウェア BIOS リージョンは、デバイスファーム
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
 msgstr "ファームウェア BIOS ディスクリプタは、デバイスファームウェア領域を改ざんから保護します。"
+
+#. TRANSLATORS: longer description
+msgid "Locked MTD prevents device firmware from being changed after the device has started."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -1242,22 +1307,6 @@ msgstr "テストデバイスを正常に有効にしました"
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
 msgstr "ファームウェアアップデートを適用中"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "デバイスが追加されました:"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "デバイスが削除されました:"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "デバイスが変更されました:"
-
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "変更されました"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1579,10 +1628,6 @@ msgstr "HWIDS-FILE"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "ハードウェア ID 生成用ファイルを保存する"
-
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "デーモンのイベントを監視する"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -2358,6 +2403,22 @@ msgstr ""
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "デバイスが追加されました:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "デバイスが削除されました:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "デバイスが変更されました:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "変更されました"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "一時的エラー発生時のダウンロード再試行回数を設定する"
@@ -2538,6 +2599,10 @@ msgstr "1つ以上のBIOS設定を変更する"
 msgid "Upload the list of updatable devices to a remote server"
 msgstr "アップデート可能なデバイスのリストをリモートサーバーにアップロード"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "デーモンのイベントを監視する"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "このツールは、管理者が fwupd デーモンを照会・制御し、ファームウェアのインストールやダウングレードなどの操作を実行できます。"
@@ -2591,6 +2656,14 @@ msgstr "現在の値"
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "説明"
+
+#. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
+msgid "AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: icon name for a BIOS setting
+msgid "Icon"
+msgstr ""
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

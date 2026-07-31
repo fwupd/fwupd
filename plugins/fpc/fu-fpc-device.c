@@ -52,7 +52,7 @@ G_DEFINE_TYPE(FuFpcDevice, fu_fpc_device, FU_TYPE_USB_DEVICE)
 
 static FuFirmware *
 fu_fpc_device_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -397,7 +397,7 @@ fu_fpc_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_fpc_device_write_ff2_blocks(FuFpcDevice *self, GInputStream *stream, GError **error)
+fu_fpc_device_write_ff2_blocks(FuFpcDevice *self, FuInputStream *stream, GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -441,7 +441,7 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 {
 	gsize offset = 0;
 	guint32 blocks_num;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(FU_FIRMWARE(firmware), error);
 	if (stream == NULL)
@@ -487,7 +487,7 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 		payload_len += st_blksec->buf->len;
 
 		if (direction == FU_FPC_FF2_BLOCK_DIR_OUT) {
-			g_autoptr(GInputStream) partial_stream = NULL;
+			g_autoptr(FuInputStream) partial_stream = NULL;
 			g_autoptr(GByteArray) buf_sec = NULL;
 
 			if (payload_len < FPC_FF2_BLK_SEC_LINK_LEN) {
@@ -563,7 +563,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 

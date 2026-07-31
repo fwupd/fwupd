@@ -224,7 +224,7 @@ fu_algoltek_usb_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GE
 
 static gboolean
 fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   guint address,
 			   FuProgress *progress,
 			   GError **error)
@@ -384,7 +384,7 @@ fu_algoltek_usb_device_status_check_cb(FuDevice *device, gpointer user_data, GEr
 
 static gboolean
 fu_algoltek_usb_device_wrf(FuAlgoltekUsbDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   GError **error)
 {
@@ -480,8 +480,8 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
-	g_autoptr(GInputStream) stream_isp = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_isp = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

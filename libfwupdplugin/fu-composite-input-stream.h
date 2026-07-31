@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 
 #define FU_TYPE_COMPOSITE_INPUT_STREAM (fu_composite_input_stream_get_type())
@@ -14,9 +15,9 @@ G_DECLARE_FINAL_TYPE(FuCompositeInputStream,
 		     fu_composite_input_stream,
 		     FU,
 		     COMPOSITE_INPUT_STREAM,
-		     GInputStream)
+		     FuInputStream)
 
-GInputStream *
+FuInputStream *
 fu_composite_input_stream_new(void);
 gboolean
 fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
@@ -27,5 +28,5 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 					     GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     GError **error) G_GNUC_NON_NULL(1, 2);

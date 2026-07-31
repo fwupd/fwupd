@@ -211,7 +211,7 @@ fu_jabra_gnp_child_device_write_image(FuJabraGnpChildDevice *self,
 {
 	const guint chunk_size = 52;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

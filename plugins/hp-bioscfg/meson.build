@@ -17,9 +17,6 @@ plugin_builtin_hp_bioscfg = static_library('fu_plugin_hp_bioscfg',
 plugin_builtins += plugin_builtin_hp_bioscfg
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'hp-bioscfg-self-test',
     sources: [
@@ -37,5 +34,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('hp-bioscfg-self-test', e, env: env)
+  test(
+    'hp-bioscfg-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

@@ -40,6 +40,7 @@ mkdir -p /usr/local/etc/pkg/repos/
 # Fix meson flag problem https://www.mail-archive.com/freebsd-ports@freebsd.org/msg86617.html
 cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
 # Use latest pkg repo instead of quarterly https://wiki.freebsd.org/Ports/QuarterlyBranch
+# shellcheck disable=SC2016 # ${ABI} is expanded by pkg, not the shell
 sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' \
     /usr/local/etc/pkg/repos/FreeBSD.conf
 pkg install -y meson efivar
@@ -66,4 +67,4 @@ make clean
 make package
 make install
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.pkg \
-    ~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg || exit 1
+    ~/work/fwupd/fwupd/"fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg" || exit 1

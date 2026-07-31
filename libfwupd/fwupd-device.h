@@ -34,6 +34,8 @@ fwupd_device_new(void);
 
 const gchar *
 fwupd_device_get_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
+gchar *
+fwupd_device_get_id_display(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_id(FwupdDevice *self, const gchar *id) G_GNUC_NON_NULL(1);
 const gchar *

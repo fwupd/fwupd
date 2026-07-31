@@ -501,7 +501,10 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 	chunks = fu_chunk_array_new_from_bytes(data,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       data_sz);
+					       data_sz,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuStructQcData) st_pkt = fu_struct_qc_data_new();
@@ -616,7 +619,7 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 
 static FuFirmware *
 fu_qc_s5gen2_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuProgress *progress,
 				     FuFirmwareParseFlags flags,
 				     GError **error)

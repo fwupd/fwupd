@@ -178,6 +178,30 @@ All of those setting types are accepted by fwupd. It is expected that drivers or
 
 fwupd will also do a mapping where it can accept multiple cases or synonyms for words that are obviously positive or negative.  So for example if the setting expects `Enabled` but the user passes `tRUE` fwupd will map this into `Enabled` before sending it to the driver and the driver sending it to the firmware.
 
+## Vendor-neutral AppStream IDs
+
+Most BIOS settings are esoteric and vendor-specific, both in how they are named (`com.dell-wmi-sysman.SecureBoot` vs `com.thinklmi.SecureBoot`) and in the values they accept (`Enabled;Disabled;` vs `Disable,Enable`).  This makes it hard for a graphical client to present a small, consistent list of settings that are safe and useful for an end user to change.
+
+To help with this, fwupd 2.1.7 and later expose additional metadata on each `FwupdBiosSetting`:
+
+* An **AppStream ID** (`fwupd_bios_setting_get_appstream_id()`): a registered, vendor-neutral fwupd identifier such as `org.fwupd.bios.secure-boot`.  When two vendors expose the same conceptual setting, they share the same AppStream ID, so a client can group, label, and behave consistently across vendors.  Clients can show settings that have an AppStream ID by default and hide the rest behind an "advanced" view.
+* An **icon** (`fwupd_bios_setting_get_icon()`): an icon name for the abstract setting, e.g. `application-certificate`.
+
+The vendor-specific setting ID (`com.<driver>.<Name>`) is mapped to an abstract AppStream ID in the `bios-settings.quirk` data file:
+
+```ini
+[com.dell-wmi-sysman.SecureBoot]
+AppstreamId = org.fwupd.bios.secure-boot
+[com.thinklmi.SecureBoot]
+AppstreamId = org.fwupd.bios.secure-boot
+```
+
+The human-readable name and icon for each AppStream ID are defined in `fu-bios-settings.c`, where the name is marked for translation and localized at runtime by the client.  The description is available untranslated from `fwupd_bios_setting_get_description()`; clients translate it with `dgettext("fwupd", ...)`.
+
+Settings that are created by a plugin rather than parsed from the kernel firmware-attributes class (such as the AMD `Dedicated Video Memory` setting) set this metadata directly on the object.
+
+None of this metadata is sensitive, so it is always available to unprivileged clients even when the current value is not.
+
 ## libfwupd
 
 `fwupdmgr` internally uses `FwupdClient` to manage BIOS settings.  Any other clients that are interested in managing BIOS settings can use this library as well. A sample python application is included in the `contrib/` directory in the fwupd source tree.

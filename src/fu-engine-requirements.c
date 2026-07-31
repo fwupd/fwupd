@@ -1091,14 +1091,15 @@ fu_engine_requirements_check(FuEngine *self,
 		return FALSE;
 #else
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) == 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "generic GUID requires --force, a CHID, child, parent "
-					    "or sibling requirement");
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "generic GUID requires --ignore-requirements, a CHID, child, parent "
+			    "or sibling requirement");
 			return FALSE;
 		}
-		g_info("ignoring enforce-requires requirement due to --force");
+		g_info("ignoring enforce-requires requirement due to --ignore-requirements");
 #endif
 	}
 

@@ -140,7 +140,7 @@ fu_redfish_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       gsize offset,
 				       GError **error)
 {
@@ -211,7 +211,7 @@ fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
 
 static gboolean
 fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				GError **error)
 {
@@ -266,7 +266,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 
 static gboolean
 fu_redfish_smbios_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {

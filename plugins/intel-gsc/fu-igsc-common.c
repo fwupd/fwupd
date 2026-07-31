@@ -38,7 +38,7 @@ fu_igsc_fwdata_device_info_export(GPtrArray *device_infos, XbBuilderNode *bn)
 
 static gboolean
 fu_igsc_fwdata_device_info_parse_device_type(GPtrArray *device_infos,
-					     GInputStream *stream,
+					     FuInputStream *stream,
 					     GError **error)
 {
 	gsize streamsz = 0;
@@ -68,7 +68,7 @@ fu_igsc_fwdata_device_info_parse_device_type(GPtrArray *device_infos,
 
 static gboolean
 fu_igsc_fwdata_device_info_parse_device_id_array(GPtrArray *device_infos,
-						 GInputStream *stream,
+						 FuInputStream *stream,
 						 GError **error)
 {
 	gsize streamsz = 0;
@@ -91,7 +91,7 @@ gboolean
 fu_igsc_fwdata_device_info_parse(GPtrArray *device_infos, FuFirmware *fw, GError **error)
 {
 	FuIgscFwuExtType ext_type = fu_firmware_get_idx(fw);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get data */
 	stream = fu_firmware_get_stream(fw, error);

@@ -27,6 +27,7 @@
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common.h>
 #include <libfwupdplugin/fu-composite-input-stream.h>
+#include <libfwupdplugin/fu-compressor-stream.h>
 #include <libfwupdplugin/fu-config.h>
 #include <libfwupdplugin/fu-context-helper.h>
 #include <libfwupdplugin/fu-context.h>
@@ -67,6 +68,7 @@
 #include <libfwupdplugin/fu-endian.h>
 #include <libfwupdplugin/fu-fdt-firmware.h>
 #include <libfwupdplugin/fu-fdt-image.h>
+#include <libfwupdplugin/fu-file-input-stream.h>
 #include <libfwupdplugin/fu-firmware-common.h>
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-fit-firmware.h>
@@ -100,6 +102,7 @@
 #include <libfwupdplugin/fu-lzma-common.h>
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
+#include <libfwupdplugin/fu-memory-input-stream.h>
 #include <libfwupdplugin/fu-msgpack-item.h>
 #include <libfwupdplugin/fu-msgpack.h>
 #include <libfwupdplugin/fu-oprom-device.h>
@@ -123,6 +126,7 @@
 #include <libfwupdplugin/fu-serio-device.h>
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-stream-input-stream.h>
 #include <libfwupdplugin/fu-string.h>
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-temporary-directory.h>

@@ -127,10 +127,19 @@ fwupd_bios_settings_func(void)
 	fwupd_bios_setting_set_filename(attr1, "current_value");
 	g_assert_cmpstr(fwupd_bios_setting_get_filename(attr1), ==, "current_value");
 
+	fwupd_bios_setting_set_appstream_id(attr1, "org.fwupd.bios.secure-boot");
+	g_assert_cmpstr(fwupd_bios_setting_get_appstream_id(attr1),
+			==,
+			"org.fwupd.bios.secure-boot");
+	fwupd_bios_setting_set_icon(attr1, "application-certificate");
+	g_assert_cmpstr(fwupd_bios_setting_get_icon(attr1), ==, "application-certificate");
+
 	str1 = fwupd_codec_to_string(FWUPD_CODEC(attr1));
 	ret = fu_test_compare_lines(str1,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
+				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
@@ -152,6 +161,8 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(str2,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
+				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
@@ -173,6 +184,8 @@ fwupd_bios_settings_func(void)
 				    "  \"Name\": \"UEFISecureBoot\",\n"
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"AppstreamId\": \"org.fwupd.bios.secure-boot\",\n"
+				    "  \"BiosSettingIcon\": \"application-certificate\",\n"
 				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
 				    "  \"BiosSettingFilename\": \"current_value\",\n"
 				    "  \"BiosSettingReadOnly\": false,\n"
@@ -209,6 +222,8 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(str4,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
+				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
@@ -229,6 +244,8 @@ fwupd_bios_settings_func(void)
 				    "  \"Name\": \"UEFISecureBoot\",\n"
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"AppstreamId\": \"org.fwupd.bios.secure-boot\",\n"
+				    "  \"BiosSettingIcon\": \"application-certificate\",\n"
 				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
 				    "  \"BiosSettingFilename\": \"current_value\",\n"
 				    "  \"BiosSettingReadOnly\": false,\n"

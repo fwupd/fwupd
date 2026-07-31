@@ -624,7 +624,7 @@ fu_coswid_firmware_parse_entity(FuCborItem *item, gpointer user_data, GError **e
 
 static gboolean
 fu_coswid_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

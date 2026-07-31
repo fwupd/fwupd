@@ -78,7 +78,7 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

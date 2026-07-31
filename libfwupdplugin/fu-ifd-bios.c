@@ -27,7 +27,7 @@ G_DEFINE_TYPE(FuIfdBios, fu_ifd_bios, FU_TYPE_IFD_IMAGE)
 
 static gboolean
 fu_ifd_bios_parse(FuFirmware *firmware,
-		  GInputStream *stream,
+		  FuInputStream *stream,
 		  FuFirmwareParseFlags flags,
 		  GError **error)
 {

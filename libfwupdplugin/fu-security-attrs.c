@@ -533,6 +533,43 @@ fu_security_attrs_ensure_fwupd_version(FwupdSecurityAttr *attr)
 	g_warning("cannot map %s to a fwupd version", appstream_id);
 }
 
+static gboolean
+fu_security_attrs_has_success(FuSecurityAttrs *self, const gchar *appstream_id)
+{
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		const gchar *attr_id = fwupd_security_attr_get_appstream_id(attr);
+
+		if (g_strcmp0(attr_id, appstream_id) != 0)
+			continue;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+static void
+fu_security_attrs_add_suspend_to_ram_obsoletes(FuSecurityAttrs *self)
+{
+	if (!fu_security_attrs_has_success(self, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM))
+		return;
+
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		const gchar *attr_id = fwupd_security_attr_get_appstream_id(attr);
+
+		if (g_strcmp0(attr_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) != 0)
+			continue;
+		if (fwupd_security_attr_get_result(attr) != FWUPD_SECURITY_ATTR_RESULT_ENABLED)
+			continue;
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE);
+	}
+}
+
 /**
  * fu_security_attrs_depsolve:
  * @self: a #FuSecurityAttrs
@@ -556,6 +593,8 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 		fu_security_attrs_ensure_level(attr);
 		fu_security_attrs_ensure_fwupd_version(attr);
 	}
+
+	fu_security_attrs_add_suspend_to_ram_obsoletes(self);
 
 	/* set flat where required */
 	for (guint i = 0; i < self->attrs->len; i++) {

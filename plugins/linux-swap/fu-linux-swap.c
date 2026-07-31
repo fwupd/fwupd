@@ -149,7 +149,10 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self,
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GFile) gfile = NULL;
 	g_autoptr(GFileInfo) info = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_volume = NULL;
+	g_autoptr(GError) error_rdev = NULL;
+	g_autoptr(GError) error_name = NULL;
+	g_autoptr(GError) error_walk = NULL;
 
 	/* this isn't technically encrypted, but isn't on disk in plaintext */
 	if (g_str_has_prefix(fn, "/dev/zram")) {
@@ -158,13 +161,11 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self,
 		return TRUE;
 	}
 
-	/* find the device */
-	volume = fu_volume_new_by_device(fn, error);
-	if (volume == NULL)
-		return FALSE;
-
-	/* udisks sees a direct dm-crypt backing */
-	if (fu_volume_is_encrypted(volume)) {
+	/* a missing volume is not fatal; fall back to the sysfs walk below */
+	volume = fu_volume_new_by_device(fn, &error_volume);
+	if (volume == NULL) {
+		g_debug("no udisks volume for %s: %s", fn, error_volume->message);
+	} else if (fu_volume_is_encrypted(volume)) {
 		g_debug("%s partition is encrypted", fn);
 		self->encrypted_cnt++;
 		return TRUE;
@@ -177,19 +178,17 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self,
 				 G_FILE_ATTRIBUTE_UNIX_RDEV,
 				 G_FILE_QUERY_INFO_NONE,
 				 NULL,
-				 &error_local);
+				 &error_rdev);
 	if (info == NULL) {
-		g_debug("could not query rdev for %s: %s", fn, error_local->message);
-		g_clear_error(&error_local);
+		g_debug("could not query rdev for %s: %s", fn, error_rdev->message);
 	} else {
 		guint32 rdev = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_RDEV);
 		if (rdev != 0) {
-			name = fu_linux_swap_block_name_for_devnum(pstore, rdev, &error_local);
+			name = fu_linux_swap_block_name_for_devnum(pstore, rdev, &error_name);
 			if (name == NULL) {
 				g_debug("st_rdev mapping failed for %s: %s",
 					fn,
-					error_local->message);
-				g_clear_error(&error_local);
+					error_name->message);
 			}
 		}
 	}
@@ -198,9 +197,8 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self,
 		name = g_path_get_basename(fn);
 		g_debug("falling back to basename %s", name);
 	}
-	if (!fu_linux_swap_block_has_crypt_below(pstore, name, 0, &encrypted_below, &error_local)) {
-		g_debug("dm walk failed for %s: %s", fn, error_local->message);
-		g_clear_error(&error_local);
+	if (!fu_linux_swap_block_has_crypt_below(pstore, name, 0, &encrypted_below, &error_walk)) {
+		g_debug("dm walk failed for %s: %s", fn, error_walk->message);
 	} else if (encrypted_below) {
 		g_debug("%s partition is encrypted via dm chain below %s", fn, name);
 		self->encrypted_cnt++;
@@ -220,7 +218,9 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(FuVolume) volume = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_volume = NULL;
+	g_autoptr(GError) error_name = NULL;
+	g_autoptr(GError) error_walk = NULL;
 
 	/* get the device number for the file */
 	file = g_file_new_for_path(fn);
@@ -233,32 +233,28 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 		return FALSE;
 	devnum = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_DEVICE);
 
-	/* find the device */
-	volume = fu_volume_new_by_devnum(devnum, error);
-	if (volume == NULL)
-		return FALSE;
-
-	/* udisks sees a direct dm-crypt backing */
-	if (fu_volume_is_encrypted(volume)) {
+	/* a missing volume is not fatal; fall back to the sysfs walk below */
+	volume = fu_volume_new_by_devnum(devnum, &error_volume);
+	if (volume == NULL) {
+		g_debug("no udisks volume for %s: %s", fn, error_volume->message);
+	} else if (fu_volume_is_encrypted(volume)) {
 		g_debug("%s file is encrypted", fn);
 		self->encrypted_cnt++;
 		return TRUE;
 	}
 
 	/* walk the backing block device for a CRYPT- node */
-	name = fu_linux_swap_block_name_for_devnum(pstore, devnum, &error_local);
+	name = fu_linux_swap_block_name_for_devnum(pstore, devnum, &error_name);
 	if (name == NULL) {
 		g_debug("no kernel block name resolved for %s: %s; skipping dm walk",
 			fn,
-			error_local->message);
-		g_clear_error(&error_local);
+			error_name->message);
 	} else if (!fu_linux_swap_block_has_crypt_below(pstore,
 							name,
 							0,
 							&encrypted_below,
-							&error_local)) {
-		g_debug("dm walk failed for %s: %s", fn, error_local->message);
-		g_clear_error(&error_local);
+							&error_walk)) {
+		g_debug("dm walk failed for %s: %s", fn, error_walk->message);
 	} else if (encrypted_below) {
 		g_debug("%s file is encrypted via dm chain below %s", fn, name);
 		self->encrypted_cnt++;

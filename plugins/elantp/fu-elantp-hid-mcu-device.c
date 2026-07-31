@@ -544,8 +544,8 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 	guint16 checksum = 0;
 	guint16 checksum_device = 0;
 	guint16 iap_addr;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GInputStream) stream_offset = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream_offset = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

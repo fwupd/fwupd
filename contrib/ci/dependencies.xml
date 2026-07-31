@@ -23,6 +23,17 @@
       <package variant="amd64" />
     </distro>
   </dependency>
+  <dependency id="7zip">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="pesign">
     <distro id="centos">
       <package variant="x86_64" />
@@ -327,6 +338,16 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="dh-python">
+    <distro id="debian">
+      <control />
+    </distro>
+    <distro id="ubuntu">
+      <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -914,6 +935,17 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="gir1.2-glib-2.0">
+    <distro id="debian">
+      <control />
+      <multi-arch />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="gir1.2-pango-1.0">
     <distro id="centos">
       <package variant="x86_64">pango-devel</package>
@@ -936,18 +968,24 @@
     </distro>
   </dependency>
   <dependency id="pkg-config">
+    <distro id="arch">
+      <package variant="x86_64">pkgconf</package>
+    </distro>
     <distro id="debian">
       <control />
+      <package>pkgconf</package>
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
+      <package variant="x86_64">pkgconf</package>
+      <package variant="aarch64">pkgconf</package>
     </distro>
     <distro id="centos">
-      <package variant="x86_64" />
+      <package variant="x86_64">pkgconf-pkg-config</package>
     </distro>
     <distro id="fedora">
+      <package variant="x86_64">pkgconf-pkg-config</package>
+      <package variant="aarch64">pkgconf-pkg-config</package>
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
     <distro id="freebsd">
@@ -1108,6 +1146,27 @@
       <package>py312-virtualenv</package>
     </distro>
   </dependency>
+  <dependency id="python3-dbus">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-dbus</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="python3-dbusmock">
     <distro id="debian" />
     <distro id="arch">
@@ -1129,6 +1188,39 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
       <package variant="mingw64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="python3-gi">
+    <distro id="debian">
+      <control />
+      <native />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-gobject</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">python3-gobject</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">python3-gobject</package>
+      <package variant="aarch64">python3-gobject</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="freebsd">
+      <package>py312-pygobject</package>
     </distro>
   </dependency>
   <dependency id="python3-gi-cairo">
@@ -1177,12 +1269,19 @@
     </distro>
   </dependency>
   <dependency id="python3-jinja2">
+    <distro id="arch">
+      <package variant="x86_64">python-jinja</package>
+    </distro>
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
+      <package variant="aarch64" />
       <package variant="mingw64" />
+    </distro>
+    <distro id="debian">
+      <control />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1247,10 +1346,7 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="python3-jinja2">
-    <distro id="debian">
-      <control />
-    </distro>
+  <dependency id="python3-flask">
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
@@ -1258,33 +1354,8 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="ubuntu">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="python3-gobject">
     <distro id="arch">
-      <package variant="x86_64">python-gobject</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>py312-pygobject</package>
-    </distro>
-  </dependency>
-  <dependency id="python3-requests">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
+      <package variant="x86_64">python-flask</package>
     </distro>
     <distro id="debian">
       <control />

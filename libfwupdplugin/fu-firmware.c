@@ -12,10 +12,12 @@
 #include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
+#include "fu-file-input-stream.h"
 #include "fu-firmware-private.h"
 #include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-ptr-array.h"
 #include "fu-string.h"
@@ -36,7 +38,7 @@ typedef struct {
 	guint64 version_raw;
 	FwupdVersionFormat version_format;
 	GBytes *bytes;
-	GInputStream *stream;
+	FuInputStream *stream;
 	gsize streamsz;
 	FuFirmwareAlignment alignment;
 	gchar *id;
@@ -711,11 +713,11 @@ fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
  *
  * Gets the input stream which was used to parse the firmware.
  *
- * Returns: (transfer full): a #GInputStream, or %NULL if the payload has never been set
+ * Returns: (transfer full): a #FuInputStream, or %NULL if the payload has never been set
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -723,7 +725,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
 	if (priv->bytes != NULL)
-		return g_memory_input_stream_new_from_bytes(priv->bytes);
+		return fu_memory_input_stream_new_from_bytes(priv->bytes);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
 	return NULL;
 }
@@ -731,7 +733,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 /**
  * fu_firmware_set_stream:
  * @self: a #FuPlugin
- * @stream: (nullable): #GInputStream
+ * @stream: (nullable): #FuInputStream
  * @error: (nullable): optional return location for an error
  *
  * Sets the input stream.
@@ -741,11 +743,11 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
  * Since: 2.0.0
  **/
 gboolean
-fu_firmware_set_stream(FuFirmware *self, GInputStream *stream, GError **error)
+fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(stream == NULL || G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(stream == NULL || FU_IS_INPUT_STREAM(stream), FALSE);
 	if (stream != NULL) {
 		if (!fu_input_stream_size(stream, &priv->streamsz, error))
 			return FALSE;
@@ -928,7 +930,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 /**
  * fu_firmware_tokenize:
  * @self: a #FuFirmware
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -943,14 +945,14 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
  **/
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
-		     GInputStream *stream,
+		     FuInputStream *stream,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optionally subclassed */
@@ -992,7 +994,7 @@ fu_firmware_check_compatible(FuFirmware *self,
 
 static gboolean
 fu_firmware_validate_with_magic(FuFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				gsize *offset_found,
 				GError **error)
@@ -1049,7 +1051,7 @@ fu_firmware_validate_with_magic(FuFirmware *self,
 
 static gboolean
 fu_firmware_validate_for_offset(FuFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				gsize offset,
 				gsize *offset_found,
 				FuFirmwareParseFlags flags,
@@ -1105,7 +1107,7 @@ fu_firmware_validate_for_offset(FuFirmware *self,
  **/
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
@@ -1113,12 +1115,12 @@ fu_firmware_parse_stream(FuFirmware *self,
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) partial_stream = NULL;
-	g_autoptr(GInputStream) seekable_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) seekable_stream = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
@@ -1135,7 +1137,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
 		if (blob == NULL)
 			return FALSE;
-		seekable_stream = g_memory_input_stream_new_from_bytes(blob);
+		seekable_stream = fu_memory_input_stream_new_from_bytes(blob);
 	} else {
 		seekable_stream = g_object_ref(stream);
 	}
@@ -1291,13 +1293,13 @@ fu_firmware_parse_bytes(FuFirmware *self,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(fw != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	return fu_firmware_parse_stream(self, stream, offset, flags, error);
 }
 
@@ -1647,18 +1649,18 @@ fu_firmware_new_from_filename(const gchar *filename, GError **error)
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags, GError **error)
 {
-	g_autoptr(GFileInputStream) stream = NULL;
+	g_autoptr(FuFileInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_file_read(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, NULL, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);
+	return fu_firmware_parse_stream(self, FU_INPUT_STREAM(stream), 0, flags, error);
 }
 
 /**
@@ -2274,11 +2276,11 @@ fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **er
  *
  * Gets the firmware image stream using the image ID.
  *
- * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_id(self, id, error);
@@ -2393,11 +2395,11 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
  *
  * Gets the firmware image stream using the image index.
  *
- * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
  *
  * Since: 2.0.0
  **/
-GInputStream *
+FuInputStream *
 fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(self, idx, error);
@@ -2573,7 +2575,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 					    "data",
 					    datastr,
 					    "type",
-					    "GInputStream",
+					    "FuInputStream",
 					    "size",
 					    dataszstr,
 					    NULL);
@@ -2840,7 +2842,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
 
 /**
  * fu_firmware_new_from_gtypes:
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @offset: start offset, useful for ignoring a bootloader
  * @flags: install flags, e.g. %FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM
  * @error: (nullable): optional return location for an error
@@ -2853,7 +2855,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
  * Since: 1.5.6
  **/
 FuFirmware *
-fu_firmware_new_from_gtypes(GInputStream *stream,
+fu_firmware_new_from_gtypes(FuInputStream *stream,
 			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error,
@@ -2863,7 +2865,7 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 	g_autoptr(GArray) gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
 	g_autoptr(GError) error_all = NULL;
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* create array of GTypes */

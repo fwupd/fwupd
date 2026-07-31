@@ -17,9 +17,6 @@ plugin_builtin_lenovo_thinklmi = static_library('fu_plugin_lenovo_thinklmi',
 plugin_builtins += plugin_builtin_lenovo_thinklmi
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'lenovo-thinklmi-self-test',
     sources: [
@@ -38,5 +35,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('lenovo-thinklmi-self-test', e, env: env)
+  test(
+    'lenovo-thinklmi-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

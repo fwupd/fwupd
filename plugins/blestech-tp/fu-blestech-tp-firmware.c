@@ -39,7 +39,7 @@ fu_blestech_tp_firmware_get_checksum(FuBlestechTpFirmware *self)
 
 static gboolean
 fu_blestech_tp_firmware_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuGoodixtpGtx8Firmware, fu_goodixtp_gtx8_firmware, FU_TYPE_GOODIXT
 
 gboolean
 fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
-				GInputStream *stream,
+				FuInputStream *stream,
 				guint8 sensor_id,
 				GError **error)
 {

@@ -36,7 +36,7 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_vli_pd_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -71,7 +71,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint16 crc_actual = 0xFFFF;
 		guint16 crc_file = 0x0;
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 
 		if (streamsz < 2) {
 			g_set_error_literal(error,

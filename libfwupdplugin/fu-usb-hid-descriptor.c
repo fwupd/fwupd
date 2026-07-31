@@ -14,6 +14,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-usb-hid-descriptor-private.h"
 
 struct _FuUsbHidDescriptor {
@@ -148,7 +149,7 @@ fu_usb_hid_descriptor_set_blob(FuUsbHidDescriptor *self, GBytes *blob)
 
 static gboolean
 fu_usb_hid_descriptor_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

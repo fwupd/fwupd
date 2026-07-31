@@ -318,12 +318,55 @@ fu_release_no_trusted_report_func(void)
 	g_assert_false(fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_TRUSTED_REPORT));
 }
 
+static void
+fu_release_check_trust_metadata_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+
+	/* load engine to get FuConfig set up; OnlyTrusted defaults to true */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_context_get_config_bool(ctx, "OnlyTrusted"));
+
+	/* neither payload nor metadata trusted -> refused */
+	ret = fu_engine_check_trust(engine, release, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* a signed payload with unsigned metadata is refused */
+	fu_release_add_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
+	ret = fu_engine_check_trust(engine, release, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* both signed -> OK */
+	fu_release_add_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
+	ret = fu_engine_check_trust(engine, release, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/release/compare", fu_release_compare_func);
+	g_test_add_func("/fwupd/release/check-trust-metadata",
+			fu_release_check_trust_metadata_func);
 	g_test_add_func("/fwupd/release/uri-scheme", fu_release_uri_scheme_func);
 	g_test_add_func("/fwupd/release/trusted-report", fu_release_trusted_report_func);
 	g_test_add_func("/fwupd/release/trusted-report-oem", fu_release_trusted_report_oem_func);

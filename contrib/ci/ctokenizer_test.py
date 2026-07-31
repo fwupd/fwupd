@@ -15,21 +15,18 @@ from ctokenizer import Tokenizer, Token, TokenList
 class TestCTokenize(unittest.TestCase):
 
     def _compare_tokens(self, data: str, tokens_wanted: List[str]) -> None:
-
         tokens = Tokenizer(data).tokens
         print(tokens)
         tokens_data = [token.data for token in tokens]
         self.assertEqual(tokens_data, tokens_wanted)
 
     def _compare_tokens_full(self, data: str, tokens_wanted: List[str]) -> None:
-
         tokens = Tokenizer(data).tokens
         print(tokens)
         tokens_data = [str(token) for token in tokens]
         self.assertEqual(tokens_data, tokens_wanted)
 
     def _compare_nodes(self, data: str, nodes_wanted: List[str]) -> None:
-
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
         print(nodes)
@@ -37,7 +34,6 @@ class TestCTokenize(unittest.TestCase):
         self.assertEqual(nodes_data, nodes_wanted)
 
     def test_tokens(self):
-
         self._compare_tokens_full(
             " /* comment */ /* comment2 */ ",
             [
@@ -167,7 +163,6 @@ class TestCTokenize(unittest.TestCase):
         )
 
     def test_token_list(self):
-
         toklist = TokenList(
             [
                 Token("/*start*/"),
@@ -279,7 +274,6 @@ class TestCTokenize(unittest.TestCase):
         self.assertEqual(toklist.find_fuzzy(["", "("], skip_comments=True), 0)
 
     def test_nodes(self):
-
         self._compare_nodes(
             "typedef struct {\n\tgchar *id;\n} FwupdDevicePrivate;\n",
             [

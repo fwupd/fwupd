@@ -40,7 +40,7 @@ fu_nordic_hid_firmware_b0_write(FuFirmware *firmware, GError **error)
 
 static gboolean
 fu_nordic_hid_firmware_b0_read_fwinfo(FuNordicHidFirmwareB0 *self,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      GError **error)
 {
 	guint32 magic_common;
@@ -112,7 +112,7 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuNordicHidFirmwareB0 *self,
 
 static gboolean
 fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {

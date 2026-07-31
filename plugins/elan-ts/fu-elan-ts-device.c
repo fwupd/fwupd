@@ -1161,7 +1161,10 @@ fu_elan_ts_device_write_page(FuElanTsDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       base_address,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_ELAN_TS_PAGE_FRAME_SIZE);
+					       FU_ELAN_TS_PAGE_FRAME_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -1196,7 +1199,10 @@ fu_elan_ts_device_write_block(FuElanTsDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       5 * FU_ELAN_TS_PAGE_FRAME_SIZE);
+					       5 * FU_ELAN_TS_PAGE_FRAME_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -1245,7 +1251,10 @@ fu_elan_ts_device_write_blocks(FuElanTsDevice *self,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
 					       FU_ELAN_TS_FIRMWARE_PAGE_SIZE *
-						   FU_ELAN_TS_FW_PAGES_PER_BLOCK);
+						   FU_ELAN_TS_FW_PAGES_PER_BLOCK,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

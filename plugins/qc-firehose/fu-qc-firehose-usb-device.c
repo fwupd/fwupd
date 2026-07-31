@@ -8,8 +8,8 @@
 
 #include "config.h"
 
-#include "fu-qc-firehose-firmware.h"
 #include "fu-qc-firehose-impl.h"
+#include "fu-qc-firehose-sahara-firmware.h"
 #include "fu-qc-firehose-sahara-impl.h"
 #include "fu-qc-firehose-struct.h"
 #include "fu-qc-firehose-usb-device.h"
@@ -243,18 +243,19 @@ fu_qc_firehose_usb_device_attach(FuDevice *device, FuProgress *progress, GError 
 
 static FuFirmware *
 fu_qc_firehose_usb_device_impl_prepare_firmware(FuDevice *device,
-						GInputStream *stream,
+						FuInputStream *stream,
 						FuProgress *progress,
 						FuFirmwareParseFlags flags,
 						GError **error)
 {
 	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
-	g_autoptr(FuQcFirehoseFirmware) firmware = fu_qc_firehose_firmware_new();
+	g_autoptr(FuQcFirehoseSaharaFirmware) firmware = fu_qc_firehose_sahara_firmware_new();
 
 	for (guint i = 0; i < self->allowed_pending_image_ids->len; i++) {
 		guint32 allowed_image_id =
 		    g_array_index(self->allowed_pending_image_ids, guint32, i);
-		fu_qc_firehose_firmware_add_allowed_pending_image_id(firmware, allowed_image_id);
+		fu_qc_firehose_sahara_firmware_add_allowed_pending_image_id(firmware,
+									    allowed_image_id);
 	}
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(firmware),
 				      stream,
@@ -419,7 +420,7 @@ fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_QC_FIREHOSE_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_QC_FIREHOSE_SAHARA_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 90000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }

@@ -43,7 +43,7 @@ fu_igsc_code_firmware_get_arb_svn(FuIgscCodeFirmware *self)
 }
 
 static gboolean
-fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream, GError **error)
+fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, FuInputStream *stream, GError **error)
 {
 	g_autoptr(FuStructIgscFwuGwsImageInfo) st_inf = NULL;
 
@@ -57,7 +57,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -66,8 +66,8 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscFwuFwImageData) st_imgdata = NULL;
 	g_autoptr(FuStructIgscFwuImageMetadataV1) st_md1 = NULL;
-	g_autoptr(GInputStream) stream_imgi = NULL;
-	g_autoptr(GInputStream) stream_info = NULL;
+	g_autoptr(FuInputStream) stream_imgi = NULL;
+	g_autoptr(FuInputStream) stream_info = NULL;
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)

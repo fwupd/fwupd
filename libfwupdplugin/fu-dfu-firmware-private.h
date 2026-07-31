@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-dfu-firmware.h"
+#include "fu-input-stream.h"
 
 guint8
 fu_dfu_firmware_get_footer_len(FuDfuFirmware *self) G_GNUC_NON_NULL(1);
@@ -15,6 +16,6 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);

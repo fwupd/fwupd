@@ -188,7 +188,7 @@ fu_io_channel_write_stream_cb(const guint8 *buf, gsize bufsz, gpointer user_data
 /**
  * fu_io_channel_write_stream:
  * @self: a #FuIOChannel
- * @stream: #GInputStream to write
+ * @stream: #FuInputStream to write
  * @timeout_ms: timeout in ms
  * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
  * @error: (nullable): optional return location for an error
@@ -201,7 +201,7 @@ fu_io_channel_write_stream_cb(const guint8 *buf, gsize bufsz, gpointer user_data
  **/
 gboolean
 fu_io_channel_write_stream(FuIOChannel *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   guint timeout_ms,
 			   FuIoChannelFlags flags,
 			   GError **error)
@@ -210,7 +210,7 @@ fu_io_channel_write_stream(FuIOChannel *self,
 					       .timeout_ms = timeout_ms,
 					       .flags = flags};
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_io_channel_write_stream_cb, &helper, error);
 }
@@ -565,7 +565,7 @@ fu_io_channel_read_raw(FuIOChannel *self,
 	if (buf != NULL)
 		memcpy(buf, tmp->data, MIN(tmp->len, bufsz)); /* nocheck:blocked */
 	if (bytes_read != NULL)
-		*bytes_read = tmp->len;
+		*bytes_read = MIN(tmp->len, bufsz);
 	return TRUE;
 }
 

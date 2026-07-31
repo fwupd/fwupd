@@ -118,6 +118,12 @@ fu_amd_gpu_uma_get_setting_valid_func(void)
 	g_assert_cmpint(possible_values->len, ==, 3);
 
 	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting), ==, "Minimum (512 MB)");
+
+	/* setting with a vendor-neutral AppStream ID and icon */
+	g_assert_cmpstr(fwupd_bios_setting_get_appstream_id(setting),
+			==,
+			"org.fwupd.bios.video-memory");
+	g_assert_cmpstr(fwupd_bios_setting_get_icon(setting), ==, "video-display");
 }
 
 static void

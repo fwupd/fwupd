@@ -982,9 +982,8 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_device_open(proxy, error))
 		return FALSE;
-	if (self->st_data != NULL && !fu_struct_dell_dock_data_get_dock_type(self->st_data))
-		return fu_dell_dock_ec_is_valid_dock(self, error);
-	return TRUE;
+
+	return fu_dell_dock_ec_is_valid_dock(self, error);
 }
 
 static gboolean

@@ -577,7 +577,7 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 {
 	guint16 device_checksum = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(img, error);
 	if (stream == NULL)

@@ -1,5 +1,6 @@
 host_machine.system() == 'linux' or subdir_done()
 libsystemd.found() or subdir_done()
+libsystemd.version().version_compare('>= 258') or subdir_done()
 cc.has_header('systemd/sd-varlink.h', dependencies: libsystemd) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginSystemdPcrlock"']
@@ -20,10 +21,6 @@ plugin_builtin_systemd_pcrlock = static_library('fu_plugin_systemd_pcrlock',
 plugin_builtins += plugin_builtin_systemd_pcrlock
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('G_DEBUG', 'fatal-criticals')
   e = executable(
     'systemd-pcrlock-self-test',
     sources: [
@@ -47,5 +44,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('systemd-pcrlock-self-test', e, env: env)
+  test(
+    'systemd-pcrlock-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

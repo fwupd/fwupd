@@ -620,8 +620,9 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 		return;
 
 	/* if pci_psp has already verified TSME is active, skip our check */
-	attr_existing =
-	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, NULL);
+	attr_existing = fu_security_attrs_get_by_appstream_id(attrs,
+							      FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
+							      NULL);
 	if (attr_existing != NULL &&
 	    fwupd_security_attr_has_flag(attr_existing, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_debug("ignoring: TSME already verified by pci_psp");

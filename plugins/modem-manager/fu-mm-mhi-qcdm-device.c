@@ -124,7 +124,7 @@ fu_mm_mhi_qcdm_device_cleanup(FuDevice *device,
 
 static FuFirmware *
 fu_mm_mhi_qcdm_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       FuProgress *progress,
 				       FuFirmwareParseFlags flags,
 				       GError **error)

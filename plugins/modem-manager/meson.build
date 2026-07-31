@@ -78,5 +78,12 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('modem-manager-self-test', e)
+  test(
+    'modem-manager-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

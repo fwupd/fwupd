@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuAmdKriaPersistentFirmware, fu_amd_kria_persistent_firmware, FU_T
 
 static gboolean
 fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {

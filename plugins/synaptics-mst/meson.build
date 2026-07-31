@@ -33,10 +33,6 @@ enumeration_data += files(
 )
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'synaptics-mst-self-test',
     rustgen.process('fu-synaptics-mst.rs'),
@@ -62,5 +58,13 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('synaptics-mst-self-test', e, env: env)
+  test(
+    'synaptics-mst-self-test',
+    e,
+    env: {
+      'FWUPD_DATADIR_QUIRKS': meson.current_source_dir(),
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

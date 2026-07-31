@@ -31,14 +31,14 @@ fu_raydium_tp_image_get_checksum(FuRaydiumTpImage *self)
 
 static gboolean
 fu_raydium_tp_image_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuRaydiumTpImage *self = FU_RAYDIUM_TP_IMAGE(firmware);
 	gsize streamsz = 0;
 	guint32 crc_calc = G_MAXUINT32;
-	g_autoptr(GInputStream) stream_crc = NULL;
+	g_autoptr(FuInputStream) stream_crc = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;

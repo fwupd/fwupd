@@ -176,7 +176,7 @@ fu_x509_certificate_get_activation_time(FuX509Certificate *self)
 
 static gboolean
 fu_x509_certificate_parse(FuFirmware *firmware,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {

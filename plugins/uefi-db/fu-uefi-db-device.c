@@ -197,4 +197,5 @@ fu_uefi_db_device_class_init(FuUefiDbDeviceClass *klass)
 	device_class->write_firmware = fu_uefi_db_device_write_firmware;
 	device_class->add_security_attrs = fu_uefi_db_device_add_security_attrs;
 	device_class->set_progress = fu_uefi_db_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }

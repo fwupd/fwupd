@@ -389,7 +389,10 @@ fu_corsair_device_write_firmware_full(FuCorsairDevice *self,
 					       chk0_size,
 					       FU_CHUNK_PAGESZ_NONE,
 					       self->cmd_write_size -
-						   FU_STRUCT_CORSAIR_WRITE_NEXT_REQ_SIZE);
+						   FU_STRUCT_CORSAIR_WRITE_NEXT_REQ_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_corsair_device_write_firmware_chunks(self,
 						     destination,
 						     chk0,
