@@ -1812,7 +1812,7 @@ fu_logitech_hidpp_device_write_firmware_dfu_img(FuLogitechHidppDevice *self,
 	guint8 fw_entity = 0;
 	guint8 idx;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);

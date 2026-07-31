@@ -508,7 +508,7 @@ fu_focal_touch_hid_device_write_firmware(FuDevice *device,
 	guint32 upgrade_id = 0;
 	guint calculate_checksum_delay = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	if (self->verify_id == 0x5822) {
 		/* FT3637 */

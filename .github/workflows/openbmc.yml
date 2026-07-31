@@ -1,0 +1,24 @@
+# This is more of an approximation for the sensible set of build options for openbmc but still
+# hosted on just plain ubuntu.
+
+on: workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest # zizmor: ignore[unpinned-images]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
+      - name: build
+        run: |
+          ./contrib/build-openbmc.sh --prefix=/home/runner/.root

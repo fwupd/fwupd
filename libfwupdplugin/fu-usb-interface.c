@@ -387,7 +387,7 @@ fu_usb_interface_add_endpoint(FuUsbInterface *self, FuUsbEndpoint *endpoint)
 
 static gboolean
 fu_usb_interface_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

@@ -10,4 +10,4 @@ meson setup .. \
     -Ddbus_socket_address="unix:path=/var/run/fwupd.socket" \
     -Dman=false \
     -Dlibxmlb:gtkdoc=false \
-    $@
+    "$@"

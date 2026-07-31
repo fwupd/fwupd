@@ -52,7 +52,7 @@ fu_synaptics_prometheus_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_prometheus_firmware_parse(FuFirmware *firmware,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
@@ -78,7 +78,7 @@ fu_synaptics_prometheus_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(FuFirmware) img_old = NULL;
 		g_autoptr(FuStructSynapticsPrometheusHdr) st_hdr = NULL;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* verify item header */
 		st_hdr = fu_struct_synaptics_prometheus_hdr_parse_stream(stream, offset, error);

@@ -17,8 +17,6 @@ plugin_builtin_uefi_kek = static_library('fu_plugin_uefi_kek',
 plugin_builtins += plugin_builtin_uefi_kek
 
 if get_option('tests')
-  env = environment()
-  env.set('G_DEBUG', 'fatal-criticals')
   e = executable(
     'uefi-kek-self-test',
     sources: [
@@ -38,5 +36,12 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('uefi-kek-self-test', e, env: env)
+  test(
+    'uefi-kek-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

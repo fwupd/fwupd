@@ -235,7 +235,7 @@ fu_pixart_tp_device_register_user_write(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 				       FuPixartTpUserBank bank,
 				       guint8 addr,
@@ -276,7 +276,7 @@ fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static GByteArray *
+GByteArray *
 fu_pixart_tp_device_register_user_read_array(FuPixartTpDevice *self,
 					     FuPixartTpUserBank bank,
 					     guint8 addr,
@@ -1009,7 +1009,10 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 	g_autoptr(GBytes) blob = fu_chunk_get_bytes(chk_sector);
 
 	/* pages 1..15 */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_PIXART_TP_DEVICE_PAGE_SIZE);
+	chunks =
+	    fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_PIXART_TP_DEVICE_PAGE_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (fu_chunk_array_length(chunks) > G_MAXUINT8) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1057,7 +1060,7 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 	guint32 target_flash_start = fu_pixart_tp_section_get_target_flash_start(section);
 	guint start_sector;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* nothing to do */
 	if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)
@@ -1292,8 +1295,9 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 
 	/* sync bootloader flag from hardware state */
 	if (val == FU_PIXART_TP_BOOT_STATUS_ROM) {
-		g_debug("device is in bootloader mode");
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
+			return FALSE;
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}

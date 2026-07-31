@@ -65,5 +65,12 @@ if get_option('tests')
     install_dir: installed_test_bindir,
     c_args: cargs,
   )
-  test('vli-self-test', e, env: env)  # added to installed-tests
+  test(
+    'vli-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

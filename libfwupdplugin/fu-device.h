@@ -12,6 +12,7 @@
 #include "fu-device-event.h"
 #include "fu-device-struct.h"
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-progress.h"
 #include "fu-security-attrs.h"
 #include "fu-version-common.h"
@@ -42,7 +43,7 @@ struct _FuDeviceClass {
 	gboolean (*probe)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*rescan)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	FuFirmware *(*prepare_firmware)(FuDevice *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -1205,7 +1206,7 @@ fu_device_write_firmware(FuDevice *self,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   FuFirmwareParseFlags flags,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
@@ -1316,7 +1317,7 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id) G_GNUC_NO
 gboolean
 fu_device_set_contents(FuDevice *self,
 		       const gchar *filename,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuProgress *progress,
 		       GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean

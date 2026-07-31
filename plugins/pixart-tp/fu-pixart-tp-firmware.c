@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuPixartTpFirmware, fu_pixart_tp_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_pixart_tp_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -30,7 +30,7 @@ fu_pixart_tp_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_pixart_tp_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -57,7 +57,7 @@ fu_pixart_tp_firmware_parse(FuFirmware *firmware,
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 stored = 0;
 		guint32 calc = G_MAXUINT32;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		if (!fu_input_stream_read_u32(stream,
 					      FU_STRUCT_PIXART_TP_FIRMWARE_HDR_DEFAULT_HEADER_LEN -

@@ -17,13 +17,13 @@ G_DEFINE_TYPE(FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_bcm57xx_stage1_image_parse(FuFirmware *image,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	gsize streamsz = 0;
 	guint32 fwversion = 0;
-	g_autoptr(GInputStream) stream_nocrc = NULL;
+	g_autoptr(FuInputStream) stream_nocrc = NULL;
 
 	/* verify CRC */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {

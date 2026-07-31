@@ -266,6 +266,7 @@ parts:
     after: [build-introspection]
     build-environment:
       - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages"
+      - PIP_BREAK_SYSTEM_PACKAGES: "1"
   update-mime:
     plugin: make
     source: contrib/snap/update-mime

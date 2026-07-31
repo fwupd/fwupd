@@ -28,7 +28,7 @@ G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_efi_filesystem_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
@@ -38,7 +38,7 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 		return FALSE;
 	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = fu_efi_file_new();
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 		gboolean is_freespace = TRUE;
 
 		/* ignore free space */

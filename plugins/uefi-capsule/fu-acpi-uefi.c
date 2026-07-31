@@ -34,7 +34,7 @@ fu_acpi_uefi_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 }
 
 static gboolean
-fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error)
+fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, FuInputStream *stream, GError **error)
 {
 	const gchar *needle = "$QUIRK";
 	gsize data_offset = 0;
@@ -72,13 +72,13 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 
 static gboolean
 fu_acpi_uefi_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuAcpiUefi *self = FU_ACPI_UEFI(firmware);
 	fwupd_guid_t guid = {0x0};
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)

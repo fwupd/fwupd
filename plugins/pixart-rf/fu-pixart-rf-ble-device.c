@@ -55,7 +55,7 @@ fu_pixart_rf_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static FuFirmware *
 fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
+					 FuInputStream *stream,
 					 FuProgress *progress,
 					 FuFirmwareParseFlags flags,
 					 GError **error)
@@ -69,7 +69,7 @@ fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
-		g_autoptr(GInputStream) stream_new = NULL;
+		g_autoptr(FuInputStream) stream_new = NULL;
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
@@ -308,7 +308,10 @@ fu_pixart_rf_ble_device_check_support_resume(FuPixartRfBleDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX);
+					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (self->fwstate.offset > fu_chunk_array_length(chunks)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -471,7 +474,10 @@ fu_pixart_rf_ble_device_write_chunk(FuPixartRfBleDevice *self, FuChunk *chk, GEr
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       fu_chunk_get_address(chk),
 					       FU_CHUNK_PAGESZ_NONE,
-					       self->fwstate.mtu_size);
+					       self->fwstate.mtu_size,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk2 = NULL;
 
@@ -697,7 +703,10 @@ fu_pixart_rf_ble_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX);
+					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_pixart_rf_ble_device_check_support_resume(self,
 							  firmware,
 							  fu_progress_get_child(progress),

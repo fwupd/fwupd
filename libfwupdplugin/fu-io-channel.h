@@ -8,6 +8,7 @@
 
 #include <fwupd.h>
 
+#include "fu-input-stream.h"
 #include "fu-io-channel-struct.h"
 
 #define FU_TYPE_IO_CHANNEL (fu_io_channel_get_type())
@@ -55,7 +56,7 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_write_stream(FuIOChannel *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   guint timeout_ms,
 			   FuIoChannelFlags flags,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

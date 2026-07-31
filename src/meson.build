@@ -292,11 +292,10 @@ if build_daemon
 endif
 
 if get_option('tests')
-  env = environment()
-  env.set('G_DEBUG', 'fatal-criticals')
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
+  src_tests_env = {
+    'G_TEST_BUILDDIR': meson.current_build_dir(),
+    'G_TEST_SRCDIR': meson.current_source_dir(),
+  }
 
   test_names = [
     'cabinet',
@@ -343,10 +342,28 @@ if get_option('tests')
       'fu-' + test_name + '-test',
       e,
       timeout: 180,
-      env: env,
+      env: src_tests_env,
     )
   endforeach
 
+  # daemon-specific
+  e = executable(
+    'fu-daemon-test',
+    fwupdengine_rs,
+    hwid_test_firmware,
+    plugins_hdr,
+    sources: ['fu-daemon-test.c', 'fu-daemon.c'],
+    include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
+    dependencies: [engine_dep],
+    link_with: [fwupdengine, libfutest, plugin_libs],
+    c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
+  )
+  test(
+    'fu-daemon-test',
+    e,
+    timeout: 180,
+    env: src_tests_env,
+  )
   if libsystemd.found()
     e = executable(
       'fu-systemd-test',
@@ -359,7 +376,7 @@ if get_option('tests')
       'fu-systemd-test',
       e,
       timeout: 180,
-      env: env,
+      env: src_tests_env,
     )
   endif
 
@@ -374,9 +391,7 @@ if get_option('tests')
     test(
       'fu-polkit-test',
       e,
-      env: {
-        'G_DEBUG': 'fatal-criticals',
-      },
+      env: src_tests_env,
     )
   endif
 endif

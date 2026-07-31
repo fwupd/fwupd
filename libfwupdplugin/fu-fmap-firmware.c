@@ -82,14 +82,14 @@ fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_fmap_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_fmap_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_fmap_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       gsize offset,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
@@ -146,7 +146,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		g_autofree gchar *area_name = NULL;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(FuStructFmapArea) st_area = NULL;
-		g_autoptr(GInputStream) img_stream = NULL;
+		g_autoptr(FuInputStream) img_stream = NULL;
 
 		/* load area */
 		st_area = fu_struct_fmap_area_parse_stream(stream, offset, error);

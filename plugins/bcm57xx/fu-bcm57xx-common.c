@@ -12,12 +12,12 @@
 #include "fu-bcm57xx-common.h"
 
 gboolean
-fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
+fu_bcm57xx_verify_crc(FuInputStream *stream, GError **error)
 {
 	guint32 crc_actual = 0xFFFFFFFF;
 	guint32 crc_file = 0;
 	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream_tmp = NULL;
+	g_autoptr(FuInputStream) stream_tmp = NULL;
 
 	/* expected */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -60,7 +60,7 @@ fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 }
 
 gboolean
-fu_bcm57xx_verify_magic(GInputStream *stream, gsize offset, GError **error)
+fu_bcm57xx_verify_magic(FuInputStream *stream, gsize offset, GError **error)
 {
 	guint32 magic = 0;
 

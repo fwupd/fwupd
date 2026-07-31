@@ -283,7 +283,7 @@ fu_legion_hid_device_read_upgrade_query_size_response(FuLegionHidDevice *self,
 static gboolean
 fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 				   FuLegionHidDeviceId id,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
@@ -491,7 +491,7 @@ static gboolean
 fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 					FuLegionHidDeviceId id,
 					guint16 max_size,
-					GInputStream *stream,
+					FuInputStream *stream,
 					GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -630,7 +630,7 @@ fu_legion_hid_device_get_version(FuLegionHidDevice *self,
 }
 
 static gboolean
-fu_legion_hid_device_get_id(GInputStream *stream, FuLegionHidDeviceId *id, GError **error)
+fu_legion_hid_device_get_id(FuInputStream *stream, FuLegionHidDeviceId *id, GError **error)
 {
 	guint offset = 0;
 	gsize streamsz = 0;
@@ -671,7 +671,7 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 {
 	FuLegionHidDeviceId id = 0;
 	guint16 max_size = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)

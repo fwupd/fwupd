@@ -16,7 +16,7 @@ G_DEFINE_TYPE(FuUefiSbatFirmware, fu_uefi_sbat_firmware, FU_TYPE_CSV_FIRMWARE)
 
 static gboolean
 fu_uefi_sbat_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

@@ -107,7 +107,7 @@ fu_himax_tp_firmware_checksum_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 
 static gboolean
 fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    gboolean *done,
 				    GError **error)
@@ -205,7 +205,7 @@ fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
 
 static gboolean
 fu_himax_tp_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {

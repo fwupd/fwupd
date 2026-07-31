@@ -217,7 +217,10 @@ fu_wacom_raw_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       priv->flash_base_addr,
 					       FU_CHUNK_PAGESZ_NONE,
-					       priv->flash_block_size);
+					       priv->flash_block_size,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	return klass->write_firmware(device, chunks, progress, error);
 }
 

@@ -49,7 +49,7 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					GError **error)
 {
@@ -76,7 +76,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {

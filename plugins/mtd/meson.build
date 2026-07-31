@@ -23,9 +23,6 @@ if not supported_build
 endif
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'mtd-self-test',
     sources: [
@@ -46,7 +43,14 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('mtd-self-test', e, env: env)  # added to installed-tests
+  test(
+    'mtd-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
   install_data(
     [
       'tests/mtd-fmap.builder.xml',

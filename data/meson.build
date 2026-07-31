@@ -33,6 +33,7 @@ if build_standalone
     install_mode: 'rw-r-----',
   )
   plugin_quirks += files(
+    'bios-settings.quirk',
     'cfi.quirk',
     'ds20.quirk',
     'power.quirk',

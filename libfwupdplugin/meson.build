@@ -9,6 +9,7 @@ fwupdplugin_structs = [
   'fu-cfu.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-config.rs', # fuzzing
+  'fu-compressor.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
@@ -95,6 +96,7 @@ fwupdplugin_src = [
   'fu-common.c', # fuzzing
   'fu-common-guid.c',
   'fu-composite-input-stream.c', # fuzzing
+  'fu-compressor-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
   'fu-context-helper.c',
@@ -137,11 +139,13 @@ fwupdplugin_src = [
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
+  'fu-file-input-stream.c', # fuzzing
   'fu-firmware.c', # fuzzing
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
   'fu-fuzzer.c', # fuzzing
+  'fu-ginput-stream-adapter.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
   'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
@@ -163,6 +167,7 @@ fwupdplugin_src = [
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-ihex-firmware.c', # fuzzing
   'fu-input-stream.c', # fuzzing
+  'fu-memory-input-stream.c', # fuzzing
   'fu-intel-me-device.c', # fuzzing
   'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-intel-thunderbolt-nvm.c', # fuzzing
@@ -200,6 +205,7 @@ fwupdplugin_src = [
   'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
+  'fu-stream-input-stream.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-temporary-directory.c', # fuzzing
@@ -264,6 +270,7 @@ fwupdplugin_headers = [
   'fu-chunk-array.h',
   'fu-common-guid.h',
   'fu-common.h',
+  'fu-compressor-stream.h',
   'fu-composite-input-stream.h',
   'fu-config.h',
   'fu-config-private.h',
@@ -309,6 +316,7 @@ fwupdplugin_headers = [
   'fu-endian.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
+  'fu-file-input-stream.h',
   'fu-firmware-common.h',
   'fu-firmware.h',
   'fu-fit-firmware.h',
@@ -328,6 +336,7 @@ fwupdplugin_headers = [
   'fu-ifwi-fpt-firmware.h',
   'fu-ihex-firmware.h',
   'fu-input-stream.h',
+  'fu-memory-input-stream.h',
   'fu-intel-me-device.h',
   'fu-intel-thunderbolt-firmware.h',
   'fu-intel-thunderbolt-nvm.h',
@@ -366,6 +375,8 @@ fwupdplugin_headers = [
   'fu-smbios.h',
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
+  'fu-stream-input-stream.h',
+  'fu-stream-input-stream-private.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',
@@ -498,9 +509,6 @@ if get_option('tests')
     link_with: [fwupd, libfwupdtest],
   )
 
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   foreach test_name: [
     'backend',
     'bios-settings',
@@ -510,6 +518,7 @@ if get_option('tests')
     'cbor',
     'chunk-array',
     'common',
+    'compressor-stream',
     'composite-input-stream',
     'config',
     'context',
@@ -542,6 +551,7 @@ if get_option('tests')
     'security-attrs',
     'smbios',
     'srec-firmware',
+    'stream-input-stream',
     'string',
     'struct',
     'temporary-directory',
@@ -573,7 +583,10 @@ if get_option('tests')
       'fwupdplugin-' + test_name + '-test',
       e,
       timeout: 180,
-      env: env,
+      env: {
+        'G_TEST_BUILDDIR': meson.current_build_dir(),
+        'G_TEST_SRCDIR': meson.current_source_dir(),
+      },
     )
   endforeach
 endif

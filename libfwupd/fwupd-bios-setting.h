@@ -108,6 +108,17 @@ void
 fwupd_bios_setting_set_id(FwupdBiosSetting *self, const gchar *id) G_GNUC_NON_NULL(1);
 
 const gchar *
+fwupd_bios_setting_get_appstream_id(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+void
+fwupd_bios_setting_set_appstream_id(FwupdBiosSetting *self, const gchar *appstream_id)
+    G_GNUC_NON_NULL(1);
+
+const gchar *
+fwupd_bios_setting_get_icon(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+void
+fwupd_bios_setting_set_icon(FwupdBiosSetting *self, const gchar *icon) G_GNUC_NON_NULL(1);
+
+const gchar *
 fwupd_bios_setting_get_filename(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
 void
 fwupd_bios_setting_set_filename(FwupdBiosSetting *self, const gchar *filename) G_GNUC_NON_NULL(1);

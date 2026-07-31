@@ -176,7 +176,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -292,7 +292,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* data first */

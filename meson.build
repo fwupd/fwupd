@@ -1,9 +1,9 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.7',
+  version: '2.1.8',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.63.0', # limited by RHEL-9
+  meson_version: '>=1.11.0',
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
@@ -141,6 +141,16 @@ add_project_arguments(
   language: 'c',
 )
 
+# FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
+# can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
+# `g_assert_nonnull()` doesn't affect control flow.
+if static_analysis
+  add_project_arguments(
+    ['-D__COVERITY__'],
+    language: 'c',
+  )
+endif
+
 if not meson.is_cross_build()
   add_project_arguments(
     '-fstack-protector-strong',
@@ -157,8 +167,12 @@ endif
 add_test_setup(
   'default',
   env: {
+    'G_DEBUG': 'fatal-criticals',
     'LANG': 'C.UTF-8',
     'LC_ALL': 'C.UTF-8',
+    'LSAN_OPTIONS': 'suppressions=@0@'.format(
+      meson.current_source_dir() / 'data' / 'tests' / 'lsan-suppressions.txt'
+    ),
   },
   is_default: true,
 )

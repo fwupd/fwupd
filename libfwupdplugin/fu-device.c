@@ -22,6 +22,7 @@
 #include "fu-device-poll-locker.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
@@ -96,7 +97,7 @@ typedef struct {
 	GPtrArray *instance_ids;     /* (nullable) (element-type FuDeviceInstanceIdItem) */
 	GPtrArray *retry_recs;	     /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
-	GArray *private_flags;		  /* (nullable) (element-type GQuark) */
+	GArray *private_flags; /* (nullable) (element-type GQuark) */
 	gchar *custom_flags;
 	gulong notify_flags_proxy_id;
 	GHashTable *instance_hash; /* (nullable) */
@@ -806,7 +807,7 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 gboolean
 fu_device_set_contents(FuDevice *self,
 		       const gchar *filename,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuProgress *progress,
 		       GError **error)
 {
@@ -819,7 +820,7 @@ fu_device_set_contents(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -915,7 +916,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -923,7 +924,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	return fu_device_set_contents(self, filename, stream, progress, error);
 }
 
@@ -951,7 +952,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1018,7 +1019,7 @@ fu_device_get_contents(FuDevice *self,
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -5555,29 +5556,11 @@ fu_device_to_string(FuDevice *self)
 gchar *
 fu_device_get_id_display(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GError) error_local = NULL;
-
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-
 	if (!fu_device_ensure_id(self, &error_local))
 		g_debug("ignoring: %s", error_local->message);
-	if (fu_device_get_id(self) != NULL)
-		g_string_append(str, fu_device_get_id(self));
-	/* nocheck:blocked */
-	if (priv->name != NULL) {
-		if (str->len > 0)
-			g_string_append(str, " ");
-		g_string_append_printf(str, "[%s]", priv->name);
-	} else if (fu_device_get_plugin(self) != NULL) {
-		if (str->len > 0)
-			g_string_append(str, " ");
-		g_string_append_printf(str, "{%s}", fu_device_get_plugin(self));
-	}
-	if (str->len == 0)
-		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return fwupd_device_get_id_display(FWUPD_DEVICE(self));
 }
 
 /**
@@ -5733,7 +5716,7 @@ fu_device_write_firmware(FuDevice *self,
 /**
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -5751,7 +5734,7 @@ fu_device_write_firmware(FuDevice *self,
  **/
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
@@ -5762,7 +5745,7 @@ fu_device_prepare_firmware(FuDevice *self,
 	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 

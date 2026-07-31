@@ -10,9 +10,9 @@ git config --global safe.directory "*"
 
 # copy current tarball, old fwupd and fwupd-efi
 RPMVERSION=${VERSION//-/.}
-mkdir -p $HOME/rpmbuild/SOURCES/
-mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
-cp /var/cache/*.tar.* $HOME/rpmbuild/SOURCES/
+mkdir -p "$HOME/rpmbuild/SOURCES/"
+mv "fwupd-$VERSION.tar.xz" "$HOME/rpmbuild/SOURCES/"
+cp /var/cache/*.tar.* "$HOME/rpmbuild/SOURCES/"
 
 # generate a spec file and build RPM packages
 mkdir -p build
@@ -26,4 +26,4 @@ rpmbuild -ba build/fwupd.spec --with=libfwupdcompat
 
 # copy as artifact
 mkdir -p dist
-cp $HOME/rpmbuild/RPMS/*/*.rpm dist
+cp "$HOME"/rpmbuild/RPMS/*/*.rpm dist

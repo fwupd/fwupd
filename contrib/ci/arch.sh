@@ -29,4 +29,4 @@ sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm --nocheck
 
 # move the package to artifact dir
 mkdir -p ../dist
-mv *.pkg.* ../dist
+mv ./*.pkg.* ../dist

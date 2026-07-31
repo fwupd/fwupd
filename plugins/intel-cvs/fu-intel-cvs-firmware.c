@@ -29,7 +29,7 @@ fu_intel_cvs_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_intel_cvs_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -38,7 +38,7 @@ fu_intel_cvs_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_intel_cvs_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

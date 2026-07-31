@@ -5,8 +5,11 @@ ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
     export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install --yes --no-install-recommends \
+    apt-get update -qq; \
+    apt-get install -qq --yes --no-install-recommends software-properties-common; \
+    add-apt-repository -y ppa:peter-hutterer/meson1.11; \
+    apt-get install -qq --yes --no-install-recommends \
+    meson \
     python3-apt \
     sudo \
 %%%DEPENDENCIES%%%; \

@@ -46,7 +46,6 @@ def _check_int(s: str) -> bool:
 class Token:
 
     def __init__(self, data: str, linecnt: int = 0, hint: Optional[TokenHint] = None):
-
         self.linecnt: int = linecnt
         self.linecnt_end: int = linecnt
         self.data: str = data
@@ -66,7 +65,6 @@ class Token:
                 self.hint = TokenHint.INTEGER
 
     def __repr__(self) -> str:
-
         tmp = [f"linecnt={self.linecnt}"]
         if self.linecnt_end != self.linecnt:
             tmp.append(f"linecnt_end={self.linecnt_end}")
@@ -112,12 +110,10 @@ def _token_fuzzy_match(token: Token, data: str) -> bool:
 class TokenList(list):
 
     def __init__(self, tokens: Optional[list[Token]] = None):
-
         for token in tokens or []:
             self.append(token)
 
     def append(self, token: Token) -> None:
-
         # autohint
         if not token.hint and token.data != ";":
             if len(self) >= 1 and self[-1].data == "#define":
@@ -222,7 +218,6 @@ class Node:
         self.hint: Optional[NodeHint] = None
 
     def __repr__(self) -> str:
-
         tmp = [f"depth={self.depth}", f"linecnt={self.linecnt}"]
         if self.linecnt_end != self.linecnt:
             tmp.append(f"linecnt_end={self.linecnt_end}")
@@ -245,7 +240,6 @@ class Tokenizer:
             self._parse(data)
 
     def _add_token(self, token: Token) -> None:
-
         # merge into previous token
         if self.tokens:
             token_prev: Token = self.tokens[-1]
@@ -274,7 +268,6 @@ class Tokenizer:
         self.tokens.append(token)
 
     def dump_acc(self, hint: Optional[TokenHint] = None) -> None:
-
         stripped = self._acc.strip()
         if stripped:
             if fnmatch(stripped, "G_G*_FORMAT"):
@@ -283,7 +276,6 @@ class Tokenizer:
         self._acc = ""
 
     def _parse(self, data: str):
-
         is_quote_double: bool = False
         is_quote_single: bool = False
         is_comment_mode: bool = False
@@ -371,7 +363,6 @@ class Tokenizer:
         self.dump_acc()
 
     def _add_node(self, node: Node):
-
         # auto-hint node
         if not node.hint:
             try:
@@ -392,7 +383,6 @@ class Tokenizer:
         self._nodes.append(node)
 
     def _ensure_nodes(self) -> None:
-
         tokens_acc: TokenList = TokenList()
         depth: int = 0
         stack: List[Node] = []
@@ -453,7 +443,6 @@ class Tokenizer:
 
     @property
     def nodes(self) -> List[Node]:
-
         if not self._nodes:
             self._ensure_nodes()
         return self._nodes

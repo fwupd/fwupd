@@ -441,7 +441,10 @@ fu_egis_moc_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_EGIS_MOC_FLASH_TRANSFER_BLOCK_SIZE);
+					       FU_EGIS_MOC_FLASH_TRANSFER_BLOCK_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_egis_moc_device_write_packets(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);

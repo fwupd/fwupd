@@ -11,17 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from fwupd_setup_helpers import parse_dependencies
-
-# translate debian architecture names (similar to docker/golang names) to the naming in the
-# dependencies file, which is closer to gcc/fedora naming.
-ARCH_TO_DEPS_MAP = {
-    "amd64": "x86_64",
-    "arm": "armhf",
-    "arm64": "aarch64",
-    "i386": "i386",
-    "s390x": "s390x",
-}
+from fwupd_setup_helpers import ARCH_TO_DEPS_MAP, parse_dependencies
 
 
 def getenv_unwrap(name: str) -> str:

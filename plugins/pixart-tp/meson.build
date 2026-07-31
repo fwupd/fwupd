@@ -6,6 +6,7 @@ plugin_quirks += files('pixart-tp.quirk')
 plugin_builtin_pixart_tp = static_library('fu_plugin_pixart_tp',
   rustgen.process('fu-pixart-tp.rs'),
   sources: [
+    'fu-pixart-tp-pjp360-device.c',
     'fu-pixart-tp-plp239-device.c',
     'fu-pixart-tp-haptic-device.c',
     'fu-pixart-tp-device.c',
@@ -33,10 +34,6 @@ if get_option('tests')
     install_tag: 'tests',
   )
 
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-
   e = executable(
     'pixart-tp-self-test',
     rustgen.process('fu-pixart-tp.rs'),
@@ -58,5 +55,12 @@ if get_option('tests')
     ],
   )
 
-  test('pixart-tp-self-test', e, env: env)
+  test(
+    'pixart-tp-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

@@ -4,12 +4,10 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
-permissions:
-  contents: read
-
 jobs:
   push_to_registry:
     permissions:
+      contents: read
       packages: write # for docker/build-push-action
     runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     strategy:
@@ -29,7 +27,7 @@ jobs:
     env: ${{ matrix.env }}
     steps:
       - name: Check out the repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Generate Dockerfile
@@ -37,7 +35,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

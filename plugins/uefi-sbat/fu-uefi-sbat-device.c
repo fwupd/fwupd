@@ -55,7 +55,7 @@ fu_uefi_sbat_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_uefi_sbat_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuProgress *progress,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
@@ -63,7 +63,7 @@ fu_uefi_sbat_device_prepare_firmware(FuDevice *device,
 	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) firmware_pefile = fu_pefile_firmware_new();
 	g_autoptr(FuFirmware) firmware_sbat = fu_uefi_sbat_firmware_new();
-	g_autoptr(GInputStream) stream_sbata = NULL;
+	g_autoptr(FuInputStream) stream_sbata = NULL;
 	g_autoptr(GPtrArray) esp_files = NULL;
 
 	if (!fu_firmware_parse_stream(firmware_pefile, stream, 0x0, flags, error))

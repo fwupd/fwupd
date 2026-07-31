@@ -36,7 +36,7 @@ G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWAR
 
 static gboolean
 fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
-						  GInputStream *stream,
+						  FuInputStream *stream,
 						  const guint8 *buf,
 						  gsize bufsz,
 						  guint32 start_offset,
@@ -46,14 +46,14 @@ fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
 static gboolean
 fu_synaptics_rmi_firmware_add_image(FuSynapticsRmiFirmware *self,
 				    const gchar *id,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    gsize bufsz,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_new();
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 	partial_stream = fu_partial_input_stream_new(stream, offset, bufsz, error);
 	if (partial_stream == NULL)
 		return FALSE;
@@ -66,7 +66,7 @@ fu_synaptics_rmi_firmware_add_image(FuSynapticsRmiFirmware *self,
 static gboolean
 fu_synaptics_rmi_firmware_add_image_v10(FuSynapticsRmiFirmware *self,
 					const gchar *id,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					gsize bufsz,
 					gsize sig_sz,
@@ -76,7 +76,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuSynapticsRmiFirmware *self,
 	if (!fu_synaptics_rmi_firmware_add_image(self, id, stream, offset, bufsz, flags, error))
 		return FALSE;
 	if (sig_sz != 0) {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autofree gchar *sig_id = NULL;
 
@@ -114,7 +114,7 @@ fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -374,7 +374,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 
 static gboolean
 fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -444,7 +444,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 
 static gboolean
 fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -760,7 +760,7 @@ fu_synaptics_rmi_firmware_class_init(FuSynapticsRmiFirmwareClass *klass)
 
 static gboolean
 fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
-						  GInputStream *stream,
+						  FuInputStream *stream,
 						  const guint8 *buf,
 						  gsize bufsz,
 						  guint32 start_offset,

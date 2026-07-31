@@ -33,5 +33,12 @@ if get_option('tests')
       plugin_builtin_egis_moc,
     ],
   )
-  test('egis-moc-self-test', e)
+  test(
+    'egis-moc-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

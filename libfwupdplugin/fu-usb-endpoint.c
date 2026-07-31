@@ -18,6 +18,7 @@
 
 #include <string.h>
 
+#include "fu-input-stream.h"
 #include "fu-usb-endpoint-private.h"
 
 struct _FuUsbEndpoint {
@@ -207,7 +208,7 @@ fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
 
 static gboolean
 fu_usb_endpoint_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

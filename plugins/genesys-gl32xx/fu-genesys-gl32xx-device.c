@@ -590,10 +590,7 @@ fu_genesys_gl32xx_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 	g_autoptr(GBytes) fw = NULL;
 
 	g_autoptr(FuDeviceLocker) locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      fu_device_detach,
-				      fu_device_attach,
-				      error);
+	    fu_device_locker_new_full(FU_DEVICE(self), fu_device_detach, fu_device_attach, error);
 
 	if (locker == NULL)
 		return NULL;
@@ -742,7 +739,10 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_GENESYS_GL32XX_FW_START_ADDR,
 					       FU_CHUNK_PAGESZ_NONE,
-					       self->packetsz);
+					       self->packetsz,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_genesys_gl32xx_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

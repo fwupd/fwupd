@@ -1,0 +1,30 @@
+{
+  "name": "PixArt POCO 103X Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "50fb0ec03271d808901bdc21fcc3f6ee0b75835fc7a96ad631781601babe18fa-firmware.cab",
+      "emulation-url": "fbfd102cdb3c94ca9a3b77db7f82649d5c7fbdc7b84fc676d1b36d2057fb90c8-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0x0102",
+          "guids": [
+            "8cff65cb-9aad-58f3-b745-3ddc4644a7d6"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "f1b42587f947ea3b9fda62179d5d4a5b19eaafc0b867a97b21ed5ca9ebf03d2c-firmware.cab",
+      "emulation-url": "464edbc0d12e73d8fc0f9c0a8786388f47e20e2302901feb83862761e3f11791-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0x0103",
+          "guids": [
+            "557765fd-e67a-5a8f-aaac-1e9fdda9252b"
+          ]
+        }
+      ]
+    }
+  ]
+}

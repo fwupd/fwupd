@@ -280,7 +280,10 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_QSI_DOCK_TX_ISP_LENGTH_MCU);
+					       FU_QSI_DOCK_TX_ISP_LENGTH_MCU,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -521,7 +524,10 @@ fu_qsi_dock_mcu_device_write_firmware_with_idx(FuQsiDockMcuDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw_align,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_QSI_DOCK_EXTERN_FLASH_PAGE_SIZE);
+					       FU_QSI_DOCK_EXTERN_FLASH_PAGE_SIZE,
+					       error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_qsi_dock_mcu_device_write_chunks(self,
 						 chunks,
 						 &checksum_val,

@@ -861,8 +861,11 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 	blob = fu_firmware_get_bytes(block_img, error);
 	if (blob == NULL)
 		return FALSE;
-	chunks =
-	    fu_chunk_array_new_from_bytes(blob, 0, 0, FU_STRUCT_ILITEK_ITS_LONG_HID_CMD_SIZE_DATA);
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       0,
+					       0,
+					       FU_STRUCT_ILITEK_ITS_LONG_HID_CMD_SIZE_DATA,
+					       error);
 	if (chunks == NULL)
 		return FALSE;
 

@@ -6,8 +6,18 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  publish:
-    uses: ./.github/workflows/matrix.yml
+  linux:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/linux.yml
+    with:
+      publish: true
+    secrets: inherit
+
+  windows:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/windows.yml
     with:
       publish: true
     secrets: inherit

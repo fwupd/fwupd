@@ -94,18 +94,18 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_ifd_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_ifd_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_ifd_fdbar_validate_stream(stream, offset, error);
 }
 
-static GInputStream *
-fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
+static FuInputStream *
+fu_ifd_firmware_fixup_stream(FuInputStream *stream, GError **error)
 {
 	const guint8 buf[] = {0xFF};
 	gsize streamsz = 0;
 	g_autoptr(GBytes) blob = g_bytes_new(buf, sizeof(buf));
-	g_autoptr(GInputStream) stream2 = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) stream2 = fu_composite_input_stream_new();
 
 	/* already aligned */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -173,7 +173,7 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 
 static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -182,7 +182,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autoptr(FuStructIfdFcba) st_fcba = NULL;
 	g_autoptr(FuStructIfdFdbar) st_fdbar = NULL;
-	g_autoptr(GInputStream) stream2 = NULL;
+	g_autoptr(FuInputStream) stream2 = NULL;
 
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -269,7 +269,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
 		guint32 freg_size;
 		g_autoptr(FuFirmware) img = NULL;
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 
 		/* invalid - check before subtraction */
 		if (freg_base > freg_limt)

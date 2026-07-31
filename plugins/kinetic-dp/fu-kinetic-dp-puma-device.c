@@ -17,9 +17,9 @@
 #define PUMA_DPCD_DATA_SIZE	0x8000ul /* 0x80000ul ~ 0x87FFF, 32 KB*/
 #define PUMA_DPCD_DATA_ADDR_END (PUMA_DPCD_DATA_ADDR + PUMA_DPCD_DATA_SIZE - 1)
 
-#define PUMA_CHUNK_PROCESS_MAX_WAIT		    10000 /* max wait time in ms to process 32KB chunk */
-#define FU_KINETIC_DP_PUMA_REQUEST_FLASH_ERASE_TIME 2  /* typical erase time, ms */
-#define POLL_INTERVAL_MS			    20 /* check the status of installing FW images */
+#define PUMA_CHUNK_PROCESS_MAX_WAIT 10000 /* max wait time in ms to process 32KB chunk */
+#define FU_KINETIC_DP_PUMA_REQUEST_FLASH_ERASE_TIME 2 /* typical erase time, ms */
+#define POLL_INTERVAL_MS 20			      /* check the status of installing FW images */
 
 struct _FuKineticDpPumaDevice {
 	FuKineticDpDevice parent_instance;
@@ -139,8 +139,13 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 static gboolean
 fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self, GBytes *fw, GError **error)
 {
-	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       16,
+								       error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -174,7 +179,10 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw,
 								       FU_CHUNK_ADDR_OFFSET_NONE,
 								       FU_CHUNK_PAGESZ_NONE,
-								       PUMA_DPCD_DATA_SIZE);
+								       PUMA_DPCD_DATA_SIZE,
+								       error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

@@ -87,7 +87,7 @@ fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
 				   FuFirmwareParseFlags flags,
@@ -176,7 +176,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 static gboolean
 fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 				 guint8 image_count,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -247,7 +247,7 @@ fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 
 static gboolean
 fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -256,7 +256,7 @@ fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -377,7 +377,10 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		chunks = fu_chunk_array_new_from_bytes(img_bytes,
 						       FU_CHUNK_ADDR_OFFSET_NONE,
 						       FU_CHUNK_PAGESZ_NONE,
-						       64);
+						       64,
+						       error);
+		if (chunks == NULL)
+			return NULL;
 		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(
 		    st_info,
 		    MAX(fu_chunk_array_length(chunks), 1));
@@ -406,7 +409,10 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		chunks = fu_chunk_array_new_from_bytes(img_bytes,
 						       FU_CHUNK_ADDR_OFFSET_NONE,
 						       FU_CHUNK_PAGESZ_NONE,
-						       64);
+						       64,
+						       error);
+		if (chunks == NULL)
+			return NULL;
 		img_padded =
 		    fu_bytes_pad(img_bytes, MAX(fu_chunk_array_length(chunks), 1) * 64, 0xFF);
 		fu_byte_array_append_bytes(buf, img_padded);

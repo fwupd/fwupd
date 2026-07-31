@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -26,7 +26,7 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autoptr(FuFirmware) firmware_payload = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware_public_key = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 	g_autoptr(GBytes) blob_public_key = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

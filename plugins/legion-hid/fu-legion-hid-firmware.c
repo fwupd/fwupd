@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuLegionHidFirmware, fu_legion_hid_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_legion_hid_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -26,9 +26,9 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_mcu = fu_firmware_new();
 	g_autoptr(FuFirmware) img_right = fu_firmware_new();
 	g_autoptr(FuStructLegionHidBinHeader) st_header = NULL;
-	g_autoptr(GInputStream) stream_left = NULL;
-	g_autoptr(GInputStream) stream_mcu = NULL;
-	g_autoptr(GInputStream) stream_right = NULL;
+	g_autoptr(FuInputStream) stream_left = NULL;
+	g_autoptr(FuInputStream) stream_mcu = NULL;
+	g_autoptr(FuInputStream) stream_right = NULL;
 
 	st_header = fu_struct_legion_hid_bin_header_parse_stream(stream, 0x00, error);
 	if (st_header == NULL)

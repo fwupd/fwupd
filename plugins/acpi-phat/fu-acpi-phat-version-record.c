@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
-				  GInputStream *stream,
+				  FuInputStream *stream,
 				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
@@ -33,7 +33,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	record_count = fu_struct_acpi_phat_version_record_get_record_count(st);
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
-		g_autoptr(GInputStream) stream_tmp = NULL;
+		g_autoptr(FuInputStream) stream_tmp = NULL;
 		stream_tmp = fu_partial_input_stream_new(stream,
 							 offset + st->buf->len,
 							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,

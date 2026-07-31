@@ -20,7 +20,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, {{obj.c_method('Unref')}})
 {{obj.name}} *{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 {%- if obj.export('ParseStream') == Export.PUBLIC %}
-{{obj.name}} *{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{{obj.name}} *{{obj.c_method('ParseStream')}}(FuInputStream *stream, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 {%- if obj.export('Validate') == Export.PUBLIC %}
 gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
@@ -29,7 +29,7 @@ gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offs
 gboolean {{obj.c_method('ValidateBytes')}}(GBytes *blob, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 {%- if obj.export('ValidateStream') == Export.PUBLIC %}
-gboolean {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+gboolean {{obj.c_method('ValidateStream')}}(FuInputStream *stream, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 {%- if obj.export('ValidateInternal') == Export.PUBLIC %}
 gboolean {{obj.c_method('ValidateInternal')}}({{obj.name}} *st, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;

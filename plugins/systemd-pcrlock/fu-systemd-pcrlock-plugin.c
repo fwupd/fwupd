@@ -14,6 +14,7 @@
 
 struct _FuSystemdPcrlockPlugin {
 	FuPlugin parent_instance;
+	GPtrArray *unlocked; /* (element-type utf8): categories unlocked during composite_prepare */
 };
 
 G_DEFINE_TYPE(FuSystemdPcrlockPlugin, fu_systemd_pcrlock_plugin, FU_TYPE_PLUGIN)
@@ -215,34 +216,91 @@ fu_systemd_pcrlock_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError
 	return FALSE;
 }
 
-/* used to rollback unlocks in case any fails, to avoid leaving intermediate state around */
-typedef struct {
-	sd_varlink *vl; /* noref */
-	const gchar *name;
-} FuSystemdPcrlockRelock;
-
-static void
-fu_systemd_pcrlock_plugin_relock_free(FuSystemdPcrlockRelock *self)
+/* re-lock a single measurement, if it was one we unlocked during prepare */
+static gboolean
+fu_systemd_pcrlock_plugin_relock_category(FuSystemdPcrlockPlugin *self,
+					  sd_varlink *vl,
+					  const gchar *category,
+					  GError **error)
 {
-	if (self->vl != NULL)
-		(void)fu_systemd_pcrlock_plugin_lock(self->vl, self->name, NULL);
-	g_free(self);
+	if (!g_ptr_array_find_with_equal_func(self->unlocked, category, g_str_equal, NULL))
+		return TRUE;
+	return fu_systemd_pcrlock_plugin_lock(vl, category, error);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSystemdPcrlockRelock, fu_systemd_pcrlock_plugin_relock_free)
+/* remember a measurement we unlocked, so it can be re-locked on failure */
+static void
+fu_systemd_pcrlock_plugin_add_unlocked_category(FuSystemdPcrlockPlugin *self, const gchar *category)
+{
+	g_ptr_array_add(self->unlocked, g_strdup(category));
+}
+
+/* Used to rollback the unlocks if any step of prepare fails, to avoid leaving
+ * intermediate state around; the sealed policy is only changed on success. */
+typedef struct {
+	FuSystemdPcrlockPlugin *self; /* noref */
+	sd_varlink *vl;		      /* noref */
+} FuSystemdPcrlockRollback;
+
+static void
+fu_systemd_pcrlock_plugin_rollback_free(FuSystemdPcrlockRollback *rollback)
+{
+	/* disarmed on success by clearing vl; otherwise re-lock everything we removed */
+	if (rollback->vl != NULL) {
+		for (guint i = 0; i < rollback->self->unlocked->len; i++) {
+			const gchar *category = g_ptr_array_index(rollback->self->unlocked, i);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_systemd_pcrlock_plugin_lock(rollback->vl, category, &error_local))
+				g_debug("failed to re-lock %s: %s", category, error_local->message);
+		}
+		g_ptr_array_set_size(rollback->self->unlocked, 0);
+	}
+	g_free(rollback);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSystemdPcrlockRollback, fu_systemd_pcrlock_plugin_rollback_free)
 
 static gboolean
-fu_systemd_pcrlock_plugin_relock(gboolean unlock_firmware,
+fu_systemd_pcrlock_plugin_component_locked(sd_json_variant *components, const gchar *needle)
+{
+	/* systemd prefixes component ids with an ordering number and may split them into an
+	 * early and a late part, e.g. "250-firmware-code-early" and "550-firmware-code-late",
+	 * so match the stable middle part of the id */
+	for (size_t i = 0; i < sd_json_variant_elements(components); i++) {
+		sd_json_variant *component = sd_json_variant_by_index(components, i);
+		sd_json_variant *variants = sd_json_variant_by_key(component, "variants");
+		const char *id = sd_json_variant_string(sd_json_variant_by_key(component, "id"));
+
+		/* a component with no variants defines no .pcrlock file, so locks nothing */
+		if (variants == NULL || sd_json_variant_elements(variants) == 0)
+			continue;
+
+		if (id != NULL && g_strstr_len(id, -1, needle) != NULL)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_systemd_pcrlock_plugin_relock(FuSystemdPcrlockPlugin *self,
+				 gboolean unlock_firmware,
 				 gboolean unlock_secureboot,
 				 GError **error)
 {
-	const gchar *address = g_getenv("FWUPD_SYSTEMD_PCRLOCK_VARLINK_ADDRESS");
 	int r;
+	const gchar *address = g_getenv("FWUPD_SYSTEMD_PCRLOCK_VARLINK_ADDRESS");
+	const char *error_id = NULL;
+	sd_json_variant *components = NULL;
+	gboolean firmware_code_locked = FALSE;
+	gboolean firmware_config_locked = FALSE;
+	gboolean secureboot_policy_locked = FALSE;
+	gboolean secureboot_authority_locked = FALSE;
 	g_autoptr(sd_varlink) vl = NULL;
-	g_autoptr(FuSystemdPcrlockRelock) firmware_code_rollback = NULL;
-	g_autoptr(FuSystemdPcrlockRelock) firmware_config_rollback = NULL;
-	g_autoptr(FuSystemdPcrlockRelock) secureboot_policy_rollback = NULL;
-	g_autoptr(FuSystemdPcrlockRelock) secureboot_authority_rollback = NULL;
+	g_autoptr(FuSystemdPcrlockRollback) rollback = g_new0(FuSystemdPcrlockRollback, 1);
+
+	/* forget anything left behind by an earlier attempt */
+	rollback->self = self;
+	g_ptr_array_set_size(self->unlocked, 0);
 
 	if (address == NULL)
 		address = FU_SYSTEMD_PCRLOCK_VARLINK_ADDRESS;
@@ -258,57 +316,71 @@ fu_systemd_pcrlock_plugin_relock(gboolean unlock_firmware,
 		return FALSE;
 	}
 
-	/* TODO: check if any of these are actually locked before unlocking once API is available */
+	/* Find out which of the measurements are actually locked, so that we only unlock
+	 * (and later re-lock on failure) the ones that pcrlock is currently enforcing. */
+	r = sd_varlink_collect(vl,
+			       "io.systemd.PCRLock.ListComponents",
+			       /* parameters= */ NULL,
+			       &components,
+			       &error_id);
+	if (!fu_systemd_pcrlock_plugin_check_reply(r,
+						   error_id,
+						   "io.systemd.PCRLock.ListComponents",
+						   error))
+		return FALSE;
+	firmware_code_locked =
+	    fu_systemd_pcrlock_plugin_component_locked(components, "firmware-code");
+	firmware_config_locked =
+	    fu_systemd_pcrlock_plugin_component_locked(components, "firmware-config");
+	secureboot_policy_locked =
+	    fu_systemd_pcrlock_plugin_component_locked(components, "secureboot-policy");
+	secureboot_authority_locked =
+	    fu_systemd_pcrlock_plugin_component_locked(components, "secureboot-authority");
+
+	/* queries are done and connection is up, arm the rollback */
+	rollback->vl = vl;
 
 	/* remove the drop-ins for the affected measurements (firmware = PCRs 0, 2, 4
-	 * and 1, 3, 5 and SecureBoot = PCR 7), arming a rollback guard after each unlock
-	 * so anything already removed is re-locked if a later step fails, to avoid leaving
-	 * intermediate state around */
-	if (unlock_firmware) {
+	 * and 1, 3, 5 and SecureBoot = PCR 7), remembering each one so it can be re-locked
+	 * if a later step fails or the update itself does not complete */
+	if (unlock_firmware && firmware_code_locked) {
 		if (!fu_systemd_pcrlock_plugin_unlock(vl, "firmwareCode", error))
 			return FALSE;
-		firmware_code_rollback = g_new0(FuSystemdPcrlockRelock, 1);
-		firmware_code_rollback->vl = vl;
-		firmware_code_rollback->name = "firmwareCode";
-
+		fu_systemd_pcrlock_plugin_add_unlocked_category(self, "firmwareCode");
+	}
+	if (unlock_firmware && firmware_config_locked) {
 		if (!fu_systemd_pcrlock_plugin_unlock(vl, "firmwareConfig", error))
 			return FALSE;
-		firmware_config_rollback = g_new0(FuSystemdPcrlockRelock, 1);
-		firmware_config_rollback->vl = vl;
-		firmware_config_rollback->name = "firmwareConfig";
+		fu_systemd_pcrlock_plugin_add_unlocked_category(self, "firmwareConfig");
 	}
-	if (unlock_secureboot) {
+	if (unlock_secureboot && secureboot_policy_locked) {
 		if (!fu_systemd_pcrlock_plugin_unlock(vl, "secureBootPolicy", error))
 			return FALSE;
-		secureboot_policy_rollback = g_new0(FuSystemdPcrlockRelock, 1);
-		secureboot_policy_rollback->vl = vl;
-		secureboot_policy_rollback->name = "secureBootPolicy";
-
+		fu_systemd_pcrlock_plugin_add_unlocked_category(self, "secureBootPolicy");
+	}
+	if (unlock_secureboot && secureboot_authority_locked) {
 		if (!fu_systemd_pcrlock_plugin_unlock(vl, "secureBootAuthority", error))
 			return FALSE;
-		secureboot_authority_rollback = g_new0(FuSystemdPcrlockRelock, 1);
-		secureboot_authority_rollback->vl = vl;
-		secureboot_authority_rollback->name = "secureBootAuthority";
+		fu_systemd_pcrlock_plugin_add_unlocked_category(self, "secureBootAuthority");
 	}
 
-	if (!fu_systemd_pcrlock_plugin_make_policy(vl, error))
-		return FALSE;
+	/* if nothing was actually unlocked the policy is unchanged, so avoid regenerating
+	 * it, which would needlessly reseal the TPM and could fail */
+	if (self->unlocked->len > 0) {
+		if (!fu_systemd_pcrlock_plugin_make_policy(vl, error))
+			return FALSE;
+	}
 
-	/* success, disarm the rollbacks */
-	if (firmware_code_rollback != NULL)
-		firmware_code_rollback->vl = NULL;
-	if (firmware_config_rollback != NULL)
-		firmware_config_rollback->vl = NULL;
-	if (secureboot_policy_rollback != NULL)
-		secureboot_policy_rollback->vl = NULL;
-	if (secureboot_authority_rollback != NULL)
-		secureboot_authority_rollback->vl = NULL;
+	/* success: keep the loosened policy, and disarm the rollback so the unlocked
+	 * measurements are remembered for composite_cleanup instead of re-locked now */
+	rollback->vl = NULL;
 	return TRUE;
 }
 
 static gboolean
 fu_systemd_pcrlock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
+	FuSystemdPcrlockPlugin *self = FU_SYSTEMD_PCRLOCK_PLUGIN(plugin);
 	gboolean unlock_firmware = FALSE;
 	gboolean unlock_secureboot = FALSE;
 
@@ -347,7 +419,7 @@ fu_systemd_pcrlock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices
 	 * fails the update must be aborted, as otherwise the measurements would
 	 * change on the next boot and no longer satisfy the still-sealed policy,
 	 * and the disk could not be unlocked */
-	if (!fu_systemd_pcrlock_plugin_relock(unlock_firmware, unlock_secureboot, error)) {
+	if (!fu_systemd_pcrlock_plugin_relock(self, unlock_firmware, unlock_secureboot, error)) {
 		g_prefix_error_literal(error,
 				       "failed to update systemd-pcrlock policy for firmware "
 				       "update: ");
@@ -357,15 +429,113 @@ fu_systemd_pcrlock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices
 	return TRUE;
 }
 
+static gboolean
+fu_systemd_pcrlock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	FuSystemdPcrlockPlugin *self = FU_SYSTEMD_PCRLOCK_PLUGIN(plugin);
+	const gchar *address = g_getenv("FWUPD_SYSTEMD_PCRLOCK_VARLINK_ADDRESS");
+	gboolean relock_firmware = FALSE;
+	gboolean relock_secureboot = FALSE;
+	int r;
+	g_autoptr(sd_varlink) vl = NULL;
+
+	/* the policy was not loosened during prepare, so there is nothing to undo */
+	if (self->unlocked->len == 0)
+		return TRUE;
+
+	/* Only re-lock the measurements whose update failed, keeping the loosened policy for
+	 * the ones that succeeded. Classify each failed device the same way as
+	 * composite_prepare did when deciding what to unlock. */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		FwupdUpdateState state;
+		gboolean fw;
+		gboolean sb;
+
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+			continue;
+		state = fu_device_get_update_state(device);
+		if (state != FWUPD_UPDATE_STATE_FAILED &&
+		    state != FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
+			continue;
+
+		fw = fu_device_has_private_flag(device,
+						FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE);
+		sb = fu_device_has_private_flag(device,
+						FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT);
+
+		/* affects the measured-boot state but did not say how, so be conservative */
+		if (!fw && !sb) {
+			fw = TRUE;
+			sb = TRUE;
+		}
+		if (fw)
+			relock_firmware = TRUE;
+		if (sb)
+			relock_secureboot = TRUE;
+	}
+	if (!relock_firmware && !relock_secureboot) {
+		g_ptr_array_set_size(self->unlocked, 0);
+		return TRUE;
+	}
+
+	/* Re-lock the measurements belonging to the failed updates and regenerate the policy
+	 * to restore the protection that was in place before the update. */
+	if (address == NULL)
+		address = FU_SYSTEMD_PCRLOCK_VARLINK_ADDRESS;
+	r = sd_varlink_connect_address(&vl, address);
+	if (r < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to connect to %s: %s",
+			    address,
+			    fwupd_strerror(-r));
+		return FALSE;
+	}
+	if (relock_firmware) {
+		if (!fu_systemd_pcrlock_plugin_relock_category(self, vl, "firmwareCode", error))
+			return FALSE;
+		if (!fu_systemd_pcrlock_plugin_relock_category(self, vl, "firmwareConfig", error))
+			return FALSE;
+	}
+	if (relock_secureboot) {
+		if (!fu_systemd_pcrlock_plugin_relock_category(self, vl, "secureBootPolicy", error))
+			return FALSE;
+		if (!fu_systemd_pcrlock_plugin_relock_category(self,
+							       vl,
+							       "secureBootAuthority",
+							       error))
+			return FALSE;
+	}
+	if (!fu_systemd_pcrlock_plugin_make_policy(vl, error))
+		return FALSE;
+
+	g_ptr_array_set_size(self->unlocked, 0);
+	return TRUE;
+}
+
 static void
 fu_systemd_pcrlock_plugin_init(FuSystemdPcrlockPlugin *self)
 {
+	self->unlocked = g_ptr_array_new_with_free_func(g_free);
+}
+
+static void
+fu_systemd_pcrlock_plugin_finalize(GObject *obj)
+{
+	FuSystemdPcrlockPlugin *self = FU_SYSTEMD_PCRLOCK_PLUGIN(obj);
+	g_ptr_array_unref(self->unlocked);
+	G_OBJECT_CLASS(fu_systemd_pcrlock_plugin_parent_class)->finalize(obj);
 }
 
 static void
 fu_systemd_pcrlock_plugin_class_init(FuSystemdPcrlockPluginClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
+	object_class->finalize = fu_systemd_pcrlock_plugin_finalize;
 	plugin_class->startup = fu_systemd_pcrlock_plugin_startup;
 	plugin_class->composite_prepare = fu_systemd_pcrlock_plugin_composite_prepare;
+	plugin_class->composite_cleanup = fu_systemd_pcrlock_plugin_composite_cleanup;
 }

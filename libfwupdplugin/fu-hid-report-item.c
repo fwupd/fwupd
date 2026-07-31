@@ -54,7 +54,7 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -85,7 +85,7 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 		if (!fu_input_stream_read_u8(stream, 1, &data_size, error))
 			return FALSE;
 	} else {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		if (data_size == 1) {
 			guint8 value = 0;
 			if (!fu_input_stream_read_u8(stream, 1, &value, error))

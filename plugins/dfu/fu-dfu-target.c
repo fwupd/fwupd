@@ -143,7 +143,8 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	if (proxy == NULL)
 		return FALSE;
 	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE)) {
-		if (tmp[1] == '\0') {
+		/* handle trailing NUL */
+		if (tmp[0] != '\0' && tmp[1] == '\0') {
 			tmp[1] = tmp[0];
 			tmp[0] = 'B';
 		}

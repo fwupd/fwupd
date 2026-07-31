@@ -62,7 +62,7 @@ fu_logitech_tap_touch_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_logitech_tap_touch_firmware_validate(FuFirmware *firmware,
-					GInputStream *stream,
+					FuInputStream *stream,
 					gsize offset,
 					GError **error)
 {
@@ -121,7 +121,7 @@ fu_logitech_tap_touch_firmware_calculate_basic_cb(const guint8 *buf,
 
 static gboolean
 fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
@@ -138,10 +138,10 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 	guint8 protocol_id = 0;
 	g_autoptr(FuFirmware) ap_img = fu_firmware_new();
 	g_autoptr(FuFirmware) df_img = fu_firmware_new();
-	g_autoptr(GInputStream) ap_stream = NULL;
+	g_autoptr(FuInputStream) ap_stream = NULL;
 	/* temp stream to calculate ap crc, it is few bytes smaller */
-	g_autoptr(GInputStream) ap_stream_crc = NULL;
-	g_autoptr(GInputStream) df_stream = NULL;
+	g_autoptr(FuInputStream) ap_stream_crc = NULL;
+	g_autoptr(FuInputStream) df_stream = NULL;
 	const gchar *image_end_magic =
 	    "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFFILITek AP CRC   ";
 

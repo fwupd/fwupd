@@ -554,9 +554,9 @@ fu_test_mtd_device_read_firmware_invalid_gtype_func(gconstpointer user_data)
 	/* with no specific firmware type set we should fall back to a generic
 	 * FuFirmware rather than crashing on g_object_new(G_TYPE_INVALID) */
 	firmware = fu_device_read_firmware(FU_DEVICE(device),
-					  progress,
-					  FU_FIRMWARE_PARSE_FLAG_NONE,
-					  &error);
+					   progress,
+					   FU_FIRMWARE_PARSE_FLAG_NONE,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 }
