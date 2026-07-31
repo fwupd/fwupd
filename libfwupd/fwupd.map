@@ -1214,3 +1214,12 @@ LIBFWUPD_2.1.7 {
     fwupd_device_get_id_display;
   local: *;
 } LIBFWUPD_2.1.6;
+
+LIBFWUPD_2.1.8 {
+  global:
+    fwupd_client_emit_device_added;
+    fwupd_client_emit_device_changed;
+    fwupd_client_emit_device_removed;
+    fwupd_client_emit_device_request;
+  local: *;
+} LIBFWUPD_2.1.7;
