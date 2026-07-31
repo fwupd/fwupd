@@ -9557,6 +9557,7 @@ fu_engine_constructed(GObject *obj)
 #endif
 
 	self->history = fu_history_new(self->ctx);
+	self->device_list = fu_device_list_new(self->ctx);
 	self->emulation = fu_engine_emulator_new(self);
 
 	self->remote_list = fu_remote_list_new(self->ctx);
@@ -9624,7 +9625,6 @@ fu_engine_constructed(GObject *obj)
 static void
 fu_engine_init(FuEngine *self)
 {
-	self->device_list = fu_device_list_new();
 	self->idle = fu_idle_new();
 	self->plugin_list = fu_plugin_list_new();
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
