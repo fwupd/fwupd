@@ -3,7 +3,7 @@ project(
   'c',
   version: '2.1.8',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.63.0', # limited by RHEL-9
+  meson_version: '>=1.11.0',
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
@@ -140,6 +140,16 @@ add_project_arguments(
   cc.get_supported_arguments(warning_flags),
   language: 'c',
 )
+
+# FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
+# can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
+# `g_assert_nonnull()` doesn't affect control flow.
+if static_analysis
+  add_project_arguments(
+    ['-D__COVERITY__'],
+    language: 'c',
+  )
+endif
 
 if not meson.is_cross_build()
   add_project_arguments(

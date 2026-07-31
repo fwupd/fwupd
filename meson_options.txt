@@ -174,7 +174,7 @@ option(
   'static_analysis',
   type: 'boolean',
   value: false,
-  description: 'enable GCC static analysis support',
+  description: 'enable GCC static analysis support (use only for debugging, this affects the binary)',
 )
 option(
   'supported_build',

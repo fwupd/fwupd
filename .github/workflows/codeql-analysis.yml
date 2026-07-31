@@ -38,8 +38,8 @@ jobs:
         run: |
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update -qq
+          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11; \
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
-          python3 -m pip install --user "meson >= 0.62.0"
 
       - name: Build
         run: |

@@ -39,17 +39,13 @@ struct _FuPartialInputStream {
 };
 
 static void
-fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface);
-static void
 fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 			fu_partial_input_stream,
 			FU_TYPE_INPUT_STREAM,
-			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_partial_input_stream_seekable_iface_init)
-			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						  fu_partial_input_stream_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					      fu_partial_input_stream_codec_iface_init))
 
 static void
 fu_partial_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
@@ -66,27 +62,27 @@ fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface)
 }
 
 static goffset
-fu_partial_input_stream_tell(GSeekable *seekable)
+fu_partial_input_stream_tell(FuInputStream *stream)
 {
-	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(seekable);
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
 	return g_seekable_tell(G_SEEKABLE(self->base_stream)) - self->offset;
 }
 
 static gboolean
-fu_partial_input_stream_can_seek(GSeekable *seekable)
+fu_partial_input_stream_can_seek(FuInputStream *stream)
 {
-	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(seekable);
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
 	return g_seekable_can_seek(G_SEEKABLE(self->base_stream));
 }
 
 static gboolean
-fu_partial_input_stream_seek(GSeekable *seekable,
+fu_partial_input_stream_seek(FuInputStream *stream,
 			     goffset offset,
 			     GSeekType type,
 			     GCancellable *cancellable,
 			     GError **error)
 {
-	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(seekable);
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
 
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -111,35 +107,6 @@ fu_partial_input_stream_seek(GSeekable *seekable,
 			       G_SEEK_SET,
 			       cancellable,
 			       error);
-}
-
-static gboolean
-fu_partial_input_stream_can_truncate(GSeekable *seekable)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_partial_input_stream_truncate(GSeekable *seekable,
-				 goffset offset,
-				 GCancellable *cancellable,
-				 GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot truncate FuPartialInputStream");
-	return FALSE;
-}
-
-static void
-fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
-{
-	iface->tell = fu_partial_input_stream_tell;
-	iface->can_seek = fu_partial_input_stream_can_seek;
-	iface->seek = fu_partial_input_stream_seek;
-	iface->can_truncate = fu_partial_input_stream_can_truncate;
-	iface->truncate_fn = fu_partial_input_stream_truncate;
 }
 
 /**
@@ -238,11 +205,11 @@ fu_partial_input_stream_get_size(FuPartialInputStream *self)
 }
 
 static gssize
-fu_partial_input_stream_read(GInputStream *stream,
-			     void *buffer,
-			     gsize count,
-			     GCancellable *cancellable,
-			     GError **error)
+fu_partial_input_stream_read_fn(FuInputStream *stream,
+				void *buffer,
+				gsize count,
+				GCancellable *cancellable,
+				GError **error)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), -1);
@@ -255,11 +222,7 @@ fu_partial_input_stream_read(GInputStream *stream,
 		return -1;
 	}
 	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
-	return g_input_stream_read(G_INPUT_STREAM(self->base_stream),
-				   buffer,
-				   count,
-				   cancellable,
-				   error);
+	return fu_input_stream_read(self->base_stream, buffer, count, cancellable, error);
 }
 
 static void
@@ -275,8 +238,11 @@ static void
 fu_partial_input_stream_class_init(FuPartialInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GInputStreamClass *istream_class = G_INPUT_STREAM_CLASS(klass);
-	istream_class->read_fn = fu_partial_input_stream_read;
+	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
+	istream_class->read_fn = fu_partial_input_stream_read_fn;
+	istream_class->tell = fu_partial_input_stream_tell;
+	istream_class->can_seek = fu_partial_input_stream_can_seek;
+	istream_class->seek = fu_partial_input_stream_seek;
 	object_class->finalize = fu_partial_input_stream_finalize;
 }
 

@@ -17,11 +17,12 @@ fu_stream_input_stream_read_func(void)
 	guint8 buf[8] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* read first 4 bytes */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 4, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 4, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 4);
 	g_assert_cmpint(buf[0], ==, 'A');
@@ -30,7 +31,7 @@ fu_stream_input_stream_read_func(void)
 	g_assert_cmpint(buf[3], ==, 'D');
 
 	/* read next 4 bytes */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 4, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 4, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 4);
 	g_assert_cmpint(buf[0], ==, 'E');
@@ -39,7 +40,7 @@ fu_stream_input_stream_read_func(void)
 	g_assert_cmpint(buf[3], ==, 'H');
 
 	/* reading past end returns 0 */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 4, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 4, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 }
@@ -50,11 +51,12 @@ fu_stream_input_stream_read_short_func(void)
 	gssize rc;
 	guint8 buf[16] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABC", 3);
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 	g_autoptr(GError) error = NULL;
 
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 3);
 	g_assert_cmpint(buf[0], ==, 'A');
@@ -70,7 +72,8 @@ fu_stream_input_stream_seek_func(void)
 	guint8 buf[2] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* can_seek should return TRUE for a seekable base stream */
@@ -82,7 +85,7 @@ fu_stream_input_stream_seek_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 4);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, 'E');
@@ -94,7 +97,7 @@ fu_stream_input_stream_seek_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 7);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'H');
@@ -105,7 +108,7 @@ fu_stream_input_stream_seek_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 6);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 2, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, 'G');
@@ -126,14 +129,15 @@ fu_stream_input_stream_tell_func(void)
 	guint8 buf[3] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEF", 6);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* initial position is 0 */
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0);
 
 	/* read advances position */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 3, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 3, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 3);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 3);
@@ -155,7 +159,8 @@ fu_stream_input_stream_truncate_func(void)
 	gboolean ret;
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCD", 4);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	g_assert_false(g_seekable_can_truncate(G_SEEKABLE(stream)));
@@ -172,7 +177,8 @@ fu_stream_input_stream_read_bytes_func(void)
 	gsize sz = 0;
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 	g_autoptr(GBytes) result = NULL;
 
@@ -195,7 +201,8 @@ fu_stream_input_stream_size_func(void)
 	gsize sz = 0;
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	ret = fu_input_stream_size(stream, &sz, &error);
@@ -211,7 +218,8 @@ fu_stream_input_stream_read_safe_func(void)
 	guint8 buf[8] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* read 3 bytes from offset 2 in the stream, store at offset 0 in buf */
@@ -228,7 +236,8 @@ fu_stream_input_stream_checksum_func(void)
 {
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 	g_autofree gchar *csum_wrapper = NULL;
 	g_autofree gchar *csum_expected = NULL;
@@ -250,7 +259,8 @@ fu_stream_input_stream_empty_func(void)
 	guint8 buf[4] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("", 0);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* size should be 0 */
@@ -260,7 +270,7 @@ fu_stream_input_stream_empty_func(void)
 	g_assert_cmpint(sz, ==, 0);
 
 	/* read should return 0 immediately */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
@@ -276,7 +286,8 @@ fu_stream_input_stream_closed_base_func(void)
 	guint8 buf[4] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* close the base stream */
@@ -285,7 +296,7 @@ fu_stream_input_stream_closed_base_func(void)
 	g_assert_true(ret);
 
 	/* reading through the wrapper should fail */
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
+	rc = fu_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CLOSED);
 	g_assert_cmpint(rc, ==, -1);
 }
@@ -294,10 +305,11 @@ static void
 fu_stream_input_stream_type_func(void)
 {
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCD", 4);
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
-	g_assert_true(G_IS_INPUT_STREAM(stream));
+	g_assert_false(G_IS_INPUT_STREAM(stream)); /* nocheck:blocked */
 	g_assert_true(G_IS_SEEKABLE(stream));
 	g_assert_true(FU_IS_INPUT_STREAM(stream));
 	g_assert_true(FU_IS_STREAM_INPUT_STREAM(stream));
@@ -311,7 +323,8 @@ fu_stream_input_stream_seek_read_cycle_func(void)
 	guint8 buf[1] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) base_stream =		/* nocheck:blocked */
+	    g_memory_input_stream_new_from_bytes(blob); /* nocheck:blocked */
 	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
 
 	/* read each byte individually by seeking */
@@ -320,7 +333,7 @@ fu_stream_input_stream_seek_read_cycle_func(void)
 		g_assert_no_error(error);
 		g_assert_true(ret);
 
-		rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 1, NULL, &error);
+		rc = fu_input_stream_read(stream, buf, 1, NULL, &error);
 		g_assert_no_error(error);
 		g_assert_cmpint(rc, ==, 1);
 		g_assert_cmpint(buf[0], ==, 'A' + (guint8)i);
@@ -331,7 +344,7 @@ fu_stream_input_stream_seek_read_cycle_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 1, NULL, &error);
+	rc = fu_input_stream_read(stream, buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'A');

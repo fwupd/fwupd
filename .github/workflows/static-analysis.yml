@@ -43,11 +43,6 @@ jobs:
         run: |-
           ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
       - name: configure
-        env:
-          # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
-          # can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
-          # `g_assert_nonnull()` doesn't affect control flow.
-          CFLAGS: -D__COVERITY__
         run: |-
           meson setup -Dwerror=true -Dstatic_analysis=true build
       - name: build with `-fanalyzer`

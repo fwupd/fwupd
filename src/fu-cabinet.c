@@ -615,15 +615,15 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 	}
 	if (g_str_has_suffix(fn, ".jcat")) {
 		g_autoptr(FuInputStream) istream = NULL;
+		g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 		istream = fu_firmware_get_stream(img, error);
 		if (istream == NULL)
 			return FALSE;
 		/* TODO: move this to libjcat? */
 		if (!g_seekable_seek(G_SEEKABLE(istream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(self->jcat_file,
-						   G_INPUT_STREAM(istream),
-						   error)) {
+		g_istream = fu_input_stream_as_g_input_stream(istream);
+		if (!fwupd_jcat_file_import_stream(self->jcat_file, g_istream, error)) {
 			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
@@ -931,12 +931,15 @@ fu_cabinet_sign(FuCabinet *self,
 	/* load existing .jcat file if it exists */
 	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "firmware.jcat", NULL);
 	if (img != NULL) {
-		g_autoptr(FuInputStream) stream = fu_firmware_get_stream(img, error);
+		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(GInputStream) g_stream = NULL; /* nocheck:blocked */
+		stream = fu_firmware_get_stream(img, error);
 		if (stream == NULL)
 			return FALSE;
 		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(stream), error))
+		g_stream = fu_input_stream_as_g_input_stream(stream);
+		if (!fwupd_jcat_file_import_stream(jcat_file, g_stream, error))
 			return FALSE;
 	}
 
