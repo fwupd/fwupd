@@ -6529,7 +6529,27 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 	g_task_return_pointer(task, g_steal_pointer(&blob), (GDestroyNotify)g_bytes_unref);
 }
 
-/* private */
+/**
+ * fwupd_client_download_bytes2_async:
+ * @self: a #FwupdClient
+ * @urls: (not nullable) (element-type utf8): the remote URLs
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 2.1.8
+ **/
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
 				   GPtrArray *urls,
@@ -6569,6 +6589,27 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 
 	/* download data */
 	g_task_run_in_thread(task, fwupd_client_download_bytes_thread_cb);
+}
+
+/**
+ * fwupd_client_download_bytes2_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.download_bytes2_async].
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 2.1.8
+ **/
+GBytes *
+fwupd_client_download_bytes2_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
 /**

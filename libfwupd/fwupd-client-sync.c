@@ -3100,6 +3100,61 @@ fwupd_client_download_bytes(FwupdClient *self,
 	return g_steal_pointer(&helper->bytes);
 }
 
+static void
+fwupd_client_download_bytes2_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->bytes =
+	    fwupd_client_download_bytes2_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_download_bytes2:
+ * @self: a #FwupdClient
+ * @urls: (not nullable) (element-type utf8): the remote URLs
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 2.1.8
+ **/
+GBytes *
+fwupd_client_download_bytes2(FwupdClient *self,
+			     GPtrArray *urls,
+			     FwupdClientDownloadFlags flags,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(urls != NULL, NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(fwupd_client_get_user_agent(self) != NULL, NULL);
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_download_bytes2_async(self,
+					   urls,
+					   flags,
+					   cancellable,
+					   fwupd_client_download_bytes2_cb,
+					   helper);
+	g_main_loop_run(helper->loop);
+	if (helper->bytes == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->bytes);
+}
+
 /**
  * fwupd_client_download_file:
  * @self: a #FwupdClient
