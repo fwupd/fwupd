@@ -228,6 +228,11 @@ fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* overwrite BCC byte with '\0' so the version field is properly null-terminated;
+	 * the struct version field spans beyond the actual string and would otherwise
+	 * include the BCC byte as a spurious trailing character */
+	buf[3 + pkt_ln] = '\0';
+
 	/* parse */
 	st_res = fu_struct_focal_moc_version_rsp_parse(buf, sizeof(buf), 0, error);
 	if (st_res == NULL)
