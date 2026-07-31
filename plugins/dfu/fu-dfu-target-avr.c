@@ -541,12 +541,12 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 }
 
 static gboolean
-fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
-					  GPtrArray *chunks,
-					  guint16 *page_last,
-					  gsize header_sz,
-					  FuProgress *progress,
-					  GError **error)
+fu_dfu_target_avr_download_element_chunk(FuDfuTarget *target,
+					 FuChunk *chk,
+					 guint16 *page_last,
+					 gsize header_sz,
+					 FuProgress *progress,
+					 GError **error)
 {
 	FuDevice *proxy;
 	/* nocheck:magic */
@@ -568,63 +568,79 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 	    0xFF,
 	    0xFF, /* release */
 	};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) chunk_tmp = fu_chunk_get_bytes(chk);
 
 	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
 	if (proxy == NULL)
 		return FALSE;
 
+	/* select page if required */
+	if (fu_chunk_get_page(chk) != *page_last) {
+		g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
+		if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+			if (!fu_dfu_target_avr_select_memory_page(target,
+								  fu_chunk_get_page(chk),
+								  progress_tmp,
+								  error))
+				return FALSE;
+		} else {
+			if (!fu_dfu_target_avr32_select_memory_page(target,
+								    fu_chunk_get_page(chk),
+								    progress_tmp,
+								    error))
+				return FALSE;
+		}
+		*page_last = fu_chunk_get_page(chk);
+	}
+
+	/* create chunk with header and footer */
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_DOWNLOAD);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_PROGRAM_START);
+	fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_BIG_ENDIAN);
+	fu_byte_array_append_uint16(buf,
+				    fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) - 1,
+				    G_BIG_ENDIAN);
+	fu_byte_array_set_size(buf, header_sz, 0x0);
+	fu_byte_array_append_bytes(buf, chunk_tmp);
+	g_byte_array_append(buf, footer, sizeof(footer));
+
+	/* download data */
+	g_debug("sending 0x%x bytes to the hardware", buf->len);
+	if (!fu_dfu_target_download_chunk(target,
+					  fu_chunk_get_idx(chk),
+					  buf,
+					  0, /* timeout default */
+					  progress,
+					  error)) {
+		g_prefix_error(error, "failed to write AVR chunk %u: ", fu_chunk_get_idx(chk));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
+					  GPtrArray *chunks,
+					  guint16 *page_last,
+					  gsize header_sz,
+					  FuProgress *progress,
+					  GError **error)
+{
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(GByteArray) buf = g_byte_array_new();
-		g_autoptr(GBytes) chunk_tmp = fu_chunk_get_bytes(chk);
-
-		/* select page if required */
-		if (fu_chunk_get_page(chk) != *page_last) {
-			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
-				if (!fu_dfu_target_avr_select_memory_page(target,
-									  fu_chunk_get_page(chk),
-									  progress_tmp,
-									  error))
-					return FALSE;
-			} else {
-				if (!fu_dfu_target_avr32_select_memory_page(target,
-									    fu_chunk_get_page(chk),
-									    progress_tmp,
-									    error))
-					return FALSE;
-			}
-			*page_last = fu_chunk_get_page(chk);
-		}
-
-		/* create chunk with header and footer */
-		fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_DOWNLOAD);
-		fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_PROGRAM_START);
-		fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_BIG_ENDIAN);
-		fu_byte_array_append_uint16(buf,
-					    fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) -
-						1,
-					    G_BIG_ENDIAN);
-		fu_byte_array_set_size(buf, header_sz, 0x0);
-		fu_byte_array_append_bytes(buf, chunk_tmp);
-		g_byte_array_append(buf, footer, sizeof(footer));
-
-		/* download data */
-		g_debug("sending 0x%x bytes to the hardware", buf->len);
-		if (!fu_dfu_target_download_chunk(target,
-						  i,
-						  buf,
-						  0, /* timeout default */
-						  fu_progress_get_child(progress),
-						  error)) {
-			g_prefix_error(error, "failed to write AVR chunk %u: ", i);
+		if (!fu_dfu_target_avr_download_element_chunk(target,
+							      chk,
+							      page_last,
+							      header_sz,
+							      fu_progress_get_child(progress),
+							      error))
 			return FALSE;
-		}
-
-		/* update UI */
 		fu_progress_step_done(progress);
 	}
 
