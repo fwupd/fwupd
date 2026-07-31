@@ -12,7 +12,7 @@
 G_DECLARE_FINAL_TYPE(FuDeviceList, fu_device_list, FU, DEVICE_LIST, GObject)
 
 FuDeviceList *
-fu_device_list_new(void);
+fu_device_list_new(FuContext *ctx) G_GNUC_NON_NULL(1);
 void
 fu_device_list_add(FuDeviceList *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
