@@ -5689,7 +5689,13 @@ fu_util_jcat_export(FuUtil *self, gchar **values, GError **error)
 	items = fwupd_jcat_file_get_items(file);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdJcatItem *item = g_ptr_array_index(items, i);
+		const gchar *id;
 		g_autoptr(GPtrArray) blobs = fwupd_jcat_item_get_blobs(item);
+
+		/* the ID is used as the basename, so it cannot contain path components */
+		id = fwupd_jcat_item_get_id_safe(item, error);
+		if (id == NULL)
+			return FALSE;
 		for (guint j = 0; j < blobs->len; j++) {
 			FwupdJcatBlob *blob = g_ptr_array_index(blobs, j);
 			g_autofree gchar *fn = NULL;
@@ -5701,7 +5707,7 @@ fu_util_jcat_export(FuUtil *self, gchar **values, GError **error)
 				continue;
 
 			/* export */
-			str = g_string_new(fwupd_jcat_item_get_id(item));
+			str = g_string_new(id);
 			g_string_append_printf(
 			    str,
 			    ".%s",
@@ -5976,6 +5982,7 @@ fu_util_jcat_verify_item(FuUtil *self,
 			 GError **error)
 {
 	gboolean ret = TRUE;
+	const gchar *id;
 	g_autoptr(GBytes) source = NULL;
 	g_autoptr(GPtrArray) alias_ids = fwupd_jcat_item_get_alias_ids(item);
 	g_autoptr(GPtrArray) blobs = fwupd_jcat_item_get_blobs(item);
@@ -5985,11 +5992,16 @@ fu_util_jcat_verify_item(FuUtil *self,
 	/* load source */
 	fu_console_print(self->console, "%s:", fwupd_jcat_item_get_id(item));
 
-	/* find the source */
-	g_ptr_array_add(fns_possible,
-			g_build_filename(self->destdir, fwupd_jcat_item_get_id(item), NULL));
+	/* find the source; the ID and aliases are used as basenames, so they cannot contain
+	 * path components */
+	id = fwupd_jcat_item_get_id_safe(item, error);
+	if (id == NULL)
+		return FALSE;
+	g_ptr_array_add(fns_possible, g_build_filename(self->destdir, id, NULL));
 	for (guint i = 0; i < alias_ids->len; i++) {
 		const gchar *alias_id = g_ptr_array_index(alias_ids, i);
+		if (!fu_path_verify_safe(alias_id, error))
+			return FALSE;
 		g_ptr_array_add(fns_possible, g_build_filename(self->destdir, alias_id, NULL));
 	}
 	for (guint i = 0; i < fns_possible->len; i++) {
