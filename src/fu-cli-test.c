@@ -138,7 +138,7 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/fwupd/util", fu_cli_func);
-	g_test_add_func("/fwupd/util/interesting-device", fu_cli_interesting_device_func);
+	g_test_add_func("/fwupd/cli", fu_cli_func);
+	g_test_add_func("/fwupd/cli/interesting-device", fu_cli_interesting_device_func);
 	return g_test_run();
 }
