@@ -7,6 +7,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="debian">
       <control />
@@ -119,11 +120,13 @@
   <dependency id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="clang-tools">
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="clang-format">
@@ -465,6 +468,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
       <package>gettext</package>
@@ -521,6 +525,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="libglib2.0-dev">
@@ -549,6 +554,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
       <package>glib</package>
@@ -648,6 +654,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="jq">
@@ -905,6 +912,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
       <package variant="amd64" />
@@ -1014,6 +1022,7 @@
       <control />
       <package variant="x86_64">pkgconf</package>
       <package variant="aarch64">pkgconf</package>
+      <package variant="android">pkgconf</package>
     </distro>
     <distro id="centos">
       <package variant="x86_64">pkgconf-pkg-config</package>
@@ -1321,6 +1330,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="gi-docgen">
@@ -1336,6 +1346,9 @@
     </distro>
     <distro id="darwin">
       <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="android" />
     </distro>
     <distro id="debian">
       <build-indep />
@@ -1629,6 +1642,19 @@
   <dependency id="wget">
     <distro id="centos">
       <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
+  <dependency id="unzip">
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
+  <dependency id="openjdk">
+    <distro id="ubuntu">
+      <package variant="android">openjdk-17-jdk-headless</package>
     </distro>
   </dependency>
   <dependency id="xz">

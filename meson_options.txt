@@ -1,3 +1,7 @@
+option('binder',
+  type: 'feature',
+  description: 'Android AIDL support',
+)
 option(
   'bash_completion',
   type: 'boolean',

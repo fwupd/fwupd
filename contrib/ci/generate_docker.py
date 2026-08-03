@@ -73,7 +73,7 @@ if CROSS:
         DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True
     )
     deps = deps_parsed + build_indep + [f"crossbuild-essential-{CROSS}"]
-elif VARIANT == "i386":
+elif VARIANT in ["i386", "android"]:
     deps_parsed, build_indep = parse_dependencies(DISTRO, VARIANT, False)
     deps = deps_parsed + build_indep
 else:

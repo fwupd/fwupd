@@ -7,6 +7,15 @@ project(
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
+if host_machine.system() == 'android'
+  add_project_link_arguments(
+    '-lc++abi',
+    '-lc++_static',
+    language : ['c', 'cpp']
+  )
+endif
+
+
 fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
@@ -257,6 +266,10 @@ else
   includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  if host_machine.system() == 'android'
+    datadir = join_paths(prefix, 'usr/share')
+    localstatedir = '/data/vendor/fwupd'
+  endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
   installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
   daemon_dir = join_paths(libexecdir, 'fwupd')
