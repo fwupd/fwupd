@@ -1,5 +1,6 @@
 /*
  * Copyright 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Mario Limonciello <mario.limonciello@amd.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -13,15 +14,16 @@
 #include <unistd.h>
 #include <xmlb.h>
 
+#include "fu-bios-settings-private.h"
+#include "fu-cli-common.h"
 #include "fu-console.h"
-#include "fu-util-common.h"
 
 static gchar *
-fu_util_remote_to_string(FwupdRemote *remote, guint idt);
+fu_cli_remote_to_string(FwupdRemote *remote, guint idt);
 static gchar *
-fu_util_release_to_string(FwupdRelease *rel, guint idt);
+fu_cli_release_to_string(FwupdRelease *rel, guint idt);
 static gchar *
-fu_util_convert_description(const gchar *xml, GError **error);
+fu_cli_convert_description(const gchar *xml, GError **error);
 
 gchar *
 fu_console_color_format(const gchar *text, FuConsoleColor fg_color) /* nocheck:name */
@@ -34,12 +36,12 @@ fu_console_color_format(const gchar *text, FuConsoleColor fg_color) /* nocheck:n
 typedef struct {
 	FwupdClient *client;
 	FuConsole *console;
-} FuUtilPrintTreeHelper;
+} FuCliPrintTreeHelper;
 
 static gboolean
-fu_util_traverse_tree(FuUtilNode *n, gpointer data)
+fu_cli_traverse_tree(FuCliNode *n, gpointer data)
 {
-	FuUtilPrintTreeHelper *helper = (FuUtilPrintTreeHelper *)data;
+	FuCliPrintTreeHelper *helper = (FuCliPrintTreeHelper *)data;
 	guint idx = g_node_depth(n) - 1;
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
@@ -47,13 +49,13 @@ fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 	/* get split lines */
 	if (FWUPD_IS_DEVICE(n->data)) {
 		FwupdDevice *dev = FWUPD_DEVICE(n->data);
-		tmp = fu_util_device_to_string(helper->client, dev, idx);
+		tmp = fu_cli_device_to_string(helper->client, dev, idx);
 	} else if (FWUPD_IS_REMOTE(n->data)) {
 		FwupdRemote *remote = FWUPD_REMOTE(n->data);
-		tmp = fu_util_remote_to_string(remote, idx);
+		tmp = fu_cli_remote_to_string(remote, idx);
 	} else if (FWUPD_IS_RELEASE(n->data)) {
 		FwupdRelease *release = FWUPD_RELEASE(n->data);
-		tmp = fu_util_release_to_string(release, idx);
+		tmp = fu_cli_release_to_string(release, idx);
 		g_info("%s", tmp);
 	}
 
@@ -115,7 +117,7 @@ fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 }
 
 static gboolean
-fu_util_free_tree_cb(FuUtilNode *n, gpointer data)
+fu_cli_free_tree_cb(FuCliNode *n, gpointer data)
 {
 	if (n->data != NULL)
 		g_object_unref(n->data);
@@ -123,34 +125,34 @@ fu_util_free_tree_cb(FuUtilNode *n, gpointer data)
 }
 
 void
-fu_util_free_node(FuUtilNode *n)
+fu_cli_free_node(FuCliNode *n)
 {
-	g_node_traverse(n, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_free_tree_cb, NULL);
+	g_node_traverse(n, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_cli_free_tree_cb, NULL);
 	g_node_destroy(n);
 }
 
 void
-fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
+fu_cli_print_node(FuConsole *console, FwupdClient *client, FuCliNode *n)
 {
-	FuUtilPrintTreeHelper helper = {.client = client, .console = console};
-	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, &helper);
+	FuCliPrintTreeHelper helper = {.client = client, .console = console};
+	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_cli_traverse_tree, &helper);
 }
 
 static gboolean
-fu_util_is_interesting_child(GPtrArray *devs, FwupdDevice *dev)
+fu_cli_is_interesting_child(GPtrArray *devs, FwupdDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *child = g_ptr_array_index(devs, i);
 		if (fwupd_device_get_parent(child) != dev)
 			continue;
-		if (fu_util_is_interesting_device(devs, child))
+		if (fu_cli_is_interesting_device(devs, child))
 			return TRUE;
 	}
 	return FALSE;
 }
 
 gboolean
-fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev)
+fu_cli_is_interesting_device(GPtrArray *devs, FwupdDevice *dev)
 {
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 		return TRUE;
@@ -161,13 +163,13 @@ fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev)
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags(dev) == 0)
 		return TRUE;
-	if (fu_util_is_interesting_child(devs, dev))
+	if (fu_cli_is_interesting_child(devs, dev))
 		return TRUE;
 	return FALSE;
 }
 
 gchar *
-fu_util_get_user_cache_path(const gchar *fn)
+fu_cli_get_user_cache_path(const gchar *fn)
 {
 	const gchar *root = g_get_user_cache_dir();
 	g_autofree gchar *basename = g_path_get_basename(fn);
@@ -187,7 +189,7 @@ fu_util_get_user_cache_path(const gchar *fn)
 }
 
 static gboolean
-fu_util_update_shutdown(GError **error)
+fu_cli_update_shutdown(GError **error)
 {
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -219,7 +221,7 @@ fu_util_update_shutdown(GError **error)
 }
 
 static gboolean
-fu_util_update_reboot(GError **error)
+fu_cli_update_reboot(GError **error)
 {
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -251,7 +253,7 @@ fu_util_update_reboot(GError **error)
 }
 
 static gchar *
-fu_util_get_release_description_with_fallback(FwupdRelease *rel)
+fu_cli_get_release_description_with_fallback(FwupdRelease *rel)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -286,11 +288,11 @@ fu_util_get_release_description_with_fallback(FwupdRelease *rel)
 }
 
 gboolean
-fu_util_prompt_warning(FuConsole *console,
-		       FwupdDevice *device,
-		       FwupdRelease *release,
-		       const gchar *machine,
-		       GError **error)
+fu_cli_prompt_warning(FuConsole *console,
+		      FwupdDevice *device,
+		      FwupdRelease *release,
+		      const gchar *machine,
+		      GError **error)
 {
 	FwupdDeviceFlags flags;
 	gint vercmp;
@@ -331,9 +333,9 @@ fu_util_prompt_warning(FuConsole *console,
 	}
 
 	/* description is optional */
-	desc_fb = fu_util_get_release_description_with_fallback(release);
+	desc_fb = fu_cli_get_release_description_with_fallback(release);
 	if (desc_fb != NULL) {
-		g_autofree gchar *desc = fu_util_convert_description(desc_fb, NULL);
+		g_autofree gchar *desc = fu_cli_convert_description(desc_fb, NULL);
 		if (desc != NULL)
 			g_string_append_printf(str, "\n%s", desc);
 	}
@@ -390,7 +392,7 @@ fu_util_prompt_warning(FuConsole *console,
 }
 
 gboolean
-fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
+fu_cli_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
 {
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
 		if (prompt) {
@@ -404,7 +406,7 @@ fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean pro
 						   _("Shutdown now?")))
 				return TRUE;
 		}
-		return fu_util_update_shutdown(error);
+		return fu_cli_update_shutdown(error);
 	}
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) {
 		if (prompt) {
@@ -417,14 +419,14 @@ fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean pro
 						   _("Restart now?")))
 				return TRUE;
 		}
-		return fu_util_update_reboot(error);
+		return fu_cli_update_reboot(error);
 	}
 
 	return TRUE;
 }
 
 static void
-fu_util_cmd_free(FuUtilCmd *item)
+fu_cli_cmd_free(FuCliCmd *item)
 {
 	g_free(item->name);
 	g_free(item->arguments);
@@ -433,29 +435,29 @@ fu_util_cmd_free(FuUtilCmd *item)
 }
 
 GPtrArray *
-fu_util_cmd_array_new(void)
+fu_cli_cmd_array_new(void)
 {
-	return g_ptr_array_new_with_free_func((GDestroyNotify)fu_util_cmd_free);
+	return g_ptr_array_new_with_free_func((GDestroyNotify)fu_cli_cmd_free);
 }
 
 static gint
-fu_util_cmd_sort_cb(FuUtilCmd **item1, FuUtilCmd **item2)
+fu_cli_cmd_sort_cb(FuCliCmd **item1, FuCliCmd **item2)
 {
 	return g_strcmp0((*item1)->name, (*item2)->name);
 }
 
 void
-fu_util_cmd_array_sort(GPtrArray *array)
+fu_cli_cmd_array_sort(GPtrArray *array)
 {
-	g_ptr_array_sort(array, (GCompareFunc)fu_util_cmd_sort_cb);
+	g_ptr_array_sort(array, (GCompareFunc)fu_cli_cmd_sort_cb);
 }
 
 void
-fu_util_cmd_array_add(GPtrArray *array,
-		      const gchar *name,
-		      const gchar *arguments,
-		      const gchar *description,
-		      FuUtilCmdFunc callback)
+fu_cli_cmd_array_add(GPtrArray *array,
+		     const gchar *name,
+		     const gchar *arguments,
+		     const gchar *description,
+		     FuCliCmdFunc callback)
 {
 	g_auto(GStrv) names = NULL;
 
@@ -466,14 +468,14 @@ fu_util_cmd_array_add(GPtrArray *array,
 	/* add each one */
 	names = g_strsplit(name, ",", -1);
 	for (guint i = 0; names[i] != NULL; i++) {
-		FuUtilCmd *item = g_new0(FuUtilCmd, 1);
+		FuCliCmd *item = g_new0(FuCliCmd, 1);
 		item->name = g_strdup(names[i]);
 		if (i == 0) {
 			item->description = g_strdup(description);
 		} else {
 			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
 			item->description = g_strdup_printf(_("Alias to %s"), names[0]);
-			item->flags |= FU_UTIL_CMD_FLAG_IS_ALIAS;
+			item->flags |= FU_CLI_CMD_FLAG_IS_ALIAS;
 		}
 		item->arguments = g_strdup(arguments);
 		item->callback = callback;
@@ -482,11 +484,11 @@ fu_util_cmd_array_add(GPtrArray *array,
 }
 
 gboolean
-fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtil *self,
-		      const gchar *command,
-		      gchar **values,
-		      GError **error)
+fu_cli_cmd_array_run(GPtrArray *array,
+		     FuCli *self,
+		     const gchar *command,
+		     gchar **values,
+		     GError **error)
 {
 	g_auto(GStrv) values_copy = g_new0(gchar *, g_strv_length(values) + 1);
 
@@ -500,8 +502,8 @@ fu_util_cmd_array_run(GPtrArray *array,
 	/* return all possible actions */
 	if (g_strcmp0(command, "get-actions") == 0) {
 		for (guint i = 0; i < array->len; i++) {
-			FuUtilCmd *item = g_ptr_array_index(array, i);
-			if (item->flags & FU_UTIL_CMD_FLAG_IS_ALIAS)
+			FuCliCmd *item = g_ptr_array_index(array, i);
+			if (item->flags & FU_CLI_CMD_FLAG_IS_ALIAS)
 				continue;
 			g_print("%s\n", item->name); /* nocheck:print */
 		}
@@ -510,7 +512,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 
 	/* find command */
 	for (guint i = 0; i < array->len; i++) {
-		FuUtilCmd *item = g_ptr_array_index(array, i);
+		FuCliCmd *item = g_ptr_array_index(array, i);
 		if (g_strcmp0(item->name, command) == 0)
 			return item->callback(self, values_copy, error);
 	}
@@ -525,7 +527,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 }
 
 gchar *
-fu_util_cmd_array_to_string(GPtrArray *array)
+fu_cli_cmd_array_to_string(GPtrArray *array)
 {
 	gsize len;
 	const gsize max_len = 35;
@@ -534,7 +536,7 @@ fu_util_cmd_array_to_string(GPtrArray *array)
 	/* print each command */
 	string = g_string_new("");
 	for (guint i = 0; i < array->len; i++) {
-		FuUtilCmd *item = g_ptr_array_index(array, i);
+		FuCliCmd *item = g_ptr_array_index(array, i);
 		g_string_append(string, "  ");
 		g_string_append(string, item->name);
 		len = fu_strwidth(item->name) + 2;
@@ -565,7 +567,7 @@ fu_util_cmd_array_to_string(GPtrArray *array)
 }
 
 const gchar *
-fu_util_branch_for_display(const gchar *branch)
+fu_cli_branch_for_display(const gchar *branch)
 {
 	if (branch == NULL) {
 		/* TRANSLATORS: this is the default branch name when unset */
@@ -575,7 +577,7 @@ fu_util_branch_for_display(const gchar *branch)
 }
 
 static gchar *
-fu_util_release_get_name(FwupdRelease *release)
+fu_cli_release_get_name(FwupdRelease *release)
 {
 	const gchar *name = fwupd_release_get_name(release);
 	GPtrArray *cats = fwupd_release_get_categories(release);
@@ -745,10 +747,10 @@ fu_util_release_get_name(FwupdRelease *release)
 }
 
 gboolean
-fu_util_parse_filter_device_flags(const gchar *filter,
-				  FwupdDeviceFlags *include,
-				  FwupdDeviceFlags *exclude,
-				  GError **error)
+fu_cli_parse_filter_device_flags(const gchar *filter,
+				 FwupdDeviceFlags *include,
+				 FwupdDeviceFlags *exclude,
+				 GError **error)
 {
 	FwupdDeviceFlags tmp;
 	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
@@ -818,10 +820,10 @@ fu_util_parse_filter_device_flags(const gchar *filter,
 }
 
 gboolean
-fu_util_parse_filter_release_flags(const gchar *filter,
-				   FwupdReleaseFlags *include,
-				   FwupdReleaseFlags *exclude,
-				   GError **error)
+fu_cli_parse_filter_release_flags(const gchar *filter,
+				  FwupdReleaseFlags *include,
+				  FwupdReleaseFlags *exclude,
+				  GError **error)
 {
 	FwupdReleaseFlags tmp;
 	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
@@ -892,7 +894,7 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 
 /* a protocol must not contain spaces and must contain at least one dot */
 static gboolean
-fu_util_validate_protocol(const gchar *protocol)
+fu_cli_validate_protocol(const gchar *protocol)
 {
 	if (protocol == NULL)
 		return FALSE;
@@ -904,15 +906,15 @@ fu_util_validate_protocol(const gchar *protocol)
 }
 
 gboolean
-fu_util_parse_filter_protocol_flags(gchar **filters,
-				    GPtrArray *include,
-				    GPtrArray *exclude,
-				    GError **error)
+fu_cli_parse_filter_protocol_flags(gchar **filters,
+				   GPtrArray *include,
+				   GPtrArray *exclude,
+				   GError **error)
 {
 	for (guint i = 0; filters[i] != NULL; i++) {
 		const gchar *protocol = filters[i];
 		if (g_str_has_prefix(protocol, "~")) {
-			if (!fu_util_validate_protocol(protocol + 1)) {
+			if (!fu_cli_validate_protocol(protocol + 1)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -922,7 +924,7 @@ fu_util_parse_filter_protocol_flags(gchar **filters,
 			}
 			g_ptr_array_add(exclude, g_strdup(protocol + 1));
 		} else {
-			if (!fu_util_validate_protocol(protocol)) {
+			if (!fu_cli_validate_protocol(protocol)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -939,7 +941,7 @@ fu_util_parse_filter_protocol_flags(gchar **filters,
 }
 
 static gboolean
-fu_util_device_has_any_protocol(FwupdDevice *device, GPtrArray *protocols)
+fu_cli_device_has_any_protocol(FwupdDevice *device, GPtrArray *protocols)
 {
 	for (guint i = 0; i < protocols->len; i++) {
 		const gchar *protocol = g_ptr_array_index(protocols, i);
@@ -950,15 +952,14 @@ fu_util_device_has_any_protocol(FwupdDevice *device, GPtrArray *protocols)
 }
 
 gboolean
-fu_util_device_match_protocol(FwupdDevice *device,
-			      GPtrArray *protocols_include,
-			      GPtrArray *protocols_exclude)
+fu_cli_device_match_protocol(FwupdDevice *device,
+			     GPtrArray *protocols_include,
+			     GPtrArray *protocols_exclude)
 {
-	if (protocols_exclude->len > 0 &&
-	    fu_util_device_has_any_protocol(device, protocols_exclude))
+	if (protocols_exclude->len > 0 && fu_cli_device_has_any_protocol(device, protocols_exclude))
 		return FALSE;
 	if (protocols_include->len > 0 &&
-	    !fu_util_device_has_any_protocol(device, protocols_include))
+	    !fu_cli_device_has_any_protocol(device, protocols_include))
 		return FALSE;
 
 	/* success */
@@ -966,12 +967,12 @@ fu_util_device_match_protocol(FwupdDevice *device,
 }
 
 GPtrArray *
-fu_util_device_array_filter(GPtrArray *devices,
-			    FwupdDeviceFlags include,
-			    FwupdDeviceFlags exclude,
-			    GPtrArray *protocols_include,
-			    GPtrArray *protocols_exclude,
-			    GError **error)
+fu_cli_device_array_filter(GPtrArray *devices,
+			   FwupdDeviceFlags include,
+			   FwupdDeviceFlags exclude,
+			   GPtrArray *protocols_include,
+			   GPtrArray *protocols_exclude,
+			   GError **error)
 {
 	g_autoptr(GPtrArray) devices1 = NULL;
 	g_autoptr(GPtrArray) devices2 = NULL;
@@ -983,9 +984,9 @@ fu_util_device_array_filter(GPtrArray *devices,
 		devices2 = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		for (guint i = 0; i < devices1->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices1, i);
-			if (!fu_util_device_match_protocol(device,
-							   protocols_include,
-							   protocols_exclude))
+			if (!fu_cli_device_match_protocol(device,
+							  protocols_include,
+							  protocols_exclude))
 				continue;
 			g_ptr_array_add(devices2, g_object_ref(device));
 		}
@@ -1005,12 +1006,12 @@ fu_util_device_array_filter(GPtrArray *devices,
 typedef struct {
 	guint cnt;
 	GString *str;
-} FuUtilConvertHelper;
+} FuCliConvertHelper;
 
 static gboolean
-fu_util_convert_description_head_cb(XbNode *n, gpointer user_data)
+fu_cli_convert_description_head_cb(XbNode *n, gpointer user_data)
 {
-	FuUtilConvertHelper *helper = (FuUtilConvertHelper *)user_data;
+	FuCliConvertHelper *helper = (FuCliConvertHelper *)user_data;
 	helper->cnt++;
 
 	/* start */
@@ -1036,9 +1037,9 @@ fu_util_convert_description_head_cb(XbNode *n, gpointer user_data)
 }
 
 static gboolean
-fu_util_convert_description_tail_cb(XbNode *n, gpointer user_data)
+fu_cli_convert_description_tail_cb(XbNode *n, gpointer user_data)
 {
-	FuUtilConvertHelper *helper = (FuUtilConvertHelper *)user_data;
+	FuCliConvertHelper *helper = (FuCliConvertHelper *)user_data;
 	helper->cnt++;
 
 	/* end */
@@ -1061,12 +1062,12 @@ fu_util_convert_description_tail_cb(XbNode *n, gpointer user_data)
 }
 
 static gchar *
-fu_util_convert_description(const gchar *xml, GError **error)
+fu_cli_convert_description(const gchar *xml, GError **error)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbSilo) silo = NULL;
-	FuUtilConvertHelper helper = {
+	FuCliConvertHelper helper = {
 	    .cnt = 0,
 	    .str = str,
 	};
@@ -1079,16 +1080,222 @@ fu_util_convert_description(const gchar *xml, GError **error)
 	/* convert to something we can show on the console */
 	n = xb_silo_get_root(silo);
 	xb_node_transmogrify(n,
-			     fu_util_convert_description_head_cb,
-			     fu_util_convert_description_tail_cb,
+			     fu_cli_convert_description_head_cb,
+			     fu_cli_convert_description_tail_cb,
 			     &helper);
 
 	/* success */
 	return fu_strstrip(str->str);
 }
 
+static void
+fu_cli_bios_setting_update_description(FwupdBiosSetting *setting)
+{
+	const gchar *tmp = fwupd_bios_setting_get_description(setting);
+	const gchar *new = NULL;
+
+	/* try to look it up from translations */
+	if (tmp == NULL)
+		return;
+	new = dgettext(GETTEXT_PACKAGE, tmp);
+	if (new != NULL)
+		fwupd_bios_setting_set_description(setting, new);
+}
+
+static const gchar *
+fu_cli_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
+{
+	if (kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
+		/* TRANSLATORS: The BIOS setting can only be changed to fixed values */
+		return _("Enumeration");
+	}
+	if (kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
+		/* TRANSLATORS: The BIOS setting only accepts integers in a fixed range */
+		return _("Integer");
+	}
+	if (kind == FWUPD_BIOS_SETTING_KIND_STRING) {
+		/* TRANSLATORS: The BIOS setting accepts strings */
+		return _("String");
+	}
+	return NULL;
+}
+
+gboolean
+fu_cli_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
+{
+	/* no arguments set */
+	if (g_strv_length(values) == 0)
+		return TRUE;
+
+	/* check all arguments */
+	for (guint j = 0; j < g_strv_length(values); j++) {
+		if (g_strcmp0(fwupd_bios_setting_get_name(setting), values[j]) == 0)
+			return TRUE;
+		if (g_strcmp0(fwupd_bios_setting_get_id(setting), values[j]) == 0)
+			return TRUE;
+		if (g_strcmp0(fwupd_bios_setting_get_appstream_id(setting), values[j]) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+void
+fu_cli_bios_setting_console_print(FuConsole *console, gchar **values, GPtrArray *settings)
+{
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
+	for (guint i = 0; i < settings->len; i++) {
+		FwupdBiosSetting *setting = g_ptr_array_index(settings, i);
+		if (fu_cli_bios_setting_matches_args(setting, values)) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fu_cli_bios_setting_update_description(setting);
+			fwupd_codec_to_json(FWUPD_CODEC(setting),
+					    json_obj_tmp,
+					    FWUPD_CODEC_FLAG_NONE);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
+		}
+	}
+	fwupd_json_object_add_array(json_obj, "BiosSettings", json_arr);
+	fu_cli_print_json_object(console, json_obj);
+}
+
+gchar *
+fu_cli_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
+{
+	const gchar *tmp;
+	FwupdBiosSettingKind type;
+	g_autofree gchar *debug_str = NULL;
+	g_autofree gchar *current_value = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	debug_str = fwupd_codec_to_string(FWUPD_CODEC(setting));
+	g_debug("%s", debug_str);
+	tmp = fwupd_bios_setting_get_name(setting);
+	fwupd_codec_string_append(str, idt, tmp, "");
+
+	type = fwupd_bios_setting_get_kind(setting);
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: type of BIOS setting */
+				  _("Setting type"),
+				  fu_cli_bios_setting_kind_to_string(type));
+
+	tmp = fwupd_bios_setting_get_current_value(setting);
+	if (tmp != NULL) {
+		current_value = g_strdup(tmp);
+	} else {
+		/* TRANSLATORS: tell a user how to get information */
+		current_value = g_strdup_printf(_("Run without '%s' to see"), "--no-authenticate");
+	}
+	/* TRANSLATORS: current value of a BIOS setting */
+	fwupd_codec_string_append(str, idt + 1, _("Current Value"), current_value);
+
+	fu_cli_bios_setting_update_description(setting);
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: description of BIOS setting */
+				  _("Description"),
+				  fwupd_bios_setting_get_description(setting));
+
+	tmp = fwupd_bios_setting_get_appstream_id(setting);
+	if (tmp != NULL) {
+		/* TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting */
+		fwupd_codec_string_append(str, idt + 1, _("AppStream ID"), tmp);
+	}
+
+	tmp = fwupd_bios_setting_get_icon(setting);
+	if (tmp != NULL) {
+		/* TRANSLATORS: icon name for a BIOS setting */
+		fwupd_codec_string_append(str, idt + 1, _("Icon"), tmp);
+	}
+
+	if (fwupd_bios_setting_get_read_only(setting)) {
+		/* TRANSLATORS: item is TRUE */
+		tmp = _("True");
+	} else {
+		/* TRANSLATORS: item is FALSE */
+		tmp = _("False");
+	}
+	/* TRANSLATORS: BIOS setting is read only */
+	fwupd_codec_string_append(str, idt + 1, _("Read Only"), tmp);
+
+	if (type == FWUPD_BIOS_SETTING_KIND_INTEGER || type == FWUPD_BIOS_SETTING_KIND_STRING) {
+		g_autofree gchar *lower =
+		    g_strdup_printf("%" G_GUINT64_FORMAT,
+				    fwupd_bios_setting_get_lower_bound(setting));
+		g_autofree gchar *upper =
+		    g_strdup_printf("%" G_GUINT64_FORMAT,
+				    fwupd_bios_setting_get_upper_bound(setting));
+		if (type == FWUPD_BIOS_SETTING_KIND_INTEGER) {
+			g_autofree gchar *scalar =
+			    g_strdup_printf("%" G_GUINT64_FORMAT,
+					    fwupd_bios_setting_get_scalar_increment(setting));
+			/* TRANSLATORS: Lowest valid integer for BIOS setting */
+			fwupd_codec_string_append(str, idt + 1, _("Minimum value"), lower);
+			/* TRANSLATORS: Highest valid integer for BIOS setting */
+			fwupd_codec_string_append(str, idt + 1, _("Maximum value"), upper);
+			fwupd_codec_string_append(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: Scalar increment for integer BIOS setting */
+			    _("Scalar Increment"),
+			    scalar);
+		} else {
+			/* TRANSLATORS: Shortest valid string for BIOS setting */
+			fwupd_codec_string_append(str, idt + 1, _("Minimum length"), lower);
+			/* TRANSLATORS: Longest valid string for BIOS setting */
+			fwupd_codec_string_append(str, idt + 1, _("Maximum length"), upper);
+		}
+	} else if (type == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
+		GPtrArray *values = fwupd_bios_setting_get_possible_values(setting);
+		if (values != NULL && values->len > 0) {
+			/* TRANSLATORS: Possible values for a bios setting */
+			fwupd_codec_string_append(str, idt + 1, _("Possible Values"), NULL);
+			for (guint i = 0; i < values->len; i++) {
+				const gchar *possible = g_ptr_array_index(values, i);
+				g_autofree gchar *index = g_strdup_printf("%u", i);
+				fwupd_codec_string_append(str, idt + 2, index, possible);
+			}
+		}
+	}
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+GHashTable *
+fu_cli_bios_settings_parse_argv(gchar **input, GError **error)
+{
+	GHashTable *bios_settings;
+
+	/* json input */
+	if (g_strv_length(input) == 1) {
+		g_autofree gchar *data = NULL;
+		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(NULL);
+		if (!g_file_get_contents(input[0], &data, NULL, error))
+			return NULL;
+		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))
+			return NULL;
+		return fu_bios_settings_to_hash_kv(new_bios_settings);
+	}
+
+	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return NULL;
+	}
+
+	bios_settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	for (guint i = 0; i < g_strv_length(input); i += 2)
+		g_hash_table_insert(bios_settings, g_strdup(input[i]), g_strdup(input[i + 1]));
+
+	return bios_settings;
+}
+
 /**
- * fu_util_time_to_str:
+ * fu_cli_time_to_str:
  * @tmp: the time in seconds
  *
  * Converts a timestamp to a 'pretty' translated string
@@ -1096,7 +1303,7 @@ fu_util_convert_description(const gchar *xml, GError **error)
  * Returns: (transfer full): A string
  **/
 static gchar *
-fu_util_time_to_str(guint64 tmp)
+fu_cli_time_to_str(guint64 tmp)
 {
 	g_return_val_if_fail(tmp != 0, NULL);
 
@@ -1127,7 +1334,7 @@ fu_util_time_to_str(guint64 tmp)
 }
 
 static gchar *
-fu_util_device_flag_to_string(guint64 device_flag)
+fu_cli_device_flag_to_string(guint64 device_flag)
 {
 	if (device_flag == FWUPD_DEVICE_FLAG_NONE)
 		return NULL;
@@ -1286,7 +1493,7 @@ fu_util_device_flag_to_string(guint64 device_flag)
 }
 
 const gchar *
-fu_util_request_flag_to_string(FwupdRequestFlags request_flag)
+fu_cli_request_flag_to_string(FwupdRequestFlags request_flag)
 {
 	if (request_flag == FWUPD_REQUEST_FLAG_NONE)
 		return NULL;
@@ -1310,7 +1517,7 @@ fu_util_request_flag_to_string(FwupdRequestFlags request_flag)
 }
 
 static const gchar *
-fu_util_update_state_to_string(FwupdUpdateState update_state)
+fu_cli_update_state_to_string(FwupdUpdateState update_state)
 {
 	if (update_state == FWUPD_UPDATE_STATE_PENDING) {
 		/* TRANSLATORS: the update state of the specific device */
@@ -1336,7 +1543,7 @@ fu_util_update_state_to_string(FwupdUpdateState update_state)
 }
 
 gchar *
-fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
+fu_cli_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
 {
 	if (problem == FWUPD_DEVICE_PROBLEM_NONE)
 		return NULL;
@@ -1422,7 +1629,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 
 /* enumerate each problem, and also untranslated update error if set */
 GPtrArray *
-fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
+fu_cli_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
 {
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 
@@ -1432,7 +1639,7 @@ fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
 
 		if (!fwupd_device_has_problem(dev, problem))
 			continue;
-		str = fu_util_device_problem_to_string(client, dev, problem);
+		str = fu_cli_device_problem_to_string(client, dev, problem);
 		if (str == NULL)
 			continue;
 		g_ptr_array_add(array, g_steal_pointer(&str));
@@ -1443,7 +1650,7 @@ fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
 }
 
 gchar *
-fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
+fu_cli_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
 	GPtrArray *guids = fwupd_device_get_guids(dev);
@@ -1546,8 +1753,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 
 	/* install duration */
 	if (fwupd_device_get_install_duration(dev) > 0) {
-		g_autofree gchar *time =
-		    fu_util_time_to_str(fwupd_device_get_install_duration(dev));
+		g_autofree gchar *time = fu_cli_time_to_str(fwupd_device_get_install_duration(dev));
 		/* TRANSLATORS: length of time the update takes to apply */
 		fwupd_codec_string_append(str, idt + 1, _("Install Duration"), time);
 	}
@@ -1562,7 +1768,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 					  idt + 1,
 					  /* TRANSLATORS: hardware state, e.g. "pending" */
 					  _("Update State"),
-					  fu_util_update_state_to_string(state));
+					  fu_cli_update_state_to_string(state));
 	}
 
 	/* battery, but only if we're not about to show the same info as an inhibit */
@@ -1605,7 +1811,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 
 			if (!fwupd_device_has_problem(dev, problem))
 				continue;
-			desc = fu_util_device_problem_to_string(client, dev, problem);
+			desc = fu_cli_device_problem_to_string(client, dev, problem);
 			if (desc == NULL)
 				continue;
 			bullet = g_strdup_printf("• %s", desc);
@@ -1654,7 +1860,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	for (guint i = 0; i < 64; i++) {
 		if ((flags & ((guint64)1 << i)) == 0)
 			continue;
-		tmp2 = fu_util_device_flag_to_string((guint64)1 << i);
+		tmp2 = fu_cli_device_flag_to_string((guint64)1 << i);
 		if (tmp2 == NULL)
 			continue;
 		/* header */
@@ -1675,7 +1881,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	for (guint i = 0; i < 64; i++) {
 		if ((request_flags & ((guint64)1 << i)) == 0)
 			continue;
-		tmp2 = fu_util_request_flag_to_string((guint64)1 << i);
+		tmp2 = fu_cli_request_flag_to_string((guint64)1 << i);
 		if (tmp2 == NULL)
 			continue;
 		/* header */
@@ -1703,13 +1909,13 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 }
 
 gint
-fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2)
+fu_cli_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2)
 {
 	return g_strcmp0(fwupd_plugin_get_name(*item1), fwupd_plugin_get_name(*item2));
 }
 
 gchar *
-fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
+fu_cli_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 {
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNKNOWN)
 		return NULL;
@@ -1799,9 +2005,9 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 }
 
 static gchar *
-fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
+fu_cli_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 {
-	g_autofree gchar *plugin_flag_str = fu_util_plugin_flag_to_string(plugin_flag);
+	g_autofree gchar *plugin_flag_str = fu_cli_plugin_flag_to_string(plugin_flag);
 	switch (plugin_flag) {
 	case FWUPD_PLUGIN_FLAG_UNKNOWN:
 	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
@@ -1837,7 +2043,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 }
 
 gchar *
-fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
+fu_cli_plugin_to_string(FwupdPlugin *plugin, guint idt)
 {
 	GString *str = g_string_new(NULL);
 	const gchar *hdr;
@@ -1848,7 +2054,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	/* TRANSLATORS: description of plugin state, e.g. disabled */
 	hdr = _("Flags");
 	if (flags == 0x0) {
-		g_autofree gchar *tmp = fu_util_plugin_flag_to_cli_text(flags);
+		g_autofree gchar *tmp = fu_cli_plugin_flag_to_cli_text(flags);
 		g_autofree gchar *li = g_strdup_printf("• %s", tmp);
 		fwupd_codec_string_append(str, idt + 1, hdr, li);
 	} else {
@@ -1857,7 +2063,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 			g_autofree gchar *tmp = NULL;
 			if ((flags & ((guint64)1 << i)) == 0)
 				continue;
-			tmp = fu_util_plugin_flag_to_cli_text((guint64)1 << i);
+			tmp = fu_cli_plugin_flag_to_cli_text((guint64)1 << i);
 			if (tmp == NULL)
 				continue;
 			li = g_strdup_printf("• %s", tmp);
@@ -1872,7 +2078,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 }
 
 static gchar *
-fu_util_license_to_string(const gchar *spdx_license)
+fu_cli_license_to_string(const gchar *spdx_license)
 {
 	g_autofree const gchar **new = NULL;
 	g_auto(GStrv) old = NULL;
@@ -1901,7 +2107,7 @@ fu_util_license_to_string(const gchar *spdx_license)
 }
 
 static const gchar *
-fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
+fu_cli_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 {
 	if (release_urgency == FWUPD_RELEASE_URGENCY_LOW) {
 		/* TRANSLATORS: the release urgency */
@@ -1924,7 +2130,7 @@ fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 }
 
 const gchar *
-fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
+fu_cli_release_flag_to_string(FwupdReleaseFlags release_flag)
 {
 	if (release_flag == FWUPD_RELEASE_FLAG_NONE)
 		return NULL;
@@ -1970,7 +2176,7 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 }
 
 static void
-fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
+fu_cli_report_add_string(FwupdReport *report, guint idt, GString *str)
 {
 	g_autofree gchar *title = NULL;
 
@@ -2006,7 +2212,7 @@ fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
 }
 
 static gchar *
-fu_util_release_to_string(FwupdRelease *rel, guint idt)
+fu_cli_release_to_string(FwupdRelease *rel, guint idt)
 {
 	const gchar *title;
 	const gchar *tmp2;
@@ -2016,7 +2222,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	GPtrArray *reports = fwupd_release_get_reports(rel);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autofree gchar *desc_fb = NULL;
-	g_autofree gchar *name = fu_util_release_get_name(rel);
+	g_autofree gchar *name = fu_cli_release_get_name(rel);
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
@@ -2053,7 +2259,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				  fwupd_release_get_name_variant_suffix(rel));
 	if (fwupd_release_get_license(rel) != NULL) {
 		g_autofree gchar *license =
-		    fu_util_license_to_string(fwupd_release_get_license(rel));
+		    fu_cli_license_to_string(fwupd_release_get_license(rel));
 		/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
 		fwupd_codec_string_append(str, idt + 1, _("License"), license);
 	}
@@ -2067,11 +2273,11 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 					  idt + 1,
 					  /* TRANSLATORS: how important the release is */
 					  _("Urgency"),
-					  fu_util_release_urgency_to_string(tmp));
+					  fu_cli_release_urgency_to_string(tmp));
 	}
 	for (guint i = 0; i < reports->len; i++) {
 		FwupdReport *report = g_ptr_array_index(reports, i);
-		fu_util_report_add_string(report, idt + 1, str);
+		fu_cli_report_add_string(report, idt + 1, str);
 	}
 	fwupd_codec_string_append(str,
 				  idt + 1,
@@ -2094,8 +2300,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				  _("Vendor"),
 				  fwupd_release_get_vendor(rel));
 	if (fwupd_release_get_install_duration(rel) != 0) {
-		g_autofree gchar *tmp =
-		    fu_util_time_to_str(fwupd_release_get_install_duration(rel));
+		g_autofree gchar *tmp = fu_cli_time_to_str(fwupd_release_get_install_duration(rel));
 		/* TRANSLATORS: length of time the update takes to apply */
 		fwupd_codec_string_append(str, idt + 1, _("Duration"), tmp);
 	}
@@ -2116,7 +2321,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		g_autofree gchar *bullet = NULL;
 		if ((flags & ((guint64)1 << i)) == 0)
 			continue;
-		tmp2 = fu_util_release_flag_to_string((guint64)1 << i);
+		tmp2 = fu_cli_release_flag_to_string((guint64)1 << i);
 		if (tmp2 == NULL)
 			continue;
 		bullet = g_strdup_printf("• %s", tmp2);
@@ -2124,10 +2329,10 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		title = "";
 	}
 
-	desc_fb = fu_util_get_release_description_with_fallback(rel);
+	desc_fb = fu_cli_get_release_description_with_fallback(rel);
 	if (desc_fb != NULL) {
 		g_autofree gchar *desc = NULL;
-		desc = fu_util_convert_description(desc_fb, NULL);
+		desc = fu_cli_convert_description(desc_fb, NULL);
 		if (desc == NULL)
 			desc = g_strdup(fwupd_release_get_description(rel));
 		/* TRANSLATORS: multiline description of device */
@@ -2171,7 +2376,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 }
 
 static gchar *
-fu_util_remote_to_string(FwupdRemote *remote, guint idt)
+fu_cli_remote_to_string(FwupdRemote *remote, guint idt)
 {
 	FwupdRemoteKind kind = fwupd_remote_get_kind(remote);
 	const gchar *tmp;
@@ -2216,13 +2421,13 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 
 	/* optional parameters */
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) != G_MAXUINT64) {
-		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
+		g_autofree gchar *age_str = fu_cli_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fwupd_codec_string_append(str, idt + 1, _("Age"), age_str);
 	}
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_refresh_interval(remote) > 0) {
 		g_autofree gchar *age_str =
-		    fu_util_time_to_str(fwupd_remote_get_refresh_interval(remote));
+		    fu_cli_time_to_str(fwupd_remote_get_refresh_interval(remote));
 		/* TRANSLATORS: how often we should refresh the metadata */
 		fwupd_codec_string_append(str, idt + 1, _("Refresh Interval"), age_str);
 	}
@@ -2294,7 +2499,7 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 }
 
 const gchar *
-fu_util_request_get_message(FwupdRequest *req)
+fu_cli_request_get_message(FwupdRequest *req)
 {
 	if (fwupd_request_has_flag(req, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
 		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_REMOVE_REPLUG) == 0) {
@@ -2335,7 +2540,7 @@ fu_util_request_get_message(FwupdRequest *req)
 }
 
 static const gchar *
-fu_util_security_attr_result_to_string(FwupdSecurityAttrResult result)
+fu_cli_security_attr_result_to_string(FwupdSecurityAttrResult result)
 {
 	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
 		/* TRANSLATORS: Suffix: the HSI result */
@@ -2397,12 +2602,12 @@ fu_util_security_attr_result_to_string(FwupdSecurityAttrResult result)
 }
 
 static const gchar *
-fu_util_security_attr_get_result(FwupdSecurityAttr *attr)
+fu_cli_security_attr_get_result(FwupdSecurityAttr *attr)
 {
 	const gchar *tmp;
 
 	/* common case */
-	tmp = fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	tmp = fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
 	if (tmp != NULL)
 		return tmp;
 
@@ -2417,9 +2622,9 @@ fu_util_security_attr_get_result(FwupdSecurityAttr *attr)
 }
 
 static void
-fu_util_security_attr_append_str(FwupdSecurityAttr *attr,
-				 GString *str,
-				 FuSecurityAttrToStringFlags flags)
+fu_cli_security_attr_append_str(FwupdSecurityAttr *attr,
+				GString *str,
+				FuSecurityAttrToStringFlags flags)
 {
 	const gchar *name;
 
@@ -2443,17 +2648,17 @@ fu_util_security_attr_append_str(FwupdSecurityAttr *attr,
 		g_string_append(str, " ");
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_autofree gchar *fmt =
-		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+		    fu_console_color_format(fu_cli_security_attr_get_result(attr),
 					    FU_CONSOLE_COLOR_YELLOW);
 		g_string_append(str, fmt);
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_autofree gchar *fmt =
-		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+		    fu_console_color_format(fu_cli_security_attr_get_result(attr),
 					    FU_CONSOLE_COLOR_GREEN);
 		g_string_append(str, fmt);
 	} else {
 		g_autofree gchar *fmt =
-		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+		    fu_console_color_format(fu_cli_security_attr_get_result(attr),
 					    FU_CONSOLE_COLOR_RED);
 		g_string_append(str, fmt);
 	}
@@ -2469,7 +2674,7 @@ fu_util_security_attr_append_str(FwupdSecurityAttr *attr,
 }
 
 static gchar *
-fu_util_security_event_to_string(FwupdSecurityAttr *attr)
+fu_cli_security_event_to_string(FwupdSecurityAttr *attr)
 {
 	const gchar *name;
 	struct {
@@ -2635,7 +2840,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s disappeared: %s"),
 		    name,
-		    fu_util_security_attr_result_to_string(
+		    fu_cli_security_attr_result_to_string(
 			fwupd_security_attr_get_result_fallback(attr)));
 	}
 
@@ -2647,7 +2852,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s appeared: %s"),
 		    name,
-		    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+		    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 	}
 
 	/* fall back to something sensible */
@@ -2657,12 +2862,12 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
 	    _("%s changed: %s → %s"),
 	    name,
-	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
-	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 }
 
 gchar *
-fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags strflags)
+fu_cli_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags strflags)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -2690,7 +2895,7 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 
 		date = g_date_time_new_from_unix_utc((gint64)fwupd_security_attr_get_created(attr));
 		dtstr = g_date_time_format(date, "%F %T");
-		eventstr = fu_util_security_event_to_string(attr);
+		eventstr = fu_cli_security_event_to_string(attr);
 		if (eventstr == NULL)
 			continue;
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
@@ -2714,7 +2919,7 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 }
 
 gchar *
-fu_util_security_issues_to_string(GPtrArray *devices)
+fu_cli_security_issues_to_string(GPtrArray *devices)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -2749,7 +2954,7 @@ fu_util_security_issues_to_string(GPtrArray *devices)
 }
 
 gchar *
-fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
+fu_cli_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
 {
 	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
@@ -2771,7 +2976,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				g_string_append_printf(str, "\n\033[1mHSI-%u\033[0m\n", j);
 				has_header = TRUE;
 			}
-			fu_util_security_attr_append_str(attr, str, strflags);
+			fu_cli_security_attr_append_str(attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
 			    !fwupd_security_attr_has_flag(attr,
@@ -2808,7 +3013,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				    !fwupd_security_attr_has_flag(attr,
 								  FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 					runtime_help = TRUE;
-				fu_util_security_attr_append_str(attr, str, strflags);
+				fu_cli_security_attr_append_str(attr, str, strflags);
 			}
 		}
 	}
@@ -2843,7 +3048,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 }
 
 gint
-fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b)
+fu_cli_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b)
 {
 	FuDevice *dev_a = *((FuDevice **)a);
 	FuDevice *dev_b = *((FuDevice **)b);
@@ -2863,11 +3068,11 @@ fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b)
 }
 
 gboolean
-fu_util_switch_branch_warning(FuConsole *console,
-			      FwupdDevice *dev,
-			      FwupdRelease *rel,
-			      gboolean assume_yes,
-			      GError **error)
+fu_cli_switch_branch_warning(FuConsole *console,
+			     FwupdDevice *dev,
+			     FwupdRelease *rel,
+			     gboolean assume_yes,
+			     GError **error)
 {
 	const gchar *desc_markup = NULL;
 	g_autofree gchar *desc_plain = NULL;
@@ -2897,7 +3102,7 @@ fu_util_switch_branch_warning(FuConsole *console,
 	desc_markup = fwupd_release_get_description(rel);
 	if (desc_markup == NULL)
 		return TRUE;
-	desc_plain = fu_util_convert_description(desc_markup, error);
+	desc_plain = fu_cli_convert_description(desc_markup, error);
 	if (desc_plain == NULL)
 		return FALSE;
 	g_string_append(desc_full, desc_plain);
@@ -2905,8 +3110,8 @@ fu_util_switch_branch_warning(FuConsole *console,
 	/* TRANSLATORS: show and ask user to confirm --
 	 * %1 is the old branch name, %2 is the new branch name */
 	title = g_strdup_printf(_("Switch branch from %s to %s?"),
-				fu_util_branch_for_display(fwupd_device_get_branch(dev)),
-				fu_util_branch_for_display(fwupd_release_get_branch(rel)));
+				fu_cli_branch_for_display(fwupd_device_get_branch(dev)),
+				fu_cli_branch_for_display(fwupd_release_get_branch(rel)));
 	fu_console_box(console, title, desc_full->str, 80);
 	if (!assume_yes) {
 		if (!fu_console_input_bool(console,
@@ -2926,7 +3131,7 @@ fu_util_switch_branch_warning(FuConsole *console,
 }
 
 gboolean
-fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error)
+fu_cli_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error)
 {
 	const gchar *url = "https://github.com/fwupd/fwupd/wiki/Full-Disk-Encryption-Detected";
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2963,7 +3168,7 @@ fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error)
 }
 
 void
-fu_util_show_unsupported_warning(FuConsole *console)
+fu_cli_show_unsupported_warning(FuConsole *console)
 {
 #ifndef SUPPORTED_BUILD
 	if (g_getenv("FWUPD_SUPPORTED") != NULL)
@@ -2978,10 +3183,10 @@ fu_util_show_unsupported_warning(FuConsole *console)
 }
 
 gboolean
-fu_util_modify_remote_warning(FuConsole *console,
-			      FwupdRemote *remote,
-			      gboolean assume_yes,
-			      GError **error)
+fu_cli_modify_remote_warning(FuConsole *console,
+			     FwupdRemote *remote,
+			     gboolean assume_yes,
+			     GError **error)
 {
 	const gchar *warning_markup = NULL;
 	g_autofree gchar *warning_plain = NULL;
@@ -2990,7 +3195,7 @@ fu_util_modify_remote_warning(FuConsole *console,
 	warning_markup = fwupd_remote_get_agreement(remote);
 	if (warning_markup == NULL)
 		return TRUE;
-	warning_plain = fu_util_convert_description(warning_markup, error);
+	warning_plain = fu_cli_convert_description(warning_markup, error);
 	if (warning_plain == NULL)
 		return FALSE;
 
@@ -3015,14 +3220,14 @@ fu_util_modify_remote_warning(FuConsole *console,
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 
 gboolean
-fu_util_is_url(const gchar *perhaps_url)
+fu_cli_is_url(const gchar *perhaps_url)
 {
 	g_autoptr(CURLU) h = curl_url();
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 }
 
 void
-fu_util_print_json_object(FuConsole *console, FwupdJsonObject *json_obj)
+fu_cli_print_json_object(FuConsole *console, FwupdJsonObject *json_obj)
 {
 	g_autoptr(GString) str = NULL;
 	str = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
@@ -3030,7 +3235,7 @@ fu_util_print_json_object(FuConsole *console, FwupdJsonObject *json_obj)
 }
 
 void
-fu_util_print_error_as_json(FuConsole *console, const GError *error)
+fu_cli_print_error_as_json(FuConsole *console, const GError *error)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
@@ -3038,46 +3243,46 @@ fu_util_print_error_as_json(FuConsole *console, const GError *error)
 	fwupd_json_object_add_integer(json_obj_tmp, "Code", error->code);
 	fwupd_json_object_add_string(json_obj_tmp, "Message", error->message);
 	fwupd_json_object_add_object(json_obj, "Error", json_obj_tmp);
-	fu_util_print_json_object(console, json_obj);
+	fu_cli_print_json_object(console, json_obj);
 }
 
 typedef enum {
-	FU_UTIL_DEPENDENCY_KIND_UNKNOWN,
-	FU_UTIL_DEPENDENCY_KIND_RUNTIME,
-	FU_UTIL_DEPENDENCY_KIND_COMPILE,
-} FuUtilDependencyKind;
+	FU_CLI_DEPENDENCY_KIND_UNKNOWN,
+	FU_CLI_DEPENDENCY_KIND_RUNTIME,
+	FU_CLI_DEPENDENCY_KIND_COMPILE,
+} FuCliDependencyKind;
 
 static const gchar *
-fu_util_dependency_kind_to_string(FuUtilDependencyKind dependency_kind)
+fu_cli_dependency_kind_to_string(FuCliDependencyKind dependency_kind)
 {
-	if (dependency_kind == FU_UTIL_DEPENDENCY_KIND_RUNTIME)
+	if (dependency_kind == FU_CLI_DEPENDENCY_KIND_RUNTIME)
 		return "runtime";
-	if (dependency_kind == FU_UTIL_DEPENDENCY_KIND_COMPILE)
+	if (dependency_kind == FU_CLI_DEPENDENCY_KIND_COMPILE)
 		return "compile";
 	return NULL;
 }
 
 static gchar *
-fu_util_parse_project_dependency(const gchar *str, FuUtilDependencyKind *dependency_kind)
+fu_cli_parse_project_dependency(const gchar *str, FuCliDependencyKind *dependency_kind)
 {
 	g_return_val_if_fail(str != NULL, NULL);
 	if (g_str_has_prefix(str, "RuntimeVersion(")) {
 		gsize strsz = strlen(str);
 		if (dependency_kind != NULL)
-			*dependency_kind = FU_UTIL_DEPENDENCY_KIND_RUNTIME;
+			*dependency_kind = FU_CLI_DEPENDENCY_KIND_RUNTIME;
 		return g_strndup(str + 15, strsz - 16);
 	}
 	if (g_str_has_prefix(str, "CompileVersion(")) {
 		gsize strsz = strlen(str);
 		if (dependency_kind != NULL)
-			*dependency_kind = FU_UTIL_DEPENDENCY_KIND_COMPILE;
+			*dependency_kind = FU_CLI_DEPENDENCY_KIND_COMPILE;
 		return g_strndup(str + 15, strsz - 16);
 	}
 	return g_strdup(str);
 }
 
 static gboolean
-fu_util_print_version_key_valid(const gchar *key)
+fu_cli_print_version_key_valid(const gchar *key)
 {
 	g_return_val_if_fail(key != NULL, FALSE);
 	if (g_str_has_prefix(key, "RuntimeVersion"))
@@ -3088,7 +3293,7 @@ fu_util_print_version_key_valid(const gchar *key)
 }
 
 void
-fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata)
+fu_cli_project_versions_as_json(FuConsole *console, GHashTable *metadata)
 {
 	GHashTableIter iter;
 	const gchar *key;
@@ -3098,30 +3303,30 @@ fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata)
 
 	g_hash_table_iter_init(&iter, metadata);
 	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
-		FuUtilDependencyKind dependency_kind = FU_UTIL_DEPENDENCY_KIND_UNKNOWN;
+		FuCliDependencyKind dependency_kind = FU_CLI_DEPENDENCY_KIND_UNKNOWN;
 		g_autofree gchar *project = NULL;
 		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 
 		/* add version keys */
-		if (!fu_util_print_version_key_valid(key))
+		if (!fu_cli_print_version_key_valid(key))
 			continue;
-		project = fu_util_parse_project_dependency(key, &dependency_kind);
-		if (dependency_kind != FU_UTIL_DEPENDENCY_KIND_UNKNOWN) {
+		project = fu_cli_parse_project_dependency(key, &dependency_kind);
+		if (dependency_kind != FU_CLI_DEPENDENCY_KIND_UNKNOWN) {
 			fwupd_json_object_add_string(
 			    json_obj_tmp,
 			    "Type",
-			    fu_util_dependency_kind_to_string(dependency_kind));
+			    fu_cli_dependency_kind_to_string(dependency_kind));
 		}
 		fwupd_json_object_add_string(json_obj_tmp, "AppstreamId", project);
 		fwupd_json_object_add_string(json_obj_tmp, "Version", value);
 		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
 	fwupd_json_object_add_array(json_obj, "Versions", json_arr);
-	fu_util_print_json_object(console, json_obj);
+	fu_cli_print_json_object(console, json_obj);
 }
 
 gchar *
-fu_util_project_versions_to_string(GHashTable *metadata)
+fu_cli_project_versions_to_string(GHashTable *metadata)
 {
 	GHashTableIter iter;
 	const gchar *key;
@@ -3130,16 +3335,16 @@ fu_util_project_versions_to_string(GHashTable *metadata)
 
 	g_hash_table_iter_init(&iter, metadata);
 	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
-		FuUtilDependencyKind dependency_kind = FU_UTIL_DEPENDENCY_KIND_UNKNOWN;
+		FuCliDependencyKind dependency_kind = FU_CLI_DEPENDENCY_KIND_UNKNOWN;
 		g_autofree gchar *project = NULL;
 
 		/* print version keys */
-		if (!fu_util_print_version_key_valid(key))
+		if (!fu_cli_print_version_key_valid(key))
 			continue;
-		project = fu_util_parse_project_dependency(key, &dependency_kind);
+		project = fu_cli_parse_project_dependency(key, &dependency_kind);
 		g_string_append_printf(str,
 				       "%-10s%-30s%s\n",
-				       fu_util_dependency_kind_to_string(dependency_kind),
+				       fu_cli_dependency_kind_to_string(dependency_kind),
 				       project,
 				       value);
 	}
@@ -3147,7 +3352,7 @@ fu_util_project_versions_to_string(GHashTable *metadata)
 }
 
 const gchar *
-fu_util_get_prgname(const gchar *argv0)
+fu_cli_get_prgname(const gchar *argv0)
 {
 	const gchar *prgname = (const gchar *)g_strrstr(argv0, " ");
 	if (prgname != NULL)

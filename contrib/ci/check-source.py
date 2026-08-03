@@ -166,7 +166,6 @@ class Checker:
             "fu_logitech_hidpp_hidpp_msg": "fu_logitech_hidpp",
             "fu_self_test": "fu_test",
             "fu_string": "fu_str,fu_utf",
-            "fu_tool": "fu_util",
             "fu_windows_efivars": "fu_efivars",
         }.items():
             if prefix == key:
