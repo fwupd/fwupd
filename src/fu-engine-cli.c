@@ -227,7 +227,7 @@ fu_engine_cli_start_engine(FuCli *self,
 			   GError **error)
 {
 	/* already done */
-	if (fu_engine_get_loaded(self->engine))
+	if (fu_engine_get_phase(self->engine) != FU_ENGINE_PHASE_IDLE)
 		return TRUE;
 
 #ifdef HAVE_SYSTEMD
