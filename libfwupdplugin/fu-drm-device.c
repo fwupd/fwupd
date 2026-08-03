@@ -257,7 +257,8 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 						"status",
 						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						NULL);
-	priv->display_state = fu_display_state_from_string(attr_status);
+	if (attr_status != NULL)
+		priv->display_state = fu_display_state_from_string(attr_status);
 	attr_connector_id = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
 						      "connector_id",
 						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
