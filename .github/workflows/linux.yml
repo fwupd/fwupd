@@ -47,12 +47,14 @@ jobs:
         env:
           CI_NETWORK: true
           VERSION: ${{ needs.library.outputs.version }}
+          PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
+              -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
@@ -77,12 +79,14 @@ jobs:
         if: steps.supported.outputs.supported == 'true'
         env:
           CI_NETWORK: true
+          PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
+              -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
@@ -103,6 +107,8 @@ jobs:
 
   library:
     runs-on: ubuntu-latest
+    env:
+      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
