@@ -38,6 +38,14 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run -v --show-diff-on-failure --hook-stage commit --all-files
 
+  containers:
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/containers.yml
+
   bsd:
     permissions:
       contents: read
@@ -48,11 +56,19 @@ jobs:
   linux:
     permissions:
       contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    needs: [pre-commit, containers]
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') && needs.containers.result == 'success' }}
     uses: ./.github/workflows/linux.yml
     with:
       publish: false
+      arch-image: ${{ needs.containers.outputs.arch-image }}
+      centos-image: ${{ needs.containers.outputs.centos-image }}
+      debian-image: ${{ needs.containers.outputs.debian-image }}
+      debian-i386-image: ${{ needs.containers.outputs.debian-i386-image }}
+      debian-arm64-image: ${{ needs.containers.outputs.debian-arm64-image }}
+      debian-cross-s390x-image: ${{ needs.containers.outputs.debian-cross-s390x-image }}
+      fedora-image: ${{ needs.containers.outputs.fedora-image }}
+      ubuntu-image: ${{ needs.containers.outputs.ubuntu-image }}
     secrets: inherit
 
   macos:
@@ -65,9 +81,11 @@ jobs:
   openbmc:
     permissions:
       contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    needs: [pre-commit, containers]
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') && needs.containers.result == 'success' }}
     uses: ./.github/workflows/openbmc.yml
+    with:
+      ubuntu-image: ${{ needs.containers.outputs.ubuntu-image }}
 
   snap:
     permissions:
@@ -82,9 +100,12 @@ jobs:
   static-analysis:
     permissions:
       contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    needs: [pre-commit, containers]
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') && needs.containers.result == 'success' }}
     uses: ./.github/workflows/static-analysis.yml
+    with:
+      ubuntu-image: ${{ needs.containers.outputs.ubuntu-image }}
+      debian-image: ${{ needs.containers.outputs.debian-image }}
 
   windows:
     permissions:

@@ -1,4 +1,12 @@
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      ubuntu-image:
+        required: true
+        type: string
+      debian-image:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -7,7 +15,7 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest # zizmor: ignore[unpinned-images]
+      image: ${{ inputs.ubuntu-image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,7 +42,7 @@ jobs:
   gcc:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/fwupd/fwupd/fwupd-debian-amd64:latest # zizmor: ignore[unpinned-images]
+      image: ${{ inputs.debian-image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
