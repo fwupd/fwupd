@@ -47,14 +47,6 @@
 #define SYSTEMD_SNAP_FWUPD_UNIT "snap.fwupd.fwupd.service"
 #endif
 
-typedef enum {
-	FU_CLI_OPERATION_UNKNOWN,
-	FU_CLI_OPERATION_UPDATE,
-	FU_CLI_OPERATION_INSTALL,
-	FU_CLI_OPERATION_READ,
-	FU_CLI_OPERATION_LAST
-} FuCliOperation;
-
 struct FuCli {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;

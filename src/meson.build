@@ -89,8 +89,25 @@ if host_machine.system() == 'windows'
   fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
+fwupdcli_rs = custom_target(
+  'fu-cli-rs',
+  input: 'fu-cli.rs',
+  output: ['fu-cli-struct.c', 'fu-cli-struct.h'],
+  command: [
+    python3,
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '--outc', '@OUTPUT0@',
+    '--outh', '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
+  ],
+)
 fwupdcli = library(
   'fwupdcli',
+  fwupdcli_rs,
   sources: ['fu-console.c', 'fu-cli-common.c', systemd_src],
   install: true,
   install_rpath: libdir_pkg,
@@ -176,6 +193,7 @@ fwupdengine = library(
 
 executable(
   'fwupdtool',
+  fwupdcli_rs,
   fwupdengine_rs,
   plugins_hdr,
   export_dynamic: true,
@@ -325,6 +343,7 @@ if get_option('tests')
   foreach test_name: test_names
     e = executable(
       'fu-' + test_name + '-test',
+      fwupdcli_rs,
       fwupdengine_rs,
       colorhug_test_firmware,
       hwid_test_firmware,
