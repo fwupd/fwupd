@@ -23,13 +23,15 @@
 
 #include "fu-cli-common.h"
 #include "fu-console.h"
+#include "fu-dbus-cli.h"
 #include "fu-polkit-agent.h"
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
 #endif
 
-struct FuCli {
+struct _FuDbusCli {
+	FuCli parent_instance;
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
@@ -64,13 +66,15 @@ struct FuCli {
 	FwupdReleaseFlags filter_release_exclude;
 };
 
+G_DEFINE_TYPE(FuDbusCli, fu_dbus_cli, FU_TYPE_CLI)
+
 static gboolean
-fu_dbus_cli_report_history(FuCli *self, gchar **values, GError **error);
+fu_dbus_cli_report_history(FuCli *cli, gchar **values, GError **error);
 static FwupdDevice *
-fu_dbus_cli_get_device_by_id(FuCli *self, const gchar *id, GError **error);
+fu_dbus_cli_get_device_by_id(FuDbusCli *self, const gchar *id, GError **error);
 
 static void
-fu_dbus_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
+fu_dbus_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuDbusCli *self)
 {
 	if (self->as_json)
 		return;
@@ -80,7 +84,7 @@ fu_dbus_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
 }
 
 static void
-fu_dbus_cli_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuCli *self)
+fu_dbus_cli_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuDbusCli *self)
 {
 	/* nothing sensible to show */
 	if (fwupd_request_get_message(request) == NULL)
@@ -104,7 +108,7 @@ fu_dbus_cli_update_device_request_cb(FwupdClient *client, FwupdRequest *request,
 }
 
 static void
-fu_dbus_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuCli *self)
+fu_dbus_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuDbusCli *self)
 {
 	g_autofree gchar *str = NULL;
 
@@ -155,7 +159,7 @@ fu_dbus_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, F
 }
 
 static FwupdDevice *
-fu_dbus_cli_prompt_for_device(FuCli *self, GPtrArray *devices, GError **error)
+fu_dbus_cli_prompt_for_device(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	FwupdDevice *dev;
 	guint idx;
@@ -216,7 +220,7 @@ fu_dbus_cli_prompt_for_device(FuCli *self, GPtrArray *devices, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
+fu_dbus_cli_perhaps_show_unreported(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -400,7 +404,7 @@ fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
 	}
 
 	/* upload */
-	if (!fu_dbus_cli_report_history(self, NULL, error))
+	if (!fu_dbus_cli_report_history(FU_CLI(self), NULL, error))
 		return FALSE;
 
 	/* offer to make automatic */
@@ -435,7 +439,7 @@ fu_dbus_cli_perhaps_show_unreported(FuCli *self, GError **error)
 }
 
 static void
-fu_dbus_cli_build_device_tree(FuCli *self, FuCliNode *root, GPtrArray *devs, FwupdDevice *dev)
+fu_dbus_cli_build_device_tree(FuDbusCli *self, FuCliNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
@@ -457,7 +461,7 @@ fu_dbus_cli_build_device_tree(FuCli *self, FuCliNode *root, GPtrArray *devs, Fwu
 }
 
 static void
-fu_dbus_cli_get_releases_as_json(FuCli *self, GPtrArray *rels)
+fu_dbus_cli_get_releases_as_json(FuDbusCli *self, GPtrArray *rels)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -477,7 +481,7 @@ fu_dbus_cli_get_releases_as_json(FuCli *self, GPtrArray *rels)
 }
 
 static void
-fu_dbus_cli_get_devices_as_json(FuCli *self, GPtrArray *devs)
+fu_dbus_cli_get_devices_as_json(FuDbusCli *self, GPtrArray *devs)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -525,8 +529,10 @@ fu_dbus_cli_get_devices_as_json(FuCli *self, GPtrArray *devs)
 }
 
 static gboolean
-fu_dbus_cli_check_reboot_needed(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_check_reboot_needed(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
 		g_autoptr(GPtrArray) devices =
@@ -568,8 +574,9 @@ fu_dbus_cli_check_reboot_needed(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_devices(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) devices_filtered = NULL;
@@ -626,8 +633,9 @@ fu_dbus_cli_get_devices(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_plugins(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_plugins(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) plugins = NULL;
 
 	/* get results from daemon */
@@ -654,7 +662,7 @@ fu_dbus_cli_get_plugins(FuCli *self, gchar **values, GError **error)
 }
 
 static gchar *
-fu_dbus_cli_download_if_required(FuCli *self, const gchar *perhapsfn, GError **error)
+fu_dbus_cli_download_if_required(FuDbusCli *self, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -686,7 +694,7 @@ fu_dbus_cli_download_if_required(FuCli *self, const gchar *perhapsfn, GError **e
 }
 
 static void
-fu_dbus_cli_display_current_message(FuCli *self)
+fu_dbus_cli_display_current_message(FuDbusCli *self)
 {
 	if (self->as_json)
 		return;
@@ -728,7 +736,7 @@ fu_dbus_cli_device_test_helper_new(void)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCliDeviceTestHelper, fu_dbus_cli_device_test_helper_free)
 
 static GPtrArray *
-fu_dbus_cli_filter_devices(FuCli *self, GPtrArray *devices, GError **error)
+fu_dbus_cli_filter_devices(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(GPtrArray) devices_filtered =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -755,7 +763,7 @@ fu_dbus_cli_filter_devices(FuCli *self, GPtrArray *devices, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_device_test_component(FuCli *self,
+fu_dbus_cli_device_test_component(FuDbusCli *self,
 				  FuCliDeviceTestHelper *helper,
 				  FwupdJsonObject *json_obj,
 				  FwupdJsonObject *json_object_result,
@@ -885,7 +893,7 @@ fu_dbus_cli_device_test_component(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_device_test_remove_emulated_devices(FuCli *self, GError **error)
+fu_dbus_cli_device_test_remove_emulated_devices(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -919,7 +927,7 @@ fu_dbus_cli_device_test_remove_emulated_devices(FuCli *self, GError **error)
 }
 
 static gchar *
-fu_dbus_cli_maybe_expand_basename(FuCli *self, const gchar *maybe_basename, GError **error)
+fu_dbus_cli_maybe_expand_basename(FuDbusCli *self, const gchar *maybe_basename, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 
@@ -940,7 +948,7 @@ fu_dbus_cli_maybe_expand_basename(FuCli *self, const gchar *maybe_basename, GErr
 }
 
 static gboolean
-fu_dbus_cli_device_test_step(FuCli *self,
+fu_dbus_cli_device_test_step(FuDbusCli *self,
 			     FuCliDeviceTestHelper *helper,
 			     FwupdJsonObject *json_obj,
 			     FwupdJsonObject *json_object_result,
@@ -1081,7 +1089,7 @@ fu_dbus_cli_device_test_step(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_device_test_filename(FuCli *self,
+fu_dbus_cli_device_test_filename(FuDbusCli *self,
 				 FuCliDeviceTestHelper *helper,
 				 const gchar *filename,
 				 FwupdJsonObject *json_object_result,
@@ -1204,7 +1212,7 @@ fu_dbus_cli_device_test_filename(FuCli *self,
 }
 
 typedef struct {
-	FuCli *self;
+	FuDbusCli *self;
 	gchar *inhibit_id;
 } FuCliInhibitHelper;
 
@@ -1220,7 +1228,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCliInhibitHelper, fu_dbus_cli_inhibit_helper_fre
 static gboolean
 fu_dbus_cli_inhibit_timeout_cb(FuCliInhibitHelper *helper)
 {
-	FuCli *self = helper->self;
+	FuDbusCli *self = helper->self;
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fwupd_client_uninhibit(self->client,
@@ -1234,8 +1242,9 @@ fu_dbus_cli_inhibit_timeout_cb(FuCliInhibitHelper *helper)
 }
 
 static gboolean
-fu_dbus_cli_inhibit(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_inhibit(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *reason = "not set";
 	guint64 timeout_ms = 0;
 	g_autoptr(FuCliInhibitHelper) helper = g_new0(FuCliInhibitHelper, 1);
@@ -1286,8 +1295,10 @@ fu_dbus_cli_inhibit(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_uninhibit(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_uninhibit(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* one argument required */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -1302,7 +1313,7 @@ fu_dbus_cli_uninhibit(FuCli *self, gchar **values, GError **error)
 }
 
 typedef struct {
-	FuCli *self;
+	FuDbusCli *self;
 	const gchar *value;
 	FwupdDevice *device; /* no-ref */
 } FuCliWaitHelper;
@@ -1310,7 +1321,7 @@ typedef struct {
 static void
 fu_dbus_cli_device_wait_added_cb(FwupdClient *client, FwupdDevice *device, FuCliWaitHelper *helper)
 {
-	FuCli *self = helper->self;
+	FuDbusCli *self = helper->self;
 	if (g_strcmp0(fwupd_device_get_id(device), helper->value) == 0 ||
 	    fwupd_device_has_guid(device, helper->value)) {
 		helper->device = device;
@@ -1322,14 +1333,15 @@ fu_dbus_cli_device_wait_added_cb(FwupdClient *client, FwupdDevice *device, FuCli
 static gboolean
 fu_dbus_cli_device_wait_timeout_cb(gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	g_main_loop_quit(self->loop);
 	return G_SOURCE_REMOVE;
 }
 
 static gboolean
-fu_dbus_cli_device_wait(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_device_wait(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GSource) source = g_timeout_source_new_seconds(30);
@@ -1389,14 +1401,14 @@ fu_dbus_cli_device_wait(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_quit(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_quit(FuCli *cli, gchar **values, GError **error)
 {
-	/* success */
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	return fwupd_client_quit(self->client, self->cancellable, error);
 }
 
 static gboolean
-fu_dbus_cli_device_test_full(FuCli *self,
+fu_dbus_cli_device_test_full(FuDbusCli *self,
 			     gchar **values,
 			     FuCliDeviceTestHelper *helper,
 			     GError **error)
@@ -1484,8 +1496,9 @@ fu_dbus_cli_device_test_full(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_device_emulate(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_device_emulate(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuCliDeviceTestHelper) helper = fu_dbus_cli_device_test_helper_new();
 	helper->use_emulation = TRUE;
 	self->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
@@ -1494,16 +1507,18 @@ fu_dbus_cli_device_emulate(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_device_test(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_device_test(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuCliDeviceTestHelper) helper = fu_dbus_cli_device_test_helper_new();
 	self->filter_device_exclude |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_dbus_cli_device_test_full(self, values, helper, error);
 }
 
 static gboolean
-fu_dbus_cli_download(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_download(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *basename = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
@@ -1541,8 +1556,9 @@ fu_dbus_cli_download(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_local_install(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_local_install(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -1597,8 +1613,9 @@ fu_dbus_cli_local_install(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_details(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_details(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 
@@ -1631,7 +1648,7 @@ fu_dbus_cli_get_details(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_report_history_for_remote(FuCli *self,
+fu_dbus_cli_report_history_for_remote(FuDbusCli *self,
 				      GPtrArray *devices,
 				      FwupdRemote *remote_filter,
 				      FwupdRemote *remote_upload,
@@ -1711,7 +1728,7 @@ fu_dbus_cli_report_history_for_remote(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_report_history_force(FuCli *self, GPtrArray *devices, GError **error)
+fu_dbus_cli_report_history_force(FuDbusCli *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(FwupdRemote) remote_upload = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -1754,8 +1771,9 @@ fu_dbus_cli_report_history_force(FuCli *self, GPtrArray *devices, GError **error
 }
 
 static gboolean
-fu_dbus_cli_report_export(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_report_export(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GPtrArray) devices_filtered =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -1888,7 +1906,7 @@ fu_dbus_cli_report_export(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_report_history_full(FuCli *self, gboolean only_automatic_reports, GError **error)
+fu_dbus_cli_report_history_full(FuDbusCli *self, gboolean only_automatic_reports, GError **error)
 {
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1996,8 +2014,9 @@ fu_dbus_cli_report_history_full(FuCli *self, gboolean only_automatic_reports, GE
 }
 
 static gboolean
-fu_dbus_cli_report_history(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_report_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	if (values != NULL && g_strv_length(values) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2009,8 +2028,9 @@ fu_dbus_cli_report_history(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_history(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 
@@ -2055,7 +2075,7 @@ fu_dbus_cli_get_history(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdDevice *
-fu_dbus_cli_get_device_by_id(FuCli *self, const gchar *id, GError **error)
+fu_dbus_cli_get_device_by_id(FuDbusCli *self, const gchar *id, GError **error)
 {
 	if (fwupd_guid_is_valid(id)) {
 		g_autoptr(GPtrArray) devices = NULL;
@@ -2079,7 +2099,7 @@ fu_dbus_cli_get_device_by_id(FuCli *self, const gchar *id, GError **error)
 }
 
 static FwupdDevice *
-fu_dbus_cli_get_device_or_prompt(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_device_or_prompt(FuDbusCli *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -2108,7 +2128,7 @@ fu_dbus_cli_get_device_or_prompt(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdRelease *
-fu_dbus_cli_get_release_for_device_version(FuCli *self,
+fu_dbus_cli_get_release_for_device_version(FuDbusCli *self,
 					   FwupdDevice *device,
 					   const gchar *version,
 					   GError **error)
@@ -2144,8 +2164,9 @@ fu_dbus_cli_get_release_for_device_version(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_clear_results(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_clear_results(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	dev = fu_dbus_cli_get_device_or_prompt(self, values, error);
@@ -2159,8 +2180,9 @@ fu_dbus_cli_clear_results(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_verify_update(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_verify_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
@@ -2183,7 +2205,7 @@ fu_dbus_cli_verify_update(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_download_metadata_enable_lvfs(FuCli *self, GError **error)
+fu_dbus_cli_download_metadata_enable_lvfs(FuDbusCli *self, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 
@@ -2222,7 +2244,7 @@ fu_dbus_cli_download_metadata_enable_lvfs(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_check_oldest_remote(FuCli *self, guint64 *age_oldest, GError **error)
+fu_dbus_cli_check_oldest_remote(FuDbusCli *self, guint64 *age_oldest, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
 	gboolean checked = FALSE;
@@ -2259,7 +2281,7 @@ fu_dbus_cli_check_oldest_remote(FuCli *self, guint64 *age_oldest, GError **error
 }
 
 static gboolean
-fu_dbus_cli_download_metadata(FuCli *self, GError **error)
+fu_dbus_cli_download_metadata(FuDbusCli *self, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
 	guint devices_supported_cnt = 0;
@@ -2396,8 +2418,9 @@ fu_dbus_cli_download_metadata(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_refresh(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_refresh(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	if (g_strv_length(values) == 0)
 		return fu_dbus_cli_download_metadata(self, error);
 	if (g_strv_length(values) != 3) {
@@ -2426,8 +2449,9 @@ fu_dbus_cli_refresh(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_results(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_results(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdDevice) rel = NULL;
@@ -2454,8 +2478,9 @@ fu_dbus_cli_get_results(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_releases(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_releases(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
@@ -2511,8 +2536,9 @@ fu_dbus_cli_get_releases(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_search(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_search(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) rels = NULL;
 
 	/* sanity check */
@@ -2571,7 +2597,7 @@ fu_dbus_cli_search(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdRelease *
-fu_dbus_cli_prompt_for_release(FuCli *self, GPtrArray *rels_unfiltered, GError **error)
+fu_dbus_cli_prompt_for_release(FuDbusCli *self, GPtrArray *rels_unfiltered, GError **error)
 {
 	FwupdRelease *rel;
 	guint idx;
@@ -2614,8 +2640,9 @@ fu_dbus_cli_prompt_for_release(FuCli *self, GPtrArray *rels_unfiltered, GError *
 }
 
 static gboolean
-fu_dbus_cli_verify(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_verify(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
@@ -2638,8 +2665,9 @@ fu_dbus_cli_verify(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_unlock(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_unlock(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_LOCKED;
@@ -2660,7 +2688,7 @@ fu_dbus_cli_unlock(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_perhaps_refresh_remotes(FuCli *self, GError **error)
+fu_dbus_cli_perhaps_refresh_remotes(FuDbusCli *self, GError **error)
 {
 	guint64 age_oldest = 0;
 	const guint64 age_limit_days = 30;
@@ -2704,7 +2732,7 @@ fu_dbus_cli_perhaps_refresh_remotes(FuCli *self, GError **error)
 }
 
 static void
-fu_dbus_cli_get_updates_as_json(FuCli *self, GPtrArray *devices)
+fu_dbus_cli_get_updates_as_json(FuDbusCli *self, GPtrArray *devices)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -2746,8 +2774,9 @@ fu_dbus_cli_get_updates_as_json(FuCli *self, GPtrArray *devices)
 }
 
 static gboolean
-fu_dbus_cli_get_updates(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_updates(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
@@ -2887,8 +2916,9 @@ fu_dbus_cli_get_updates(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_remotes(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_remotes(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -2918,7 +2948,7 @@ fu_dbus_cli_get_remotes(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdRelease *
-fu_dbus_cli_get_release_with_tag(FuCli *self,
+fu_dbus_cli_get_release_with_tag(FuDbusCli *self,
 				 FwupdDevice *dev,
 				 const gchar *host_bkc,
 				 GError **error)
@@ -2954,7 +2984,7 @@ fu_dbus_cli_get_release_with_tag(FuCli *self,
 }
 
 static FwupdRelease *
-fu_dbus_cli_get_release_with_branch(FuCli *self,
+fu_dbus_cli_get_release_with_branch(FuDbusCli *self,
 				    FwupdDevice *dev,
 				    const gchar *branch,
 				    GError **error)
@@ -2987,7 +3017,7 @@ fu_dbus_cli_get_release_with_branch(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
+fu_dbus_cli_prompt_warning_bkc(FuDbusCli *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(self->client);
 	g_autofree gchar *cmd = g_strdup_printf("%s sync", g_get_prgname());
@@ -3049,7 +3079,7 @@ fu_dbus_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel,
 }
 
 static gboolean
-fu_dbus_cli_prompt_warning_composite(FuCli *self,
+fu_dbus_cli_prompt_warning_composite(FuDbusCli *self,
 				     FwupdDevice *dev,
 				     FwupdRelease *rel,
 				     GError **error)
@@ -3121,7 +3151,7 @@ fu_dbus_cli_prompt_warning_composite(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_update_device_with_release(FuCli *self,
+fu_dbus_cli_update_device_with_release(FuDbusCli *self,
 				       FwupdDevice *dev,
 				       FwupdRelease *rel,
 				       GError **error)
@@ -3171,7 +3201,7 @@ fu_dbus_cli_update_device_with_release(FuCli *self,
 }
 
 static gboolean
-fu_dbus_cli_maybe_send_reports(FuCli *self, FwupdRelease *rel, GError **error)
+fu_dbus_cli_maybe_send_reports(FuDbusCli *self, FwupdRelease *rel, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -3186,7 +3216,7 @@ fu_dbus_cli_maybe_send_reports(FuCli *self, FwupdRelease *rel, GError **error)
 	if (remote == NULL)
 		return FALSE;
 	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
-		if (!fu_dbus_cli_report_history(self, NULL, &error_local))
+		if (!fu_dbus_cli_report_history(FU_CLI(self), NULL, &error_local))
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("%s", error_local->message);
 	}
@@ -3195,8 +3225,9 @@ fu_dbus_cli_maybe_send_reports(FuCli *self, FwupdRelease *rel, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean supported = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_latest = g_ptr_array_new();
@@ -3399,8 +3430,9 @@ fu_dbus_cli_update(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_remote_modify(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_remote_modify(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) < 3) {
 		g_set_error_literal(error,
@@ -3431,8 +3463,9 @@ fu_dbus_cli_remote_modify(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_remote_enable(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_remote_enable(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -3489,8 +3522,9 @@ fu_dbus_cli_remote_enable(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_remote_clean(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_remote_clean(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -3517,8 +3551,9 @@ fu_dbus_cli_remote_clean(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_remote_disable(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_remote_disable(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdRemote) remote = NULL;
 
 	if (g_strv_length(values) != 1) {
@@ -3572,8 +3607,9 @@ fu_dbus_cli_remote_disable(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_downgrade(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_downgrade(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3645,8 +3681,9 @@ fu_dbus_cli_downgrade(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_reinstall(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_reinstall(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -3698,8 +3735,9 @@ fu_dbus_cli_reinstall(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_install(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_install(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3708,7 +3746,7 @@ fu_dbus_cli_install(FuCli *self, gchar **values, GError **error)
 	/* fall back for CLI compatibility */
 	if (g_strv_length(values) >= 1) {
 		if (g_file_test(values[0], G_FILE_TEST_EXISTS) || fu_cli_is_url(values[0]))
-			return fu_dbus_cli_local_install(self, values, error);
+			return fu_dbus_cli_local_install(FU_CLI(self), values, error);
 	}
 
 	/* find device */
@@ -3773,8 +3811,9 @@ _g_str_equal0(gconstpointer str1, gconstpointer str2)
 }
 
 static gboolean
-fu_dbus_cli_switch_branch(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_switch_branch(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *branch;
 	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -3907,8 +3946,9 @@ fu_dbus_cli_switch_branch(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_activate(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_activate(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean has_pending = FALSE;
 
@@ -3986,8 +4026,9 @@ fu_dbus_cli_activate(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_set_approved_firmware(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_set_approved_firmware(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) checksums = NULL;
 
 	/* check args */
@@ -4017,7 +4058,7 @@ fu_dbus_cli_set_approved_firmware(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_dbus_cli_get_checksums_as_json(FuCli *self, gchar **csums)
+fu_dbus_cli_get_checksums_as_json(FuDbusCli *self, gchar **csums)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -4029,8 +4070,9 @@ fu_dbus_cli_get_checksums_as_json(FuCli *self, gchar **csums)
 }
 
 static gboolean
-fu_dbus_cli_get_approved_firmware(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_approved_firmware(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) checksums = NULL;
 
 	/* check args */
@@ -4067,8 +4109,9 @@ fu_dbus_cli_get_approved_firmware(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_modify_config(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_modify_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	/* check args */
 	if (g_strv_length(values) == 3) {
 		if (!fwupd_client_modify_config(self->client,
@@ -4106,7 +4149,7 @@ fu_dbus_cli_modify_config(FuCli *self, gchar **values, GError **error)
 			return TRUE;
 	}
 
-	if (!fu_dbus_cli_quit(self, NULL, error))
+	if (!fu_dbus_cli_quit(FU_CLI(self), NULL, error))
 		return FALSE;
 	if (!fwupd_client_connect(self->client, self->cancellable, error))
 		return FALSE;
@@ -4117,8 +4160,10 @@ fu_dbus_cli_modify_config(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_reset_config(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_reset_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -4141,7 +4186,7 @@ fu_dbus_cli_reset_config(FuCli *self, gchar **values, GError **error)
 					   _("Restart the daemon to make the change effective?")))
 			return TRUE;
 	}
-	if (!fu_dbus_cli_quit(self, NULL, error))
+	if (!fu_dbus_cli_quit(FU_CLI(self), NULL, error))
 		return FALSE;
 	if (!fwupd_client_connect(self->client, self->cancellable, error))
 		return FALSE;
@@ -4152,7 +4197,7 @@ fu_dbus_cli_reset_config(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdRemote *
-fu_dbus_cli_get_remote_with_report_uri(FuCli *self, GError **error)
+fu_dbus_cli_get_remote_with_report_uri(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -4178,7 +4223,7 @@ fu_dbus_cli_get_remote_with_report_uri(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
+fu_dbus_cli_upload_security(FuDbusCli *self, GPtrArray *attrs, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
@@ -4284,7 +4329,10 @@ fu_dbus_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
 }
 
 static void
-fu_dbus_cli_security_as_json(FuCli *self, GPtrArray *attrs, GPtrArray *events, GPtrArray *devices)
+fu_dbus_cli_security_as_json(FuDbusCli *self,
+			     GPtrArray *attrs,
+			     GPtrArray *events,
+			     GPtrArray *devices)
 {
 	g_autoptr(GPtrArray) devices_issues = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
@@ -4319,8 +4367,9 @@ fu_dbus_cli_security_as_json(FuCli *self, GPtrArray *attrs, GPtrArray *events, G
 }
 
 static gboolean
-fu_dbus_cli_sync(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_sync(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *host_bkc = fwupd_client_get_host_bkc(self->client);
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -4407,7 +4456,7 @@ fu_dbus_cli_sync(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
+fu_dbus_cli_security_fix_attr(FuDbusCli *self, FwupdSecurityAttr *attr, GError **error)
 {
 	g_autoptr(GString) body = g_string_new(NULL);
 	g_autoptr(GString) title = g_string_new(NULL);
@@ -4484,8 +4533,9 @@ fu_dbus_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **err
 }
 
 static gboolean
-fu_dbus_cli_security(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_security(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -4615,7 +4665,7 @@ fu_dbus_cli_ignore_cb(const gchar *log_domain,
 static gboolean
 fu_dbus_cli_sigint_cb(gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	g_debug("handling SIGINT");
 	g_cancellable_cancel(self->cancellable);
 	return FALSE;
@@ -4623,7 +4673,7 @@ fu_dbus_cli_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_dbus_cli_setup_signal_handlers(FuCli *self)
+fu_dbus_cli_setup_signal_handlers(FuDbusCli *self)
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
@@ -4633,8 +4683,9 @@ fu_dbus_cli_setup_signal_handlers(FuCli *self)
 }
 
 static void
-fu_dbus_cli_private_free(FuCli *self)
+fu_dbus_cli_finalize(GObject *obj)
 {
+	FuDbusCli *self = FU_DBUS_CLI(obj);
 	if (self->client != NULL) {
 		/* when destroying GDBusProxy in a custom GMainContext, the context must be
 		 * iterated enough after finalization of the proxies that any pending D-Bus traffic
@@ -4655,11 +4706,11 @@ fu_dbus_cli_private_free(FuCli *self)
 	g_object_unref(self->cancellable);
 	g_object_unref(self->console);
 	g_option_context_free(self->context);
-	g_free(self);
+	G_OBJECT_CLASS(fu_dbus_cli_parent_class)->finalize(obj);
 }
 
 static gboolean
-fu_dbus_cli_check_daemon_version(FuCli *self, GError **error)
+fu_dbus_cli_check_daemon_version(FuDbusCli *self, GError **error)
 {
 	const gchar *daemon = fwupd_client_get_daemon_version(self->client);
 
@@ -4710,13 +4761,8 @@ fu_dbus_cli_check_polkit_actions(GError **error)
 	return TRUE;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCli, fu_dbus_cli_private_free)
-#pragma clang diagnostic pop
-
 static void
-fu_dbus_cli_show_plugin_warnings(FuCli *self)
+fu_dbus_cli_show_plugin_warnings(FuDbusCli *self)
 {
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	g_autoptr(GPtrArray) plugins = NULL;
@@ -4770,11 +4816,12 @@ fu_dbus_cli_show_plugin_warnings(FuCli *self)
 }
 
 static gboolean
-fu_dbus_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
+fu_dbus_cli_set_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GHashTable) settings = NULL;
 
-	settings = fu_cli_bios_settings_parse_argv(input, error);
+	settings = fu_cli_bios_settings_parse_argv(values, error);
 	if (settings == NULL)
 		return FALSE;
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
@@ -4808,8 +4855,9 @@ fu_dbus_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_get_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(GPtrArray) attrs = NULL;
 	gboolean found = FALSE;
 
@@ -4849,8 +4897,9 @@ fu_dbus_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_security_fix(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_security_fix(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -4881,7 +4930,7 @@ fu_dbus_cli_security_fix(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_dbus_cli_hwids_as_json(FuCli *self, GStrv hwids_keys, GStrv hwids_values)
+fu_dbus_cli_hwids_as_json(FuDbusCli *self, GStrv hwids_keys, GStrv hwids_values)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	for (guint i = 0; hwids_keys[i] != NULL; i++)
@@ -4890,8 +4939,9 @@ fu_dbus_cli_hwids_as_json(FuCli *self, GStrv hwids_keys, GStrv hwids_values)
 }
 
 static gboolean
-fu_dbus_cli_hwids(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_hwids(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_auto(GStrv) hwids_keys = NULL;
 	g_auto(GStrv) hwids_values = NULL;
 
@@ -4928,8 +4978,9 @@ fu_dbus_cli_hwids(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_report_devices(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_report_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
 	g_autofree gchar *uri = NULL;
@@ -5012,8 +5063,9 @@ fu_dbus_cli_report_devices(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_security_undo(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_security_undo(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -5047,8 +5099,9 @@ fu_dbus_cli_security_undo(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_emulation_tag(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_emulation_tag(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* set the flag */
@@ -5065,8 +5118,9 @@ fu_dbus_cli_emulation_tag(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_emulation_untag(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_emulation_untag(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* set the flag */
@@ -5083,8 +5137,10 @@ fu_dbus_cli_emulation_untag(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_emulation_save(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_emulation_save(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -5099,8 +5155,10 @@ fu_dbus_cli_emulation_save(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_emulation_load(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_emulation_load(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -5113,8 +5171,9 @@ fu_dbus_cli_emulation_load(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_enable_remote_auth(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_enable_remote_auth(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
 	const gchar *remote_id = "lvfs-embargo";
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autofree gchar *username = NULL;
@@ -5213,7 +5272,7 @@ fu_dbus_cli_enable_remote_auth(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_version(FuCli *self, GError **error)
+fu_dbus_cli_version(FuDbusCli *self, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autofree gchar *str = NULL;
@@ -5234,7 +5293,7 @@ fu_dbus_cli_version(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_dbus_cli_setup_interactive(FuCli *self, GError **error)
+fu_dbus_cli_setup_interactive(FuDbusCli *self, GError **error)
 {
 	if (self->as_json) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "using --json");
@@ -5246,7 +5305,7 @@ fu_dbus_cli_setup_interactive(FuCli *self, GError **error)
 static void
 fu_dbus_cli_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	if (!g_main_loop_is_running(self->loop))
 		return;
 	/* TRANSLATORS: this is from ctrl+c */
@@ -5257,7 +5316,7 @@ fu_dbus_cli_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 static void
 fu_dbus_cli_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	g_autofree gchar *tmp = NULL;
 
 	if (self->as_json)
@@ -5272,7 +5331,7 @@ fu_dbus_cli_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer u
 static void
 fu_dbus_cli_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	g_autofree gchar *tmp = NULL;
 
 	if (self->as_json)
@@ -5287,7 +5346,7 @@ fu_dbus_cli_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer
 static void
 fu_dbus_cli_device_changed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 	g_autofree gchar *tmp = NULL;
 
 	if (self->as_json)
@@ -5302,7 +5361,7 @@ fu_dbus_cli_device_changed_cb(FwupdClient *client, FwupdDevice *device, gpointer
 static void
 fu_dbus_cli_changed_cb(FwupdClient *client, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuDbusCli *self = FU_DBUS_CLI(user_data);
 
 	if (self->as_json)
 		return;
@@ -5312,8 +5371,10 @@ fu_dbus_cli_changed_cb(FwupdClient *client, gpointer user_data)
 }
 
 static gboolean
-fu_dbus_cli_monitor(FuCli *self, gchar **values, GError **error)
+fu_dbus_cli_monitor(FuCli *cli, gchar **values, GError **error)
 {
+	FuDbusCli *self = FU_DBUS_CLI(cli);
+
 	/* get all the devices */
 	if (!fwupd_client_connect(self->client, self->cancellable, error))
 		return FALSE;
@@ -5344,7 +5405,7 @@ fu_dbus_cli_monitor(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_dbus_cli_print_error(FuCli *self, const GError *error)
+fu_dbus_cli_print_error(FuDbusCli *self, const GError *error)
 {
 	if (self->as_json) {
 		fu_cli_print_error_as_json(self->console, error);
@@ -5353,9 +5414,36 @@ fu_dbus_cli_print_error(FuCli *self, const GError *error)
 	fu_console_print_full(self->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
 }
 
+static void
+fu_dbus_cli_init(FuDbusCli *self)
+{
+	self->main_ctx = g_main_context_new();
+	self->loop = g_main_loop_new(self->main_ctx, FALSE);
+	self->console = fu_console_new();
+	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
+	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
+	fu_console_set_main_context(self->console, self->main_ctx);
+
+	/* do stuff on ctrl+c */
+	self->cancellable = g_cancellable_new();
+	g_signal_connect(G_CANCELLABLE(self->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_dbus_cli_cancelled_cb),
+			 self);
+}
+
+static void
+fu_dbus_cli_class_init(FuDbusCliClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_dbus_cli_finalize;
+}
+
 int
 main(int argc, char *argv[])
 { /* nocheck:lines */
+	g_autoptr(FuDbusCli) self = g_object_new(FU_TYPE_DBUS_CLI, NULL);
 	gboolean force = FALSE;
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
@@ -5370,7 +5458,6 @@ main(int argc, char *argv[])
 	gboolean version = FALSE;
 	guint download_retries = 0;
 	g_auto(GStrv) filter_protocols = NULL;
-	g_autoptr(FuCli) self = g_new0(FuCli, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_console = NULL;
@@ -5620,15 +5707,6 @@ main(int argc, char *argv[])
 
 	/* ensure D-Bus errors are registered */
 	(void)fwupd_error_quark();
-
-	/* create helper object */
-	self->main_ctx = g_main_context_new();
-	self->loop = g_main_loop_new(self->main_ctx, FALSE);
-	self->console = fu_console_new();
-	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
-	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
-	fu_console_set_main_context(self->console, self->main_ctx);
 
 	/* add commands */
 	fu_cli_cmd_array_add(cmd_array,
@@ -5992,13 +6070,6 @@ main(int argc, char *argv[])
 			     _("Monitor the daemon for events"),
 			     fu_dbus_cli_monitor);
 
-	/* do stuff on ctrl+c */
-	self->cancellable = g_cancellable_new();
-	g_signal_connect(G_CANCELLABLE(self->cancellable),
-			 "cancelled",
-			 G_CALLBACK(fu_dbus_cli_cancelled_cb),
-			 self);
-
 	/* sort by command name */
 	fu_cli_cmd_array_sort(cmd_array);
 
@@ -6254,7 +6325,7 @@ main(int argc, char *argv[])
 	}
 
 	/* run the specified command */
-	ret = fu_cli_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
+	ret = fu_cli_cmd_array_run(cmd_array, FU_CLI(self), argv[1], (gchar **)&argv[2], &error);
 	if (!ret) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */

@@ -108,7 +108,12 @@ fwupdcli_rs = custom_target(
 fwupdcli = library(
   'fwupdcli',
   fwupdcli_rs,
-  sources: ['fu-console.c', 'fu-cli-common.c', systemd_src],
+  sources: [
+    'fu-console.c',
+    'fu-cli-common.c',
+    'fu-cli.c',
+    systemd_src,
+  ],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
