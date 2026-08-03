@@ -29,14 +29,6 @@
 #include "fu-systemd.h"
 #endif
 
-typedef enum {
-	FU_CLI_OPERATION_UNKNOWN,
-	FU_CLI_OPERATION_UPDATE,
-	FU_CLI_OPERATION_DOWNGRADE,
-	FU_CLI_OPERATION_INSTALL,
-	FU_CLI_OPERATION_LAST
-} FuCliOperation;
-
 struct FuCli {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
