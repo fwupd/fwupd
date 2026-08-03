@@ -35,6 +35,7 @@ enum FuEngineRequestFlags {
     AnyRelease = 1 << 1,
 }
 
+#[derive(ToString, Bitfield)]
 enum FuEngineLoadFlags {
     None = 0,
     Readonly = 1 << 0,
@@ -47,10 +48,16 @@ enum FuEngineLoadFlags {
     ExternalPlugins = 1 << 8,   // dload'ed plugins such as modem-manager
     DeviceHotplug = 1 << 9,
     ColdplugForce = 1 << 10,    // even without a matched plugin
-    Ready = 1 << 11,
     History = 1 << 12,
     AllowTestPlugin = 1 << 13,
     PathStoreDefaults = 1 << 14,
+}
+
+// Startup phase
+enum FuEnginePhase {
+    Idle,
+    Startup,
+    Done,
 }
 
 #[derive(ToString)]
