@@ -34,6 +34,11 @@ The device reboots automatically after the final ACK; the plugin then issues a r
 command (`attach`) in case the device has not yet rebooted.
 The device re-enumerates after each mode switch.
 
+Both modes use the same USB product ID, so the mode is taken from the `_APP_` or `_IAP_` marker in
+the version string reported by the device.
+A device left in bootloader mode by an interrupted update is detected as such, and an update can
+start without another mode switch.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor ID, in this instance `USB:0x2808`.

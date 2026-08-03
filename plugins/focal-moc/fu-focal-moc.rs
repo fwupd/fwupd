@@ -55,16 +55,6 @@ struct FuStructFocalMocDlHdr {
     seq: u8,                   // incrementing sequence number
 }
 
-// GetFwVersion response
-#[derive(Parse, Default)]
-#[repr(C, packed)]
-struct FuStructFocalMocVersionRsp {
-    head: u8 == 0x02,
-    ln: u16be,
-    st: FuFocalMocCmd == Ack,
-    version: [char; 59],
-}
-
 // SHO packet data payload
 #[derive(New, Setters)]
 #[repr(C, packed)]

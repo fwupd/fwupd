@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-focal-moc-common.h"
 #include "fu-focal-moc-device.h"
 #include "fu-focal-moc-struct.h"
 
@@ -35,6 +36,10 @@ G_DEFINE_TYPE(FuFocalMocDevice, fu_focal_moc_device, FU_TYPE_USB_DEVICE)
 
 /* maximum receive buffer (covers any response packet) */
 #define FU_FOCAL_MOC_MAX_RSP_SIZE 256
+
+/* the emulation event key includes the requested transfer size, so the version
+ * reply has to keep asking for the smaller size it was recorded with */
+#define FU_FOCAL_MOC_VERSION_RSP_SIZE 64
 
 static gboolean
 fu_focal_moc_device_send(FuFocalMocDevice *self, GByteArray *pkt, GError **error)
@@ -68,66 +73,36 @@ fu_focal_moc_device_send(FuFocalMocDevice *self, GByteArray *pkt, GError **error
 	return TRUE;
 }
 
-/* read one response packet and verify it is an ACK */
-static gboolean
-fu_focal_moc_device_recv_ack(FuFocalMocDevice *self, guint timeout_ms, GError **error)
+/* read one response packet, verify it is an ACK and return any payload */
+static GByteArray *
+fu_focal_moc_device_recv(FuFocalMocDevice *self, guint timeout_ms, gsize bufsz, GError **error)
 {
 	gsize actual = 0;
-	guint16 pkt_ln;
-	guint8 bcc_calc = 0;
-	guint8 bcc_recv;
 	guint8 buf[FU_FOCAL_MOC_MAX_RSP_SIZE] = {0};
-	g_autoptr(FuStructFocalMocCmdRsp) st_res = NULL;
+
+	g_return_val_if_fail(bufsz <= sizeof(buf), NULL);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_FOCAL_MOC_USB_EP_IN,
 					 buf,
-					 sizeof(buf),
+					 bufsz,
 					 &actual,
 					 timeout_ms,
 					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "recv failed: ");
-		return FALSE;
+		return NULL;
 	}
-
-	if (actual < 5) {
-		/* minimum: magic(1)+len(2)+cmd(1)+bcc(1) */
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "response too short: %zu bytes",
-			    actual);
-		return FALSE;
-	}
-
 	fu_dump_full(G_LOG_DOMAIN, "RECV", buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
+	return fu_focal_moc_packet_parse(buf, actual, error);
+}
 
-	/* parse the 4-byte response header */
-	st_res = fu_struct_focal_moc_cmd_rsp_parse(buf, sizeof(buf), 0, error);
-	if (st_res == NULL)
-		return FALSE;
-
-	/* use LN field to locate BCC; actual may include USB padding bytes.
-	 * device sends [MAGIC|LN_HI|LN_LO|CMD...|BCC] where BCC is at buf[3+LN].
-	 * actual-1 is wrong when USB pads the response. */
-	pkt_ln = fu_struct_focal_moc_cmd_rsp_get_ln(st_res);
-	if (!fu_xor8_safe(buf, sizeof(buf), 1, 2 + pkt_ln, &bcc_calc, error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, sizeof(buf), 3 + pkt_ln, &bcc_recv, error))
-		return FALSE;
-	if (bcc_calc != bcc_recv) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BCC mismatch: expected 0x%02x, got 0x%02x",
-			    bcc_calc,
-			    bcc_recv);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+static gboolean
+fu_focal_moc_device_recv_ack(FuFocalMocDevice *self, guint timeout_ms, GError **error)
+{
+	g_autoptr(GByteArray) data = NULL;
+	data = fu_focal_moc_device_recv(self, timeout_ms, FU_FOCAL_MOC_MAX_RSP_SIZE, error);
+	return data != NULL;
 }
 
 /* send a standard command packet and receive the ACK */
@@ -139,17 +114,11 @@ fu_focal_moc_device_cmd_xfer(FuFocalMocDevice *self,
 			     guint delay_ms,
 			     GError **error)
 {
-	guint8 bcc;
-	g_autoptr(FuStructFocalMocCmdReq) st_req = fu_struct_focal_moc_cmd_req_new();
+	g_autoptr(GByteArray) pkt = fu_focal_moc_packet_new(cmd, buf, buf_len, error);
 
-	fu_struct_focal_moc_cmd_req_set_ln(st_req, (guint16)(buf_len + 1));
-	fu_struct_focal_moc_cmd_req_set_cmd(st_req, cmd);
-	if (buf != NULL && buf_len > 0)
-		g_byte_array_append(st_req->buf, buf, buf_len);
-	bcc = fu_xor8(st_req->buf->data + 1, st_req->buf->len - 1);
-	fu_byte_array_append_uint8(st_req->buf, bcc);
-
-	if (!fu_focal_moc_device_send(self, st_req->buf, error))
+	if (pkt == NULL)
+		return FALSE;
+	if (!fu_focal_moc_device_send(self, pkt, error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), delay_ms);
@@ -160,84 +129,40 @@ fu_focal_moc_device_cmd_xfer(FuFocalMocDevice *self,
 static gboolean
 fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 {
-	const gchar *ver_num;
-	gsize actual = 0;
-	guint16 pkt_ln;
-	guint8 bcc_calc = 0;
-	guint8 bcc_recv;
-	guint8 bcc;
-	guint8 buf[64] = {0};
+	gboolean is_bootloader = FALSE;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuStructFocalMocCmdReq) st_req = fu_struct_focal_moc_cmd_req_new();
-	g_autoptr(FuStructFocalMocCmdRsp) st_hdr = NULL;
-	g_autoptr(FuStructFocalMocVersionRsp) st_res = NULL;
+	g_autoptr(GByteArray) data = NULL;
+	g_autoptr(GByteArray) pkt = NULL;
 
-	/* build request */
-	fu_struct_focal_moc_cmd_req_set_ln(st_req, 1);
-	fu_struct_focal_moc_cmd_req_set_cmd(st_req, FU_FOCAL_MOC_CMD_GET_FW_VERSION);
-	bcc = fu_xor8(st_req->buf->data + 1, st_req->buf->len - 1);
-	fu_byte_array_append_uint8(st_req->buf, bcc);
-	if (!fu_focal_moc_device_send(self, st_req->buf, error)) {
+	pkt = fu_focal_moc_packet_new(FU_FOCAL_MOC_CMD_GET_FW_VERSION, NULL, 0, error);
+	if (pkt == NULL)
+		return FALSE;
+	if (!fu_focal_moc_device_send(self, pkt, error)) {
 		g_prefix_error_literal(error, "version: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), FU_FOCAL_MOC_DELAY_CMD_MS);
-
-	/* receive response */
-	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_FOCAL_MOC_USB_EP_IN,
-					 buf,
-					 sizeof(buf),
-					 &actual,
-					 FU_FOCAL_MOC_RECV_TIMEOUT,
-					 NULL,
-					 error)) {
+	data = fu_focal_moc_device_recv(self,
+					FU_FOCAL_MOC_RECV_TIMEOUT,
+					FU_FOCAL_MOC_VERSION_RSP_SIZE,
+					error);
+	if (data == NULL) {
 		g_prefix_error_literal(error, "version recv: ");
 		return FALSE;
 	}
 
-	fu_dump_full(G_LOG_DOMAIN, "VERSION-RSP", buf, actual, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
-
-	/* minimum: magic(1)+len(2)+cmd(1)+bcc(1) = 5 bytes */
-	if (actual < 5) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "bad version response");
+	/* e.g. "FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396" */
+	version = fu_focal_moc_version_parse(data->data, data->len, &is_bootloader, error);
+	if (version == NULL)
 		return FALSE;
+	fu_device_set_version(FU_DEVICE(self), version);
+	if (is_bootloader) {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 
-	/* parse the 4-byte response header to obtain LN and validate magic */
-	st_hdr = fu_struct_focal_moc_cmd_rsp_parse(buf, sizeof(buf), 0, error);
-	if (st_hdr == NULL)
-		return FALSE;
-
-	/* use LN from the header struct to locate BCC accurately */
-	pkt_ln = fu_struct_focal_moc_cmd_rsp_get_ln(st_hdr);
-	if (!fu_xor8_safe(buf, sizeof(buf), 1, 2 + pkt_ln, &bcc_calc, error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, sizeof(buf), 3 + pkt_ln, &bcc_recv, error))
-		return FALSE;
-	if (bcc_calc != bcc_recv) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "version BCC mismatch: expected 0x%02x, got 0x%02x",
-			    bcc_calc,
-			    bcc_recv);
-		return FALSE;
-	}
-
-	/* parse */
-	st_res = fu_struct_focal_moc_version_rsp_parse(buf, sizeof(buf), 0, error);
-	if (st_res == NULL)
-		return FALSE;
-
-	/* device returns a full build string e.g. "FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396";
-	 * report only the numeric suffix after the last underscore */
-	version = fu_struct_focal_moc_version_rsp_get_version(st_res);
-	ver_num = strrchr(version, '_');
-	fu_device_set_version(FU_DEVICE(self), ver_num != NULL ? ver_num + 1 : version);
+	/* success */
 	return TRUE;
 }
 
@@ -306,6 +231,10 @@ fu_focal_moc_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 {
 	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
 
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("already in bootloader mode, skipping");
+		return TRUE;
+	}
 	if (!fu_focal_moc_device_set_boot_mode(self, FU_FOCAL_MOC_BOOT_MODE_ENTER_BOOT, error)) {
 		g_prefix_error_literal(error, "failed to enter bootloader mode: ");
 		return FALSE;
