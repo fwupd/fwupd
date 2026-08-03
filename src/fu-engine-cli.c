@@ -53,7 +53,6 @@ struct _FuEngineCli {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
-	GOptionContext *context;
 	FuContext *ctx;
 	GSource *source_sigint;
 	FuEngine *engine;
@@ -390,8 +389,6 @@ fu_engine_cli_finalize(GObject *obj)
 		g_object_unref(self->console);
 	if (self->progress != NULL)
 		g_object_unref(self->progress);
-	if (self->context != NULL)
-		g_option_context_free(self->context);
 	if (self->jcat_context != NULL)
 		g_object_unref(self->jcat_context);
 	if (self->source_sigint != NULL)
@@ -6510,7 +6507,6 @@ main(int argc, char *argv[])
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean no_search = FALSE;
-	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_requirements = FALSE;
@@ -6521,6 +6517,7 @@ main(int argc, char *argv[])
 	g_autoptr(FuEngineCli) self = g_object_new(FU_TYPE_ENGINE_CLI, NULL);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GOptionContext) option_context = g_option_context_new(NULL);
 	g_autoptr(GPtrArray) cmd_array = fu_cli_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *destdir = NULL;
@@ -7340,21 +7337,19 @@ main(int argc, char *argv[])
 	fu_console_set_interactive(self->console, self->interactive);
 
 	/* get a list of the commands */
-	self->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_cli_cmd_array_to_string(cmd_array);
-	g_option_context_set_summary(self->context, cmd_descriptions);
+	g_option_context_set_summary(option_context, cmd_descriptions);
 	g_option_context_set_description(
-	    self->context,
+	    option_context,
 	    /* TRANSLATORS: CLI description */
 	    _("This tool allows an administrator to use the fwupd plugins "
 	      "without being installed on the host system."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("Firmware Utility"));
-	g_option_context_add_main_entries(self->context, options, NULL);
-	g_option_context_add_group(self->context, fu_debug_get_option_group());
-	ret = g_option_context_parse(self->context, &argc, &argv, &error);
-	if (!ret) {
+	g_option_context_add_main_entries(option_context, options, NULL);
+	g_option_context_add_group(option_context, fu_debug_get_option_group());
+	if (!g_option_context_parse(option_context, &argc, &argv, &error)) {
 		fu_console_print(self->console,
 				 "%s: %s",
 				 /* TRANSLATORS: the user didn't read the man page */
@@ -7487,8 +7482,7 @@ main(int argc, char *argv[])
 		fu_engine_add_plugin_filter(self->engine, plugin_glob[i]);
 
 	/* run the specified command */
-	ret = fu_cli_cmd_array_run(cmd_array, FU_CLI(self), argv[1], (gchar **)&argv[2], &error);
-	if (!ret) {
+	if (!fu_cli_cmd_array_run(cmd_array, FU_CLI(self), argv[1], (gchar **)&argv[2], &error)) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
 		if (error == NULL) {
