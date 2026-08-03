@@ -321,33 +321,40 @@ if build_standalone
     version: '>= 0.1.27',
   )
   conf.set_quoted('LIBUSB_VERSION', libusb.version())
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_set_option',
-    dependencies: libusb,
-  )
+  if libusb.type_name() == 'internal'
     conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_init_context',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_get_parent',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_GET_PARENT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_wrap_sys_device',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+  else
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_set_option',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_init_context',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_get_parent',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_wrap_sys_device',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+    endif
   endif
 
   readline = dependency(
