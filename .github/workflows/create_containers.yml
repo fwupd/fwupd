@@ -24,6 +24,7 @@ jobs:
           - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android }
     env: ${{ matrix.env }}
     steps:
       - name: Check out the repo
