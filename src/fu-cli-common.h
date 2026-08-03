@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-cli-struct.h"
+#include "fu-cli.h"
 #include "fu-console.h"
 
 /* custom return codes */
@@ -19,7 +19,6 @@
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
-typedef struct FuCli FuCli;
 typedef gboolean (*FuCliCmdFunc)(FuCli *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
