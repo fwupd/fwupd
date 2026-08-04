@@ -942,6 +942,11 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="rustup">
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
   <dependency id="libstd-rust-dev">
     <distro id="debian">
       <multi-arch />
