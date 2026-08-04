@@ -26,7 +26,7 @@ struct _FuUdevBackend {
 	GHashTable *map_paths;	    /* of str:None */
 	GHashTable *coldplug_cache; /* of str:FuUdevBackendColdplugCacheItem */
 	GPtrArray *dpaux_devices;   /* of FuDpauxDevice */
-	guint dpaux_devices_rescan_id;
+	GSource *dpaux_devices_rescan_source;
 	gboolean done_coldplug;
 };
 
@@ -117,19 +117,23 @@ fu_udev_backend_rescan_dpaux_devices_cb(gpointer user_data)
 		FuDevice *dpaux_device = g_ptr_array_index(self->dpaux_devices, i);
 		fu_udev_backend_rescan_dpaux_device(self, dpaux_device);
 	}
-	self->dpaux_devices_rescan_id = 0;
+	g_clear_pointer(&self->dpaux_devices_rescan_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
 static void
 fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 {
-	if (self->dpaux_devices_rescan_id != 0)
-		g_source_remove(self->dpaux_devices_rescan_id);
-	self->dpaux_devices_rescan_id =
-	    g_timeout_add_seconds(FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY,
-				  fu_udev_backend_rescan_dpaux_devices_cb,
-				  self);
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	if (self->dpaux_devices_rescan_source != NULL) {
+		g_source_destroy(self->dpaux_devices_rescan_source);
+		g_source_unref(self->dpaux_devices_rescan_source);
+	}
+	self->dpaux_devices_rescan_source =
+	    fu_context_add_timeout_seconds(ctx,
+					   FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY,
+					   fu_udev_backend_rescan_dpaux_devices_cb,
+					   self);
 }
 
 static FuUdevDevice *
@@ -911,8 +915,10 @@ static void
 fu_udev_backend_finalize(GObject *object)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(object);
-	if (self->dpaux_devices_rescan_id != 0)
-		g_source_remove(self->dpaux_devices_rescan_id);
+	if (self->dpaux_devices_rescan_source != NULL) {
+		g_source_destroy(self->dpaux_devices_rescan_source);
+		g_source_unref(self->dpaux_devices_rescan_source);
+	}
 	if (self->netlink_fd > 0)
 		g_close(self->netlink_fd, NULL);
 	g_hash_table_unref(self->map_paths);

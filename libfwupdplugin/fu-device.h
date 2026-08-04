@@ -1288,6 +1288,8 @@ void
 fu_device_sleep(FuDevice *self, guint delay_ms) G_GNUC_NON_NULL(1);
 void
 fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress) G_GNUC_NON_NULL(1);
+void
+fu_device_sleep_idle(FuDevice *self, guint duration_ms, FuProgress *progress) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *driver, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

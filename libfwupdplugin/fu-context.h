@@ -160,6 +160,13 @@ gboolean
 fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
     G_GNUC_NON_NULL(1);
 
+GSource *
+fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function, gpointer data)
+    G_GNUC_NON_NULL(1, 3);
+GSource *
+fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc function, gpointer data)
+    G_GNUC_NON_NULL(1, 3);
+
 GPtrArray *
 fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
     G_GNUC_NON_NULL(1);

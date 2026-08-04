@@ -72,7 +72,7 @@ fu_progress_idle_func(void)
 
 	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.f, 0.001);
 
-	fu_progress_sleep_idle(progress, 500);
+	fu_progress_sleep_idle(progress, NULL, 500);
 	g_assert_cmpint(helper.last_percentage, ==, 0);
 
 	fu_test_loop_run_with_timeout(600);

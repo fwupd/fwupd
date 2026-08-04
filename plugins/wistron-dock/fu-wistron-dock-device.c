@@ -20,7 +20,7 @@ struct _FuWistronDockDevice {
 	guint8 imgmode;
 	gchar *icp_bbinfo;
 	gchar *icp_userinfo;
-	guint device_insert_id;
+	GSource *device_insert_source;
 };
 
 G_DEFINE_TYPE(FuWistronDockDevice, fu_wistron_dock_device, FU_TYPE_HID_DEVICE)
@@ -737,7 +737,7 @@ fu_wistron_dock_device_insert_cb(gpointer user_data)
 		g_warning("%s", error_local->message);
 
 	/* success */
-	self->device_insert_id = 0;
+	g_clear_pointer(&self->device_insert_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -750,7 +750,10 @@ fu_wistron_dock_device_cleanup(FuDevice *device,
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
 
 	/* ensure the timeout has been cleared, even on error */
-	g_clear_handle_id(&self->device_insert_id, g_source_remove);
+	if (self->device_insert_source != NULL) {
+		g_source_destroy(self->device_insert_source);
+		g_clear_pointer(&self->device_insert_source, g_source_unref);
+	}
 	return TRUE;
 }
 
@@ -758,6 +761,7 @@ static gboolean
 fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
+	FuContext *ctx = fu_device_get_context(device);
 	guint8 cmd[8] = {FU_WISTRON_DOCK_ID_IMG_CONTROL, FU_WISTRON_DOCK_CMD_DFU_EXIT};
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
@@ -782,7 +786,8 @@ fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	/* set a timeout, which will trigger as we're waiting for the device --
 	 * no sync sleep is possible as the device will re-enumerate one more time */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	self->device_insert_id = g_timeout_add_seconds(20, fu_wistron_dock_device_insert_cb, self);
+	self->device_insert_source =
+	    fu_context_add_timeout_seconds(ctx, 20, fu_wistron_dock_device_insert_cb, self);
 
 	/* success */
 	return TRUE;
@@ -821,8 +826,10 @@ static void
 fu_wistron_dock_device_finalize(GObject *object)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(object);
-	if (self->device_insert_id != 0)
-		g_source_remove(self->device_insert_id);
+	if (self->device_insert_source != NULL) {
+		g_source_destroy(self->device_insert_source);
+		g_source_unref(self->device_insert_source);
+	}
 	g_free(self->icp_bbinfo);
 	g_free(self->icp_userinfo);
 	G_OBJECT_CLASS(fu_wistron_dock_device_parent_class)->finalize(object);

@@ -24,6 +24,7 @@
 #include "fu-input-stream.h"
 #include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
+#include "fu-progress-private.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -78,10 +79,11 @@ typedef struct {
 	guint event_idx;
 	guint remove_delay;    /* ms */
 	guint acquiesce_delay; /* ms */
+	guint poll_interval;   /* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint order;
 	guint priority;
-	guint poll_id;
+	GSource *poll_source;
 	gint poll_locker_cnt;
 	gboolean done_probe;
 	gboolean done_setup;
@@ -791,6 +793,29 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 }
 
 /**
+ * fu_device_sleep_idle:
+ * @self: a #FuDevice
+ * @duration_ms: duration in milliseconds
+ * @progress: a #FuProgress
+ *
+ * Sleeps, setting the device progress from 0..100% as time continues.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_device_sleep_idle(FuDevice *self, guint duration_ms, FuProgress *progress)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_CONTEXT(priv->ctx));
+	g_return_if_fail(duration_ms < 1000000);
+	g_return_if_fail(FU_IS_PROGRESS(progress));
+
+	fu_progress_sleep_idle(progress, fu_context_get_main_context(priv->ctx), duration_ms);
+}
+
+/**
  * fu_device_set_contents:
  * @self: a #FuDevice
  * @filename: full path to a file
@@ -1279,10 +1304,36 @@ fu_device_poll_cb(gpointer user_data)
 
 	if (!fu_device_poll(self, &error_local)) {
 		g_warning("disabling polling: %s", error_local->message);
-		priv->poll_id = 0;
+		g_clear_pointer(&priv->poll_source, g_source_unref);
 		return G_SOURCE_REMOVE;
 	}
 	return G_SOURCE_CONTINUE;
+}
+
+static void
+fu_device_ensure_poll_interval(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* called from _init(); will call again from _constructed() */
+	if (priv->ctx == NULL)
+		return;
+
+	if (priv->poll_source != NULL) {
+		g_source_destroy(priv->poll_source);
+		g_clear_pointer(&priv->poll_source, g_source_unref);
+	}
+	if (priv->poll_interval == 0)
+		return;
+	if (priv->poll_interval % 1000 == 0) {
+		priv->poll_source = fu_context_add_timeout_seconds(priv->ctx,
+								   priv->poll_interval / 1000,
+								   fu_device_poll_cb,
+								   self);
+	} else {
+		priv->poll_source =
+		    fu_context_add_timeout(priv->ctx, priv->poll_interval, fu_device_poll_cb, self);
+	}
 }
 
 /**
@@ -1300,17 +1351,11 @@ void
 fu_device_set_poll_interval(FuDevice *self, guint interval)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	g_clear_handle_id(&priv->poll_id, g_source_remove);
-	if (interval == 0)
+	if (priv->poll_interval == interval)
 		return;
-	if (interval % 1000 == 0) {
-		priv->poll_id = g_timeout_add_seconds(interval / 1000, fu_device_poll_cb, self);
-	} else {
-		priv->poll_id = g_timeout_add(interval, fu_device_poll_cb, self);
-	}
+	priv->poll_interval = interval;
+	fu_device_ensure_poll_interval(self);
 }
 
 /**
@@ -5362,6 +5407,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
+	fwupd_codec_string_append_int(str, idt, "PollInterval", priv->poll_interval);
 	fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
 		fwupd_codec_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
@@ -8377,6 +8423,14 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 }
 
 static void
+fu_device_constructed(GObject *obj)
+{
+	FuDevice *self = FU_DEVICE(obj);
+	fu_device_ensure_poll_interval(self);
+	G_OBJECT_CLASS(fu_device_parent_class)->constructed(obj);
+}
+
+static void
 fu_device_dispose(GObject *object)
 {
 	FuDevice *self = FU_DEVICE(object);
@@ -8457,6 +8511,7 @@ fu_device_class_init(FuDeviceClass *klass)
 	    FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER,
 	};
 
+	object_class->constructed = fu_device_constructed;
 	object_class->dispose = fu_device_dispose;
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
@@ -8763,8 +8818,10 @@ fu_device_finalize(GObject *object)
 	}
 	if (priv->backend != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
-	if (priv->poll_id != 0)
-		g_source_remove(priv->poll_id);
+	if (priv->poll_source != NULL) {
+		g_source_destroy(priv->poll_source);
+		g_source_unref(priv->poll_source);
+	}
 	if (priv->metadata != NULL)
 		g_hash_table_unref(priv->metadata);
 	if (priv->inhibits != NULL)

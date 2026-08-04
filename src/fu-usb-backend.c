@@ -29,7 +29,7 @@ struct _FuUsbBackend {
 	GPtrArray *idle_events;
 	GMutex idle_events_mutex;
 	guint idle_events_id;
-	guint hotplug_poll_id;
+	GSource *hotplug_poll_source;
 	guint hotplug_poll_interval;
 #endif
 };
@@ -194,10 +194,16 @@ fu_usb_backend_rescan_cb(gpointer user_data)
 static void
 fu_usb_backend_ensure_rescan_timeout(FuUsbBackend *self)
 {
-	g_clear_handle_id(&self->hotplug_poll_id, g_source_remove);
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	if (self->hotplug_poll_source != NULL) {
+		g_source_destroy(self->hotplug_poll_source);
+		g_clear_pointer(&self->hotplug_poll_source, g_source_unref);
+	}
 	if (self->hotplug_poll_interval > 0) {
-		self->hotplug_poll_id =
-		    g_timeout_add(self->hotplug_poll_interval, fu_usb_backend_rescan_cb, self);
+		self->hotplug_poll_source = fu_context_add_timeout(ctx,
+								   self->hotplug_poll_interval,
+								   fu_usb_backend_rescan_cb,
+								   self);
 	}
 }
 
@@ -211,7 +217,7 @@ fu_usb_backend_set_hotplug_poll_interval(FuUsbBackend *self, guint hotplug_poll_
 	self->hotplug_poll_interval = hotplug_poll_interval;
 
 	/* if already running then change the existing timeout */
-	if (self->hotplug_poll_id > 0)
+	if (self->hotplug_poll_source != NULL)
 		fu_usb_backend_ensure_rescan_timeout(self);
 }
 
@@ -480,8 +486,10 @@ fu_usb_backend_finalize(GObject *object)
 	}
 	if (self->idle_events_id > 0)
 		g_source_remove(self->idle_events_id);
-	if (self->hotplug_poll_id > 0)
-		g_source_remove(self->hotplug_poll_id);
+	if (self->hotplug_poll_source != NULL) {
+		g_source_destroy(self->hotplug_poll_source);
+		g_source_unref(self->hotplug_poll_source);
+	}
 	if (self->ctx != NULL)
 		libusb_exit(self->ctx);
 	g_clear_pointer(&self->idle_events, g_ptr_array_unref);
