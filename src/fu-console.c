@@ -593,6 +593,14 @@ fu_console_refresh(FuConsole *self)
 	self->contents_to_clear = TRUE;
 }
 
+gchar *
+fu_console_color_format(const gchar *text, FuConsoleColor fg_color)
+{
+	if (g_getenv("NO_COLOR") != NULL)
+		return g_strdup(text);
+	return g_strdup_printf("\033[%um\033[1m%s\033[0m", fg_color, text);
+}
+
 /**
  * fu_console_print_full:
  * @self: a #FuConsole
@@ -809,6 +817,13 @@ fu_console_set_interactive(FuConsole *self, gboolean interactive)
 {
 	g_return_if_fail(FU_IS_CONSOLE(self));
 	self->interactive = interactive;
+}
+
+gboolean
+fu_console_get_interactive(FuConsole *self)
+{
+	g_return_val_if_fail(FU_IS_CONSOLE(self), FALSE);
+	return self->interactive;
 }
 
 /**
