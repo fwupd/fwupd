@@ -37,6 +37,13 @@ fi
 
 export PATH="${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/bin:${ANDROID_SDK_ROOT}/build-tools/35.0.0"
 
+# install Rust target for Android cross-compilation
+if ! command -v rustup >/dev/null 2>&1; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+    . "${HOME}/.cargo/env"
+fi
+rustup target add x86_64-linux-android
+
 root=$(pwd)
 export BUILD="${root}/build"
 rm -rf "${BUILD}"

@@ -953,6 +953,11 @@
       <package variant="mingw64" />
     </distro>
   </dependency>
+  <dependency id="rustup">
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
   <dependency id="mingw-w64-tools">
     <distro id="centos">
       <package variant="x86_64" />
