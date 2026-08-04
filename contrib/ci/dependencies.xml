@@ -20,7 +20,7 @@
       <package variant="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="7zip">
@@ -238,7 +238,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libftdi1</package>
+      <package variant="x86_64">libftdi1</package>
     </distro>
   </dependency>
   <dependency id="libpci-dev">
@@ -262,7 +262,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libpci</package>
+      <package variant="x86_64">libpci</package>
     </distro>
   </dependency>
   <dependency id="fonts-noto">
@@ -587,7 +587,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="gnome-desktop-testing">
@@ -907,7 +907,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="rustc">
@@ -927,7 +927,7 @@
       <package variant="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">rust</package>
+      <package variant="x86_64">rust</package>
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1729,7 +1729,7 @@
   </dependency>
   <dependency id="libinotify">
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
 </dependencies>
