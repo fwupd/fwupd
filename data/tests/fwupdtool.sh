@@ -366,7 +366,7 @@ expect_rc 2
 # ---
 echo " ● Activating (not possible)…"
 run switch-branch ${DEVICE} impossible
-expect_rc 2
+expect_rc 3
 
 # ---
 echo " ● Resetting config…"
