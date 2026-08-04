@@ -182,6 +182,7 @@ parts:
       - python3-gi
       - python3-jinja2
       - python3-dbusmock
+      - rustc
       - shim-signed
       - systemd
       - umockdev
