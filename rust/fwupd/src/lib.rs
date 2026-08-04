@@ -7,5 +7,7 @@
 //! Core components of fwupd
 
 mod bitflags;
+#[macro_use]
+mod errors;
 
 pub use crate::bitflags::{BitflagIter, Bitflags};
