@@ -319,6 +319,62 @@ fu_context_get_main_context(FuContext *self)
 }
 
 /**
+ * fu_context_add_timeout_seconds:
+ * @self: a #FuContext
+ * @interval: timeout interval in seconds
+ * @function: (scope call): function to call
+ * @data: data to pass to @function
+ *
+ * Creates a new timeout source and attaches it to the main context.
+ *
+ * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
+ *
+ * Since: 2.1.8
+ **/
+GSource *
+fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc function, gpointer data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GSource) source = g_timeout_source_new_seconds(interval);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(interval != 0, NULL);
+	g_return_val_if_fail(function != NULL, NULL);
+
+	g_source_set_callback(source, function, data, NULL);
+	g_source_attach(source, priv->main_ctx);
+	return g_steal_pointer(&source);
+}
+
+/**
+ * fu_context_add_timeout:
+ * @self: a #FuContext
+ * @interval_ms: timeout interval in ms
+ * @function: (scope call): function to call
+ * @data: data to pass to @function
+ *
+ * Creates a new timeout source and attaches it to the main context.
+ *
+ * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
+ *
+ * Since: 2.1.8
+ **/
+GSource *
+fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function, gpointer data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GSource) source = g_timeout_source_new(interval_ms);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(interval_ms != 0, NULL);
+	g_return_val_if_fail(function != NULL, NULL);
+
+	g_source_set_callback(source, function, data, NULL);
+	g_source_attach(source, priv->main_ctx);
+	return g_steal_pointer(&source);
+}
+
+/**
  * fu_context_set_main_context:
  * @self: a #FuContext
  * @main_ctx: (nullable): a #GMainContext

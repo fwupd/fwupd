@@ -724,7 +724,7 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	}
 
 	/* increment the progressbar when waiting for replug */
-	fu_progress_sleep_idle(progress, fu_device_get_remove_delay(device));
+	fu_device_sleep_idle(device, fu_device_get_remove_delay(device), progress);
 
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

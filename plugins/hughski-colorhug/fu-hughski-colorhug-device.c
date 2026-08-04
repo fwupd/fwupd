@@ -288,7 +288,7 @@ fu_hughski_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError
 	}
 
 	/* this takes some time */
-	fu_progress_sleep_idle(progress, 1000);
+	fu_device_sleep_idle(device, 1000, progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -320,7 +320,7 @@ fu_hughski_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError
 	}
 
 	/* this takes some time */
-	fu_progress_sleep_idle(progress, 1000);
+	fu_device_sleep_idle(device, 1000, progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
