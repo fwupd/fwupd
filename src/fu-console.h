@@ -77,6 +77,8 @@ void
 fu_console_set_progress_title(FuConsole *self, const gchar *title) G_GNUC_NON_NULL(1);
 void
 fu_console_set_interactive(FuConsole *self, gboolean interactive) G_GNUC_NON_NULL(1);
+gboolean
+fu_console_get_interactive(FuConsole *self) G_GNUC_NON_NULL(1);
 void
 fu_console_set_main_context(FuConsole *self, GMainContext *main_ctx) G_GNUC_NON_NULL(1);
 
