@@ -121,9 +121,9 @@ struct _FuEngine {
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
-	guint acquiesce_id;
+	GSource *acquiesce_source;
 	guint acquiesce_delay;
-	guint update_motd_id;
+	GSource *update_motd_source;
 	FuEngineEmulatorPhase emulator_phase;
 	guint emulator_write_cnt;
 	guint emulator_composite_cnt;
@@ -193,7 +193,7 @@ fu_engine_update_motd_timeout_cb(gpointer user_data)
 	/* update now */
 	if (!fu_engine_update_motd(self, &error_local))
 		g_info("failed to update MOTD: %s", error_local->message);
-	self->update_motd_id = 0;
+	g_clear_pointer(&self->update_motd_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -201,11 +201,14 @@ static void
 fu_engine_update_motd_reset(FuEngine *self)
 {
 	g_info("resetting update motd timeout");
-	if (self->update_motd_id != 0)
-		g_source_remove(self->update_motd_id);
-	self->update_motd_id = g_timeout_add_seconds(FU_ENGINE_UPDATE_MOTD_DELAY,
-						     fu_engine_update_motd_timeout_cb,
-						     self);
+	if (self->update_motd_source != NULL) {
+		g_source_destroy(self->update_motd_source);
+		g_source_unref(self->update_motd_source);
+	}
+	self->update_motd_source = fu_context_add_timeout_seconds(self->ctx,
+								  FU_ENGINE_UPDATE_MOTD_DELAY,
+								  fu_engine_update_motd_timeout_cb,
+								  self);
 }
 
 static void
@@ -629,7 +632,7 @@ fu_engine_acquiesce_timeout_cb(gpointer user_data)
 	FuEngine *self = FU_ENGINE(user_data);
 	g_info("system acquiesced after %ums", self->acquiesce_delay);
 	g_main_loop_quit(self->acquiesce_loop);
-	self->acquiesce_id = 0;
+	g_clear_pointer(&self->acquiesce_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -639,10 +642,14 @@ fu_engine_acquiesce_reset(FuEngine *self)
 	if (!g_main_loop_is_running(self->acquiesce_loop))
 		return;
 	g_info("resetting system acquiesce timeout");
-	if (self->acquiesce_id != 0)
-		g_source_remove(self->acquiesce_id);
-	self->acquiesce_id =
-	    g_timeout_add(self->acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
+	if (self->acquiesce_source != 0) {
+		g_source_destroy(self->acquiesce_source);
+		g_source_unref(self->acquiesce_source);
+	}
+	self->acquiesce_source = fu_context_add_timeout(self->ctx,
+							self->acquiesce_delay,
+							fu_engine_acquiesce_timeout_cb,
+							self);
 }
 
 static void
@@ -651,7 +658,10 @@ fu_engine_wait_for_acquiesce(FuEngine *self, guint acquiesce_delay)
 	if (acquiesce_delay == 0)
 		return;
 	self->acquiesce_delay = acquiesce_delay;
-	self->acquiesce_id = g_timeout_add(acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
+	self->acquiesce_source = fu_context_add_timeout(self->ctx,
+							acquiesce_delay,
+							fu_engine_acquiesce_timeout_cb,
+							self);
 	g_main_loop_run(self->acquiesce_loop);
 }
 
@@ -9571,6 +9581,7 @@ fu_engine_constructed(GObject *obj)
 	self->history = fu_history_new(self->ctx);
 	self->device_list = fu_device_list_new(self->ctx);
 	self->emulation = fu_engine_emulator_new(self);
+	self->acquiesce_loop = g_main_loop_new(fu_context_get_main_context(self->ctx), FALSE);
 
 	self->remote_list = fu_remote_list_new(self->ctx);
 	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
@@ -9643,7 +9654,6 @@ fu_engine_init(FuEngine *self)
 	self->host_security_attrs = fu_security_attrs_new();
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->search_queries = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
@@ -9680,17 +9690,22 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->query_tag_by_guid_version);
 	if (self->approved_firmware != NULL)
 		g_hash_table_unref(self->approved_firmware);
-	if (self->acquiesce_id != 0)
-		g_source_remove(self->acquiesce_id);
-	if (self->update_motd_id != 0)
-		g_source_remove(self->update_motd_id);
+	if (self->acquiesce_source != NULL) {
+		g_source_destroy(self->acquiesce_source);
+		g_source_unref(self->acquiesce_source);
+	}
+	if (self->update_motd_source != NULL) {
+		g_source_destroy(self->update_motd_source);
+		g_source_unref(self->update_motd_source);
+	}
 	if (self->emulation != NULL)
 		g_object_unref(self->emulation);
 #ifdef HAVE_PASSIM
 	if (self->passim_client != NULL)
 		g_object_unref(self->passim_client);
 #endif
-	g_main_loop_unref(self->acquiesce_loop);
+	if (self->acquiesce_loop != NULL)
+		g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);
 	g_object_unref(self->host_security_attrs);

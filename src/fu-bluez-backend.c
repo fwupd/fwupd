@@ -133,7 +133,7 @@ typedef struct {
 	GMainLoop *loop;
 	GError **error;
 	GCancellable *cancellable;
-	guint timeout_id;
+	GSource *timeout_source;
 } FuBluezBackendHelper;
 
 static void
@@ -141,8 +141,10 @@ fu_bluez_backend_helper_free(FuBluezBackendHelper *helper)
 {
 	if (helper->object_manager != NULL)
 		g_object_unref(helper->object_manager);
-	if (helper->timeout_id != 0)
-		g_source_remove(helper->timeout_id);
+	if (helper->timeout_source != NULL) {
+		g_source_destroy(helper->timeout_source);
+		g_source_unref(helper->timeout_source);
+	}
 	g_cancellable_cancel(helper->cancellable);
 	g_main_loop_unref(helper->loop);
 	g_free(helper);
@@ -164,7 +166,7 @@ fu_bluez_backend_timeout_cb(gpointer user_data)
 {
 	FuBluezBackendHelper *helper = (FuBluezBackendHelper *)user_data;
 	g_cancellable_cancel(helper->cancellable);
-	helper->timeout_id = 0;
+	g_clear_pointer(&helper->timeout_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -175,15 +177,20 @@ fu_bluez_backend_setup(FuBackend *backend,
 		       GError **error)
 {
 	FuBluezBackend *self = FU_BLUEZ_BACKEND(backend);
+	FuContext *ctx = fu_backend_get_context(backend);
+	GMainContext *main_ctx = fu_context_get_main_context(ctx);
 	g_autoptr(FuBluezBackendHelper) helper = g_new0(FuBluezBackendHelper, 1);
 
 	/* in some circumstances the bluez daemon will just hang... do not wait
 	 * forever and make fwupd startup also fail */
 	helper->error = error;
-	helper->loop = g_main_loop_new(NULL, FALSE);
+	helper->loop = g_main_loop_new(main_ctx, FALSE);
 	helper->cancellable = g_cancellable_new();
-	helper->timeout_id =
-	    g_timeout_add(FU_BLUEZ_BACKEND_TIMEOUT, fu_bluez_backend_timeout_cb, helper);
+	helper->timeout_source = fu_context_add_timeout(ctx,
+							FU_BLUEZ_BACKEND_TIMEOUT,
+							fu_bluez_backend_timeout_cb,
+							helper);
+	g_main_context_push_thread_default(main_ctx);
 	g_dbus_object_manager_client_new_for_bus(G_BUS_TYPE_SYSTEM,
 						 G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
 						 "org.bluez",
@@ -194,6 +201,7 @@ fu_bluez_backend_setup(FuBackend *backend,
 						 helper->cancellable,
 						 fu_bluez_backend_connect_cb,
 						 helper);
+	g_main_context_pop_thread_default(main_ctx);
 	g_main_loop_run(helper->loop);
 	if (helper->object_manager == NULL)
 		return FALSE;

@@ -21,7 +21,7 @@
 typedef struct {
 	FuEngine *engine;
 	GMainLoop *loop;
-	guint housekeeping_id;
+	GSource *housekeeping_source;
 	gboolean update_in_progress;
 	gboolean pending_stop;
 	guint process_quit_id;
@@ -179,7 +179,7 @@ fu_daemon_schedule_housekeeping_cb(gpointer user_data)
 	fu_context_housekeeping(ctx);
 
 	/* success */
-	priv->housekeeping_id = 0;
+	g_clear_pointer(&priv->housekeeping_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -187,15 +187,19 @@ void
 fu_daemon_schedule_housekeeping(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	FuEngine *engine = fu_daemon_get_engine(self);
+	FuContext *ctx = fu_engine_get_context(engine);
 	guint delay = FU_DAEMON_HOUSEKEEPING_DELAY;
 	if (priv->update_in_progress)
 		return;
-	if (priv->housekeeping_id != 0)
-		g_source_remove(priv->housekeeping_id);
+	if (priv->housekeeping_source != 0) {
+		g_source_destroy(priv->housekeeping_source);
+		g_source_unref(priv->housekeeping_source);
+	}
 	if (g_getenv("CI") != NULL)
 		delay = 1;
-	priv->housekeeping_id =
-	    g_timeout_add_seconds(delay, fu_daemon_schedule_housekeeping_cb, self);
+	priv->housekeeping_source =
+	    fu_context_add_timeout_seconds(ctx, delay, fu_daemon_schedule_housekeeping_cb, self);
 }
 
 static gboolean
@@ -400,7 +404,7 @@ fu_daemon_init(FuDaemon *self)
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	priv->engine = fu_engine_new(ctx);
-	priv->loop = g_main_loop_new(NULL, FALSE);
+	priv->loop = g_main_loop_new(fu_context_get_main_context(ctx), FALSE);
 	priv->status = FWUPD_STATUS_IDLE;
 }
 
@@ -412,8 +416,10 @@ fu_daemon_finalize(GObject *obj)
 
 	if (priv->loop != NULL)
 		g_main_loop_unref(priv->loop);
-	if (priv->housekeeping_id != 0)
-		g_source_remove(priv->housekeeping_id);
+	if (priv->housekeeping_source != 0) {
+		g_source_destroy(priv->housekeeping_source);
+		g_source_unref(priv->housekeeping_source);
+	}
 	if (priv->process_quit_id != 0)
 		g_source_remove(priv->process_quit_id);
 	if (priv->set_status_id != 0)
