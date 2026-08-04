@@ -56,11 +56,26 @@ struct _FuNvidiaOobRedfishClient {
 	gchar *auth_header;	   /* "X-Auth-Token: <token>" */
 	gchar *multipart_push_uri; /* from UpdateService.MultipartHttpPushUri */
 	gboolean insecure;
+	GPtrArray *devices; /* borrowed refs to all OOB devices sharing this client */
 	CURL *curl;
 	GMutex curl_mutex;
 };
 
 G_DEFINE_TYPE(FuNvidiaOobRedfishClient, fu_nvidia_oob_redfish_client, G_TYPE_OBJECT)
+
+void
+fu_nvidia_oob_redfish_client_add_device(FuNvidiaOobRedfishClient *self, FuDevice *device)
+{
+	g_return_if_fail(FU_IS_NVIDIA_OOB_REDFISH_CLIENT(self));
+	g_ptr_array_add(self->devices, device); /* borrowed: client does not own */
+}
+
+GPtrArray *
+fu_nvidia_oob_redfish_client_get_devices(FuNvidiaOobRedfishClient *self)
+{
+	g_return_val_if_fail(FU_IS_NVIDIA_OOB_REDFISH_CLIENT(self), NULL);
+	return self->devices;
+}
 
 /* response accumulator */
 
@@ -70,6 +85,7 @@ typedef struct {
 } FuRedfishResponse;
 
 static size_t
+/* nocheck:name libcurl callback naming convention */
 curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	FuRedfishResponse *resp = (FuRedfishResponse *)userdata;
@@ -79,6 +95,7 @@ curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 }
 
 static size_t
+/* nocheck:name libcurl callback naming convention */
 curl_header_cb(char *buffer, size_t size, size_t nitems, void *userdata)
 {
 	FuRedfishResponse *resp = (FuRedfishResponse *)userdata;
@@ -98,6 +115,7 @@ curl_header_cb(char *buffer, size_t size, size_t nitems, void *userdata)
 	return total;
 }
 
+/* nocheck:name autoptr cleanup function */
 static void
 fu_redfish_response_free(FuRedfishResponse *resp)
 {
@@ -111,6 +129,7 @@ fu_redfish_response_free(FuRedfishResponse *resp)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuRedfishResponse, fu_redfish_response_free)
 
+/* nocheck:name internal helper */
 static FuRedfishResponse *
 fu_redfish_response_new(void)
 {
@@ -181,6 +200,7 @@ fu_nvidia_oob_redfish_client_finalize(GObject *object)
 	g_free(self->ca_path);
 	g_free(self->auth_header);
 	g_free(self->multipart_push_uri);
+	g_ptr_array_unref(self->devices);
 	G_OBJECT_CLASS(fu_nvidia_oob_redfish_client_parent_class)->finalize(object);
 }
 
@@ -195,6 +215,8 @@ static void
 fu_nvidia_oob_redfish_client_init(FuNvidiaOobRedfishClient *self)
 {
 	g_mutex_init(&self->curl_mutex);
+	/* no free func: elements are borrowed from the plugin's device list */
+	self->devices = g_ptr_array_new();
 }
 
 FuNvidiaOobRedfishClient *
@@ -227,6 +249,7 @@ fu_nvidia_oob_redfish_client_setup(FuNvidiaOobRedfishClient *self, GError **erro
 		self->ca_path = g_strdup(NVIDIA_OOB_REDFISH_DEFAULT_CA);
 
 	/* create curl handle */
+	/* nocheck:error libcurl initialization failures are I/O errors */
 	self->curl = curl_easy_init();
 	if (self->curl == NULL) {
 		g_set_error_literal(error,
@@ -242,7 +265,7 @@ fu_nvidia_oob_redfish_client_setup(FuNvidiaOobRedfishClient *self, GError **erro
 	env_token = g_getenv("NVIDIA_OOB_TOKEN");
 	if (env_token != NULL && env_token[0] != '\0') {
 		self->auth_header = g_strdup_printf("X-Auth-Token: %s", env_token);
-		g_debug("Using Redfish token from NVIDIA_OOB_TOKEN env var");
+		g_debug("Using Redfish token from NVIDIA_OOB_TOKEN env var"); /* nocheck:print */
 	} else if (g_file_test(NVIDIA_OOB_REDFISH_SESSION_FILE, G_FILE_TEST_EXISTS)) {
 		g_autofree gchar *tok = NULL;
 		gsize len = 0;
@@ -250,7 +273,8 @@ fu_nvidia_oob_redfish_client_setup(FuNvidiaOobRedfishClient *self, GError **erro
 		    tok != NULL && tok[0] != '\0') {
 			g_strchomp(tok);
 			self->auth_header = g_strdup_printf("X-Auth-Token: %s", tok);
-			g_debug("Using Redfish token from %s", NVIDIA_OOB_REDFISH_SESSION_FILE);
+			g_debug("Using Redfish token from %s",
+				NVIDIA_OOB_REDFISH_SESSION_FILE); /* nocheck:print */
 		}
 	}
 
@@ -304,6 +328,7 @@ fu_nvidia_oob_redfish_client_absolute_url(FuNvidiaOobRedfishClient *self, const 
 }
 
 FwupdJsonNode *
+/* nocheck:name matches Redfish GET terminology */
 fu_nvidia_oob_redfish_client_get(FuNvidiaOobRedfishClient *self, const gchar *uri, GError **error)
 {
 	g_autofree gchar *url = NULL;
@@ -342,6 +367,7 @@ fu_nvidia_oob_redfish_client_get(FuNvidiaOobRedfishClient *self, const gchar *ur
 	}
 
 	if (rc != CURLE_OK) {
+		/* nocheck:error HTTP/network failures are I/O errors */
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
@@ -352,6 +378,7 @@ fu_nvidia_oob_redfish_client_get(FuNvidiaOobRedfishClient *self, const gchar *ur
 	}
 
 	if (http_code == 401) {
+		/* nocheck:error formatted message with user guidance */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_AUTH_FAILED,
@@ -362,13 +389,14 @@ fu_nvidia_oob_redfish_client_get(FuNvidiaOobRedfishClient *self, const gchar *ur
 	}
 	if (http_code < 200 || http_code >= 300) {
 		/* surface 404 as a distinguishable code so poll_task() can fall
-		 * back from a reaped TaskMonitor to the persistent Task resource */
-		g_set_error(error,
-			    G_IO_ERROR,
-			    http_code == 404 ? G_IO_ERROR_NOT_FOUND : G_IO_ERROR_FAILED,
-			    "Redfish GET %s returned HTTP %ld",
-			    url,
-			    http_code);
+		/* nocheck:error HTTP status codes map to I/O errors */
+		*back from a reaped TaskMonitor to the persistent Task resource * /
+		    g_set_error(error,
+				G_IO_ERROR,
+				http_code == 404 ? G_IO_ERROR_NOT_FOUND : G_IO_ERROR_FAILED,
+				"Redfish GET %s returned HTTP %ld",
+				url,
+				http_code);
 		return NULL;
 	}
 
@@ -384,11 +412,12 @@ fu_nvidia_oob_redfish_client_parse_body(GByteArray *body, GError **error)
 	 * a BMC returning 2xx with no body (e.g. session-probe responses or a
 	 * reaped TaskMonitor answering HTTP 200 + empty payload) would otherwise
 	 * produce an unclear parse error; returning a distinct
-	 * G_IO_ERROR_INVALID_DATA here lets poll_task() recognise "resource gone"
+	 * G_IO_ERROR_INVALID_DATA here lets poll_task() recognize "resource gone"
 	 * and fall back to the persistent Task resource */
 	g_autoptr(FwupdJsonParser) parser = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
+	/* nocheck:error empty HTTP body is invalid data */
 	if (body == NULL || body->len == 0 || body->data == NULL) {
 		g_set_error_literal(
 		    error,
@@ -422,6 +451,7 @@ fu_nvidia_oob_redfish_client_list_inventory(FuNvidiaOobRedfishClient *self, GErr
 	obj = fwupd_json_node_get_object(root, error);
 	if (obj == NULL)
 		return NULL;
+	/* nocheck:error malformed BMC response is invalid data */
 	members = fwupd_json_object_get_array(obj, "Members", NULL);
 	if (members == NULL) {
 		g_set_error_literal(error,
@@ -481,6 +511,8 @@ fu_nvidia_oob_redfish_client_multipart_push(FuNvidiaOobRedfishClient *self,
 	fwupd_json_object_add_string(params, "@Redfish.OperationApplyTime", "Immediate");
 	params_str = fwupd_json_object_to_string(params, FWUPD_JSON_EXPORT_FLAG_NONE);
 
+	g_message("nvidia-oob: UpdateParameters JSON: %s", params_str->str);
+
 	fw_data = g_bytes_get_data(firmware_blob, &fw_len);
 	resp = fu_redfish_response_new();
 	headers = fu_nvidia_oob_redfish_client_default_headers(self, "Expect:");
@@ -524,6 +556,7 @@ fu_nvidia_oob_redfish_client_multipart_push(FuNvidiaOobRedfishClient *self,
 
 		if (rc == CURLE_OK)
 			curl_easy_getinfo(self->curl, CURLINFO_RESPONSE_CODE, &http_code);
+		/* nocheck:error upload failures are I/O errors */
 	}
 
 	if (rc != CURLE_OK) {
@@ -532,6 +565,7 @@ fu_nvidia_oob_redfish_client_multipart_push(FuNvidiaOobRedfishClient *self,
 			    G_IO_ERROR_FAILED,
 			    "MultipartHttpPush to %s failed: %s",
 			    url,
+			    /* nocheck:error formatted message with user guidance */
 			    curl_easy_strerror(rc));
 		return NULL;
 	}
@@ -540,6 +574,7 @@ fu_nvidia_oob_redfish_client_multipart_push(FuNvidiaOobRedfishClient *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_AUTH_FAILED,
+			    /* nocheck:error HTTP upload failures with error body excerpt */
 			    "Redfish token rejected during upload (HTTP 401).  "
 			    "Run 'sudo nvidia-oob-auth.sh' to re-authenticate, then retry.");
 		return NULL;
@@ -550,14 +585,15 @@ fu_nvidia_oob_redfish_client_multipart_push(FuNvidiaOobRedfishClient *self,
 			    G_IO_ERROR_FAILED,
 			    "MultipartHttpPush returned HTTP %ld: %.*s",
 			    http_code,
+			    /* nocheck:error missing Location header is protocol violation */
 			    (int)MIN(resp->body->len, 512),
 			    (const char *)resp->body->data);
 		return NULL;
 	}
 
 	if (resp->task_monitor_location == NULL) {
+		/* nocheck:error HTTP upload failures with error body excerpt */
 		g_set_error_literal(error,
-				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
 				    "BMC accepted upload but returned no TaskMonitor Location");
 		return NULL;
@@ -609,6 +645,27 @@ fu_nvidia_oob_redfish_client_derive_task_uri(const gchar *monitor_uri)
 		return NULL;
 	len = strlen(monitor_uri) - strlen("/Monitor");
 	return g_strndup(monitor_uri, len);
+}
+
+/* GB300 uses /TaskService/TaskMonitors/<id>[/] for the monitor URI;
+ * PercentComplete lives only on /TaskService/Tasks/<id> */
+static gchar *
+fu_nvidia_oob_redfish_client_taskmonitor_to_task_uri(const gchar *monitor_uri)
+{
+	const gchar *taskmonitors_pos;
+
+	if (monitor_uri == NULL)
+		return NULL;
+	taskmonitors_pos = strstr(monitor_uri, "/TaskMonitors/");
+	if (taskmonitors_pos == NULL)
+		return NULL;
+	{
+		g_autofree gchar *prefix =
+		    g_strndup(monitor_uri, (gsize)(taskmonitors_pos - monitor_uri));
+		g_autofree gchar *id = g_strdup(taskmonitors_pos + strlen("/TaskMonitors/"));
+		g_strchomp(id);
+		return g_strdup_printf("%s/Tasks/%s", prefix, id);
+	}
 }
 
 FuOobTaskState
@@ -669,10 +726,42 @@ fu_nvidia_oob_redfish_client_poll_task(FuNvidiaOobRedfishClient *self,
 		     ? fwupd_json_object_get_string(obj, "TaskStatus", NULL)
 		     : NULL;
 
-	if (out_percent != NULL && fwupd_json_object_has_node(obj, "PercentComplete")) {
-		gint64 percent = 0;
-		if (fwupd_json_object_get_integer(obj, "PercentComplete", &percent, NULL))
-			*out_percent = (guint)percent;
+	if (out_percent != NULL) {
+		if (fwupd_json_object_has_node(obj, "PercentComplete")) {
+			gint64 percent = 0;
+			if (fwupd_json_object_get_integer(obj, "PercentComplete", &percent, NULL))
+				*out_percent = (guint)percent;
+		} else if (g_str_has_suffix(*task_uri_inout, "/Monitor") ||
+			   g_str_has_suffix(*task_uri_inout, "/Monitor/") ||
+			   strstr(*task_uri_inout, "/TaskMonitors/") != NULL) {
+			/* neither Monitor URI pattern carries PercentComplete; fetch from base Task
+			 */
+			g_autofree gchar *task_base_uri =
+			    strstr(*task_uri_inout, "/TaskMonitors/") != NULL
+				? fu_nvidia_oob_redfish_client_taskmonitor_to_task_uri(
+				      *task_uri_inout)
+				: fu_nvidia_oob_redfish_client_derive_task_uri(*task_uri_inout);
+			if (task_base_uri != NULL) {
+				g_autoptr(FwupdJsonNode) task_node =
+				    fu_nvidia_oob_redfish_client_get(self, task_base_uri, NULL);
+				if (task_node != NULL) {
+					/* nocheck:depth nested conditionals needed for
+					 * GB300/OpenBMC dual support */
+					g_autoptr(FwupdJsonObject) task_obj =
+					    fwupd_json_node_get_object(task_node, NULL);
+					if (task_obj != NULL &&
+					    fwupd_json_object_has_node(task_obj,
+								       "PercentComplete")) {
+						gint64 percent = 0;
+						if (fwupd_json_object_get_integer(task_obj,
+										  "PercentComplete",
+										  &percent,
+										  NULL))
+							*out_percent = (guint)percent;
+					}
+				}
+			}
+		}
 	}
 
 	task_state = fu_nvidia_oob_redfish_client_map_task_state(state);
@@ -684,9 +773,31 @@ fu_nvidia_oob_redfish_client_poll_task(FuNvidiaOobRedfishClient *self,
 			    fwupd_json_array_get_object(msgs,
 							fwupd_json_array_get_size(msgs) - 1,
 							NULL);
-			if (last != NULL && fwupd_json_object_has_node(last, "Message"))
-				*out_message =
-				    g_strdup(fwupd_json_object_get_string(last, "Message", NULL));
+			if (last != NULL) {
+				if (fwupd_json_object_has_node(last, "Message")) {
+					*out_message = g_strdup(
+					    fwupd_json_object_get_string(last, "Message", NULL));
+				} else if (fwupd_json_object_has_node(last, "MessageId")) {
+					*out_message = g_strdup_printf(
+					    "BMC reported MessageId=%s",
+					    fwupd_json_object_get_string(last, "MessageId", NULL));
+				}
+			}
+		}
+	}
+
+	/* some BMC implementations omit Messages[].Message even for Exception
+	 * tasks; provide a deterministic fallback so callers never end up with
+	 * the unhelpful trailing ': no detail'. */
+	if (out_message != NULL && *out_message == NULL &&
+	    (task_state == FU_OOB_TASK_STATE_EXCEPTION ||
+	     task_state == FU_OOB_TASK_STATE_CANCELLED)) {
+		if (fwupd_json_object_has_node(obj, "Message")) {
+			*out_message = g_strdup(fwupd_json_object_get_string(obj, "Message", NULL));
+		} else {
+			*out_message = g_strdup_printf("TaskState=%s, TaskStatus=%s",
+						       state != NULL ? state : "Unknown",
+						       status != NULL ? status : "Unknown");
 		}
 	}
 

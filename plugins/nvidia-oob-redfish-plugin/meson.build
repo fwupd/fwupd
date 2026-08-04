@@ -10,11 +10,11 @@ install_data(
   install_dir: join_paths(sysconfdir, 'fwupd'),
 )
 
-# Install helper scripts to /usr/local/bin
+# Install helper scripts
 install_data(
   'fwupd-nvidia-oob-env.sh',
   'install-plugin.sh',
-  install_dir: join_paths(get_option('prefix'), 'local', 'bin'),
+  install_dir: get_option('bindir'),
   install_mode: 'rwxr-xr-x',
 )
 

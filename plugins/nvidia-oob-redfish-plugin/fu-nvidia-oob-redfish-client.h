@@ -20,8 +20,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
-
 #define FU_TYPE_NVIDIA_OOB_REDFISH_CLIENT (fu_nvidia_oob_redfish_client_get_type())
 G_DECLARE_FINAL_TYPE(FuNvidiaOobRedfishClient,
 		     fu_nvidia_oob_redfish_client,
@@ -40,6 +38,12 @@ typedef enum {
 
 FuNvidiaOobRedfishClient *
 fu_nvidia_oob_redfish_client_new(void);
+
+void
+fu_nvidia_oob_redfish_client_add_device(FuNvidiaOobRedfishClient *self, FuDevice *device)
+    G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fu_nvidia_oob_redfish_client_get_devices(FuNvidiaOobRedfishClient *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_nvidia_oob_redfish_client_setup(FuNvidiaOobRedfishClient *self, GError **error);

@@ -2,17 +2,24 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-# Galaxy GB300 BMC USB virtual NIC for Redfish access
-[USB\VID_0955&PID_7020]
+#SMBIOS Type 42 USB host interface, overrides generic redfish plugin
+[SMBIOS\Type42-HostInterface-USB]
+Plugin = nvidia_oob_redfish
+Flags = internal
+
+#BMC USB virtual NIC for Redfish access
+[USB\VID_046B&PID_FFB0]
 Plugin = nvidia_oob_redfish
 Flags = internal,no-probe
 
-# BMC firmware inventory names
-[NvidiaOob\Name=BMC_FW]
+#BMC self-firmware (Redfish Id FW_BMC_0)
+[NvidiaOob\Name=FW_BMC_0]
 Summary = Baseboard Management Controller firmware
 
-[NvidiaOob\Name=SBIOS]
+#Host UEFI BIOS (Redfish Id FW_CPU_0)
+[NvidiaOob\Name=FW_CPU_0]
 Summary = System BIOS
 
+#HPM PLDM composite bundle for GPU, CX9, FPGA and MCU (Redfish Id HPM_PLDM_BUNDLE)
 [NvidiaOob\Name=HPM_PLDM_BUNDLE]
 Summary = NVIDIA HPM PLDM firmware bundle (GPU/CX9/FPGA/MCU)

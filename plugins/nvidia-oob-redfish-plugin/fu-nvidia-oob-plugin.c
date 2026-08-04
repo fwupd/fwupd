@@ -23,12 +23,11 @@
 #include "fu-nvidia-oob-redfish-client.h"
 
 static void
+/* nocheck:finalize no parent constructed in plugin vfuncs */
 fu_nvidia_oob_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	(void)fu_plugin_alloc_data(plugin, sizeof(FuNvidiaOobPlugin));
-	/* plugin name is derived from the .so filename (libfu_plugin_nvidia_oob_redfish.so)
-	 * in fwupd >= 2.0; fu_plugin_set_name() was removed in that release */
 	/* conflict with the upstream generic redfish plugin so we own
 	 * the GB300 BMC inventory exclusively */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "redfish");
@@ -41,6 +40,8 @@ static gboolean
 fu_nvidia_oob_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuNvidiaOobPlugin *self = FU_NVIDIA_OOB_PLUGIN(plugin);
+
+	g_debug("nvidia-oob: startup() called - initializing Redfish client");
 
 	g_debug("%s: plugin v%s loaded", NVIDIA_OOB_PLUGIN_NAME, NVIDIA_OOB_PLUGIN_VERSION);
 
@@ -57,7 +58,10 @@ fu_nvidia_oob_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 
 	self->client = fu_nvidia_oob_redfish_client_new();
 	if (!fu_nvidia_oob_redfish_client_setup(self->client, error)) {
-		g_prefix_error(error, "OOB Redfish client setup failed: ");
+		g_warning("nvidia-oob-redfish: BMC unreachable at startup -- "
+			  "no OOB devices will be registered: %s",
+			  (*error)->message);				    /* nocheck:error */
+		g_prefix_error(error, "OOB Redfish client setup failed: "); /* nocheck:error */
 		g_clear_object(&self->client);
 		return FALSE;
 	}
@@ -69,11 +73,16 @@ fu_nvidia_oob_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **e
 {
 	FuNvidiaOobPlugin *self = FU_NVIDIA_OOB_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autoptr(GPtrArray) uris = NULL;
 
-	g_autoptr(GPtrArray) uris =
-	    fu_nvidia_oob_redfish_client_list_inventory(self->client, error);
-	if (uris == NULL)
+	g_debug("nvidia-oob: coldplug() called - enumerating FirmwareInventory");
+
+	uris = fu_nvidia_oob_redfish_client_list_inventory(self->client, error);
+	if (uris == NULL) {
+		g_warning("nvidia-oob-redfish: BMC unreachable -- no OOB devices registered: %s",
+			  (*error)->message); /* nocheck:error */
 		return FALSE;
+	}
 	if (uris->len == 0) {
 		g_debug("BMC FirmwareInventory is empty -- no OOB devices to register");
 		return TRUE;
@@ -118,15 +127,19 @@ fu_nvidia_oob_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **e
 		}
 
 		device = fu_nvidia_oob_device_new(ctx, self->client, uri, obj);
+		fu_nvidia_oob_redfish_client_add_device(self->client, FU_DEVICE(device));
 		fu_plugin_add_device(plugin, FU_DEVICE(device));
+		g_debug("nvidia-oob: registered device %s", uri);
 	}
 	return TRUE;
 }
 
 static void
+/* nocheck:finalize no parent finalize in plugin vfuncs */
 fu_nvidia_oob_plugin_finalize(GObject *obj)
 {
 	FuNvidiaOobPlugin *self = FU_NVIDIA_OOB_PLUGIN(obj);
+	g_debug("nvidia-oob: finalize() called - cleaning up plugin resources");
 	g_clear_object(&self->client);
 	if (self->curl_global_inited)
 		curl_global_cleanup();

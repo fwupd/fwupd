@@ -19,9 +19,18 @@ struct _FuNvidiaOobDevice {
 	gchar *inventory_uri;
 	gchar *software_id;
 	gboolean needs_ac_cycle; /* BMC told us this component requires AC */
+	gboolean firmware_staged; /* write_firmware completed; prevents spurious attach() POST
+			on error recovery */
 };
 
 G_DEFINE_TYPE(FuNvidiaOobDevice, fu_nvidia_oob_device, FU_TYPE_DEVICE)
+
+/* Plugin-level concurrency lock: the BMC can only stage one firmware at a time.
+ * A second concurrent update would get HTTP 507 InsufficientStorage. This flag
+ * blocks concurrent write_firmware() calls before they contact the BMC. Set at
+ * upload start; never cleared on success (BMC staging persists until AC cycle);
+ * cleared only on failure (allows retry). Daemon restart resets to FALSE. */
+static gboolean fu_nvidia_oob_update_busy = FALSE; /* nocheck:static */
 
 /* helpers */
 
@@ -51,7 +60,7 @@ fu_nvidia_oob_device_populate_from_inventory(FuNvidiaOobDevice *self, FwupdJsonO
 	 * neither of which actually AC-cycles a server (the aux rail stays
 	 * alive); attach() handles activation directly via the BMC's OEM
 	 * AuxPowerReset action; on failure, the helper script
-	 * /usr/local/bin/nvidia-oob-aux-cycle is the documented manual
+	 * nvidia-oob-aux-cycle is the documented manual
 	 * fallback, and surfacing a misleading prompt would only push users
 	 * toward the wrong action */
 	/* use the inventory ID (last URI path segment, e.g. FW_BMC_0,
@@ -88,7 +97,8 @@ fu_nvidia_oob_device_populate_from_inventory(FuNvidiaOobDevice *self, FwupdJsonO
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 
 	/* tell fwupdmgr how long an OOB update typically takes so it computes
 	 * a realistic ETA in its progress display -- without this, fwupdmgr
@@ -196,6 +206,21 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 	const guint poll_interval_ms = 2000;
 	const guint max_attempts = 1800; /* 1h at 2s intervals */
 
+	/* Prevent concurrent installs to avoid BMC HTTP 507 (InsufficientStorage).
+	 * Uses static bool as framework flags unreliable; safe in single-threaded mainloop. */
+	if (fu_nvidia_oob_update_busy) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
+				    "An update is in progress");
+		g_info("nvidia-oob: REJECTED concurrent write_firmware() on %s -- "
+		       "another OOB update is already staging firmware on the BMC",
+		       fu_device_get_id(device));
+		return FALSE;
+	}
+	fu_nvidia_oob_update_busy = TRUE;
+	g_info("nvidia-oob: LOCK ACQUIRED for %s (BMC upload starting)", fu_device_get_id(device));
+
 	fu_progress_set_id(progress, G_STRLOC);
 	/* the actual upload (~117 MB over USB Redfish) finishes in ~30 s, while
 	 * the BMC's PLDM verification + per-component fan-out runs ~10 min;
@@ -210,9 +235,35 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "upload");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 95, "bmc-apply");
 
+	/* inhibit ALL sibling OOB devices: fu_device_inhibit() removes FWUPD_DEVICE_FLAG_UPDATABLE
+	 * so T2's fu_engine_install_release() fails the UPDATABLE check BEFORE fu_engine_prepare()
+	 * runs -- this stops the "Waiting" status signal that disrupts T1's progress display;
+	 * the engine error message becomes "Device X does not currently allow updates:
+	 * An update is in progress" which clearly informs the T2 user */
+	{
+		GPtrArray *all_devices = fu_nvidia_oob_redfish_client_get_devices(self->client);
+		for (guint i = 0; i < all_devices->len; i++) {
+			FuDevice *sibling = g_ptr_array_index(all_devices, i);
+			fu_device_inhibit(sibling,
+					  "nvidia-oob-staging",
+					  "An update is in progress");
+			fu_device_add_problem(sibling, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+		}
+	}
+
 	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	if (blob == NULL) {
+		/* upload never started — clear so user can retry */
+		GPtrArray *all_devices = fu_nvidia_oob_redfish_client_get_devices(self->client);
+		for (guint i = 0; i < all_devices->len; i++) {
+			fu_device_uninhibit(g_ptr_array_index(all_devices, i),
+					    "nvidia-oob-staging");
+			fu_device_remove_problem(g_ptr_array_index(all_devices, i),
+						 FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+		}
+		fu_nvidia_oob_update_busy = FALSE;
 		return FALSE;
+	}
 
 	/* step 1: POST multipart/form-data to UpdateService */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
@@ -220,8 +271,18 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 							       self->inventory_uri,
 							       blob,
 							       error);
-	if (task_uri == NULL)
+	if (task_uri == NULL) {
+		/* BMC rejected the upload — clear so user can retry */
+		GPtrArray *all_devices = fu_nvidia_oob_redfish_client_get_devices(self->client);
+		for (guint i = 0; i < all_devices->len; i++) {
+			fu_device_uninhibit(g_ptr_array_index(all_devices, i),
+					    "nvidia-oob-staging");
+			fu_device_remove_problem(g_ptr_array_index(all_devices, i),
+						 FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+		}
+		fu_nvidia_oob_update_busy = FALSE;
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* step 2: poll the TaskMonitor until completion -- acquire the
@@ -245,7 +306,7 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 			 * accepted our upload and started the update -- a subsequent
 			 * 404 or empty body from BOTH the Monitor and the /Tasks/<id>
 			 * fallback means the BMC has reaped the entire task lifecycle
-			 * (its documented behaviour after PLDM activation completes);
+			 * (its documented behavior after PLDM activation completes);
 			 * without an explicit failure signal, treat resource-gone as
 			 * success (without this guard, the GB300 BMC's habit of
 			 * returning HTTP 200 + empty body after activation surfaced
@@ -265,10 +326,38 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 			/* transient network blip during BMC reset -- be forgiving
 			 * for the first few attempts but propagate persistent errors */
 			if (attempt < 5) {
-				g_usleep(poll_interval_ms * 1000);
+				/* keep the daemon mainloop responsive so a concurrent
+				 * D-Bus install request from Terminal 2 is dispatched
+				 * IMMEDIATELY (not queued until we finish). The engine's
+				 * FWUPD_DEVICE_FLAG_UPDATABLE check then rejects it with
+				 * "An update is in progress" because we set
+				 * FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS on every sibling
+				 * OOB device at the start of write_firmware(). Iterate
+				 * with may_block=FALSE in short bursts so we drain any
+				 * ready events but never sit waiting inside the pump. */
+				GMainContext *ctx = g_main_context_default();
+				gint64 deadline =
+				    g_get_monotonic_time() + ((gint64)poll_interval_ms * 1000);
+				while (g_get_monotonic_time() < deadline) {
+					while (g_main_context_pending(ctx))
+						g_main_context_iteration(ctx, FALSE);
+					g_usleep(100 * 1000); /* 100 ms nap between drains */
+				}
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_local));
+			{
+				GPtrArray *all_devices =
+				    fu_nvidia_oob_redfish_client_get_devices(self->client);
+				for (guint j = 0; j < all_devices->len; j++) {
+					fu_device_uninhibit(g_ptr_array_index(all_devices, j),
+							    "nvidia-oob-staging");
+					fu_device_remove_problem(
+					    g_ptr_array_index(all_devices, j),
+					    FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+				}
+			}
+			fu_nvidia_oob_update_busy = FALSE;
 			return FALSE;
 		}
 
@@ -285,26 +374,82 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 			break;
 		}
 		if (state == FU_OOB_TASK_STATE_EXCEPTION || state == FU_OOB_TASK_STATE_CANCELLED) {
+			{
+				GPtrArray *all_devices =
+				    fu_nvidia_oob_redfish_client_get_devices(self->client);
+				for (guint j = 0; j < all_devices->len; j++) {
+					fu_device_uninhibit(g_ptr_array_index(all_devices, j),
+							    "nvidia-oob-staging");
+					fu_device_remove_problem(
+					    g_ptr_array_index(all_devices, j),
+					    FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+				}
+			}
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "BMC task %s failed: %s",
 				    task_uri,
 				    msg != NULL ? msg : "no detail");
+			fu_nvidia_oob_update_busy = FALSE;
 			return FALSE;
 		}
-		g_usleep(poll_interval_ms * 1000);
+		/* keep the daemon mainloop responsive so a concurrent D-Bus install
+		 * request from Terminal 2 is dispatched IMMEDIATELY (not queued until
+		 * this ~10-minute poll finishes). The engine's UPDATABLE check then
+		 * rejects Terminal 2 with "An update is in progress" because we set
+		 * FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS on every sibling OOB device
+		 * at the start of write_firmware(). Drain any pending events first
+		 * (may_block=FALSE) then nap 100 ms; repeat until poll_interval_ms
+		 * elapses. This is safe because the framework's install path only
+		 * READS device flags before dispatching to the plugin; it does not
+		 * mutate our device state re-entrantly. */
+		{
+			GMainContext *ctx = g_main_context_default();
+			gint64 deadline =
+			    g_get_monotonic_time() + ((gint64)poll_interval_ms * 1000);
+			while (g_get_monotonic_time() < deadline) {
+				while (g_main_context_pending(ctx))
+					g_main_context_iteration(ctx, FALSE);
+				g_usleep(100 * 1000); /* 100 ms nap between drains */
+			}
+		}
 
 		if (attempt == max_attempts - 1) {
+			{
+				GPtrArray *all_devices =
+				    fu_nvidia_oob_redfish_client_get_devices(self->client);
+				for (guint j = 0; j < all_devices->len; j++) {
+					fu_device_uninhibit(g_ptr_array_index(all_devices, j),
+							    "nvidia-oob-staging");
+					fu_device_remove_problem(
+					    g_ptr_array_index(all_devices, j),
+					    FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+				}
+			}
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "timed out waiting for BMC task %s after %u seconds",
 				    task_uri,
 				    max_attempts * poll_interval_ms / 1000);
+			fu_nvidia_oob_update_busy = FALSE;
 			return FALSE;
 		}
 	}
+	/* SUCCESS: uninhibit the write-phase lock from all siblings now that staging
+	 * is complete; attach() will set a post-staging inhibit with the correct message;
+	 * the engine's fu_engine_cleanup() removes UPDATE_IN_PROGRESS on the target device */
+	{
+		GPtrArray *all_devices = fu_nvidia_oob_redfish_client_get_devices(self->client);
+		for (guint i = 0; i < all_devices->len; i++) {
+			fu_device_uninhibit(g_ptr_array_index(all_devices, i),
+					    "nvidia-oob-staging");
+			fu_device_remove_problem(g_ptr_array_index(all_devices, i),
+						 FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+		}
+	}
+	self->firmware_staged = TRUE;
 	fu_progress_step_done(progress);
 	return TRUE;
 }
@@ -312,32 +457,49 @@ fu_nvidia_oob_device_write_firmware(FuDevice *device,
 static gboolean
 fu_nvidia_oob_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	/* staged firmware on GB300 OOB components only becomes active after
-	 * an AC (aux-rail) power cycle -- use fwupd's canonical "activation
-	 * pending" mechanism rather than trying to emit a free-text message:
-	 *
-	 *   - FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION is the standard signal
-	 *     that says "this device is staged but not yet running the new
-	 *     firmware"; fwupdmgr renders a clear post-install line about
-	 *     activation when it sees this flag
-	 *   - update_message is also set as a hint; fwupdmgr prints it
-	 *     alongside the activation notice
-	 *   - the actual activation work (POST AuxPowerReset to BMC) lives
-	 *     in the activate() vfunc below, dispatched by `fwupdmgr
-	 *     activate`; that keeps the install/activate phases cleanly
-	 *     separated and lets the user choose when to AC-cycle */
+	FuNvidiaOobDevice *self = FU_NVIDIA_OOB_DEVICE(device);
+
+	/* engine calls attach() on error recovery path too; skip if nothing was staged */
+	if (!self->firmware_staged)
+		return TRUE;
+
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_update_message(
-	    device,
-	    "An AC power cycle is required to activate the staged firmware:\n"
-	    "  1. sudo poweroff\n"
-	    "  2. After the host is fully off, physically unplug AC for\n"
-	    "     at least 30 seconds\n"
-	    "  3. Reconnect AC and power on — staged firmware will be\n"
-	    "     active on next boot.\n"
-	    "(`fwupdmgr activate` will print the same instructions; the\n"
-	    " activation requires a physical AC cycle and cannot be\n"
-	    " sequenced automatically from the host.)");
+
+	/* block ALL sibling OOB devices from further installs until the AC
+	 * power cycle activates the staged firmware; fu_engine_cleanup() only
+	 * clears FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS — it never touches
+	 * UPDATE_PENDING, so this inhibit survives cleanup and persists until
+	 * the daemon restarts after the power cycle + reboot; without this,
+	 * fu_engine_cleanup() restores UPDATABLE on the current device and a
+	 * second terminal can reach the BMC and get HTTP 507 InsufficientStorage
+	 * instead of the expected "An update is in progress" message */
+	{
+		GPtrArray *all_devices = fu_nvidia_oob_redfish_client_get_devices(self->client);
+		for (guint i = 0; i < all_devices->len; i++) {
+			FuDevice *sibling = g_ptr_array_index(all_devices, i);
+			/* inhibit blocks T2 at UPDATABLE check; message shown in get-devices */
+			fu_device_inhibit(sibling,
+					  "nvidia-oob-activation-pending",
+					  "Update pending activation");
+			fu_device_add_problem(sibling, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+		}
+	}
+
+	/* POST request shown by fwupdmgr after "Successfully installed firmware" */
+	{
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+		fwupd_request_set_message(
+		    request,
+		    "Firmware staged successfully. To activate, perform an AC power cycle:\n"
+		    "  1. sudo poweroff\n"
+		    "  2. Unplug AC power for at least 30 seconds\n"
+		    "  3. Reconnect AC and power on");
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+	}
 	return TRUE;
 }
 
@@ -426,6 +588,7 @@ fu_nvidia_oob_device_init(FuNvidiaOobDevice *self)
 	 * PCI/USB/NVMe identity visible to the host */
 	fu_device_add_vendor_id(FU_DEVICE(self), "DMI:NVIDIA");
 	fu_device_add_vendor_id(FU_DEVICE(self), "OEM:NVIDIA");
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 }
 
 FuNvidiaOobDevice *

@@ -47,7 +47,7 @@ the following instance IDs:
 The firmware is uploaded to the BMC, which schedules the actual write. The
 Redfish API does not specify when the firmware is written to the target device,
 so the plugin polls the returned `Task` until it reports completion. Components
-that require a manual AC (power) cycle are flagged so the operator is informed.
+that require a manual AC (power) cycle are flagged, so the operator is informed.
 
 ## Vendor ID Security
 
