@@ -32,6 +32,7 @@
 #include "fu-context-private.h"
 #include "fu-debug.h"
 #include "fu-device-private.h"
+#include "fu-engine-cli.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
@@ -47,19 +48,11 @@
 #define SYSTEMD_SNAP_FWUPD_UNIT "snap.fwupd.fwupd.service"
 #endif
 
-typedef enum {
-	FU_CLI_OPERATION_UNKNOWN,
-	FU_CLI_OPERATION_UPDATE,
-	FU_CLI_OPERATION_INSTALL,
-	FU_CLI_OPERATION_READ,
-	FU_CLI_OPERATION_LAST
-} FuCliOperation;
-
-struct FuCli {
+struct _FuEngineCli {
+	FuCli parent_instance;
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
-	GOptionContext *context;
 	FuContext *ctx;
 	GSource *source_sigint;
 	FuEngine *engine;
@@ -96,8 +89,10 @@ struct FuCli {
 	FuJcatContext *jcat_context;
 };
 
+G_DEFINE_TYPE(FuEngineCli, fu_engine_cli, FU_TYPE_CLI)
+
 static void
-fu_engine_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
+fu_engine_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuEngineCli *self)
 {
 	if (self->as_json)
 		return;
@@ -107,7 +102,7 @@ fu_engine_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
 }
 
 static void
-fu_engine_cli_show_plugin_warnings(FuCli *self)
+fu_engine_cli_show_plugin_warnings(FuEngineCli *self)
 {
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	g_autoptr(GPtrArray) plugins = NULL;
@@ -152,7 +147,7 @@ fu_engine_cli_show_plugin_warnings(FuCli *self)
 }
 
 static gboolean
-fu_engine_cli_lock(FuCli *self, GError **error)
+fu_engine_cli_lock(FuEngineCli *self, GError **error)
 {
 #ifdef HAVE_WRLCK
 	struct flock lockp = {
@@ -229,13 +224,13 @@ fu_engine_cli_get_systemd_unit(void)
 #endif
 
 static gboolean
-fu_engine_cli_start_engine(FuCli *self,
+fu_engine_cli_start_engine(FuEngineCli *self,
 			   FuEngineLoadFlags flags,
 			   FuProgress *progress,
 			   GError **error)
 {
 	/* already done */
-	if (fu_engine_get_loaded(self->engine))
+	if (fu_engine_get_phase(self->engine) != FU_ENGINE_PHASE_IDLE)
 		return TRUE;
 
 #ifdef HAVE_SYSTEMD
@@ -299,15 +294,16 @@ fu_engine_cli_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* 
 static void
 fu_engine_cli_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	/* TRANSLATORS: this is when a device ctrl+c's a watch */
 	fu_console_print_literal(self->console, _("Cancelled"));
 	g_main_loop_quit(self->loop);
 }
 
 static gboolean
-fu_engine_cli_smbios_dump(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_smbios_dump(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
@@ -330,7 +326,7 @@ fu_engine_cli_smbios_dump(FuCli *self, gchar **values, GError **error)
 static gboolean
 fu_engine_cli_sigint_cb(gpointer user_data)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	g_info("handling SIGINT");
 	g_cancellable_cancel(self->cancellable);
 	return FALSE;
@@ -338,7 +334,7 @@ fu_engine_cli_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_engine_cli_handle_sigint_start(FuCli *self)
+fu_engine_cli_handle_sigint_start(FuEngineCli *self)
 {
 #ifdef HAVE_GIO_UNIX
 	if (self->source_sigint != NULL)
@@ -350,7 +346,7 @@ fu_engine_cli_handle_sigint_start(FuCli *self)
 }
 
 static void
-fu_engine_cli_handle_sigint_stop(FuCli *self)
+fu_engine_cli_handle_sigint_stop(FuEngineCli *self)
 {
 	if (self->source_sigint == NULL)
 		return;
@@ -359,7 +355,7 @@ fu_engine_cli_handle_sigint_stop(FuCli *self)
 }
 
 static void
-fu_engine_cli_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuCli *self)
+fu_engine_cli_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuEngineCli *self)
 {
 	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
 		fu_engine_cli_handle_sigint_start(self);
@@ -369,8 +365,9 @@ fu_engine_cli_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuCli *
 }
 
 static void
-fu_engine_cli_private_free(FuCli *self)
+fu_engine_cli_finalize(GObject *obj)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(obj);
 	g_free(self->destdir);
 	if (self->current_device != NULL)
 		g_object_unref(self->current_device);
@@ -392,8 +389,6 @@ fu_engine_cli_private_free(FuCli *self)
 		g_object_unref(self->console);
 	if (self->progress != NULL)
 		g_object_unref(self->progress);
-	if (self->context != NULL)
-		g_option_context_free(self->context);
 	if (self->jcat_context != NULL)
 		g_object_unref(self->jcat_context);
 	if (self->source_sigint != NULL)
@@ -403,16 +398,13 @@ fu_engine_cli_private_free(FuCli *self)
 	g_ptr_array_unref(self->post_requests);
 	g_ptr_array_unref(self->filter_protocols_include);
 	g_ptr_array_unref(self->filter_protocols_exclude);
-	g_free(self);
+	G_OBJECT_CLASS(fu_engine_cli_parent_class)->finalize(obj);
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCli, fu_engine_cli_private_free)
-#pragma clang diagnostic pop
-
 static void
-fu_engine_cli_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuCli *self)
+fu_engine_cli_update_device_request_cb(FwupdClient *client,
+				       FwupdRequest *request,
+				       FuEngineCli *self)
 {
 	/* action has not been assigned yet */
 	if (self->current_operation == FU_CLI_OPERATION_UNKNOWN)
@@ -440,7 +432,7 @@ fu_engine_cli_update_device_request_cb(FwupdClient *client, FwupdRequest *reques
 }
 
 static void
-fu_engine_cli_engine_device_added_cb(FuEngine *engine, FwupdDevice *device, FuCli *self)
+fu_engine_cli_engine_device_added_cb(FuEngine *engine, FwupdDevice *device, FuEngineCli *self)
 {
 	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *tmp = fwupd_codec_to_string(FWUPD_CODEC(device));
@@ -450,7 +442,7 @@ fu_engine_cli_engine_device_added_cb(FuEngine *engine, FwupdDevice *device, FuCl
 }
 
 static void
-fu_engine_cli_engine_device_removed_cb(FuEngine *engine, FwupdDevice *device, FuCli *self)
+fu_engine_cli_engine_device_removed_cb(FuEngine *engine, FwupdDevice *device, FuEngineCli *self)
 {
 	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *tmp = fwupd_codec_to_string(FWUPD_CODEC(device));
@@ -460,7 +452,7 @@ fu_engine_cli_engine_device_removed_cb(FuEngine *engine, FwupdDevice *device, Fu
 }
 
 static void
-fu_engine_cli_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuCli *self)
+fu_engine_cli_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuEngineCli *self)
 {
 	if (self->as_json)
 		return;
@@ -468,7 +460,9 @@ fu_engine_cli_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuC
 }
 
 static void
-fu_engine_cli_progress_percentage_changed_cb(FuProgress *progress, gdouble percentage, FuCli *self)
+fu_engine_cli_progress_percentage_changed_cb(FuProgress *progress,
+					     gdouble percentage,
+					     FuEngineCli *self)
 {
 	if (self->as_json)
 		return;
@@ -476,7 +470,9 @@ fu_engine_cli_progress_percentage_changed_cb(FuProgress *progress, gdouble perce
 }
 
 static void
-fu_engine_cli_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuCli *self)
+fu_engine_cli_progress_status_changed_cb(FuProgress *progress,
+					 FwupdStatus status,
+					 FuEngineCli *self)
 {
 	if (self->as_json)
 		return;
@@ -484,8 +480,9 @@ fu_engine_cli_progress_status_changed_cb(FuProgress *progress, FwupdStatus statu
 }
 
 static gboolean
-fu_engine_cli_watch(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_watch(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	if (!fu_engine_cli_start_engine(self,
 					FU_ENGINE_LOAD_FLAG_COLDPLUG |
 					    FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG,
@@ -503,8 +500,9 @@ fu_engine_cli_verfmt_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_engine_cli_get_verfmts(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_verfmts(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) verfmts = g_ptr_array_new_with_free_func((GDestroyNotify)g_free);
 
 	for (guint i = FWUPD_VERSION_FORMAT_PLAIN; i < FWUPD_VERSION_FORMAT_LAST; i++) {
@@ -538,9 +536,10 @@ fu_engine_cli_get_verfmts(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_plugins(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_plugins(FuCli *cli, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) plugins = NULL;
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 
 	/* print */
 	plugins = fwupd_client_get_plugins(self->client, self->cancellable, error);
@@ -565,7 +564,7 @@ fu_engine_cli_get_plugins(FuCli *self, gchar **values, GError **error)
 }
 
 static GPtrArray *
-fu_engine_cli_get_devices_with_filter(FuCli *self, GError **error)
+fu_engine_cli_get_devices_with_filter(FuEngineCli *self, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -581,7 +580,7 @@ fu_engine_cli_get_devices_with_filter(FuCli *self, GError **error)
 }
 
 static FwupdDevice *
-fu_engine_cli_prompt_for_device(FuCli *self, GPtrArray *devices_opt, GError **error)
+fu_engine_cli_prompt_for_device(FuEngineCli *self, GPtrArray *devices_opt, GError **error)
 {
 	FwupdDevice *dev;
 	guint idx;
@@ -642,7 +641,7 @@ fu_engine_cli_prompt_for_device(FuCli *self, GPtrArray *devices_opt, GError **er
 }
 
 static FwupdDevice *
-fu_engine_cli_get_device(FuCli *self, const gchar *id, GError **error)
+fu_engine_cli_get_device(FuEngineCli *self, const gchar *id, GError **error)
 {
 	if (fwupd_guid_is_valid(id)) {
 		g_autoptr(GPtrArray) devices = NULL;
@@ -667,7 +666,7 @@ fu_engine_cli_get_device(FuCli *self, const gchar *id, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_updates_as_json(FuCli *self, GPtrArray *devices, GError **error)
+fu_engine_cli_get_updates_as_json(FuEngineCli *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -708,8 +707,9 @@ fu_engine_cli_get_updates_as_json(FuCli *self, GPtrArray *devices, GError **erro
 }
 
 static gboolean
-fu_engine_cli_get_updates(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_updates(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
@@ -825,8 +825,9 @@ fu_engine_cli_get_updates(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_details(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_details(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 	g_autoptr(FuInputStream) stream = NULL;
@@ -884,8 +885,9 @@ fu_engine_cli_get_details(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_device_flags(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_device_flags(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	for (FwupdDeviceFlags i = FWUPD_DEVICE_FLAG_INTERNAL; i < FWUPD_DEVICE_FLAG_UNKNOWN;
@@ -905,7 +907,10 @@ fu_engine_cli_get_device_flags(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_engine_cli_build_device_tree(FuCli *self, FuCliNode *root, GPtrArray *devs, FwupdDevice *dev)
+fu_engine_cli_build_device_tree(FuEngineCli *self,
+				FuCliNode *root,
+				GPtrArray *devs,
+				FwupdDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
@@ -927,7 +932,7 @@ fu_engine_cli_build_device_tree(FuCli *self, FuCliNode *root, GPtrArray *devs, F
 }
 
 static gboolean
-fu_engine_cli_get_devices_as_json(FuCli *self, GPtrArray *devs, GError **error)
+fu_engine_cli_get_devices_as_json(FuEngineCli *self, GPtrArray *devs, GError **error)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -965,8 +970,9 @@ fu_engine_cli_get_devices_as_json(FuCli *self, GPtrArray *devs, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_devices(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEngineLoadFlags load_flags = FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
 				       FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
@@ -1019,7 +1025,7 @@ fu_engine_cli_get_devices(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_engine_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuCli *self)
+fu_engine_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuEngineCli *self)
 {
 	g_autofree gchar *str = NULL;
 
@@ -1066,7 +1072,7 @@ fu_engine_cli_update_device_changed_cb(FwupdClient *client, FwupdDevice *device,
 }
 
 static void
-fu_engine_cli_display_current_message(FuCli *self)
+fu_engine_cli_display_current_message(FuEngineCli *self)
 {
 	if (self->as_json)
 		return;
@@ -1079,8 +1085,9 @@ fu_engine_cli_display_current_message(FuCli *self)
 }
 
 static gboolean
-fu_engine_cli_install_blob(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_install_blob(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
@@ -1197,7 +1204,7 @@ fu_engine_cli_install_blob(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_sign(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_sign(FuCli *cli, gchar **values, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) archive_blob_new = NULL;
@@ -1239,8 +1246,9 @@ fu_engine_cli_firmware_sign(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_dump(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_dump(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
 	g_autoptr(GBytes) blob_fw = NULL;
@@ -1313,8 +1321,9 @@ fu_engine_cli_firmware_dump(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_read(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_read(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuFirmware) fw = NULL;
 	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
@@ -1401,7 +1410,7 @@ fu_engine_cli_release_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gchar *
-fu_engine_cli_download_if_required(FuCli *self, const gchar *perhapsfn, GError **error)
+fu_engine_cli_download_if_required(FuEngineCli *self, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -1428,7 +1437,7 @@ fu_engine_cli_download_if_required(FuCli *self, const gchar *perhapsfn, GError *
 }
 
 static gboolean
-fu_engine_cli_install_stream(FuCli *self,
+fu_engine_cli_install_stream(FuEngineCli *self,
 			     FuInputStream *stream,
 			     GPtrArray *devices,
 			     FuProgress *progress,
@@ -1522,8 +1531,9 @@ fu_engine_cli_install_stream(FuCli *self,
 }
 
 static gboolean
-fu_engine_cli_install(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_install(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
@@ -1605,7 +1615,10 @@ fu_engine_cli_install(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_install_release(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GError **error)
+fu_engine_cli_install_release(FuEngineCli *self,
+			      FwupdDevice *dev,
+			      FwupdRelease *rel,
+			      GError **error)
 {
 	FwupdRemote *remote;
 	GPtrArray *locations;
@@ -1680,12 +1693,13 @@ fu_engine_cli_install_release(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, 
 	/* reset progress before reusing it. */
 	fu_progress_reset(self->progress);
 
-	return fu_engine_cli_install(self, argv, error);
+	return fu_engine_cli_install(FU_CLI(self), argv, error);
 }
 
 static gboolean
-fu_engine_cli_update(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_latest = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_pending = g_ptr_array_new();
@@ -1869,8 +1883,9 @@ fu_engine_cli_update(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_reinstall(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_reinstall(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -1946,8 +1961,9 @@ fu_engine_cli_reinstall(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_detach(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_detach(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -1989,8 +2005,9 @@ fu_engine_cli_detach(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_unbind_driver(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_unbind_driver(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -2020,8 +2037,9 @@ fu_engine_cli_unbind_driver(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_bind_driver(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_bind_driver(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -2059,8 +2077,9 @@ fu_engine_cli_bind_driver(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_attach(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_attach(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -2117,7 +2136,9 @@ fu_engine_cli_report_metadata_to_string(GHashTable *metadata, guint idt, GString
 }
 
 static gboolean
-fu_engine_cli_get_report_metadata_as_json(FuCli *self, FwupdJsonObject *json_obj, GError **error)
+fu_engine_cli_get_report_metadata_as_json(FuEngineCli *self,
+					  FwupdJsonObject *json_obj,
+					  GError **error)
 {
 	g_autoptr(FwupdJsonArray) json_array_devices = fwupd_json_array_new();
 	g_autoptr(FwupdJsonArray) json_array_plugins = fwupd_json_array_new();
@@ -2189,8 +2210,9 @@ fu_engine_cli_get_report_metadata_as_json(FuCli *self, FwupdJsonObject *json_obj
 }
 
 static gboolean
-fu_engine_cli_get_report_metadata(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_report_metadata(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) plugins = NULL;
@@ -2280,8 +2302,10 @@ fu_engine_cli_get_report_metadata(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_modify_config(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_modify_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
+
 	/* check args */
 	if (g_strv_length(values) == 3) {
 		if (!fwupd_client_modify_config(self->client,
@@ -2316,8 +2340,10 @@ fu_engine_cli_modify_config(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_reset_config(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_reset_config(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
+
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -2343,8 +2369,9 @@ fu_engine_cli_reset_config(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_remote_modify(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_remote_modify(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdRemote *remote = NULL;
 
 	if (g_strv_length(values) < 3) {
@@ -2380,8 +2407,9 @@ fu_engine_cli_remote_modify(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_remote_clean(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_remote_clean(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdRemote *remote = NULL;
 
 	if (g_strv_length(values) != 1) {
@@ -2407,8 +2435,9 @@ fu_engine_cli_remote_clean(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_remote_disable(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_remote_disable(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdRemote *remote = NULL;
 
 	if (g_strv_length(values) != 1) {
@@ -2462,8 +2491,9 @@ fu_engine_cli_remote_disable(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_crc(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_crc(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuCrcKind kind;
 
 	/* sanity check */
@@ -2527,8 +2557,9 @@ fu_engine_cli_tpm_eventlog_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_engine_cli_tpm_eventlog(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_tpm_eventlog(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	guint64 pcr = G_MAXUINT64;
 	guint8 max_pcr = 0;
 	g_autofree gchar *fn = NULL;
@@ -2614,8 +2645,9 @@ fu_engine_cli_tpm_eventlog(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_crc_find(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_crc_find(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuCrcKind kind;
 	guint64 crc_target = 0;
 	g_autoptr(GBytes) blob = NULL;
@@ -2650,8 +2682,9 @@ fu_engine_cli_crc_find(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_search(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_search(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 
@@ -2692,8 +2725,9 @@ fu_engine_cli_search(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_vercmp(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_vercmp(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdVersionFormat verfmt = FWUPD_VERSION_FORMAT_UNKNOWN;
 	gint rc;
 
@@ -2732,8 +2766,9 @@ fu_engine_cli_vercmp(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_remote_enable(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_remote_enable(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdRemote *remote = NULL;
 
 	if (g_strv_length(values) != 1) {
@@ -2770,7 +2805,7 @@ fu_engine_cli_remote_enable(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_set_test_devices_enabled(FuCli *self, gboolean enable, GError **error)
+fu_engine_cli_set_test_devices_enabled(FuEngineCli *self, gboolean enable, GError **error)
 {
 	return fwupd_client_modify_config(self->client,
 					  "fwupd",
@@ -2781,8 +2816,10 @@ fu_engine_cli_set_test_devices_enabled(FuCli *self, gboolean enable, GError **er
 }
 
 static gboolean
-fu_engine_cli_disable_test_devices(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_disable_test_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
+
 	if (!fu_engine_cli_set_test_devices_enabled(self, FALSE, error))
 		return FALSE;
 
@@ -2796,8 +2833,9 @@ fu_engine_cli_disable_test_devices(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_enable_test_devices(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_enable_test_devices(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	gboolean found = FALSE;
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -2837,7 +2875,7 @@ fu_engine_cli_enable_test_devices(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_check_activation_needed(FuCli *self, GError **error)
+fu_engine_cli_check_activation_needed(FuEngineCli *self, GError **error)
 {
 	gboolean has_pending = FALSE;
 	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
@@ -2866,8 +2904,9 @@ fu_engine_cli_check_activation_needed(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_engine_cli_activate(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_activate(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	gboolean has_pending = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -2946,8 +2985,9 @@ fu_engine_cli_activate(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_export_hwids(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_export_hwids(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	FuHwids *hwids = fu_context_get_hwids(ctx);
 	g_autoptr(GKeyFile) kf = g_key_file_new();
@@ -2985,8 +3025,9 @@ fu_engine_cli_export_hwids(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_hwids(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_hwids(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	FuHwids *hwids = fu_context_get_hwids(ctx);
 	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
@@ -3062,8 +3103,9 @@ fu_engine_cli_hwids(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_self_sign(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_self_sign(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *sig = NULL;
 
 	/* check args */
@@ -3097,8 +3139,9 @@ fu_engine_cli_self_sign(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_firmware_types(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_firmware_types(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) firmware_types = NULL;
 
 	/* load engine */
@@ -3128,8 +3171,9 @@ fu_engine_cli_get_firmware_types(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_firmware_gtypes(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_firmware_gtypes(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GArray) firmware_types = NULL;
 
 	/* load engine */
@@ -3159,7 +3203,7 @@ fu_engine_cli_get_firmware_gtypes(FuCli *self, gchar **values, GError **error)
 }
 
 static gchar *
-fu_engine_cli_prompt_for_firmware_type(FuCli *self, GPtrArray *firmware_types, GError **error)
+fu_engine_cli_prompt_for_firmware_type(FuEngineCli *self, GPtrArray *firmware_types, GError **error)
 {
 	guint idx;
 
@@ -3198,8 +3242,9 @@ fu_engine_cli_prompt_for_firmware_type(FuCli *self, GPtrArray *firmware_types, G
 }
 
 static gboolean
-fu_engine_cli_firmware_parse(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -3323,8 +3368,9 @@ fu_engine_cli_firmware_parse(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_export(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_export(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	FuFirmwareExportFlags flags = FU_FIRMWARE_EXPORT_FLAG_NONE;
 	GType gtype;
@@ -3384,7 +3430,7 @@ fu_engine_cli_firmware_export(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_extract_image(FuCli *self,
+fu_engine_cli_firmware_extract_image(FuEngineCli *self,
 				     FuFirmware *firmware,
 				     const gchar *idxstr,
 				     GError **error)
@@ -3422,7 +3468,7 @@ fu_engine_cli_firmware_extract_image(FuCli *self,
 }
 
 static gboolean
-fu_engine_cli_firmware_extract_images(FuCli *self,
+fu_engine_cli_firmware_extract_images(FuEngineCli *self,
 				      FuFirmware *firmware,
 				      const gchar *idxstr,
 				      GError **error)
@@ -3446,8 +3492,9 @@ fu_engine_cli_firmware_extract_images(FuCli *self,
 }
 
 static gboolean
-fu_engine_cli_firmware_extract(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_extract(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autofree gchar *firmware_type = NULL;
@@ -3501,8 +3548,9 @@ fu_engine_cli_firmware_extract(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_build(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_build(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	GType gtype = FU_TYPE_FIRMWARE;
 	const gchar *tmp;
 	g_autofree gchar *str = NULL;
@@ -3605,8 +3653,9 @@ fu_engine_cli_firmware_build(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_convert(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_convert(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype_dst;
 	GType gtype_src;
@@ -3744,8 +3793,9 @@ fu_engine_cli_hex_string_to_bytes(const gchar *val, GError **error)
 }
 
 static gboolean
-fu_engine_cli_firmware_patch(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_firmware_patch(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autofree gchar *firmware_type = NULL;
@@ -3835,8 +3885,9 @@ fu_engine_cli_firmware_patch(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_verify_update(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_verify_update(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 
@@ -3882,8 +3933,9 @@ fu_engine_cli_verify_update(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_history(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_filtered = NULL;
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
@@ -3988,7 +4040,7 @@ fu_engine_cli_get_history(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_refresh_remote(FuCli *self, FwupdRemote *remote, GError **error)
+fu_engine_cli_refresh_remote(FuEngineCli *self, FwupdRemote *remote, GError **error)
 {
 	g_autofree gchar *uri_raw = NULL;
 	g_autofree gchar *uri_sig = NULL;
@@ -4047,7 +4099,7 @@ fu_engine_cli_refresh_remote(FuCli *self, FwupdRemote *remote, GError **error)
 }
 
 static gboolean
-fu_engine_cli_download_metadata(FuCli *self, GError **error)
+fu_engine_cli_download_metadata(FuEngineCli *self, GError **error)
 {
 	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) remotes = NULL;
@@ -4107,8 +4159,9 @@ fu_engine_cli_download_metadata(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_engine_cli_refresh(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_refresh(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 
@@ -4148,8 +4201,9 @@ fu_engine_cli_refresh(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_remotes(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_remotes(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuCliNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -4180,8 +4234,9 @@ fu_engine_cli_get_remotes(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_security(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_security(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	const gchar *fwupd_version = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
@@ -4266,7 +4321,7 @@ fu_engine_cli_security(FuCli *self, gchar **values, GError **error)
 }
 
 static FuVolume *
-fu_engine_cli_prompt_for_volume(FuCli *self, GError **error)
+fu_engine_cli_prompt_for_volume(FuEngineCli *self, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	FuVolume *volume;
@@ -4309,8 +4364,9 @@ fu_engine_cli_prompt_for_volume(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_engine_cli_esp_mount(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_esp_mount(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuVolume) volume = NULL;
 	volume = fu_engine_cli_prompt_for_volume(self, error);
 	if (volume == NULL)
@@ -4319,8 +4375,9 @@ fu_engine_cli_esp_mount(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_esp_unmount(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_esp_unmount(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuVolume) volume = NULL;
 	volume = fu_engine_cli_prompt_for_volume(self, error);
 	if (volume == NULL)
@@ -4329,7 +4386,7 @@ fu_engine_cli_esp_unmount(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_esp_list_as_json(FuCli *self, GError **error)
+fu_engine_cli_esp_list_as_json(FuEngineCli *self, GError **error)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GPtrArray) volumes = NULL;
@@ -4343,8 +4400,9 @@ fu_engine_cli_esp_list_as_json(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_engine_cli_esp_list(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_esp_list(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *mount_point = NULL;
 	g_autoptr(FuVolumeLocker) locker = NULL;
 	g_autoptr(FuVolume) volume = NULL;
@@ -4383,7 +4441,7 @@ fu_engine_cli_esp_list(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_modify_tag(FuCli *self, gchar **values, gboolean enable, GError **error)
+fu_engine_cli_modify_tag(FuEngineCli *self, gchar **values, gboolean enable, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	const gchar *tag = enable ? "emulation-tag" : "~emulation-tag";
@@ -4410,20 +4468,23 @@ fu_engine_cli_modify_tag(FuCli *self, gchar **values, gboolean enable, GError **
 }
 
 static gboolean
-fu_engine_cli_emulation_tag(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_emulation_tag(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	return fu_engine_cli_modify_tag(self, values, TRUE, error);
 }
 
 static gboolean
-fu_engine_cli_emulation_untag(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_emulation_untag(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	return fu_engine_cli_modify_tag(self, values, FALSE, error);
 }
 
 static gboolean
-fu_engine_cli_emulation_save(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_emulation_save(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileOutputStream) stream = NULL;
 
@@ -4462,8 +4523,9 @@ fu_engine_cli_emulation_save(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_emulation_load(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_emulation_load(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuInputStream) stream = NULL;
 
 	/* check args */
@@ -4528,8 +4590,9 @@ _g_str_equal0(gconstpointer str1, gconstpointer str2)
 }
 
 static gboolean
-fu_engine_cli_switch_branch(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_switch_branch(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	const gchar *branch;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
@@ -4667,8 +4730,9 @@ fu_engine_cli_switch_branch(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_results(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_results(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) device = NULL;
 
@@ -4707,9 +4771,10 @@ fu_engine_cli_get_results(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
+fu_engine_cli_set_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
-	g_autoptr(GHashTable) settings = fu_cli_bios_settings_parse_argv(input, error);
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
+	g_autoptr(GHashTable) settings = fu_cli_bios_settings_parse_argv(values, error);
 
 	if (settings == NULL)
 		return FALSE;
@@ -4751,8 +4816,9 @@ fu_engine_cli_set_bios_setting(FuCli *self, gchar **input, GError **error)
 }
 
 static gboolean
-fu_engine_cli_security_fix(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_security_fix(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -4788,8 +4854,9 @@ fu_engine_cli_security_fix(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_security_undo(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_security_undo(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 #ifndef HAVE_HSI
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -4825,8 +4892,9 @@ fu_engine_cli_security_undo(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_get_bios_setting(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuBiosSettings) attrs = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	FuContext *ctx = fu_engine_get_context(self->engine);
@@ -4876,8 +4944,9 @@ fu_engine_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_reboot_cleanup(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_reboot_cleanup(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuPlugin *plugin;
 	g_autoptr(FwupdDevice) device = NULL;
 
@@ -4906,7 +4975,7 @@ fu_engine_cli_reboot_cleanup(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_engine_cli_efiboot_info_as_json(FuCli *self, GPtrArray *entries)
+fu_engine_cli_efiboot_info_as_json(FuEngineCli *self, GPtrArray *entries)
 {
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint16 idx = 0;
@@ -4934,8 +5003,9 @@ fu_engine_cli_efiboot_info_as_json(FuCli *self, GPtrArray *entries)
 }
 
 static gboolean
-fu_engine_cli_efiboot_next(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_next(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint64 value = 0;
 
@@ -4963,8 +5033,9 @@ fu_engine_cli_efiboot_next(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_efiboot_order(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_order(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GArray) order = NULL;
@@ -5004,8 +5075,9 @@ fu_engine_cli_efiboot_order(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_efiboot_create(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_create(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(FuVolume) volume = NULL;
 	guint64 idx = 0;
@@ -5081,8 +5153,9 @@ fu_engine_cli_efiboot_create(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_efiboot_delete(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_delete(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint64 value = 0;
 
@@ -5148,8 +5221,9 @@ fu_engine_cli_efiboot_hive_check_loadopt_is_shim(FuEfiLoadOption *loadopt, GErro
 }
 
 static gboolean
-fu_engine_cli_efiboot_hive(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_hive(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(FuEfiLoadOption) loadopt = NULL;
 	guint64 idx = 0;
@@ -5228,8 +5302,9 @@ fu_engine_cli_efiboot_hive(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_efiboot_info(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efiboot_info(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -5272,7 +5347,7 @@ fu_engine_cli_efiboot_info(FuCli *self, gchar **values, GError **error)
 }
 
 static void
-fu_engine_cli_efivar_files_as_json(FuCli *self, GPtrArray *files)
+fu_engine_cli_efivar_files_as_json(FuEngineCli *self, GPtrArray *files)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash,
@@ -5316,8 +5391,9 @@ fu_engine_cli_efivar_files_as_json(FuCli *self, GPtrArray *files)
 }
 
 static gboolean
-fu_engine_cli_efivar_files(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efivar_files(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) files = NULL;
 
 	/* load paths */
@@ -5354,8 +5430,9 @@ fu_engine_cli_efivar_files(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_efivar_list(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_efivar_list(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(GPtrArray) names = NULL;
 
@@ -5389,8 +5466,9 @@ fu_engine_cli_efivar_list(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_build_cabinet(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_build_cabinet(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GBytes) cab_blob = NULL;
 	g_autoptr(FuCabinet) cab_file = fu_cabinet_new();
 
@@ -5451,7 +5529,7 @@ fu_engine_cli_build_cabinet(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_version(FuCli *self, GError **error)
+fu_engine_cli_version(FuEngineCli *self, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autofree gchar *str = NULL;
@@ -5476,8 +5554,9 @@ fu_engine_cli_version(FuCli *self, GError **error)
 }
 
 static gboolean
-fu_engine_cli_clear_history(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_clear_history(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
 
 	/* load paths */
@@ -5492,7 +5571,7 @@ fu_engine_cli_clear_history(FuCli *self, gchar **values, GError **error)
 }
 
 static FwupdJcatFile *
-fu_engine_cli_jcat_load_filename(FuCli *self, const gchar *filename, GError **error)
+fu_engine_cli_jcat_load_filename(FuEngineCli *self, const gchar *filename, GError **error)
 {
 	g_autoptr(FwupdJcatFile) file = fwupd_jcat_file_new();
 	g_autoptr(GFile) gfile = g_file_new_for_path(filename);
@@ -5513,7 +5592,7 @@ fu_engine_cli_jcat_load_filename(FuCli *self, const gchar *filename, GError **er
 }
 
 static gboolean
-fu_engine_cli_jcat_save_filename(FuCli *self,
+fu_engine_cli_jcat_save_filename(FuEngineCli *self,
 				 FwupdJcatFile *file,
 				 const gchar *filename,
 				 GError **error)
@@ -5527,8 +5606,9 @@ fu_engine_cli_jcat_save_filename(FuCli *self,
 }
 
 static gboolean
-fu_engine_cli_jcat_info(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_info(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -5555,8 +5635,9 @@ fu_engine_cli_jcat_info(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_add_alias(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_add_alias(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
 
@@ -5585,8 +5666,9 @@ fu_engine_cli_jcat_add_alias(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_remove_alias(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_remove_alias(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
 
@@ -5674,8 +5756,9 @@ fu_engine_cli_jcat_blob_kind_to_ext(FwupdJcatBlobKind kind)
 }
 
 static gboolean
-fu_engine_cli_jcat_export(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_export(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autoptr(GPtrArray) items = NULL;
@@ -5740,8 +5823,9 @@ fu_engine_cli_jcat_export(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_import(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_import(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GBytes) data_sig = NULL;
 	g_autoptr(FwupdJcatBlob) blob = NULL;
 	g_autoptr(FwupdJcatFile) file = NULL;
@@ -5824,8 +5908,9 @@ fu_engine_cli_jcat_import(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_self_sign(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_self_sign(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuJcatSignFlags flags = FU_JCAT_SIGN_FLAG_NONE;
 	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	FwupdJcatBlobKind target = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
@@ -5900,8 +5985,9 @@ fu_engine_cli_jcat_self_sign(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_sign(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_sign(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	FwupdJcatBlobKind target = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	g_autoptr(GBytes) cert = NULL;
@@ -5988,7 +6074,7 @@ fu_engine_cli_jcat_sign(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_jcat_verify_item(FuCli *self,
+fu_engine_cli_jcat_verify_item(FuEngineCli *self,
 			       FwupdJcatItem *item,
 			       FwupdJcatBlobKind kind,
 			       FuCliJcatBlobVariant variant,
@@ -6114,8 +6200,9 @@ fu_engine_cli_jcat_verify_item(FuCli *self,
 }
 
 static gboolean
-fu_engine_cli_jcat_verify(FuCli *self, gchar **values, GError **error)
+fu_engine_cli_jcat_verify(FuCli *cli, gchar **values, GError **error)
 {
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	FuCliJcatBlobVariant variant = FU_CLI_JCAT_BLOB_VARIANT_NONE;
 	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	gboolean ret = TRUE;
@@ -6164,7 +6251,7 @@ fu_engine_cli_jcat_verify(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_engine_cli_setup_interactive(FuCli *self, GError **error)
+fu_engine_cli_setup_interactive(FuEngineCli *self, GError **error)
 {
 	if (self->as_json) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "using --json");
@@ -6174,7 +6261,7 @@ fu_engine_cli_setup_interactive(FuCli *self, GError **error)
 }
 
 static void
-fu_engine_cli_print_error(FuCli *self, const GError *error)
+fu_engine_cli_print_error(FuEngineCli *self, const GError *error)
 {
 	if (self->as_json) {
 		fu_cli_print_error_as_json(self->console, error);
@@ -6189,7 +6276,7 @@ fu_engine_cli_sync_impl_connect(FwupdClient *client,
 				GCancellable *cancellable,
 				GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_cli_start_engine(
 	    self,
 	    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
@@ -6206,7 +6293,7 @@ fu_engine_cli_sync_impl_get_devices(FwupdClient *client,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_devices(self->engine, error);
 }
 
@@ -6217,7 +6304,7 @@ fu_engine_cli_sync_impl_get_device_by_id(FwupdClient *client,
 					 GCancellable *cancellable,
 					 GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return FWUPD_DEVICE(fu_engine_get_device(self->engine, device_id, error));
 }
 
@@ -6228,7 +6315,7 @@ fu_engine_cli_sync_impl_get_devices_by_guid(FwupdClient *client,
 					    GCancellable *cancellable,
 					    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_devices_by_guid(self->engine, guid, error);
 }
 
@@ -6238,7 +6325,7 @@ fu_engine_cli_sync_impl_get_plugins(FwupdClient *client,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return g_ptr_array_ref(fu_engine_get_plugins(self->engine));
 }
 
@@ -6248,7 +6335,7 @@ fu_engine_cli_sync_impl_get_history(FwupdClient *client,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_history(self->engine, error);
 }
 
@@ -6259,7 +6346,7 @@ fu_engine_cli_sync_impl_get_releases(FwupdClient *client,
 				     GCancellable *cancellable,
 				     GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_releases(self->engine, self->request, device_id, error);
 }
 
@@ -6270,7 +6357,7 @@ fu_engine_cli_sync_impl_get_upgrades(FwupdClient *client,
 				     GCancellable *cancellable,
 				     GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_upgrades(self->engine, self->request, device_id, error);
 }
 
@@ -6280,7 +6367,7 @@ fu_engine_cli_sync_impl_get_remotes(FwupdClient *client,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_remotes(self->engine, error);
 }
 
@@ -6291,7 +6378,7 @@ fu_engine_cli_sync_impl_get_remote_by_id(FwupdClient *client,
 					 GCancellable *cancellable,
 					 GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_remote_by_id(self->engine, remote_id, error);
 }
 
@@ -6301,7 +6388,7 @@ fu_engine_cli_sync_impl_get_report_metadata(FwupdClient *client,
 					    GCancellable *cancellable,
 					    GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_get_report_metadata(self->engine, error);
 }
 
@@ -6314,7 +6401,7 @@ fu_engine_cli_sync_impl_modify_config(FwupdClient *client,
 				      GCancellable *cancellable,
 				      GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_modify_config(self->engine, section, key, value, error);
 }
 
@@ -6327,7 +6414,7 @@ fu_engine_cli_sync_impl_modify_remote(FwupdClient *client,
 				      GCancellable *cancellable,
 				      GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_modify_remote(self->engine, remote_id, key, value, error);
 }
 
@@ -6338,8 +6425,78 @@ fu_engine_cli_sync_impl_search(FwupdClient *client,
 			       GCancellable *cancellable,
 			       GError **error)
 {
-	FuCli *self = (FuCli *)user_data;
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return fu_engine_search(self->engine, token, error);
+}
+
+static void
+fu_engine_cli_init(FuEngineCli *self)
+{
+	static FwupdClientSyncImpl impl = {
+	    .connect = fu_engine_cli_sync_impl_connect,
+	    .get_devices = fu_engine_cli_sync_impl_get_devices,
+	    .get_devices_by_guid = fu_engine_cli_sync_impl_get_devices_by_guid,
+	    .get_device_by_id = fu_engine_cli_sync_impl_get_device_by_id,
+	    .get_history = fu_engine_cli_sync_impl_get_history,
+	    .get_releases = fu_engine_cli_sync_impl_get_releases,
+	    .get_upgrades = fu_engine_cli_sync_impl_get_upgrades,
+	    .get_plugins = fu_engine_cli_sync_impl_get_plugins,
+	    .get_remotes = fu_engine_cli_sync_impl_get_remotes,
+	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
+	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
+	    .modify_config = fu_engine_cli_sync_impl_modify_config,
+	    .modify_remote = fu_engine_cli_sync_impl_modify_remote,
+	    .search = fu_engine_cli_sync_impl_search,
+	};
+	self->lock_fd = -1;
+	self->request = fu_engine_request_new(NULL);
+	self->main_ctx = g_main_context_new();
+	self->loop = g_main_loop_new(self->main_ctx, FALSE);
+	self->console = fu_console_new();
+	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
+	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
+	fu_console_set_main_context(self->console, self->main_ctx);
+
+	/* used for monitoring and downloading */
+	self->client = fwupd_client_new();
+	fwupd_client_set_sync_impl(self->client, &impl, self, NULL);
+	fwupd_client_set_main_context(self->client, self->main_ctx);
+	fwupd_client_set_daemon_version(self->client, PACKAGE_VERSION);
+	fwupd_client_set_user_agent_for_package(self->client, "fwupdtool", PACKAGE_VERSION);
+	g_signal_connect(FWUPD_CLIENT(self->client),
+			 "notify::percentage",
+			 G_CALLBACK(fu_engine_cli_client_notify_cb),
+			 self);
+	g_signal_connect(FWUPD_CLIENT(self->client),
+			 "notify::status",
+			 G_CALLBACK(fu_engine_cli_client_notify_cb),
+			 self);
+
+	/* when not using the engine */
+	self->progress = fu_progress_new(G_STRLOC);
+	g_signal_connect(self->progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_cli_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(self->progress,
+			 "status-changed",
+			 G_CALLBACK(fu_engine_cli_progress_status_changed_cb),
+			 self);
+
+	/* do stuff on ctrl+c */
+	self->cancellable = g_cancellable_new();
+	g_signal_connect(G_CANCELLABLE(self->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_engine_cli_cancelled_cb),
+			 self);
+}
+
+static void
+fu_engine_cli_class_init(FuEngineCliClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_engine_cli_finalize;
 }
 
 int
@@ -6350,7 +6507,6 @@ main(int argc, char *argv[])
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean no_search = FALSE;
-	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_requirements = FALSE;
@@ -6358,9 +6514,10 @@ main(int argc, char *argv[])
 	g_auto(GStrv) filter_protocols = NULL;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_auto(GStrv) public_keys = NULL;
-	g_autoptr(FuCli) self = g_new0(FuCli, 1);
+	g_autoptr(FuEngineCli) self = g_object_new(FU_TYPE_ENGINE_CLI, NULL);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GOptionContext) option_context = g_option_context_new(NULL);
 	g_autoptr(GPtrArray) cmd_array = fu_cli_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *destdir = NULL;
@@ -6576,22 +6733,6 @@ main(int argc, char *argv[])
 	     _("Prefix for import and output files"),
 	     NULL},
 	    {NULL}};
-	static FwupdClientSyncImpl impl = {
-	    .connect = fu_engine_cli_sync_impl_connect,
-	    .get_devices = fu_engine_cli_sync_impl_get_devices,
-	    .get_devices_by_guid = fu_engine_cli_sync_impl_get_devices_by_guid,
-	    .get_device_by_id = fu_engine_cli_sync_impl_get_device_by_id,
-	    .get_history = fu_engine_cli_sync_impl_get_history,
-	    .get_releases = fu_engine_cli_sync_impl_get_releases,
-	    .get_upgrades = fu_engine_cli_sync_impl_get_upgrades,
-	    .get_plugins = fu_engine_cli_sync_impl_get_plugins,
-	    .get_remotes = fu_engine_cli_sync_impl_get_remotes,
-	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
-	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
-	    .modify_config = fu_engine_cli_sync_impl_modify_config,
-	    .modify_remote = fu_engine_cli_sync_impl_modify_remote,
-	    .search = fu_engine_cli_sync_impl_search,
-	};
 
 #ifdef _WIN32
 	/* workaround Windows setting the codepage to 1252 */
@@ -6604,43 +6745,6 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 	g_set_prgname(fu_cli_get_prgname(argv[0]));
-
-	/* create helper object */
-	self->lock_fd = -1;
-	self->main_ctx = g_main_context_new();
-	self->loop = g_main_loop_new(self->main_ctx, FALSE);
-	self->console = fu_console_new();
-	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
-	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
-	fu_console_set_main_context(self->console, self->main_ctx);
-	self->request = fu_engine_request_new(NULL);
-
-	/* used for monitoring and downloading */
-	self->client = fwupd_client_new();
-	fwupd_client_set_sync_impl(self->client, &impl, self, NULL);
-	fwupd_client_set_main_context(self->client, self->main_ctx);
-	fwupd_client_set_daemon_version(self->client, PACKAGE_VERSION);
-	fwupd_client_set_user_agent_for_package(self->client, "fwupdtool", PACKAGE_VERSION);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "notify::percentage",
-			 G_CALLBACK(fu_engine_cli_client_notify_cb),
-			 self);
-	g_signal_connect(FWUPD_CLIENT(self->client),
-			 "notify::status",
-			 G_CALLBACK(fu_engine_cli_client_notify_cb),
-			 self);
-
-	/* when not using the engine */
-	self->progress = fu_progress_new(G_STRLOC);
-	g_signal_connect(self->progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_cli_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(self->progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_cli_progress_status_changed_cb),
-			 self);
 
 	/* add commands */
 	fu_cli_cmd_array_add(cmd_array,
@@ -7207,13 +7311,6 @@ main(int argc, char *argv[])
 			     _("Verify a signature from a JCat file"),
 			     fu_engine_cli_jcat_verify);
 
-	/* do stuff on ctrl+c */
-	self->cancellable = g_cancellable_new();
-	g_signal_connect(G_CANCELLABLE(self->cancellable),
-			 "cancelled",
-			 G_CALLBACK(fu_engine_cli_cancelled_cb),
-			 self);
-
 	/* sort by command name */
 	fu_cli_cmd_array_sort(cmd_array);
 
@@ -7240,21 +7337,19 @@ main(int argc, char *argv[])
 	fu_console_set_interactive(self->console, self->interactive);
 
 	/* get a list of the commands */
-	self->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_cli_cmd_array_to_string(cmd_array);
-	g_option_context_set_summary(self->context, cmd_descriptions);
+	g_option_context_set_summary(option_context, cmd_descriptions);
 	g_option_context_set_description(
-	    self->context,
+	    option_context,
 	    /* TRANSLATORS: CLI description */
 	    _("This tool allows an administrator to use the fwupd plugins "
 	      "without being installed on the host system."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("Firmware Utility"));
-	g_option_context_add_main_entries(self->context, options, NULL);
-	g_option_context_add_group(self->context, fu_debug_get_option_group());
-	ret = g_option_context_parse(self->context, &argc, &argv, &error);
-	if (!ret) {
+	g_option_context_add_main_entries(option_context, options, NULL);
+	g_option_context_add_group(option_context, fu_debug_get_option_group());
+	if (!g_option_context_parse(option_context, &argc, &argv, &error)) {
 		fu_console_print(self->console,
 				 "%s: %s",
 				 /* TRANSLATORS: the user didn't read the man page */
@@ -7387,8 +7482,7 @@ main(int argc, char *argv[])
 		fu_engine_add_plugin_filter(self->engine, plugin_glob[i]);
 
 	/* run the specified command */
-	ret = fu_cli_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
-	if (!ret) {
+	if (!fu_cli_cmd_array_run(cmd_array, FU_CLI(self), argv[1], (gchar **)&argv[2], &error)) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
 		if (error == NULL) {

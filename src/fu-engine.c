@@ -128,6 +128,7 @@ struct _FuEngine {
 	guint emulator_write_cnt;
 	guint emulator_composite_cnt;
 	FuEngineLoadFlags load_flags;
+	FuEnginePhase phase;
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
@@ -171,10 +172,12 @@ G_DEFINE_TYPE_EXTENDED(FuEngine,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_codec_iface_init))
 
-gboolean
-fu_engine_get_loaded(FuEngine *self)
+/* private */
+FuEnginePhase
+fu_engine_get_phase(FuEngine *self)
 {
-	return (self->load_flags & FU_ENGINE_LOAD_FLAG_READY) > 0;
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	return self->phase;
 }
 
 static gboolean
@@ -211,7 +214,7 @@ fu_engine_emit_changed(FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* do nothing */
-	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
+	if (self->phase != FU_ENGINE_PHASE_DONE)
 		return;
 
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
@@ -230,7 +233,7 @@ static void
 fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
 	/* do nothing */
-	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
+	if (self->phase != FU_ENGINE_PHASE_DONE)
 		return;
 
 	/* invalidate host security attributes */
@@ -6707,7 +6710,7 @@ static void
 fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
 	fu_device_set_parent(device, parent);
-	if (fu_engine_get_loaded(self)) {
+	if (self->phase >= FU_ENGINE_PHASE_DONE) {
 		fu_engine_ensure_device_supported(self, device);
 		fu_engine_ensure_device_supported(self, parent);
 	}
@@ -7031,7 +7034,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	fu_engine_ensure_device_emulation_tag(self, device);
 
 	/* set or clear the SUPPORTED flag right away when doing device holdplug */
-	if (fu_engine_get_loaded(self))
+	if (self->phase >= FU_ENGINE_PHASE_DONE)
 		fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
@@ -8878,9 +8881,18 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* avoid re-loading a second time if fu-tool or fu-util request to */
-	if (self->load_flags & FU_ENGINE_LOAD_FLAG_READY)
+	/* avoid re-loading a second time */
+	if (self->phase != FU_ENGINE_PHASE_IDLE) {
+		if (self->load_flags != flags) {
+			g_autofree gchar *old = fu_engine_load_flags_to_string(self->load_flags);
+			g_autofree gchar *new = fu_engine_load_flags_to_string(flags);
+			g_warning("originally started engine with %s and now loading with %s",
+				  old,
+				  new);
+		}
 		return TRUE;
+	}
+	self->phase = FU_ENGINE_PHASE_STARTUP;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -9179,7 +9191,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_info("failed to update list of devices: %s", error_json_devices->message);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
-	self->load_flags |= FU_ENGINE_LOAD_FLAG_READY;
+	self->phase = FU_ENGINE_PHASE_DONE;
 
 	/* let clients know engine finished starting up */
 	fu_engine_emit_changed(self);

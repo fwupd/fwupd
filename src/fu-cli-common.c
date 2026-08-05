@@ -3246,22 +3246,6 @@ fu_cli_print_error_as_json(FuConsole *console, const GError *error)
 	fu_cli_print_json_object(console, json_obj);
 }
 
-typedef enum {
-	FU_CLI_DEPENDENCY_KIND_UNKNOWN,
-	FU_CLI_DEPENDENCY_KIND_RUNTIME,
-	FU_CLI_DEPENDENCY_KIND_COMPILE,
-} FuCliDependencyKind;
-
-static const gchar *
-fu_cli_dependency_kind_to_string(FuCliDependencyKind dependency_kind)
-{
-	if (dependency_kind == FU_CLI_DEPENDENCY_KIND_RUNTIME)
-		return "runtime";
-	if (dependency_kind == FU_CLI_DEPENDENCY_KIND_COMPILE)
-		return "compile";
-	return NULL;
-}
-
 static gchar *
 fu_cli_parse_project_dependency(const gchar *str, FuCliDependencyKind *dependency_kind)
 {

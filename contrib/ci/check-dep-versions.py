@@ -216,6 +216,42 @@ def sync_xml_versions(xml_file: str, meson_versions: Dict[str, str]) -> List[str
     return updated_ids
 
 
+def check_variant_names(xml_file: str) -> int:
+    """Check that variant names in dependencies.xml use the canonical naming
+    (gcc/fedora style) rather than OS-native names that get mapped away by
+    ARCH_TO_DEPS_MAP in fwupd_setup_helpers.py.
+
+    For example, FreeBSD reports uname -m as 'amd64' but the helpers map
+    that to 'x86_64'.  If the XML uses 'amd64' as the variant, the package
+    will never be matched at runtime."""
+
+    # Variant names that are mapped to something else and thus must not
+    # appear in the XML.
+    FORBIDDEN_VARIANTS: Dict[str, str] = {
+        "amd64": "x86_64",
+        "arm": "armhf",
+        "arm64": "aarch64",
+    }
+
+    rc = 0
+    tree = etree.parse(xml_file)
+    root = tree.getroot()
+    for dep in root:
+        dep_id = dep.attrib.get("id", "")
+        for distro in dep:
+            distro_id = distro.attrib.get("id", "")
+            for pkg in distro.findall("package"):
+                variant = pkg.attrib.get("variant", "")
+                if variant in FORBIDDEN_VARIANTS:
+                    canonical = FORBIDDEN_VARIANTS[variant]
+                    print(
+                        f'ERROR: {dep_id}: distro "{distro_id}" uses '
+                        f'variant="{variant}", use "{canonical}" instead'
+                    )
+                    rc = 1
+    return rc
+
+
 def check_versions(fix: bool = False) -> int:
     rc = 0
 
@@ -249,6 +285,8 @@ def check_versions(fix: bool = False) -> int:
                 f"but dependencies.xml has '>= {xml_ver}'"
             )
             rc = 1
+
+    rc |= check_variant_names(xml_file)
 
     return rc
 

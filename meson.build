@@ -1,11 +1,20 @@
 project(
   'fwupd',
-  'c',
+  'c', 'rust',
   version: '2.2.1',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.11.0',
-  default_options: ['warning_level=2', 'c_std=c17'],
+  default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
+
+if host_machine.system() == 'android'
+  add_project_link_arguments(
+    '-lc++abi',
+    '-lc++_static',
+    language : ['c', 'cpp']
+  )
+endif
+
 
 fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
@@ -257,6 +266,10 @@ else
   includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  if host_machine.system() == 'android'
+    datadir = join_paths(prefix, 'usr/share')
+    localstatedir = '/data/vendor/fwupd'
+  endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
   installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
   daemon_dir = join_paths(libexecdir, 'fwupd')
@@ -321,33 +334,40 @@ if build_standalone
     version: '>= 0.1.27',
   )
   conf.set_quoted('LIBUSB_VERSION', libusb.version())
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_set_option',
-    dependencies: libusb,
-  )
+  if libusb.type_name() == 'internal'
     conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_init_context',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_get_parent',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_GET_PARENT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_wrap_sys_device',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+  else
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_set_option',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_init_context',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_get_parent',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_wrap_sys_device',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+    endif
   endif
 
   readline = dependency(
@@ -873,7 +893,11 @@ umockdev = dependency(
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
+rustmod = import('rust')
+cargo_ws = rustmod.workspace()
+
 subdir('generate-build')
+subdir('rust')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')

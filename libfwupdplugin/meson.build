@@ -430,6 +430,7 @@ library_deps = [
   libdrm,
   gnutls,
   platform_deps,
+  fwupd_rust_ffi_dep,
 ]
 
 fwupdplugin = library(
