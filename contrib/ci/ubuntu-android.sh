@@ -37,6 +37,9 @@ fi
 
 export PATH="${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/bin:${ANDROID_SDK_ROOT}/build-tools/35.0.0"
 
+rustup default stable
+rustup target add x86_64-linux-android
+
 root=$(pwd)
 export BUILD="${root}/build"
 rm -rf "${BUILD}"
