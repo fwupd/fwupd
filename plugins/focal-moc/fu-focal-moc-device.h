@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 FocalTech Systems Co., Ltd.
+ * Copyright 2026 FocalTech Systems Co., Ltd.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

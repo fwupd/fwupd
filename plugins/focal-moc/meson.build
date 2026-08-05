@@ -1,13 +1,20 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalMoc"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
 
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('focal-moc.quirk')
-plugin_builtin_focal_moc = static_library('fu_plugin_focal_moc',
-  rustgen.process('fu-focal-moc.rs'),
+plugin_builtin_focal_moc = static_library(
+  'fu_plugin_focal_moc',
+  rustgen.process(
+    'fu-focal-moc.rs' # fuzzing
+  ),
   sources: [
     'fu-focal-moc-common.c',
     'fu-focal-moc-device.c',
+    'fu-focal-moc-firmware.c', # fuzzing
     'fu-focal-moc-plugin.c',
+    'fu-focal-moc-transport.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -19,17 +26,22 @@ plugin_builtins += plugin_builtin_focal_moc
 device_tests += files('tests/focal-moc.json')
 
 if get_option('tests')
+  install_data(
+    ['tests/focal-moc.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'focal-moc-self-test',
-    sources: [
-      'fu-self-test.c',
-    ],
+    rustgen.process('fu-focal-moc.rs'),
+    sources: ['fu-self-test.c'],
     include_directories: plugin_incdirs,
     dependencies: plugin_deps,
-    c_args: cargs,
     link_with: [
       plugin_libs,
       plugin_builtin_focal_moc,
+    ],
+    c_args: cargs + [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
     install: true,
     install_tag: 'tests',

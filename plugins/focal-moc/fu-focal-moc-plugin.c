@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 FocalTech Systems Co., Ltd.
+ * Copyright 2026 FocalTech Systems Co., Ltd.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-focal-moc-device.h"
+#include "fu-focal-moc-firmware.h"
 #include "fu-focal-moc-plugin.h"
 
 struct _FuFocalMocPlugin {
@@ -24,10 +25,10 @@ static void
 fu_focal_moc_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FOCAL_MOC_DEVICE);
-
-	/* chain up to parent */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_FOCAL_MOC_FIRMWARE);
 	G_OBJECT_CLASS(fu_focal_moc_plugin_parent_class)->constructed(obj);
 }
 
