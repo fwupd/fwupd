@@ -17,6 +17,7 @@ G_DECLARE_DERIVABLE_TYPE(FuEfivars, fu_efivars, FU, EFIVARS, GObject)
 
 struct _FuEfivarsClass {
 	GObjectClass parent_class;
+#ifndef __cplusplus
 	gboolean (*supported)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_used)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_free)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
@@ -49,6 +50,7 @@ struct _FuEfivarsClass {
 	GPtrArray *(*get_names)(FuEfivars *self,
 				const gchar *guid,
 				GError **error)G_GNUC_NON_NULL(1, 2);
+#endif
 };
 
 #define FU_EFIVARS_GUID_EFI_GLOBAL	   "8be4df61-93ca-11d2-aa0d-00e098032b8c"
