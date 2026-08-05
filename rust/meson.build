@@ -24,6 +24,10 @@ fwupd_ffi_lib = fwupd_ffi_pkg.library(
 )
 
 fwupd_rust_ffi_incdir = include_directories('fwupd-ffi')
+fwupd_rust_ffi_dep = declare_dependency(
+  link_with: fwupd_ffi_lib,
+  include_directories: [fwupd_rust_ffi_incdir],
+)
 
 if get_option('tests')
   rustmod.test(
