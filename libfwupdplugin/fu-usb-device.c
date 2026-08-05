@@ -274,6 +274,7 @@ fu_usb_device_init(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	priv->configuration = -1;
+	priv->claim_retry_count = 3;
 	priv->interfaces = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->bos_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
