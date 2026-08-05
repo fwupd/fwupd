@@ -1,0 +1,395 @@
+# Build targets.
+option(
+    'tool'     ,
+    type: 'feature',
+)
+option(
+    'tests'    ,
+    type: 'feature',
+)
+option(
+    'unittests',
+    type: 'feature',
+)
+
+# Debugging.
+option(
+    'curldebug',
+    type: 'boolean',
+    value: false,
+)
+# Debug build only: use libuv for event-based tests.
+option(
+    'libuv'    ,
+    type: 'feature',
+)
+
+# CA.
+option(
+    'ca_bundle'  ,
+    type: 'string' ,
+    value: 'auto',
+)
+option(
+    'ca_path'    ,
+    type: 'string' ,
+    value: 'auto',
+)
+option(
+    'ca_fallback',
+    type: 'boolean',
+    value: false,
+)
+
+# NOTE: disabling some of those opt-out options can
+# break build and/or test suite, you've been warned!
+
+# Features. {{{
+
+option(
+    'bindlocal'      ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'brotli'         ,
+    type: 'feature',
+)
+option(
+    'cookies'        ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'doh'            ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'form-api'       ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'getoptions'     ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'gsasl'          ,
+    type: 'feature',
+)
+option(
+    'http2'          ,
+    type: 'feature',
+)
+option(
+    'ipv6'           ,
+    type: 'feature',
+)
+option(
+    'libcurl-option' ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'libz'           ,
+    type: 'feature',
+)
+option(
+    'mime'           ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'netrc'          ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'parsedate'      ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'progress-meter' ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'proxy'          ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'psl'            ,
+    type: 'feature',
+)
+option(
+    'sha512_256'     ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'shuffle-dns'    ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'socketpair'     ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'sspi'           ,
+    type: 'feature',
+)
+option(
+    'unixsockets'    ,
+    type: 'feature',
+)
+option(
+    'verbose-strings',
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'websockets'     ,
+    type: 'feature',
+    value: 'disabled',
+)
+option(
+    'zstd'           ,
+    type: 'feature',
+)
+
+# Asynchronous DNS.
+option(
+    'asynchdns',
+    type: 'feature',
+)
+# Resolver, by order of preference (first available one is enabled).
+option(
+    'asynchdns-resolver',
+    type: 'array',
+    value: ['pthread', 'win32'],
+    choices: ['pthread', 'win32', 'ares'],
+)
+
+# Authentication.
+option(
+    'aws'           ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'basic-auth'    ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'bearer-auth'   ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'digest-auth'   ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'kerberos-auth' ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'negotiate-auth',
+    type: 'feature',
+    value: 'enabled',
+)
+
+# GSS API.
+option(
+    'gss-api',
+    type: 'feature',
+)
+# Provider, by order of preference (first available one is enabled).
+option(
+    'gss-api-provider',
+    type: 'array',
+    choices: ['gnu', 'mit', 'heimdal'],
+)
+
+# IDN.
+option(
+    'idn',
+    type: 'feature',
+)
+# Provider, by order of preference (first available one is enabled).
+option(
+    'idn-provider',
+    type: 'array',
+    choices: ['appleidn', 'winidn', 'libidn2'],
+)
+
+# HTTP.
+option(
+    'alt-svc'    ,
+    type: 'feature',
+)
+option(
+    'headers-api',
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'hsts'       ,
+    type: 'feature',
+)
+option(
+    'http-auth'  ,
+    type: 'feature',
+    value: 'enabled',
+)
+
+# LDAP.
+option(
+    'ldap-provider',
+    type: 'array',
+    choices: ['win32', 'openldap'],
+)
+
+# NTLM.
+option(
+    'ntlm',
+    type: 'feature',
+)
+
+# SSH support.
+option(
+    'ssh',
+    type: 'feature',
+)
+# Provider, by order of preference (first available one is enabled).
+option(
+    'ssh-provider',
+    type: 'array',
+    choices: ['libssh2', 'libssh'],
+)
+
+# SSL support.
+option(
+    'ssl'                ,
+    type: 'feature',
+)
+option(
+    'tls-srp'            ,
+    type: 'feature',
+)
+option(
+    'ssl-default-backend',
+    type: 'combo'  ,
+    choices: ['implicit', 'openssl', 'schannel', 'secure-transport'],
+)
+# Backends.
+option(
+    'openssl'            ,
+    type: 'feature',
+)
+# Windows only.
+option(
+    'schannel'           ,
+    type: 'feature',
+)
+# macOS only.
+option(
+    'secure-transport'   ,
+    type: 'feature',
+)
+
+# }}}
+
+# Protocols. {{{
+
+option(
+    'dict'  ,
+    type: 'feature',
+)
+option(
+    'file'  ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'ftp'   ,
+    type: 'feature',
+)
+option(
+    'gopher',
+    type: 'feature',
+)
+option(
+    'http'  ,
+    type: 'feature',
+    value: 'enabled',
+)
+option(
+    'imap'  ,
+    type: 'feature',
+)
+option(
+    'ldap'  ,
+    type: 'feature',
+)
+option(
+    'ldaps' ,
+    type: 'feature',
+)
+option(
+    'mqtt'  ,
+    type: 'feature',
+)
+option(
+    'pop3'  ,
+    type: 'feature',
+)
+option(
+    'rtmp'  ,
+    type: 'feature',
+)
+option(
+    'rtsp'  ,
+    type: 'feature',
+)
+option(
+    'smb'   ,
+    type: 'feature',
+)
+option(
+    'smtp'  ,
+    type: 'feature',
+)
+option(
+    'telnet',
+    type: 'feature',
+)
+option(
+    'tftp'  ,
+    type: 'feature',
+)
+
+# }}}
+
+# Internal, disregard.
+option(
+    '_disabled',
+    type: 'feature',
+    value: 'disabled',
+)
+option(
+    '_enabled' ,
+    type: 'feature',
+    value: 'enabled',
+)
+
+# vim: foldmethod=marker foldlevel=0

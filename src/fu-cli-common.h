@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-cli.h"
 #include "fu-console.h"
 
 /* custom return codes */
@@ -18,12 +19,6 @@
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
-typedef enum {
-	FU_CLI_CMD_FLAG_NONE = 0,
-	FU_CLI_CMD_FLAG_IS_ALIAS = 1 << 0,
-} G_GNUC_FLAG_ENUM FuCliCmdFlags;
-
-typedef struct FuCli FuCli;
 typedef gboolean (*FuCliCmdFunc)(FuCli *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
@@ -32,14 +27,6 @@ typedef struct {
 	FuCliCmdFlags flags;
 	FuCliCmdFunc callback;
 } FuCliCmd;
-
-typedef enum {
-	FU_SECURITY_ATTR_TO_STRING_FLAG_NONE = 0,
-	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES = 1 << 0,
-	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS = 1 << 1,
-	/*< private >*/
-	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
-} G_GNUC_FLAG_ENUM FuSecurityAttrToStringFlags;
 
 /* node with refcounted data */
 typedef GNode FuCliNode;

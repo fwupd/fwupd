@@ -7,6 +7,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="debian">
       <control />
@@ -20,7 +21,7 @@
       <package variant="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="7zip">
@@ -119,11 +120,13 @@
   <dependency id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="clang-tools">
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="clang-format">
@@ -238,7 +241,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libftdi1</package>
+      <package variant="x86_64">libftdi1</package>
     </distro>
   </dependency>
   <dependency id="libpci-dev">
@@ -262,7 +265,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libpci</package>
+      <package variant="x86_64">libpci</package>
     </distro>
   </dependency>
   <dependency id="fonts-noto">
@@ -465,6 +468,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
       <package>gettext</package>
@@ -521,6 +525,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="libglib2.0-dev">
@@ -549,6 +554,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
       <package>glib</package>
@@ -587,7 +593,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="gnome-desktop-testing">
@@ -648,6 +654,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="jq">
@@ -905,9 +912,10 @@
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="rustc">
@@ -927,11 +935,16 @@
       <package variant="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">rust</package>
+      <package variant="x86_64">rust</package>
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="rustup">
+    <distro id="ubuntu">
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="libstd-rust-dev">
@@ -1014,6 +1027,7 @@
       <control />
       <package variant="x86_64">pkgconf</package>
       <package variant="aarch64">pkgconf</package>
+      <package variant="android">pkgconf</package>
     </distro>
     <distro id="centos">
       <package variant="x86_64">pkgconf-pkg-config</package>
@@ -1321,6 +1335,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="gi-docgen">
@@ -1336,6 +1351,9 @@
     </distro>
     <distro id="darwin">
       <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="android" />
     </distro>
     <distro id="debian">
       <build-indep />
@@ -1630,6 +1648,19 @@
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
+  <dependency id="unzip">
+    <distro id="ubuntu">
+      <package variant="android" />
+    </distro>
+  </dependency>
+  <dependency id="openjdk">
+    <distro id="ubuntu">
+      <package variant="android">openjdk-17-jdk-headless</package>
+    </distro>
   </dependency>
   <dependency id="xz">
     <distro id="centos">
@@ -1729,7 +1760,7 @@
   </dependency>
   <dependency id="libinotify">
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package variant="x86_64" />
     </distro>
   </dependency>
 </dependencies>

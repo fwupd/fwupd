@@ -1,0 +1,10 @@
+[wrap-file]
+directory = curl-8.10.1
+source_url = https://github.com/curl/curl/releases/download/curl-8_10_1/curl-8.10.1.tar.xz
+source_fallback_url = https://curl.se/download/curl-8.10.1.tar.xz
+source_filename = curl-8.10.1.tar.xz
+source_hash = 73a4b0e99596a09fa5924a4fb7e4b995a85fda0d18a2c02ab9cf134bebce04ee
+patch_directory = curl
+
+[provide]
+dependency_names = libcurl

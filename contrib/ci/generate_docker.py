@@ -73,7 +73,7 @@ if CROSS:
         DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True
     )
     deps = deps_parsed + build_indep + [f"crossbuild-essential-{CROSS}"]
-elif VARIANT == "i386":
+elif VARIANT in ["i386", "android"]:
     deps_parsed, build_indep = parse_dependencies(DISTRO, VARIANT, False)
     deps = deps_parsed + build_indep
 else:
@@ -84,6 +84,11 @@ deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
 content = content.replace("%%%DEPENDENCIES%%%", deps)
 
+# install android rust target
+rustup: str = ""
+if VARIANT == "android":
+    rustup = "RUN rustup default stable && rustup target add x86_64-linux-android"
+content = content.replace("%%%RUSTUP%%%", rustup)
 
 with open("Dockerfile", "w") as file:
     file.write(content)
