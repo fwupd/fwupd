@@ -24,6 +24,7 @@ G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
 struct _FuFirmwareClass {
 	GObjectClass parent_class;
+#ifndef __cplusplus
 	gboolean (*parse)(FuFirmware *self,
 			  FuInputStream *stream,
 			  FuFirmwareParseFlags flags,
@@ -50,6 +51,7 @@ struct _FuFirmwareClass {
 				     GError **error);
 	gchar *(*convert_version)(FuFirmware *self, guint64 version_raw);
 	void (*add_magic)(FuFirmware *self);
+#endif
 };
 
 /**
