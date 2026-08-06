@@ -136,23 +136,6 @@ fu_memory_input_stream_init(FuMemoryInputStream *self)
 }
 
 /**
- * fu_memory_input_stream_new:
- *
- * Creates a new empty memory-backed input stream.
- *
- * Returns: (transfer full): a #FuInputStream
- *
- * Since: 2.1.7
- **/
-FuInputStream *
-fu_memory_input_stream_new(void)
-{
-	FuMemoryInputStream *self = g_object_new(FU_TYPE_MEMORY_INPUT_STREAM, NULL);
-
-	return FU_INPUT_STREAM(self);
-}
-
-/**
  * fu_memory_input_stream_new_from_bytes:
  * @bytes: a #GBytes
  *
