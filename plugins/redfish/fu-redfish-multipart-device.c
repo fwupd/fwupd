@@ -169,7 +169,11 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		g_free(location);
 		location = g_strdup(location_tmp);
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
+	if (!fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error))
+		return FALSE;
+
+	/* confirm the member still denotes the component we selected */
+	return fu_redfish_device_verify_target_identity(FU_REDFISH_DEVICE(self), error);
 }
 
 static void

@@ -294,6 +294,8 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 					     fu_progress_get_child(progress),
 					     error))
 		return FALSE;
+	if (!fu_redfish_device_verify_target_identity(FU_REDFISH_DEVICE(self), error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* success */
