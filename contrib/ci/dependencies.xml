@@ -33,6 +33,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="pesign">
@@ -159,6 +160,7 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+      <package variant="android" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64">gcovr</package>
@@ -1176,6 +1178,9 @@
     </distro>
     <distro id="freebsd">
       <package>py312-pip</package>
+    </distro>
+    <distro id="ubuntu">
+      <package variant="android">python3-pip</package>
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">

@@ -8,6 +8,7 @@ if [ "$CI" != "true" ]; then
 fi
 
 gcovr -x \
+    ${GCOV:+--gcov-executable "${GCOV}"} \
     --filter build/libfwupd \
     --filter build/libfwupdplugin \
     --filter build/plugins \
