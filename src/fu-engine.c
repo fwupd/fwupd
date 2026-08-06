@@ -266,6 +266,9 @@ fu_engine_get_context(FuEngine *self)
 static void
 fu_engine_set_status(FuEngine *self, FwupdStatus status)
 {
+	/* suppress global status so one client does not see another client's install stage */
+	if (fu_idle_has_inhibit(self->idle, FU_IDLE_INHIBIT_SIGNALS))
+		return;
 	/* emit changed */
 	g_signal_emit(self, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }

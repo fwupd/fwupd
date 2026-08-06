@@ -104,6 +104,7 @@ plugins = {
   'mtd': false,
   'nordic-hid': false,
   'novatek-ts': false,
+  'nvidia-oob-redfish-plugin': false,
   'nvme': false,
   'parade-lspcon': false,
   'parade-usbhub': false,
