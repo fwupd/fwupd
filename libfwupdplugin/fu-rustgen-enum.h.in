@@ -1,3 +1,5 @@
+G_BEGIN_DECLS
+
 /**
  * {{obj.c_type}}:
 {%- if obj.comments %}
@@ -45,3 +47,5 @@ const gchar *{{obj.c_method('ToString')}}({{obj.c_type}} val) G_GNUC_CONST;
 {%- if obj.export('FromString') == Export.PUBLIC %}
 {{obj.c_type}} {{obj.c_method('FromString')}}(const gchar *val) G_GNUC_CONST G_GNUC_NON_NULL(1);
 {%- endif %}
+
+G_END_DECLS
