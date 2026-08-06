@@ -14,5 +14,5 @@ RUN set -euxo pipefail; \
     sudo \
 %%%DEPENDENCIES%%%; \
     apt-get clean
-%%%RUSTUP%%%
 WORKDIR /github/workspace
+%%%RUSTUP%%%

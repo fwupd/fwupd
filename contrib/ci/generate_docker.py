@@ -85,10 +85,11 @@ deps = " \\\n".join(deps)
 content = content.replace("%%%DEPENDENCIES%%%", deps)
 
 # install android rust target
-rustup: str = ""
+rustup: list[str] = []
 if VARIANT == "android":
-    rustup = "RUN rustup default stable && rustup target add x86_64-linux-android"
-content = content.replace("%%%RUSTUP%%%", rustup)
+    rustup.append("COPY contrib/ci/android.sh .")
+    rustup.append("RUN sh android.sh")
+content = content.replace("%%%RUSTUP%%%", "\n".join(rustup))
 
 with open("Dockerfile", "w") as file:
     file.write(content)
