@@ -34,3 +34,45 @@ fi
 
 rustup default stable
 rustup target add x86_64-linux-android
+
+# Android system image
+export SYSIMG="${ANDROID_SDK_ROOT}/system-images/android-35/default/x86_64"
+if [ -f "${SYSIMG}/system.img" ]; then
+    echo "Android system image already downloaded"
+else
+    yes | "${ANDROID_SDK_ROOT}/cmdline-tools/bin/sdkmanager" \
+        --sdk_root="${ANDROID_SDK_ROOT}" "system-images;android-35;default;x86_64"
+fi
+
+# lpunpack
+if [ ! -x "/usr/bin/lpunpack" ]; then
+    pip install --break-system-packages liblp
+fi
+
+# Bionic runtime
+if [ -e "/system/bin/linker64" ]; then
+    echo "Android Bionic runtime already installed"
+else
+    # system.img is GPT containing a super.img with logical partitions;
+    # linker64, libc, libm and libdl are inside the com.android.runtime APEX
+    7z e -o/tmp/android-extract "${SYSIMG}/system.img" '1.super.img' -y
+    lpunpack -o /tmp/android-extract /tmp/android-extract/1.super.img
+    7z e -o/tmp/android-extract /tmp/android-extract/system.img \
+        'system/apex/com.android.runtime.apex' 'system/lib64/liblog.so' \
+        'system/lib64/libz.so' -y
+    7z e -o/tmp/android-extract /tmp/android-extract/com.android.runtime.apex \
+        'apex_payload.img' -y
+    7z e -o/tmp/android-extract /tmp/android-extract/apex_payload.img \
+        'bin/linker64' 'lib64/bionic/libc.so' 'lib64/bionic/libdl.so' \
+        'lib64/bionic/libm.so' -y
+    mkdir -p /system/bin /system/lib64
+    mv /tmp/android-extract/linker64 /system/bin/linker64
+    chmod +x /system/bin/linker64
+    for lib in libc.so libm.so libdl.so liblog.so libz.so; do
+        mv "/tmp/android-extract/$lib" "/system/lib64/$lib"
+    done
+    rm -rf /tmp/android-extract
+    # C++ runtime from the NDK
+    cp "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so" \
+        /system/lib64/libc++_shared.so
+fi
