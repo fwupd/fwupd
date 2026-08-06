@@ -29,11 +29,11 @@ FwupdRemote *
 fu_binder_remote_from_aidl(const aidl_fwupd::FwupdRemote &r)
 {
 	FwupdRemote *remote = fwupd_remote_new();
-	if (r.id.has_value())
+	if (r.id.has_value() && !r.id.value().empty())
 		fwupd_remote_set_id(remote, r.id.value().c_str());
-	if (r.title.has_value())
+	if (r.title.has_value() && !r.title.value().empty())
 		fwupd_remote_set_title(remote, r.title.value().c_str());
-	if (r.metadataUri.has_value())
+	if (r.metadataUri.has_value() && !r.metadataUri.value().empty())
 		fwupd_remote_set_metadata_uri(remote, r.metadataUri.value().c_str());
 	fwupd_remote_set_flags(remote, (FwupdRemoteFlags)r.flags);
 	return remote;
@@ -78,13 +78,17 @@ FwupdDevice *
 fu_binder_device_from_aidl(const aidl_fwupd::FwupdDevice &d)
 {
 	FwupdDevice *device = fwupd_device_new();
-	fwupd_device_set_id(device, d.deviceId.c_str());
-	fwupd_device_set_name(device, d.name.c_str());
-	fwupd_device_set_version(device, d.version.c_str());
-	fwupd_device_set_plugin(device, d.plugin.c_str());
-	if (d.summary.has_value())
+	if (!d.deviceId.empty())
+		fwupd_device_set_id(device, d.deviceId.c_str());
+	if (!d.name.empty())
+		fwupd_device_set_name(device, d.name.c_str());
+	if (!d.version.empty())
+		fwupd_device_set_version(device, d.version.c_str());
+	if (!d.plugin.empty())
+		fwupd_device_set_plugin(device, d.plugin.c_str());
+	if (d.summary.has_value() && !d.summary.value().empty())
 		fwupd_device_set_summary(device, d.summary.value().c_str());
-	if (d.vendor.has_value())
+	if (d.vendor.has_value() && !d.vendor.value().empty())
 		fwupd_device_set_vendor(device, d.vendor.value().c_str());
 	fwupd_device_set_flags(device, d.flags);
 	return device;
@@ -120,10 +124,14 @@ FwupdRelease *
 fu_binder_release_from_aidl(const aidl_fwupd::FwupdRelease &r)
 {
 	FwupdRelease *release = fwupd_release_new();
-	fwupd_release_set_id(release, r.remoteId.c_str());
-	fwupd_release_set_name(release, r.name.c_str());
-	fwupd_release_set_version(release, r.version.c_str());
-	fwupd_release_set_filename(release, r.filename.c_str());
+	if (!r.remoteId.empty())
+		fwupd_release_set_id(release, r.remoteId.c_str());
+	if (!r.name.empty())
+		fwupd_release_set_name(release, r.name.c_str());
+	if (!r.version.empty())
+		fwupd_release_set_version(release, r.version.c_str());
+	if (!r.filename.empty())
+		fwupd_release_set_filename(release, r.filename.c_str());
 	if (r.checksums.has_value()) {
 		for (const auto &checksum : r.checksums.value())
 			fwupd_release_add_checksum(release, checksum.value().c_str());

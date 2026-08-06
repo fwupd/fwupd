@@ -8,5 +8,9 @@
 
 #include "fwupd-build.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error);
+
+G_END_DECLS
