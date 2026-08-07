@@ -24,6 +24,10 @@ struct _FuPixartTpDeviceClass {
 };
 
 gboolean
+fu_pixart_tp_device_ensure_vendor_reports(FuPixartTpDevice *self, GError **error)
+    G_GNUC_NON_NULL(1);
+
+gboolean
 fu_pixart_tp_device_register_write(FuPixartTpDevice *self,
 				   FuPixartTpSystemBank bank,
 				   guint8 addr,

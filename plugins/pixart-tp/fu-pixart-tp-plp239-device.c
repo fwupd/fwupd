@@ -1334,6 +1334,9 @@ fu_pixart_tp_plp239_device_setup(FuDevice *device, GError **error)
 	guint8 ver_h = 0;
 	guint8 boot_status = 0;
 
+	if (!fu_pixart_tp_device_ensure_vendor_reports(FU_PIXART_TP_DEVICE(self), error))
+		return FALSE;
+
 	/* sync bootloader flag from hardware state before doing anything else */
 	if (!fu_pixart_tp_device_register_read(FU_PIXART_TP_DEVICE(self),
 					       FU_PIXART_TP_SYSTEM_BANK_BANK6,

@@ -45,6 +45,42 @@ fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
 
 #define OP_READ 0x10
 
+#define VENDOR_USAGE_PAGE 0xFF00
+
+/*
+ * Check if the device has the expected vendor usage page and report ID for updating. If the
+ * touchpad is part of a composite HID device, e.g. keyboard+touchpad combo, need to avoid matching
+ * on the others.
+ */
+gboolean
+fu_pixart_tp_device_ensure_vendor_reports(FuPixartTpDevice *self, GError **error)
+{
+	g_autoptr(FuHidDescriptor) descriptor = NULL;
+	g_autoptr(FuHidReport) report = NULL;
+
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
+	if (descriptor == NULL) {
+		g_prefix_error_literal(error, "failed to parse HID descriptor: ");
+		return FALSE;
+	}
+	report = fu_hid_descriptor_find_report(descriptor,
+					       error,
+					       "usage-page",
+					       VENDOR_USAGE_PAGE,
+					       "report-id",
+					       REPORT_ID_SINGLE,
+					       NULL);
+	if (report == NULL) {
+		g_prefix_error(error,
+			       "no vendor feature report 0x%02x on this interface: ",
+			       (guint)REPORT_ID_SINGLE);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_pixart_tp_device_register_write(FuPixartTpDevice *self,
 				   FuPixartTpSystemBank bank,
@@ -1257,6 +1293,9 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 	guint8 val = 0;
 	guint16 version_raw = 0;
 	g_autoptr(GByteArray) buf = NULL;
+
+	if (!fu_pixart_tp_device_ensure_vendor_reports(self, error))
+		return FALSE;
 
 	/* read tp part id */
 	buf = fu_pixart_tp_device_register_read_array(self,
