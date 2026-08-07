@@ -29,6 +29,7 @@ plugin_builtin_devlink = static_library('fu_plugin_devlink',
 plugin_builtins += plugin_builtin_devlink
 
 device_tests += files(
+  'tests/devlink-mxl86282.json',
   'tests/devlink-netdevsim.json',
 )
 
