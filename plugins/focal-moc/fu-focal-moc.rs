@@ -35,6 +35,11 @@ enum FuFocalMocIapStatusLayout {
     Aligned,
 }
 
+#[repr(u32le)]
+enum FuFocalMocFirmwareKind {
+    App = 0x02,
+}
+
 #[repr(u8)]
 enum FuFocalMocBootMode {
     App = 0x00,
@@ -80,4 +85,18 @@ struct FuStructFocalMocDataV1 {
     kind: FuFocalMocFrame,
     sequence: u8,
     data: [u8; 1024],
+}
+
+#[derive(New, ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocFirmwareHeader {
+    magic: u32le == 0x46574844,
+    kind: u32le,
+    version: u32le,
+    size: u32le,
+    entry_offset: u32le,
+    _reserved1: [u8; 28],
+    digest: [u8; 32],
+    signature: [u8; 64],
+    _reserved2: [u8; 112],
 }
