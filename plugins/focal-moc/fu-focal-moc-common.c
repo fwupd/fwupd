@@ -131,6 +131,26 @@ fu_focal_moc_ymodem_build_soh(gsize firmware_sz, guint32 crc32, GError **error)
 }
 
 GByteArray *
+fu_focal_moc_ymodem_build_soh_v2(gsize firmware_sz, guint32 crc32, GError **error)
+{
+	g_autoptr(FuStructFocalMocSohV2) st = fu_struct_focal_moc_soh_v2_new();
+
+	if (firmware_sz > G_MAXUINT32) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware too large: 0x%zx",
+			    firmware_sz);
+		return NULL;
+	}
+	if (!fu_struct_focal_moc_soh_v2_set_filename(st, "app.bin", error))
+		return NULL;
+	fu_struct_focal_moc_soh_v2_set_firmware_size(st, (guint32)firmware_sz);
+	fu_struct_focal_moc_soh_v2_set_crc32(st, crc32);
+	return g_byte_array_ref(st->buf);
+}
+
+GByteArray *
 fu_focal_moc_ymodem_build_data(FuFocalMocFrame kind,
 			       guint16 sequence,
 			       const guint8 *buf,
@@ -168,6 +188,39 @@ fu_focal_moc_ymodem_build_data(FuFocalMocFrame kind,
 	fu_struct_focal_moc_data_v1_set_kind(st, kind);
 	fu_struct_focal_moc_data_v1_set_sequence(st, (guint8)sequence);
 	if (!fu_struct_focal_moc_data_v1_set_data(st, buf, bufsz, error))
+		return NULL;
+	return g_byte_array_ref(st->buf);
+}
+
+GByteArray *
+fu_focal_moc_ymodem_build_data_v2(FuFocalMocFrame kind,
+				  guint16 sequence,
+				  const guint8 *buf,
+				  gsize bufsz,
+				  GError **error)
+{
+	g_autoptr(FuStructFocalMocDataV2) st = fu_struct_focal_moc_data_v2_new();
+
+	if (kind != FU_FOCAL_MOC_FRAME_STX && kind != FU_FOCAL_MOC_FRAME_EOT) {
+		const gchar *kindstr = fu_focal_moc_frame_to_string(kind);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "data frame kind invalid: %s",
+			    kindstr != NULL ? kindstr : "unknown");
+		return NULL;
+	}
+	if (buf == NULL || bufsz > FU_FOCAL_MOC_YMODEM_DATA_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "data frame size invalid: 0x%zx",
+			    bufsz);
+		return NULL;
+	}
+	fu_struct_focal_moc_data_v2_set_kind(st, kind);
+	fu_struct_focal_moc_data_v2_set_sequence(st, sequence);
+	if (!fu_struct_focal_moc_data_v2_set_data(st, buf, bufsz, error))
 		return NULL;
 	return g_byte_array_ref(st->buf);
 }
