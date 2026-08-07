@@ -24,6 +24,7 @@ device_tests += files('tests/focal-moc.json')
 if get_option('tests')
   e = executable(
     'focal-moc-self-test',
+    rustgen.process('fu-focal-moc.rs'),
     sources: [
       'fu-self-test.c',
     ],
