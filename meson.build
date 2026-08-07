@@ -234,15 +234,15 @@ add_project_arguments(
 )
 
 # sanity check
-if get_option('build') == 'all'
+if get_option('build') == 'dbus'
   build_standalone = true
-  build_daemon = true
+  build_daemon = 'dbus'
 elif get_option('build') == 'standalone'
   build_standalone = true
-  build_daemon = false
+  build_daemon = 'none'
 elif get_option('build') == 'library'
   build_standalone = false
-  build_daemon = false
+  build_daemon = 'none'
 endif
 
 prefix = get_option('prefix')
@@ -422,7 +422,7 @@ if polkit.found()
   endif
   conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
 endif
-if build_daemon
+if build_daemon != 'none'
   if not polkit.found()
     warning('Polkit is disabled, the daemon will allow ALL client actions')
   endif
@@ -948,7 +948,7 @@ endif
 summary(
   {
     'fwupdtool': build_standalone,
-    'fwupd (daemon)': build_daemon,
+    'fwupd': build_daemon,
   },
   section: 'build targets',
   bool_yn: true,
@@ -976,7 +976,7 @@ summary(
   bool_yn: true,
 )
 
-if build_daemon
+if build_daemon != 'none'
   summary(
     {
       'bluez': bluez.allowed(),

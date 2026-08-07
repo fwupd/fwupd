@@ -19,7 +19,7 @@ meson setup .. \
     --sysconfdir="etc" \
     --libexecdir="bin" \
     --bindir="bin" \
-    -Dbuild=all \
+    -Dbuild=dbus \
     -Ddbus_socket_address="tcp:host=localhost,port=1341" \
     -Dman=false \
     -Dfish_completion=false \

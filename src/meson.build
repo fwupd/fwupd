@@ -122,17 +122,19 @@ fwupdcli = library(
   link_with: [fwupd, fwupdplugin],
 )
 
-dbus_interface = custom_target(
-  'fwupd-generate-dbus-interface',
-  input: 'org.freedesktop.fwupd.xml',
-  output: 'org.freedesktop.fwupd.xml',
-  command: [generate_dbus_interface, '@INPUT@', '@OUTPUT@'],
-  install: build_daemon,
-  install_tag: 'runtime',
-  install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
+if build_daemon == 'dbus'
+  dbus_interface = custom_target(
+    'fwupd-generate-dbus-interface',
+    input: 'org.freedesktop.fwupd.xml',
+    output: 'org.freedesktop.fwupd.xml',
+    command: [generate_dbus_interface, '@INPUT@', '@OUTPUT@'],
+    install: true,
+    install_tag: 'runtime',
+    install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
 )
+endif
 
-if build_daemon
+if build_daemon == 'dbus'
   executable(
     'fwupdmgr',
     sources: ['fu-dbus-cli.c', client_src],
@@ -145,12 +147,20 @@ if build_daemon
   )
 endif
 
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  c_name: 'fu',
-  dependencies: [dbus_interface],
-)
+if build_daemon == 'dbus'
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    'fwupd-dbus.gresource.xml',
+    c_name: 'fu',
+    dependencies: [dbus_interface],
+  )
+else
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    'fwupd.gresource.xml',
+    c_name: 'fu',
+  )
+endif
 
 # generate a header file that allows us to instantiate the plugins without copy-pasting or
 # duplicating the meson build logic in the engine
@@ -211,7 +221,7 @@ executable(
   install_dir: bindir,
 )
 
-if build_daemon
+if build_daemon != 'none'
   if get_option('man')
     custom_target(
       'fwupdmgr.1',
@@ -290,15 +300,14 @@ if build_standalone
   endif
 endif
 
-if build_daemon
+# the StartServiceCtrlDispatcherA design is so different use a different source file
+if host_machine.system() == 'windows'
+  daemon_loader_src = 'fu-main-windows.c'
+else
+  daemon_loader_src = 'fu-main.c'
+endif
 
-  # the StartServiceCtrlDispatcherA design is so different use a different source file
-  if host_machine.system() == 'windows'
-    daemon_loader_src = 'fu-main-windows.c'
-  else
-    daemon_loader_src = 'fu-main.c'
-  endif
-
+if build_daemon == 'dbus'
   executable(
     'fwupd',
     fwupdengine_rs,

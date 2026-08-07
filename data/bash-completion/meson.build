@@ -19,7 +19,7 @@ if bashcomp.found()
     install_dir: completions_dir,
   )
 
-  if build_daemon
+  if build_daemon != 'none'
     configure_file(
       input: 'fwupdmgr',
       output: 'fwupdmgr',

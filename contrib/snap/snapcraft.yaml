@@ -108,7 +108,7 @@ parts:
         --prefix=/,
         -Defi_binary=false,
         -Ddocs=disabled,
-        -Dbuild=all,
+        -Dbuild=dbus,
         -Dintrospection=disabled,
         -Dman=false,
         -Dpython=/usr/bin/python3,
