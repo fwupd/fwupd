@@ -85,6 +85,12 @@ if build_daemon
       ]
     endif
 
+    if get_option('plugin_modem_manager').allowed()
+      rw_directories += [
+        '-/lib/firmware',
+      ]
+    endif
+
     # not using ConfigurationDirectory further down
     if get_option('prefix') != '/usr'
       rw_directories += join_paths(sysconfdir, 'fwupd')

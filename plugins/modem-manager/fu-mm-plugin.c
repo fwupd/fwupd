@@ -14,6 +14,7 @@
 #include "fu-mm-firehose-device.h"
 #include "fu-mm-mbim-device.h"
 #include "fu-mm-mhi-qcdm-device.h"
+#include "fu-mm-mhi-firehose-device.h"
 #include "fu-mm-qcdm-device.h"
 #include "fu-mm-qdu-mbim-device.h"
 #include "fu-mm-qmi-device.h"
@@ -58,16 +59,17 @@ fu_mm_plugin_constructed(GObject *obj)
 	g_autoptr(FuBackend) backend = fu_mm_backend_new(ctx);
 
 	fu_context_add_backend(ctx, backend);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_DEVICE);		/* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_DFOTA_DEVICE);	/* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FASTBOOT_DEVICE); /* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FDL_DEVICE);	/* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FIREHOSE_DEVICE); /* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_MBIM_DEVICE);	/* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_MHI_QCDM_DEVICE); /* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QCDM_DEVICE);	/* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QDU_MBIM_DEVICE); /* coverage */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QMI_DEVICE);	/* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_DEVICE);		    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_DFOTA_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FASTBOOT_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FDL_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_FIREHOSE_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_MBIM_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_MHI_QCDM_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_MHI_FIREHOSE_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QCDM_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QDU_MBIM_DEVICE);	    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QMI_DEVICE);	    /* coverage */
 
 	/* nocheck:finalize */
 }

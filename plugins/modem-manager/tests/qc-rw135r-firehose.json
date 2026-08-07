@@ -1,0 +1,19 @@
+{
+  "name": "RollingWireless RW135R (MBIM -> EDL)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "f858d18cb93f7dba45e43e0e2556fcf1e7ac2fbac87fa195cb2a62b8f7be2a17-89602.0000.99.02.02.17.cab",
+      "emulation-url": "35452e4b35d18a5041d19794d560897c1321c4816301d6d39fa33362418a5206-rw135r_0725_2.zip",
+      "components": [
+        {
+          "version": "89602.0000.00.02.02.16_5003.0000.005.002.008_D01",
+          "protocol": "com.qualcomm.firehose",
+          "guids": [
+            "b6b04124-0961-5035-9e59-28f58da01801"
+          ]
+        }
+      ]
+    }
+  ]
+}
