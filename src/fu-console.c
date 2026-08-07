@@ -868,8 +868,10 @@ fu_console_finalize(GObject *obj)
 	FuConsole *self = FU_CONSOLE(obj);
 
 	fu_console_reset_line(self);
-	if (self->timer_source != 0)
+	if (self->timer_source != NULL) {
 		g_source_destroy(self->timer_source);
+		g_source_unref(self->timer_source);
+	}
 	if (self->main_ctx != NULL)
 		g_main_context_unref(self->main_ctx);
 	g_timer_destroy(self->time_elapsed);
