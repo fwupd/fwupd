@@ -3648,6 +3648,16 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 	}
 	if (firmware_type_dst == NULL)
 		return FALSE;
+
+	/* this makes no sense */
+	if (g_strcmp0(firmware_type_src, firmware_type_dst) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Source and destination types were the same");
+		return FALSE;
+	}
+
 	gtype_src = fu_context_get_firmware_gtype_by_id(ctx, firmware_type_src);
 	if (gtype_src == G_TYPE_INVALID) {
 		g_set_error(error,
