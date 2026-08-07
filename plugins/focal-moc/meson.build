@@ -12,6 +12,8 @@ plugin_builtin_focal_moc = static_library(
     'fu-focal-moc-device.c',
     'fu-focal-moc-firmware.c',
     'fu-focal-moc-plugin.c',
+    'fu-focal-moc-transport-impl.c',
+    'fu-focal-moc-transport.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -29,6 +31,7 @@ if get_option('tests')
     'focal-moc-self-test',
     rustgen.process('fu-focal-moc.rs'),
     sources: [
+      'fu-focal-moc-test-device.c',
       'fu-self-test.c',
     ],
     include_directories: plugin_incdirs,
