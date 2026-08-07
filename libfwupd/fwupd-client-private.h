@@ -130,6 +130,13 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	gboolean (*modify_device)(FwupdClient *self,
+				  const gchar *device_id,
+				  const gchar *key,
+				  const gchar *value,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 	gboolean (*modify_remote)(FwupdClient *self,
 				  const gchar *remote_id,
 				  const gchar *key,

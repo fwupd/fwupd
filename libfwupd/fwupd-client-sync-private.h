@@ -148,6 +148,14 @@ fwupd_client_sync_impl_modify_config(FwupdClient *self,
 				     GCancellable *cancellable,
 				     GError **error);
 gboolean
+fwupd_client_sync_impl_modify_device(FwupdClient *self,
+				     const gchar *device_id,
+				     const gchar *key,
+				     const gchar *value,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+gboolean
 fwupd_client_sync_impl_modify_remote(FwupdClient *self,
 				     const gchar *remote_id,
 				     const gchar *key,
