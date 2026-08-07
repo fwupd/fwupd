@@ -10,6 +10,460 @@
 #include "fu-focal-moc-common.h"
 #include "fu-focal-moc-firmware.h"
 #include "fu-focal-moc-struct.h"
+#include "fu-focal-moc-test-device.h"
+#include "fu-focal-moc-transport.h"
+
+static void
+fu_focal_moc_transport_kdf_func(void)
+{
+	const guint8 expected[] = {
+	    0x6E, 0x3C, 0xBE, 0xB6, 0x45, 0xF7, 0xD2, 0x68, 0xF1, 0x5F, 0x5B,
+	    0xE5, 0xBE, 0xA2, 0x5D, 0x35, 0x63, 0xD0, 0xA7, 0xC7, 0x66, 0x27,
+	    0x50, 0x13, 0xF9, 0x9B, 0x3D, 0xCF, 0xB8, 0xE3, 0x53, 0x89,
+	};
+	guint8 context[130] = {0};
+	guint8 key[32] = {0};
+	guint8 prk[32] = {0};
+	g_autoptr(GError) error = NULL;
+
+	for (guint i = 0; i < sizeof(prk); i++)
+		prk[i] = i;
+	for (guint i = 0; i < sizeof(context); i++)
+		context[i] = i;
+	g_assert_true(fu_focal_moc_transport_kdf_expand(prk,
+							sizeof(prk),
+							"AES_KEY_D2M",
+							context,
+							sizeof(context),
+							key,
+							sizeof(key),
+							&error));
+	g_assert_no_error(error);
+	g_assert_cmpmem(key, sizeof(key), expected, sizeof(expected));
+}
+
+static void
+fu_focal_moc_transport_aes_func(void)
+{
+	const guint8 expected_iv[] = {
+	    0x9D,
+	    0xBA,
+	    0x41,
+	    0xA7,
+	    0x77,
+	    0xF3,
+	    0xB4,
+	    0x6A,
+	    0x37,
+	    0xB7,
+	    0xAA,
+	    0xAE,
+	    0x49,
+	    0xD6,
+	    0xDF,
+	    0x8D,
+	};
+	const guint8 expected_ciphertext[] = {
+	    0xD4, 0x28, 0x15, 0x45, 0x00, 0x4F, 0xBE, 0xCB, 0x52, 0x0C, 0xA8, 0xA5, 0x35,
+	    0xC2, 0x10, 0x7A, 0xD1, 0xEF, 0x8A, 0xFB, 0xA3, 0xC3, 0xC7, 0xE4, 0x73, 0x68,
+	    0xE0, 0x47, 0xDB, 0x45, 0x5C, 0x93, 0x07, 0xA5, 0x04, 0xF9, 0x72,
+	};
+	guint8 ciphertext[37] = {0};
+	guint8 iv[16] = {0};
+	guint8 key[32] = {0};
+	guint8 plaintext[37] = {0};
+	g_autoptr(GError) error = NULL;
+
+	if (!fu_focal_moc_transport_is_supported()) {
+		g_test_skip("GnuTLS 3.8.2 is unavailable");
+		return;
+	}
+	for (guint i = 0; i < sizeof(key); i++)
+		key[i] = i;
+	for (guint i = 0; i < sizeof(plaintext); i++)
+		plaintext[i] = i;
+	g_assert_true(fu_focal_moc_transport_derive_iv(key, 1, iv, &error));
+	g_assert_no_error(error);
+	g_assert_cmpmem(iv, sizeof(iv), expected_iv, sizeof(expected_iv));
+	g_assert_true(fu_focal_moc_transport_aes_ctr(key,
+						     iv,
+						     plaintext,
+						     sizeof(plaintext),
+						     ciphertext,
+						     &error));
+	g_assert_no_error(error);
+	g_assert_cmpmem(ciphertext,
+			sizeof(ciphertext),
+			expected_ciphertext,
+			sizeof(expected_ciphertext));
+}
+
+static void
+fu_focal_moc_transport_cipher_frame_func(void)
+{
+	const guint8 expected[] = {
+	    0x03, 0x00, 0x1A, 0x00, 0x00, 0x00, 0x01, 0xF0, 0xD6, 0xE3,
+	    0xDB, 0x44, 0x20, 0xFA, 0x86, 0xB3, 0x2C, 0x02, 0xC1, 0x85,
+	    0x26, 0x5D, 0x8E, 0x80, 0x78, 0xB6, 0x4A, 0xC6, 0xF3,
+	};
+	const guint8 plaintext[] = {0x00, 0x00, 0x00, 0x01, 0x30};
+	guint8 key_aes[32] = {0};
+	guint8 key_iv[32] = {0};
+	guint8 key_mac[32] = {0};
+	g_autoptr(GByteArray) frame = NULL;
+	g_autoptr(GByteArray) plaintext_parsed = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (!fu_focal_moc_transport_is_supported()) {
+		g_test_skip("GnuTLS 3.8.2 is unavailable");
+		return;
+	}
+	for (guint i = 0; i < sizeof(key_aes); i++) {
+		key_aes[i] = i;
+		key_mac[i] = i + 32;
+		key_iv[i] = i + 64;
+	}
+	frame = fu_focal_moc_transport_cipher_frame_new(key_aes,
+							key_mac,
+							key_iv,
+							1,
+							plaintext,
+							sizeof(plaintext),
+							&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(frame);
+	g_assert_cmpmem(frame->data, frame->len, expected, sizeof(expected));
+	plaintext_parsed =
+	    fu_focal_moc_transport_cipher_frame_parse(key_aes, key_mac, key_iv, 1, frame, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plaintext_parsed);
+	g_assert_cmpmem(plaintext_parsed->data,
+			plaintext_parsed->len,
+			plaintext,
+			sizeof(plaintext));
+
+	frame->data[frame->len - 1] ^= 0x01;
+	g_assert_null(
+	    fu_focal_moc_transport_cipher_frame_parse(key_aes, key_mac, key_iv, 1, frame, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_clear_error(&error);
+	frame->data[frame->len - 1] ^= 0x01;
+
+	frame->data[frame->len - 2] ^= 0x01;
+	frame->data[frame->len - 1] ^= 0x01;
+	g_assert_null(
+	    fu_focal_moc_transport_cipher_frame_parse(key_aes, key_mac, key_iv, 1, frame, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_clear_error(&error);
+	frame->data[frame->len - 2] ^= 0x01;
+	frame->data[frame->len - 1] ^= 0x01;
+
+	g_assert_null(
+	    fu_focal_moc_transport_cipher_frame_parse(key_aes, key_mac, key_iv, 2, frame, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_clear_error(&error);
+
+	g_clear_pointer(&frame, g_byte_array_unref);
+	frame = fu_focal_moc_transport_cipher_frame_new(key_aes,
+							key_mac,
+							key_iv,
+							0xFFFF0000,
+							plaintext,
+							sizeof(plaintext),
+							&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(frame);
+	g_assert_null(fu_focal_moc_transport_cipher_frame_parse(key_aes,
+								key_mac,
+								key_iv,
+								0xFFFF0000,
+								frame,
+								&error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+}
+
+#ifdef FU_FOCAL_MOC_TEST_HAVE_ECDH
+#define FU_TYPE_FOCAL_MOC_TEST_STUB (fu_focal_moc_test_stub_get_type())
+G_DECLARE_FINAL_TYPE(FuFocalMocTestStub, fu_focal_moc_test_stub, FU, FOCAL_MOC_TEST_STUB, GObject)
+
+struct _FuFocalMocTestStub {
+	GObject parent_instance;
+};
+
+#define FU_TYPE_FOCAL_MOC_TEST_JOURNAL_STUB (fu_focal_moc_test_journal_stub_get_type())
+G_DECLARE_FINAL_TYPE(FuFocalMocTestJournalStub,
+		     fu_focal_moc_test_journal_stub,
+		     FU,
+		     FOCAL_MOC_TEST_JOURNAL_STUB,
+		     GObject)
+
+struct _FuFocalMocTestJournalStub {
+	GObject parent_instance;
+};
+
+static void
+fu_focal_moc_test_stub_transport_impl_iface_init(FuFocalMocTransportImplInterface *iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE(FuFocalMocTestStub,
+			fu_focal_moc_test_stub,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(FU_TYPE_FOCAL_MOC_TRANSPORT_IMPL,
+					      fu_focal_moc_test_stub_transport_impl_iface_init))
+
+static void
+fu_focal_moc_test_stub_init(FuFocalMocTestStub *self)
+{
+}
+
+static void
+fu_focal_moc_test_stub_class_init(FuFocalMocTestStubClass *klass)
+{
+}
+static gboolean
+fu_focal_moc_test_journal_stub_load_host_key(FuFocalMocTransportImpl *impl,
+					     guint8 *host_key,
+					     gboolean *found,
+					     GError **error)
+{
+	*found = FALSE;
+	return TRUE;
+}
+
+static void
+fu_focal_moc_test_journal_stub_transport_impl_iface_init(FuFocalMocTransportImplInterface *iface)
+{
+	/* deliberately no save_host_key, so the pair check must reject it */
+	iface->load_host_key = fu_focal_moc_test_journal_stub_load_host_key;
+}
+
+G_DEFINE_TYPE_WITH_CODE(
+    FuFocalMocTestJournalStub,
+    fu_focal_moc_test_journal_stub,
+    G_TYPE_OBJECT,
+    G_IMPLEMENT_INTERFACE(FU_TYPE_FOCAL_MOC_TRANSPORT_IMPL,
+			  fu_focal_moc_test_journal_stub_transport_impl_iface_init))
+
+static void
+fu_focal_moc_test_journal_stub_init(FuFocalMocTestJournalStub *self)
+{
+}
+
+static void
+fu_focal_moc_test_journal_stub_class_init(FuFocalMocTestJournalStubClass *klass)
+{
+}
+#endif
+
+static void
+fu_focal_moc_transport_handshake_func(void)
+{
+#ifdef FU_FOCAL_MOC_TEST_HAVE_ECDH
+	const guint8 payload_alive[] = {0x55, 0xAA};
+	const guint8 payload_version[] = "FT9349_APP_FT9001_AA7A_USB_DEC_SV0.1_0104";
+	const guint8 request_alive[] = {0x00, 0x00, 0x00, 0x01, FU_FOCAL_MOC_CMD_WAKE_UP};
+	const guint8 request_version[] = {0x00, 0x01, 0x00, 0x01, FU_FOCAL_MOC_CMD_GET_FW_VERSION};
+	const guint8 request_sensor[] = {0x00, 0x02, 0x00, 0x01, FU_FOCAL_MOC_CMD_GET_FP_VERSION};
+	gboolean ret;
+	guint8 status = 0;
+	g_autoptr(FuFocalMocTestDevice) device = g_object_new(FU_TYPE_FOCAL_MOC_TEST_DEVICE, NULL);
+	g_autoptr(FuFocalMocTransport) transport = NULL;
+	g_autoptr(GByteArray) data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	transport = fu_focal_moc_transport_new(FU_FOCAL_MOC_TRANSPORT_IMPL(device));
+
+	/* encrypted commands require a confirmed session */
+	g_assert_null(fu_focal_moc_transport_command(transport,
+						     FU_FOCAL_MOC_CMD_WAKE_UP,
+						     NULL,
+						     0,
+						     100,
+						     &status,
+						     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_clear_error(&error);
+
+	ret = fu_focal_moc_transport_handshake(transport, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_focal_moc_transport_is_active(transport));
+
+	/* single-fragment response with the first message ID */
+	device->response_status = FU_FOCAL_MOC_STATUS_OK;
+	g_byte_array_append(device->response_payload, payload_alive, sizeof(payload_alive));
+	g_clear_pointer(&data, g_byte_array_unref);
+	data = fu_focal_moc_transport_command(transport,
+					      FU_FOCAL_MOC_CMD_WAKE_UP,
+					      NULL,
+					      0,
+					      100,
+					      &status,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data);
+	g_assert_cmphex(status, ==, FU_FOCAL_MOC_STATUS_OK);
+	g_assert_cmpmem(data->data, data->len, payload_alive, sizeof(payload_alive));
+	g_assert_cmpmem(device->last_request->data,
+			device->last_request->len,
+			request_alive,
+			sizeof(request_alive));
+
+	/* still a single fragment, with the next message ID */
+	g_byte_array_set_size(device->response_payload, 0);
+	g_byte_array_append(device->response_payload, payload_version, sizeof(payload_version) - 1);
+	g_clear_pointer(&data, g_byte_array_unref);
+	data = fu_focal_moc_transport_command(transport,
+					      FU_FOCAL_MOC_CMD_GET_FW_VERSION,
+					      NULL,
+					      0,
+					      100,
+					      &status,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data);
+	g_assert_cmphex(status, ==, FU_FOCAL_MOC_STATUS_OK);
+	g_assert_cmpmem(data->data, data->len, payload_version, sizeof(payload_version) - 1);
+	g_assert_cmpmem(device->last_request->data,
+			device->last_request->len,
+			request_version,
+			sizeof(request_version));
+
+	/* 2100-byte response reassembled from 1013+1013+74-byte fragments */
+	g_byte_array_set_size(device->response_payload, 0);
+	for (guint i = 0; i < 2100; i++)
+		fu_byte_array_append_uint8(device->response_payload, (guint8)i);
+	g_clear_pointer(&data, g_byte_array_unref);
+	data = fu_focal_moc_transport_command(transport,
+					      FU_FOCAL_MOC_CMD_GET_FP_VERSION,
+					      NULL,
+					      0,
+					      100,
+					      &status,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data);
+	g_assert_cmphex(status, ==, FU_FOCAL_MOC_STATUS_OK);
+	g_assert_cmpmem(data->data,
+			data->len,
+			device->response_payload->data,
+			device->response_payload->len);
+	g_assert_cmpmem(device->last_request->data,
+			device->last_request->len,
+			request_sensor,
+			sizeof(request_sensor));
+
+	/* one KC exchange plus three commands, three reply messages in six frames */
+	g_assert_cmpuint(device->d2m_sequence, ==, 4);
+	g_assert_cmpuint(device->m2d_sequence, ==, 6);
+	g_assert_cmpuint(device->tx_message_id, ==, 3);
+
+	/* teardown ends the session and rejects further commands */
+	fu_focal_moc_transport_teardown(transport);
+	g_assert_false(fu_focal_moc_transport_is_active(transport));
+	g_assert_null(fu_focal_moc_transport_command(transport,
+						     FU_FOCAL_MOC_CMD_WAKE_UP,
+						     NULL,
+						     0,
+						     100,
+						     &status,
+						     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+#else
+	g_test_skip("GnuTLS 3.8.2 is unavailable");
+#endif
+}
+
+static void
+fu_focal_moc_transport_fragment_invalid_func(void)
+{
+#ifdef FU_FOCAL_MOC_TEST_HAVE_ECDH
+	const struct {
+		FuFocalMocTestFault fault;
+		FwupdError code;
+	} faults[] = {
+	    {FU_FOCAL_MOC_TEST_FAULT_FIRST_INDEX, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_FIRST_TOTAL_ZERO, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_FIRST_MORE, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_FIRST_MESSAGE_ID, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_MESSAGE_ID, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_TOTAL, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_INDEX, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_MORE, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_STATUS, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_SHORT, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_TRUNCATED, FWUPD_ERROR_TIMED_OUT},
+	    {FU_FOCAL_MOC_TEST_FAULT_CIPHER_BCC, FWUPD_ERROR_INVALID_DATA},
+	    {FU_FOCAL_MOC_TEST_FAULT_SEND, FWUPD_ERROR_WRITE},
+	};
+	g_autoptr(FuFocalMocTestDevice) device = g_object_new(FU_TYPE_FOCAL_MOC_TEST_DEVICE, NULL);
+	g_autoptr(FuFocalMocTransport) transport = NULL;
+
+	device->response_status = FU_FOCAL_MOC_STATUS_OK;
+	/* two 1013-byte-rule fragments so both first and follow-up checks trigger */
+	for (guint i = 0; i < 1200; i++)
+		fu_byte_array_append_uint8(device->response_payload, (guint8)i);
+	transport = fu_focal_moc_transport_new(FU_FOCAL_MOC_TRANSPORT_IMPL(device));
+
+	for (guint i = 0; i < G_N_ELEMENTS(faults); i++) {
+		gboolean ret;
+		guint8 status = 0;
+		g_autoptr(GError) error = NULL;
+
+		/* a fresh session per fault; the handshake drains stale fragments */
+		fu_focal_moc_transport_teardown(transport);
+		device->fault = FU_FOCAL_MOC_TEST_FAULT_NONE;
+		ret = fu_focal_moc_transport_handshake(transport, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		device->fault = faults[i].fault;
+		g_assert_null(fu_focal_moc_transport_command(transport,
+							     FU_FOCAL_MOC_CMD_GET_FP_VERSION,
+							     NULL,
+							     0,
+							     100,
+							     &status,
+							     &error));
+		g_assert_error(error, FWUPD_ERROR, (gint)faults[i].code);
+		/* a burned sequence must never be reused: any post-send failure
+		 * has to end the session and force a fresh handshake */
+		g_assert_false(fu_focal_moc_transport_is_active(transport));
+	}
+#else
+	g_test_skip("GnuTLS 3.8.2 is unavailable");
+#endif
+}
+
+static void
+fu_focal_moc_transport_impl_vfuncs_func(void)
+{
+#ifdef FU_FOCAL_MOC_TEST_HAVE_ECDH
+	g_autoptr(FuFocalMocTestStub) stub = g_object_new(FU_TYPE_FOCAL_MOC_TEST_STUB, NULL);
+	g_autoptr(FuFocalMocTestJournalStub) journal_stub =
+	    g_object_new(FU_TYPE_FOCAL_MOC_TEST_JOURNAL_STUB, NULL);
+	g_autoptr(FuFocalMocTransport) transport = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* missing mandatory I/O vfuncs must fail cleanly rather than crash */
+	transport = fu_focal_moc_transport_new(FU_FOCAL_MOC_TRANSPORT_IMPL(stub));
+	g_assert_false(fu_focal_moc_transport_handshake(transport, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "not implemented"));
+	g_assert_false(fu_focal_moc_transport_is_active(transport));
+	g_clear_error(&error);
+	g_clear_pointer(&transport, fu_focal_moc_transport_free);
+
+	/* a host key journal has to implement load and save as a pair */
+	transport = fu_focal_moc_transport_new(FU_FOCAL_MOC_TRANSPORT_IMPL(journal_stub));
+	g_assert_false(fu_focal_moc_transport_handshake(transport, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "load and save"));
+	g_assert_false(fu_focal_moc_transport_is_active(transport));
+#else
+	g_test_skip("GnuTLS 3.8.2 is unavailable");
+#endif
+}
 
 static void
 fu_focal_moc_packet_build_func(void)
@@ -926,6 +1380,15 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_FOCAL_MOC_FIRMWARE);
 	g_test_add_func("/focal-moc/packet/build", fu_focal_moc_packet_build_func);
+	g_test_add_func("/focal-moc/transport/kdf", fu_focal_moc_transport_kdf_func);
+	g_test_add_func("/focal-moc/transport/aes", fu_focal_moc_transport_aes_func);
+	g_test_add_func("/focal-moc/transport/cipher-frame",
+			fu_focal_moc_transport_cipher_frame_func);
+	g_test_add_func("/focal-moc/transport/handshake", fu_focal_moc_transport_handshake_func);
+	g_test_add_func("/focal-moc/transport/fragment-invalid",
+			fu_focal_moc_transport_fragment_invalid_func);
+	g_test_add_func("/focal-moc/transport/impl-vfuncs",
+			fu_focal_moc_transport_impl_vfuncs_func);
 	g_test_add_func("/focal-moc/packet/parse", fu_focal_moc_packet_parse_func);
 	g_test_add_func("/focal-moc/packet/status-only", fu_focal_moc_packet_status_only_func);
 	g_test_add_func("/focal-moc/packet/bad-bcc", fu_focal_moc_packet_bad_bcc_func);

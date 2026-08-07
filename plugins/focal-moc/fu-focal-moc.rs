@@ -8,6 +8,8 @@ enum FuFocalMocCmd {
     SetBootMode = 0x32,
     SendFirmware = 0x33,
     WakeUp = 0x34,
+    TransportKeyExchange = 0xB0,
+    TransportKeyConfirm = 0xB1,
 }
 
 #[repr(u8)]
@@ -66,6 +68,23 @@ struct FuStructFocalMocPacketHeader {
 #[repr(C, packed)]
 struct FuStructFocalMocWakeUp {
     magic: u16be == 0x55AA,
+}
+
+#[derive(New, Parse, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocCipherHeader {
+    magic: u8 == 0x03,
+    length: u16be,
+    sequence: u32be,
+}
+
+#[derive(New, Parse, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocFragmentHeader {
+    more: u8,
+    message_id: u8,
+    index: u8,
+    total: u8,
 }
 
 #[derive(New, Default)]
