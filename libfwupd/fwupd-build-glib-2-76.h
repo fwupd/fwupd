@@ -10,6 +10,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+G_BEGIN_DECLS
+
 static inline gboolean
 g_clear_fd(int *fd_ptr, GError **error)
 {
@@ -36,3 +38,5 @@ _g_clear_fd_ignore_error(int *fd_ptr)
 }
 
 #define g_autofd _GLIB_CLEANUP(_g_clear_fd_ignore_error)
+
+G_END_DECLS

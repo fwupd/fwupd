@@ -8,6 +8,8 @@
 
 #include "fu-smbios.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_smbios_setup(FuSmbios *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
@@ -18,3 +20,5 @@ gboolean
 fu_smbios_setup_from_file(FuSmbios *self,
 			  const gchar *filename,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

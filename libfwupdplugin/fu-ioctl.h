@@ -10,6 +10,8 @@
 
 #include "fu-ioctl-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IOCTL (fu_ioctl_get_type())
 
 G_DECLARE_FINAL_TYPE(FuIoctl, fu_ioctl, FU, IOCTL, GObject)
@@ -47,3 +49,5 @@ fu_ioctl_execute(FuIoctl *self,
 		 guint timeout,
 		 FuIoctlFlags flags,
 		 GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

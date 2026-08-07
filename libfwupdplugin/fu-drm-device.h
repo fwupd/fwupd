@@ -9,6 +9,8 @@
 #include "fu-edid.h"
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DRM_DEVICE (fu_drm_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDrmDevice, fu_drm_device, FU, DRM_DEVICE, FuUdevDevice)
 
@@ -32,3 +34,5 @@ guint32
 fu_drm_device_get_crtc_height(FuDrmDevice *self) G_GNUC_NON_NULL(1);
 FuEdid *
 fu_drm_device_get_edid(FuDrmDevice *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

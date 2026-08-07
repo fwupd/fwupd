@@ -9,6 +9,8 @@
 #include "fu-security-attrs-struct.h"
 #include "fu-security-attrs.h"
 
+G_BEGIN_DECLS
+
 FuSecurityAttrs *
 fu_security_attrs_new(void);
 gchar *
@@ -30,3 +32,5 @@ gboolean
 fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DPAUX_DEVICE (fu_dpaux_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDpauxDevice, fu_dpaux_device, FU, DPAUX_DEVICE, FuUdevDevice)
 
@@ -53,3 +55,5 @@ fu_dpaux_device_write(FuDpauxDevice *self,
 		      gsize bufsz,
 		      guint timeout_ms,
 		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

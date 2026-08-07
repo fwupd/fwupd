@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-ihex-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IHEX_FIRMWARE (fu_ihex_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIhexFirmware, fu_ihex_firmware, FU, IHEX_FIRMWARE, FuFirmware)
 
@@ -36,3 +38,5 @@ GPtrArray *
 fu_ihex_firmware_get_records(FuIhexFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_ihex_firmware_set_padding_value(FuIhexFirmware *self, guint8 padding_value) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

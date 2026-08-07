@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PEFILE_FIRMWARE (fu_pefile_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU, PEFILE_FIRMWARE, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuPefileFirmwareClass {
 
 FuFirmware *
 fu_pefile_firmware_new(void);
+
+G_END_DECLS

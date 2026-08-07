@@ -10,6 +10,8 @@
 #include "fu-usb-interface.h"
 #include "fu-usb-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuUdevDevice)
 
@@ -134,3 +136,5 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 					       GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

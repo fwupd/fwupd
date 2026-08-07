@@ -9,6 +9,8 @@
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_LZ77_DECOMPRESSOR (fu_efi_lz77_decompressor_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiLz77Decompressor,
 		     fu_efi_lz77_decompressor,
@@ -18,3 +20,5 @@ G_DECLARE_FINAL_TYPE(FuEfiLz77Decompressor,
 
 FuFirmware *
 fu_efi_lz77_decompressor_new(void);
+
+G_END_DECLS

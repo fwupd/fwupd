@@ -10,6 +10,8 @@
 #include "fu-plugin.h"
 #include "fu-security-attrs.h"
 
+G_BEGIN_DECLS
+
 FuPlugin *
 fu_plugin_new(FuContext *ctx);
 FuPlugin *
@@ -170,3 +172,5 @@ fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1,
 /* utils */
 gchar *
 fu_plugin_guess_name_from_fn(const gchar *filename) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

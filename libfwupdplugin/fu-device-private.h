@@ -11,6 +11,8 @@
 #include "fu-backend.h"
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define fu_device_set_plugin(d, v) fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 
 gboolean
@@ -106,3 +108,5 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

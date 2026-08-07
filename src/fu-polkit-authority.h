@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_POLKIT_AUTHORITY (fu_polkit_authority_get_type())
 G_DECLARE_FINAL_TYPE(FuPolkitAuthority, fu_polkit_authority, FU, POLKIT_AUTHORITY, GObject)
 
@@ -33,3 +35,5 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 gboolean
 fu_polkit_authority_check_finish(FuPolkitAuthority *self, GAsyncResult *res, GError **error)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

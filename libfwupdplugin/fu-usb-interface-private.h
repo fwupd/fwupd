@@ -11,8 +11,12 @@
 #include "fu-usb-endpoint.h"
 #include "fu-usb-interface.h"
 
+G_BEGIN_DECLS
+
 FuUsbInterface *
 fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
     G_GNUC_NON_NULL(1);
 void
 fu_usb_interface_add_endpoint(FuUsbInterface *self, FuUsbEndpoint *endpoint);
+
+G_END_DECLS

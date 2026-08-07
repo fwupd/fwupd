@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-tpm-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_TPM_EVENTLOG_ITEM (fu_tpm_eventlog_item_get_type())
 
 G_DECLARE_FINAL_TYPE(FuTpmEventlogItem, fu_tpm_eventlog_item, FU, TPM_EVENTLOG_ITEM, FuFirmware)
@@ -32,3 +34,5 @@ GBytes *
 fu_tpm_eventlog_item_get_checksum(FuTpmEventlogItem *self,
 				  FuTpmAlg alg,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

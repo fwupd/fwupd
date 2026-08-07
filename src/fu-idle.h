@@ -10,6 +10,8 @@
 
 #include "fu-engine-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IDLE (fu_idle_get_type())
 G_DECLARE_FINAL_TYPE(FuIdle, fu_idle, FU, IDLE, GObject)
 
@@ -44,3 +46,5 @@ void
 fu_idle_locker_free(FuIdleLocker *locker) G_GNUC_NON_NULL(1);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuIdleLocker, fu_idle_locker_free)
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_VSS_AUTH_VARIABLE (fu_efi_vss_auth_variable_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiVssAuthVariable,
 		     fu_efi_vss_auth_variable,
@@ -20,3 +22,5 @@ fu_efi_vss_auth_variable_get_state(FuEfiVssAuthVariable *self) G_GNUC_NON_NULL(1
 
 FuFirmware *
 fu_efi_vss_auth_variable_new(void);
+
+G_END_DECLS

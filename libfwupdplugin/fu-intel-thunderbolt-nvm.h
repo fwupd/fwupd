@@ -11,6 +11,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_INTEL_THUNDERBOLT_NVM (fu_intel_thunderbolt_nvm_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIntelThunderboltNvm,
 			 fu_intel_thunderbolt_nvm,
@@ -39,3 +41,5 @@ fu_intel_thunderbolt_nvm_get_flash_size(FuIntelThunderboltNvm *self) G_GNUC_NON_
 
 FuFirmware *
 fu_intel_thunderbolt_nvm_new(void);
+
+G_END_DECLS

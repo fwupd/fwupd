@@ -9,6 +9,8 @@
 #include "fu-device.h"
 #include "fu-processor-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PROCESSOR_DEVICE (fu_processor_device_get_type())
 G_DECLARE_FINAL_TYPE(FuProcessorDevice, fu_processor_device, FU, PROCESSOR_DEVICE, FuDevice)
 
@@ -24,3 +26,5 @@ guint32
 fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

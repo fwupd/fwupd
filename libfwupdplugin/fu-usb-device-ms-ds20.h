@@ -8,6 +8,8 @@
 
 #include "fu-usb-device-ds20.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_DEVICE_MS_DS20 (fu_usb_device_ms_ds20_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbDeviceMsDs20,
 		     fu_usb_device_ms_ds20,
@@ -17,3 +19,5 @@ G_DECLARE_FINAL_TYPE(FuUsbDeviceMsDs20,
 
 FuFirmware *
 fu_usb_device_ms_ds20_new(void);
+
+G_END_DECLS

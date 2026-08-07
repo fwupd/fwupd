@@ -10,6 +10,8 @@
 
 #include "fu-endian.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_memcmp_safe(const guint8 *buf1,
 	       gsize buf1_sz,
@@ -117,3 +119,5 @@ fu_memread_uint64(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1);
 gchar *
 fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError **error)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

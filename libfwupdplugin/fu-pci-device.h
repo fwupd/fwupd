@@ -9,6 +9,8 @@
 #include "fu-pci-struct.h"
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PCI_DEVICE (fu_pci_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPciDevice, fu_pci_device, FU, PCI_DEVICE, FuUdevDevice)
 
@@ -30,3 +32,5 @@ void
 fu_pci_device_set_revision(FuPciDevice *self, guint8 revision) G_GNUC_NON_NULL(1);
 FuPciDeviceClassCode
 fu_pci_device_get_class_code(FuPciDevice *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

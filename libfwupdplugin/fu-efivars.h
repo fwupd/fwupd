@@ -12,6 +12,8 @@
 #include "fu-path-store.h"
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfivars, fu_efivars, FU, EFIVARS, GObject)
 
@@ -151,3 +153,5 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 					const gchar *name,
 					const gchar *target,
 					GError **error) G_GNUC_NON_NULL(1, 3, 4, 5);
+
+G_END_DECLS

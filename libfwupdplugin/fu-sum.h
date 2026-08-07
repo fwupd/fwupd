@@ -10,6 +10,8 @@
 
 #include "fu-endian.h"
 
+G_BEGIN_DECLS
+
 guint8
 fu_sum8(const guint8 *buf, gsize bufsz);
 gboolean
@@ -36,3 +38,5 @@ guint32
 fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian);
 guint32
 fu_sum32w_bytes(GBytes *blob, FuEndianType endian);
+
+G_END_DECLS

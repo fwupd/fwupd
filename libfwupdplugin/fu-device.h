@@ -17,6 +17,8 @@
 #include "fu-security-attrs.h"
 #include "fu-version-common.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DEVICE (fu_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 
@@ -1400,3 +1402,5 @@ void
 fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
 GPtrArray *
 fu_device_get_events(FuDevice *self);
+
+G_END_DECLS

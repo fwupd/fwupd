@@ -10,6 +10,8 @@
 
 #include "fu-crc-struct.h"
 
+G_BEGIN_DECLS
+
 guint
 fu_crc_size(FuCrcKind kind);
 
@@ -55,3 +57,5 @@ fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target, FuCrcKind *kind,
 
 guint16
 fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz);
+
+G_END_DECLS

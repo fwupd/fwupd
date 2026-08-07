@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_VSS2_VARIABLE_STORE (fu_efi_vss2_variable_store_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiVss2VariableStore,
 		     fu_efi_vss2_variable_store,
@@ -17,3 +19,5 @@ G_DECLARE_FINAL_TYPE(FuEfiVss2VariableStore,
 
 FuFirmware *
 fu_efi_vss2_variable_store_new(void);
+
+G_END_DECLS

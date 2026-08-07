@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CAB_IMAGE (fu_cab_image_get_type())
 
 G_DECLARE_FINAL_TYPE(FuCabImage, fu_cab_image, FU, CAB_IMAGE, FuFirmware)
@@ -23,3 +25,5 @@ fu_cab_image_set_created(FuCabImage *self, GDateTime *created) G_GNUC_NON_NULL(1
 
 FuCabImage *
 fu_cab_image_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

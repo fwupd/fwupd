@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_TPM_EVENTLOG (fu_tpm_eventlog_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuTpmEventlog, fu_tpm_eventlog, FU, TPM_EVENTLOG, FuFirmware)
 
@@ -19,3 +21,5 @@ GPtrArray *
 fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self,
 			       guint8 pcr,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

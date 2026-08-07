@@ -8,8 +8,12 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HID_REPORT (fu_hid_report_get_type())
 G_DECLARE_FINAL_TYPE(FuHidReport, fu_hid_report, FU, HID_REPORT, FuFirmware)
 
 FuHidReport *
 fu_hid_report_new(void);
+
+G_END_DECLS

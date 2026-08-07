@@ -11,8 +11,12 @@
 #include "fu-engine.h"
 #include "fu-release.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_engine_requirements_check(FuEngine *self,
 			     FuRelease *release,
 			     FwupdInstallFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -11,6 +11,8 @@
 #include "fu-chunk.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CHUNK_ARRAY (fu_chunk_array_get_type())
 
 G_DECLARE_FINAL_TYPE(FuChunkArray, fu_chunk_array, FU, CHUNK_ARRAY, GObject)
@@ -33,3 +35,5 @@ guint
 fu_chunk_array_length(FuChunkArray *self) G_GNUC_NON_NULL(1);
 FuChunk *
 fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

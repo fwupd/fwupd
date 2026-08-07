@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CHUNK (fu_chunk_get_type())
 
 G_DECLARE_FINAL_TYPE(FuChunk, fu_chunk, FU, CHUNK, GObject)
@@ -76,3 +78,5 @@ fu_chunk_array_mutable_new(guint8 *data,
 			   gsize page_sz,
 			   gsize packet_sz,
 			   GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

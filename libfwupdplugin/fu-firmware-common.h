@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 gboolean
 fu_firmware_strparse_uint4_safe(const gchar *data,
 				gsize datasz,
@@ -38,3 +40,5 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 				 gsize offset,
 				 guint32 *value,
 				 GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

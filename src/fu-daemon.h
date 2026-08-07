@@ -8,6 +8,8 @@
 
 #include "fu-engine.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DAEMON (fu_daemon_get_type())
 
 G_DECLARE_DERIVABLE_TYPE(FuDaemon, fu_daemon, FU, DAEMON, GObject)
@@ -50,3 +52,5 @@ gdouble
 fu_daemon_get_percentage(FuDaemon *self) G_GNUC_NON_NULL(1);
 void
 fu_daemon_set_percentage(FuDaemon *self, gdouble percentage) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

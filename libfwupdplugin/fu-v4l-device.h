@@ -9,6 +9,8 @@
 #include "fu-udev-device.h"
 #include "fu-v4l-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_V4L_DEVICE (fu_v4l_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuV4lDevice, fu_v4l_device, FU, V4L_DEVICE, FuUdevDevice)
 
@@ -20,3 +22,5 @@ guint8
 fu_v4l_device_get_index(FuV4lDevice *self) G_GNUC_NON_NULL(1);
 FuV4lCap
 fu_v4l_device_get_caps(FuV4lDevice *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

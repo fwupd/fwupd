@@ -8,6 +8,8 @@
 
 #include "fu-fdt-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FIT_FIRMWARE (fu_fit_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFitFirmware, fu_fit_firmware, FU, FIT_FIRMWARE, FuFdtFirmware)
 
@@ -130,3 +132,5 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ID_CONFIGURATIONS "configurations"
+
+G_END_DECLS

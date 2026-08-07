@@ -8,7 +8,11 @@
 
 #include "fu-msgpack-item.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_msgpack_item_append(FuMsgpackItem *self, GByteArray *buf, GError **error) G_GNUC_NON_NULL(1, 2);
 FuMsgpackItem *
 fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

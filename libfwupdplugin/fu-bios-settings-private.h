@@ -9,6 +9,8 @@
 #include "fu-bios-settings.h"
 #include "fu-context.h"
 
+G_BEGIN_DECLS
+
 FuBiosSettings *
 fu_bios_settings_new(FuContext *ctx);
 gboolean
@@ -21,3 +23,5 @@ GHashTable *
 fu_bios_settings_to_hash_kv(FuBiosSettings *self) G_GNUC_NON_NULL(1);
 void
 fu_bios_settings_add_attribute(FuBiosSettings *self, FwupdBiosSetting *attr) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PROTOBUF (fu_protobuf_get_type())
 
 G_DECLARE_FINAL_TYPE(FuProtobuf, fu_protobuf, FU, PROTOBUF, GObject)
@@ -43,3 +45,5 @@ gchar *
 fu_protobuf_get_string(FuProtobuf *self, guint8 fnum, GError **error) G_GNUC_NON_NULL(1);
 FuProtobuf *
 fu_protobuf_get_embedded(FuProtobuf *self, guint8 fnum, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

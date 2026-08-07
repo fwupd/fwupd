@@ -12,6 +12,8 @@
 #include <gnutls/crypto.h>
 #include <gnutls/pkcs7.h>
 
+G_BEGIN_DECLS
+
 typedef guchar gnutls_data_t;
 
 /* nocheck:name */
@@ -75,3 +77,5 @@ fu_jcat_gnutls_pkcs7_ensure_sign_algo_pq_safe(gnutls_sign_algorithm_t algo, GErr
 GBytes *
 fu_jcat_gnutls_pkcs7_create_client_certificate(gnutls_privkey_t privkey, GError **error)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

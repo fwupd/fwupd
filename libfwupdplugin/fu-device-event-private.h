@@ -8,7 +8,11 @@
 
 #include "fu-device-event.h"
 
+G_BEGIN_DECLS
+
 const gchar *
 fu_device_event_get_id(FuDeviceEvent *self) G_GNUC_NON_NULL(1);
 gchar *
 fu_device_event_build_id(const gchar *id) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

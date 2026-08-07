@@ -8,6 +8,8 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_MEI_DEVICE (fu_mei_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuMeiDevice, fu_mei_device, FU, MEI_DEVICE, FuUdevDevice)
 
@@ -43,3 +45,5 @@ gchar *
 fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

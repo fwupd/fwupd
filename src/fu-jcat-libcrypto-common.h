@@ -29,6 +29,8 @@
 #include <openssl/x509_vfy.h>
 #include <openssl/x509v3.h>
 
+G_BEGIN_DECLS
+
 /* wrap macros to define autoptr for STACK_OF(X509) */
 typedef STACK_OF(X509) STACK_OF_X509;
 
@@ -72,3 +74,5 @@ fu_jcat_libcrypto_x509_get_issuer_name(X509 *crt, GError **error) G_GNUC_NON_NUL
 
 gchar *
 fu_jcat_libcrypto_get_errors(void);
+
+G_END_DECLS

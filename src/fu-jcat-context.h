@@ -13,6 +13,8 @@
 
 #include "fu-jcat-engine.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JCAT_CONTEXT fu_jcat_context_get_type()
 
 G_DECLARE_FINAL_TYPE(FuJcatContext, fu_jcat_context, FU, JCAT_CONTEXT, GObject)
@@ -50,3 +52,5 @@ void
 fu_jcat_context_allow_blob_kind(FuJcatContext *self, FwupdJcatBlobKind kind) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_jcat_context_get_public_keys(FuJcatContext *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

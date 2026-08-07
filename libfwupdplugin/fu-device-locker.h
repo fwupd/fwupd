@@ -8,6 +8,8 @@
 
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DEVICE_LOCKER (fu_device_locker_get_type())
 
 G_DECLARE_FINAL_TYPE(FuDeviceLocker, fu_device_locker, FU, DEVICE_LOCKER, GObject)
@@ -29,3 +31,5 @@ fu_device_locker_new_full(FuDevice *device,
 gboolean
 fu_device_locker_close(FuDeviceLocker *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

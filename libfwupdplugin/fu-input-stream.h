@@ -12,6 +12,8 @@
 #include "fu-endian.h"
 #include "fu-progress.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GObject)
 
@@ -142,3 +144,5 @@ fu_input_stream_find(FuInputStream *stream,
 		     gsize offset,
 		     gsize *offset_found,
 		     GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

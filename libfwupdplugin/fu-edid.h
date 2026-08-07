@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EDID (fu_edid_get_type())
 
 G_DECLARE_FINAL_TYPE(FuEdid, fu_edid, FU, EDID, FuFirmware)
@@ -35,3 +37,5 @@ fu_edid_set_product_code(FuEdid *self, guint16 product_code) G_GNUC_NON_NULL(1);
 
 FuEdid *
 fu_edid_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

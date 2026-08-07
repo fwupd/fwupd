@@ -8,6 +8,8 @@
 
 #include "fu-path-store.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_kernel_locked_down(FuPathStore *pstore);
 gboolean
@@ -28,3 +30,5 @@ fu_kernel_add_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
 gboolean
 fu_kernel_remove_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

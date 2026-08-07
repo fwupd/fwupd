@@ -8,6 +8,8 @@
 
 #include <libfwupd/fwupd-bios-setting.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FIRMWARE_ATTRS (fu_bios_settings_get_type())
 
 G_DECLARE_FINAL_TYPE(FuBiosSettings, fu_bios_settings, FU, BIOS_SETTINGS, GObject)
@@ -22,3 +24,5 @@ fu_bios_settings_is_supported(FuBiosSettings *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_bios_settings_register_attr(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_FMAP_FIRMWARE_STRLEN 32 /* maximum length for strings, */
 				   /* including null-terminator */
 
@@ -20,3 +22,5 @@ struct _FuFmapFirmwareClass {
 
 FuFirmware *
 fu_fmap_firmware_new(void);
+
+G_END_DECLS

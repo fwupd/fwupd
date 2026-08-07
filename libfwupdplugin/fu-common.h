@@ -12,6 +12,8 @@
 #include "fu-common-struct.h"
 #include "fu-path-store.h"
 
+G_BEGIN_DECLS
+
 /**
  * FU_BIT_SET:
  * @val: integer value
@@ -162,3 +164,5 @@ void
 fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
 void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

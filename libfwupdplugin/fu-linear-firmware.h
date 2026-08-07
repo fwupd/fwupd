@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_LINEAR_FIRMWARE (fu_linear_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuLinearFirmware, fu_linear_firmware, FU, LINEAR_FIRMWARE, FuFirmware)
 
@@ -19,3 +21,5 @@ FuFirmware *
 fu_linear_firmware_new(GType image_gtype);
 GType
 fu_linear_firmware_get_image_gtype(FuLinearFirmware *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

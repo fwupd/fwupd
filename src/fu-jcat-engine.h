@@ -11,6 +11,8 @@
 #include "fu-engine-struct.h"
 #include "fu-jcat-result.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JCAT_ENGINE (fu_jcat_engine_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuJcatEngine, fu_jcat_engine, FU, JCAT_ENGINE, GObject)
 
@@ -72,3 +74,5 @@ fu_jcat_engine_add_public_key_raw(FuJcatEngine *self, GBytes *blob, GError **err
     G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_jcat_engine_get_keyring_path(FuJcatEngine *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

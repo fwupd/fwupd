@@ -11,6 +11,8 @@
 #include "fu-cab-firmware.h"
 #include "fu-jcat-context.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CABINET (fu_cabinet_get_type())
 
 G_DECLARE_FINAL_TYPE(FuCabinet, fu_cabinet, FU, CABINET, FuCabFirmware)
@@ -46,3 +48,5 @@ GPtrArray *
 fu_cabinet_get_components(FuCabinet *self, GError **error) G_GNUC_NON_NULL(1);
 XbNode *
 fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

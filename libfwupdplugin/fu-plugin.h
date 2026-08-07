@@ -21,6 +21,8 @@
 /* only until HSI is declared stable */
 #include "fwupd-security-attr-private.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PLUGIN (fu_plugin_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 
@@ -549,3 +551,5 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
     G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-stream-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM (fu_unix_seekable_input_stream_get_type())
 
 G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
@@ -20,3 +22,5 @@ FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error);
 gboolean
 fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GError **error);
+
+G_END_DECLS

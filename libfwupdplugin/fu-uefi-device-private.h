@@ -8,6 +8,8 @@
 
 #include "fu-uefi-device.h"
 
+G_BEGIN_DECLS
+
 FuUefiDevice *
 fu_uefi_device_new(FuContext *ctx, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2, 3);
 void
@@ -18,3 +20,5 @@ void
 fu_uefi_device_set_name(FuUefiDevice *self, const gchar *name) G_GNUC_NON_NULL(1);
 const gchar *
 fu_uefi_device_get_name(FuUefiDevice *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

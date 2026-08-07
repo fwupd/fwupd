@@ -10,7 +10,11 @@
 
 #include "fwupd-test.h"
 
+G_BEGIN_DECLS
+
 void
 fu_test_loop_run_with_timeout(guint timeout_ms);
 void
 fu_test_loop_quit(void);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FUZZER (fu_fuzzer_get_type())
 G_DECLARE_INTERFACE(FuFuzzer, fu_fuzzer, FU, FUZZER, GObject)
 
@@ -21,3 +23,5 @@ gboolean
 fu_fuzzer_test_input(FuFuzzer *self, GBytes *blob, GError **error);
 GBytes *
 fu_fuzzer_build_example(FuFuzzer *self, GBytes *blob, GError **error);
+
+G_END_DECLS

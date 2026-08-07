@@ -8,6 +8,8 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BLOCK_DEVICE (fu_block_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBlockDevice, fu_block_device, FU, BLOCK_DEVICE, FuUdevDevice)
 
@@ -32,3 +34,5 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 				const guint8 *buf,
 				gsize bufsz,
 				GError **error) G_GNUC_NON_NULL(1, 2, 4);
+
+G_END_DECLS

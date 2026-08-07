@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 /* see https://bugzilla.gnome.org/show_bug.cgi?id=113075 */
 #ifndef G_GNUC_NON_NULL
 #if !defined(SUPPORTED_BUILD) && !defined(_WIN32) && (__GNUC__ > 3) ||                             \
@@ -56,3 +58,5 @@
 #if !GLIB_CHECK_VERSION(2, 80, 0)
 #include "fwupd-build-glib-2-80.h"
 #endif
+
+G_END_DECLS

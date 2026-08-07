@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DEVICE_EVENT (fu_device_event_get_type())
 G_DECLARE_FINAL_TYPE(FuDeviceEvent, fu_device_event, FU, DEVICE_EVENT, GObject)
 
@@ -50,3 +52,5 @@ void
 fu_device_event_set_error(FuDeviceEvent *self, const GError *error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_event_check_error(FuDeviceEvent *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

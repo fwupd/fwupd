@@ -9,6 +9,8 @@
 #include "fu-input-stream.h"
 #include "fu-msgpack-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_MSGPACK_ITEM (fu_msgpack_item_get_type())
 
 G_DECLARE_FINAL_TYPE(FuMsgpackItem, fu_msgpack_item, FU, MSGPACK_ITEM, GObject)
@@ -48,3 +50,5 @@ guint64
 fu_msgpack_item_get_map(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
 guint64
 fu_msgpack_item_get_array(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

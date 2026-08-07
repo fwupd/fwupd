@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CAB_FIRMWARE (fu_cab_firmware_get_type())
 
 G_DECLARE_DERIVABLE_TYPE(FuCabFirmware, fu_cab_firmware, FU, CAB_FIRMWARE, FuFirmware)
@@ -23,3 +25,5 @@ fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed) G_GNUC_
 
 FuCabFirmware *
 fu_cab_firmware_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

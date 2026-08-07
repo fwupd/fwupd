@@ -8,5 +8,9 @@
 
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_SELF_TEST_DEVICE (fu_self_test_device_get_type())
 G_DECLARE_FINAL_TYPE(FuSelfTestDevice, fu_self_test_device, FU, SELF_TEST_DEVICE, FuDevice)
+
+G_END_DECLS

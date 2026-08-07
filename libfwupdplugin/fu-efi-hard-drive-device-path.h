@@ -9,6 +9,8 @@
 #include "fu-efi-device-path.h"
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_HARD_DRIVE_DEVICE_PATH (fu_efi_hard_drive_device_path_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiHardDriveDevicePath,
 		     fu_efi_hard_drive_device_path,
@@ -35,3 +37,5 @@ fu_efi_hard_drive_device_path_get_partition_start(FuEfiHardDriveDevicePath *self
 guint32
 fu_efi_hard_drive_device_path_get_partition_number(FuEfiHardDriveDevicePath *self)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

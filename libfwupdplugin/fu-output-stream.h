@@ -10,6 +10,8 @@
 
 #include "fu-progress.h"
 
+G_BEGIN_DECLS
+
 GOutputStream *
 fu_output_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
@@ -18,3 +20,5 @@ fu_output_stream_write_bytes(GOutputStream *stream,
 			     GBytes *bytes,
 			     FuProgress *progress,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS
