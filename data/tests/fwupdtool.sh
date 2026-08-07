@@ -235,9 +235,9 @@ run firmware-export ${TMPDIR}/blob.srec srec
 expect_rc 0
 
 # ---
-echo " ● Firmware convert (not working)…"
-run firmware-convert ${TMPDIR}/blob.srec ${TMPDIR}/blob.bin srec srec
-expect_rc 3
+echo " ● Firmware convert…"
+run firmware-convert ${TMPDIR}/blob.srec ${TMPDIR}/blob.bin srec raw
+expect_rc 0
 
 if [ -z "$CI_NETWORK" ]; then
     echo " ● Skipping remaining tests due to CI_NETWORK not being set"
