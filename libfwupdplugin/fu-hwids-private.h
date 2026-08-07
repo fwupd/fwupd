@@ -10,6 +10,8 @@
 #include "fu-hwids.h"
 #include "fu-kenv.h"
 
+G_BEGIN_DECLS
+
 FuHwids *
 fu_hwids_new(void);
 void
@@ -28,3 +30,5 @@ gboolean
 fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

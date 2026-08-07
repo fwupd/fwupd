@@ -10,6 +10,8 @@
 #include "fu-hid-struct.h"
 #include "fu-usb-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HID_DEVICE (fu_hid_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuHidDevice, fu_hid_device, FU, HID_DEVICE, FuUsbDevice)
 
@@ -49,3 +51,5 @@ fu_hid_device_get_report(FuHidDevice *self,
 			 guint timeout,
 			 FuHidDeviceFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

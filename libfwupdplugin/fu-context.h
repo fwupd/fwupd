@@ -18,6 +18,8 @@
 #include "fu-path-struct.h"
 #include "fu-smbios-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CONTEXT (fu_context_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuContext, fu_context, FU, CONTEXT, GObject)
 
@@ -183,3 +185,5 @@ fu_context_set_tmpdir(FuContext *self, FuPathKind kind, FuTemporaryDirectory *tm
 gchar *
 fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
     G_GNUC_NON_NULL(1) G_GNUC_NULL_TERMINATED;
+
+G_END_DECLS

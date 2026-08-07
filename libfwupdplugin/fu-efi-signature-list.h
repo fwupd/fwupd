@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_SIGNATURE_LIST (fu_efi_signature_list_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiSignatureList,
 			 fu_efi_signature_list,
@@ -25,3 +27,5 @@ GPtrArray *
 fu_efi_signature_list_get_newest(FuEfiSignatureList *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_efi_signature_list_is_external(FuEfiSignatureList *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

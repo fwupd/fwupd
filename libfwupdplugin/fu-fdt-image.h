@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FDT_IMAGE (fu_fdt_image_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFdtImage, fu_fdt_image, FU, FDT_IMAGE, FuFirmware)
 
@@ -48,3 +50,5 @@ fu_fdt_image_set_attr_strlist(FuFdtImage *self, const gchar *key, gchar **value)
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_fdt_image_get_attrs(FuFdtImage *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

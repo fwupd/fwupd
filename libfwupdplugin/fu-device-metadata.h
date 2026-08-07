@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 /**
  * FU_DEVICE_METADATA_TBT_IS_SAFE_MODE:
  *
@@ -43,3 +45,5 @@
  * need to be handled as a capsule update.
  */
 #define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS "UefiCapsuleFlags"
+
+G_END_DECLS

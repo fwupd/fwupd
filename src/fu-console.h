@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CONSOLE (fu_console_get_type())
 G_DECLARE_FINAL_TYPE(FuConsole, fu_console, FU, CONSOLE, GObject)
 
@@ -77,3 +79,5 @@ void
 fu_console_set_interactive(FuConsole *self, gboolean interactive) G_GNUC_NON_NULL(1);
 void
 fu_console_set_main_context(FuConsole *self, GMainContext *main_ctx) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

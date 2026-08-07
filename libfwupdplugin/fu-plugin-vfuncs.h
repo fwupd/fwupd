@@ -8,6 +8,8 @@
 
 #include "fu-plugin.h"
 
+G_BEGIN_DECLS
+
 /**
  * fu_plugin_init_vfuncs:
  * @vfuncs: #FuPluginVfuncs
@@ -18,3 +20,5 @@
  **/
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

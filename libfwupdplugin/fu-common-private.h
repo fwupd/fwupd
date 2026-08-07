@@ -8,6 +8,8 @@
 
 #include "fu-common.h"
 
+G_BEGIN_DECLS
+
 #define UDISKS_DBUS_SERVICE		 "org.freedesktop.UDisks2"
 #define UDISKS_DBUS_INTERFACE_PARTITION	 "org.freedesktop.UDisks2.Partition"
 #define UDISKS_DBUS_INTERFACE_FILESYSTEM "org.freedesktop.UDisks2.Filesystem"
@@ -21,3 +23,5 @@ gchar *
 fu_common_get_kernel_cmdline_impl(GError **error);
 gchar *
 fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error);
+
+G_END_DECLS

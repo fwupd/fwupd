@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CSV_ENTRY (fu_csv_entry_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCsvEntry, fu_csv_entry, FU, CSV_ENTRY, FuFirmware)
 
@@ -28,3 +30,5 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 					   const gchar *column_id,
 					   guint64 *value,
 					   GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

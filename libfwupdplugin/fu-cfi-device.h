@@ -9,6 +9,8 @@
 #include "fu-cfi-struct.h"
 #include "fu-device-locker.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CFI_DEVICE (fu_cfi_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfiDevice, fu_cfi_device, FU, CFI_DEVICE, FuDevice)
 
@@ -63,3 +65,5 @@ gboolean
 fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error) G_GNUC_NON_NULL(1);
 FuDeviceLocker *
 fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

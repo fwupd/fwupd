@@ -9,6 +9,8 @@
 #include "fu-context.h"
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BACKEND (fu_backend_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBackend, fu_backend, FU, BACKEND, GObject)
 
@@ -97,3 +99,5 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
 FuDevice *
 fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **error)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

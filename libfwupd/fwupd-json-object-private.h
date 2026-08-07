@@ -8,6 +8,8 @@
 
 #include "fwupd-json-object.h"
 
+G_BEGIN_DECLS
+
 void
 fwupd_json_object_append_string(FwupdJsonObject *self,
 				GString *str,
@@ -35,3 +37,5 @@ void
 fwupd_json_object_add_array_internal(FwupdJsonObject *self,
 				     GRefString *key,
 				     FwupdJsonArray *json_arr) G_GNUC_NON_NULL(1, 2, 3);
+
+G_END_DECLS

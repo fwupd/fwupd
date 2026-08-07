@@ -8,5 +8,9 @@
 
 #include "fu-usb-bos-descriptor.h"
 
+G_BEGIN_DECLS
+
 FuUsbBosDescriptor *
 fu_usb_bos_descriptor_new(FuUsbBosHdr *st_hdr) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-efi-device-path.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_FILE_PATH_DEVICE_PATH (fu_efi_file_path_device_path_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiFilePathDevicePath,
 		     fu_efi_file_path_device_path,
@@ -25,3 +27,5 @@ gboolean
 fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 				      const gchar *name,
 				      GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

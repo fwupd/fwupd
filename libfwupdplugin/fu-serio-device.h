@@ -8,9 +8,13 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_SERIO_DEVICE (fu_serio_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuSerioDevice, fu_serio_device, FU, SERIO_DEVICE, FuUdevDevice)
 
 struct _FuSerioDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
+
+G_END_DECLS

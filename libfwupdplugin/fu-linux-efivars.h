@@ -8,5 +8,9 @@
 
 #include "fu-efivars.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_LINUX_EFIVARS (fu_linux_efivars_get_type())
 G_DECLARE_FINAL_TYPE(FuLinuxEfivars, fu_linux_efivars, FU, LINUX_EFIVARS, FuEfivars)
+
+G_END_DECLS

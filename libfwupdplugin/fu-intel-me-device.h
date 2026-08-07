@@ -9,6 +9,8 @@
 #include "fu-device.h"
 #include "fu-intel-me-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_INTEL_ME_DEVICE (fu_intel_me_device_get_type())
 G_DECLARE_FINAL_TYPE(FuIntelMeDevice, fu_intel_me_device, FU, INTEL_ME_DEVICE, FuDevice)
 
@@ -25,3 +27,5 @@ fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHf
 
 FuIntelMeDevice *
 fu_intel_me_device_new(FuContext *ctx) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

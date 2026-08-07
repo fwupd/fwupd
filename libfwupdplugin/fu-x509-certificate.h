@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_X509_CERTIFICATE (fu_x509_certificate_get_type())
 G_DECLARE_FINAL_TYPE(FuX509Certificate, fu_x509_certificate, FU, X509_CERTIFICATE, FuFirmware)
 
@@ -26,3 +28,5 @@ fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activati
     G_GNUC_NON_NULL(1);
 GDateTime *
 fu_x509_certificate_get_activation_time(FuX509Certificate *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

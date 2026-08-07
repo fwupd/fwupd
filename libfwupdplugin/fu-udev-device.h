@@ -10,6 +10,8 @@
 #include "fu-io-channel.h"
 #include "fu-ioctl.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_UDEV_DEVICE (fu_udev_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice)
 
@@ -160,3 +162,5 @@ fu_udev_device_get_subsystem_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_reopen(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

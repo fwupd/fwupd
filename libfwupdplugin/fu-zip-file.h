@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-zip-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ZIP_FILE (fu_zip_file_get_type())
 
 G_DECLARE_DERIVABLE_TYPE(FuZipFile, fu_zip_file, FU, ZIP_FILE, FuFirmware)
@@ -24,3 +26,5 @@ fu_zip_file_set_compression(FuZipFile *self, FuZipCompression compression) G_GNU
 
 FuFirmware *
 fu_zip_file_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

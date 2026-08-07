@@ -14,6 +14,8 @@
 #include "fu-quirks.h"
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 #define FU_CONTEXT_LOAD_FLAG_HWID_ALL                                                              \
 	(FU_CONTEXT_LOAD_FLAG_HWID_CONFIG | FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS |                     \
 	 FU_CONTEXT_LOAD_FLAG_HWID_FDT | FU_CONTEXT_LOAD_FLAG_HWID_DMI |                           \
@@ -86,3 +88,5 @@ gpointer
 fu_context_get_data(FuContext *self, const gchar *key);
 void
 fu_context_set_data(FuContext *self, const gchar *key, gpointer data);
+
+G_END_DECLS

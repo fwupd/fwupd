@@ -12,6 +12,8 @@
 #include <gio/gunixinputstream.h>
 #endif
 
+G_BEGIN_DECLS
+
 /* allow overrides for synchronous clients that are not using DBus */
 struct FwupdClientSyncImpl {
 	gboolean (*activate)(FwupdClient *self,
@@ -203,3 +205,5 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  GAsyncReadyCallback callback,
 					  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3, 4);
 #endif
+
+G_END_DECLS

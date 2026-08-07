@@ -9,6 +9,8 @@
 #include "fu-path-struct.h"
 #include "fu-temporary-directory.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PATH_STORE (fu_path_store_get_type())
 
 G_DECLARE_FINAL_TYPE(FuPathStore, fu_path_store, FU, PATH_STORE, GObject)
@@ -42,3 +44,5 @@ fu_path_store_load_from_env(FuPathStore *self) G_GNUC_NON_NULL(1);
 
 FuPathStore *
 fu_path_store_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

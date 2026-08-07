@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define g_memdup2 g_memdup
 
 static inline guint
@@ -46,3 +48,5 @@ g_strv_builder_end(GStrvBuilder *builder)
 	}
 	return tmp;
 }
+
+G_END_DECLS

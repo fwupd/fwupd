@@ -8,5 +8,9 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_FTW_STORE (fu_efi_ftw_store_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiFtwStore, fu_efi_ftw_store, FU, EFI_FTW_STORE, FuFirmware)
+
+G_END_DECLS

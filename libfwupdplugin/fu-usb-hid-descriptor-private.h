@@ -8,6 +8,8 @@
 
 #include "fu-usb-hid-descriptor.h"
 
+G_BEGIN_DECLS
+
 guint8
 fu_usb_hid_descriptor_get_iface_number(FuUsbHidDescriptor *self) G_GNUC_NON_NULL(1);
 void
@@ -19,3 +21,5 @@ GBytes *
 fu_usb_hid_descriptor_get_blob(FuUsbHidDescriptor *self) G_GNUC_NON_NULL(1);
 void
 fu_usb_hid_descriptor_set_blob(FuUsbHidDescriptor *self, GBytes *blob) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

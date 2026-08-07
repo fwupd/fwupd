@@ -8,5 +8,9 @@
 
 #include "fu-cbor-item.h"
 
+G_BEGIN_DECLS
+
 FuCborItem *
 fu_cbor_item_new_string_steal(gchar *value) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

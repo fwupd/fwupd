@@ -11,6 +11,8 @@
 #include "fu-cli.h"
 #include "fu-console.h"
 
+G_BEGIN_DECLS
+
 /* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
 #define EXIT_NOT_FOUND	   3
@@ -167,3 +169,5 @@ void
 fu_cli_project_versions_as_json(FuConsole *console, GHashTable *metadata) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_cli_get_prgname(const gchar *argv0) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

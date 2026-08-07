@@ -8,5 +8,9 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 GPtrArray *
 fu_ptr_array_copy(GPtrArray *array, GCopyFunc func, GDestroyNotify free_func) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

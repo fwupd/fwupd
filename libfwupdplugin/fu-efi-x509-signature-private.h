@@ -8,6 +8,8 @@
 
 #include "fu-efi-x509-signature.h"
 
+G_BEGIN_DECLS
+
 FuEfiX509Signature *
 fu_efi_x509_signature_new(void);
 void
@@ -17,3 +19,5 @@ fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject
     G_GNUC_NON_NULL(1);
 gchar *
 fu_efi_x509_signature_build_dedupe_key(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

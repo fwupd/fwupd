@@ -10,6 +10,8 @@
 
 #include "fu-engine-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CLIENT (fu_client_get_type())
 G_DECLARE_FINAL_TYPE(FuClient, fu_client, FU, CLIENT, GObject)
 
@@ -30,3 +32,5 @@ void
 fu_client_remove_flag(FuClient *self, FuClientFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fu_client_has_flag(FuClient *self, FuClientFlags flag) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

@@ -9,6 +9,8 @@
 #include "fu-fdt-image.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FDT_FIRMWARE (fu_fdt_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFdtFirmware, fu_fdt_firmware, FU, FDT_FIRMWARE, FuFirmware)
 
@@ -25,3 +27,5 @@ fu_fdt_firmware_set_cpuid(FuFdtFirmware *self, guint32 cpuid) G_GNUC_NON_NULL(1)
 FuFdtImage *
 fu_fdt_firmware_get_image_by_path(FuFdtFirmware *self, const gchar *path, GError **error)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

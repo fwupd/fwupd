@@ -9,6 +9,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_VOLUME (fu_volume_get_type())
 
 G_DECLARE_FINAL_TYPE(FuVolume, fu_volume, FU, VOLUME, GObject)
@@ -80,3 +82,5 @@ const gchar *
 fu_volume_kind_convert_to_gpt(const gchar *kind) G_GNUC_NON_NULL(1);
 gboolean
 fu_volume_is_mdraid(FuVolume *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

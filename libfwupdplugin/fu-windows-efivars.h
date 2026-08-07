@@ -8,5 +8,9 @@
 
 #include "fu-efivars.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_WINDOWS_EFIVARS (fu_windows_efivars_get_type())
 G_DECLARE_FINAL_TYPE(FuWindowsEfivars, fu_windows_efivars, FU, WINDOWS_EFIVARS, FuEfivars)
+
+G_END_DECLS

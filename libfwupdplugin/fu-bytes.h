@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 gboolean
 fu_bytes_set_contents(const gchar *filename,
 		      GBytes *bytes,
@@ -36,3 +38,5 @@ gchar *
 fu_bytes_to_string(GBytes *bytes) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GBytes *
 fu_bytes_from_string(const gchar *str, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

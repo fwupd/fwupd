@@ -8,6 +8,8 @@
 
 #include "fu-cbor-struct.h"
 
+G_BEGIN_DECLS
+
 typedef struct FuCborItem FuCborItem;
 
 FuCborItemKind
@@ -65,3 +67,5 @@ GByteArray *
 fu_cbor_item_write(FuCborItem *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gchar *
 fu_cbor_item_to_string(FuCborItem *self) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

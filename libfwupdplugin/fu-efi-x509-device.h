@@ -9,6 +9,8 @@
 #include "fu-device.h"
 #include "fu-efi-x509-signature.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_X509_DEVICE (fu_efi_x509_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiX509Device, fu_efi_x509_device, FU, EFI_X509_DEVICE, FuDevice)
 
@@ -18,3 +20,5 @@ struct _FuEfiX509DeviceClass {
 
 FuEfiX509Device *
 fu_efi_x509_device_new(FuContext *ctx, FuEfiX509Signature *sig) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

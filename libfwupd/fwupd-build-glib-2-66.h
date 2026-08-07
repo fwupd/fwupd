@@ -9,6 +9,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+G_BEGIN_DECLS
+
 #define G_FILE_SET_CONTENTS_NONE       0
 #define G_FILE_SET_CONTENTS_CONSISTENT (1 << 0)
 
@@ -31,3 +33,5 @@ g_file_set_contents_full(const gchar *filename,
 	}
 	return TRUE;
 }
+
+G_END_DECLS

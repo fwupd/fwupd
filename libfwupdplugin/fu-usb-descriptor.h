@@ -9,9 +9,13 @@
 #include "fu-firmware.h"
 #include "fu-usb-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_DESCRIPTOR (fu_usb_descriptor_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUsbDescriptor, fu_usb_descriptor, FU, USB_DESCRIPTOR, FuFirmware)
 
 struct _FuUsbDescriptorClass {
 	FuFirmwareClass parent_class;
 };
+
+G_END_DECLS

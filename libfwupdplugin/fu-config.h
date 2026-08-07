@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CONFIG (fu_config_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuConfig, fu_config, FU, CONFIG, GObject)
 
@@ -35,3 +37,5 @@ fu_config_get_value_bool(FuConfig *self, const gchar *section, const gchar *key)
 guint64
 fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

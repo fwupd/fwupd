@@ -13,6 +13,8 @@
 #include "fu-firmware-struct.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
@@ -272,3 +274,5 @@ fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GErro
     G_GNUC_NON_NULL(1, 2);
 void
 fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob) G_GNUC_NON_NULL(1, 3);
+
+G_END_DECLS

@@ -11,6 +11,8 @@
 
 #include "fu-intel-thunderbolt-nvm.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE (fu_intel_thunderbolt_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIntelThunderboltFirmware,
 			 fu_intel_thunderbolt_firmware,
@@ -24,3 +26,5 @@ struct _FuIntelThunderboltFirmwareClass {
 
 FuFirmware *
 fu_intel_thunderbolt_firmware_new(void);
+
+G_END_DECLS

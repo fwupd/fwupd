@@ -8,6 +8,8 @@
 
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_UEFI_DEVICE (fu_uefi_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
 
@@ -40,3 +42,5 @@ fu_uefi_device_read_default(FuUefiDevice *self,
 			    const gchar *guid,
 			    const gchar *name,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_REMOTE (fu_remote_get_type())
 G_DECLARE_FINAL_TYPE(FuRemote, fu_remote, FU, REMOTE, FwupdRemote)
 
@@ -26,3 +28,5 @@ fu_remote_clean(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 
 FwupdRemote *
 fu_remote_new(void);
+
+G_END_DECLS

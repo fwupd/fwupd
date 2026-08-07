@@ -9,6 +9,8 @@
 #include "fu-compressor-struct.h"
 #include "fu-stream-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_COMPRESSOR_STREAM (fu_compressor_stream_get_type())
 G_DECLARE_FINAL_TYPE(FuCompressorStream,
 		     fu_compressor_stream,
@@ -24,3 +26,5 @@ FuInputStream *
 fu_compressor_stream_new_compress(FuInputStream *source,
 				  FuCompressorFormat format,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

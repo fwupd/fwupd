@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DEVICE_LIST (fu_device_list_get_type())
 G_DECLARE_FINAL_TYPE(FuDeviceList, fu_device_list, FU, DEVICE_LIST, GObject)
 
@@ -35,3 +37,5 @@ gboolean
 fu_device_list_wait_for_replug(FuDeviceList *self, GError **error) G_GNUC_NON_NULL(1);
 void
 fu_device_list_depsolve_order(FuDeviceList *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

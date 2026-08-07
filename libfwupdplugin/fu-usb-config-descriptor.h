@@ -8,6 +8,8 @@
 
 #include "fu-usb-descriptor.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_CONFIG_DESCRIPTOR (fu_usb_config_descriptor_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbConfigDescriptor,
 		     fu_usb_config_descriptor,
@@ -19,3 +21,5 @@ guint8
 fu_usb_config_descriptor_get_configuration(FuUsbConfigDescriptor *self);
 guint8
 fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self);
+
+G_END_DECLS

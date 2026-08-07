@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define G_OS_INFO_KEY_NAME	     "NAME"
 #define G_OS_INFO_KEY_VERSION_ID     "VERSION_ID"
 #define G_OS_INFO_KEY_ID	     "ID"
@@ -31,3 +33,5 @@ g_get_os_info(const gchar *key)
 		return NULL;
 	return g_key_file_get_string(kf, "os", key, NULL);
 }
+
+G_END_DECLS

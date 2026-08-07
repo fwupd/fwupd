@@ -8,6 +8,8 @@
 
 #include "fwupd-jcat-blob.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JCAT_RESULT (fu_jcat_result_get_type())
 G_DECLARE_FINAL_TYPE(FuJcatResult, fu_jcat_result, FU, JCAT_RESULT, GObject)
 
@@ -19,3 +21,5 @@ FwupdJcatBlobKind
 fu_jcat_result_get_kind(FuJcatResult *self) G_GNUC_NON_NULL(1);
 FwupdJcatBlobMethod
 fu_jcat_result_get_method(FuJcatResult *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

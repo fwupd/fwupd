@@ -8,6 +8,8 @@
 
 #include "fu-efi-signature-list.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_VARIABLE_AUTHENTICATION2 (fu_efi_variable_authentication2_get_type())
 G_DECLARE_FINAL_TYPE(FuEfiVariableAuthentication2,
 		     fu_efi_variable_authentication2,
@@ -17,3 +19,5 @@ G_DECLARE_FINAL_TYPE(FuEfiVariableAuthentication2,
 
 GPtrArray *
 fu_efi_variable_authentication2_get_signers(FuEfiVariableAuthentication2 *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

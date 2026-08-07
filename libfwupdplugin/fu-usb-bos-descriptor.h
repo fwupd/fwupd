@@ -8,6 +8,8 @@
 
 #include "fu-usb-descriptor.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_BOS_DESCRIPTOR (fu_usb_bos_descriptor_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbBosDescriptor,
 		     fu_usb_bos_descriptor,
@@ -17,3 +19,5 @@ G_DECLARE_FINAL_TYPE(FuUsbBosDescriptor,
 
 guint8
 fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self);
+
+G_END_DECLS

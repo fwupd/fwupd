@@ -33,4 +33,8 @@
 #include <libfwupd/fwupd-variant.h>
 #include <libfwupd/fwupd-version.h>
 
+G_BEGIN_DECLS
+
 #undef __FWUPD_H_INSIDE__
+
+G_END_DECLS

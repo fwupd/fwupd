@@ -11,6 +11,8 @@
 
 #include "fu-progress-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PROGRESS (fu_progress_get_type())
 G_DECLARE_FINAL_TYPE(FuProgress, fu_progress, FU, PROGRESS, GObject)
 
@@ -67,3 +69,5 @@ void
 fu_progress_sleep(FuProgress *self, guint delay_ms) G_GNUC_NON_NULL(1);
 gchar *
 fu_progress_traceback(FuProgress *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

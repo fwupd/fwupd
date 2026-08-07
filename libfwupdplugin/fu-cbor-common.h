@@ -9,6 +9,8 @@
 #include "fu-cbor-item.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 FuCborItem *
 fu_cbor_parse(FuInputStream *stream,
 	      gsize *offset,
@@ -16,3 +18,5 @@ fu_cbor_parse(FuInputStream *stream,
 	      guint max_items,
 	      guint max_length,
 	      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

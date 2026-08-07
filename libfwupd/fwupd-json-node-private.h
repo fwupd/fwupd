@@ -8,6 +8,8 @@
 
 #include "fwupd-json-node.h"
 
+G_BEGIN_DECLS
+
 FwupdJsonNode *
 fwupd_json_node_new_null_internal(void) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *
@@ -19,3 +21,5 @@ fwupd_json_node_append_string(FwupdJsonNode *self,
 			      GString *str,
 			      guint depth,
 			      FwupdJsonExportFlags flags) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

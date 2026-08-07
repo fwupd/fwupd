@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_TEMPORARY_DIRECTORY (fu_temporary_directory_get_type())
 
 G_DECLARE_FINAL_TYPE(FuTemporaryDirectory, fu_temporary_directory, FU, TEMPORARY_DIRECTORY, GObject)
@@ -18,3 +20,5 @@ const gchar *
 fu_temporary_directory_get_path(FuTemporaryDirectory *self) G_GNUC_NON_NULL(1);
 gchar *
 fu_temporary_directory_build(FuTemporaryDirectory *self, ...) G_GNUC_NULL_TERMINATED;
+
+G_END_DECLS

@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-srec-struct.h"
 
+G_BEGIN_DECLS
+
 /* FIXME: rename */
 #define FuFirmwareSrecRecordKind FuFirmwareSrecRecordKind
 
@@ -44,3 +46,5 @@ GType
 fu_srec_firmware_record_get_type(void);
 FuSrecFirmwareRecord *
 fu_srec_firmware_record_new(guint ln, FuFirmwareSrecRecordKind kind, guint32 addr);
+
+G_END_DECLS

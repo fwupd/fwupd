@@ -9,6 +9,8 @@
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_COMPOSITE_INPUT_STREAM (fu_composite_input_stream_get_type())
 
 G_DECLARE_FINAL_TYPE(FuCompositeInputStream,
@@ -30,3 +32,5 @@ gboolean
 fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 				     FuInputStream *stream,
 				     GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

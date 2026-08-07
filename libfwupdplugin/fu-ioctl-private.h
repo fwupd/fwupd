@@ -9,5 +9,9 @@
 #include "fu-ioctl.h"
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 FuIoctl *
 fu_ioctl_new(FuUdevDevice *udev_device) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

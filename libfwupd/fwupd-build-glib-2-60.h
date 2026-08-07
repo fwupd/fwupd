@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define G_TEST_OPTION_ISOLATE_DIRS "isolate-dirs"
 
 static inline gboolean
@@ -34,3 +36,5 @@ g_ptr_array_extend(GPtrArray *array_to_extend, GPtrArray *array, GCopyFunc func,
 		g_ptr_array_add(array_to_extend, func(item, user_data));
 	}
 }
+
+G_END_DECLS

@@ -9,6 +9,8 @@
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_LOAD_OPTION (fu_efi_load_option_get_type())
 
 G_DECLARE_FINAL_TYPE(FuEfiLoadOption, fu_efi_load_option, FU, EFI_LOAD_OPTION, FuFirmware)
@@ -44,3 +46,5 @@ fu_efi_load_option_set_metadata(FuEfiLoadOption *self, const gchar *key, const g
 
 FuEfiLoadOption *
 fu_efi_load_option_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

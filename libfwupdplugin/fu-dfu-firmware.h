@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DFU_FIRMWARE (fu_dfu_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDfuFirmware, fu_dfu_firmware, FU, DFU_FIRMWARE, FuFirmware)
 
@@ -68,3 +70,5 @@ void
 fu_dfu_firmware_set_release(FuDfuFirmware *self, guint16 release) G_GNUC_NON_NULL(1);
 void
 fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

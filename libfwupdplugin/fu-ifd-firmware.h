@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IFD_FIRMWARE (fu_ifd_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIfdFirmware, fu_ifd_firmware, FU, IFD_FIRMWARE, FuFirmware)
 
@@ -19,3 +21,5 @@ FuFirmware *
 fu_ifd_firmware_new(void);
 gboolean
 fu_ifd_firmware_check_jedec_cmd(FuIfdFirmware *self, guint8 cmd) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

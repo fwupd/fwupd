@@ -8,6 +8,8 @@
 
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_VOLUME_LOCKER (fu_volume_locker_get_type())
 
 G_DECLARE_FINAL_TYPE(FuVolumeLocker, fu_volume_locker, FU, VOLUME_LOCKER, GObject)
@@ -17,3 +19,5 @@ fu_volume_locker_new(FuVolume *volume, GError **error) G_GNUC_WARN_UNUSED_RESULT
 gboolean
 fu_volume_locker_close(FuVolumeLocker *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

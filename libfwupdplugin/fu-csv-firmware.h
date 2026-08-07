@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CSV_FIRMWARE (fu_csv_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCsvFirmware, fu_csv_firmware, FU, CSV_FIRMWARE, FuFirmware)
 
@@ -25,3 +27,5 @@ void
 fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids);
 gboolean
 fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self);
+
+G_END_DECLS

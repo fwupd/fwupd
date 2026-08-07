@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FWUPD_TYPE_TEST_BIOS_SETTING (fwupd_test_bios_setting_get_type())
 G_DECLARE_FINAL_TYPE(FwupdTestBiosSetting,
 		     fwupd_test_bios_setting,
@@ -22,3 +24,5 @@ fwupd_test_bios_setting_get_value_raw(FwupdTestBiosSetting *self) G_GNUC_NON_NUL
 void
 fwupd_test_bios_setting_set_value_raw(FwupdTestBiosSetting *self, const gchar *value_raw)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

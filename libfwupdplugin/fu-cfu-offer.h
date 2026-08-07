@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CFU_OFFER (fu_cfu_offer_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfuOffer, fu_cfu_offer, FU, CFU_OFFER, FuFirmware)
 
@@ -60,3 +62,5 @@ void
 fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone) G_GNUC_NON_NULL(1);
 void
 fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

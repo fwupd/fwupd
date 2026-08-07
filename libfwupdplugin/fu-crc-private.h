@@ -8,6 +8,8 @@
 
 #include "fu-crc.h"
 
+G_BEGIN_DECLS
+
 guint32
 fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc);
 guint32
@@ -24,3 +26,5 @@ guint8
 fu_crc8_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint8 crc);
 guint8
 fu_crc8_done(FuCrcKind kind, guint8 crc);
+
+G_END_DECLS

@@ -9,6 +9,8 @@
 #include "fu-jcat-context.h"
 #include "fu-jcat-engine.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JCAT_SHA256_ENGINE (fu_jcat_sha256_engine_get_type())
 G_DECLARE_FINAL_TYPE(FuJcatSha256Engine,
 		     fu_jcat_sha256_engine,
@@ -18,3 +20,5 @@ G_DECLARE_FINAL_TYPE(FuJcatSha256Engine,
 
 FuJcatEngine *
 fu_jcat_sha256_engine_new(FuJcatContext *context) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

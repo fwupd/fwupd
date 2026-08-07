@@ -11,6 +11,8 @@
 #include "fu-cabinet.h"
 #include "fu-engine-request.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_RELEASE (fu_release_get_type())
 G_DECLARE_FINAL_TYPE(FuRelease, fu_release, FU, RELEASE, FwupdRelease)
 
@@ -102,3 +104,5 @@ void
 fu_release_set_priority(FuRelease *self, guint64 priority) G_GNUC_NON_NULL(1);
 guint64
 fu_release_get_priority(FuRelease *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

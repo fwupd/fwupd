@@ -11,6 +11,8 @@
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_SIGNATURE (fu_efi_signature_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
 
@@ -28,3 +30,5 @@ FuEfiSignatureKind
 fu_efi_signature_get_kind(FuEfiSignature *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_efi_signature_get_owner(FuEfiSignature *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

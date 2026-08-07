@@ -8,5 +8,9 @@
 
 #include "fu-cli.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ENGINE_CLI (fu_engine_cli_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineCli, fu_engine_cli, FU, ENGINE_CLI, FuCli)
+
+G_END_DECLS

@@ -10,6 +10,8 @@
 #include "fu-engine.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ENGINE_EMULATOR (fu_engine_emulator_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineEmulator, fu_engine_emulator, FU, ENGINE_EMULATOR, GObject)
 
@@ -42,3 +44,5 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

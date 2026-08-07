@@ -9,6 +9,8 @@
 #include "fu-device.h"
 #include "fu-io-channel.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BLUEZ_DEVICE (fu_bluez_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBluezDevice, fu_bluez_device, FU, BLUEZ_DEVICE, FuDevice)
 
@@ -46,3 +48,5 @@ fu_bluez_device_notify_acquire(FuBluezDevice *self, const gchar *uuid, gint32 *m
 FuIOChannel *
 fu_bluez_device_write_acquire(FuBluezDevice *self, const gchar *uuid, gint32 *mtu, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
+
+G_END_DECLS
