@@ -207,32 +207,32 @@ fu_devlink_netlink_event_id_msg_cb(const struct nlmsghdr *nlh, gpointer data)
 
 	/* extract attribute name and value based on type */
 	if (tb[DEVLINK_ATTR_BUS_NAME] != NULL) {
-		g_strv_builder_add(
-		    tuples_builder,
-		    g_strdup_printf("bus_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME])));
+		g_autofree gchar *str =
+		    g_strdup_printf("bus_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME]));
+		g_strv_builder_add(tuples_builder, str);
 	}
 	if (tb[DEVLINK_ATTR_DEV_NAME] != NULL) {
-		g_strv_builder_add(
-		    tuples_builder,
-		    g_strdup_printf("dev_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME])));
+		g_autofree gchar *str =
+		    g_strdup_printf("dev_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME]));
+		g_strv_builder_add(tuples_builder, str);
 	}
 	if (tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME] != NULL) {
-		g_strv_builder_add(
-		    tuples_builder,
+		g_autofree gchar *str =
 		    g_strdup_printf("file_name=%s",
-				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME])));
+				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME]));
+		g_strv_builder_add(tuples_builder, str);
 	}
 	if (tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT] != NULL) {
-		g_strv_builder_add(
-		    tuples_builder,
+		g_autofree gchar *str =
 		    g_strdup_printf("component=%s",
-				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT])));
+				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT]));
+		g_strv_builder_add(tuples_builder, str);
 	}
 	if (tb[DEVLINK_ATTR_RELOAD_ACTION] != NULL) {
-		g_strv_builder_add(
-		    tuples_builder,
+		g_autofree gchar *str =
 		    g_strdup_printf("reload_action=%u",
-				    mnl_attr_get_u8(tb[DEVLINK_ATTR_RELOAD_ACTION])));
+				    mnl_attr_get_u8(tb[DEVLINK_ATTR_RELOAD_ACTION]));
+		g_strv_builder_add(tuples_builder, str);
 	}
 
 	return MNL_CB_OK;
