@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "de9796f65f2a5c8927d0aea99e0fdf40b71db22d6da9663d3c8c063b2ae5bceb-FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396.cab",
-      "emulation-url": "9c7a37cae5b6942acb3822e28cc74770b5431892aa483137e4d32da68f97ca49-focal-moc-emulation-FT9769-v7396.zip",
+      "emulation-url": "7b798cec687920a8c4bf2df9662682e9004675bdadf9b8a4f8453e1258340ffd-focal-moc-emulation-FT9769-v7396.zip",
       "components": [
         {
           "version": "7396",
