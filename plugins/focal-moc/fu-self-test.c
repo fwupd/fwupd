@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include "fu-focal-moc-common.h"
+#include "fu-focal-moc-firmware.h"
 #include "fu-focal-moc-struct.h"
 
 static void
@@ -666,10 +667,264 @@ fu_focal_moc_status_error_func(void)
 	g_clear_error(&error);
 }
 
+static GBytes *
+fu_focal_moc_build_firmware_sized(guint32 kind, guint32 body_sz)
+{
+	guint8 reserved1[28] = {0};
+	guint8 digest[32] = {0};
+	guint8 signature[64] = {0};
+	guint8 reserved2[112] = {0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* nonzero patterns prove the writer carries the fields, not the raw copy */
+	for (guint i = 0; i < sizeof(digest); i++)
+		digest[i] = (guint8)i;
+	for (guint i = 0; i < sizeof(signature); i++)
+		signature[i] = (guint8)(0x80 + i);
+	fu_byte_array_append_uint32(buf, 0x46574844, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, kind, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, 0x0104, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, body_sz, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, 0, G_LITTLE_ENDIAN);
+	g_byte_array_append(buf, reserved1, sizeof(reserved1));
+	g_byte_array_append(buf, digest, sizeof(digest));
+	g_byte_array_append(buf, signature, sizeof(signature));
+	g_byte_array_append(buf, reserved2, sizeof(reserved2));
+	fu_byte_array_set_size(buf, FU_STRUCT_FOCAL_MOC_FIRMWARE_HEADER_SIZE + body_sz, 0x0);
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+static GBytes *
+fu_focal_moc_build_firmware(guint32 kind)
+{
+	return fu_focal_moc_build_firmware_sized(kind, 4);
+}
+
+static void
+fu_focal_moc_firmware_func(void)
+{
+	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
+	g_autoptr(GBytes) bytes_body = NULL;
+	g_autoptr(GBytes) bytes_written = NULL;
+	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_true(
+	    fu_firmware_parse_stream(firmware, stream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, &error));
+	g_assert_no_error(error);
+	g_assert_cmpstr(fu_firmware_get_version(firmware), ==, "0104");
+
+	/* the payload is the body without the header */
+	bytes_body = fu_firmware_get_bytes(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(bytes_body);
+	g_assert_cmpuint(g_bytes_get_size(bytes_body), ==, 4);
+
+	/* the writer rebuilds the header from the parsed fields */
+	bytes_written = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(bytes_written);
+	g_assert_cmpmem(g_bytes_get_data(bytes_written, NULL),
+			g_bytes_get_size(bytes_written),
+			g_bytes_get_data(bytes, NULL),
+			g_bytes_get_size(bytes));
+}
+
+static void
+fu_focal_moc_firmware_xml_func(void)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "focal-moc.builder.xml", NULL);
+	g_assert_true(
+	    fu_firmware_roundtrip_from_filename(filename,
+						"82d74338dcf189114871f15666e96b7471db3e82",
+						FU_FIRMWARE_BUILDER_FLAG_NONE,
+						&error));
+	g_assert_no_error(error);
+}
+
+static void
+fu_focal_moc_firmware_wrong_type_func(void)
+{
+	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(0x01);
+	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_false(
+	    fu_firmware_parse_stream(firmware, stream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+}
+
+static void
+fu_focal_moc_firmware_invalid_func(void)
+{
+	const struct {
+		gsize offset;
+		guint32 value;
+		FwupdError code;
+	} tests[] = {
+	    /* a bad magic is rejected by the struct parser, the rest by the field checks */
+	    {0, 0x00000000, FWUPD_ERROR_INVALID_DATA},
+	    {8, 0x00010000, FWUPD_ERROR_INVALID_FILE},
+	    {12, 0x00000005, FWUPD_ERROR_INVALID_FILE},
+	    {16, 0x00000004, FWUPD_ERROR_INVALID_FILE},
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+		g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+		g_autoptr(GBytes) bytes =
+		    fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
+		g_autoptr(GByteArray) buf = g_bytes_unref_to_array(g_steal_pointer(&bytes));
+		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(GError) error = NULL;
+
+		fu_memwrite_uint32(buf->data + tests[i].offset, tests[i].value, G_LITTLE_ENDIAN);
+		stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+		g_assert_false(fu_firmware_parse_stream(firmware,
+							stream,
+							0,
+							FU_FIRMWARE_PARSE_FLAG_NONE,
+							&error));
+		g_assert_error(error, FWUPD_ERROR, (gint)tests[i].code);
+	}
+}
+
+static void
+fu_focal_moc_firmware_size_max_func(void)
+{
+	const gsize size_max = FU_FOCAL_MOC_FIRMWARE_SIZE_MAX;
+	const struct {
+		gsize streamsz;
+		gboolean valid;
+	} tests[] = {
+	    {size_max, TRUE},
+	    {size_max + 1, FALSE},
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+		gboolean ret;
+		g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+		g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware_sized(
+		    FU_FOCAL_MOC_FIRMWARE_KIND_APP,
+		    (guint32)(tests[i].streamsz - FU_STRUCT_FOCAL_MOC_FIRMWARE_HEADER_SIZE));
+		g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+		g_autoptr(GError) error = NULL;
+
+		ret = fu_firmware_parse_stream(firmware,
+					       stream,
+					       0,
+					       FU_FIRMWARE_PARSE_FLAG_NONE,
+					       &error);
+		g_assert_cmpint(ret, ==, tests[i].valid);
+		if (tests[i].valid)
+			g_assert_no_error(error);
+		else
+			g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	}
+}
+
+static void
+fu_focal_moc_firmware_strict_func(void)
+{
+	const struct {
+		gsize offset;
+		guint8 value;
+	} tests[] = {
+	    /* reserved regions must stay zero or a parse-write cycle would not
+	     * reproduce the file */
+	    {0x14, 0xAA},
+	    {0x95, 0x01},
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+		g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+		g_autoptr(GBytes) bytes =
+		    fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
+		g_autoptr(GByteArray) buf = g_bytes_unref_to_array(g_steal_pointer(&bytes));
+		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(GError) error = NULL;
+
+		buf->data[tests[i].offset] = tests[i].value;
+		stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+		g_assert_false(fu_firmware_parse_stream(firmware,
+							stream,
+							0,
+							FU_FIRMWARE_PARSE_FLAG_NONE,
+							&error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	}
+}
+
+static void
+fu_focal_moc_firmware_truncated_func(void)
+{
+	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
+	g_autoptr(FuInputStream) stream =
+	    fu_memory_input_stream_new_from_data(g_bytes_get_data(bytes, NULL), 128, NULL);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_false(
+	    fu_firmware_parse_stream(firmware, stream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, &error));
+	g_assert_nonnull(error);
+}
+
+static void
+fu_focal_moc_firmware_entry_offset_func(void)
+{
+	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
+	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
+	g_autoptr(GByteArray) buf = g_bytes_unref_to_array(g_steal_pointer(&bytes));
+	g_autoptr(GBytes) bytes_patched = NULL;
+	g_autoptr(GBytes) bytes_written = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a nonzero entry offset must survive the parse-write cycle */
+	fu_memwrite_uint32(buf->data + 0x10, 0x2, G_LITTLE_ENDIAN);
+	bytes_patched = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	stream = fu_memory_input_stream_new_from_bytes(bytes_patched);
+	g_assert_true(
+	    fu_firmware_parse_stream(firmware, stream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, &error));
+	g_assert_no_error(error);
+	bytes_written = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(bytes_written);
+	g_assert_cmpmem(g_bytes_get_data(bytes_written, NULL),
+			g_bytes_get_size(bytes_written),
+			g_bytes_get_data(bytes_patched, NULL),
+			g_bytes_get_size(bytes_patched));
+}
+
+static void
+fu_focal_moc_firmware_xml_invalid_func(void)
+{
+	const gchar *xmls[] = {
+	    "<firmware gtype=\"FuFocalMocFirmware\"><digest>zz</digest></firmware>",
+	    "<firmware gtype=\"FuFocalMocFirmware\"><digest>aabb</digest></firmware>",
+	    "<firmware gtype=\"FuFocalMocFirmware\"><signature>aabb</signature></firmware>",
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(xmls); i++) {
+		g_autoptr(FuFirmware) firmware = NULL;
+		g_autoptr(GError) error = NULL;
+
+		firmware = fu_firmware_new_from_xml(xmls[i], &error);
+		g_assert_null(firmware);
+		g_assert_nonnull(error);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+	g_type_ensure(FU_TYPE_FOCAL_MOC_FIRMWARE);
 	g_test_add_func("/focal-moc/packet/build", fu_focal_moc_packet_build_func);
 	g_test_add_func("/focal-moc/packet/parse", fu_focal_moc_packet_parse_func);
 	g_test_add_func("/focal-moc/packet/status-only", fu_focal_moc_packet_status_only_func);
@@ -683,5 +938,15 @@ main(int argc, char **argv)
 	g_test_add_func("/focal-moc/iap-probe-required", fu_focal_moc_iap_probe_required_func);
 	g_test_add_func("/focal-moc/iap-status-layout", fu_focal_moc_iap_status_layout_func);
 	g_test_add_func("/focal-moc/status-error", fu_focal_moc_status_error_func);
+	g_test_add_func("/focal-moc/firmware/parse", fu_focal_moc_firmware_func);
+	g_test_add_func("/focal-moc/firmware/xml", fu_focal_moc_firmware_xml_func);
+	g_test_add_func("/focal-moc/firmware/wrong-type", fu_focal_moc_firmware_wrong_type_func);
+	g_test_add_func("/focal-moc/firmware/invalid", fu_focal_moc_firmware_invalid_func);
+	g_test_add_func("/focal-moc/firmware/size-max", fu_focal_moc_firmware_size_max_func);
+	g_test_add_func("/focal-moc/firmware/strict", fu_focal_moc_firmware_strict_func);
+	g_test_add_func("/focal-moc/firmware/truncated", fu_focal_moc_firmware_truncated_func);
+	g_test_add_func("/focal-moc/firmware/entry-offset",
+			fu_focal_moc_firmware_entry_offset_func);
+	g_test_add_func("/focal-moc/firmware/xml-invalid", fu_focal_moc_firmware_xml_invalid_func);
 	return g_test_run();
 }
