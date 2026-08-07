@@ -212,7 +212,7 @@ expect_rc 0
 
 # ---
 echo " ● Getting filtered devices (should be none)…"
-fwupdmgr get-devices --no-unreported-check --filter wait-for-replug --filter-release trusted-payload -vv
+fwupdmgr get-devices --no-unreported-check --filter wait-for-replug --filter-release trusted-payload -v
 expect_rc 2
 
 # ---
