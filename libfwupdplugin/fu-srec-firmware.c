@@ -677,6 +677,7 @@ fu_srec_firmware_class_init(FuSrecFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	object_class->finalize = fu_srec_firmware_finalize;
 	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 	firmware_class->parse = fu_srec_firmware_parse;
