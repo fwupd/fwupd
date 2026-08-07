@@ -6,7 +6,7 @@ export PKG_CONFIG_PATH="/opt/homebrew/Cellar/readline/8.2.13/lib/pkgconfig:$PKG_
 
 mkdir -p build-macos && cd build-macos
 meson setup .. \
-    -Dbuild=all \
+    -Dbuild=dbus \
     -Ddbus_socket_address="unix:path=/var/run/fwupd.socket" \
     -Dman=false \
     -Dlibxmlb:gtkdoc=false \

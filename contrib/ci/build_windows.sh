@@ -39,7 +39,7 @@ xvfb-run meson setup .. \
     --sysconfdir="etc" \
     --libexecdir="bin" \
     --bindir="bin" \
-    -Dbuild=all \
+    -Dbuild=dbus \
     -Dman=false \
     -Dtests=false \
     -Dbuildtype=release \

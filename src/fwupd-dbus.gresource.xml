@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+ <gresource prefix="/org/freedesktop/fwupd">
+  <file preprocess="xml-stripblanks" compressed="true">org.freedesktop.fwupd.xml</file>
+ </gresource>
+</gresources>

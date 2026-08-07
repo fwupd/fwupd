@@ -1,7 +1,7 @@
 # Installed tests
 
 A test suite that can be used to interact with a fake device is installed when
-configured with `-Dbuild=all` and `-Dtests=true`.
+configured with `-Dbuild=dbus` and `-Dtests=true`.
 
 The test files have been signed by the production LVFS instance, and are available here:
 

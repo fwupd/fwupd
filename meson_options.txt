@@ -21,8 +21,8 @@ option(
 option(
   'build',
   type: 'combo',
-  choices: ['all', 'standalone', 'library'],
-  value: 'all',
+  choices: ['dbus', 'standalone', 'library'],
+  value: 'dbus',
   description: 'build type',
 )
 option(

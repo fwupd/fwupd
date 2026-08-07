@@ -15,12 +15,12 @@ if get_option('tests')
   subdir('device-tests')
 endif
 
-if build_daemon
+if build_daemon == 'dbus'
   subdir('motd')
 endif
 
 if get_option('tests')
-  if build_daemon
+  if build_daemon != 'none'
     subdir('tests')
   endif
 endif
@@ -59,7 +59,7 @@ if get_option('metainfo')
   )
 endif
 
-if build_daemon
+if build_daemon == 'dbus'
   install_data(
     ['org.freedesktop.fwupd.conf'],
     install_tag: 'runtime',

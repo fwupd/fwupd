@@ -181,7 +181,7 @@ DEBUG=1 fwupdmgr get-devices
 ## Build Options
 
 ### Common Meson Options
-- `-Dbuild=all|standalone|library` - What to build
+- `-Dbuild=dbus|standalone|library` - What to build
 - `-Dtests=true|false` - Enable/disable tests
 - `-Dplugin_*=enabled|disabled|auto` - Individual plugin control
 - `-Dsystemd=enabled|disabled|auto` - systemd integration
