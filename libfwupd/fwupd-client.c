@@ -92,6 +92,7 @@ typedef struct {
 	GMutex download_items_mutex; /* for @download_items */
 	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
 	FwupdClientSyncImpl impl;
+	GPtrArray *connect_items; /* element-type FwupdClientConnectItem */
 	gpointer impl_userdata;
 	GDestroyNotify impl_userdata_destroy; /* nullable */
 } FwupdClientPrivate;
@@ -107,6 +108,12 @@ typedef struct {
 	gchar *key;
 	gchar *value;
 } FwupdClientHwid;
+
+typedef struct {
+	FwupdClientConnectFunc func;
+	gpointer user_data;
+	GDestroyNotify user_data_destroy;
+} FwupdClientConnectItem;
 
 enum {
 	SIGNAL_CHANGED,
@@ -153,6 +160,16 @@ fwupd_client_hwid_free(FwupdClientHwid *hwid)
 	g_free(hwid->value);
 	g_free(hwid);
 }
+
+static void
+fwupd_client_connect_item_free(FwupdClientConnectItem *item)
+{
+	if (item->user_data_destroy != NULL)
+		item->user_data_destroy(item->user_data);
+	g_free(item);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientConnectItem, fwupd_client_connect_item_free)
 
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
@@ -1059,12 +1076,41 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	return g_steal_pointer(&helper);
 }
 
+/**
+ * fwupd_client_run_connect_funcs:
+ * @self: a #FwupdClient
+ * @error: (nullable): optional return location for an error
+ *
+ * Manually runs functions to run after the connection has been completed. In the usual case, this
+ * function is called as the last step of fwupd_client_connect_async(), but must be called manually
+ * if the connect action is overridden by fwupd_client_set_sync_impl().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	for (guint i = 0; i < priv->connect_items->len; i++) {
+		FwupdClientConnectItem *item = g_ptr_array_index(priv->connect_items, i);
+		if (!item->func(self, item->user_data, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
+	FwupdClient *self = g_task_get_source_object(task);
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
@@ -1075,6 +1121,12 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			return;
 		}
 		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* any post-connect extra checks */
+	if (!fwupd_client_run_connect_funcs(self, &error)) {
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -7976,6 +8028,37 @@ fwupd_client_build_report_security(FwupdClient *self,
 }
 
 /**
+ * fwupd_client_add_connect_func:
+ * @self: a #FwupdClient
+ * @func: (not nullable) (scope notified) (closure user_data) (destroy user_data_destroy): a
+ * #FwupdClientConnectFunc
+ * @user_data: (nullable): userdata to use with both @func and @user_data_destroy
+ * @user_data_destroy: (nullable): function to destroy @user_data when @self is finalized
+ *
+ * Adds a function to run after the connection has been completed. For example, checking that
+ * the client version matches the daemon version.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_add_connect_func(FwupdClient *self,
+			      FwupdClientConnectFunc func,
+			      gpointer user_data,
+			      GDestroyNotify user_data_destroy)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdClientConnectItem) item = g_new0(FwupdClientConnectItem, 1);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(func != NULL);
+
+	item->func = func;
+	item->user_data = user_data;
+	item->user_data_destroy = user_data_destroy;
+	g_ptr_array_add(priv->connect_items, g_steal_pointer(&item));
+}
+
+/**
  * fwupd_client_set_sync_impl:
  * @self: a #FwupdClient
  * @impl: (not nullable): a #FwupdClientSyncImpl
@@ -8514,7 +8597,8 @@ fwupd_client_init(FwupdClient *self)
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
 	g_mutex_init(&priv->immediate_requests_mutex);
 	priv->hwids = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_hwid_free);
-
+	priv->connect_items =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_connect_item_free);
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
 }
@@ -8526,6 +8610,7 @@ fwupd_client_finalize(GObject *object)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
 	g_ptr_array_unref(priv->hwids);
+	g_ptr_array_unref(priv->connect_items);
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->package_name);

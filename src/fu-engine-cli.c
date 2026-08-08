@@ -6296,14 +6296,16 @@ fu_engine_cli_sync_impl_connect(FwupdClient *client,
 				GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	return fu_engine_cli_start_engine(
-	    self,
-	    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-		FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
-		FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_REMOTES |
-		FU_ENGINE_LOAD_FLAG_HISTORY,
-	    self->progress,
-	    error);
+	if (!fu_engine_cli_start_engine(
+		self,
+		FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+		    FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
+		    FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_REMOTES |
+		    FU_ENGINE_LOAD_FLAG_HISTORY,
+		self->progress,
+		error))
+		return FALSE;
+	return fwupd_client_run_connect_funcs(client, error);
 }
 
 static GPtrArray *
