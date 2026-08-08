@@ -15,6 +15,7 @@
 #include "fu-plugin-private.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
 #include "fu-redfish-struct.h"
@@ -274,6 +275,136 @@ fu_redfish_common_lenovo_func(void)
 		g_assert_cmpstr(build, ==, values[i].build);
 		g_assert_cmpstr(version, ==, values[i].version);
 	}
+}
+
+static void
+fu_redfish_nvidia_task_response_func(void)
+{
+	/* A task-shaped body must never override the HTTP status. */
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(503,
+									 TRUE,
+									 TRUE,
+									 FALSE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_TRANSIENT);
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(403,
+									 TRUE,
+									 TRUE,
+									 FALSE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_FATAL);
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(404,
+									 TRUE,
+									 TRUE,
+									 FALSE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_REAPED);
+
+	/* Empty HTTP 200 is a reap signal only for the TaskMonitor URI. */
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200,
+									 TRUE,
+									 FALSE,
+									 FALSE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_TRANSIENT);
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200,
+									 TRUE,
+									 FALSE,
+									 TRUE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_REAPED);
+	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200,
+									 TRUE,
+									 TRUE,
+									 FALSE),
+			==,
+			FU_REDFISH_NVIDIA_TASK_RESPONSE_TASK);
+}
+
+static void
+fu_redfish_nvidia_task_parse_func(void)
+{
+	guint percent = 0;
+	FuRedfishNvidiaTaskState state;
+	g_autoptr(FwupdJsonObject) json_task = fwupd_json_object_new();
+	g_autoptr(GError) error = NULL;
+
+	fwupd_json_object_add_string(json_task, "TaskState", "Running");
+	fwupd_json_object_add_integer(json_task, "PercentComplete", 42);
+	state = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
+						     json_task,
+						     &percent,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(state, ==, FU_REDFISH_NVIDIA_TASK_RUNNING);
+	g_assert_cmpuint(percent, ==, 42);
+
+	/* The GB300 100% quirk applies only to a recognized running state. */
+	fwupd_json_object_clear(json_task);
+	fwupd_json_object_add_string(json_task, "TaskState", "Starting");
+	fwupd_json_object_add_integer(json_task, "PercentComplete", 100);
+	state = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
+						     json_task,
+						     &percent,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(state, ==, FU_REDFISH_NVIDIA_TASK_COMPLETED);
+
+	fwupd_json_object_clear(json_task);
+	state = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
+						     json_task,
+						     &percent,
+						     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpint(state, ==, FU_REDFISH_NVIDIA_TASK_FAILED);
+	g_clear_error(&error);
+
+	fwupd_json_object_add_string(json_task, "TaskState", "VendorDefinedSuccess");
+	fwupd_json_object_add_integer(json_task, "PercentComplete", 100);
+	state = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
+						     json_task,
+						     &percent,
+						     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpint(state, ==, FU_REDFISH_NVIDIA_TASK_FAILED);
+}
+
+static void
+fu_redfish_nvidia_firmware_size_func(void)
+{
+	const guint8 payload[] = {0x00, 0x01, 0x02, 0x03, 0x04};
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device =
+	    g_object_new(FU_TYPE_REDFISH_NVIDIA_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_exact = g_bytes_new_static(payload, 4);
+	g_autoptr(GBytes) blob_oversized = g_bytes_new_static(payload, sizeof(payload));
+	g_autoptr(FuInputStream) stream_exact = fu_memory_input_stream_new_from_bytes(blob_exact);
+	g_autoptr(FuInputStream) stream_oversized =
+	    fu_memory_input_stream_new_from_bytes(blob_oversized);
+	g_autoptr(GError) error = NULL;
+
+	/* exact advertised maximum must remain intact */
+	fu_device_set_firmware_size_max(device, 4);
+	firmware = fu_device_prepare_firmware(device,
+					      stream_exact,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	g_assert_cmpuint(fu_firmware_get_size(firmware), ==, 4);
+	g_clear_object(&firmware);
+
+	/* reject one byte beyond the maximum instead of truncating it */
+	firmware = fu_device_prepare_firmware(device,
+					      stream_oversized,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(firmware);
 }
 
 static void
@@ -672,6 +803,9 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
+	g_test_add_func("/redfish/nvidia/task-response", fu_redfish_nvidia_task_response_func);
+	g_test_add_func("/redfish/nvidia/task-parse", fu_redfish_nvidia_task_parse_func);
+	g_test_add_func("/redfish/nvidia/firmware-size", fu_redfish_nvidia_firmware_size_func);
 	g_test_add_func("/redfish/network/mac_addr", fu_redfish_network_mac_addr_func);
 	g_test_add_func("/redfish/network/vid_pid", fu_redfish_network_vid_pid_func);
 	g_test_add_data_func("/redfish/unlicensed-plugin/devices",
