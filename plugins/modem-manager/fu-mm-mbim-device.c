@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-mm-mbim-device.h"
 
 typedef struct {
@@ -434,6 +436,68 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 	/* success */
 	return g_steal_pointer(&helper->mbim_message);
+}
+
+MbimMessage *
+fu_mm_mbim_device_transaction_sync(const gchar *device_file,
+				   MbimMessage *request,
+				   guint timeout_ms,
+				   GError **error)
+{
+	g_autoptr(FuMmMbimDevice) device = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(MbimMessage) response = NULL;
+	FuMmMbimDevicePrivate *priv = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuContext) ctx = NULL;
+
+	g_return_val_if_fail(device_file != NULL, NULL);
+	g_return_val_if_fail(request != NULL, NULL);
+
+	device = g_object_new(FU_TYPE_MM_MBIM_DEVICE, NULL);
+	if (device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Failed to create FuMmMbimDevice");
+		return NULL;
+	}
+
+	ctx = g_object_new(FU_TYPE_CONTEXT, "flags", (guint64)FU_CONTEXT_FLAG_SAVE_EVENTS, NULL);
+	if (ctx == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Failed to create FuContext");
+		return NULL;
+	}
+	fu_device_set_context(FU_DEVICE(device), ctx);
+
+	file = g_file_new_for_path(device_file);
+
+	priv = GET_PRIVATE(device);
+	priv->mbim_device = fu_mm_mbim_device_new_sync(device, file, timeout_ms, error);
+	if (priv->mbim_device == NULL)
+		return NULL;
+
+	if (!fu_mm_mbim_device_open_sync(device, timeout_ms, error))
+		return NULL;
+
+	response = fu_mm_mbim_device_command_sync(device, request, timeout_ms, error);
+	if (response == NULL) {
+		if (!fu_mm_mbim_device_close_sync(device, timeout_ms, &error_local)) {
+			g_warning("Failed to close MBIM device after command error: %s",
+				  error_local->message);
+		}
+		return NULL;
+	}
+
+	if (!fu_mm_mbim_device_close_sync(device, timeout_ms, &error_local)) {
+		g_warning("Failed to close MBIM device after successful command: %s",
+			  error_local->message);
+	}
+
+	return g_steal_pointer(&response);
 }
 
 static gboolean

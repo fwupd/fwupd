@@ -5,7 +5,7 @@
  */
 
 #include "config.h"
-
+#include "fu-mm-mbim-device.h"
 #include "fu-mm-fastboot-device.h"
 
 struct _FuMmFastbootDevice {
@@ -16,6 +16,8 @@ struct _FuMmFastbootDevice {
 G_DEFINE_TYPE(FuMmFastbootDevice, fu_mm_fastboot_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE "detach-at-fastboot-has-no-response"
+
+#define ROLLING_WIRELESS_VENDOR_ID 0x33F8
 
 static void
 fu_mm_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -34,21 +36,108 @@ fu_mm_fastboot_device_set_detach_at(FuMmFastbootDevice *self, const gchar *detac
 }
 
 static gboolean
+fu_mm_fastboot_device_detach_at_cmd_transaction_sync(const gchar *device_file,
+						     const gchar *detach_at,
+						     GError **error)
+{
+	g_autoptr(MbimMessage) request = NULL;
+	g_autoptr(MbimMessage) response = NULL;
+	g_autofree gchar *cmd_crlf = NULL;
+	const guint8 *resp_data = NULL;
+	guint32 resp_size = 0;
+
+	g_return_val_if_fail(device_file != NULL, FALSE);
+	g_return_val_if_fail(detach_at != NULL, FALSE);
+
+	request = mbim_message_fibocom_at_command_set_new(strlen("AT\r\n"),
+							  (const guint8 *)"AT\r\n",
+							  error);
+	if (request == NULL)
+		return FALSE;
+
+	response = fu_mm_mbim_device_transaction_sync(device_file, request, 10 * 1000, error);
+	if (response == NULL) {
+		g_prefix_error_literal(error, "AT channel pre-check transaction failed: ");
+		return FALSE;
+	}
+
+	if (!mbim_message_fibocom_at_command_response_parse(response,
+							    &resp_size,
+							    &resp_data,
+							    error)) {
+		g_prefix_error_literal(error, "AT cmd pre-check response parse failed: ");
+		return FALSE;
+	}
+
+	if (g_strrstr_len((const gchar *)resp_data, resp_size, "\r\nOK\r\n") == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "AT pre-check did not contain '\\r\\nOK\\r\\n'");
+		return FALSE;
+	}
+
+	cmd_crlf = g_strdup_printf("%s\r\n", detach_at);
+	if (cmd_crlf == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Out of memory");
+		return FALSE;
+	}
+
+	/* send detach at command,
+	 * and modem need reboot, so ignore response */
+	request = mbim_message_fibocom_at_command_set_new(strlen(cmd_crlf),
+							  (const guint8 *)cmd_crlf,
+							  error);
+	if (request == NULL)
+		return FALSE;
+
+	response = fu_mm_mbim_device_transaction_sync(device_file, request, 10 * 1000, NULL);
+	if (response == NULL) {
+		g_debug("detach AT command transaction failed (ignored)");
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_mm_fastboot_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 	gboolean has_response = TRUE;
+	guint16 vid = fu_device_get_vid(device);
 
 	/* expect response for fastboot AT command */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE)) {
 		has_response = FALSE;
 	}
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
-		return FALSE;
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), self->detach_at, has_response, error)) {
-		g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
-		return FALSE;
+
+	if (vid != ROLLING_WIRELESS_VENDOR_ID) {
+		if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
+			return FALSE;
+		if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self),
+					 self->detach_at,
+					 has_response,
+					 error)) {
+			g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
+			return FALSE;
+		}
+	} else {
+		g_autofree gchar *device_file = NULL;
+		if (!fu_mm_device_get_device_file(FU_MM_DEVICE(self),
+						  MM_MODEM_PORT_TYPE_MBIM,
+						  &device_file,
+						  error)) {
+			g_prefix_error_literal(error, "no mbim port type found for modem: ");
+			return FALSE;
+		}
+
+		if (!fu_mm_fastboot_device_detach_at_cmd_transaction_sync(device_file,
+									  self->detach_at,
+									  error)) {
+			g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -60,8 +149,14 @@ static gboolean
 fu_mm_fastboot_device_probe(FuDevice *device, GError **error)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
-	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_AT, error);
+	guint16 vid = fu_device_get_vid(device);
+
+	if (vid != ROLLING_WIRELESS_VENDOR_ID) {
+		return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_AT, error);
+	}
+	return TRUE;
 }
+
 
 static gboolean
 fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)

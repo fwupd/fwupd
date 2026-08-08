@@ -1,0 +1,27 @@
+{
+  "FwupdVersion": "2.1.7",
+  "UsbDevices": [
+    {
+      "Created": "2026-07-27T10:42:54.021297Z",
+      "GType": "FuMmFastbootDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb4/4-4",
+      "Vendor": 13304,
+      "Model": 769,
+      "Version": "19512.0000.00.11.03.01_5157.0001.012.302.003_E42",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:14.0/usb4/4-4",
+      "DeviceIds": [
+        "USB\\VID_33F8&PID_0301",
+        "USB\\VID_33F8&PID_0301&REV_0504",
+        "USB\\VID_33F8&PID_0301&CARRIER_VOLTE-CU",
+        "USB\\VID_33F8&PID_0301&REV_0504&CARRIER_VOLTE-CU",
+        "USB\\VID_33F8"
+      ],
+      "Ports": {
+        "mbim": "/dev/cdc-wdm0",
+        "at": "/dev/ttyUSB0",
+        "net": "/dev/wwp0s20f0u4"
+      },
+      "DetachAt": "AT+SYSCMD=\"sys_reboot bootloader\""
+    }
+  ]
+}

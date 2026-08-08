@@ -1,6 +1,6 @@
 libmm_glib = dependency('mm-glib', version: '>= 1.22.0', required: get_option('plugin_modem_manager'))
 libqmi_glib = dependency('qmi-glib', version: '>= 1.32.0', required: get_option('plugin_modem_manager'))
-libmbim_glib = dependency('mbim-glib', version: '>= 1.28.0', required: get_option('plugin_modem_manager'))
+libmbim_glib = dependency('mbim-glib', version: '>= 1.32.0', required: get_option('plugin_modem_manager'))
 
 libmm_glib.found() or subdir_done()
 libqmi_glib.found() or subdir_done()
@@ -50,10 +50,12 @@ device_tests += files(
   'tests/lenovo-em061kgl-mbim.json',
   'tests/foxconn-t99w373-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
+  'tests/qc-rw101r-fastboot.json',
 )
 enumeration_data += files(
   'tests/foxconn-t99w373-mbim-setup.json',
   'tests/qc-eg25ggc-fastboot-setup.json',
+  'tests/qc-rw101r-fastboot-setup.json',
 )
 
 if get_option('tests')
