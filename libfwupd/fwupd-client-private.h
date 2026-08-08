@@ -21,6 +21,11 @@ struct FwupdClientSyncImpl {
 			     gpointer user_data,
 			     GCancellable *cancellable,
 			     GError **error);
+	gboolean (*clean_remote)(FwupdClient *self,
+				 const gchar *remote_id,
+				 gpointer user_data,
+				 GCancellable *cancellable,
+				 GError **error);
 	gboolean (*connect)(FwupdClient *self,
 			    gpointer user_data,
 			    GCancellable *cancellable,
@@ -125,6 +130,13 @@ struct FwupdClientSyncImpl {
 					GError **error);
 	gboolean (*modify_config)(FwupdClient *self,
 				  const gchar *section,
+				  const gchar *key,
+				  const gchar *value,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
+	gboolean (*modify_device)(FwupdClient *self,
+				  const gchar *device_id,
 				  const gchar *key,
 				  const gchar *value,
 				  gpointer user_data,

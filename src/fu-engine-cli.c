@@ -6279,6 +6279,17 @@ fu_engine_cli_print_error(FuEngineCli *self, const GError *error)
 }
 
 static gboolean
+fu_engine_cli_sync_impl_clean_remote(FwupdClient *client,
+				     const gchar *remote_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_clean_remote(self->engine, remote_id, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_connect(FwupdClient *client,
 				gpointer user_data,
 				GCancellable *cancellable,
@@ -6414,6 +6425,19 @@ fu_engine_cli_sync_impl_modify_config(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_modify_device(FwupdClient *client,
+				      const gchar *device_id,
+				      const gchar *key,
+				      const gchar *value,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_modify_device(self->engine, device_id, key, value, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_modify_remote(FwupdClient *client,
 				      const gchar *remote_id,
 				      const gchar *key,
@@ -6441,6 +6465,7 @@ static void
 fu_engine_cli_init(FuEngineCli *self)
 {
 	static FwupdClientSyncImpl impl = {
+	    .clean_remote = fu_engine_cli_sync_impl_clean_remote,
 	    .connect = fu_engine_cli_sync_impl_connect,
 	    .get_devices = fu_engine_cli_sync_impl_get_devices,
 	    .get_devices_by_guid = fu_engine_cli_sync_impl_get_devices_by_guid,
@@ -6453,6 +6478,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
 	    .modify_config = fu_engine_cli_sync_impl_modify_config,
+	    .modify_device = fu_engine_cli_sync_impl_modify_device,
 	    .modify_remote = fu_engine_cli_sync_impl_modify_remote,
 	    .search = fu_engine_cli_sync_impl_search,
 	};
