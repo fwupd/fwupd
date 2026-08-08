@@ -10,6 +10,56 @@
 #include "fwupd-error.h"
 #include "fwupd-test.h"
 
+static gboolean
+fwupd_client_connect_success_cb(FwupdClient *self, gpointer user_data, GError **error)
+{
+	gboolean *run = (gboolean *)user_data;
+	*run = TRUE;
+	return TRUE;
+}
+
+static gboolean
+fwupd_client_connect_failure_cb(FwupdClient *self, gpointer user_data, GError **error)
+{
+	gboolean *run = (gboolean *)user_data;
+	*run = TRUE;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED, "ac needed");
+	return FALSE;
+}
+
+static void
+fwupd_client_connect_func(void)
+{
+	gboolean ret;
+	gboolean ran_func1 = FALSE;
+	gboolean ran_func2 = FALSE;
+	gboolean ran_func3 = FALSE;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(GError) error = NULL;
+
+	/* none */
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* all success */
+	fwupd_client_add_connect_func(client, fwupd_client_connect_success_cb, &ran_func1, NULL);
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(ran_func1);
+
+	/* 1 success, 1 failure (then abort) */
+	fwupd_client_add_connect_func(client, fwupd_client_connect_failure_cb, &ran_func2, NULL);
+	fwupd_client_add_connect_func(client, fwupd_client_connect_success_cb, &ran_func3, NULL);
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED);
+	g_assert_false(ret);
+	g_assert_true(ran_func1);
+	g_assert_true(ran_func2);
+	g_assert_false(ran_func3);
+}
+
 static void
 fwupd_client_download_func(void)
 {
@@ -388,5 +438,6 @@ main(int argc, char **argv)
 		g_test_add_func("/fwupd/client/devices", fwupd_client_devices_func);
 	}
 	g_test_add_func("/fwupd/client/download", fwupd_client_download_func);
+	g_test_add_func("/fwupd/client/connect/func", fwupd_client_connect_func);
 	return g_test_run();
 }

@@ -1217,6 +1217,7 @@ LIBFWUPD_2.1.7 {
 
 LIBFWUPD_2.1.8 {
   global:
+    fwupd_client_add_connect_func;
     fwupd_client_download_bytes2;
     fwupd_client_download_bytes2_async;
     fwupd_client_download_bytes2_finish;
@@ -1224,5 +1225,6 @@ LIBFWUPD_2.1.8 {
     fwupd_client_emit_device_changed;
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
+    fwupd_client_run_connect_funcs;
   local: *;
 } LIBFWUPD_2.1.7;

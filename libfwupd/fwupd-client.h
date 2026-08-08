@@ -682,4 +682,28 @@ fwupd_client_set_sync_impl(FwupdClient *self,
 			   gpointer userdata,
 			   GDestroyNotify userdata_destroy) G_GNUC_NON_NULL(1);
 
+/**
+ * FwupdClientConnectFunc:
+ * @self: a #FwupdClient
+ * @user_data: (closure): user data
+ * @error: (nullable): optional return location for an error
+ *
+ * Functions to run when the client has connected. If any function returns with a failure then
+ * the connect method will fail and will need to be started again.
+ *
+ * Returns: %TRUE on success
+ */
+typedef gboolean (*FwupdClientConnectFunc)(FwupdClient *self,
+					   gpointer user_data,
+					   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+
+void
+fwupd_client_add_connect_func(FwupdClient *self,
+			      FwupdClientConnectFunc func,
+			      gpointer user_data,
+			      GDestroyNotify user_data_destroy) G_GNUC_NON_NULL(1, 2);
+gboolean
+fwupd_client_run_connect_funcs(FwupdClient *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+
 G_END_DECLS
