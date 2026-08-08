@@ -6,6 +6,7 @@ policy/org.freedesktop.fwupd.policy.in
 plugins/uefi-capsule/fu-uefi-capsule-plugin.c
 plugins/uefi-dbx/fu-dbxtool.c
 src/fu-cli-common.c
+src/fu-cli.c
 src/fu-console.c
 src/fu-dbus-cli.c
 src/fu-debug.c

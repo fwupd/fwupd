@@ -8464,6 +8464,7 @@ fwupd_client_init(FwupdClient *self)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	static FwupdClientSyncImpl impl = {
 	    .activate = fwupd_client_sync_impl_activate,
+	    .clean_remote = fwupd_client_sync_impl_clean_remote,
 	    .connect = fwupd_client_sync_impl_connect,
 	    .emulation_load = fwupd_client_sync_impl_emulation_load,
 	    .emulation_save = fwupd_client_sync_impl_emulation_save,
@@ -8486,6 +8487,7 @@ fwupd_client_init(FwupdClient *self)
 	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,
+	    .modify_device = fwupd_client_sync_impl_modify_device,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
 	    .refresh_remote = fwupd_client_sync_impl_refresh_remote,
 	    .reset_config = fwupd_client_sync_impl_reset_config,

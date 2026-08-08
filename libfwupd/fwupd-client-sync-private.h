@@ -17,6 +17,12 @@ fwupd_client_sync_impl_activate(FwupdClient *self,
 				GCancellable *cancellable,
 				GError **error);
 gboolean
+fwupd_client_sync_impl_clean_remote(FwupdClient *self,
+				    const gchar *remote_id,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+gboolean
 fwupd_client_sync_impl_connect(FwupdClient *self,
 			       gpointer user_data,
 			       GCancellable *cancellable,
@@ -142,6 +148,14 @@ fwupd_client_sync_impl_modify_bios_setting(FwupdClient *self,
 gboolean
 fwupd_client_sync_impl_modify_config(FwupdClient *self,
 				     const gchar *section,
+				     const gchar *key,
+				     const gchar *value,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+gboolean
+fwupd_client_sync_impl_modify_device(FwupdClient *self,
+				     const gchar *device_id,
 				     const gchar *key,
 				     const gchar *value,
 				     gpointer user_data,
