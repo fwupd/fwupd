@@ -17,6 +17,12 @@ fwupd_client_sync_impl_activate(FwupdClient *self,
 				GCancellable *cancellable,
 				GError **error);
 gboolean
+fwupd_client_sync_impl_clean_remote(FwupdClient *self,
+				    const gchar *remote_id,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+gboolean
 fwupd_client_sync_impl_connect(FwupdClient *self,
 			       gpointer user_data,
 			       GCancellable *cancellable,
