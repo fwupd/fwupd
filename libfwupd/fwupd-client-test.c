@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
 #include "fwupd-error.h"
 #include "fwupd-test.h"
@@ -58,6 +59,68 @@ fwupd_client_connect_func(void)
 	g_assert_true(ran_func1);
 	g_assert_true(ran_func2);
 	g_assert_false(ran_func3);
+}
+
+typedef struct {
+	gboolean done_connect;
+	gboolean done_set_feature_flags;
+	FwupdFeatureFlags feature_flags;
+} FwupdClientImplHelper;
+
+static gboolean
+fwupd_client_impl_connect_cb(FwupdClient *self,
+			     gpointer user_data,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
+	helper->done_connect = TRUE;
+	return TRUE;
+}
+
+static gboolean
+fwupd_client_impl_set_feature_flags_cb(FwupdClient *self,
+				       FwupdFeatureFlags feature_flags,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
+	helper->done_set_feature_flags = TRUE;
+	helper->feature_flags = feature_flags;
+	return TRUE;
+}
+
+static void
+fwupd_client_sync_impl_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	FwupdClientSyncImpl impl = {
+	    .connect = fwupd_client_impl_connect_cb,
+	    .set_feature_flags = fwupd_client_impl_set_feature_flags_cb,
+	};
+	FwupdClientImplHelper helper = {};
+
+	fwupd_client_set_sync_impl(client, &impl, &helper, NULL);
+	ret = fwupd_client_connect(client, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(helper.done_connect);
+	g_assert_false(helper.done_set_feature_flags);
+
+	ret =
+	    fwupd_client_set_feature_flags(client, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(helper.feature_flags, ==, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
+	g_assert_true(helper.done_connect);
+	g_assert_true(helper.done_set_feature_flags);
+
+	ret = fwupd_client_reset_config(client, "daemon", NULL, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
 }
 
 static void
@@ -439,5 +502,6 @@ main(int argc, char **argv)
 	}
 	g_test_add_func("/fwupd/client/download", fwupd_client_download_func);
 	g_test_add_func("/fwupd/client/connect/func", fwupd_client_connect_func);
+	g_test_add_func("/fwupd/client/sync/impl", fwupd_client_sync_impl_func);
 	return g_test_run();
 }
