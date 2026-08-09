@@ -1,0 +1,20 @@
+{
+  "name": "MaxLinear MxL86282 Ethernet Switch",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "ea91982f41f6ff768a2ace5fa910b7f5d1d03e30d1f1d1cbbd7addcc0c52c6ce-mxl86282_test_firmware.cab",
+      "emulation-url": "84f2e57073a148dbcb759f4466eaca42223ed92475d40df544d7b22f17262f7c-mxl86282-emulation.zip",
+      "components": [
+        {
+          "name": "fw",
+          "protocol": "org.kernel.devlink",
+          "version": "1.0.73",
+          "guids": [
+            "9ac715d5-9e4c-53da-9801-05d8366855b6"
+          ]
+        }
+      ]
+    }
+  ]
+}
