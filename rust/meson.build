@@ -37,6 +37,15 @@ if get_option('tests')
     suite: 'rust',
   )
 
+  rustmod.test(
+    'fwupd-rust-ffi',
+    fwupd_ffi_lib,
+    dependencies: [glib],
+    rust_args: rust_panic_unwind_flags,
+    timeout: 120,
+    suite: 'rust',
+  )
+
   if build_docs
     rustmod.doctest(
       'fwupd-doctest',
