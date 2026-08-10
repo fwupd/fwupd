@@ -9,7 +9,6 @@ rust_panic_unwind_flags = ['-Cpanic=unwind']
 
 # The pure Rust library
 fwupd_rust_lib = fwupd_pkg.library(
-  rust_args: rust_panic_abort_flags,
   install: false
 )
 fwupd_pkg.override_dependency(
