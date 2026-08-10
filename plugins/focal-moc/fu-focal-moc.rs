@@ -106,6 +106,26 @@ struct FuStructFocalMocDataV1 {
     data: [u8; 1024],
 }
 
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocSohV2 {
+    kind: FuFocalMocFrame == Soh,
+    sequence: u16be,
+    filename: [char; 64],
+    firmware_size: u32be,
+    crc32: u32be,
+    frame_size: u16be == 1024,
+    _reserved: [u8; 54],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocDataV2 {
+    kind: FuFocalMocFrame,
+    sequence: u16be,
+    data: [u8; 1024],
+}
+
 #[derive(New, ParseStream, ValidateStream, Default)]
 #[repr(C, packed)]
 struct FuStructFocalMocFirmwareHeader {

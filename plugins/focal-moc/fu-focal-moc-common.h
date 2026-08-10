@@ -30,11 +30,23 @@ fu_focal_moc_ymodem_build_soh(gsize firmware_sz,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 GByteArray *
+fu_focal_moc_ymodem_build_soh_v2(gsize firmware_sz,
+				 guint32 crc32,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+
+GByteArray *
 fu_focal_moc_ymodem_build_data(FuFocalMocFrame kind,
 			       guint16 sequence,
 			       const guint8 *buf,
 			       gsize bufsz,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+
+GByteArray *
+fu_focal_moc_ymodem_build_data_v2(FuFocalMocFrame kind,
+				  guint16 sequence,
+				  const guint8 *buf,
+				  gsize bufsz,
+				  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 gchar *
 fu_focal_moc_version_parse(const guint8 *buf, gsize bufsz, gboolean *is_bootloader, GError **error)

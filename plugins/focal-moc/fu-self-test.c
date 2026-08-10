@@ -2,7 +2,7 @@
  * Copyright 2026 FocalTech Systems Co., Ltd.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
- * nocheck:magic-inlines=230
+ * nocheck:magic-inlines=235
  */
 
 #include "config.h"
@@ -717,6 +717,51 @@ fu_focal_moc_ymodem_frame_func(void)
 					       payload,
 					       sizeof(payload),
 					       &error);
+	g_assert_null(frame);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_clear_error(&error);
+
+	frame = fu_focal_moc_ymodem_build_soh_v2(0x1234, 0x89ABCDEF, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(frame);
+	g_assert_cmpuint(frame->len, ==, FU_STRUCT_FOCAL_MOC_SOH_V2_SIZE);
+	g_assert_cmphex(frame->data[0], ==, FU_FOCAL_MOC_FRAME_SOH);
+	g_assert_cmphex(frame->data[1], ==, 0x00);
+	g_assert_cmphex(frame->data[2], ==, 0x00);
+	g_assert_cmpmem(frame->data + 3, 7, "app.bin", 7);
+	g_assert_true(
+	    fu_memread_uint32_safe(frame->data, frame->len, 67, &value, G_BIG_ENDIAN, &error));
+	g_assert_no_error(error);
+	g_assert_cmphex(value, ==, 0x1234);
+	g_assert_true(
+	    fu_memread_uint32_safe(frame->data, frame->len, 71, &value, G_BIG_ENDIAN, &error));
+	g_assert_no_error(error);
+	g_assert_cmphex(value, ==, 0x89ABCDEF);
+	/* the fixed frame size is 1024 big-endian */
+	g_assert_cmphex(frame->data[75], ==, 0x04);
+	g_assert_cmphex(frame->data[76], ==, 0x00);
+
+	g_clear_pointer(&frame, g_byte_array_unref);
+	frame = fu_focal_moc_ymodem_build_data_v2(FU_FOCAL_MOC_FRAME_STX,
+						  0x1234,
+						  payload,
+						  sizeof(payload),
+						  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(frame);
+	g_assert_cmpuint(frame->len, ==, FU_STRUCT_FOCAL_MOC_DATA_V2_SIZE);
+	g_assert_cmphex(frame->data[0], ==, FU_FOCAL_MOC_FRAME_STX);
+	g_assert_cmphex(frame->data[1], ==, 0x12);
+	g_assert_cmphex(frame->data[2], ==, 0x34);
+	g_assert_cmpmem(frame->data + 3, sizeof(payload), payload, sizeof(payload));
+	g_assert_cmphex(frame->data[3 + sizeof(payload)], ==, 0x00);
+
+	g_clear_pointer(&frame, g_byte_array_unref);
+	frame = fu_focal_moc_ymodem_build_data_v2(FU_FOCAL_MOC_FRAME_SOH,
+						  0x1234,
+						  payload,
+						  sizeof(payload),
+						  &error);
 	g_assert_null(frame);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 }

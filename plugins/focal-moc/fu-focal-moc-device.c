@@ -10,15 +10,15 @@
 #include "fu-focal-moc-device.h"
 #include "fu-focal-moc-struct.h"
 
-struct _FuFocalMocDevice {
-	FuUsbDevice parent_instance;
+typedef struct {
 	guint8 ep_in;
 	guint8 ep_out;
 	guint8 iface;
 	FuFocalMocIapStatusLayout iap_status_layout;
-};
+} FuFocalMocDevicePrivate;
 
-G_DEFINE_TYPE(FuFocalMocDevice, fu_focal_moc_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuFocalMocDevice, fu_focal_moc_device, FU_TYPE_USB_DEVICE)
+#define GET_PRIVATE(o) (fu_focal_moc_device_get_instance_private(o))
 
 #define FU_FOCAL_MOC_USB_INTERFACE	    0
 #define FU_FOCAL_MOC_USB_TIMEOUT_MS	    5000
@@ -35,29 +35,43 @@ static void
 fu_focal_moc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_string_append_hex(str, idt, "Interface", self->iface);
-	fwupd_codec_string_append_hex(str, idt, "EndpointIn", self->ep_in);
-	fwupd_codec_string_append_hex(str, idt, "EndpointOut", self->ep_out);
+	fwupd_codec_string_append_hex(str, idt, "Interface", priv->iface);
+	fwupd_codec_string_append_hex(str, idt, "EndpointIn", priv->ep_in);
+	fwupd_codec_string_append_hex(str, idt, "EndpointOut", priv->ep_out);
 	fwupd_codec_string_append(
 	    str,
 	    idt,
 	    "IapStatusLayout",
-	    fu_focal_moc_iap_status_layout_to_string(self->iap_status_layout));
+	    fu_focal_moc_iap_status_layout_to_string(priv->iap_status_layout));
 }
 
-static gboolean
+void
+fu_focal_moc_device_set_iap_status_layout(FuFocalMocDevice *self,
+					  FuFocalMocIapStatusLayout iap_status_layout)
+{
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_FOCAL_MOC_DEVICE(self));
+	priv->iap_status_layout = iap_status_layout;
+}
+
+gboolean
 fu_focal_moc_device_send_raw(FuFocalMocDevice *self,
 			     const guint8 *buf,
 			     gsize bufsz,
 			     guint timeout_ms,
 			     GError **error)
 {
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual = 0;
+
+	g_return_val_if_fail(FU_IS_FOCAL_MOC_DEVICE(self), FALSE);
 
 	fu_dump_full(G_LOG_DOMAIN, "request", buf, bufsz, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 self->ep_out,
+					 priv->ep_out,
 					 (guint8 *)buf,
 					 bufsz,
 					 &actual,
@@ -87,15 +101,18 @@ fu_focal_moc_device_send(FuFocalMocDevice *self, GByteArray *buf, guint timeout_
 	return fu_focal_moc_device_send_raw(self, buf->data, buf->len, timeout_ms, error);
 }
 
-static GByteArray *
+GByteArray *
 fu_focal_moc_device_receive_raw(FuFocalMocDevice *self, guint timeout_ms, GError **error)
 {
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual = 0;
 	guint8 buf[FU_FOCAL_MOC_RESPONSE_SIZE] = {0};
 	g_autoptr(GByteArray) data = g_byte_array_new();
 
+	g_return_val_if_fail(FU_IS_FOCAL_MOC_DEVICE(self), NULL);
+
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 self->ep_in,
+					 priv->ep_in,
 					 buf,
 					 sizeof(buf),
 					 &actual,
@@ -123,17 +140,22 @@ fu_focal_moc_device_receive(FuFocalMocDevice *self,
 	response = fu_focal_moc_device_receive_raw(self, timeout_ms, error);
 	if (response == NULL)
 		return NULL;
-	return fu_focal_moc_packet_parse(response->data, response->len, TRUE, status, error);
+	return fu_focal_moc_packet_parse(
+	    response->data,
+	    response->len,
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_FOCAL_MOC_DEVICE_FLAG_LEGACY_TRAILER),
+	    status,
+	    error);
 }
 
 static GByteArray *
-fu_focal_moc_device_command(FuFocalMocDevice *self,
-			    FuFocalMocCmd command,
-			    const guint8 *payload,
-			    gsize payload_sz,
-			    guint timeout_ms,
-			    guint8 *status,
-			    GError **error)
+fu_focal_moc_device_command_plaintext(FuFocalMocDevice *self,
+				      guint8 command,
+				      const guint8 *payload,
+				      gsize payload_sz,
+				      guint timeout_ms,
+				      guint8 *status,
+				      GError **error)
 {
 	g_autoptr(GByteArray) request = NULL;
 
@@ -145,6 +167,19 @@ fu_focal_moc_device_command(FuFocalMocDevice *self,
 	return fu_focal_moc_device_receive(self, timeout_ms, status, error);
 }
 
+static GByteArray *
+fu_focal_moc_device_command(FuFocalMocDevice *self,
+			    guint8 command,
+			    const guint8 *payload,
+			    gsize payload_sz,
+			    guint timeout_ms,
+			    guint8 *status,
+			    GError **error)
+{
+	FuFocalMocDeviceClass *klass = FU_FOCAL_MOC_DEVICE_GET_CLASS(self);
+	return klass->command(self, command, payload, payload_sz, timeout_ms, status, error);
+}
+
 static gboolean
 fu_focal_moc_device_status_error(FuFocalMocDevice *self,
 				 guint8 status,
@@ -153,12 +188,13 @@ fu_focal_moc_device_status_error(FuFocalMocDevice *self,
 				 GByteArray *data,
 				 GError **error)
 {
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean status_aligned = TRUE;
 
 	/* only a bootloader that failed the capability probe uses the legacy
 	 * layout; the runtime firmware always uses the unified one */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
-	    self->iap_status_layout == FU_FOCAL_MOC_IAP_STATUS_LAYOUT_LEGACY)
+	    priv->iap_status_layout == FU_FOCAL_MOC_IAP_STATUS_LAYOUT_LEGACY)
 		status_aligned = FALSE;
 	return fu_focal_moc_status_to_error(status,
 					    context,
@@ -352,9 +388,38 @@ fu_focal_moc_device_send_frame(FuFocalMocDevice *self,
 	return TRUE;
 }
 
+static GByteArray *
+fu_focal_moc_device_build_soh(FuFocalMocDevice *self,
+			      gsize firmware_sz,
+			      guint32 crc32,
+			      GError **error)
+{
+	return fu_focal_moc_ymodem_build_soh(firmware_sz, crc32, error);
+}
+
+static GByteArray *
+fu_focal_moc_device_build_data(FuFocalMocDevice *self,
+			       FuFocalMocFrame kind,
+			       guint16 sequence,
+			       const guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	return fu_focal_moc_ymodem_build_data(kind, sequence, buf, bufsz, error);
+}
+
+static FuInputStream *
+fu_focal_moc_device_get_firmware_stream(FuFocalMocDevice *self,
+					FuFirmware *firmware,
+					GError **error)
+{
+	return fu_firmware_get_stream(firmware, error);
+}
+
 static gboolean
 fu_focal_moc_device_write_soh(FuFocalMocDevice *self, FuInputStream *stream, GError **error)
 {
+	FuFocalMocDeviceClass *klass = FU_FOCAL_MOC_DEVICE_GET_CLASS(self);
 	gsize streamsz = 0;
 	/* only this seed makes fu_input_stream_compute_crc32() agree with fu_crc32() */
 	guint32 crc32 = G_MAXUINT32;
@@ -364,7 +429,7 @@ fu_focal_moc_device_write_soh(FuFocalMocDevice *self, FuInputStream *stream, GEr
 		return FALSE;
 	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &crc32, error))
 		return FALSE;
-	frame = fu_focal_moc_ymodem_build_soh(streamsz, crc32, error);
+	frame = klass->build_soh(self, streamsz, crc32, error);
 	if (frame == NULL)
 		return FALSE;
 
@@ -378,6 +443,8 @@ fu_focal_moc_device_write_chunks(FuFocalMocDevice *self,
 				 FuProgress *progress,
 				 GError **error)
 {
+	FuFocalMocDeviceClass *klass = FU_FOCAL_MOC_DEVICE_GET_CLASS(self);
+
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -388,12 +455,12 @@ fu_focal_moc_device_write_chunks(FuFocalMocDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		frame = fu_focal_moc_ymodem_build_data(is_last ? FU_FOCAL_MOC_FRAME_EOT
-							       : FU_FOCAL_MOC_FRAME_STX,
-						       (guint16)(i + 1),
-						       fu_chunk_get_data(chk),
-						       fu_chunk_get_data_sz(chk),
-						       error);
+		frame = klass->build_data(self,
+					  is_last ? FU_FOCAL_MOC_FRAME_EOT : FU_FOCAL_MOC_FRAME_STX,
+					  (guint16)(i + 1),
+					  fu_chunk_get_data(chk),
+					  fu_chunk_get_data_sz(chk),
+					  error);
 		if (frame == NULL)
 			return FALSE;
 		if (!fu_focal_moc_device_send_frame(self,
@@ -491,8 +558,9 @@ fu_focal_moc_device_write_ymodem(FuFocalMocDevice *self,
 }
 
 static gboolean
-fu_focal_moc_device_ensure_iap_status_layout(FuFocalMocDevice *self, GError **error)
+fu_focal_moc_device_ensure_bootloader_layout(FuFocalMocDevice *self, GError **error)
 {
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 status = 0;
 	g_autoptr(GByteArray) data = NULL;
 
@@ -513,19 +581,21 @@ fu_focal_moc_device_ensure_iap_status_layout(FuFocalMocDevice *self, GError **er
 	return fu_focal_moc_iap_status_layout_from_probe(status,
 							 data->data,
 							 data->len,
-							 &self->iap_status_layout,
+							 &priv->iap_status_layout,
 							 error);
 }
 
 static gboolean
 fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 {
+	FuFocalMocDeviceClass *klass = FU_FOCAL_MOC_DEVICE_GET_CLASS(self);
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean is_bootloader = FALSE;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) data = NULL;
 
 	/* never reuse a layout probed on a previous enumeration */
-	self->iap_status_layout = FU_FOCAL_MOC_IAP_STATUS_LAYOUT_UNKNOWN;
+	priv->iap_status_layout = FU_FOCAL_MOC_IAP_STATUS_LAYOUT_UNKNOWN;
 	data = fu_focal_moc_device_command_ok(self,
 					      FU_FOCAL_MOC_CMD_GET_FW_VERSION,
 					      NULL,
@@ -544,7 +614,7 @@ fu_focal_moc_device_ensure_version(FuFocalMocDevice *self, GError **error)
 	else
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	if (fu_focal_moc_iap_probe_required(is_bootloader)) {
-		if (!fu_focal_moc_device_ensure_iap_status_layout(self, error))
+		if (!klass->ensure_bootloader_layout(self, error))
 			return FALSE;
 	}
 
@@ -556,6 +626,7 @@ static gboolean
 fu_focal_moc_device_probe(FuDevice *device, GError **error)
 {
 	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
+	FuFocalMocDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) interfaces = NULL;
 
 	if (!FU_DEVICE_CLASS(fu_focal_moc_device_parent_class)->probe(device, error))
@@ -575,21 +646,21 @@ fu_focal_moc_device_probe(FuDevice *device, GError **error)
 			FuUsbEndpoint *endpoint = g_ptr_array_index(endpoints, j);
 			if (fu_usb_endpoint_get_direction(endpoint) ==
 			    FU_USB_DIRECTION_DEVICE_TO_HOST)
-				self->ep_in = fu_usb_endpoint_get_address(endpoint);
+				priv->ep_in = fu_usb_endpoint_get_address(endpoint);
 			else
-				self->ep_out = fu_usb_endpoint_get_address(endpoint);
+				priv->ep_out = fu_usb_endpoint_get_address(endpoint);
 		}
-		self->iface = fu_usb_interface_get_number(iface);
+		priv->iface = fu_usb_interface_get_number(iface);
 		break;
 	}
-	if (self->ep_in == 0 || self->ep_out == 0) {
+	if (priv->ep_in == 0 || priv->ep_out == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
 				    "bulk endpoint pair not found on interface 0");
 		return FALSE;
 	}
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), priv->iface);
 
 	/* success */
 	return TRUE;
@@ -642,6 +713,7 @@ fu_focal_moc_device_write_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuFocalMocDevice *self = FU_FOCAL_MOC_DEVICE(device);
+	FuFocalMocDeviceClass *klass = FU_FOCAL_MOC_DEVICE_GET_CLASS(self);
 	g_autoptr(FuInputStream) stream = NULL;
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -651,7 +723,7 @@ fu_focal_moc_device_write_firmware(FuDevice *device,
 				    "firmware write requires IAP mode");
 		return FALSE;
 	}
-	stream = fu_firmware_get_stream(firmware, error);
+	stream = klass->get_firmware_stream(self, firmware, error);
 	if (stream == NULL)
 		return FALSE;
 	if (!fu_focal_moc_device_probe_alive(self, FU_FOCAL_MOC_USB_TIMEOUT_MS, error)) {
@@ -682,6 +754,7 @@ fu_focal_moc_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_focal_moc_device_init(FuFocalMocDevice *self)
 {
+	fu_device_add_private_flag(FU_DEVICE(self), FU_FOCAL_MOC_DEVICE_FLAG_LEGACY_TRAILER);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
@@ -705,4 +778,10 @@ fu_focal_moc_device_class_init(FuFocalMocDeviceClass *klass)
 	device_class->detach = fu_focal_moc_device_detach;
 	device_class->write_firmware = fu_focal_moc_device_write_firmware;
 	device_class->set_progress = fu_focal_moc_device_set_progress;
+	klass->command = fu_focal_moc_device_command_plaintext;
+	klass->build_soh = fu_focal_moc_device_build_soh;
+	klass->build_data = fu_focal_moc_device_build_data;
+	klass->get_firmware_stream = fu_focal_moc_device_get_firmware_stream;
+	klass->ensure_bootloader_layout = fu_focal_moc_device_ensure_bootloader_layout;
+	fu_device_register_private_flag(device_class, FU_FOCAL_MOC_DEVICE_FLAG_LEGACY_TRAILER);
 }
