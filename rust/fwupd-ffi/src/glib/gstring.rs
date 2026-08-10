@@ -27,6 +27,9 @@ impl GString {
     /// Create a new `GString *` from a Rust string.
     ///
     /// The returned `GString` is owned by the caller and must be freed accordingly.
+    ///
+    /// # Panics
+    /// This function panics if `s` contains a null byte.
     #[must_use]
     pub fn from_rust_string(s: &str) -> *mut GString {
         let cs = CString::new(s).expect("Unexpected null byte in string");
