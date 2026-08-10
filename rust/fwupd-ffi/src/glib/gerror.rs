@@ -28,12 +28,10 @@ impl GError {
         let c_msg =
             CString::new(msg).unwrap_or_else(|_| CString::new("(invalid error message)").unwrap());
         unsafe {
-            g_set_error_literal(
-                error,
-                fwupd_error_quark(),
-                error_code as c_int,
-                c_msg.as_ptr(),
-            );
+            // clippy wants error_code.cast_signed() but that requires Rust 1.87.0
+            #[allow(clippy::cast_possible_wrap)]
+            let glib_error_code = error_code as c_int;
+            g_set_error_literal(error, fwupd_error_quark(), glib_error_code, c_msg.as_ptr());
         }
     }
 }
