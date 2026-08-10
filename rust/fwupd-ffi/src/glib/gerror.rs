@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-//! Minimal GError FFI helpers for setting errors from Rust.
+//! Minimal `GError` FFI helpers for setting errors from Rust.
 
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 
-/// GError -- must match the GLib GError struct layout
+/// `GError` -- must match the `GLib` `GError` struct layout
 #[repr(C)]
 pub struct GError {
     pub domain: u32,
@@ -18,7 +18,7 @@ pub struct GError {
 }
 
 impl GError {
-    /// Generic setter for a GError from an error code and a message.
+    /// Generic setter for a `GError` from an error code and a message.
     #[allow(dead_code)]
     pub(crate) unsafe fn set(error: *mut *mut GError, error_code: u32, msg: &str) {
         if error.is_null() {
@@ -28,17 +28,15 @@ impl GError {
         let c_msg =
             CString::new(msg).unwrap_or_else(|_| CString::new("(invalid error message)").unwrap());
         unsafe {
-            g_set_error_literal(
-                error,
-                fwupd_error_quark(),
-                error_code as c_int,
-                c_msg.as_ptr(),
-            );
+            // clippy wants error_code.cast_signed() but that requires Rust 1.87.0
+            #[allow(clippy::cast_possible_wrap)]
+            let glib_error_code = error_code as c_int;
+            g_set_error_literal(error, fwupd_error_quark(), glib_error_code, c_msg.as_ptr());
         }
     }
 }
 
-/// Opaque GQuark (a guint32 in GLib).
+/// Opaque `GQuark` (a guint32 in `GLib`).
 type GQuark = u32;
 
 #[allow(dead_code)]
