@@ -109,7 +109,7 @@ repos:
         name: clang-format
         language: script
         entry: ./contrib/reformat-code.py
-        types: [c]
+        types_or: [c, c++]
       - id: check-cli-actions
         name: check cli actions
         language: script
