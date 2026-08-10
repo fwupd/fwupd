@@ -1,10 +1,13 @@
 allow_uefi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('uefi-dbx.quirk')
-plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
+plugin_builtin_uefi_dbx = static_library(
+  'fu_plugin_uefi_dbx',
   sources: [
     'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
@@ -72,12 +75,18 @@ dbxtool = executable(
 )
 
 if get_option('man')
-  custom_target('dbxtool.1',
+  custom_target(
+    'dbxtool.1',
     input: 'dbxtool.md',
     output: 'dbxtool.1',
     command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
+      generate_man,
+      '@INPUT@',
+      '-o',
+      '@OUTPUT@',
+      '--replace',
+      'PACKAGE_VERSION',
+      fwupd_version,
     ],
     install: true,
     install_tag: 'man',
@@ -85,12 +94,18 @@ if get_option('man')
   )
 endif
 if build_docs
-  md_targets += custom_target('dbxtool.md',
+  md_targets += custom_target(
+    'dbxtool.md',
     input: 'dbxtool.md',
     output: 'dbxtool.md',
     command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
+      generate_man,
+      '@INPUT@',
+      '-o',
+      '@OUTPUT@',
+      '--replace',
+      'PACKAGE_VERSION',
+      fwupd_version,
       '--md',
     ],
   )

@@ -1,13 +1,18 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSteelSeries"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('steelseries.quirk')
-plugin_builtins += static_library('fu_plugin_steelseries',
-  rustgen.process([
-    'fu-steelseries-fizz.rs',
-    'fu-steelseries-gamepad.rs',
-    'fu-steelseries-sonic.rs',
-  ]),
+plugin_builtins += static_library(
+  'fu_plugin_steelseries',
+  rustgen.process(
+    [
+      'fu-steelseries-fizz.rs',
+      'fu-steelseries-gamepad.rs',
+      'fu-steelseries-sonic.rs',
+    ]
+  ),
   sources: [
     'fu-steelseries-plugin.c',
     'fu-steelseries-device.c',

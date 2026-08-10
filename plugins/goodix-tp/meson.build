@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixtp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('goodixtp.quirk')
-plugin_builtins += static_library('fu_plugin_goodixtp',
+plugin_builtins += static_library(
+  'fu_plugin_goodixtp',
   rustgen.process('fu-goodixtp.rs'),
   sources: [
     'fu-goodixtp-brlb-device.c',

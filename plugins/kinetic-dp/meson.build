@@ -1,9 +1,12 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginKineticDp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_kinetic_dp = static_library('fu_plugin_kinetic_dp',
+plugin_builtin_kinetic_dp = static_library(
+  'fu_plugin_kinetic_dp',
   rustgen.process('fu-kinetic-dp.rs'),
   sources: [
     'fu-kinetic-dp-device.c',

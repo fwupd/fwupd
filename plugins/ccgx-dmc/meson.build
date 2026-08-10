@@ -1,16 +1,19 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgxDmc"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_quirks += files(['ccgx-dmc.quirk'])
-plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
+plugin_quirks += files('ccgx-dmc.quirk')
+plugin_builtin_ccgx_dmc = static_library(
+  'fu_plugin_ccgx_dmc',
   rustgen.process(
-    'fu-ccgx-dmc.rs',       # fuzzing
+    'fu-ccgx-dmc.rs' # fuzzing
   ),
   sources: [
     'fu-ccgx-dmc-plugin.c',
     'fu-ccgx-dmc-device.c',
     'fu-ccgx-dmc-devx-device.c',
-    'fu-ccgx-dmc-firmware.c',   # fuzzing
+    'fu-ccgx-dmc-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -19,13 +22,13 @@ plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
 )
 plugin_builtins += plugin_builtin_ccgx_dmc
 
-device_tests += files(
-  'tests/hp-dock-g5.json',
-)
+device_tests += files('tests/hp-dock-g5.json')
 
 if get_option('tests')
-  install_data(['tests/ccgx-dmc.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/ccgx-dmc.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'ccgx-dmc-self-test',
     rustgen.process('fu-ccgx-dmc.rs'),

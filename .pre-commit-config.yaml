@@ -110,6 +110,12 @@ repos:
         language: script
         entry: ./contrib/reformat-code.py
         types: [c]
+      - id: meson-format
+        name: meson-format
+        language: system
+        entry: meson format -i
+        files: (meson\.build|meson\.options|meson_options\.txt)$
+        exclude: subprojects/
       - id: check-cli-actions
         name: check cli actions
         language: script

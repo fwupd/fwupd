@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginEgisMoc"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += join_paths(meson.current_source_dir(), 'egis-moc.quirk')
-plugin_builtin_egis_moc = static_library('fu_plugin_egis_moc',
+plugin_builtin_egis_moc = static_library(
+  'fu_plugin_egis_moc',
   rustgen.process('fu-egis-moc.rs'),
   sources: [
     'fu-egis-moc-common.c',
@@ -16,9 +19,7 @@ plugin_builtin_egis_moc = static_library('fu_plugin_egis_moc',
 )
 plugin_builtins += plugin_builtin_egis_moc
 
-device_tests += files(
-  'tests/egis-moc.json',
-)
+device_tests += files('tests/egis-moc.json')
 
 if get_option('tests')
   e = executable(

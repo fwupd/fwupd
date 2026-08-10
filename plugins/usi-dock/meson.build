@@ -1,8 +1,11 @@
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 cargs = ['-DG_LOG_DOMAIN="FuPluginUsiDock"']
 
 plugin_quirks += files('usi-dock.quirk')
-plugin_builtins += static_library('fu_plugin_usi_dock',
+plugin_builtins += static_library(
+  'fu_plugin_usi_dock',
   rustgen.process('fu-usi-dock.rs'),
   sources: [
     'fu-usi-dock-child-device.c',

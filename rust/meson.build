@@ -12,7 +12,9 @@ fwupd_rust_lib = fwupd_pkg.library(
   install: false
 )
 fwupd_pkg.override_dependency(
-  declare_dependency(link_with: fwupd_rust_lib),
+  declare_dependency(
+    link_with: fwupd_rust_lib
+  )
 )
 
 # The FFI lib to call into Rust

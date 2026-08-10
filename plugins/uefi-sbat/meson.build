@@ -2,8 +2,11 @@ allow_uefi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiSbat"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
-plugin_builtin_uefi_sbat = static_library('fu_plugin_uefi_sbat',
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
+plugin_builtin_uefi_sbat = static_library(
+  'fu_plugin_uefi_sbat',
   sources: [
     'fu-uefi-sbat-device.c',
     'fu-uefi-sbat-firmware.c',

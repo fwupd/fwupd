@@ -1,21 +1,24 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('bcm57xx.quirk')
-plugin_builtin_bcm57xx = static_library('fu_plugin_bcm57xx',
+plugin_builtin_bcm57xx = static_library(
+  'fu_plugin_bcm57xx',
   rustgen.process(
-    'fu-bcm57xx.rs',                # fuzzing
+    'fu-bcm57xx.rs' # fuzzing
   ),
   sources: [
     'fu-bcm57xx-plugin.c',
-    'fu-bcm57xx-common.c',          # fuzzing
+    'fu-bcm57xx-common.c', # fuzzing
     'fu-bcm57xx-device.c',
-    'fu-bcm57xx-dict-image.c',      # fuzzing
-    'fu-bcm57xx-firmware.c',        # fuzzing
-    'fu-bcm57xx-stage1-image.c',    # fuzzing
-    'fu-bcm57xx-stage2-image.c',    # fuzzing
+    'fu-bcm57xx-dict-image.c', # fuzzing
+    'fu-bcm57xx-firmware.c', # fuzzing
+    'fu-bcm57xx-stage1-image.c', # fuzzing
+    'fu-bcm57xx-stage2-image.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -34,8 +37,10 @@ device_tests += files(
 )
 
 if get_option('tests')
-  install_data(['tests/bcm57xx.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/bcm57xx.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'bcm57xx-self-test',
     sources: [

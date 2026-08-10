@@ -1,17 +1,20 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsPrometheus"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('synaptics-prometheus.quirk')
-plugin_builtin_synaptics_prometheus = static_library('fu_plugin_synaptics_prometheus',
+plugin_builtin_synaptics_prometheus = static_library(
+  'fu_plugin_synaptics_prometheus',
   rustgen.process(
-    'fu-synaptics-prometheus.rs',           # fuzzing
+    'fu-synaptics-prometheus.rs' # fuzzing
   ),
   sources: [
     'fu-synaptics-prometheus-plugin.c',
     'fu-synaptics-prometheus-common.c',
     'fu-synaptics-prometheus-config.c',
     'fu-synaptics-prometheus-device.c',
-    'fu-synaptics-prometheus-firmware.c',       # fuzzing
+    'fu-synaptics-prometheus-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -21,8 +24,10 @@ plugin_builtin_synaptics_prometheus = static_library('fu_plugin_synaptics_promet
 plugin_builtins += plugin_builtin_synaptics_prometheus
 
 if get_option('tests')
-  install_data(['tests/synaptics-prometheus.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/synaptics-prometheus.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'synaptics-prometheus-self-test',
     sources: [

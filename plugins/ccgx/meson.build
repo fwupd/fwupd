@@ -1,19 +1,22 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_quirks += files([
+plugin_quirks += files(
   'ccgx-ids.quirk',
   'ccgx.quirk',
-  ])
-plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
+)
+plugin_builtin_ccgx = static_library(
+  'fu_plugin_ccgx',
   rustgen.process(
-    'fu-ccgx.rs',           # fuzzing
-    'fu-ccgx-pure-hid.rs',  # fuzzing
+    'fu-ccgx.rs', # fuzzing
+    'fu-ccgx-pure-hid.rs', # fuzzing
   ),
   sources: [
     'fu-ccgx-plugin.c',
-    'fu-ccgx-common.c',         # fuzzing
-    'fu-ccgx-firmware.c',       # fuzzing
+    'fu-ccgx-common.c', # fuzzing
+    'fu-ccgx-firmware.c', # fuzzing
     'fu-ccgx-hid-device.c',
     'fu-ccgx-pure-hid-device.c',
     'fu-ccgx-hpi-device.c',
@@ -29,8 +32,10 @@ enumeration_data += files('tests/framework-hdmi-setup.json')
 device_tests += files('tests/framework-hdmi.json')
 
 if get_option('tests')
-  install_data(['tests/ccgx.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/ccgx.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'ccgx-self-test',
     rustgen.process('fu-ccgx.rs'),

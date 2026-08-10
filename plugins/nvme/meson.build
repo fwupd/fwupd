@@ -1,11 +1,17 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
-cc.has_header('linux/nvme_ioctl.h', required: false) or subdir_done()
+cc.has_header(
+  'linux/nvme_ioctl.h',
+  required: false,
+) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('nvme.quirk')
-plugin_builtin_nvme = static_library('fu_plugin_nvme',
+plugin_builtin_nvme = static_library(
+  'fu_plugin_nvme',
   rustgen.process('fu-nvme.rs'),
   sources: [
     'fu-nvme-plugin.c',
@@ -21,9 +27,7 @@ plugin_builtin_nvme = static_library('fu_plugin_nvme',
 )
 plugin_builtins += plugin_builtin_nvme
 
-device_tests += files(
-  'tests/lenovo-pcsn720.json',
-)
+device_tests += files('tests/lenovo-pcsn720.json')
 
 if get_option('tests')
   e = executable(

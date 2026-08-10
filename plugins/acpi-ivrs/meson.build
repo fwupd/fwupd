@@ -2,9 +2,12 @@ hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiIvrs"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_acpi_ivrs = static_library('fu_plugin_acpi_ivrs',
+plugin_builtin_acpi_ivrs = static_library(
+  'fu_plugin_acpi_ivrs',
   sources: [
     'fu-acpi-ivrs-plugin.c',
     'fu-acpi-ivrs.c',

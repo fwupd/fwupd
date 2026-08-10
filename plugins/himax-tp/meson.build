@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginHimaxTp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('himax-tp.quirk')
-plugin_builtins += static_library('fu_plugin_himax_tp',
+plugin_builtins += static_library(
+  'fu_plugin_himax_tp',
   rustgen.process('fu-himax-tp.rs'),
   sources: [
     'fu-himax-tp-hid-device.c',

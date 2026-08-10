@@ -1,13 +1,14 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginRaydiumTp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('raydium-tp.quirk')
-plugin_builtin_raydium_tp = static_library('fu_plugin_raydium_tp',
-  rustgen.process(
-    'fu-raydium-tp.rs',
-  ),
+plugin_builtin_raydium_tp = static_library(
+  'fu_plugin_raydium_tp',
+  rustgen.process('fu-raydium-tp.rs'),
   sources: [
     'fu-raydium-tp-plugin.c',
     'fu-raydium-tp-firmware.c',

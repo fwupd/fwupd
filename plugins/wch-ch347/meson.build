@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginWchCh347"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('wch-ch347.quirk')
-plugin_builtins += static_library('fu_plugin_wch_ch347',
+plugin_builtins += static_library(
+  'fu_plugin_wch_ch347',
   rustgen.process('fu-wch-ch347.rs'),
   sources: [
     'fu-wch-ch347-cfi-device.c',

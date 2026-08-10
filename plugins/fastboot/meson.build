@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('fastboot.quirk')
-plugin_builtins += static_library('fu_plugin_fastboot',
+plugin_builtins += static_library(
+  'fu_plugin_fastboot',
   sources: [
     'fu-fastboot-plugin.c',
     'fu-fastboot-device.c',

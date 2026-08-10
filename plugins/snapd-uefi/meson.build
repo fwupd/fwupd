@@ -1,7 +1,10 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSnapdUefi"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_snapd_uefi = static_library('fu_plugin_snapd_uefi',
+plugin_builtin_snapd_uefi = static_library(
+  'fu_plugin_snapd_uefi',
   sources: [
     'fu-snapd-uefi-plugin.c',
   ],
@@ -16,8 +19,10 @@ plugin_builtin_snapd_uefi = static_library('fu_plugin_snapd_uefi',
 plugin_builtins += plugin_builtin_snapd_uefi
 
 if get_option('tests')
-  install_data(['tests/snapd.py'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/snapd.py'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
 
   e = executable(
     'snap-self-test',

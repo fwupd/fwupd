@@ -1,11 +1,14 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechRallysystem"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('logitech-rallysystem.quirk')
 
-plugin_builtins += static_library('fu_plugin_logitech_rallysystem',
+plugin_builtins += static_library(
+  'fu_plugin_logitech_rallysystem',
   rustgen.process('fu-logitech-rallysystem.rs'),
   sources: [
     'fu-logitech-rallysystem-plugin.c',

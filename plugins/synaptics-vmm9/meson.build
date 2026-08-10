@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsVmm9"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('synaptics-vmm9.quirk')
-plugin_builtins += static_library('fu_plugin_synaptics_vmm9',
+plugin_builtins += static_library(
+  'fu_plugin_synaptics_vmm9',
   rustgen.process('fu-synaptics-vmm9.rs'),
   sources: [
     'fu-synaptics-vmm9-device.c',

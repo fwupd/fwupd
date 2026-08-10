@@ -64,8 +64,10 @@ foreach fwupdplugin_struct : fwupdplugin_structs
       python3,
       join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
       '@INPUT@',
-      '--outc', '@OUTPUT0@',
-      '--outh', '@OUTPUT1@',
+      '--outc',
+      '@OUTPUT0@',
+      '--outh',
+      '@OUTPUT1@',
       '--include',
       'fwupd.h',
       '--prefix',
@@ -510,7 +512,7 @@ if get_option('tests')
     link_with: [fwupd, libfwupdtest],
   )
 
-  foreach test_name: [
+  foreach test_name : [
     'backend',
     'bios-settings',
     'byte-array',

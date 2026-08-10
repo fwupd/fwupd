@@ -1,6 +1,18 @@
-libmm_glib = dependency('mm-glib', version: '>= 1.22.0', required: get_option('plugin_modem_manager'))
-libqmi_glib = dependency('qmi-glib', version: '>= 1.32.0', required: get_option('plugin_modem_manager'))
-libmbim_glib = dependency('mbim-glib', version: '>= 1.28.0', required: get_option('plugin_modem_manager'))
+libmm_glib = dependency(
+  'mm-glib',
+  version: '>= 1.22.0',
+  required: get_option('plugin_modem_manager'),
+)
+libqmi_glib = dependency(
+  'qmi-glib',
+  version: '>= 1.32.0',
+  required: get_option('plugin_modem_manager'),
+)
+libmbim_glib = dependency(
+  'mbim-glib',
+  version: '>= 1.28.0',
+  required: get_option('plugin_modem_manager'),
+)
 
 libmm_glib.found() or subdir_done()
 libqmi_glib.found() or subdir_done()
@@ -8,15 +20,16 @@ libmbim_glib.found() or subdir_done()
 get_option('plugin_modem_manager').allowed() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
-cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+cargs += ['-DMM_REQUIRED_VERSION="1.10.0"']
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('modem-manager.quirk')
 
-shared_module('fu_plugin_modem_manager',
-  rustgen.process(
-    'fu-mm-fdl.rs',
-  ),
+shared_module(
+  'fu_plugin_modem_manager',
+  rustgen.process('fu-mm-fdl.rs'),
   sources: [
     'fu-mm-backend.c',
     'fu-mm-common.c',

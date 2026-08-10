@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginBlestechTp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('blestech-tp.quirk')
-plugin_builtins += static_library('fu_plugin_blestech_tp',
+plugin_builtins += static_library(
+  'fu_plugin_blestech_tp',
   rustgen.process('fu-blestech-tp.rs'),
   sources: [
     'fu-blestech-tp-firmware.c',
@@ -15,6 +18,4 @@ plugin_builtins += static_library('fu_plugin_blestech_tp',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/blestech-touchpad.json'
-)
+device_tests += files('tests/blestech-touchpad.json')

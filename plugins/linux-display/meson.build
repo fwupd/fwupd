@@ -1,9 +1,12 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxDisplay"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtins += static_library('fu_plugin_linux_display',
+plugin_builtins += static_library(
+  'fu_plugin_linux_display',
   sources: [
     'fu-linux-display-plugin.c',
   ],

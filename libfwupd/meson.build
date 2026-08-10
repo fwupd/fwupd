@@ -108,7 +108,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [gio, giounix, glib, libcurl, fwupd_rust_ffi_dep ]
+libfwupd_deps = [gio, giounix, glib, libcurl, fwupd_rust_ffi_dep]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -287,7 +287,7 @@ if get_option('tests')
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps],
   )
-  foreach test_name: [
+  foreach test_name : [
     'bios-setting',
     'client',
     'common',

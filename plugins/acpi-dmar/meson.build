@@ -1,10 +1,13 @@
 hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiDmar"']
 
-plugin_builtin_acpi_dmar = static_library('fu_plugin_acpi_dmar',
+plugin_builtin_acpi_dmar = static_library(
+  'fu_plugin_acpi_dmar',
   sources: [
     'fu-acpi-dmar-plugin.c',
     'fu-acpi-dmar.c',

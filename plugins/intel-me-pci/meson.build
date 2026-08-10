@@ -1,10 +1,13 @@
 hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelMePci"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('intel-me-pci.quirk')
-plugin_builtin_intel_me_pci = static_library('fu_plugin_intel_me_pci',
+plugin_builtin_intel_me_pci = static_library(
+  'fu_plugin_intel_me_pci',
   sources: [
     'fu-intel-me-pci-plugin.c',
   ],
@@ -15,9 +18,7 @@ plugin_builtin_intel_me_pci = static_library('fu_plugin_intel_me_pci',
 )
 plugin_builtins += plugin_builtin_intel_me_pci
 
-enumeration_data += files(
-  'tests/intel-me-setup.json',
-)
+enumeration_data += files('tests/intel-me-setup.json')
 
 if get_option('tests')
   e = executable(
