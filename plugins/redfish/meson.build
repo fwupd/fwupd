@@ -1,7 +1,9 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('redfish.quirk')
 
@@ -10,14 +12,15 @@ if cc.has_header('linux/ipmi.h')
   ipmi_src += 'fu-ipmi-device.c'
 endif
 
-plugin_builtin_redfish = static_library('fu_plugin_redfish',
+plugin_builtin_redfish = static_library(
+  'fu_plugin_redfish',
   rustgen.process(
-    'fu-redfish.rs',       # fuzzing
+    'fu-redfish.rs' # fuzzing
   ),
   sources: [
     'fu-redfish-plugin.c',
     'fu-redfish-backend.c',
-    'fu-redfish-common.c',     # fuzzing
+    'fu-redfish-common.c', # fuzzing
     'fu-redfish-device.c',
     'fu-redfish-smc-device.c',
     'fu-redfish-legacy-device.c',
@@ -26,7 +29,7 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
     'fu-redfish-network.c',
     'fu-redfish-network-device.c',
     'fu-redfish-request.c',
-    'fu-redfish-smbios.c',     # fuzzing
+    'fu-redfish-smbios.c', # fuzzing
     ipmi_src,
   ],
   include_directories: plugin_incdirs,
@@ -40,16 +43,23 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
 plugin_builtins += plugin_builtin_redfish
 
 if get_option('tests')
-  install_data(['tests/redfish-smbios.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
-  install_data(['tests/redfish-fwupd.conf'],
+  install_data(
+    ['tests/redfish-smbios.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
+  install_data(
+    ['tests/redfish-fwupd.conf'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
     install_mode: 'rw-r-----',
   )
-  install_data(['tests/efi/efivars/RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70'],
-    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
-  install_data(['tests/efi/efivars/RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70'],
-    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
+  install_data(
+    ['tests/efi/efivars/RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'),
+  )
+  install_data(
+    ['tests/efi/efivars/RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'),
+  )
   e = executable(
     'redfish-self-test',
     rustgen.process('fu-redfish.rs'),

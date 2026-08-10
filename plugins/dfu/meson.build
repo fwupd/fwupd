@@ -1,25 +1,31 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('dfu.quirk')
 
 # do not use structgen as these files are used in the dfu-csr plugin too...
-dfu_rs = custom_target('fu-dfu-rs',
+dfu_rs = custom_target(
+  'fu-dfu-rs',
   input: 'fu-dfu.rs',
   output: ['fu-dfu-struct.c', 'fu-dfu-struct.h'],
   command: [
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
     'Fu',
   ],
 )
-plugin_builtin_dfu = static_library('fu_plugin_dfu',
+plugin_builtin_dfu = static_library(
+  'fu_plugin_dfu',
   dfu_rs,
   sources: [
     'fu-dfu-plugin.c',
@@ -52,9 +58,7 @@ if get_option('tests')
   e = executable(
     'fu-dfu-self-test',
     dfu_rs,
-    sources: [
-      'fu-dfu-self-test.c'
-    ],
+    sources: ['fu-dfu-self-test.c'],
     include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,

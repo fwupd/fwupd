@@ -1,9 +1,12 @@
 host_machine.system() in ['linux', 'freebsd'] or subdir_done()
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
-plugin_builtin_upower = static_library('fu_plugin_upower',
+plugin_builtin_upower = static_library(
+  'fu_plugin_upower',
   sources: [
     'fu-upower-plugin.c',
   ],

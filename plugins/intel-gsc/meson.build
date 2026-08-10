@@ -1,10 +1,13 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginIgsc"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('igsc.quirk')
-plugin_builtins += static_library('fu_plugin_igsc',
+plugin_builtins += static_library(
+  'fu_plugin_igsc',
   rustgen.process('fu-igsc.rs'),
   sources: [
     'fu-igsc-common.c',

@@ -2,8 +2,11 @@ hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelMeSmbios"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
-plugin_builtin_intel_me_smbios = static_library('fu_plugin_intel_me_smbios',
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
+plugin_builtin_intel_me_smbios = static_library(
+  'fu_plugin_intel_me_smbios',
   rustgen.process('fu-intel-me-smbios.rs'),
   sources: [
     'fu-intel-me-smbios-plugin.c',

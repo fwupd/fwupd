@@ -1,18 +1,21 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiPhat"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_acpi_phat = static_library('fu_plugin_acpi_phat',
+plugin_builtin_acpi_phat = static_library(
+  'fu_plugin_acpi_phat',
   rustgen.process(
-    'fu-acpi-phat.rs',            # fuzzing
+    'fu-acpi-phat.rs' # fuzzing
   ),
   sources: [
     'fu-acpi-phat-plugin.c',
-    'fu-acpi-phat.c',                 # fuzzing
-    'fu-acpi-phat-health-record.c',   # fuzzing
+    'fu-acpi-phat.c', # fuzzing
+    'fu-acpi-phat-health-record.c', # fuzzing
     'fu-acpi-phat-version-element.c', # fuzzing
-    'fu-acpi-phat-version-record.c',  # fuzzing
+    'fu-acpi-phat-version-record.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

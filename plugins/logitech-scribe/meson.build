@@ -1,11 +1,14 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechScribe"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('logitech-scribe.quirk')
 
-plugin_builtins += static_library('fu_plugin_logitech_scribe',
+plugin_builtins += static_library(
+  'fu_plugin_logitech_scribe',
   rustgen.process('fu-logitech-scribe.rs'),
   sources: [
     'fu-logitech-scribe-device.c',
@@ -17,9 +20,5 @@ plugin_builtins += static_library('fu_plugin_logitech_scribe',
   dependencies: plugin_deps,
 )
 
-enumeration_data += files(
-  'tests/logi-scribe-setup.json',
-)
-device_tests += files(
-  'tests/logi-scribe.json',
-)
+enumeration_data += files('tests/logi-scribe-setup.json')
+device_tests += files('tests/logi-scribe.json')

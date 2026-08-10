@@ -1,15 +1,18 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginElanfp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('elanfp.quirk')
-plugin_builtins += static_library('fu_plugin_elanfp',
+plugin_builtins += static_library(
+  'fu_plugin_elanfp',
   rustgen.process(
-    'fu-elanfp.rs',         # fuzzing
+    'fu-elanfp.rs' # fuzzing
   ),
   sources: [
     'fu-elanfp-plugin.c',
     'fu-elanfp-device.c',
-    'fu-elanfp-firmware.c'  # fuzzing
+    'fu-elanfp-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

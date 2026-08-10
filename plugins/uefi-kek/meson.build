@@ -2,9 +2,12 @@ allow_uefi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiKek"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('uefi-kek.quirk')
-plugin_builtin_uefi_kek = static_library('fu_plugin_uefi_kek',
+plugin_builtin_uefi_kek = static_library(
+  'fu_plugin_uefi_kek',
   sources: [
     'fu-uefi-kek-device.c',
     'fu-uefi-kek-plugin.c',

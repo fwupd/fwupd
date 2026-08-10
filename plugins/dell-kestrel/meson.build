@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellKestrel"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('dell-kestrel.quirk')
-plugin_builtins += static_library('fu_plugin_dell_kestrel',
+plugin_builtins += static_library(
+  'fu_plugin_dell_kestrel',
   rustgen.process(
     'fu-dell-kestrel-hid.rs',
     'fu-dell-kestrel-ec.rs',
@@ -26,9 +29,5 @@ plugin_builtins += static_library('fu_plugin_dell_kestrel',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-enumeration_data += files(
-  'tests/dell-kestrel-enumerate-ec.json',
-)
-device_tests += files(
-  'tests/dell-kestrel-enumerate.json',
-)
+enumeration_data += files('tests/dell-kestrel-enumerate-ec.json')
+device_tests += files('tests/dell-kestrel-enumerate.json')

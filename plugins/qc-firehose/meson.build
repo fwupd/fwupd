@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginQcFirehose"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('qc-firehose.quirk')
-plugin_builtins += static_library('fu_plugin_qc_firehose',
+plugin_builtins += static_library(
+  'fu_plugin_qc_firehose',
   rustgen.process('fu-qc-firehose.rs'),
   sources: [
     'fu-qc-firehose-impl.c',

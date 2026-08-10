@@ -1,10 +1,13 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginElanTs"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('elan-ts.quirk')
-plugin_builtins += static_library('fu_plugin_elan_ts',
+plugin_builtins += static_library(
+  'fu_plugin_elan_ts',
   rustgen.process('fu-elan-ts.rs'),
   sources: [
     'fu-elan-ts-plugin.c',

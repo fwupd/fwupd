@@ -1,16 +1,19 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('elantp.quirk')
-plugin_builtin_elantp = static_library('fu_plugin_elantp',
+plugin_builtin_elantp = static_library(
+  'fu_plugin_elantp',
   rustgen.process(
-    'fu-elantp.rs',         # fuzzing
+    'fu-elantp.rs' # fuzzing
   ),
   sources: [
     'fu-elantp-plugin.c',
-    'fu-elantp-firmware.c',   # fuzzing
+    'fu-elantp-firmware.c', # fuzzing
     'fu-elantp-haptic-firmware.c',
     'fu-elantp-hid-device.c',
     'fu-elantp-i2c-device.c',
@@ -35,8 +38,10 @@ device_tests += files(
 )
 
 if get_option('tests')
-  install_data(['tests/elantp.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/elantp.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'elantp-self-test',
     sources: [

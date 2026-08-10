@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAlgoltekUsbcr"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('algoltek-usbcr.quirk')
-plugin_builtin_algoltek_usbcr = static_library('fu_plugin_algoltek_usbcr',
+plugin_builtin_algoltek_usbcr = static_library(
+  'fu_plugin_algoltek_usbcr',
   rustgen.process('fu-algoltek-usbcr.rs'),
   sources: [
     'fu-algoltek-usbcr-device.c',
@@ -20,8 +23,10 @@ enumeration_data += files('tests/algoltek-au84612-setup.json')
 device_tests += files('tests/algoltek-au84612.json')
 
 if get_option('tests')
-  install_data(['tests/algoltek-usbcr.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/algoltek-usbcr.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'algoltek-usbcr-self-test',
     sources: [

@@ -2,7 +2,9 @@ host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginBnrDp"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('bnr-dp.quirk')
 plugin_rustgen_output = rustgen.process('fu-bnr-dp.rs')
 plugin_builtin_bnr_dp = static_library(

@@ -1,13 +1,16 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdKria"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('kria.quirk')
-plugin_builtin_kria = static_library('fu_plugin_amd_kria',
+plugin_builtin_kria = static_library(
+  'fu_plugin_amd_kria',
   rustgen.process(
-    'fu-amd-kria-persistent.rs',          # fuzzing
-    'fu-amd-kria-som-eeprom.rs',          # fuzzing
+    'fu-amd-kria-persistent.rs', # fuzzing
+    'fu-amd-kria-som-eeprom.rs', # fuzzing
   ),
   sources: [
     'fu-amd-kria-plugin.c',

@@ -2,9 +2,12 @@ allow_uefi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDb"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('uefi-db.quirk')
-plugin_builtin_uefi_db = static_library('fu_plugin_uefi_db',
+plugin_builtin_uefi_db = static_library(
+  'fu_plugin_uefi_db',
   sources: [
     'fu-uefi-db-device.c',
     'fu-uefi-db-plugin.c',

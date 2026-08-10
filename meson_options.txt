@@ -1,4 +1,5 @@
-option('binder',
+option(
+  'binder',
   type: 'feature',
   description: 'Android AIDL support',
 )
@@ -36,7 +37,8 @@ option(
   type: 'feature',
   description: 'Build developer documentation',
 )
-option('efi_app_location',
+option(
+  'efi_app_location',
   type: 'string',
   value: '',
   description: 'EFI app location (empty uses $libexecdir/fwupd/efi)',

@@ -97,8 +97,10 @@ fwupdcli_rs = custom_target(
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
@@ -131,7 +133,7 @@ if build_daemon == 'dbus'
     install: true,
     install_tag: 'runtime',
     install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
-)
+  )
 endif
 
 if build_daemon == 'dbus'
@@ -183,8 +185,10 @@ fwupdengine_rs = custom_target(
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
@@ -354,7 +358,7 @@ if get_option('tests')
   if giounix.found()
     test_names += 'unix-seekable-input-stream'
   endif
-  foreach test_name: test_names
+  foreach test_name : test_names
     e = executable(
       'fu-' + test_name + '-test',
       fwupdcli_rs,

@@ -1,4 +1,5 @@
-install_data([
+install_data(
+  [
     'firmware.bin',
     'firmware.bin.asc',
     'firmware.bin.p7b',

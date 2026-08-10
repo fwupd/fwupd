@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAverHid"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('aver-hid.quirk')
-plugin_builtins += static_library('fu_plugin_aver_hid',
+plugin_builtins += static_library(
+  'fu_plugin_aver_hid',
   rustgen.process('fu-aver-hid.rs'),
   sources: [
     'fu-aver-hid-device.c',
@@ -15,6 +18,4 @@ plugin_builtins += static_library('fu_plugin_aver_hid',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/aver-fone540.json',
-)
+device_tests += files('tests/aver-fone540.json')

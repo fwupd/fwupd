@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginTelinkDfu"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('telink-dfu.quirk')
-plugin_builtins += static_library('fu_plugin_telink_dfu',
+plugin_builtins += static_library(
+  'fu_plugin_telink_dfu',
   rustgen.process('fu-telink-dfu.rs'),
   sources: [
     'fu-telink-dfu-archive.c',
@@ -17,7 +20,5 @@ plugin_builtins += static_library('fu_plugin_telink_dfu',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/telink-ryder-dongle.json',
-)
+device_tests += files('tests/telink-ryder-dongle.json')
 

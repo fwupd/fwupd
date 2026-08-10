@@ -1,5 +1,6 @@
 if get_option('tests')
-  install_data([
+  install_data(
+    [
       'synaptics-mst-test.quirk',
       'synaptics-mst.builder.xml',
     ],

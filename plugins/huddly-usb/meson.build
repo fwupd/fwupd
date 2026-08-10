@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginHuddlyUsb"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('huddly-usb.quirk')
-plugin_builtins += static_library('fu_plugin_huddly_usb',
+plugin_builtins += static_library(
+  'fu_plugin_huddly_usb',
   rustgen.process('fu-huddly-usb.rs'),
   sources: [
     'fu-huddly-usb-common.c',

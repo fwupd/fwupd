@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginFrameworkQmk"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('framework-qmk.quirk')
-plugin_builtins += static_library('fu_plugin_framework_qmk',
+plugin_builtins += static_library(
+  'fu_plugin_framework_qmk',
   rustgen.process('fu-framework-qmk.rs'),
   sources: [
     'fu-framework-qmk-device.c',

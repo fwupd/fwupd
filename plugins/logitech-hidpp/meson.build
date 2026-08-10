@@ -1,10 +1,13 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidpp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('logitech-hidpp.quirk')
-plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
+plugin_builtin_logitech_hidpp = static_library(
+  'fu_plugin_logitech_hidpp',
   rustgen.process('fu-logitech-hidpp.rs'),
   rustgen.process('fu-logitech-hidpp-rdfu.rs'), # fuzzing
   sources: [

@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalMoc"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('focal-moc.quirk')
-plugin_builtin_focal_moc = static_library('fu_plugin_focal_moc',
+plugin_builtin_focal_moc = static_library(
+  'fu_plugin_focal_moc',
   rustgen.process('fu-focal-moc.rs'),
   sources: [
     'fu-focal-moc-common.c',

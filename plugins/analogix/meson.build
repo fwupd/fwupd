@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('analogix.quirk')
-plugin_builtins += static_library('fu_plugin_analogix',
+plugin_builtins += static_library(
+  'fu_plugin_analogix',
   rustgen.process('fu-analogix.rs'),
   sources: [
     'fu-analogix-plugin.c',
@@ -15,6 +18,4 @@ plugin_builtins += static_library('fu_plugin_analogix',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/analogix-anx7518.json',
-)
+device_tests += files('tests/analogix-anx7518.json')

@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCxaudio"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('synaptics-cxaudio.quirk')
-plugin_builtins += static_library('fu_plugin_synaptics_cxaudio',
+plugin_builtins += static_library(
+  'fu_plugin_synaptics_cxaudio',
   rustgen.process('fu-synaptics-cxaudio.rs'),
   sources: [
     'fu-synaptics-cxaudio-plugin.c',
@@ -15,6 +18,4 @@ plugin_builtins += static_library('fu_plugin_synaptics_cxaudio',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/lenovo-03x7609-cxaudio.json',
-)
+device_tests += files('tests/lenovo-03x7609-cxaudio.json')

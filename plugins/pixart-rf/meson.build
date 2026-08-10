@@ -1,12 +1,18 @@
-cc.has_header('linux/hidraw.h', required: false) or subdir_done()
+cc.has_header(
+  'linux/hidraw.h',
+  required: false,
+) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('pixart-rf.quirk')
-plugin_builtin_pxi = static_library('fu_plugin_pixart_rf',
+plugin_builtin_pxi = static_library(
+  'fu_plugin_pixart_rf',
   rustgen.process(
-    'fu-pixart-rf.rs', # fuzzing
+    'fu-pixart-rf.rs' # fuzzing
   ),
   sources: [
     'fu-pixart-rf-plugin.c',
@@ -31,8 +37,10 @@ device_tests += files(
 )
 
 if get_option('tests')
-  install_data(['tests/pixart-rf.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/pixart-rf.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'pixart-rf-self-test',
     sources: [

@@ -1,6 +1,7 @@
 project(
   'fwupd',
-  'c', 'rust',
+  'c',
+  'rust',
   version: '2.2.1',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.11.0',
@@ -11,7 +12,7 @@ if host_machine.system() == 'android'
   add_project_link_arguments(
     '-lc++abi',
     '-lc++_static',
-    language : ['c', 'cpp']
+    language: ['c', 'cpp'],
   )
 endif
 
@@ -253,7 +254,10 @@ libexecdir = join_paths(prefix, get_option('libexecdir'))
 #this ends up in compiled code, ignore prefix
 if host_machine.system() == 'windows'
   # require Windows 8+ for GetFirmwareType() and other modern APIs
-  add_project_arguments('-D_WIN32_WINNT=0x0602', language: 'c')
+  add_project_arguments(
+    '-D_WIN32_WINNT=0x0602',
+    language: 'c',
+  )
   sysconfdir = get_option('sysconfdir')
   localstatedir = get_option('localstatedir')
   datadir = get_option('datadir')
@@ -300,7 +304,7 @@ if host_machine.system() in ['linux', 'android']
   conf.set('HAVE_UDEV', '1')
 endif
 if get_option('udev_hotplug')
-  conf.set('HAVE_UDEV_HOTPLUG' , '1')
+  conf.set('HAVE_UDEV_HOTPLUG', '1')
 endif
 if build_standalone
   bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
@@ -411,16 +415,24 @@ libdrm = dependency(
   required: get_option('libdrm'),
 )
 if libdrm.found()
-  conf.set('HAVE_LIBDRM' , '1')
+  conf.set('HAVE_LIBDRM', '1')
 endif
-polkit = dependency('polkit-gobject-1', version: '>= 0.103',
-         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
+polkit = dependency(
+  'polkit-gobject-1',
+  version: '>= 0.103',
+  required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'),
+)
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
-  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
+  conf.set_quoted(
+    'POLKIT_ACTIONDIR',
+    polkit.get_variable(
+      pkgconfig: 'actiondir'
+    ),
+  )
 endif
 if build_daemon != 'none'
   if not polkit.found()
@@ -489,7 +501,11 @@ gnutls = dependency(
 if gnutls.found()
   jcat_crypto = 'gnutls'
   conf.set('HAVE_GNUTLS', '1')
-  if cc.has_header_symbol('gnutls/gnutls.h', 'GNUTLS_SIGN_MLDSA87', dependencies: gnutls)
+  if cc.has_header_symbol(
+    'gnutls/gnutls.h',
+    'GNUTLS_SIGN_MLDSA87',
+    dependencies: gnutls,
+  )
     conf.set('HAVE_GNUTLS_PQC', '1')
   endif
 endif
@@ -582,9 +598,10 @@ endif
 if cc.has_header_symbol('linux/sed-opal.h', 'IOC_OPAL_GET_STATUS')
   conf.set('HAVE_LINUX_SED_OPAL_H', '1')
 endif
-has_HIDIOCGINPUT = cc.has_header_symbol('linux/hidraw.h',
+has_HIDIOCGINPUT = cc.has_header_symbol(
+  'linux/hidraw.h',
   'HIDIOCGINPUT',
-   required: false,
+  required: false,
 )
 if has_HIDIOCGINPUT
   conf.set('HAVE_HIDRAW_H', '1')
@@ -701,7 +718,8 @@ if build_standalone
 endif
 
 logind = dependency(
-  'systemd', 'libelogind',
+  'systemd',
+  'libelogind',
   required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
 )
 
@@ -714,7 +732,7 @@ if libsystemd.found()
     version: '>= 249',
     required: get_option('systemd'),
   )
-  conf.set('HAVE_SYSTEMD' , '1')
+  conf.set('HAVE_SYSTEMD', '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
     systemdunitdir = systemd.get_variable(
@@ -863,11 +881,15 @@ rustgen = generator(
   depfile: '@BASENAME@.deps',
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
-    '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
+    '--use',
+    'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
-    '--depfile', '@DEPFILE@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
+    '--depfile',
+    '@DEPFILE@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
@@ -890,8 +912,12 @@ umockdev = dependency(
   ),
 )
 
-allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
-  host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
+allow_uefi = host_machine.system() in ['linux', 'freebsd'] and host_machine.cpu_family() in [
+  'x86_64',
+  'aarch64',
+  'riscv64',
+  'loongarch64',
+]
 
 rustmod = import('rust')
 cargo_ws = rustmod.workspace()
