@@ -8,6 +8,7 @@
 
 #include <lzma.h>
 
+#include "fu-common.h"
 #include "fu-lzma-common.h"
 
 /**
@@ -50,6 +51,10 @@ fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
 		rc = lzma_code(&strm, LZMA_RUN);
 		if (rc != LZMA_OK && rc != LZMA_STREAM_END)
 			break;
+		if (buf->len + tmpbufsz > 2 * FU_GB) {
+			rc = LZMA_BUF_ERROR;
+			break;
+		}
 		g_byte_array_append(buf, tmpbuf, tmpbufsz - strm.avail_out);
 	} while (rc == LZMA_OK);
 	lzma_end(&strm);
