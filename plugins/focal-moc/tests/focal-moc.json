@@ -14,6 +14,19 @@
           ]
         }
       ]
+    },
+    {
+      "url": "87b2d06726d05935907061a3ba4dcce1955f6e44730131708d58279942deb7e2-FT9349_APP_FT9001_AA7A_USB_DEC_SV0.1_0104.cab",
+      "emulation-url": "b5b43df56bf5b918925b2e3c9b27dacabf9e012e6e0dcb58ea949425b4bd8331-focal-moc-emulation-AA7A-v0104.zip",
+      "components": [
+        {
+          "version": "0104",
+          "protocol": "com.focal.moc",
+          "guids": [
+            "847bfb91-b443-50a2-afe2-4530c06955b6"
+          ]
+        }
+      ]
     }
   ]
 }

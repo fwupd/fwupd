@@ -12,6 +12,7 @@ plugin_builtin_focal_moc = static_library(
     'fu-focal-moc-device.c',
     'fu-focal-moc-firmware.c',
     'fu-focal-moc-plugin.c',
+    'fu-focal-moc-signed-device.c',
     'fu-focal-moc-transport-impl.c',
     'fu-focal-moc-transport.c',
   ],
