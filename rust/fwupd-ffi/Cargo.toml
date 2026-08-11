@@ -2,6 +2,7 @@
 name = "fwupd-ffi"
 version = "0.1.0"
 edition = "2021"
+rust-version.workspace = true
 
 [lib]
 crate-type = ["staticlib"]
