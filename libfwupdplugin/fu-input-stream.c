@@ -1010,3 +1010,26 @@ fu_input_stream_find(FuInputStream *stream,
 		    (guint)bufsz);
 	return FALSE;
 }
+
+/**
+ * fu_input_stream_get_stream_impl: (skip):
+ * @stream: a #FuInputStream
+ *
+ * Returns the Rust-side stream implementation handle for the given stream.
+ *
+ * Returns: (transfer full): an opaque #FuRsStreamImpl, free with fu_stream_impl_free()
+ *
+ * Since: 2.1.8
+ */
+FuRsStreamImpl *
+fu_input_stream_get_stream_impl(FuInputStream *stream)
+{
+	FuInputStreamClass *klass;
+
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+
+	klass = FU_INPUT_STREAM_GET_CLASS(stream);
+	g_return_val_if_fail(klass->get_stream_impl != NULL, NULL);
+
+	return klass->get_stream_impl(stream);
+}
