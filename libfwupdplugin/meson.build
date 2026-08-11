@@ -378,7 +378,6 @@ fwupdplugin_headers = [
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
   'fu-stream-input-stream.h',
-  'fu-stream-input-stream-private.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',

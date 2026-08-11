@@ -11,15 +11,11 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_STREAM_INPUT_STREAM (fu_stream_input_stream_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuStreamInputStream,
-			 fu_stream_input_stream,
-			 FU,
-			 STREAM_INPUT_STREAM,
-			 FuInputStream)
-
-struct _FuStreamInputStreamClass {
-	FuInputStreamClass parent_class;
-};
+G_DECLARE_FINAL_TYPE(FuStreamInputStream,
+		     fu_stream_input_stream,
+		     FU,
+		     STREAM_INPUT_STREAM,
+		     FuInputStream)
 
 FuInputStream *
 fu_stream_input_stream_from_stream(GInputStream *stream) G_GNUC_NON_NULL(1);
