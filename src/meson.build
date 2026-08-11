@@ -68,6 +68,7 @@ endif
 
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
+  fwupd_engine_src += 'fu-engine-installer.c'
 endif
 if host_machine.system() in ['linux', 'android']
   fwupd_engine_src += 'fu-udev-backend.c'
