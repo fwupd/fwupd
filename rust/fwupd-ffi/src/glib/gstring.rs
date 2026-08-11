@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-//! Minimal GString FFI helpers for returning GLib strings from Rust.
+//! Minimal `GString` FFI helpers for returning `GLib` strings from Rust.
 
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-/// Opaque GString -- matches the GLib `GString` struct layout.
+/// Opaque `GString` -- matches the `GLib` `GString` struct layout.
 #[repr(C)]
 pub struct GString {
     pub str_: *mut c_char,
@@ -27,13 +27,12 @@ impl GString {
     /// Create a new `GString *` from a Rust string.
     ///
     /// The returned `GString` is owned by the caller and must be freed accordingly.
+    #[must_use]
     pub fn from_rust_string(s: &str) -> *mut GString {
         let cs = CString::new(s).expect("Unexpected null byte in string");
         unsafe {
             let gstr = g_string_new(cs.as_ptr());
-            if gstr.is_null() {
-                panic!("g_string_new() returned NULL");
-            }
+            assert!(!gstr.is_null(), "g_string_new() returned NULL");
             gstr
         }
     }

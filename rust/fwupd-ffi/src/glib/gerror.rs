@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-//! Minimal GError FFI helpers for setting errors from Rust.
+//! Minimal `GError` FFI helpers for setting errors from Rust.
 
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 
-/// GError -- must match the GLib GError struct layout
+/// `GError` -- must match the `GLib` `GError` struct layout
 #[repr(C)]
 pub struct GError {
     pub domain: u32,
@@ -18,7 +18,7 @@ pub struct GError {
 }
 
 impl GError {
-    /// Generic setter for a GError from an error code and a message.
+    /// Generic setter for a `GError` from an error code and a message.
     #[allow(dead_code)]
     pub(crate) unsafe fn set(error: *mut *mut GError, error_code: u32, msg: &str) {
         if error.is_null() {
@@ -38,7 +38,7 @@ impl GError {
     }
 }
 
-/// Opaque GQuark (a guint32 in GLib).
+/// Opaque `GQuark` (a guint32 in `GLib`).
 type GQuark = u32;
 
 #[allow(dead_code)]
