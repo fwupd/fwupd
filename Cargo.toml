@@ -13,4 +13,5 @@ panic = "abort"
 panic = "abort"
 
 [workspace.package]
+edition = "2021"
 rust-version = "1.75"
