@@ -14,12 +14,15 @@
 //! - [`FileInputStream`]: reads from a file on disk
 //! - [`PartialInputStream`]: a slice/view over another stream
 //! - [`CompositeInputStream`]: concatenation of multiple streams
+//! - [`CompressorStream`]: compresses data from another stream on the fly
+//! - [`DecompressorStream`]: decompresses data from another stream on the fly
 //!
 //! All stream types implement [`std::io::Read`] and [`std::io::Seek`] for
 //! interoperability with the Rust standard library.
 
 mod borrowed_memory_input_stream;
 mod composite_input_stream;
+mod compressor_stream;
 mod cstream;
 mod file_input_stream;
 mod memory_input_stream;
@@ -29,6 +32,8 @@ mod partial_input_stream;
 pub use borrowed_memory_input_stream::*;
 #[doc(inline)]
 pub use composite_input_stream::*;
+#[doc(inline)]
+pub use compressor_stream::*;
 #[doc(inline)]
 pub use cstream::*;
 #[doc(inline)]
