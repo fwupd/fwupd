@@ -12,6 +12,7 @@ struct _FuRedfishRequest {
 	GObject parent_instance;
 	CURL *curl;
 	CURLU *uri;
+	struct curl_slist *headers; /* nullable */
 	gchar *path_prefix;
 	GByteArray *buf;
 	glong status_code;
@@ -204,6 +205,40 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 typedef struct curl_slist _curl_slist;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 
+gboolean
+fu_redfish_request_set_x_auth_header_token(FuRedfishRequest *self,
+					   const gchar *session_key,
+					   GError **error)
+{
+	g_autofree gchar *header_str = NULL;
+
+	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), FALSE);
+	g_return_val_if_fail(session_key != NULL, FALSE);
+
+	header_str = g_strdup_printf("X-Auth-Token: %s", session_key);
+	if (header_str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to create X-Auth-Token header");
+		return FALSE;
+	}
+	if (self->headers != NULL) {
+		curl_slist_free_all(self->headers);
+		self->headers = NULL;
+	}
+	self->headers = curl_slist_append(NULL, header_str);
+	if (self->headers == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to set X-Auth-Token header");
+		return FALSE;
+	}
+	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, self->headers);
+	return TRUE;
+}
+
 static void
 fu_redfish_request_reset(FuRedfishRequest *self)
 {
@@ -320,6 +355,8 @@ fu_redfish_request_finalize(GObject *object)
 	FuRedfishRequest *self = FU_REDFISH_REQUEST(object);
 	if (self->cache != NULL)
 		g_hash_table_unref(self->cache);
+	if (self->headers != NULL)
+		curl_slist_free_all(self->headers);
 	g_object_unref(self->json_parser);
 	g_byte_array_unref(self->buf);
 	g_free(self->path_prefix);

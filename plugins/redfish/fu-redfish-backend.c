@@ -13,6 +13,7 @@
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -100,10 +101,11 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
 	if (self->bearer_token != NULL) {
-		/* Some custom implementation require special authentication through bearer token.
-		 * Let's use that if configured to do so. */
-		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
-		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
+		/* Some custom implementations require special authentication through a bearer
+		 * token; let's use that if configured to do so. Per DSP0266 §13.3.4, Redfish
+		 * session login authentication uses X-Auth-Token */
+		if (!fu_redfish_request_set_x_auth_header_token(request, self->bearer_token, NULL))
+			g_info("failed to set X-Auth-Token header");
 	} else {
 		/* Here is the common auth scenario, when no specific bearer token is configured.
 		 * since DSP0266 makes Basic Authorization a requirement,
@@ -467,6 +469,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
 			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
+			} else if (g_strcmp0(self->vendor, "AMI") == 0) {
+				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
 			}
