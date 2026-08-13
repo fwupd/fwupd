@@ -33,6 +33,10 @@ CURL *
 fu_redfish_request_get_curl(FuRedfishRequest *self);
 void
 fu_redfish_request_set_curlsh(FuRedfishRequest *self, CURLSH *curlsh);
+gboolean
+fu_redfish_request_set_x_auth_header_token(FuRedfishRequest *self,
+					   const gchar *session_key,
+					   GError **error);
 CURLU *
 fu_redfish_request_get_uri(FuRedfishRequest *self);
 glong

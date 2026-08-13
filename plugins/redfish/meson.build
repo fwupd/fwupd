@@ -23,6 +23,7 @@ plugin_builtin_redfish = static_library(
     'fu-redfish-common.c', # fuzzing
     'fu-redfish-device.c',
     'fu-redfish-smc-device.c',
+    'fu-redfish-nvidia-device.c',
     'fu-redfish-legacy-device.c',
     'fu-redfish-hpe-device.c',
     'fu-redfish-multipart-device.c',
