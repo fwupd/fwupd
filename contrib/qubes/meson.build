@@ -51,3 +51,18 @@ install_symlink(
   pointing_to: '/usr/share/qubes-fwupd/src/qubes_fwupdmgr.py',
   install_dir: '/usr/sbin',
 )
+
+if get_option('tests')
+  # The tests that need dom0 skip themselves, so the rest can run anywhere.
+  # They import the modules under src/ by bare name, the way they do once
+  # installed alongside each other in /usr/share/qubes-fwupd/src, and read
+  # their fixtures relative to the source directory.
+  test(
+    'qubes-fwupdmgr-test',
+    python3,
+    args: ['-m', 'pytest', '-v', 'test/'],
+    workdir: meson.current_source_dir(),
+    env: {'PYTHONPATH': meson.current_source_dir() / 'src'},
+    timeout: 180,
+  )
+endif
