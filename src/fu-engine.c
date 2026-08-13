@@ -4367,6 +4367,8 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
 	g_autoptr(FuInputStream) memstream = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	gsize sz = 0;
 
 	/* convert the CAB into metadata XML */
 	cabinet = fu_engine_build_cabinet_from_stream(self, fustream, error);
@@ -4378,7 +4380,11 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
-	memstream = fu_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+
+	sz = strlen(xml);
+	bytes = g_bytes_new_take(g_steal_pointer(&xml), sz);
+
+	memstream = fu_memory_input_stream_new_from_bytes(bytes);
 	return fu_input_stream_as_g_input_stream(memstream);
 }
 
