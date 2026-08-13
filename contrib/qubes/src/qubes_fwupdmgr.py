@@ -14,9 +14,9 @@ import subprocess
 import tempfile
 import sys
 import xml.etree.ElementTree as ET
+import re
 
 from pathlib import Path
-from packaging import version as pversion
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
 
@@ -44,6 +44,7 @@ METADATA_URL = "https://fwupd.org/downloads/firmware.xml.xz"
 METADATA_URL_JCAT = "https://fwupd.org/downloads/firmware.xml.xz.jcat"
 
 FWUPDMGR = "/bin/fwupdmgr"
+FWUPDTOOL = "/bin/fwupdtool"
 
 BIOS_UPDATE_FLAG = os.path.join(FWUPD_DOM0_DIR, "bios_update")
 LVFS_TESTING_DOM0_FLAG = os.path.join(FWUPD_DOM0_DIR, "lvfs_testing")
@@ -225,6 +226,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             {
                 "Name": device["Name"],
                 "Version": device["Version"],
+                "VersionFormat": device.get("VersionFormat"),
                 "Releases": [
                     {
                         "Version": update["Version"],
@@ -315,6 +317,47 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 except ValueError:
                     print("Invalid choice.")
 
+    def _compare_versions(self, version_a, version_b, version_format=None):
+        """Compares two firmware versions using `fwupdtool vercmp`. This supports all of the version number formats in https://fwupd.org/lvfs/docs/metainfo/version
+
+        Keywords arguments:
+        version_a -- first version specifier, e.g. "1.2.3"
+        version_b -- second version specifier, e.g. "1.2.4"
+        version_format -- device version format, e.g. "triplet" or "hex", none to auto-detect
+
+        Returns -1 if version_a is before version_b, 1 if after,
+        and 0 if equal.
+        """
+        for version in (version_a, version_b):
+            if not isinstance(version, str) or version.strip() == "":
+                raise ValueError(f"empty version specifier: {version!r}")
+            if version.startswith("-") or "\n" in version or "\r" in version:
+                # fwupdtool would read these as options, or as extra output
+                raise ValueError(f"unsupported version specifier: {version!r}")
+
+        # a None or "unknown" version format means auto-detect, so just leave off the third parameter if so
+        p = subprocess.run(
+            [FWUPDTOOL, "vercmp", version_a, version_b]
+            + ([] if version_format in (None, "unknown") else [version_format]),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if p.returncode != 0:
+            raise Exception(
+                f"fwupd-qubes: Comparing {version_a!r} with {version_b!r} failed: {p.stderr.decode(errors='replace').strip()}"
+            )
+        # fwupdtool outputs "VERSION1 <op> VERSION2"
+        output = p.stdout.decode(errors="replace")
+        for line in output.splitlines():
+            match = re.fullmatch(
+                f"{re.escape(version_a)} (<|==|>) {re.escape(version_b)}", line
+            )
+            if match:
+                return {"<": -1, "==": 0, ">": 1}[match.group(1)]
+        raise Exception(
+            f"fwupd-qubes: invalid `fwupdtool vercmp` output: {output.strip()!r}"
+        )
+
     def _parse_parameters(self, updates_list, choice):
         """Parses device name, url, version and SHA256 checksum of the file list.
 
@@ -323,9 +366,15 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         choice -- number of device to be updated
         """
         self.name = updates_list[choice]["Name"]
+        self.version_format = updates_list[choice].get("VersionFormat")
         self.version = updates_list[choice]["Releases"][0]["Version"]
         for ver_check in updates_list[choice]["Releases"]:
-            if pversion.parse(ver_check["Version"]) >= pversion.parse(self.version):
+            if (
+                self._compare_versions(
+                    ver_check["Version"], self.version, self.version_format
+                )
+                >= 0
+            ):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -343,13 +392,14 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise Exception("dmidecode: Reading DMI failed")
         return p.communicate()[0].decode()
 
-    def _verify_dmi(self, arch_path, version, downgrade=False):
+    def _verify_dmi(self, arch_path, version, downgrade=False, version_format=None):
         """Verifies DMI tables for BIOS updates.
 
         Keywords arguments:
         arch_path -- absolute path of the update archive
         version -- version of the update
         downgrade -- downgrade flag
+        version_format -- version format of the device being updated
         """
         dmi_info = self._read_dmi()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -366,8 +416,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and pversion.parse(version) <= pversion.parse(
-            self.dmi_version
+        if (
+            not downgrade
+            and self._compare_versions(version, self.dmi_version, version_format) <= 0
         ):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
 
@@ -404,7 +455,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._download_firmware_updates(self.url, self.sha, whonix=whonix)
         if self.name == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
-            self._verify_dmi(self.arch_path, self.version)
+            self._verify_dmi(
+                self.arch_path, self.version, version_format=self.version_format
+            )
         self._install_dom0_firmware(
             self.arch_path,
             allow_older=allow_older,
@@ -428,10 +481,12 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                     version = device["Version"]
                 except KeyError:
                     continue
+                version_format = device.get("VersionFormat")
                 downgrades.append(
                     {
                         "Name": device["Name"],
                         "Version": device["Version"],
+                        "VersionFormat": version_format,
                         "Releases": [
                             {
                                 "Version": downgrade["Version"],
@@ -440,8 +495,10 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                                 "Checksum": downgrade["Checksum"][-1],
                             }
                             for downgrade in device["Releases"]
-                            if pversion.parse(downgrade["Version"])
-                            < pversion.parse(version)
+                            if self._compare_versions(
+                                downgrade["Version"], version, version_format
+                            )
+                            < 0
                         ],
                     }
                 )
@@ -536,16 +593,25 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             return uri, match["Checksum"][-1]
 
         current = target_device.get("Version", "0")
+        version_format = target_device.get("VersionFormat")
         candidates = [
             r
             for r in releases
             if self._release_eligible(
-                r.get("Version"), current, allow_older, allow_reinstall
+                r.get("Version"), current, allow_older, allow_reinstall, version_format
             )
         ]
         if not candidates:
             raise Exception(f"No eligible release found for device '{device_id}'")
-        best = max(candidates, key=lambda r: pversion.Version(r["Version"]))
+        best = candidates[0]
+        for candidate in candidates[1:]:
+            if (
+                self._compare_versions(
+                    candidate["Version"], best["Version"], version_format
+                )
+                > 0
+            ):
+                best = candidate
         uri = self._release_uri(best)
         if not uri:
             raise Exception(
@@ -616,6 +682,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 self.arch_path,
                 downgrade["Version"],
                 downgrade=True,
+                version_format=downgrade.get("VersionFormat"),
             )
         self._install_dom0_firmware_downgrade(self.arch_path)
 
@@ -853,13 +920,18 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             if not dev_id:
                 continue
             dev_ver = device.get("Version", "0")
+            version_format = device.get("VersionFormat")
 
             releases, _ = self._fwupd_get_releases(dev_id, allow_older, allow_reinstall)
             candidates = [
                 r
                 for r in releases
                 if self._release_eligible(
-                    r.get("Version"), dev_ver, allow_older, allow_reinstall
+                    r.get("Version"),
+                    dev_ver,
+                    allow_older,
+                    allow_reinstall,
+                    version_format,
                 )
             ]
             if not candidates:
@@ -869,6 +941,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 {
                     "Name": device.get("Name", "Unknown"),
                     "Version": dev_ver,
+                    "VersionFormat": version_format,
                     "Releases": [
                         {
                             "Version": r["Version"],
@@ -883,22 +956,28 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             )
         return updates_list
 
-    def _release_eligible(self, rel_ver_str, cur_ver_str, allow_older, allow_reinstall):
-        """Return True if a release is eligible to install over current using
-        packaging.version human-readable Version strings.
+    def _release_eligible(
+        self,
+        rel_ver_str,
+        cur_ver_str,
+        allow_older,
+        allow_reinstall,
+        version_format=None,
+    ):
+        """Return True if a release is eligible to install over current, using
+        fwupd's own version comparison.
         """
         if not rel_ver_str:
             return False
         try:
-            rv = pversion.parse(rel_ver_str)
-            cv = pversion.parse(cur_ver_str or "0")
+            rc = self._compare_versions(rel_ver_str, cur_ver_str or "0", version_format)
         except Exception:
             return False
-        if rv > cv:
+        if rc > 0:
             return True
-        if rv == cv and allow_reinstall:
+        if rc == 0 and allow_reinstall:
             return True
-        if rv < cv and allow_older:
+        if rc < 0 and allow_older:
             return True
         return False
 
