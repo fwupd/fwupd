@@ -624,6 +624,8 @@ fu_input_stream_read_string(FuInputStream *stream, gsize offset, gsize count, GE
 gboolean
 fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error)
 {
+	goffset current;
+
 	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -634,6 +636,7 @@ fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error)
 		return TRUE;
 	}
 
+	current = g_seekable_tell(G_SEEKABLE(stream));
 	if (!g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_END, NULL, error)) {
 		g_prefix_error_literal(error, "seek to end: ");
 		return FALSE;
@@ -641,8 +644,7 @@ fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error)
 	if (val != NULL)
 		*val = g_seekable_tell(G_SEEKABLE(stream));
 
-	/* success */
-	return TRUE;
+	return g_seekable_seek(G_SEEKABLE(stream), current, G_SEEK_SET, NULL, error);
 }
 
 static gboolean
