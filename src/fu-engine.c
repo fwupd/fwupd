@@ -7710,7 +7710,6 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
-	g_autoptr(GInputStream) g_istream_json = NULL; /* nocheck:blocked */
 	g_autoptr(FuInputStream) istream_json = NULL;
 	g_autoptr(FuInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -7741,11 +7740,10 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
-	g_istream_json = fu_input_stream_as_g_input_stream(istream_json);
-	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       g_istream_json,
-						       FWUPD_JSON_LOAD_FLAG_NONE,
-						       error);
+	json_node = fu_json_parser_load_from_stream(json_parser,
+						    istream_json,
+						    FWUPD_JSON_LOAD_FLAG_NONE,
+						    error);
 	if (json_node == NULL)
 		return FALSE;
 	json_obj = fwupd_json_node_get_object(json_node, error);
