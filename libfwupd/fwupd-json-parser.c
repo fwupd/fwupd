@@ -234,6 +234,39 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 	return fwupd_json_node_new_from_rust(rs);
 }
 
+/**
+ * fwupd_json_parser_load_from_stream_impl: (skip):
+ * @self: a #FwupdJsonParser
+ * @stream_impl: (transfer full): an opaque Rust stream handle
+ * @flags: a #FwupdJsonLoadFlags
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads JSON from a Rust stream implementation handle. This is an internal
+ * function used by libfwupdplugin to avoid converting streams to GInputStream.
+ *
+ * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
+ *
+ * Since: 2.1.8
+ **/
+FwupdJsonNode *
+fwupd_json_parser_load_from_stream_impl(FwupdJsonParser *self,
+					gpointer stream_impl,
+					FwupdJsonLoadFlags flags,
+					GError **error)
+{
+	FwupdRsJsonNode *rs;
+
+	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
+	g_return_val_if_fail(stream_impl != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* ownership of stream_impl is transferred */
+	rs = fwupd_rs_json_parser_load_from_stream_impl(self->rs, stream_impl, (guint)flags, error);
+	if (rs == NULL)
+		return NULL;
+	return fwupd_json_node_new_from_rust(rs);
+}
+
 static void
 fwupd_json_parser_finalize(GObject *object)
 {
