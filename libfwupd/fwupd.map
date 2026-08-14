@@ -1228,5 +1228,6 @@ LIBFWUPD_2.1.8 {
     fwupd_client_run_connect_funcs;
     fwupd_client_set_percentage;
     fwupd_client_set_status;
+    fwupd_json_parser_load_from_stream_impl;
   local: *;
 } LIBFWUPD_2.1.7;
