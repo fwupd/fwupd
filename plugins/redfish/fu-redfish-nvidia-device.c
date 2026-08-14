@@ -176,8 +176,8 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
-	const guint poll_interval_ms = 2000;
-	const guint max_attempts = 900; /* 900 × 2 s = 30 min */
+	const guint poll_interval_ms = 1000;
+	const guint max_attempts = 1800; /* 1800 × 1 s = 30 mins */
 	guint consecutive_errors = 0;
 
 	for (guint i = 0; i < max_attempts; i++) {
@@ -189,7 +189,7 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 		g_autoptr(FwupdJsonObject) json_obj = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
+		fu_device_sleep(FU_DEVICE(self), poll_interval_ms); /* ms */
 
 		backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 		if (backend == NULL)
@@ -232,7 +232,10 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 					    "no TaskState in poll response");
 			return FALSE;
 		}
-		g_debug("polling %s: TaskState=%s (%li%%)", task_uri, state_tmp, pc);
+		g_debug("polling %s: TaskState=%s (%" G_GINT64_FORMAT "%%)",
+			task_uri,
+			state_tmp,
+			pc);
 
 		if (g_strcmp0(state_tmp, "Completed") == 0) {
 			fu_progress_set_percentage(progress, 100);
@@ -270,7 +273,6 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 	FuDeviceClass *parent_class =
 	    FU_DEVICE_CLASS(fu_redfish_nvidia_device_parent_class);
 	const gchar *name;
-	const gchar *software_id;
 
 	/* run standard Redfish probe: sets logical_id, backend_id, vendor, version, flags */
 	if (!parent_class->probe(device, error))
@@ -295,16 +297,15 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 		fu_device_set_name(device, fu_device_get_backend_id(device));
 
 	/* if SoftwareId was present the parent already built a GUID; skip */
-	software_id = fu_device_get_backend_id(device);
 	if (fu_device_get_instance_ids(device)->len > 0)
 		return TRUE;
 
 	/* derive a stable GUID from REDFISH\VENDOR_<vendor>&ID_<Id> for inventory
 	 * entries that carry no SoftwareId (common on NVIDIA/OpenBMC platforms) */
-	if (!fu_device_build_instance_id(device, error, "REDFISH", "VENDOR", "ID", NULL))
+	if (fu_device_get_backend_id(device) != NULL &&
+	    !fu_device_build_instance_id(device, error, "REDFISH", "VENDOR", "ID", NULL))
 		return FALSE;
 
-	(void)software_id; /* used only for the comment context above */
 	return TRUE;
 }
 
@@ -312,7 +313,6 @@ static gboolean
 fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
-	g_autoptr(GError) error_local = NULL;
 
 	/* show activation guidance during `fwupdmgr activate`. */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
@@ -326,8 +326,10 @@ fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError
 				  "  1. sudo poweroff\n"
 				  "  2. After the host is fully off, physically unplug AC for at least 30 seconds\n"
 				  "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
-	if (!fu_device_emit_request(device, request, progress, &error_local))
-		g_message("failed to emit activation guidance: %s", error_local->message);
+	if (!fu_device_emit_request(device, request, progress, error)) {
+		g_prefix_error_literal(error, "failed to emit activation guidance: ");
+		return FALSE;
+	}
 
 	return TRUE;
 }
