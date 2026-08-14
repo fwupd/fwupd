@@ -11,6 +11,7 @@
 #include "fwupd-jcat-file.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-parser.h"
+#include "fwupd-rust-compressor-stream.h"
 
 struct _FwupdJcatFile {
 	GObject parent_instance;
@@ -190,6 +191,60 @@ fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError
 						       istream_uncompressed,
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
+	if (json_node == NULL)
+		return FALSE;
+	return fwupd_jcat_file_import_node(self, json_node, error);
+}
+
+/**
+ * fwupd_jcat_file_import_stream_impl: (skip):
+ * @self: #FwupdJcatFile
+ * @stream_impl: (transfer full): a #FuRsStreamImpl
+ * @error: #GError, or %NULL
+ *
+ * Imports a compressed FwupdJcat file from a Rust stream implementation.
+ *
+ * The stream is decompressed (gzip) and parsed as JSON. Ownership of
+ * @stream_impl is transferred to this function.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, gpointer stream_impl, GError **error)
+{
+	FuRsDecompressorStream *dstream;
+	FuRsStreamImpl *dstream_impl;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	g_return_val_if_fail(FWUPD_IS_JCAT_FILE(self), FALSE);
+	g_return_val_if_fail(stream_impl != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* ownership of stream_impl is transferred to the decompressor
+	 * (2 == GZIP, matching FuCompressorFormat) */
+	dstream = fu_rs_compressor_stream_new_decompress(stream_impl, 2, error);
+	if (dstream == NULL)
+		return FALSE;
+
+	dstream_impl = fu_rs_decompressor_stream_get_stream_impl(dstream);
+	fu_rs_decompressor_stream_free(dstream);
+
+	if (dstream_impl == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get decompressor stream impl");
+		return FALSE;
+	}
+
+	/* ownership of dstream_impl is transferred */
+	json_node = fwupd_json_parser_load_from_stream_impl(json_parser,
+							    dstream_impl,
+							    FWUPD_JSON_LOAD_FLAG_NONE,
+							    error);
 	if (json_node == NULL)
 		return FALSE;
 	return fwupd_jcat_file_import_node(self, json_node, error);
