@@ -125,6 +125,8 @@ fu_input_stream_func(void)
 	g_autofree gchar *csum = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree guint8 *buf2 = NULL;
+	g_autofree guint8 *buf3 = NULL;
+	g_autofree guint8 *buf4 = NULL;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
@@ -146,6 +148,26 @@ fu_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(streamsz, ==, bufsz);
+
+	/* verify we're still at the beginning of the stream - read first half */
+	buf3 = g_malloc0(bufsz / 2);
+	ret = fu_input_stream_read(stream, buf3, bufsz / 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(ret, ==, bufsz / 2);
+	g_assert_cmpmem(buf, bufsz / 2, buf3, bufsz / 2);
+
+	/* verify size again, position-independent */
+	ret = fu_input_stream_size(stream, &streamsz, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(streamsz, ==, bufsz);
+
+	/* size shouldn't have changed our position in the stream - read second half */
+	buf4 = g_malloc0(bufsz / 2);
+	ret = fu_input_stream_read(stream, buf4, bufsz / 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(ret, ==, bufsz / 2);
+	g_assert_cmpmem(buf + (bufsz / 2), bufsz / 2, buf4, bufsz / 2);
 
 	/* verify checksum */
 	csum2 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_MD5, &error);
