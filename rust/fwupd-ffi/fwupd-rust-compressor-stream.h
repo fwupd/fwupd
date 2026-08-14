@@ -14,19 +14,13 @@
 
 #include "fwupd-rust-streams.h"
 
-#include "fu-compressor-struct.h"
-
 G_BEGIN_DECLS
-
-G_STATIC_ASSERT(sizeof(FuCompressorFormat) == 4);
 
 typedef struct FuRsCompressorStream FuRsCompressorStream;
 typedef struct FuRsDecompressorStream FuRsDecompressorStream;
 
 FuRsCompressorStream *
-fu_rs_compressor_stream_new_compress(FuRsStreamImpl *base_stream,
-				     FuCompressorFormat format,
-				     GError **error);
+fu_rs_compressor_stream_new_compress(FuRsStreamImpl *base_stream, gint32 format, GError **error);
 gssize
 fu_rs_compressor_stream_read(FuRsCompressorStream *stream, guint8 *buf, gsize count);
 gboolean
@@ -37,9 +31,7 @@ FuRsStreamImpl *
 fu_rs_compressor_stream_get_stream_impl(const FuRsCompressorStream *stream);
 
 FuRsDecompressorStream *
-fu_rs_compressor_stream_new_decompress(FuRsStreamImpl *base_stream,
-				       FuCompressorFormat format,
-				       GError **error);
+fu_rs_compressor_stream_new_decompress(FuRsStreamImpl *base_stream, gint32 format, GError **error);
 gssize
 fu_rs_decompressor_stream_read(FuRsDecompressorStream *stream, guint8 *buf, gsize count);
 gboolean
