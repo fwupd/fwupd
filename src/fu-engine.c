@@ -4845,7 +4845,6 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuInputStream) istream = NULL;
-	g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
@@ -4859,8 +4858,9 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	g_istream = fu_input_stream_as_g_input_stream(istream);
-	if (!fwupd_jcat_file_import_stream(jcat_file, g_istream, error))
+	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
+						fu_input_stream_get_stream_impl(istream),
+						error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -4950,7 +4950,6 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuInputStream) istream = NULL;
-	g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
@@ -4980,8 +4979,9 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 
 	/* verify JCatFile, or create a dummy one from legacy data */
 	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
-	g_istream = fu_input_stream_as_g_input_stream(istream);
-	if (!fwupd_jcat_file_import_stream(jcat_file, g_istream, error))
+	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
+						fu_input_stream_get_stream_impl(istream),
+						error))
 		return FALSE;
 
 	/* distrusting RSA? */
