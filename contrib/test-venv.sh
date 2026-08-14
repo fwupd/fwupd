@@ -13,6 +13,7 @@ export GI_TYPELIB_PATH=${BUILD}/libfwupd
 export LD_LIBRARY_PATH=${BUILD}/libfwupd
 export DAEMON_BUILDDIR=${BUILD}/src
 export PATH=${VENV}/bin:$PATH
+export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 
 echo "Build time test suite"
 meson test -C "${BUILD}" "$@"
