@@ -23,6 +23,7 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
+#include "fu-engine-installer.h"
 #include "fu-engine-requirements.h"
 #include "fu-unix-seekable-input-stream.h"
 
@@ -37,37 +38,16 @@ typedef struct {
 	FuBinderDaemon *self;
 	FuEngineRequest *request;
 	FuProgress *progress;
-	gchar *device_id;
 	guint64 flags;
-	FuInputStream *stream;
-	FuCabinet *cabinet;
-	GPtrArray *action_ids;
-	GPtrArray *releases;
-	GPtrArray *errors;
-	gchar *remote_id;
+	FuEngineInstaller *engine_installer;
 } FuBinderDaemonAuthHelper;
 
 static void
 fu_binder_daemon_auth_helper_free(FuBinderDaemonAuthHelper *helper)
 {
-	if (helper->request)
-		g_object_unref(helper->request);
-	if (helper->progress)
-		g_object_unref(helper->progress);
-	if (helper->device_id)
-		g_free(helper->device_id);
-	if (helper->stream)
-		g_object_unref(helper->stream);
-	if (helper->cabinet)
-		g_object_unref(helper->cabinet);
-	if (helper->action_ids)
-		g_ptr_array_unref(helper->action_ids);
-	if (helper->releases)
-		g_ptr_array_unref(helper->releases);
-	if (helper->errors)
-		g_ptr_array_unref(helper->errors);
-	if (helper->remote_id)
-		g_free(helper->remote_id);
+	g_object_unref(helper->request);
+	g_object_unref(helper->progress);
+	g_object_unref(helper->engine_installer);
 	g_free(helper);
 }
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuBinderDaemonAuthHelper, fu_binder_daemon_auth_helper_free)
@@ -126,14 +106,6 @@ fu_binder_daemon_create_request(FuBinderDaemon *self)
 	return g_steal_pointer(&request);
 }
 
-static gint
-fu_binder_daemon_release_sort_cb(gconstpointer a, gconstpointer b)
-{
-	FuRelease *release1 = *((FuRelease **)a);
-	FuRelease *release2 = *((FuRelease **)b);
-	return fu_release_compare(release1, release2);
-}
-
 static void
 fu_binder_daemon_progress_status_changed_cb(FuProgress *progress,
 					    FwupdStatus status,
@@ -143,176 +115,11 @@ fu_binder_daemon_progress_status_changed_cb(FuProgress *progress,
 }
 
 static gboolean
-fu_binder_daemon_install_with_helper_device(FuBinderDaemonAuthHelper *helper,
-					    XbNode *component,
-					    FuDevice *device,
-					    GError **error)
+fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper, GError **error)
 {
 	FuBinderDaemon *self = helper->self;
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) releases = NULL;
-
-	fu_release_set_device(release, device);
-	fu_release_set_request(release, helper->request);
-	if (helper->remote_id != NULL) {
-		fu_release_set_remote(release,
-				      fu_engine_get_remote_by_id(engine, helper->remote_id, NULL));
-	}
-	if (!fu_release_load(release,
-			     helper->cabinet,
-			     component,
-			     NULL,
-			     helper->flags | FWUPD_INSTALL_FLAG_FORCE,
-			     &error_local)) {
-		g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
-		return TRUE;
-	}
-	if (!fu_engine_requirements_check(engine,
-					  release,
-					  helper->flags | FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
-					  &error_local)) {
-		g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
-		return TRUE;
-	}
-
-	fu_device_ensure_from_component(device, component);
-	fu_device_incorporate_from_component(device, component);
-
-	if (!fu_release_check_version(release, component, helper->flags, &error_local)) {
-		g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
-		return TRUE;
-	}
-
-	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
-		g_autoptr(GPtrArray) rels = NULL;
-		g_autoptr(XbQuery) query = NULL;
-
-		g_ptr_array_add(releases, g_object_ref(release));
-
-		query = xb_query_new_full(xb_node_get_silo(component),
-					  "releases/release",
-					  XB_QUERY_FLAG_FORCE_NODE_CACHE,
-					  error);
-		if (query == NULL)
-			return FALSE;
-
-		rels = xb_node_query_full(component, query, NULL);
-		for (guint i = 1; i < rels->len; i++) {
-			XbNode *rel = g_ptr_array_index(rels, i);
-			g_autoptr(FuRelease) release2 = fu_release_new();
-			g_autoptr(GError) error_loop = NULL;
-			fu_release_set_device(release2, device);
-			fu_release_set_request(release2, helper->request);
-			if (!fu_release_load(release2,
-					     helper->cabinet,
-					     component,
-					     rel,
-					     helper->flags,
-					     &error_loop)) {
-				g_ptr_array_add(helper->errors, g_steal_pointer(&error_loop));
-				continue;
-			}
-			g_ptr_array_add(releases, g_object_ref(release2));
-		}
-	} else {
-		g_ptr_array_add(releases, g_object_ref(release));
-	}
-
-	for (guint i = 0; i < releases->len; i++) {
-		FuRelease *release_tmp = g_ptr_array_index(releases, i);
-		if (!fu_engine_requirements_check(engine,
-						  release_tmp,
-						  helper->flags,
-						  &error_local)) {
-			g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
-			continue;
-		}
-		if (!fu_engine_check_trust(engine, release_tmp, &error_local)) {
-			g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
-			continue;
-		}
-
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
-			const gchar *action_id = fu_release_get_action_id(release_tmp);
-			if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
-				g_ptr_array_add(helper->action_ids, g_strdup(action_id));
-		}
-		g_ptr_array_add(helper->releases, g_object_ref(release_tmp));
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_binder_daemon_install_with_helper(FuBinderDaemonAuthHelper *helper, GError **error)
-{
-	g_autoptr(GPtrArray) components = NULL;
-	g_autoptr(GPtrArray) devices_possible = NULL;
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
-
-	if (g_strcmp0(helper->device_id, FWUPD_DEVICE_ID_ANY) == 0) {
-		devices_possible = fu_engine_get_devices(engine, error);
-		if (devices_possible == NULL)
-			return FALSE;
-	} else {
-		g_autoptr(FuDevice) device = NULL;
-		device = fu_engine_get_device(engine, helper->device_id, error);
-		if (device == NULL)
-			return FALSE;
-		devices_possible =
-		    fu_engine_get_devices_by_composite_id(engine,
-							  fu_device_get_composite_id(device),
-							  error);
-		if (devices_possible == NULL)
-			return FALSE;
-	}
-
-	helper->cabinet = fu_engine_build_cabinet_from_stream(engine, helper->stream, error);
-	if (helper->cabinet == NULL)
-		return FALSE;
-
-	components = fu_cabinet_get_components(helper->cabinet, error);
-	if (components == NULL)
-		return FALSE;
-
-	helper->action_ids = g_ptr_array_new_with_free_func(g_free);
-	helper->releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	helper->errors = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
-	helper->remote_id = fu_engine_get_remote_id_for_stream(engine, helper->stream);
-
-	for (guint i = 0; i < components->len; i++) {
-		XbNode *component = g_ptr_array_index(components, i);
-		for (guint j = 0; j < devices_possible->len; j++) {
-			FuDevice *device = g_ptr_array_index(devices_possible, j);
-			if (!fu_binder_daemon_install_with_helper_device(helper,
-									 component,
-									 device,
-									 error))
-				return FALSE;
-		}
-	}
-
-	g_ptr_array_sort(helper->releases, fu_binder_daemon_release_sort_cb);
-
-	if (helper->releases->len == 0) {
-		GError *error_tmp = fu_engine_error_array_get_best(helper->errors);
-		g_propagate_error(error, error_tmp);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper_ref, GError **error)
-{
-	FuBinderDaemon *self = helper_ref->self;
-	g_autoptr(FuBinderDaemonAuthHelper) helper = helper_ref;
 	gboolean ret;
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 
 	fu_progress_set_profile(helper->progress, g_getenv("FWUPD_VERBOSE") != NULL);
 	g_signal_connect(FU_PROGRESS(helper->progress),
@@ -325,22 +132,22 @@ fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper_ref, G
 			 helper->self);
 
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), TRUE);
-
 	ret = fu_engine_install_releases(engine,
 					 helper->request,
-					 helper->releases,
+					 fu_engine_installer_get_releases(helper->engine_installer),
 					 helper->progress,
 					 helper->flags,
 					 error);
-
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
-
+	if (!ret)
+		return FALSE;
 	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "daemon was stopped");
 		return FALSE;
 	}
 
-	return ret;
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -354,26 +161,32 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FuContext *ctx = fu_engine_get_context(engine);
 	g_autoptr(FuBinderDaemonAuthHelper) helper = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_debug("starting install via aidl bridge for device: %s", device_id);
 
 	helper = g_new0(FuBinderDaemonAuthHelper, 1);
 	helper->request = fu_binder_daemon_create_request(self);
 	helper->progress = fu_progress_new(G_STRLOC);
-	helper->device_id = g_strdup(device_id);
+	helper->engine_installer = fu_engine_installer_new(engine);
 	helper->flags = flags;
 	helper->self = self;
-	helper->stream = fu_unix_seekable_input_stream_new(fd_handle, TRUE, error);
-	if (helper->stream == NULL) {
+
+	fu_engine_installer_set_request(helper->engine_installer, helper->request);
+
+	/* get stream */
+	stream = fu_unix_seekable_input_stream_new(fd_handle, TRUE, error);
+	if (stream == NULL) {
 		g_prefix_error_literal(error, "invalid stream: ");
 		return FALSE;
 	}
 
 	if (fu_context_get_config_bool(ctx, "IgnoreRequirements"))
 		helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
-	if (!fu_binder_daemon_install_with_helper(helper, error))
+
+	if (!fu_engine_installer_build(helper->engine_installer, device_id, stream, flags, error))
 		return FALSE;
-	if (!fu_binder_daemon_authorize_install_queue(g_steal_pointer(&helper), error))
+	if (!fu_binder_daemon_authorize_install_queue(helper, error))
 		return FALSE;
 
 	/* success */
