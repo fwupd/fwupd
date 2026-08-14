@@ -1445,26 +1445,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="python3-packaging">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="arch">
-      <package variant="x86_64">python-packaging</package>
-    </distro>
-    <distro id="debian">
-      <control />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="rpm-build">
     <distro id="centos">
       <package variant="x86_64" />
