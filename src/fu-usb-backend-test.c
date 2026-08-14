@@ -25,7 +25,6 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
-	g_autoptr(GInputStream) g_stream = NULL; /* nocheck:blocked */
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
@@ -39,11 +38,8 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	g_stream = fu_input_stream_as_g_input_stream(stream);
-	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       g_stream,
-						       FWUPD_JSON_LOAD_FLAG_NONE,
-						       &error);
+	json_node =
+	    fu_json_parser_load_from_stream(json_parser, stream, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_node);
 	json_obj = fwupd_json_node_get_object(json_node, &error);
