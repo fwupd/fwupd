@@ -4,6 +4,7 @@ editor_url = "vscode://file{path}:{line}:{column}"
 
 ignore = [
     "contrib/ci/tests/**",
+    "rust/fwupd-ffi/**",
 ]
 
 [rules.use_g_object_class_install_properties]
