@@ -64,7 +64,6 @@ BuildRequires: libcurl-devel >= %{libcurl_version}
 BuildRequires: libjcat-devel
 %endif
 BuildRequires: polkit-devel >= 0.103
-BuildRequires: python3-packaging
 BuildRequires: python3-jinja2
 BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
@@ -200,7 +199,6 @@ or server machines.
 Summary: fwupd wrapper for Qubes OS - dom0 scripts
 Requires:   fwupd >= 2.0.0
 Requires:   libjcat >= 0.1.6
-Requires:   python3-packaging
 Requires:   sequoia-sqv
 
 %description qubes-dom0
@@ -210,7 +208,6 @@ fwupd wrapper for Qubes OS
 Summary: fwupd wrapper for Qubes OS - VM scripts
 Requires:   fwupd >= 2.0.0
 Requires:   libjcat >= 0.1.6
-Requires:   python3-packaging
 
 %description qubes-vm
 fwupd wrapper for Qubes OS
