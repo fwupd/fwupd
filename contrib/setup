@@ -14,7 +14,7 @@ rename_branch() {
     if git log $OLD >/dev/null 2>&1 &&
         git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
         echo ""
-        read -p "Rename existing $OLD branch to $NEW? (y/N) " question
+        read -rp "Rename existing $OLD branch to $NEW? (y/N) " question
         if [ "$question" = "y" ]; then
             git branch -m $OLD $NEW
             git fetch origin
@@ -26,29 +26,30 @@ rename_branch() {
 
 setup_deps() {
     if [ -z "$CI" ]; then
-        read -p "Install build dependencies? (y/N) " question
+        read -rp "Install build dependencies? (y/N) " question
     else
         question=y
     fi
     if [ "$question" = "y" ]; then
-        python3 $HELPER install-dependencies $HELPER_ARGS -y
+        # shellcheck disable=SC2086
+        python3 "$HELPER" install-dependencies $HELPER_ARGS -y
     fi
 }
 
 setup_run_wrappers() {
     BASE=../../contrib/
     BIN=venv/bin/
-    TEMPLATE=${BASE}/launch-venv.sh
+    TEMPLATE="${BASE}/launch-venv.sh"
     # launch wrappers
     for F in fwupdtool fwupdmgr fwupd; do
-        rm -f ${BIN}/${F}
-        ln -s $TEMPLATE ${BIN}/${F}
+        rm -f "${BIN}/${F}"
+        ln -s "$TEMPLATE" "${BIN}/${F}"
     done
     # build wrapper
-    rm -f ${BIN}/build-fwupd
-    ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
-    rm -f ${BIN}/test-fwupd
-    ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
+    rm -f "${BIN}/build-fwupd"
+    ln -s "${BASE}/build-venv.sh" "${BIN}/build-fwupd"
+    rm -f "${BIN}/test-fwupd"
+    ln -s "${BASE}/test-venv.sh" "${BIN}/test-fwupd"
 }
 
 setup_vscode() {
@@ -59,9 +60,9 @@ setup_vscode() {
     LAUNCH_F=launch.json
     TASK_F=tasks.json
     for f in $SETTINGS_F $LAUNCH_F $TASK_F; do
-        TEMPLATE=${SOURCED}/${f}
-        TARGETF=${TARGETD}/${f}
-        mkdir -p ${TARGETD}
+        TEMPLATE="${SOURCED}/${f}"
+        TARGETF="${TARGETD}/${f}"
+        mkdir -p "${TARGETD}"
         echo "Copy ${TEMPLATE} to ${TARGETF}."
         cp "${TEMPLATE}" "${TARGETF}"
     done
@@ -77,11 +78,12 @@ setup_git() {
 install_pip() {
     package=$1
     args=$2
-    if ! python3 -m pip install $package $args; then
-        python3 $HELPER install-pip $HELPER_ARGS -y
+    if ! python3 -m pip install "$package" "$args"; then
+        # shellcheck disable=SC2086
+        python3 "$HELPER" install-pip $HELPER_ARGS -y
     fi
     #try once more
-    python3 -m pip install $package
+    python3 -m pip install "$package"
 }
 
 setup_virtualenv() {
@@ -95,6 +97,7 @@ setup_virtualenv() {
         fi
         virtualenv --system-site-packages venv --prompt fwupd
     fi
+    # shellcheck disable=SC1091
     source venv/bin/activate
     cat >>venv/bin/activate <<EOF
 echo "To build or rebuild fwupd within development environment run:"
@@ -132,7 +135,7 @@ setup_precommit() {
 setup_prepush() {
     if [ -z "$CI" ]; then
         echo ""
-        read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
+        read -rp "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
     else
         question=y
     fi
@@ -144,15 +147,15 @@ setup_prepush() {
 }
 
 check_markdown() {
-    python3 $HELPER test-markdown
+    python3 "$HELPER" test-markdown
 }
 
 check_jinja2() {
-    python3 $HELPER test-jinja2
+    python3 "$HELPER" test-jinja2
 }
 
 check_meson() {
-    python3 $HELPER test-meson
+    python3 "$HELPER" test-meson
 }
 
 detect_os() {
@@ -169,11 +172,11 @@ detect_os() {
         *) ;;
         esac
     done
-    if [ -z $OS ]; then
-        OS=$(python3 $HELPER detect-profile)
+    if [ -z "$OS" ]; then
+        OS="$(python3 "$HELPER" detect-profile)"
         if [ -z "$OS" ]; then
             install_pip distro
-            OS=$(python3 $HELPER detect-profile)
+            OS="$(python3 "$HELPER" detect-profile)"
         fi
         echo "Using OS profile $OS to setup"
     fi
@@ -201,7 +204,7 @@ if [ -f venv/bin/build-fwupd ]; then
     exit 0
 fi
 
-PYTHON_VERSION=$(python3 --version 2>/dev/null)
+PYTHON_VERSION="$(python3 --version 2>/dev/null)"
 if [ -z "$PYTHON_VERSION" ]; then
     echo "Install python3 to run this script" >&2
     exit 1
