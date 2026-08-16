@@ -298,6 +298,11 @@
       <control />
     </distro>
   </dependency>
+  <dependency type="build" id="dh-sequence-gir">
+    <distro id="debian">
+      <control />
+    </distro>
+  </dependency>
   <dependency id="devscripts">
     <distro id="debian" />
     <distro id="ubuntu">
@@ -586,11 +591,15 @@
       <package variant="x86_64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 1.80)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 1.80)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -761,17 +770,6 @@
     <distro id="debian">
       <control />
       <multi-arch />
-    </distro>
-  </dependency>
-  <dependency id="libgirepository1.0-dev">
-    <distro id="debian">
-      <control />
-      <native />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="libusb-1.0-0-dev">
@@ -985,6 +983,12 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="gir1.2-gio-2.0-dev">
+    <distro id="debian">
+      <control />
+      <multi-arch />
+    </distro>
+  </dependency>
   <dependency id="gir1.2-glib-2.0">
     <distro id="debian">
       <control />
@@ -994,6 +998,12 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+  </dependency>
+  <dependency id="gir1.2-gobject-2.0-dev">
+    <distro id="debian">
+      <control />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency id="gir1.2-pango-1.0">
