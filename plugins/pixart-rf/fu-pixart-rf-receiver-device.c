@@ -655,7 +655,7 @@ fu_pixart_rf_receiver_device_get_peripheral_info(FuPixartRfReceiverDevice *self,
 	model->checksum = checksum;
 	g_debug("checksum %x", model->checksum);
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
-		version_str = g_strndup((gchar *)model->version, 5);
+		version_str = fu_strsafe((gchar *)model->version, 5);
 	} else {
 		if (!fu_memread_uint16_safe(model->version, 5, 3, &hpac_ver, G_BIG_ENDIAN, error))
 			return FALSE;
@@ -727,13 +727,13 @@ fu_pixart_rf_receiver_device_add_peripherals(FuPixartRfReceiverDevice *device,
 	if (!fu_pixart_rf_receiver_device_get_peripheral_info(device, &model, idx, error))
 		return FALSE;
 	if (!fu_device_has_private_flag(FU_DEVICE(device), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
-		model_version = g_strndup((gchar *)model.version, 5);
+		model_version = fu_strsafe((gchar *)model.version, 5);
 	} else {
 		if (!fu_memread_uint16_safe(model.version, 5, 3, &hpac_ver, G_BIG_ENDIAN, error))
 			return FALSE;
 		model_version = fu_pixart_rf_hpac_version_info_parse(hpac_ver);
 	}
-	model_name = g_strndup((gchar *)model.name, FU_PIXART_RF_DEVICE_MODEL_NAME_LEN);
+	model_name = fu_strsafe((gchar *)model.name, FU_PIXART_RF_DEVICE_MODEL_NAME_LEN);
 
 	/* idx 0 is for local_device */
 	if (idx == 0) {
