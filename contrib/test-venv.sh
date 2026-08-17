@@ -78,6 +78,14 @@ print_msg() {
     fi
 }
 
+chown_state_dir() {
+    # Tests/tools run as root may create dist/var which can cause
+    # subsequent tests to fail if they can't write to that directory.
+    if [ -n "${SUDO}" ] && [ -d "${VENV}"/dist/var ]; then
+        "${SUDO}" chown -R "$(id -u)":"$(id -g)" "${VENV}"/dist/var
+    fi
+}
+
 set -e
 
 run_fwupd=false
@@ -190,6 +198,8 @@ export DAEMON_BUILDDIR="${BUILD}/src"
 export PATH="${VENV}/bin:$PATH"
 export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 
+trap chown_state_dir EXIT INT TERM
+
 if [ "$run_meson" = true ]; then
     print_msg "green" "Testing meson test suite"
     meson test -C "${BUILD}" "${meson_args[@]}"
@@ -206,6 +216,8 @@ if [ "$run_mtd" = true ]; then
             LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" \
             G_TEST_SRCDIR="${G_TEST_SRCDIR}" \
             "${VENV}"/dist/libexec/installed-tests/fwupd/mtd-self-test
+
+        chown_state_dir
     fi
 fi
 
@@ -218,6 +230,8 @@ if [ "$run_fwupdtool" = true ]; then
 
         # artifacts from the test run
         rm -f fwupdtool.txt
+
+        chown_state_dir
     fi
 fi
 
@@ -228,10 +242,15 @@ if [ "$run_fwupd" = true ]; then
         print_msg "pink" "Starting daemon"
         G_DEBUG=fatal-criticals "${VENV}"/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 
+        # give the daemon time to create the state directories
+        sleep 0.5
+        chown_state_dir
+
         print_msg "pink" "Testing fwupd.sh"
         "${INSTALLED_TESTS}"/fwupd.sh
 
         # artifacts from the test run
         rm -f fwupd.txt
+
     fi
 fi
