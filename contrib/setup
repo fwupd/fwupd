@@ -26,14 +26,11 @@ setup_run_wrappers() {
     TEMPLATE="${BASE}/launch-venv.sh"
     # launch wrappers
     for F in fwupdtool fwupdmgr fwupd; do
-        rm -f "${BIN}/${F}"
-        ln -s "$TEMPLATE" "${BIN}/${F}"
+        ln -sf "$TEMPLATE" "${BIN}/${F}"
     done
     # build wrapper
-    rm -f "${BIN}/build-fwupd"
-    ln -s "${BASE}/build-venv.sh" "${BIN}/build-fwupd"
-    rm -f "${BIN}/test-fwupd"
-    ln -s "${BASE}/test-venv.sh" "${BIN}/test-fwupd"
+    ln -sf "${BASE}/build-venv.sh" "${BIN}/build-fwupd"
+    ln -sf "${BASE}/test-venv.sh" "${BIN}/test-fwupd"
 }
 
 setup_vscode() {
