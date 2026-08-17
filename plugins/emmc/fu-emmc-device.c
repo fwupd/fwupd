@@ -563,7 +563,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			g_prefix_error_literal(error, "multi-cmd failed setting install mode: ");
 			if (!fu_ioctl_execute(ioctl,
 					      MMC_IOC_CMD,
-					      (guint8 *)&multi_cmd->cmds[2],
+					      (guint8 *)&multi_cmd->cmds[3],
 					      sizeof(struct mmc_ioc_cmd),
 					      NULL,
 					      FU_EMMC_DEVICE_IOCTL_TIMEOUT,
