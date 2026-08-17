@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 HELPER=./contrib/ci/fwupd_setup_helpers.py
-HELPER_ARGS="-y"
+HELPER_ARGS=""
 
 rename_branch() {
     OLD=master
