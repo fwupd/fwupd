@@ -31,6 +31,47 @@ usage() {
     echo -e "        are passed as-is to meson test."
 }
 
+# Print a message with a background color
+print_msg() {
+    colorname="$1"
+    msg="$2"
+
+    if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+        reset="\033[0m"
+        pad="               "
+        larrow="\xee\x82\xb2" # 
+        rarrow="\xee\x82\xb0" # 
+        case "$colorname" in
+        pink)
+            rgb="239;177;246" # #efb1f6
+            ;;
+        blue)
+            rgb="00;215;255" # #00d7ff
+            ;;
+        green)
+            rgb="00;255;175" # #00ffaf
+            ;;
+        yellow)
+            rgb="255;215;00" # #ffd700
+            ;;
+        *)
+            echo "Unsupported color '$colorname'" >&2
+            exit 1
+            ;;
+        esac
+
+        # Escape sequences:
+        # \033[38;2;r;g;bm  - foreground truecolor r,g,b (decimal)
+        # \033[48;2;r;g;bm  - background truecolor r,g,b (decimal)
+
+        fg="\033[38;2;0;0;0m"
+        # shellcheck disable=SC2059
+        echo -e "\033[38;2;${rgb}m${larrow}\033[48;2;${rgb}m${fg}${pad}${msg}${pad}${reset}\033[38;2;${rgb}m${rarrow}${reset}\n"
+    else
+        echo "${msg}"
+    fi
+}
+
 set -e
 
 run_fwupd=false
@@ -117,12 +158,12 @@ export PATH="${VENV}/bin:$PATH"
 export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 
 if [ "$run_meson" = true ]; then
-    echo "Testing meson test suite"
+    print_msg "green" "Testing meson test suite"
     meson test -C "${BUILD}" "${meson_args[@]}"
 fi
 
 if [ "$run_mtd" = true ]; then
-    echo "Testing mtd-self-test"
+    print_msg "blue" "Testing mtd-self-test"
     "${SUDO}" modprobe mtdram
     "${SUDO}" \
         G_TEST_BUILDDIR="${G_TEST_BUILDDIR}" \
@@ -132,7 +173,7 @@ if [ "$run_mtd" = true ]; then
 fi
 
 if [ "$run_fwupdtool" = true ]; then
-    echo "Testing fwupdtool.sh"
+    print_msg "yellow" "Testing fwupdtool.sh"
     "${INSTALLED_TESTS}"/fwupdtool.sh
 
     # artifacts from the test run
@@ -140,10 +181,10 @@ if [ "$run_fwupdtool" = true ]; then
 fi
 
 if [ "$run_fwupd" = true ]; then
-    echo "Starting daemon"
+    print_msg "pink" "Starting daemon"
     G_DEBUG=fatal-criticals "${VENV}"/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 
-    echo "Testing fwupd.sh"
+    print_msg "pink" "Testing fwupd.sh"
     "${INSTALLED_TESTS}"/fwupd.sh
 
     # artifacts from the test run
