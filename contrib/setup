@@ -7,16 +7,20 @@ cd "$(dirname "$0")/.."
 
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS=""
+INSTALL_BUILD_DEPS="n"
+SETUP_PRE_PUSH="n"
 
 setup_deps() {
-    if [ -z "$CI" ]; then
-        read -rp "Install build dependencies? (y/N) " question
-    else
-        question=y
-    fi
-    if [ "$question" = "y" ]; then
-        # shellcheck disable=SC2086
-        python3 "$HELPER" install-dependencies $HELPER_ARGS -y
+    if [ "$INSTALL_BUILD_DEPS" = "y" ]; then
+        case $OS in
+        debian | ubuntu | arch | fedora | darwin | freebsd)
+            # shellcheck disable=SC2086
+            python3 "$HELPER" install-dependencies $HELPER_ARGS -y
+            ;;
+        nixos)
+            echo "NixOS detected, using nix-shell for build dependencies"
+            ;;
+        esac
     fi
 }
 
@@ -114,13 +118,10 @@ setup_precommit() {
 }
 
 setup_prepush() {
-    if [ -z "$CI" ]; then
-        echo ""
-        read -rp "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
-    else
-        question=y
+    if ! command -v pre-commit >/dev/null 2>&1; then
+        return
     fi
-    if [ "$question" = "y" ]; then
+    if [ "$SETUP_PRE_PUSH" = "y" ]; then
         pre-commit install -t pre-push
     else
         pre-commit uninstall -t pre-push
@@ -195,16 +196,15 @@ fi
 detect_os "$@"
 
 #if interactive install build deps and prepare environment
-if [ -t 2 ]; then
-    case $OS in
-    debian | ubuntu | arch | fedora | darwin | freebsd)
-        setup_deps
-        ;;
-    nixos)
-        echo "NixOS detected, using nix-shell for build dependencies"
-        ;;
-    esac
+if [ -n "$CI" ]; then
+    INSTALL_BUILD_DEPS="y"
+    SETUP_PRE_PUSH="y"
+elif [ -t 2 ]; then
+    read -rp "Install build dependencies? (y/N) " INSTALL_BUILD_DEPS
+    read -rp "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " SETUP_PRE_PUSH
 fi
+
+setup_deps
 setup_virtualenv
 setup_run_wrappers
 check_markdown
@@ -215,8 +215,6 @@ check_meson
 setup_precommit
 
 #needs to be after pre-commit is sourced
-if [ -t 2 ]; then
-    setup_prepush
-fi
+setup_prepush
 
 howto
