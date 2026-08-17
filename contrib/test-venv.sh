@@ -29,6 +29,12 @@ usage() {
     echo -e "        Only applies if meson is in the selected tests."
     echo -e "        If given as --meson-args (without '=') all further arguments"
     echo -e "        are passed as-is to meson test."
+    echo -e ""
+    echo -e "    ${B}--sudo=[auto|noask|skip]${R}"
+    echo -e "        Behavior for sudo (if used for selected tests)"
+    echo -e "            ${B}auto${R}          ask for the sudo password if required (default)"
+    echo -e "            ${B}noask${R}         only run sudo commands if already authenticated"
+    echo -e "            ${B}skip${R}          skip sudo commands (and tests that rely on it)"
 }
 
 # Print a message with a background color
@@ -79,6 +85,7 @@ run_fwupdtool=false
 run_meson=false
 run_mtd=false
 run_all=true
+sudo_mode="auto"
 meson_args=()
 
 while [ $# -gt 0 ]; do
@@ -124,6 +131,18 @@ while [ $# -gt 0 ]; do
         meson_args=("$@")
         shift $#
         ;;
+    --sudo=*)
+        sudo_mode="${1#--sudo=}"
+        case "$sudo_mode" in
+        auto | noask | skip) ;;
+        *)
+            echo "Unknown sudo mode: $sudo_mode" >&2
+            usage >&2
+            exit 1
+            ;;
+        esac
+        shift
+        ;;
     -h | --help)
         usage
         exit 0
@@ -148,7 +167,21 @@ fi
 VENV="$(dirname "$0")/.."
 BUILD="${VENV}/build"
 INSTALLED_TESTS="${VENV}/dist/share/installed-tests/fwupd"
-SUDO=$(command -v sudo 2>/dev/null)
+case "$sudo_mode" in
+skip)
+    SUDO=""
+    ;;
+noask)
+    if sudo -n true 2>/dev/null; then
+        SUDO="$(command -v sudo 2>/dev/null)"
+    else
+        SUDO=""
+    fi
+    ;;
+*)
+    SUDO="$(command -v sudo 2>/dev/null)"
+    ;;
+esac
 export G_TEST_BUILDDIR="${INSTALLED_TESTS}"
 export G_TEST_SRCDIR="${INSTALLED_TESTS}"
 export GI_TYPELIB_PATH="${BUILD}/libfwupd"
@@ -163,30 +196,42 @@ if [ "$run_meson" = true ]; then
 fi
 
 if [ "$run_mtd" = true ]; then
-    print_msg "blue" "Testing mtd-self-test"
-    "${SUDO}" modprobe mtdram
-    "${SUDO}" \
-        G_TEST_BUILDDIR="${G_TEST_BUILDDIR}" \
-        LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" \
-        G_TEST_SRCDIR="${G_TEST_SRCDIR}" \
-        "${VENV}"/dist/libexec/installed-tests/fwupd/mtd-self-test
+    if [ -z "$SUDO" ]; then
+        echo "Skipping mtd-self-test (requires sudo)"
+    else
+        print_msg "blue" "Testing mtd-self-test"
+        "${SUDO}" modprobe mtdram
+        "${SUDO}" \
+            G_TEST_BUILDDIR="${G_TEST_BUILDDIR}" \
+            LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" \
+            G_TEST_SRCDIR="${G_TEST_SRCDIR}" \
+            "${VENV}"/dist/libexec/installed-tests/fwupd/mtd-self-test
+    fi
 fi
 
 if [ "$run_fwupdtool" = true ]; then
-    print_msg "yellow" "Testing fwupdtool.sh"
-    "${INSTALLED_TESTS}"/fwupdtool.sh
+    if [ -z "$SUDO" ]; then
+        echo "Skipping fwupdtool test (requires sudo)"
+    else
+        print_msg "yellow" "Testing fwupdtool.sh"
+        "${INSTALLED_TESTS}"/fwupdtool.sh
 
-    # artifacts from the test run
-    rm -f fwupdtool.txt
+        # artifacts from the test run
+        rm -f fwupdtool.txt
+    fi
 fi
 
 if [ "$run_fwupd" = true ]; then
-    print_msg "pink" "Starting daemon"
-    G_DEBUG=fatal-criticals "${VENV}"/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
+    if [ -z "$SUDO" ]; then
+        echo "Skipping fwupd test (requires sudo)"
+    else
+        print_msg "pink" "Starting daemon"
+        G_DEBUG=fatal-criticals "${VENV}"/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 
-    print_msg "pink" "Testing fwupd.sh"
-    "${INSTALLED_TESTS}"/fwupd.sh
+        print_msg "pink" "Testing fwupd.sh"
+        "${INSTALLED_TESTS}"/fwupd.sh
 
-    # artifacts from the test run
-    rm -f fwupd.txt
+        # artifacts from the test run
+        rm -f fwupd.txt
+    fi
 fi
