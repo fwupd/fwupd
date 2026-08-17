@@ -8,22 +8,6 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS=""
 
-rename_branch() {
-    OLD=master
-    NEW=main
-    if git log $OLD >/dev/null 2>&1 &&
-        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
-        echo ""
-        read -rp "Rename existing $OLD branch to $NEW? (y/N) " question
-        if [ "$question" = "y" ]; then
-            git branch -m $OLD $NEW
-            git fetch origin
-            git branch -u origin/$NEW $NEW
-            git remote set-head origin -a
-        fi
-    fi
-}
-
 setup_deps() {
     if [ -z "$CI" ]; then
         read -rp "Install build dependencies? (y/N) " question
@@ -224,7 +208,6 @@ if [ -t 2 ]; then
         echo "NixOS detected, using nix-shell for build dependencies"
         ;;
     esac
-    rename_branch
 fi
 setup_virtualenv
 setup_run_wrappers
