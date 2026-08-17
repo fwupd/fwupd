@@ -24,7 +24,7 @@ if [ ! -d "${BUILD}" ] || ! [ -e "${BUILD}/build.ninja" ]; then
     # shellcheck disable=SC2086
     meson setup "${BUILD}" --prefix="${DIST}" ${EXTRA_ARGS} "$@"
 fi
-ninja -C "${BUILD}" install
+meson install -C "${BUILD}"
 
 # check whether we have an existing fwupd EFI binary in the host system to use
 EFI_PREFIX="$(pkg-config fwupd-efi --variable=prefix 2>/dev/null || echo "/usr")"
