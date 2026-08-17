@@ -87,19 +87,20 @@ install_pip() {
 }
 
 setup_virtualenv() {
-    echo "Setting up virtualenv"
+    VENV="${PWD}/venv"
+    echo "Setting up virtualenv in ${VENV}"
     if [ "$OS" = "nixos" ]; then
-        python3 -m venv venv --prompt fwupd
-        touch venv/.nixos
+        python3 -m venv "${VENV}" --prompt fwupd
+        touch "${VENV}/.nixos"
     else
         if ! command -v virtualenv >/dev/null 2>&1; then
             install_pip virtualenv
         fi
-        virtualenv --system-site-packages venv --prompt fwupd
+        virtualenv --system-site-packages "${VENV}" --prompt fwupd
     fi
     # shellcheck disable=SC1091
-    source venv/bin/activate
-    cat >>venv/bin/activate <<EOF
+    source "${VENV}/bin/activate"
+    cat >>"${VENV}/bin/activate" <<EOF
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# build-fwupd"
@@ -120,7 +121,7 @@ if [ -n "\$BASH_VERSION" ]; then
     . data/bash-completion/fwupdtool
     . data/bash-completion/fwupdmgr
 fi
-export MANPATH=./venv/dist/share/man:
+export MANPATH=${VENV}/dist/share/man:
 EOF
 }
 
