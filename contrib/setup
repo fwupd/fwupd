@@ -10,6 +10,49 @@ HELPER_ARGS=""
 INSTALL_BUILD_DEPS="n"
 SETUP_PRE_PUSH="n"
 
+howto() {
+    echo ""
+    echo "To enter fwupd development environment run:"
+    echo ""
+    echo "# source venv/bin/activate"
+    echo ""
+}
+
+instructions() {
+    cat <<'EOF'
+echo "To build or rebuild fwupd within development environment run:"
+echo ""
+echo "# build-fwupd"
+echo ""
+echo "To run the test suite run:"
+echo ""
+echo "# test-fwupd"
+echo ""
+echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+echo ""
+echo "# DEBUG=1 fwupdtool get-devices"
+echo ""
+echo "To leave fwupd development environment run:"
+echo ""
+echo "# deactivate"
+EOF
+}
+
+usage() {
+    echo "Usage: $(basename "$0") [OPTIONS]"
+    echo ""
+    echo "Set up the fwupd build"
+    echo ""
+    echo "OPTIONS:"
+    echo "  --debug                   ... enable debugging output"
+    echo "  --help                    ... print this help"
+    echo "  --os=[fedora|ubuntu|...]  ... the operating system to set up the build for."
+    echo ""
+    echo "Once set up, the following commands become available:"
+    howto
+    instructions | bash
+}
+
 setup_deps() {
     if [ "$INSTALL_BUILD_DEPS" = "y" ]; then
         case $OS in
@@ -84,23 +127,8 @@ setup_virtualenv() {
     fi
     # shellcheck disable=SC1091
     source "${VENV}/bin/activate"
+    instructions >>"${VENV}/bin/activate"
     cat >>"${VENV}/bin/activate" <<EOF
-echo "To build or rebuild fwupd within development environment run:"
-echo ""
-echo "# build-fwupd"
-echo ""
-echo "To run the test suite run:"
-echo ""
-echo "# test-fwupd"
-echo ""
-echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
-echo ""
-echo "# DEBUG=1 fwupdtool get-devices"
-echo ""
-echo "To leave fwupd development environment run:"
-echo ""
-echo "# deactivate"
-
 if [ -n "\$BASH_VERSION" ]; then
     . data/bash-completion/fwupdtool
     . data/bash-completion/fwupdmgr
@@ -141,20 +169,7 @@ check_meson() {
 }
 
 detect_os() {
-    for i in "$@"; do
-        case $i in
-        --os=*)
-            OS="${i#*=}"
-            shift
-            ;;
-        --debug)
-            DEBUG=1
-            shift
-            ;;
-        *) ;;
-        esac
-    done
-    if [ -z "$OS" ]; then
+    if [ -z "${OS:-}" ]; then
         OS="$(python3 "$HELPER" detect-profile)"
         if [ -z "$OS" ]; then
             install_pip distro
@@ -166,18 +181,28 @@ detect_os() {
         HELPER_ARGS="$HELPER_ARGS --os $OS"
     fi
     if [ -n "$DEBUG" ]; then
-        set -x
         HELPER_ARGS="$HELPER_ARGS --debug"
     fi
 }
 
-howto() {
-    echo ""
-    echo "To enter fwupd development environment run:"
-    echo ""
-    echo "# source venv/bin/activate"
-    echo ""
-}
+for i in "$@"; do
+    case $i in
+    --os=*)
+        OS="${i#*=}"
+        shift
+        ;;
+    --debug)
+        set -x
+        DEBUG=1
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *) ;;
+    esac
+done
 
 #already setup
 if [ -f venv/bin/build-fwupd ]; then
@@ -193,7 +218,7 @@ if [ -z "$PYTHON_VERSION" ]; then
 fi
 
 #needed for arguments for some commands
-detect_os "$@"
+detect_os
 
 #if interactive install build deps and prepare environment
 if [ -n "$CI" ]; then
