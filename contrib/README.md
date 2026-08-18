@@ -12,7 +12,7 @@ A Dockerfile for Fedora can be generated in `contrib`.
 To prepare the Docker container run this command:
 
 ```shell
-OS=fedora ./generate_docker.py build
+./generate_docker.py --distro fedora --arch amd64 build
 ```
 
 To build the RPMs run this command (from the root of your git checkout):
@@ -37,9 +37,9 @@ A Dockerfile for Debian or Ubuntu can be generated in `contrib`.
 To prepare the Docker container run one of these commands:
 
 ```shell
-OS=debian-x86_64 ./generate_docker.py build
-OS=debian-i386 ./generate_docker.py build
-OS=ubuntu-x86_64 ./generate_docker.py build
+./generate_docker.py --distro debian --arch amd64 build
+./generate_docker.py --distro debian --arch amd64 --variant i386 build
+./generate_docker.py --distro ubuntu --arch amd64 build
 ```
 
 To build the DEBs run one of these commands (from the root of your git checkout):
@@ -66,7 +66,7 @@ A Dockerfile for Arch can be generated in `contrib`.
 To prepare the Docker container run this command:
 
 ```shell
-OS=arch ./generate_docker.py
+./generate_docker.py --distro arch --arch amd64 build
 ```
 
 To build the PKGs run this command (from the root of your git checkout):
