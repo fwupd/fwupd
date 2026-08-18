@@ -10,8 +10,8 @@ RUN dnf copr enable rhughes/fwupd-epel-9 -y
 RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 RUN crb enable
 RUN dnf -y install \
-%%%DEPENDENCIES%%%
-RUN ls -R /var/cache
+%%%DEPENDENCIES%%% && \
+    dnf clean all
 RUN wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
 RUN wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
 WORKDIR /github/workspace
