@@ -996,6 +996,25 @@ fwupd_client_inhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 	g_main_loop_quit(helper->loop);
 }
 
+gchar *
+fwupd_client_sync_impl_inhibit(FwupdClient *self,
+			       const gchar *reason,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_inhibit_async(self, reason, cancellable, fwupd_client_inhibit_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (helper->str == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->str);
+}
+
 /**
  * fwupd_client_inhibit:
  * @self: a #FwupdClient
@@ -1019,7 +1038,8 @@ fwupd_client_inhibit(FwupdClient *self,
 		     GCancellable *cancellable,
 		     GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(reason != NULL, NULL);
@@ -1030,15 +1050,14 @@ fwupd_client_inhibit(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return NULL;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_inhibit_async(self, reason, cancellable, fwupd_client_inhibit_cb, helper);
-	g_main_loop_run(helper->loop);
-	if (helper->str == NULL) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->inhibit == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->inhibit");
 		return NULL;
 	}
-	return g_steal_pointer(&helper->str);
+	return impl->inhibit(self, reason, impl_userdata, cancellable, error);
 }
 
 static void

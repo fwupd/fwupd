@@ -128,6 +128,12 @@ fwupd_client_sync_impl_get_report_metadata(FwupdClient *self,
 					   gpointer user_data,
 					   GCancellable *cancellable,
 					   GError **error);
+gchar *
+fwupd_client_sync_impl_inhibit(FwupdClient *self,
+			       const gchar *reason,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error);
 gboolean
 fwupd_client_sync_impl_install(FwupdClient *self,
 			       const gchar *device_id,

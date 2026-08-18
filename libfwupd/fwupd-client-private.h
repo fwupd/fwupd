@@ -113,6 +113,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	gchar *(*inhibit)(FwupdClient *self,
+			  const gchar *reason,
+			  gpointer user_data,
+			  GCancellable *cancellable,
+			  GError **error);
 	gboolean (*install)(FwupdClient *self,
 			    const gchar *device_id,
 			    const gchar *filename,
