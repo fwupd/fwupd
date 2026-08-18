@@ -8567,6 +8567,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
+	    .inhibit = fwupd_client_sync_impl_inhibit,
 	    .install = fwupd_client_sync_impl_install,
 	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
