@@ -58,8 +58,7 @@ setup_git() {
 
 install_pip() {
     package=$1
-    args=$2
-    if ! python3 -m pip install "$package" "$args"; then
+    if ! python3 -m pip install "$package"; then
         # shellcheck disable=SC2086
         python3 "$HELPER" install-pip $HELPER_ARGS -y
     fi
