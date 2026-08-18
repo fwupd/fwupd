@@ -170,6 +170,11 @@ fwupd_client_sync_impl_modify_remote(FwupdClient *self,
 				     GCancellable *cancellable,
 				     GError **error);
 gboolean
+fwupd_client_sync_impl_quit(FwupdClient *self,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
+gboolean
 fwupd_client_sync_impl_refresh_remote(FwupdClient *self,
 				      FwupdRemote *remote,
 				      FwupdClientDownloadFlags download_flags,

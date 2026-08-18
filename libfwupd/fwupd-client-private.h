@@ -149,6 +149,10 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	gboolean (*quit)(FwupdClient *self,
+			 gpointer user_data,
+			 GCancellable *cancellable,
+			 GError **error);
 	gboolean (*refresh_remote)(FwupdClient *self,
 				   FwupdRemote *remote,
 				   FwupdClientDownloadFlags download_flags,
