@@ -212,6 +212,12 @@ fwupd_client_sync_impl_set_feature_flags(FwupdClient *self,
 					 GCancellable *cancellable,
 					 GError **error);
 gboolean
+fwupd_client_sync_impl_uninhibit(FwupdClient *self,
+				 const gchar *inhibit_id,
+				 gpointer user_data,
+				 GCancellable *cancellable,
+				 GError **error);
+gboolean
 fwupd_client_sync_impl_unlock(FwupdClient *self,
 			      const gchar *device_id,
 			      gpointer user_data,

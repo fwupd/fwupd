@@ -8579,6 +8579,7 @@ fwupd_client_init(FwupdClient *self)
 	    .reset_config = fwupd_client_sync_impl_reset_config,
 	    .search = fwupd_client_sync_impl_search,
 	    .set_feature_flags = fwupd_client_sync_impl_set_feature_flags,
+	    .uninhibit = fwupd_client_sync_impl_uninhibit,
 	    .unlock = fwupd_client_sync_impl_unlock,
 	    .update_metadata = fwupd_client_sync_impl_update_metadata,
 	    .verify = fwupd_client_sync_impl_verify,
