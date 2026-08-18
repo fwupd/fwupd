@@ -38,7 +38,7 @@ if [ -d "${EFI_PREFIX}/${EFI_DIR}" ]; then
             if [ -f "${DIST}/${EFI_DIR}/${FN}" ]; then
                 continue
             fi
-            ln -s "$i" "${DIST}/${EFI_DIR}/${FN}"
+            ln -sf "$i" "${DIST}/${EFI_DIR}/${FN}"
         done
     fi
 fi
