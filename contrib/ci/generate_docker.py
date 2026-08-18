@@ -24,8 +24,10 @@ def get_container_cmd():
         return "podman"
 
 
-def generate_dockerfile(distro: str, arch: str, variant: str | None) -> str:
-    """Generate a Dockerfile from the template for the given distro/arch/variant."""
+def generate_dockerfile(
+    distro: str, version: str, arch: str, variant: str | None
+) -> str:
+    """Generate a Dockerfile from the template for the given distro/version/arch/variant."""
 
     directory = os.path.dirname(sys.argv[0])
     cross = (
@@ -44,10 +46,14 @@ def generate_dockerfile(distro: str, arch: str, variant: str | None) -> str:
     with open(template_file) as file:
         content = file.read()
 
+    content = content.replace("%%%VERSION%%%", version)
+
     # special cases
     match (distro, variant):
         case ("debian", "i386"):
-            content = content.replace("FROM debian:testing", "FROM i386/debian:testing")
+            content = content.replace(
+                f"FROM debian:{version}", f"FROM i386/debian:{version}"
+            )
 
     # insert commands to prepare cross compile
     if cross:
@@ -95,6 +101,11 @@ parser.add_argument(
 )
 parser.add_argument("--arch", default="amd64", help="Architecture (e.g. amd64, arm64)")
 parser.add_argument(
+    "--version",
+    required=True,
+    help="Distribution version/tag (e.g. 44, testing, rolling)",
+)
+parser.add_argument(
     "--variant", default=None, help="Build variant (e.g. i386, android, cross-s390x)"
 )
 
@@ -105,7 +116,7 @@ subparsers.add_parser(
 
 args = parser.parse_args()
 
-content = generate_dockerfile(args.distro, args.arch, args.variant)
+content = generate_dockerfile(args.distro, args.version, args.arch, args.variant)
 
 with open("Dockerfile", "w") as file:
     file.write(content)

@@ -14,17 +14,16 @@ jobs:
       fail-fast: false
       matrix:
         distros:
-          # NOTE: values are joined by '-' for name of container image
-          - { DISTRO: arch, ARCH: amd64 }
-          - { DISTRO: centos, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
-          - { DISTRO: debian, ARCH: arm64 }
-          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
-          - { DISTRO: fedora, ARCH: amd64 }
-          - { DISTRO: ubuntu, ARCH: amd64 }
-          - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android }
+          - { DISTRO: arch, VERSION: latest, ARCH: amd64 }
+          - { DISTRO: centos, VERSION: stream9, ARCH: amd64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, VERSION: unstable, ARCH: amd64, VARIANT: tartan }
+          - { DISTRO: debian, VERSION: testing, ARCH: arm64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: fedora, VERSION: 44, ARCH: amd64 }
+          - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64 }
+          - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64, VARIANT: android }
     steps:
       - name: Check out the repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -34,6 +33,7 @@ jobs:
         run: >-
           ./contrib/ci/generate_docker.py
           --distro "${{ matrix.distros.DISTRO }}"
+          --version "${{ matrix.distros.VERSION }}"
           --arch "${{ matrix.distros.ARCH }}"
           ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }}
       - name: Set up Docker Buildx
@@ -44,9 +44,21 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build container tag
+        id: tag
+        env:
+          DISTRO: ${{ matrix.distros.DISTRO }}
+          ARCH: ${{ matrix.distros.ARCH }}
+          VARIANT: ${{ matrix.distros.VARIANT }}
+        run: |
+          tag="ghcr.io/fwupd/fwupd/fwupd-${DISTRO}-${ARCH}"
+          if [ -n "${VARIANT}" ]; then
+            tag="${tag}-${VARIANT}"
+          fi
+          echo "tag=${tag}:latest" >> "$GITHUB_OUTPUT"
       - name: Push to GitHub Packages
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ join(matrix.distros.*, '-') }}:latest"
+          tags: ${{ steps.tag.outputs.tag }}
