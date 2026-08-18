@@ -97,9 +97,9 @@ with open("Dockerfile", "w") as file:
 if len(sys.argv) == 2 and sys.argv[1] == "build":
     cmd = get_container_cmd()
     args = [cmd, "build", "-t", f"fwupd-{DISTRO}"]
-    if "http_proxy" in os.environ:
-        args += [f"--build-arg=http_proxy={os.environ['http_proxy']}"]
-    if "https_proxy" in os.environ:
-        args += [f"--build-arg=https_proxy={os.environ['https_proxy']}"]
+    if http_proxy := os.environ.get("http_proxy"):
+        args += [f"--build-arg=http_proxy={http_proxy}"]
+    if https_proxy := os.environ.get("https_proxy"):
+        args += [f"--build-arg=https_proxy={https_proxy}"]
     args += ["-f", "./Dockerfile", "."]
     subprocess.check_call(args)
