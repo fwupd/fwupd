@@ -7,7 +7,7 @@ set -e
 VENV="$(dirname "$0")/.."
 BUILD="${VENV}/build"
 INSTALLED_TESTS="${VENV}/dist/share/installed-tests/fwupd"
-SUDO=$(which sudo)
+SUDO=$(command -v sudo 2>/dev/null)
 export G_TEST_BUILDDIR="${INSTALLED_TESTS}"
 export G_TEST_SRCDIR="${INSTALLED_TESTS}"
 export GI_TYPELIB_PATH="${BUILD}/libfwupd"
