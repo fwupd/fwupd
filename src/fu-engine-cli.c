@@ -3911,6 +3911,17 @@ fu_engine_cli_sync_impl_get_device_by_id(FwupdClient *client,
 }
 
 static GPtrArray *
+fu_engine_cli_sync_impl_get_downgrades(FwupdClient *client,
+				       const gchar *device_id,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_get_downgrades(self->engine, self->request, device_id, error);
+}
+
+static GPtrArray *
 fu_engine_cli_sync_impl_get_devices_by_guid(FwupdClient *client,
 					    const gchar *guid,
 					    gpointer user_data,
@@ -4364,6 +4375,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_devices = fu_engine_cli_sync_impl_get_devices,
 	    .get_devices_by_guid = fu_engine_cli_sync_impl_get_devices_by_guid,
 	    .get_device_by_id = fu_engine_cli_sync_impl_get_device_by_id,
+	    .get_downgrades = fu_engine_cli_sync_impl_get_downgrades,
 	    .get_history = fu_engine_cli_sync_impl_get_history,
 	    .get_host_security_attrs = fu_engine_cli_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fu_engine_cli_sync_impl_get_host_security_events,
