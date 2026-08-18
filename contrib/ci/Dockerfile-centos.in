@@ -3,6 +3,7 @@ FROM quay.io/centos/centos:stream9
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
+ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN dnf copr enable rhughes/fwupd-epel-9 -y
