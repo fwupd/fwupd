@@ -10,5 +10,6 @@ RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
 RUN locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
-%%%DEPENDENCIES%%%
+%%%DEPENDENCIES%%% && \
+    pacman -Sc --noconfirm
 WORKDIR /github/workspace
