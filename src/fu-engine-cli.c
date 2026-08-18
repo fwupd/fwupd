@@ -4280,6 +4280,17 @@ fu_engine_cli_sync_impl_set_feature_flags(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_unlock(FwupdClient *client,
+			       const gchar *device_id,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_unlock(self->engine, device_id, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_update_metadata(FwupdClient *client,
 					const gchar *remote_id,
 					const gchar *metadata_fn,
@@ -4361,6 +4372,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .reset_config = fu_engine_cli_sync_impl_reset_config,
 	    .search = fu_engine_cli_sync_impl_search,
 	    .set_feature_flags = fu_engine_cli_sync_impl_set_feature_flags,
+	    .unlock = fu_engine_cli_sync_impl_unlock,
 	    .update_metadata = fu_engine_cli_sync_impl_update_metadata,
 	    .verify = fu_engine_cli_sync_impl_verify,
 	    .verify_update = fu_engine_cli_sync_impl_verify_update,
