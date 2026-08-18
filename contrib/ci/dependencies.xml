@@ -772,6 +772,11 @@
       <multi-arch />
     </distro>
   </dependency>
+  <dependency id="libgirepository1.0-dev">
+    <distro id="ubuntu">
+      <control />
+    </distro>
+  </dependency>
   <dependency id="libusb-1.0-0-dev">
     <distro id="arch">
       <package variant="x86_64">libusb</package>
@@ -988,8 +993,11 @@
       <control />
       <multi-arch />
     </distro>
+    <distro id="ubuntu">
+      <control />
+    </distro>
   </dependency>
-  <dependency id="gir1.2-glib-2.0">
+  <dependency id="gir1.2-glib-2.0-dev">
     <distro id="debian">
       <control />
       <multi-arch />
@@ -1004,6 +1012,9 @@
     <distro id="debian">
       <control />
       <multi-arch />
+    </distro>
+    <distro id="ubuntu">
+      <control />
     </distro>
   </dependency>
   <dependency id="gir1.2-pango-1.0">
