@@ -5,7 +5,6 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
-RUN echo fubar > /etc/machine-id
 RUN dnf copr enable rhughes/fwupd-epel-9 -y
 RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 RUN crb enable
