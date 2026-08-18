@@ -15,7 +15,7 @@ export FWUPD_LOCALSTATEDIR="${DIST}"
 export FWUPD_SYSCONFDIR="${DIST}/etc"
 export LD_LIBRARY_PATH="${DIST}/lib/${cc}:${DIST}/lib64:${DIST}/lib"
 if [ -n "${DEBUG}" ]; then
-    if ! which gdbserver 1>/dev/null 2>&1; then
+    if ! command -v gdbserver 1>/dev/null 2>&1; then
         echo "install gdbserver to enable debugging"
         exit 1
     fi
@@ -47,7 +47,7 @@ ENV="FWUPD_POLKIT_NOCHECK=1 \
 for var in $(env | grep FWUPD | cut -d= -f1); do
     ENV="${ENV} ${var}=${!var}"
 done
-SUDO=$(which sudo)
+SUDO=$(command -v sudo 2>/dev/null)
 if [ "${BIN}" = "fwupd" ] &&
     [ -d "$(dirname "${DBUSPOLICY}")" ] &&
     [ ! -f "${DBUSPOLICY}" ]; then
