@@ -26,6 +26,11 @@ struct FwupdClientSyncImpl {
 				 gpointer user_data,
 				 GCancellable *cancellable,
 				 GError **error);
+	gboolean (*clear_results)(FwupdClient *self,
+				  const gchar *device_id,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 	gboolean (*connect)(FwupdClient *self,
 			    gpointer user_data,
 			    GCancellable *cancellable,

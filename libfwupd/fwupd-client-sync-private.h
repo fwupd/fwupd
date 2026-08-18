@@ -23,6 +23,12 @@ fwupd_client_sync_impl_clean_remote(FwupdClient *self,
 				    GCancellable *cancellable,
 				    GError **error);
 gboolean
+fwupd_client_sync_impl_clear_results(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+gboolean
 fwupd_client_sync_impl_connect(FwupdClient *self,
 			       gpointer user_data,
 			       GCancellable *cancellable,

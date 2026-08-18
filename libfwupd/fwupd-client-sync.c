@@ -1327,6 +1327,29 @@ fwupd_client_clear_results_cb(GObject *source, GAsyncResult *res, gpointer user_
 	g_main_loop_quit(helper->loop);
 }
 
+gboolean
+fwupd_client_sync_impl_clear_results(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_clear_results_async(self,
+					 device_id,
+					 cancellable,
+					 fwupd_client_clear_results_cb,
+					 helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fwupd_client_clear_results:
  * @self: a #FwupdClient
@@ -1346,7 +1369,8 @@ fwupd_client_clear_results(FwupdClient *self,
 			   GCancellable *cancellable,
 			   GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -1357,19 +1381,14 @@ fwupd_client_clear_results(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_clear_results_async(self,
-					 device_id,
-					 cancellable,
-					 fwupd_client_clear_results_cb,
-					 helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->clear_results == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->clear_results");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->clear_results(self, device_id, impl_userdata, cancellable, error);
 }
 
 static void
