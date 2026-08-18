@@ -1,9 +1,9 @@
 # -*- mode: dockerfile -*-
 FROM debian:testing
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
 %%%SETUP%%% \
     apt-get update -qq; \
     apt-get install -qq --yes --no-install-recommends \

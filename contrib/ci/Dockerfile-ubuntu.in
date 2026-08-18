@@ -1,10 +1,10 @@
 # -*- mode: dockerfile -*-
 FROM ubuntu:rolling
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
     apt-get update -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:peter-hutterer/meson1.11; \
