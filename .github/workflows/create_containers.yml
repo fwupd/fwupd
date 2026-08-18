@@ -9,11 +9,11 @@ jobs:
     permissions:
       contents: read
       packages: write # for docker/build-push-action
-    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
+    runs-on: ${{ case(matrix.distros.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     strategy:
       fail-fast: false
       matrix:
-        env:
+        distros:
           # NOTE: values are joined by '-' for name of container image
           - { DISTRO: arch, ARCH: amd64 }
           - { DISTRO: centos, ARCH: amd64 }
@@ -25,14 +25,17 @@ jobs:
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
           - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android }
-    env: ${{ matrix.env }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Generate Dockerfile
-        run: ./contrib/ci/generate_docker.py
+        run: >-
+          ./contrib/ci/generate_docker.py
+          --distro "${{ matrix.distros.DISTRO }}"
+          --arch "${{ matrix.distros.ARCH }}"
+          ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Login to GitHub Container Registry
@@ -46,4 +49,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ join(matrix.env.*, '-') }}:latest"
+          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ join(matrix.distros.*, '-') }}:latest"
