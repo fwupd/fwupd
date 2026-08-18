@@ -3,6 +3,7 @@ FROM fedora:44
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
+ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN dnf --enablerepo=updates-testing -y install \
