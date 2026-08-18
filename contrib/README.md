@@ -7,7 +7,7 @@ The build can be performed using Linux containers with [Docker](https://www.dock
 
 ## RPM packages
 
-A Dockerfile for Fedora can be generated in `contrib`.
+A Dockerfile for Fedora can be generated in `contrib/ci`.
 
 To prepare the Docker container run this command:
 
@@ -32,7 +32,7 @@ docker run --privileged -e QUBES=true  -t -v `pwd`:/github/workspace fwupd-fedor
 
 ## DEB packages
 
-A Dockerfile for Debian or Ubuntu can be generated in `contrib`.
+A Dockerfile for Debian or Ubuntu can be generated in `contrib/ci`.
 
 To prepare the Docker container run one of these commands:
 
@@ -61,7 +61,7 @@ docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-x86_64-qubes
 
 ## PKG packages
 
-A Dockerfile for Arch can be generated in `contrib`.
+A Dockerfile for Arch can be generated in `contrib/ci`.
 
 To prepare the Docker container run this command:
 
