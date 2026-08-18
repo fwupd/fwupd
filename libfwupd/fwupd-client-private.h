@@ -68,6 +68,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	GPtrArray *(*get_downgrades)(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
 	GPtrArray *(*get_history)(FwupdClient *self,
 				  gpointer user_data,
 				  GCancellable *cancellable,

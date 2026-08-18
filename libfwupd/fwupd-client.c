@@ -8557,6 +8557,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_devices = fwupd_client_sync_impl_get_devices,
 	    .get_devices_by_guid = fwupd_client_sync_impl_get_devices_by_guid,
 	    .get_device_by_id = fwupd_client_sync_impl_get_device_by_id,
+	    .get_downgrades = fwupd_client_sync_impl_get_downgrades,
 	    .get_history = fwupd_client_sync_impl_get_history,
 	    .get_host_security_attrs = fwupd_client_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fwupd_client_sync_impl_get_host_security_events,

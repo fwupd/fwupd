@@ -74,6 +74,12 @@ fwupd_client_sync_impl_get_devices_by_guid(FwupdClient *self,
 					   GCancellable *cancellable,
 					   GError **error);
 GPtrArray *
+fwupd_client_sync_impl_get_downgrades(FwupdClient *self,
+				      const gchar *device_id,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error);
+GPtrArray *
 fwupd_client_sync_impl_get_plugins(FwupdClient *self,
 				   gpointer user_data,
 				   GCancellable *cancellable,
