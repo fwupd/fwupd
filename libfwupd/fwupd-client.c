@@ -8572,6 +8572,7 @@ fwupd_client_init(FwupdClient *self)
 	    .modify_config = fwupd_client_sync_impl_modify_config,
 	    .modify_device = fwupd_client_sync_impl_modify_device,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
+	    .quit = fwupd_client_sync_impl_quit,
 	    .refresh_remote = fwupd_client_sync_impl_refresh_remote,
 	    .reset_config = fwupd_client_sync_impl_reset_config,
 	    .search = fwupd_client_sync_impl_search,
