@@ -3749,6 +3749,17 @@ fu_engine_cli_sync_impl_clean_remote(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_clear_results(FwupdClient *client,
+				      const gchar *device_id,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_clear_results(self->engine, device_id, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_connect(FwupdClient *client,
 				gpointer user_data,
 				GCancellable *cancellable,
@@ -4344,6 +4355,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	static FwupdClientSyncImpl impl = {
 	    .activate = fu_engine_cli_sync_impl_activate,
 	    .clean_remote = fu_engine_cli_sync_impl_clean_remote,
+	    .clear_results = fu_engine_cli_sync_impl_clear_results,
 	    .connect = fu_engine_cli_sync_impl_connect,
 	    .emulation_load = fu_engine_cli_sync_impl_emulation_load,
 	    .emulation_save = fu_engine_cli_sync_impl_emulation_save,

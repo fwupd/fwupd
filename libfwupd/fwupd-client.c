@@ -8548,6 +8548,7 @@ fwupd_client_init(FwupdClient *self)
 	static FwupdClientSyncImpl impl = {
 	    .activate = fwupd_client_sync_impl_activate,
 	    .clean_remote = fwupd_client_sync_impl_clean_remote,
+	    .clear_results = fwupd_client_sync_impl_clear_results,
 	    .connect = fwupd_client_sync_impl_connect,
 	    .emulation_load = fwupd_client_sync_impl_emulation_load,
 	    .emulation_save = fwupd_client_sync_impl_emulation_save,
