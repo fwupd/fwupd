@@ -55,7 +55,7 @@ struct FuSynapticsCapeMsg {
 
 #[derive(New, Getters, Default)]
 #[repr(C, packed)]
-struct FuSynapticsCapeCmdHidReport {
+struct FuStructSynapticsCapeCmdHidReport {
     report_id: u16le == 1,
     msg: FuSynapticsCapeMsg,
 }
