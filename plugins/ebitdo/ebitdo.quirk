@@ -91,13 +91,13 @@ InstallDuration = 120
 # M30
 [USB\VID_2DC8&PID_5006]
 Plugin = ebitdo
-Flags = ~is-bootloader
+Flags = will-disappear
 InstallDuration = 120
 
 # SN30v2
 [USB\VID_2DC8&PID_9012]
 Plugin = ebitdo
-Flags = ~is-bootloader
+Flags = will-disappear
 InstallDuration = 120
 
 # SN30 Pro for Android
@@ -113,5 +113,5 @@ InstallDuration = 120
 # N30 Pro 2
 [USB\VID_2DC8&PID_9015]
 Plugin = ebitdo
-Flags = ~is-bootloader
+Flags = will-disappear
 InstallDuration = 120
