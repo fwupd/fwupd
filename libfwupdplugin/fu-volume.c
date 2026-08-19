@@ -20,6 +20,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-bytes.h"
 #include "fu-common-private.h"
 #include "fu-volume-private.h"
 
@@ -650,6 +651,30 @@ fu_volume_set_filesystem_free(FuVolume *self, guint64 fs_free)
 {
 	g_return_if_fail(FU_IS_VOLUME(self));
 	self->fs_free = fs_free;
+}
+
+/**
+ * fu_volume_write_file:
+ * @self: a @FuVolume
+ * @filename: (not nullable): a filename
+ * @bytes: (not nullable): data to write
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes a blob of data to a volume, creating the parent directories as required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GError **error)
+{
+	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(bytes, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	return fu_bytes_set_contents(filename, bytes, error);
 }
 
 /**
