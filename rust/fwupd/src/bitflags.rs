@@ -87,8 +87,8 @@ use std::ops::{BitAnd, BitOr};
 ///     }
 /// }
 /// ```
-/// All APIs except [Bitflags::iter()] work on the underlying
-/// bit field values. Check the documentation for [Bitflags::iter()] to
+/// All APIs except [`Bitflags::iter()`] work on the underlying
+/// bit field values. Check the documentation for [`Bitflags::iter()`] to
 /// avoid surprises.
 pub trait Bitflags: Copy
 where
@@ -121,6 +121,7 @@ where
     fn flag_bits(flag: Self::Flag) -> Self::Bits;
 
     /// Returns a bitmask with no bits set.
+    #[must_use]
     fn empty() -> Self {
         Self::from_bits(Self::Bits::default())
     }
