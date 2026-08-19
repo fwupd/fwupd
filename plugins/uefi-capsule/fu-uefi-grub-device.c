@@ -212,8 +212,6 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 						   NULL);
 	if (fn == NULL)
 		return FALSE;
-	if (!fu_path_mkdir_parent(fn, error))
-		return FALSE;
 	fixed_fw = fu_uefi_capsule_device_fixup_firmware(self, fw, error);
 	if (fixed_fw == NULL)
 		return FALSE;
