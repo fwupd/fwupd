@@ -72,7 +72,13 @@ else
         mv "/tmp/android-extract/$lib" "/system/lib64/$lib"
     done
     rm -rf /tmp/android-extract
-    # C++ and binder runtime from the NDK
+fi
+
+# C++ and binder runtime from the NDK
+if [ -e "/system/lib64/libc++_shared.so" ]; then
+    echo "Android NDK runtime libraries already installed"
+else
+    mkdir -p /system/lib64
     NDK_SYSROOT_LIB="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android"
     for lib in libc++_shared.so 35/libbinder_ndk.so; do
         cp "${NDK_SYSROOT_LIB}/$lib" "/system/lib64/$(basename "$lib")"
