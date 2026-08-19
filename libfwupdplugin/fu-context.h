@@ -28,6 +28,7 @@ struct _FuContextClass {
 	/* signals */
 	void (*security_changed)(FuContext *self);
 	void (*housekeeping)(FuContext *self);
+	void (*volume_write)(FuContext *self, FuVolume *volume, const gchar *filename);
 };
 
 /**

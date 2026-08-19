@@ -64,7 +64,12 @@ typedef struct {
 	FuCpuVendor cpu_vendor;
 } FuContextPrivate;
 
-enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
+enum {
+	SIGNAL_SECURITY_CHANGED,
+	SIGNAL_HOUSEKEEPING,
+	SIGNAL_ESP_WRITE,
+	SIGNAL_LAST,
+};
 
 enum {
 	PROP_0,
@@ -1970,6 +1975,12 @@ fu_context_has_flag(FuContext *context, FuContextFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
+static void
+fu_context_esp_write_file_cb(FuVolume *volume, const gchar *filename, FuContext *self)
+{
+	g_signal_emit(self, signals[SIGNAL_ESP_WRITE], 0, volume, filename);
+}
+
 /**
  * fu_context_add_esp_volume:
  * @self: a #FuContext
@@ -1997,6 +2008,11 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 	}
 
 	/* add */
+	g_signal_connect_object(FU_VOLUME(volume),
+				"write-file",
+				G_CALLBACK(fu_context_esp_write_file_cb),
+				self,
+				0);
 	g_ptr_array_add(priv->esp_volumes, g_object_ref(volume));
 }
 
@@ -3097,6 +3113,28 @@ fu_context_class_init(FuContextClass *klass)
 						    g_cclosure_marshal_VOID__VOID,
 						    G_TYPE_NONE,
 						    0);
+	/**
+	 * FuContext::esp-write:
+	 * @self: the #FuContext instance that emitted the signal
+	 * @volume: the #FuVolume being written to
+	 * @filename: the filename being written
+	 *
+	 * The ::esp-write signal is emitted when plugins should be notified of a write to a
+	 * specific ESP volume.
+	 *
+	 * Since: 2.1.8
+	 **/
+	signals[SIGNAL_ESP_WRITE] = g_signal_new("esp-write",
+						 G_TYPE_FROM_CLASS(object_class),
+						 G_SIGNAL_RUN_LAST,
+						 G_STRUCT_OFFSET(FuContextClass, volume_write),
+						 NULL,
+						 NULL,
+						 g_cclosure_marshal_generic,
+						 G_TYPE_NONE,
+						 2,
+						 FU_TYPE_VOLUME,
+						 G_TYPE_STRING);
 
 	object_class->finalize = fu_context_finalize;
 }
