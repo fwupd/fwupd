@@ -86,7 +86,24 @@ chown_state_dir() {
     fi
 }
 
+cleanup() {
+    if [ -n "$FWUPD_PID" ]; then
+        kill "$FWUPD_PID" 2>/dev/null || true
+        # Give the daemon a few seconds to exit cleanly, then force-kill
+        local _
+        for _ in 1 2 3 4 5; do
+            kill -0 "$FWUPD_PID" 2>/dev/null || break
+            sleep 1
+        done
+        kill -KILL "$FWUPD_PID" 2>/dev/null || true
+        wait "$FWUPD_PID" 2>/dev/null || true
+    fi
+    chown_state_dir
+}
+
 set -e
+
+FWUPD_PID=""
 
 run_fwupd=false
 run_fwupdtool=false
@@ -198,7 +215,7 @@ export DAEMON_BUILDDIR="${BUILD}/src"
 export PATH="${VENV}/bin:$PATH"
 export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 
-trap chown_state_dir EXIT INT TERM
+trap cleanup EXIT INT TERM
 
 if [ "$run_meson" = true ]; then
     print_msg "green" "Testing meson test suite"
@@ -241,6 +258,7 @@ if [ "$run_fwupd" = true ]; then
     else
         print_msg "pink" "Starting daemon"
         G_DEBUG=fatal-criticals "${VENV}"/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
+        FWUPD_PID=$!
 
         # give the daemon time to create the state directories
         sleep 0.5
