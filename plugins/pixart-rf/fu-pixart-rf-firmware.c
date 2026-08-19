@@ -193,7 +193,7 @@ fu_pixart_rf_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to get fw model name: ");
 		return FALSE;
 	}
-	self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
+	self->model_name = fu_strsafe((const gchar *)model_name, sizeof(model_name));
 
 	/* success */
 	return TRUE;

@@ -852,7 +852,7 @@ fu_pixart_rf_ble_device_get_model_info(FuPixartRfBleDevice *self, GError **error
 		return FALSE;
 	g_clear_pointer(&self->model_name, g_free);
 	if (model_name[0] != 0x00 && model_name[0] != 0xFF)
-		self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
+		self->model_name = fu_strsafe((const gchar *)model_name, sizeof(model_name));
 
 	/* success */
 	return TRUE;
