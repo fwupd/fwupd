@@ -17,9 +17,5 @@ FuFileInputStream *
 fu_file_input_stream_from_file(GFile *file,
 			       GCancellable *cancellable,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
-guint64
-fu_file_input_stream_get_file_size(FuFileInputStream *stream,
-				   GCancellable *cancellable,
-				   GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

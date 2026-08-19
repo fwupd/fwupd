@@ -242,9 +242,8 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	sz = fu_file_input_stream_get_file_size(FU_FILE_INPUT_STREAM(istr), NULL, error);
-	if (sz == 0 && error != NULL && *error != NULL) {
-		g_prefix_error_literal(error, "failed to get file size: ");
+	if (!fu_input_stream_size(istr, &sz, error)) {
+		g_prefix_error_literal(error, "failed to get stream size: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
