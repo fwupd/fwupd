@@ -39,6 +39,9 @@ fu_volume_check_free_space(FuVolume *self,
 			   guint64 required,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
+fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+gboolean
 fu_volume_is_mounted(FuVolume *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_volume_is_encrypted(FuVolume *self) G_GNUC_NON_NULL(1);
