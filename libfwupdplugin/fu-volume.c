@@ -50,6 +50,10 @@ enum {
 	PROP_LAST
 };
 
+enum { SIGNAL_WRITE_FILE, SIGNAL_LAST };
+
+static guint signals[SIGNAL_LAST] = {0};
+
 static void
 fu_volume_codec_iface_init(FwupdCodecInterface *iface);
 
@@ -162,6 +166,26 @@ fu_volume_class_init(FuVolumeClass *klass)
 	object_class->finalize = fu_volume_finalize;
 	object_class->get_property = fu_volume_get_property;
 	object_class->set_property = fu_volume_set_property;
+
+	/**
+	 * FuVolume::write-file:
+	 * @self: the #FuVolume instance that emitted the signal
+	 * @filename: the filename being written
+	 *
+	 * The ::write-file signal is emitted when fu_volume_write_file() is used.
+	 *
+	 * Since: 2.1.8
+	 **/
+	signals[SIGNAL_WRITE_FILE] = g_signal_new("write-file",
+						  G_TYPE_FROM_CLASS(object_class),
+						  G_SIGNAL_RUN_LAST,
+						  0,
+						  NULL,
+						  NULL,
+						  g_cclosure_marshal_VOID__STRING,
+						  G_TYPE_NONE,
+						  1,
+						  G_TYPE_STRING);
 
 	/**
 	 * FuVolume:proxy-block:
@@ -674,7 +698,12 @@ fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GErro
 	g_return_val_if_fail(bytes, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	return fu_bytes_set_contents(filename, bytes, error);
+	if (!fu_bytes_set_contents(filename, bytes, error))
+		return FALSE;
+
+	/* success */
+	g_signal_emit(self, signals[SIGNAL_WRITE_FILE], 0, filename);
+	return TRUE;
 }
 
 /**
