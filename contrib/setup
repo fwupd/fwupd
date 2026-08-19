@@ -18,6 +18,10 @@ else
     R=""
 fi
 
+task() {
+    echo -e "${B}[$0]${R} $*"
+}
+
 howto() {
     echo -e ""
     echo -e "To enter fwupd development environment run:"
@@ -106,14 +110,14 @@ setup_vscode() {
         TEMPLATE="${SOURCED}/${f}"
         TARGETF="${TARGETD}/${f}"
         mkdir -p "${TARGETD}"
-        echo "Copy ${TEMPLATE} to ${TARGETF}."
+        task "Copy ${TEMPLATE} to ${TARGETF}."
         cp "${TEMPLATE}" "${TARGETF}"
     done
 }
 
 setup_git() {
     if [ -z "$CI" ]; then
-        echo "Configuring git environment"
+        task "Configuring git environment"
         git config include.path ../.gitconfig
     fi
 }
@@ -130,7 +134,7 @@ install_pip() {
 
 setup_virtualenv() {
     VENV="${PWD}/venv"
-    echo "Setting up virtualenv in ${VENV}"
+    task "Setting up virtualenv in ${VENV}"
     if [ "$OS" = "nixos" ]; then
         python3 -m venv "${VENV}" --prompt fwupd
         touch "${VENV}/.nixos"
@@ -154,7 +158,7 @@ EOF
 
 setup_precommit() {
     if [ -z "$CI" ]; then
-        echo "Configuring pre-commit hooks"
+        task "Configuring pre-commit hooks"
         install_pip pre-commit
         pre-commit install
     fi
@@ -257,4 +261,5 @@ setup_precommit
 #needs to be after pre-commit is sourced
 setup_prepush
 
+task "Setup complete"
 howto
