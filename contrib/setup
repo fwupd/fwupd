@@ -10,45 +10,60 @@ HELPER_ARGS=""
 INSTALL_BUILD_DEPS="n"
 SETUP_PRE_PUSH="n"
 
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    B="\033[1m" # bold
+    R="\033[0m" # regular
+else
+    B=""
+    R=""
+fi
+
 howto() {
-    echo ""
-    echo "To enter fwupd development environment run:"
-    echo ""
-    echo "# source venv/bin/activate"
-    echo ""
+    echo -e ""
+    echo -e "To enter fwupd development environment run:"
+    echo -e ""
+    echo -e "    # ${B}source venv/bin/activate${R}"
+    echo -e ""
 }
 
 instructions() {
     cat <<'EOF'
-echo "To build or rebuild fwupd within development environment run:"
-echo ""
-echo "# build-fwupd"
-echo ""
-echo "To run the test suite run:"
-echo ""
-echo "# test-fwupd"
-echo ""
-echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
-echo ""
-echo "# DEBUG=1 fwupdtool get-devices"
-echo ""
-echo "To leave fwupd development environment run:"
-echo ""
-echo "# deactivate"
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    B="\033[1m" # bold
+    R="\033[0m" # regular
+else
+    B=""
+    R=""
+fi
+echo -e "To build or rebuild fwupd within development environment run:"
+echo -e ""
+echo -e "${B}    # build-fwupd${R}"
+echo -e ""
+echo -e "To run the test suite run:"
+echo -e ""
+echo -e "${B}    # test-fwupd${R}"
+echo -e ""
+echo -e "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+echo -e ""
+echo -e "${B}    # DEBUG=1 fwupdtool get-devices${R}"
+echo -e ""
+echo -e "To leave fwupd development environment run:"
+echo -e ""
+echo -e "${B}    # deactivate${R}"
 EOF
 }
 
 usage() {
-    echo "Usage: $(basename "$0") [OPTIONS]"
-    echo ""
-    echo "Set up the fwupd build"
-    echo ""
-    echo "OPTIONS:"
-    echo "  --debug                   ... enable debugging output"
-    echo "  --help                    ... print this help"
-    echo "  --os=[fedora|ubuntu|...]  ... the operating system to set up the build for."
-    echo ""
-    echo "Once set up, the following commands become available:"
+    echo -e "${B}Usage: $(basename "$0") [OPTIONS]${R}"
+    echo -e ""
+    echo -e "Set up the fwupd build"
+    echo -e ""
+    echo -e "${B}OPTIONS:${R}"
+    echo -e "  ${B}--debug${R}                   ... enable debugging output"
+    echo -e "  ${B}--help${R}                    ... print this help"
+    echo -e "  ${B}--os=[fedora|ubuntu|...]${R}  ... the operating system to set up the build for."
+    echo -e ""
+    echo -e "Once set up, the following commands become available:"
     howto
     instructions | bash
 }
@@ -206,7 +221,7 @@ done
 
 #already setup
 if [ -f venv/bin/build-fwupd ]; then
-    echo "$0 has already been run"
+    echo -e "${B}$0 has already been run${R}"
     howto
     exit 0
 fi
