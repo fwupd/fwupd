@@ -31,6 +31,7 @@ plugins = {
   'bios': false,
   'blestech-tp': false,
   'bnr-dp': false,
+  'bootupd': false,
   'ccgx': false,
   'ccgx-dmc': false,
   'cfu': false,
