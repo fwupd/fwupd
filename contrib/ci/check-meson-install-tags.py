@@ -19,15 +19,6 @@ def parse_version(ver):
     return tuple(map(int, ver.split(".")))
 
 
-# see https://github.com/mesonbuild/meson/pull/14890
-def old_meson_missing_vapi_deps_tag() -> bool:
-    version_str = subprocess.check_output(
-        ["meson", "--version"],
-        text=True,
-    )
-    return parse_version(version_str.strip()) <= parse_version("1.9.0")
-
-
 def objects_with_tag(obj) -> Iterator[dict]:
     match obj:
         case dict(d):
@@ -83,13 +74,9 @@ def check(install_plan) -> int:
     tags = collect_tags(install_plan)
 
     # check for files missing install tag
-    ignore_vapi_deps = old_meson_missing_vapi_deps_tag()
     for null_file in collect_files(install_plan, None):
-        if ignore_vapi_deps and null_file.endswith("fwupd.deps"):
-            logging.warning(f"missing meson install tag: {null_file}")
-        else:
-            logging.error(f"missing meson install tag: {null_file}")
-            exit_code = 1
+        logging.error(f"missing meson install tag: {null_file}")
+        exit_code = 1
 
     # check for incorrect test file tags
     for tag in [t for t in tags if t != "tests"]:

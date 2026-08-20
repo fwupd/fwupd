@@ -1620,30 +1620,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="valac">
-    <distro id="arch">
-      <package variant="x86_64">vala</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">vala</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">vala</package>
-      <package variant="aarch64">vala</package>
-    </distro>
-    <distro id="darwin">
-      <package>vala</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <native />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="valgrind">
     <distro id="arch">
       <package variant="x86_64" />

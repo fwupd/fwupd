@@ -46,7 +46,6 @@ makedepends=(
   python-cairo
   python-dbus
   python-gobject
-  vala
   valgrind
 )
 checkdepends=(umockdev)

@@ -87,7 +87,6 @@ BuildRequires: gi-docgen
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
-BuildRequires: vala
 BuildRequires: pkgconfig(bash-completion)
 BuildRequires: git-core
 BuildRequires: libdrm-devel
@@ -428,7 +427,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/doc/libfwupdplugin
 %{_datadir}/doc/libfwupd
 %endif
-%{_datadir}/vala/vapi
 %if 0%{?libfwupd_19x_version}
 %{_includedir}/fwupd-1
 %endif
