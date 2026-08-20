@@ -14,14 +14,14 @@ These instructions below can either be used by the silicon vendor, or the consul
 
 ## Setup fwupd development environment
 
-A fwupd development environment is setup in a [virtualenv](https://virtualenv.pypa.io/en/latest/user_guide.html) to avoid development work for fwupd from conflicting with any system fwupd installation. All builds will occur in `venv/build` and all installs in `venv/dist`.
+A fwupd development environment is setup in a [virtualenv](https://virtualenv.pypa.io/en/latest/user_guide.html) to avoid development work for fwupd from conflicting with any system fwupd installation. All builds will occur in `<builddir>/build` and all installs in `<builddir>/dist`.
 To set it up follow the below steps:
 
 ```shell
 cd ~
 git clone https://github.com/fwupd/fwupd.git
 cd fwupd
-./contrib/setup
+./fub init <builddir>
 ```
 
 ## Building
@@ -29,7 +29,7 @@ cd fwupd
 After the development environment has been setup you can enter it by running:
 
 ```shell
-source venv/bin/activate
+source <builddir>/bin/activate
 ```
 
 You can tell you are in the development environment by looking at the start of your prompt for this prefix:
@@ -41,13 +41,13 @@ You can tell you are in the development environment by looking at the start of y
 To build the project a script is included that will configure and build the project with default settings.
 
 ```shell
-build-fwupd
+fub build
 ```
 
 To run the project test suite a script is included:
 
 ```shell
-test-fwupd
+fub test
 ```
 
 If you want to leave the development environment at any time you can run:
