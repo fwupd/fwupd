@@ -80,21 +80,6 @@ fu_freebsd_efivars_delete_with_glob(FuEfivars *efivars,
 }
 
 static gboolean
-fu_freebsd_efivars_exists_guid(const gchar *guid)
-{
-	efi_guid_t *guidt = NULL;
-	gchar *name = NULL;
-	efi_guid_t test;
-
-	efi_str_to_guid(guid, &test);
-	while (efi_get_next_variable_name(&guidt, &name) == 1) {
-		if (memcmp(&test, guidt, sizeof(test)) == 0)
-			return TRUE;
-	}
-	return FALSE;
-}
-
-static gboolean
 fu_freebsd_efivars_get_data(FuEfivars *efivars,
 			    const gchar *guid,
 			    const gchar *name,
@@ -111,10 +96,6 @@ fu_freebsd_efivars_get_data(FuEfivars *efivars,
 static gboolean
 fu_freebsd_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
-	/* any name */
-	if (name == NULL)
-		return fu_freebsd_efivars_exists_guid(guid);
-
 	return fu_freebsd_efivars_get_data(efivars, guid, name, NULL, NULL, NULL, NULL);
 }
 
