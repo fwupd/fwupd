@@ -600,7 +600,11 @@ static gboolean
 fu_release_check_verfmt_compatible(FuRelease *self, FwupdVersionFormat fmt_rel)
 {
 	FwupdVersionFormat fmt_dev = fu_device_get_version_format(self->device);
-	if (fmt_dev == FWUPD_VERSION_FORMAT_BCD && fmt_rel == FWUPD_VERSION_FORMAT_PAIR)
+	if (fmt_dev == FWUPD_VERSION_FORMAT_BCD &&
+	    (fmt_rel == FWUPD_VERSION_FORMAT_PAIR || fmt_rel == FWUPD_VERSION_FORMAT_PAIR_PADDED))
+		return TRUE;
+	if ((fmt_dev == FWUPD_VERSION_FORMAT_PAIR || fmt_dev == FWUPD_VERSION_FORMAT_PAIR_PADDED) &&
+	    (fmt_rel == FWUPD_VERSION_FORMAT_PAIR || fmt_rel == FWUPD_VERSION_FORMAT_PAIR_PADDED))
 		return TRUE;
 	return fmt_dev == fmt_rel;
 }

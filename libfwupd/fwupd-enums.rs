@@ -197,4 +197,7 @@ enum FwupdVersionFormat {
     // Compal BIOS-style version number, as two hex bytes.
     // Since: 2.1.4
     CompalBios,
+    // Two AABB.CCDD version numbers with a zero-padded second section.
+    // Since: 2.2.1
+    PairPadded,
 }

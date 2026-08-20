@@ -3480,6 +3480,29 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 }
 
 /**
+ * fu_device_ensure_version_safe:
+ * @self: a #FuDevice
+ * @version: (nullable): a string, e.g. `1.2.3`
+ *
+ * Returns a sanitized version string if required.
+ */
+static gchar *
+fu_device_ensure_version_safe(FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER) ||
+	    fu_device_get_version_format(self) == FWUPD_VERSION_FORMAT_PAIR_PADDED) {
+		version_safe =
+		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
+		if (g_strcmp0(version, version_safe) != 0)
+			g_debug("converted '%s' to '%s'", version, version_safe);
+		return g_steal_pointer(&version_safe);
+	}
+	return g_strdup(version);
+}
+
+/**
  * fu_device_set_version_format:
  * @self: a #FuDevice
  * @fmt: the version format, e.g. %FWUPD_VERSION_FORMAT_PLAIN
@@ -3524,6 +3547,17 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 			fu_device_set_version_highest(self, version);
 		}
 	}
+	if (fmt == FWUPD_VERSION_FORMAT_PAIR_PADDED) {
+		if (fu_device_get_version(self) != NULL)
+			fu_device_set_version(self, fu_device_get_version(self));
+		if (fu_device_get_version_lowest(self) != NULL)
+			fu_device_set_version_lowest(self, fu_device_get_version_lowest(self));
+		if (fu_device_get_version_highest(self) != NULL)
+			fu_device_set_version_highest(self, fu_device_get_version_highest(self));
+		if (fu_device_get_version_bootloader(self) != NULL)
+			fu_device_set_version_bootloader(self,
+							 fu_device_get_version_bootloader(self));
+	}
 }
 
 /**
@@ -3543,15 +3577,7 @@ fu_device_set_version(FuDevice *self, const gchar *version)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* sanitize if required */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER)) {
-		version_safe =
-		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
-		if (g_strcmp0(version, version_safe) != 0)
-			g_debug("converted '%s' to '%s'", version, version_safe);
-	} else {
-		version_safe = g_strdup(version);
-	}
+	version_safe = fu_device_ensure_version_safe(self, version);
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
@@ -3591,15 +3617,7 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* sanitize if required */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER)) {
-		version_safe =
-		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
-		if (g_strcmp0(version, version_safe) != 0)
-			g_debug("converted '%s' to '%s'", version, version_safe);
-	} else {
-		version_safe = g_strdup(version);
-	}
+	version_safe = fu_device_ensure_version_safe(self, version);
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
@@ -3639,15 +3657,7 @@ fu_device_set_version_highest(FuDevice *self, const gchar *version)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* sanitize if required */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER)) {
-		version_safe =
-		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
-		if (g_strcmp0(version, version_safe) != 0)
-			g_debug("converted '%s' to '%s'", version, version_safe);
-	} else {
-		version_safe = g_strdup(version);
-	}
+	version_safe = fu_device_ensure_version_safe(self, version);
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
@@ -3682,18 +3692,12 @@ fu_device_set_version_highest(FuDevice *self, const gchar *version)
 void
 fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 {
+	g_autofree gchar *version_safe = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* sanitize if required */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER)) {
-		g_autofree gchar *version_safe =
-		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
-		if (g_strcmp0(version, version_safe) != 0)
-			g_debug("converted '%s' to '%s'", version, version_safe);
-		fwupd_device_set_version_bootloader(FWUPD_DEVICE(self), version_safe);
-	} else {
-		fwupd_device_set_version_bootloader(FWUPD_DEVICE(self), version);
-	}
+	version_safe = fu_device_ensure_version_safe(self, version);
+	fwupd_device_set_version_bootloader(FWUPD_DEVICE(self), version_safe);
 }
 
 /**

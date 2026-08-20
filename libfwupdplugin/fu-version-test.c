@@ -42,6 +42,9 @@ fu_version_verify_format_func(void)
 	ret = fu_version_verify_format("12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	ret = fu_version_verify_format("26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -58,6 +61,8 @@ fu_version_semver_func(void)
 		   {"CBET1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
 		   {"4.11-1190-g12d8072e6b-dirty", "4.11.1190", FWUPD_VERSION_FORMAT_TRIPLET},
 		   {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_PAIR},
+		   {"26.6", "26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED},
+		   {"26.06", "26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED},
 		   {NULL, NULL}};
 	for (guint i = 0; map[i].old != NULL; i++) {
 		g_autofree gchar *tmp = fu_version_ensure_semver(map[i].old, map[i].fmt);
@@ -96,6 +101,8 @@ fu_version_func(void)
 	    {0x00ff0001, "255.0.1", FWUPD_VERSION_FORMAT_DELL_BIOS},
 	    {0x010f0201, "1.15.2", FWUPD_VERSION_FORMAT_DELL_BIOS_MSB},
 	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
+	    {0x001a0006, "26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED},
+	    {0x001a000a, "26.10", FWUPD_VERSION_FORMAT_PAIR_PADDED},
 	    {0x0, "00.00", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	    {0xff, "00.ff", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	    {0x0000ff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
@@ -121,6 +128,7 @@ fu_version_func(void)
 	    {0xffffffffffffffff, "65535.65535.65535.65535", FWUPD_VERSION_FORMAT_QUAD},
 	    {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
 	    {0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR},
+	    {0x1a00000006, "26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x11000000c8, "0x00000011000000c8", FWUPD_VERSION_FORMAT_HEX},
 	    {0x0, "00.00", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
@@ -136,6 +144,7 @@ fu_version_func(void)
 	    {0x0, "0.0", FWUPD_VERSION_FORMAT_PAIR},
 	    {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
 	    {0xff01, "255.1", FWUPD_VERSION_FORMAT_PAIR},
+	    {0x1a06, "26.06", FWUPD_VERSION_FORMAT_PAIR_PADDED},
 	    {0x0, "0.0", FWUPD_VERSION_FORMAT_BCD},
 	    {0x0110, "1.10", FWUPD_VERSION_FORMAT_BCD},
 	    {0x9999, "99.99", FWUPD_VERSION_FORMAT_BCD},

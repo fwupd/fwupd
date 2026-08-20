@@ -18,11 +18,43 @@ static void
 fu_device_version_format_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDevice) device_aux = fu_device_new(NULL);
+	g_autoptr(FuDevice) device_format = fu_device_new(NULL);
+	g_autoptr(FuDevice) device_raw = fu_device_new(NULL);
+	g_autoptr(FuDevice) device_version = fu_device_new(NULL);
+
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	/* nocheck:set-version */
 	fu_device_set_version(device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
+
+	fu_device_set_version(device_format, "26.6"); /* nocheck:set-version */
+	fu_device_set_version_lowest(device_format, "26.6");	 /* nocheck:set-version */
+	fu_device_set_version_highest(device_format, "26.6");	 /* nocheck:set-version */
+	fu_device_set_version_bootloader(device_format, "26.6"); /* nocheck:set-version */
+	fu_device_set_version_format(device_format, FWUPD_VERSION_FORMAT_PAIR_PADDED);
+	g_assert_cmpstr(fu_device_get_version(device_format), ==, "26.06");
+	g_assert_cmpstr(fu_device_get_version_lowest(device_format), ==, "26.06");
+	g_assert_cmpstr(fu_device_get_version_highest(device_format), ==, "26.06");
+	g_assert_cmpstr(fu_device_get_version_bootloader(device_format), ==, "26.06");
+
+	fu_device_set_version(device_raw, "26.6"); /* nocheck:set-version */
+	fu_device_set_version_raw(device_raw, 0x1a06);
+	fu_device_set_version_format(device_raw, FWUPD_VERSION_FORMAT_PAIR_PADDED);
+	g_assert_cmpstr(fu_device_get_version(device_raw), ==, "26.06");
+
+	fu_device_set_version_format(device_version, FWUPD_VERSION_FORMAT_PAIR_PADDED);
+	fu_device_set_version(device_version, "26.6"); /* nocheck:set-version */
+	g_assert_cmpstr(fu_device_get_version(device_version), ==, "26.06");
+
+	fu_device_set_version_format(device_aux, FWUPD_VERSION_FORMAT_PAIR_PADDED);
+	fu_device_set_version_lowest(device_aux, "26.6");     /* nocheck:set-version */
+	fu_device_set_version_highest(device_aux, "26.6");    /* nocheck:set-version */
+	fu_device_set_version_bootloader(device_aux, "26.6"); /* nocheck:set-version */
+	g_assert_cmpstr(fu_device_get_version_lowest(device_aux), ==, "26.06");
+	g_assert_cmpstr(fu_device_get_version_highest(device_aux), ==, "26.06");
+	g_assert_cmpstr(fu_device_get_version_bootloader(device_aux), ==, "26.06");
 }
 
 static void
@@ -45,6 +77,39 @@ fu_device_version_format_raw_func(void)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "256");
 	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "257");
 	g_assert_cmpstr(fu_device_get_version_highest(device), ==, "258");
+}
+
+static void
+fu_device_version_format_metadata_func(void)
+{
+	gboolean ret;
+	const gchar *xml = "<component>"
+			   "<custom>"
+			   "<value key=\"LVFS::VersionFormat\">pair-padded</value>"
+			   "</custom>"
+			   "</component>";
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version(device, "26.6"); /* nocheck:set-version */
+
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	fu_device_ensure_from_component(device, component);
+	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_PAIR_PADDED);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "26.06");
+
+	ret = fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	g_assert_false(ret);
 }
 
 static void
@@ -1079,6 +1144,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/open-refcount", fu_device_open_refcount_func);
 	g_test_add_func("/fwupd/device/version-format", fu_device_version_format_func);
 	g_test_add_func("/fwupd/device/version-format-raw", fu_device_version_format_raw_func);
+	g_test_add_func("/fwupd/device/version-format-metadata",
+			fu_device_version_format_metadata_func);
 	g_test_add_func("/fwupd/device/retry-success", fu_device_retry_success_func);
 	g_test_add_func("/fwupd/device/retry-failed", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device/retry-hardware", fu_device_retry_hardware_func);
