@@ -216,6 +216,15 @@ fu_synaptics_rmi_device_reset(FuSynapticsRmiDevice *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_synaptics_rmi_device_scan_pdt:
+ * @self: a #FuSynapticsRmiDevice
+ * @error: (nullable): #GError
+ *
+ * Scans the Page Descriptor Table (PDT) and caches available RMI functions.
+ *
+ * Returns: %TRUE on success
+ **/
 gboolean
 fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 {
@@ -224,6 +233,10 @@ fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 
 	/* clear old list */
 	g_ptr_array_set_size(priv->functions, 0);
+
+	/* invalidate the cached pointers into the list */
+	priv->f01 = NULL;
+	priv->f34 = NULL;
 
 	/* scan pages */
 	for (guint page = 0; page < priv->max_page; page++) {
@@ -282,6 +295,10 @@ fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 			func->command_base,
 			func->query_base);
 	}
+
+	/* re-cache: these stay NULL if the device did not advertise the function */
+	priv->f01 = fu_synaptics_rmi_device_get_function(self, 0x01, NULL);
+	priv->f34 = fu_synaptics_rmi_device_get_function(self, 0x34, NULL);
 
 	/* success */
 	return TRUE;
@@ -828,12 +845,28 @@ fu_synaptics_rmi_device_write_bootloader_id(FuSynapticsRmiDevice *self, GError *
 	return TRUE;
 }
 
+/**
+ * fu_synaptics_rmi_device_disable_irqs:
+ * @self: a #FuSynapticsRmiDevice
+ * @error: (nullable): #GError
+ *
+ * Disables interrupts for F01 and F34 on the device.
+ *
+ * Returns: %TRUE on success
+ **/
 gboolean
 fu_synaptics_rmi_device_disable_irqs(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) interrupt_disable_req = g_byte_array_new();
 
+	if (priv->f01 == NULL || priv->f34 == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "f01 and f34 are required to disable interrupts");
+		return FALSE;
+	}
 	fu_byte_array_append_uint8(interrupt_disable_req,
 				   priv->f34->interrupt_mask | priv->f01->interrupt_mask);
 	if (!fu_synaptics_rmi_device_write(self,
