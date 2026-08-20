@@ -115,13 +115,14 @@ fu_cros_ec_firmware_ensure_version(FuCrosEcFirmware *self, GError **error)
 			g_prefix_error(error, "unable to get bytes from %s: ", fmap_fwid_name);
 			return FALSE;
 		}
+		/* the FWID area may fill the whole field, so keep room for the terminator */
 		if (!fu_memcpy_safe((guint8 *)section->raw_version,
 				    FU_FMAP_FIRMWARE_STRLEN,
 				    0x0,
 				    g_bytes_get_data(fwid_bytes, NULL),
 				    g_bytes_get_size(fwid_bytes),
 				    0x0,
-				    g_bytes_get_size(fwid_bytes),
+				    MIN(g_bytes_get_size(fwid_bytes), FU_FMAP_FIRMWARE_STRLEN - 1),
 				    error))
 			return FALSE;
 
