@@ -1,4 +1,5 @@
 ---
+Language: 'Cpp'
 AlignAfterOpenBracket: 'Align'
 AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
