@@ -820,6 +820,14 @@ configure_file(
   configuration: conf,
 )
 
+if build_daemon == 'binder'
+  configure_file(
+    input: 'contrib/android/adb_fwupd_env.sh.in',
+    output: 'adb_fwupd_env.sh',
+    configuration: conf,
+  )
+endif
+
 libdrm_amdgpu = dependency(
   'libdrm_amdgpu',
   version: '>= 2.4.113',
