@@ -24,7 +24,7 @@ struct _FuEfivarsClass {
 	guint64 (*space_used)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_free)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	gboolean (*exists)(FuEfivars *self, const gchar *guid, const gchar *name)
-	    G_GNUC_NON_NULL(1, 2);
+	    G_GNUC_NON_NULL(1, 2, 3);
 	GFileMonitor *(*get_monitor)(FuEfivars *self,
 				     const gchar *guid,
 				     const gchar *name,
@@ -71,7 +71,7 @@ fu_efivars_space_used(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 guint64
 fu_efivars_space_free(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2);
+fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2, 3);
 GFileMonitor *
 fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);

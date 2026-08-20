@@ -138,7 +138,7 @@ fu_efivars_delete_with_glob(FuEfivars *self,
  * fu_efivars_exists:
  * @self: a #FuEfivars
  * @guid: Globally unique identifier
- * @name: (nullable): Variable name
+ * @name: (not nullable): Variable name
  *
  * Test if a variable exists
  *
@@ -153,6 +153,7 @@ fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name)
 
 	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
 
 	if (efivars_class->exists == NULL)
 		return FALSE;

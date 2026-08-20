@@ -207,33 +207,9 @@ fu_linux_efivars_delete_with_glob(FuEfivars *efivars,
 }
 
 static gboolean
-fu_linux_efivars_exists_guid(FuEfivars *efivars, const gchar *guid)
-{
-	const gchar *fn;
-	g_autofree gchar *efivarsdir = NULL;
-	g_autoptr(GDir) dir = NULL;
-
-	efivarsdir = fu_linux_efivars_get_path(efivars, NULL);
-	if (efivarsdir == NULL)
-		return FALSE;
-	dir = g_dir_open(efivarsdir, 0, NULL);
-	if (dir == NULL)
-		return FALSE;
-	while ((fn = g_dir_read_name(dir)) != NULL) {
-		if (g_str_has_suffix(fn, guid))
-			return TRUE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_linux_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
 	g_autofree gchar *fn = NULL;
-
-	/* any name */
-	if (name == NULL)
-		return fu_linux_efivars_exists_guid(efivars, guid);
 
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, NULL);
 	if (fn == NULL)
