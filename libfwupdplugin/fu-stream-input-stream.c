@@ -140,11 +140,11 @@ fu_stream_input_stream_set_base_stream(FuStreamInputStream *self, GInputStream *
  * fu_stream_input_stream_from_stream:
  * @stream: (transfer none): a #GInputStream
  *
- * Wraps a #GInputStream and returns a #FuStreamInputStream. The @stream
+ * Wraps a #GInputStream and returns a #FuInputStream. The @stream
  * is reffed and future operations on this input stream apply to the
  * underlying #GInputStream.
  *
- * Returns: (transfer full): a #FuStreamInputStream, or %NULL on error
+ * Returns: (transfer full): a #FuInputStream, or %NULL on error
  *
  * Since: 2.0.7
  **/
