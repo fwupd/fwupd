@@ -11,6 +11,7 @@
 
 struct _FuLenovoAccessoryBleDevice {
 	FuBluezDevice parent_instance;
+	FuIOChannel *notify_io; /* owned, for AcquireNotify mode */
 };
 
 static void
@@ -24,6 +25,9 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryBleDevice,
 
 #define UUID_WRITE "c1d02501-2d1f-400a-95d2-6a2f7bca0c25"
 #define UUID_READ  "c1d02502-2d1f-400a-95d2-6a2f7bca0c25"
+
+#define FU_LENOVO_ACCESSORY_BLE_NOTIFY_BUFSZ   64    /* bytes */
+#define FU_LENOVO_ACCESSORY_BLE_NOTIFY_TIMEOUT 10000 /* ms */
 
 static gboolean
 fu_lenovo_accessory_ble_device_write_files(FuLenovoAccessoryBleDevice *self,
@@ -143,12 +147,19 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 static gboolean
 fu_lenovo_accessory_ble_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(device);
+
+	/* release the notify stream so that BlueZ can detect the disconnect */
+	g_clear_object(&self->notify_io);
+
 	if (!fu_lenovo_accessory_impl_dfu_exit(FU_LENOVO_ACCESSORY_IMPL(device),
 					       FU_LENOVO_ACCESSORY_DFU_EXIT_CODE_DFU_SUCCESS,
 					       error)) {
 		g_prefix_error_literal(error, "failed to exit: ");
 		return FALSE;
 	}
+
+	/* the device reboots and reconnects with the same address */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -156,10 +167,22 @@ fu_lenovo_accessory_ble_device_attach(FuDevice *device, FuProgress *progress, GE
 static gboolean
 fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 {
+	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(device);
 	guint8 major = 0;
 	guint8 minor = 0;
 	guint8 micro = 0;
 	g_autofree gchar *version = NULL;
+
+	/* if using notify mode, acquire the notify fd */
+	if (fu_device_has_private_flag(device, FU_LENOVO_ACCESSORY_BLE_DEVICE_FLAG_USE_NOTIFY)) {
+		gint32 mtu = 0;
+		self->notify_io =
+		    fu_bluez_device_notify_acquire(FU_BLUEZ_DEVICE(self), UUID_READ, &mtu, error);
+		if (self->notify_io == NULL) {
+			g_prefix_error_literal(error, "failed to acquire notify: ");
+			return FALSE;
+		}
+	}
 
 	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
 						    &major,
@@ -194,7 +217,21 @@ static gboolean
 fu_lenovo_accessory_ble_device_write(FuLenovoAccessoryImpl *impl, GByteArray *buf, GError **error)
 {
 	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(impl);
-	return fu_bluez_device_write(FU_BLUEZ_DEVICE(self), UUID_WRITE, buf, error);
+	g_autoptr(GByteArray) buf_padded = g_byte_array_new();
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = NULL;
+
+	/* the peripheral rejects a request whose written length is not exactly the header plus
+	 * the advertised data_size -- HID gets this for free from the fixed feature report
+	 * length, but a GATT write only carries the bytes we pass in, so pad it here */
+	st_cmd = fu_struct_lenovo_accessory_cmd_parse(buf->data, buf->len, 0x0, error);
+	if (st_cmd == NULL)
+		return FALSE;
+	g_byte_array_append(buf_padded, buf->data, buf->len);
+	fu_byte_array_set_size(buf_padded,
+			       FU_STRUCT_LENOVO_ACCESSORY_CMD_SIZE +
+				   fu_struct_lenovo_accessory_cmd_get_data_size(st_cmd),
+			       0x0);
+	return fu_bluez_device_write(FU_BLUEZ_DEVICE(self), UUID_WRITE, buf_padded, error);
 }
 
 static gboolean
@@ -240,20 +277,79 @@ static GByteArray *
 fu_lenovo_accessory_ble_device_process(FuLenovoAccessoryImpl *impl, GByteArray *buf, GError **error)
 {
 	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(impl);
+	FuLenovoAccessoryStatus status;
+	gsize offset = 0x0;
 	g_autoptr(GByteArray) buf_rsp = g_byte_array_new();
+	g_autoptr(GByteArray) buf_read = NULL;
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = NULL;
 
+	/* write command */
 	if (!fu_lenovo_accessory_ble_device_write(impl, buf, error)) {
 		g_prefix_error_literal(error, "failed to write cmd: ");
 		return NULL;
 	}
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_lenovo_accessory_ble_device_poll_cb,
-				  50, /* count */
-				  10, /* ms */
-				  buf_rsp,
-				  error))
+
+	/* read response based on mode */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_LENOVO_ACCESSORY_BLE_DEVICE_FLAG_USE_NOTIFY)) {
+		/* one notification is one complete response, so return as soon as the first
+		 * packet arrives rather than waiting for the read to time out */
+		buf_read = fu_io_channel_read_byte_array(self->notify_io,
+							 FU_LENOVO_ACCESSORY_BLE_NOTIFY_BUFSZ,
+							 FU_LENOVO_ACCESSORY_BLE_NOTIFY_TIMEOUT,
+							 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+							 error);
+		if (buf_read == NULL) {
+			g_prefix_error_literal(error, "failed to read notify: ");
+			return NULL;
+		}
+	} else {
+		/* traditional polling mode: retry ReadValue until data arrives */
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_lenovo_accessory_ble_device_poll_cb,
+					  50, /* count */
+					  10, /* ms */
+					  buf_rsp,
+					  error))
+			return NULL;
+		return g_steal_pointer(&buf_rsp);
+	}
+
+	/* parse and validate the response (notify mode) */
+	if (buf_read->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "received empty data");
 		return NULL;
+	}
+	st_cmd = fu_struct_lenovo_accessory_cmd_parse(buf_read->data, buf_read->len, offset, error);
+	if (st_cmd == NULL)
+		return NULL;
+	status = fu_struct_lenovo_accessory_cmd_get_target_status(st_cmd) & 0x0F;
+	if (status == FU_LENOVO_ACCESSORY_STATUS_COMMAND_BUSY) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command busy");
+		return NULL;
+	}
+	if (status != FU_LENOVO_ACCESSORY_STATUS_COMMAND_SUCCESSFUL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "command failed with status 0x%02x",
+			    status);
+		return NULL;
+	}
+	offset += FU_STRUCT_LENOVO_ACCESSORY_CMD_SIZE;
+
+	/* extract payload */
+	g_byte_array_append(buf_rsp, buf_read->data + offset, buf_read->len - offset);
 	return g_steal_pointer(&buf_rsp);
+}
+
+static void
+fu_lenovo_accessory_ble_device_finalize(GObject *object)
+{
+	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(object);
+	if (self->notify_io != NULL)
+		g_object_unref(self->notify_io);
+	G_OBJECT_CLASS(fu_lenovo_accessory_ble_device_parent_class)->finalize(object);
 }
 
 static void
@@ -280,9 +376,13 @@ fu_lenovo_accessory_ble_device_impl_iface_init(FuLenovoAccessoryImplInterface *i
 static void
 fu_lenovo_accessory_ble_device_class_init(FuLenovoAccessoryBleDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_lenovo_accessory_ble_device_finalize;
 	device_class->write_firmware = fu_lenovo_accessory_ble_device_write_firmware;
 	device_class->set_progress = fu_lenovo_accessory_ble_device_set_progress;
 	device_class->setup = fu_lenovo_accessory_ble_device_setup;
 	device_class->attach = fu_lenovo_accessory_ble_device_attach;
+	fu_device_register_private_flag(device_class,
+					FU_LENOVO_ACCESSORY_BLE_DEVICE_FLAG_USE_NOTIFY);
 }
