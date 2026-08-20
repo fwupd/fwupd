@@ -11,6 +11,7 @@
 
 struct _FuLenovoAccessoryHidDualDevice {
 	FuHidDevice parent_instance;
+	guint8 interface_number;
 };
 
 static void
@@ -216,6 +217,30 @@ fu_lenovo_accessory_hid_dual_device_set_progress(FuDevice *device, FuProgress *p
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gboolean
+fu_lenovo_accessory_hid_dual_device_set_quirk_kv(FuDevice *device,
+						 const gchar *key,
+						 const gchar *value,
+						 GError **error)
+{
+	FuLenovoAccessoryHidDualDevice *self = FU_LENOVO_ACCESSORY_HID_DUAL_DEVICE(device);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "LenovoAccessoryInterface") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->interface_number = (guint8)tmp;
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_lenovo_accessory_hid_dual_device_impl_iface_init(FuLenovoAccessoryImplInterface *iface)
 {
@@ -232,11 +257,15 @@ fu_lenovo_accessory_hid_dual_device_class_init(FuLenovoAccessoryHidDualDeviceCla
 	device_class->set_progress = fu_lenovo_accessory_hid_dual_device_set_progress;
 	device_class->setup = fu_lenovo_accessory_hid_dual_device_setup;
 	device_class->attach = fu_lenovo_accessory_hid_dual_device_attach;
+	device_class->set_quirk_kv = fu_lenovo_accessory_hid_dual_device_set_quirk_kv;
 }
 
 static void
 fu_lenovo_accessory_hid_dual_device_init(FuLenovoAccessoryHidDualDevice *self)
 {
+	/* default interface for dual-bank dongles with 4 interfaces */
+	self->interface_number = FU_LENOVO_ACCESSORY_IFACE_CMD;
+
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* ms */
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.accessory");
 	fu_device_set_install_duration(FU_DEVICE(self), 60);
@@ -246,5 +275,5 @@ fu_lenovo_accessory_hid_dual_device_init(FuLenovoAccessoryHidDualDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-	fu_hid_device_set_interface(FU_HID_DEVICE(self), FU_LENOVO_ACCESSORY_IFACE_CMD);
+	fu_hid_device_set_interface(FU_HID_DEVICE(self), self->interface_number);
 }

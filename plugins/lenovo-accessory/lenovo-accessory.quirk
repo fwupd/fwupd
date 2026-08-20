@@ -166,3 +166,18 @@ Name = Helios Gen II Keyboard
 Plugin = lenovo_accessory
 Flags = no-generic-version
 GType = FuLenovoAccessoryBleDevice
+
+# Chrome AI Mouse (BT Mode)
+[BLUETOOTH\VID_17EF&PID_62F4]
+Name = Chrome AI Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Chrome AI Mouse
+[USB\VID_17EF&PID_62F5]
+Name = Chrome AI Mouse
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDualDevice
+Flags = detach-kernel-driver
+LenovoAccessoryInterface = 0x02
