@@ -151,6 +151,37 @@ fu_device_event_strict_order_func(void)
 	g_assert_null(event_tmp);
 }
 
+static void
+fu_device_event_copy_data_func(void)
+{
+	gboolean ret;
+	gsize actual_length = 0;
+	guint8 buf[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	const guint8 data[4] = {0x11, 0x22, 0x33, 0x44};
+	g_autoptr(FuDeviceEvent) event = fu_device_event_new("foo:bar:baz");
+	g_autoptr(GError) error = NULL;
+
+	fu_device_event_set_data(event, "Data", data, sizeof(data));
+
+	/* copy 4-byte recorded event into an 8-byte buffer */
+	ret = fu_device_event_copy_data(event, "Data", buf, sizeof(buf), &actual_length, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(actual_length, ==, 4);
+
+	/* verify payload copied correctly */
+	g_assert_cmpint(buf[0], ==, 0x11);
+	g_assert_cmpint(buf[1], ==, 0x22);
+	g_assert_cmpint(buf[2], ==, 0x33);
+	g_assert_cmpint(buf[3], ==, 0x44);
+
+	/* verify the tail was zeroed rather than retaining 0xFF */
+	g_assert_cmpint(buf[4], ==, 0x00);
+	g_assert_cmpint(buf[5], ==, 0x00);
+	g_assert_cmpint(buf[6], ==, 0x00);
+	g_assert_cmpint(buf[7], ==, 0x00);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -159,5 +190,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device-event/uncompressed", fu_device_event_uncompressed_func);
 	g_test_add_func("/fwupd/device-event/donor", fu_device_event_donor_func);
 	g_test_add_func("/fwupd/device-event/strict-order", fu_device_event_strict_order_func);
+	g_test_add_func("/fwupd/device-event/copy-data", fu_device_event_copy_data_func);
 	return g_test_run();
 }
