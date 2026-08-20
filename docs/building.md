@@ -21,7 +21,7 @@ To set it up follow the below steps:
 cd ~
 git clone https://github.com/fwupd/fwupd.git
 cd fwupd
-./contrib/setup
+./fub init <builddir>
 ```
 
 ## Building
@@ -41,13 +41,13 @@ You can tell you are in the development environment by looking at the start of y
 To build the project a script is included that will configure and build the project with default settings.
 
 ```shell
-build-fwupd
+fub build
 ```
 
 To run the project test suite a script is included:
 
 ```shell
-test-fwupd
+fub test
 ```
 
 If you want to leave the development environment at any time you can run:
