@@ -39,12 +39,16 @@ IncludeCategories:
     Priority:        0
   - Regex:           '<fwupdplugin.h>'
     Priority:        1
-  - Regex:           '^<'
+  - Regex:           'aidl'
     Priority:        2
-  - Regex:           'fwupd'
+  - Regex:           'android'
     Priority:        3
-  - Regex:           '.*'
+  - Regex:           '^<'
     Priority:        4
+  - Regex:           'fwupd'
+    Priority:        5
+  - Regex:           '.*'
+    Priority:        6
 ---
 Language: 'Proto'
 ...
