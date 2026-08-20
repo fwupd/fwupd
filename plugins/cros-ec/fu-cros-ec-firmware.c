@@ -115,15 +115,7 @@ fu_cros_ec_firmware_ensure_version(FuCrosEcFirmware *self, GError **error)
 			g_prefix_error(error, "unable to get bytes from %s: ", fmap_fwid_name);
 			return FALSE;
 		}
-		if (!fu_memcpy_safe((guint8 *)section->raw_version,
-				    FU_FMAP_FIRMWARE_STRLEN,
-				    0x0,
-				    g_bytes_get_data(fwid_bytes, NULL),
-				    g_bytes_get_size(fwid_bytes),
-				    0x0,
-				    g_bytes_get_size(fwid_bytes),
-				    error))
-			return FALSE;
+		section->raw_version = fu_strsafe_bytes(fwid_bytes, 32);
 
 		payload_bytes = fu_firmware_write(img, error);
 		if (payload_bytes == NULL) {
@@ -161,11 +153,19 @@ fu_cros_ec_firmware_ensure_version(FuCrosEcFirmware *self, GError **error)
 }
 
 static void
+fu_cros_ec_firmware_section_free(FuCrosEcFirmwareSection *section)
+{
+	g_free(section->raw_version);
+	g_free(section);
+}
+
+static void
 fu_cros_ec_firmware_init(FuCrosEcFirmware *self)
 {
 	FuCrosEcFirmwareSection *section;
 
-	self->sections = g_ptr_array_new_with_free_func(g_free);
+	self->sections =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_cros_ec_firmware_section_free);
 	section = g_new0(FuCrosEcFirmwareSection, 1);
 	section->name = "RO";
 	g_ptr_array_add(self->sections, section);
