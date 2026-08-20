@@ -250,7 +250,6 @@ parts:
       - -usr/share/lintian
       - -usr/share/pkgconfig
       - -usr/share/polkit-1
-      - -usr/share/vala
       - -usr/share/doc
       - -usr/share/info
       - -usr/share/gir-1.0

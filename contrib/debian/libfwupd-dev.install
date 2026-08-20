@@ -3,5 +3,3 @@ usr/include/fwupd-*/libfwupd
 usr/lib/*/libfwupd.so
 usr/lib/*/pkgconfig/fwupd.pc
 usr/share/gir-1.0/Fwupd-*.gir
-usr/share/vala/vapi/fwupd.deps
-usr/share/vala/vapi/fwupd.vapi
