@@ -68,6 +68,25 @@ fwupd_bios_settings_raw_mapped_func(void)
 			==,
 			"False");
 	g_assert_cmpstr(fwupd_test_bios_setting_get_value_raw(setting), ==, "0");
+
+	/* the user can also provide the raw value directly, e.g. "1" instead of "True" */
+	ret = fwupd_bios_setting_write_value(FWUPD_BIOS_SETTING(setting), "1", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"True");
+	g_assert_cmpstr(fwupd_test_bios_setting_get_value_raw(setting), ==, "1");
+
+	/* unsupported values should fail and leave the current value unchanged */
+	ret = fwupd_bios_setting_write_value(FWUPD_BIOS_SETTING(setting), "2", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"True");
+	g_assert_cmpstr(fwupd_test_bios_setting_get_value_raw(setting), ==, "1");
 }
 
 static void

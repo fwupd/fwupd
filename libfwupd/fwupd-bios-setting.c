@@ -542,15 +542,26 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 	/* explicitly specified by fwupd_bios_setting_add_possible_value_full() */
 	if (priv->possible_values_to_raw != NULL) {
 		const gchar *value_raw = g_hash_table_lookup(priv->possible_values_to_raw, key);
-		if (value_raw == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "cannot map %s to display value",
-				    key);
-			return NULL;
-		}
-		return value_raw;
+		gpointer value_raw_key = NULL;
+
+		/* the user provided the display value, e.g. "Disabled" */
+		if (value_raw != NULL)
+			return value_raw;
+
+		/* the user provided the raw value directly, e.g. "0" */
+		if (priv->possible_values_from_raw != NULL &&
+		    g_hash_table_lookup_extended(priv->possible_values_from_raw,
+						 key,
+						 &value_raw_key,
+						 NULL))
+			return value_raw_key;
+
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot map %s to display value",
+			    key);
+		return NULL;
 	}
 
 	lower_key = g_utf8_strdown(key, -1);
@@ -941,6 +952,15 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
 	/* proxy */
 	if (!klass->write_value(self, value_raw, error))
 		return FALSE;
+
+	/* the user may have provided the raw value, so store the canonical display value */
+	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION &&
+	    priv->possible_values_from_raw != NULL) {
+		const gchar *value_display =
+		    g_hash_table_lookup(priv->possible_values_from_raw, value_raw);
+		if (value_display != NULL)
+			value = value_display;
+	}
 	fwupd_bios_setting_set_current_value(self, value);
 
 	/* success */
