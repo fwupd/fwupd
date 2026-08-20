@@ -141,14 +141,14 @@ if __name__ == "__main__":
     if "PRE_COMMIT" not in os.environ:
         sys.exit(main())
 
-    if not os.path.exists("venv/build"):
+    if not os.path.exists("builddir/build"):
         logging.info("no configured build directory, skipping check-meson-install-tag")
         sys.exit(0)
 
     install_plan = json.loads(
         subprocess.check_output(
             ["meson", "introspect", "--install-plan"],
-            cwd="venv/build",
+            cwd="builddir/build",
             text=True,
         )
     )

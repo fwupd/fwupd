@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # if we can't run the binary for some reason, assume everything is okay
     try:
         pr = subprocess.run(
-            ["venv/build/src/fwupdmgr", "get-actions", "--force"],
+            ["builddir/build/src/fwupdmgr", "get-actions", "--force"],
             cwd=".",
             # stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
