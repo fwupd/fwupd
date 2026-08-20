@@ -11,6 +11,7 @@
 #include "fu-redfish-backend.h"
 #include "fu-redfish-device.h"
 #include "fu-redfish-nvidia-device.h"
+#include "fu-redfish-nvidia-firmware.h"
 #include "fu-redfish-request.h"
 
 struct _FuRedfishNvidiaDevice {
@@ -123,14 +124,15 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 
 	/* firmware staged in BMC; explicit activation guidance for CLI and UI */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_update_message(device,
-				     "Activation cannot be performed automatically on this hardware.\n\n"
-				     "BIOS-only firmware updates may require a host reboot or AC cycle.\n"
-				     "BMC, Bundle firmware updates require an AC cycle.\n\n"
-				     "An AC (aux-rail) power cycle must be done out of band:\n"
-				     "  1. sudo poweroff\n"
-				     "  2. After the host is fully off, physically unplug AC for at least 30 seconds\n"
-				     "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
+	fu_device_set_update_message(
+	    device,
+	    "Activation cannot be performed automatically on this hardware.\n\n"
+	    "BIOS-only firmware updates may require a DC cycle or AC cycle.\n"
+	    "BMC, Bundle firmware updates require an AC cycle.\n\n"
+	    "An AC (aux-rail) power cycle must be done out of band:\n"
+	    "  1. ipmitool chassis power off\n"
+	    "  2. After the host is fully off, physically unplug AC for at least 20 seconds\n"
+	    "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
 	return TRUE;
 }
 
@@ -169,7 +171,7 @@ fu_redfish_nvidia_device_task_failure_detail(FwupdJsonObject *json_obj)
 	return g_string_free(g_steal_pointer(&detail), FALSE);
 }
 
-/* poll the task URI directly every 2 seconds for up to 30 minutes; tolerates transient network errors */
+/* poll the task URI every second for up to 40 minutes */
 gboolean
 fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 				   const gchar *task_uri,
@@ -177,27 +179,30 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 				   GError **error)
 {
 	const guint poll_interval_ms = 1000;
-	const guint max_attempts = 1800; /* 1800 × 1 s = 30 mins */
+	const guint timeout_seconds = 2400;
+	const gint64 deadline = g_get_monotonic_time() + timeout_seconds * G_USEC_PER_SEC;
 	guint consecutive_errors = 0;
 
-	for (guint i = 0; i < max_attempts; i++) {
+	while (g_get_monotonic_time() < deadline) {
 		FuRedfishBackend *backend;
 		const gchar *state_tmp;
 		gint64 pc = 0;
+		gint64 remaining_us;
 		g_autofree gchar *detail = NULL;
 		g_autoptr(FuRedfishRequest) request = NULL;
 		g_autoptr(FwupdJsonObject) json_obj = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		fu_device_sleep(FU_DEVICE(self), poll_interval_ms); /* ms */
+		remaining_us = deadline - g_get_monotonic_time();
+		if (remaining_us <= 0)
+			break;
 
 		backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 		if (backend == NULL)
 			return FALSE;
 
 		request = fu_redfish_backend_request_new(backend);
-		/* status polls should fail reasonably fast without waiting too long */
-		(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_TIMEOUT, (glong)35);
 		if (!fu_redfish_request_perform(request,
 						task_uri,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -263,7 +268,7 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 		    FWUPD_ERROR_TIMED_OUT,
 		    "timed out waiting for BMC task %s after %u seconds",
 		    task_uri,
-		    max_attempts * poll_interval_ms / 1000);
+		    timeout_seconds);
 	return FALSE;
 }
 
@@ -285,8 +290,6 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	fu_device_set_install_duration(device, 900);
-
 	/* override Description-derived summary set by the parent probe */
 	fu_device_set_summary(device, "OOB-managed firmware (activates on AC cycle)");
 
@@ -306,6 +309,18 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 	    !fu_device_build_instance_id(device, error, "REDFISH", "VENDOR", "ID", NULL))
 		return FALSE;
 
+	/* also add a GUID derived from the stable @odata.id, e.g. FW_CPU_0 */
+	if (fu_device_get_logical_id(device) != NULL) {
+		fu_device_add_instance_str(device, "ODATAID", fu_device_get_logical_id(device));
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "REDFISH",
+						 "VENDOR",
+						 "ODATAID",
+						 NULL))
+			return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -318,14 +333,15 @@ fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(request,
-				  "Activation cannot be performed automatically on this hardware.\n\n"
-				  "BIOS-only firmware updates may require a host reboot or AC cycle.\n"
-				  "BMC, Bundle firmware updates require an AC cycle.\n\n"
-				  "An AC (aux-rail) power cycle must be done out of band:\n"
-				  "  1. sudo poweroff\n"
-				  "  2. After the host is fully off, physically unplug AC for at least 30 seconds\n"
-				  "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
+	fwupd_request_set_message(
+	    request,
+	    "Activation cannot be performed automatically on this hardware.\n\n"
+	    "BIOS-only firmware updates may require a DC cycle or AC cycle.\n"
+	    "BMC, Bundle firmware updates require an AC cycle.\n\n"
+	    "An AC (aux-rail) power cycle must be done out of band:\n"
+	    "  1. ipmitool chassis power off\n"
+	    "  2. After the host is fully off, physically unplug AC for at least 20 seconds\n"
+	    "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
 	if (!fu_device_emit_request(device, request, progress, error)) {
 		g_prefix_error_literal(error, "failed to emit activation guidance: ");
 		return FALSE;
@@ -348,6 +364,8 @@ fu_redfish_nvidia_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_redfish_nvidia_device_init(FuRedfishNvidiaDevice *self)
 {
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_REDFISH_NVIDIA_FIRMWARE);
+	fu_device_set_install_duration(FU_DEVICE(self), 900);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 }
 

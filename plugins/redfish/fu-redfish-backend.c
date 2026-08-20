@@ -424,6 +424,28 @@ fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 	       0;
 }
 
+/* helper function to check the manufacturer is nvidia type */
+static gboolean
+fu_redfish_backend_is_manufacturer_nvidia(FuRedfishBackend *self)
+{
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_redfish_request_perform(request,
+					"/redfish/v1/Chassis/Chassis_0",
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					&error_local)) {
+		g_debug("failed to query Chassis_0 : %s", error_local->message);
+		return FALSE;
+	}
+	json_obj = fu_redfish_request_get_json_object(request);
+	if (g_strcmp0(fwupd_json_object_get_string(json_obj, "Manufacturer", NULL), "NVIDIA") == 0)
+		return TRUE;
+
+	return FALSE;
+}
+
 static gboolean
 fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
@@ -469,7 +491,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
 			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
-			} else if (g_strcmp0(self->vendor, "AMI") == 0) {
+			} else if (g_strcmp0(self->vendor, "AMI") == 0 &&
+				   fu_redfish_backend_is_manufacturer_nvidia(self)) {
 				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
