@@ -159,7 +159,7 @@ repos:
         types: [rust]
       - id: cargo-clippy
         name: cargo clippy
-        entry: cargo clippy -- -W clippy::pedantic -D warnings
+        entry: cargo clippy --  -D warnings
         language: system
         # Only run on our real Rust code
         files: ^rust/

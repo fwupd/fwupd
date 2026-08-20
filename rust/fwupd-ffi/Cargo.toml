@@ -9,3 +9,6 @@ crate-type = ["staticlib"]
 
 [dependencies]
 fwupd = { path = "../fwupd" }
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
