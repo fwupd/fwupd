@@ -163,7 +163,7 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 	gboolean found_report = FALSE;
 
 	/* the command interface is a vendor HID collection (UsagePage 0xFF00,
-	 * Usage 0x02) carrying a 64-byte report; confirm it is present so we
+	 * Usage 0x01 or 0x02) carrying a 64-byte report; confirm it is present so we
 	 * fail early on a device that does not speak this protocol */
 	descriptors = fu_hid_device_parse_descriptors(FU_HID_DEVICE(self), error);
 	if (descriptors == NULL)
@@ -171,17 +171,32 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 	for (guint i = 0; i < descriptors->len; i++) {
 		FuHidDescriptor *desc = g_ptr_array_index(descriptors, i);
 		g_autoptr(FuHidReport) report = NULL;
+		/* try Usage 0x01 first (newer devices like Chrome AI Mouse) */
 		report = fu_hid_descriptor_find_report(desc,
 						       NULL,
 						       "usage-page",
 						       0xFF00,
 						       "usage",
-						       0x02,
+						       0x01,
 						       "report-size",
 						       8,
 						       "report-count",
 						       0x40,
 						       NULL);
+		/* fallback to Usage 0x02 for older devices */
+		if (report == NULL) {
+			report = fu_hid_descriptor_find_report(desc,
+							       NULL,
+							       "usage-page",
+							       0xFF00,
+							       "usage",
+							       0x02,
+							       "report-size",
+							       8,
+							       "report-count",
+							       0x40,
+							       NULL);
+		}
 		if (report != NULL) {
 			found_report = TRUE;
 			break;
@@ -191,7 +206,7 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no vendor command report (0xFF00/0x02) found");
+				    "no vendor command report (0xFF00/0x01 or 0xFF00/0x02) found");
 		return FALSE;
 	}
 	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
