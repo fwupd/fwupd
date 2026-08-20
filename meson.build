@@ -238,6 +238,9 @@ add_project_arguments(
 if get_option('build') == 'dbus'
   build_standalone = true
   build_daemon = 'dbus'
+elif get_option('build') == 'binder'
+  build_standalone = true
+  build_daemon = 'binder'
 elif get_option('build') == 'standalone'
   build_standalone = true
   build_daemon = 'none'
