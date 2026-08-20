@@ -732,7 +732,7 @@ fu_console_spin_end(FuConsole *self)
 {
 	if (self->timer_source != NULL) {
 		g_source_destroy(self->timer_source);
-		self->timer_source = NULL;
+		g_clear_pointer(&self->timer_source, g_source_unref);
 
 		/* reset when the spinner has been stopped */
 		g_timer_start(self->time_elapsed);
