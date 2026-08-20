@@ -23,6 +23,12 @@ fwupd_client_sync_impl_clean_remote(FwupdClient *self,
 				    GCancellable *cancellable,
 				    GError **error);
 gboolean
+fwupd_client_sync_impl_clear_results(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+gboolean
 fwupd_client_sync_impl_connect(FwupdClient *self,
 			       gpointer user_data,
 			       GCancellable *cancellable,
@@ -67,6 +73,12 @@ fwupd_client_sync_impl_get_devices_by_guid(FwupdClient *self,
 					   gpointer user_data,
 					   GCancellable *cancellable,
 					   GError **error);
+GPtrArray *
+fwupd_client_sync_impl_get_downgrades(FwupdClient *self,
+				      const gchar *device_id,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error);
 GPtrArray *
 fwupd_client_sync_impl_get_plugins(FwupdClient *self,
 				   gpointer user_data,
@@ -122,6 +134,12 @@ fwupd_client_sync_impl_get_report_metadata(FwupdClient *self,
 					   gpointer user_data,
 					   GCancellable *cancellable,
 					   GError **error);
+gchar *
+fwupd_client_sync_impl_inhibit(FwupdClient *self,
+			       const gchar *reason,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error);
 gboolean
 fwupd_client_sync_impl_install(FwupdClient *self,
 			       const gchar *device_id,
@@ -170,6 +188,11 @@ fwupd_client_sync_impl_modify_remote(FwupdClient *self,
 				     GCancellable *cancellable,
 				     GError **error);
 gboolean
+fwupd_client_sync_impl_quit(FwupdClient *self,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
+gboolean
 fwupd_client_sync_impl_refresh_remote(FwupdClient *self,
 				      FwupdRemote *remote,
 				      FwupdClientDownloadFlags download_flags,
@@ -194,6 +217,18 @@ fwupd_client_sync_impl_set_feature_flags(FwupdClient *self,
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+gboolean
+fwupd_client_sync_impl_uninhibit(FwupdClient *self,
+				 const gchar *inhibit_id,
+				 gpointer user_data,
+				 GCancellable *cancellable,
+				 GError **error);
+gboolean
+fwupd_client_sync_impl_unlock(FwupdClient *self,
+			      const gchar *device_id,
+			      gpointer user_data,
+			      GCancellable *cancellable,
+			      GError **error);
 gboolean
 fwupd_client_sync_impl_update_metadata(FwupdClient *self,
 				       const gchar *remote_id,

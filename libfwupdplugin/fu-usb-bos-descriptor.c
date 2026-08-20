@@ -96,9 +96,11 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
 		g_autoptr(FuInputStream) stream = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(GBytes) bytes = NULL;
 
+		bytes = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 		/* create child */
-		stream = fu_memory_input_stream_new_from_data(g_steal_pointer(&buf), bufsz, g_free);
+		stream = fu_memory_input_stream_new_from_bytes(bytes);
 		if (!fu_firmware_parse_stream(img,
 					      stream,
 					      0x0,

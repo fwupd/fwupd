@@ -26,6 +26,11 @@ struct FwupdClientSyncImpl {
 				 gpointer user_data,
 				 GCancellable *cancellable,
 				 GError **error);
+	gboolean (*clear_results)(FwupdClient *self,
+				  const gchar *device_id,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 	gboolean (*connect)(FwupdClient *self,
 			    gpointer user_data,
 			    GCancellable *cancellable,
@@ -63,6 +68,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	GPtrArray *(*get_downgrades)(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
 	GPtrArray *(*get_history)(FwupdClient *self,
 				  gpointer user_data,
 				  GCancellable *cancellable,
@@ -108,6 +118,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	gchar *(*inhibit)(FwupdClient *self,
+			  const gchar *reason,
+			  gpointer user_data,
+			  GCancellable *cancellable,
+			  GError **error);
 	gboolean (*install)(FwupdClient *self,
 			    const gchar *device_id,
 			    const gchar *filename,
@@ -149,6 +164,10 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	gboolean (*quit)(FwupdClient *self,
+			 gpointer user_data,
+			 GCancellable *cancellable,
+			 GError **error);
 	gboolean (*refresh_remote)(FwupdClient *self,
 				   FwupdRemote *remote,
 				   FwupdClientDownloadFlags download_flags,
@@ -170,6 +189,16 @@ struct FwupdClientSyncImpl {
 				      gpointer user_data,
 				      GCancellable *cancellable,
 				      GError **error);
+	gboolean (*uninhibit)(FwupdClient *self,
+			      const gchar *inhibit_id,
+			      gpointer user_data,
+			      GCancellable *cancellable,
+			      GError **error);
+	gboolean (*unlock)(FwupdClient *self,
+			   const gchar *device_id,
+			   gpointer user_data,
+			   GCancellable *cancellable,
+			   GError **error);
 	gboolean (*update_metadata)(FwupdClient *self,
 				    const gchar *remote_id,
 				    const gchar *metadata_fn,

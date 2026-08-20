@@ -56,6 +56,7 @@ Source2:   https://github.com/fwupd/%{name}/releases/download/1.9.%{libfwupd_19x
 
 BuildRequires: gettext
 BuildRequires: hwdata
+BuildRequires: rustc
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
 BuildRequires: libusb1-devel >= %{libusb_version}

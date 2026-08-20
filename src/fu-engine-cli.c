@@ -3749,6 +3749,17 @@ fu_engine_cli_sync_impl_clean_remote(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_clear_results(FwupdClient *client,
+				      const gchar *device_id,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_clear_results(self->engine, device_id, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_connect(FwupdClient *client,
 				gpointer user_data,
 				GCancellable *cancellable,
@@ -3897,6 +3908,17 @@ fu_engine_cli_sync_impl_get_device_by_id(FwupdClient *client,
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	return FWUPD_DEVICE(fu_engine_get_device(self->engine, device_id, error));
+}
+
+static GPtrArray *
+fu_engine_cli_sync_impl_get_downgrades(FwupdClient *client,
+				       const gchar *device_id,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_get_downgrades(self->engine, self->request, device_id, error);
 }
 
 static GPtrArray *
@@ -4280,6 +4302,17 @@ fu_engine_cli_sync_impl_set_feature_flags(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_unlock(FwupdClient *client,
+			       const gchar *device_id,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_unlock(self->engine, device_id, error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_update_metadata(FwupdClient *client,
 					const gchar *remote_id,
 					const gchar *metadata_fn,
@@ -4333,6 +4366,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	static FwupdClientSyncImpl impl = {
 	    .activate = fu_engine_cli_sync_impl_activate,
 	    .clean_remote = fu_engine_cli_sync_impl_clean_remote,
+	    .clear_results = fu_engine_cli_sync_impl_clear_results,
 	    .connect = fu_engine_cli_sync_impl_connect,
 	    .emulation_load = fu_engine_cli_sync_impl_emulation_load,
 	    .emulation_save = fu_engine_cli_sync_impl_emulation_save,
@@ -4341,6 +4375,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_devices = fu_engine_cli_sync_impl_get_devices,
 	    .get_devices_by_guid = fu_engine_cli_sync_impl_get_devices_by_guid,
 	    .get_device_by_id = fu_engine_cli_sync_impl_get_device_by_id,
+	    .get_downgrades = fu_engine_cli_sync_impl_get_downgrades,
 	    .get_history = fu_engine_cli_sync_impl_get_history,
 	    .get_host_security_attrs = fu_engine_cli_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fu_engine_cli_sync_impl_get_host_security_events,
@@ -4361,6 +4396,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .reset_config = fu_engine_cli_sync_impl_reset_config,
 	    .search = fu_engine_cli_sync_impl_search,
 	    .set_feature_flags = fu_engine_cli_sync_impl_set_feature_flags,
+	    .unlock = fu_engine_cli_sync_impl_unlock,
 	    .update_metadata = fu_engine_cli_sync_impl_update_metadata,
 	    .verify = fu_engine_cli_sync_impl_verify,
 	    .verify_update = fu_engine_cli_sync_impl_verify_update,
