@@ -4,7 +4,8 @@ libjcat
 libxmlb
 fwupd-efi
 passim
-android_frameworks/
+android_frameworks
+!packagefiles/android_frameworks
 curl-8.10.1/
 glib-2.84.2/
 gvdb.wrap
