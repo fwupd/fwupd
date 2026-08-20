@@ -86,22 +86,9 @@ fu_dummy_efivars_delete_with_glob(FuEfivars *efivars,
 }
 
 static gboolean
-fu_dummy_efivars_exists_guid(FuDummyEfivars *self, const gchar *guid)
-{
-	for (guint i = 0; i < self->keys->len; i++) {
-		FuDummyEfivarsKey *key = g_ptr_array_index(self->keys, i);
-		if (g_strcmp0(guid, key->guid) == 0)
-			return TRUE;
-	}
-	return FALSE;
-}
-
-static gboolean
 fu_dummy_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
 	FuDummyEfivars *self = FU_DUMMY_EFIVARS(efivars);
-	if (name == NULL)
-		return fu_dummy_efivars_exists_guid(self, guid);
 	return fu_dummy_efivars_find_by_guid_name(self, guid, name) != NULL;
 }
 
