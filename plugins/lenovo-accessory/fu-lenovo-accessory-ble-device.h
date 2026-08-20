@@ -14,3 +14,7 @@ G_DECLARE_FINAL_TYPE(FuLenovoAccessoryBleDevice,
 		     FU,
 		     LENOVO_ACCESSORY_BLE_DEVICE,
 		     FuBluezDevice)
+
+/* the firmware pushes the response as a notification and clears its buffer, so an
+ * active read afterwards returns zero bytes */
+#define FU_LENOVO_ACCESSORY_BLE_DEVICE_FLAG_USE_NOTIFY "use-notify"

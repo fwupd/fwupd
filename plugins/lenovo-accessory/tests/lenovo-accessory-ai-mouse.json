@@ -1,0 +1,30 @@
+{
+  "name": "Lenovo AI Mouse",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "6ffa666af706cf51b7dbcd869e11659c5e14c5db6a28b4f5db7465071154d025-Lenovo-mouse_62f5-62f6-vs1.0.7.cab",
+      "emulation-url": "12f2ef91d512067b2aeb627d4ca4c28adf68236f9390e09853b50ed56d05d1fa-lenovo-ai-mouse-62f6.zip",
+      "components": [
+        {
+          "version": "1.0.7",
+          "guids": [
+            "5bde91cf-fa01-5980-9f6d-84b393589743"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "680e9acd101d27113cd193c0fb6ae7fd6c24a759952b0f3c75b36a7c3c110fb7-Lenovo-mouse_62f5-62f6-vs1.0.6.cab",
+      "emulation-url": "6f7ea990c851f45600cc48b5ef8c039415523bae07e3e7f0d63ad2e451a4d240-lenovo-ai-mouse-62f5-usb.zip",
+      "components": [
+        {
+          "version": "1.0.6",
+          "guids": [
+            "e973316c-705c-5db1-bd31-ed5135463288"
+          ]
+        }
+      ]
+    }
+  ]
+}
