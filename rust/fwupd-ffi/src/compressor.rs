@@ -10,7 +10,7 @@ use std::io::{Cursor, Read};
 use std::ptr;
 
 use crate::glib::GError;
-use fwupd::compressor::{Compressor, CompressorFormat, Decompressor};
+use fwupd::compressor::{Compressor, CompressorFormat};
 
 /// Convert a C format byte to a [`CompressorFormat`].
 pub(crate) fn format_from_c(format: i32) -> Option<CompressorFormat> {
@@ -41,6 +41,9 @@ pub unsafe extern "C" fn fu_rs_compressor_decompress(
     out_len: *mut usize,
     error: *mut *mut GError,
 ) -> i32 {
+    // Prevent zip bombs - limit decompression ratio to a factor 1000
+    const MAX_DECOMPRESSION_RATIO: usize = 1000;
+
     let Some(fmt) = format_from_c(format) else {
         let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "Invalid compression format");
         GError::convert(error, &e);
@@ -59,22 +62,13 @@ pub unsafe extern "C" fn fu_rs_compressor_decompress(
         return -1;
     }
 
-    let source: Box<dyn Read + Send> = Box::new(Cursor::new(input.to_vec()));
-    let mut decompressor = match Decompressor::new(source, fmt) {
-        Ok(d) => d,
-        Err(e) => {
-            GError::convert(error, &e.into());
-            unsafe {
-                *out_buf = ptr::null_mut();
-                *out_len = 0;
-            }
-            return -1;
-        }
+    let max_size = if in_len == 0 {
+        None
+    } else {
+        Some(in_len.saturating_mul(MAX_DECOMPRESSION_RATIO))
     };
-
-    let mut data = Vec::new();
-    match decompressor.read_to_end(&mut data) {
-        Ok(_) => {
+    match fwupd::compressor::decompress(fmt, input, max_size) {
+        Ok(data) => {
             let len = data.len();
             let boxed = data.into_boxed_slice();
             let ptr = Box::into_raw(boxed).cast::<u8>();
