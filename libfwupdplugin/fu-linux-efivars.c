@@ -223,7 +223,7 @@ fu_linux_efivars_exists_guid(FuEfivars *efivars, const gchar *guid)
 		if (g_str_has_suffix(fn, guid))
 			return TRUE;
 	}
-	return TRUE;
+	return FALSE;
 }
 
 static gboolean
