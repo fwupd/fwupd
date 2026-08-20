@@ -525,6 +525,17 @@ if jcat_crypto == 'none'
   endif
 endif
 
+if build_daemon == 'binder'
+  ndk_arch_dir = meson.get_external_property('android_ndk_sysroot_arch')
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/' + ndk_arch_dir + '/35'
+  binder_ndk = cc.find_library(
+    'binder_ndk',
+    dirs: ndk_sysroot_lib,
+    required: true,
+  )
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
+endif
+
 lzma = dependency('liblzma')
 
 platform_deps = []
