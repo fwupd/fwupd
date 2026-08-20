@@ -127,8 +127,7 @@ fu_volume_locker_new(FuVolume *volume, GError **error)
 		return NULL;
 	}
 
-	/* create object */
-	self = g_object_new(FU_TYPE_VOLUME_LOCKER, NULL);
+	/* success */
 	self->is_open = TRUE;
 	self->volume = g_object_ref(volume);
 	return g_steal_pointer(&self);
