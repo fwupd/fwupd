@@ -37,7 +37,7 @@ Since: 1.8.10
 
 The system firmware path to use during the mhi driver switch to EDL (Emergency Download) mode.
 
-Since: 2.2.1
+Since: 2.1.8
 
 ### `Flags=use-branch`
 

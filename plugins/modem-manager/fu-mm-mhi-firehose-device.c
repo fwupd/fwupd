@@ -1,9 +1,11 @@
 /*
  * Copyright 2026 HongXing Xu <qifeng.liu@rollingwireless.com>
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
+
 #include "fu-mm-mhi-firehose-device.h"
 
 struct _FuMmMhiFirehoseDevice {
@@ -28,7 +30,6 @@ fu_mm_mhi_firehose_device_trigger_edl(FuMmMhiFirehoseDevice *self, GError **erro
 		g_prefix_error_literal(error, "failed to list sysfs entries: ");
 		return FALSE;
 	}
-
 	for (guint i = 0; i < attrs->len; i++) {
 		const gchar *name = g_ptr_array_index(attrs, i);
 		if (g_str_has_prefix(name, "mhi")) {
@@ -44,12 +45,13 @@ fu_mm_mhi_firehose_device_trigger_edl(FuMmMhiFirehoseDevice *self, GError **erro
 		return FALSE;
 	}
 
-	trigger_path = g_strdup_printf("%s/trigger_edl", mhi_name);
+	trigger_path = g_build_filename(mhi_name, "trigger_edl", NULL);
 	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(self), trigger_path, "1", 3000, error)) {
 		g_prefix_error_literal(error, "write trigger_edl fail: ");
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -90,6 +92,7 @@ fu_mm_mhi_firehose_device_detach(FuDevice *device, FuProgress *progress, GError 
 		return FALSE;
 	}
 
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -102,7 +105,7 @@ fu_mm_mhi_firehose_device_search_path_locker_new(FuMmMhiFirehoseDevice *self, GE
 	g_autofree gchar *mm_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
-        if (self->lib_firmware_path == NULL) {
+	if (self->lib_firmware_path == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
@@ -128,9 +131,9 @@ fu_mm_mhi_firehose_device_search_path_locker_new(FuMmMhiFirehoseDevice *self, GE
 
 static gboolean
 fu_mm_mhi_firehose_device_prepare(FuDevice *device,
-			      FuProgress *progress,
-			      FwupdInstallFlags flags,
-			      GError **error)
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 
@@ -146,9 +149,9 @@ fu_mm_mhi_firehose_device_prepare(FuDevice *device,
 
 static gboolean
 fu_mm_mhi_firehose_device_cleanup(FuDevice *device,
-			      FuProgress *progress,
-			      FwupdInstallFlags flags,
-			      GError **error)
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 
@@ -191,9 +194,9 @@ fu_mm_mhi_firehose_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_mm_mhi_firehose_device_set_quirk_kv(FuDevice *device,
-				   const gchar *key,
-				   const gchar *value,
-				   GError **error)
+				       const gchar *key,
+				       const gchar *value,
+				       GError **error)
 {
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 
@@ -221,8 +224,9 @@ static gboolean
 fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *sysfs_path;
-	g_autoptr(GPtrArray) attrs = NULL;
 	const gchar *mhi_name = NULL;
+	gboolean devnode_exists = FALSE;
+	g_autoptr(GPtrArray) attrs = NULL;
 	g_autofree gchar *devnode = NULL;
 
 	sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
@@ -255,17 +259,23 @@ fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* In the mhi_pci_generic driver,
-	 * mbim channel name definitely be configured as MBIM */
-	devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
-	if (!g_file_test(devnode, G_FILE_TEST_EXISTS)) {
-		g_set_error_literal(error,
+	/* in the mhi_pci_generic driver, mbim channel name definitely be configured as MBIM
+	 * FIXME: skip until emulation is re-recorded */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
+		if (!fu_device_query_file_exists(device, devnode, &devnode_exists, error))
+			return FALSE;
+		if (!devnode_exists) {
+			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
-				    "no mbim port found");
-		return FALSE;
+				    "no mbim port found at %s",
+				    devnode);
+			return FALSE;
+		}
 	}
 
+	/* success */
 	return TRUE;
 }
 
