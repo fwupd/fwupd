@@ -128,46 +128,18 @@ fu_bluez_backend_object_removed_cb(GDBusObjectManager *manager,
 	fu_backend_device_removed(FU_BACKEND(self), device_tmp);
 }
 
-typedef struct {
-	GDBusObjectManager *object_manager;
-	GMainLoop *loop;
-	GError **error;
-	GCancellable *cancellable;
-	GSource *timeout_source;
-} FuBluezBackendHelper;
-
-static void
-fu_bluez_backend_helper_free(FuBluezBackendHelper *helper)
+/* the object manager has to be constructed synchronously to get the signal
+ * subscriptions bound to the correct main context, so the timeout cannot be a
+ * GSource -- nothing would be iterating the context while we block. Use a
+ * watchdog thread to cancel after the timeout. g_cancellable_cancel() is
+ * idempotent, so it's safe to call it even if the sync call already finished. */
+static gpointer
+fu_bluez_backend_watchdog_thread_cb(gpointer user_data)
 {
-	if (helper->object_manager != NULL)
-		g_object_unref(helper->object_manager);
-	if (helper->timeout_source != NULL) {
-		g_source_destroy(helper->timeout_source);
-		g_source_unref(helper->timeout_source);
-	}
-	g_cancellable_cancel(helper->cancellable);
-	g_main_loop_unref(helper->loop);
-	g_free(helper);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuBluezBackendHelper, fu_bluez_backend_helper_free)
-
-static void
-fu_bluez_backend_connect_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-	FuBluezBackendHelper *helper = (FuBluezBackendHelper *)user_data;
-	helper->object_manager =
-	    g_dbus_object_manager_client_new_for_bus_finish(res, helper->error);
-	g_main_loop_quit(helper->loop);
-}
-
-static gboolean
-fu_bluez_backend_timeout_cb(gpointer user_data)
-{
-	FuBluezBackendHelper *helper = (FuBluezBackendHelper *)user_data;
-	g_cancellable_cancel(helper->cancellable);
-	g_clear_pointer(&helper->timeout_source, g_source_unref);
-	return G_SOURCE_REMOVE;
+	GCancellable *cancellable = G_CANCELLABLE(user_data);
+	g_usleep(FU_BLUEZ_BACKEND_TIMEOUT * 1000);
+	g_cancellable_cancel(cancellable);
+	return NULL;
 }
 
 static gboolean
@@ -179,33 +151,39 @@ fu_bluez_backend_setup(FuBackend *backend,
 	FuBluezBackend *self = FU_BLUEZ_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(backend);
 	GMainContext *main_ctx = fu_context_get_main_context(ctx);
-	g_autoptr(FuBluezBackendHelper) helper = g_new0(FuBluezBackendHelper, 1);
+	GThread *watchdog_thread;
+	g_autoptr(GCancellable) cancellable = g_cancellable_new();
 
 	/* in some circumstances the bluez daemon will just hang... do not wait
 	 * forever and make fwupd startup also fail */
-	helper->error = error;
-	helper->loop = g_main_loop_new(main_ctx, FALSE);
-	helper->cancellable = g_cancellable_new();
-	helper->timeout_source = fu_context_add_timeout(ctx,
-							FU_BLUEZ_BACKEND_TIMEOUT,
-							fu_bluez_backend_timeout_cb,
-							helper);
+	watchdog_thread =
+	    g_thread_new("fu-bluez-watchdog", fu_bluez_backend_watchdog_thread_cb, cancellable);
+
+	/* GDBusObjectManagerClient subscribes to the bus signals from ::init, and
+	 * g_dbus_connection_signal_subscribe() binds the subscription to the
+	 * thread-default main context of the *calling* thread. The async constructor
+	 * runs ::init in a GTask worker thread, which has no thread-default context --
+	 * so the subscription would be bound to the global default context and the
+	 * device property changes would never be dispatched. Construct synchronously
+	 * with @main_ctx pushed so that everything is bound to the context we iterate. */
 	g_main_context_push_thread_default(main_ctx);
-	g_dbus_object_manager_client_new_for_bus(G_BUS_TYPE_SYSTEM,
-						 G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
-						 "org.bluez",
-						 "/",
-						 NULL,
-						 NULL,
-						 NULL,
-						 helper->cancellable,
-						 fu_bluez_backend_connect_cb,
-						 helper);
+	self->object_manager =
+	    g_dbus_object_manager_client_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+							  G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+							  "org.bluez",
+							  "/",
+							  NULL,
+							  NULL,
+							  NULL,
+							  cancellable,
+							  error);
 	g_main_context_pop_thread_default(main_ctx);
-	g_main_loop_run(helper->loop);
-	if (helper->object_manager == NULL)
+
+	/* stop the watchdog (cancel is idempotent, harmless if already timed out) */
+	g_thread_join(watchdog_thread);
+
+	if (self->object_manager == NULL)
 		return FALSE;
-	self->object_manager = g_steal_pointer(&helper->object_manager);
 
 	if (flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) {
 		g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
