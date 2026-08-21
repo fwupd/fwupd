@@ -50,6 +50,13 @@ def generate_dockerfile(
 
     data = {"VERSION": version}
 
+    # special cases
+    match (distro, variant):
+        case ("debian", "i386"):
+            data["PLATFORM"] = "linux/i386"
+        case _:
+            pass
+
     # insert commands to prepare cross compile
     if cross:
         cross_setup = f"""\
@@ -85,11 +92,6 @@ def generate_dockerfile(
         rustup.append("RUN sh android.sh")
     if rustup:
         data["RUSTUP"] = "\n".join(rustup)
-
-    # special cases
-    match (distro, variant):
-        case ("debian", "i386"):
-            data["ARCH_PREFIX"] = "i386/"
 
     loader = jinja2.FileSystemLoader(template_file.parent)
     jinja_env = jinja2.Environment(
