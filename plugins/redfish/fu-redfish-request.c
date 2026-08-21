@@ -18,6 +18,11 @@ struct _FuRedfishRequest {
 	FwupdJsonParser *json_parser;
 	FwupdJsonObject *json_obj;
 	GHashTable *cache; /* nullable */
+	/* Non-owning pointer to the backend's authentication header slist
+	 * (X-Auth-Token or similar).  Set once by the backend in request_new()
+	 * so perform_full() can merge them with Content-Type headers instead of
+	 * replacing them. */
+	struct curl_slist *auth_headers;
 };
 
 G_DEFINE_TYPE(FuRedfishRequest, fu_redfish_request, G_TYPE_OBJECT)
@@ -29,7 +34,7 @@ FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self)
 {
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), NULL);
-	return fwupd_json_object_ref(self->json_obj);
+	return self->json_obj != NULL ? fwupd_json_object_ref(self->json_obj) : NULL;
 }
 
 CURL *
@@ -260,6 +265,15 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	hs = curl_slist_append(hs, "Content-Type: application/json");
 	if (etag_header != NULL)
 		hs = curl_slist_append(hs, etag_header);
+	/* Merge backend authentication headers (X-Auth-Token etc.) into this
+	 * header list.  CURLOPT_HTTPHEADER replaces whatever was set in
+	 * request_new(), so we must re-append auth headers here to avoid
+	 * sending unauthenticated POST/PATCH requests (HTTP 401). */
+	if (self->auth_headers != NULL) {
+		struct curl_slist *h;
+		for (h = self->auth_headers; h != NULL; h = h->next)
+			hs = curl_slist_append(hs, h->data);
+	}
 	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 	return fu_redfish_request_perform(self, path, flags, error);
 }
@@ -279,6 +293,14 @@ fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_pre
 	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
 	g_free(self->path_prefix);
 	self->path_prefix = g_strdup(path_prefix);
+}
+
+void
+fu_redfish_request_set_auth_headers(FuRedfishRequest *self, struct curl_slist *auth_headers)
+{
+	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
+	/* Non-owning: the slist is owned by the backend and outlives requests. */
+	self->auth_headers = auth_headers;
 }
 
 void

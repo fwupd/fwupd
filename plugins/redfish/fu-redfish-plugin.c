@@ -510,6 +510,32 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
 	if (bearer_token != NULL)
 		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
+
+	/* Optional pre-provisioned session token.  If FWUPD_SESSION_TOKEN_FILE is
+	 * set in the environment, read the X-Auth-Token from that file instead of
+	 * using Basic Auth.  This allows an external tool (e.g. a platform-specific
+	 * BMC authentication helper) to provision the token without storing
+	 * credentials in the fwupd config.  The file typically lives on tmpfs so no
+	 * secret ever touches persistent storage.  Set via the systemd service
+	 * drop-in: Environment=FWUPD_SESSION_TOKEN_FILE=/path/to/session
+	 * Falls through to username/password if the variable is unset or the file
+	 * is absent. */
+	{
+		const gchar *session_token_file = g_getenv("FWUPD_SESSION_TOKEN_FILE");
+		if (session_token_file != NULL &&
+		    g_file_test(session_token_file, G_FILE_TEST_EXISTS)) {
+			g_autofree gchar *token = NULL;
+			gsize len = 0;
+			if (g_file_get_contents(session_token_file, &token, &len, NULL) &&
+			    token != NULL && len > 0) {
+				g_strchomp(token);
+				fu_redfish_backend_set_session_key(self->backend, token);
+				g_debug("using pre-provisioned X-Auth-Token from %s",
+					session_token_file);
+			}
+		}
+	}
+
 	fu_redfish_backend_set_cacheck(self->backend,
 				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
@@ -538,7 +564,10 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 
 	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
+	/* Skip if a pre-provisioned session token is available (e.g. nvidia-oob-auth):
+	 * X-Auth-Token auth does not require a username or password. */
+	if ((fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) &&
+	    fu_redfish_backend_get_session_key(self->backend) == NULL) {
 		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

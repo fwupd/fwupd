@@ -13,6 +13,7 @@
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -25,6 +26,7 @@ struct _FuRedfishBackend {
 	gchar *bearer_token;
 	gchar *session_key;
 	gchar *session_uri;
+	struct curl_slist *session_xauth_header; /* X-Auth-Token: <session_key> slist */
 	guint port;
 	gchar *vendor;
 	gchar *version;
@@ -99,15 +101,24 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
-		/* Some custom implementation require special authentication through bearer token.
-		 * Let's use that if configured to do so. */
+	if (self->session_xauth_header != NULL) {
+		/* X-Auth-Token session authentication per Redfish DSP0266 §12.3.
+		 * Used when a session was pre-created externally (e.g. nvidia-oob-auth)
+		 * so no password needs to be stored on disk.  The slist is owned by
+		 * the backend and outlives this request.
+		 *
+		 * Set on the curl handle for plain GET requests (fu_redfish_request_perform).
+		 * Also stored on the request so fu_redfish_request_perform_full() can merge
+		 * it with Content-Type headers instead of replacing them (which would cause
+		 * authenticated POST/PATCH to return HTTP 401). */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, self->session_xauth_header);
+		fu_redfish_request_set_auth_headers(request, self->session_xauth_header);
+	} else if (self->bearer_token != NULL) {
+		/* Some custom implementations require OAuth2 bearer token auth. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
 		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
 	} else {
-		/* Here is the common auth scenario, when no specific bearer token is configured.
-		 * since DSP0266 makes Basic Authorization a requirement,
-		 * it is safe to use Basic Auth for all implementations */
+		/* Common scenario: Basic Auth per DSP0266 §12.1. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
 		(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
 		(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
@@ -253,11 +264,20 @@ fu_redfish_backend_check_wildcard_targets(FuRedfishBackend *self)
 	}
 }
 
-static void
+void
 fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_key)
 {
 	g_free(self->session_key);
 	self->session_key = g_strdup(session_key);
+
+	/* Rebuild the pre-built X-Auth-Token header slist so request_new() can
+	 * stamp it on every request without a per-request allocation. */
+	curl_slist_free_all(self->session_xauth_header);
+	self->session_xauth_header = NULL;
+	if (session_key != NULL) {
+		g_autofree gchar *hdr = g_strdup_printf("X-Auth-Token: %s", session_key);
+		self->session_xauth_header = curl_slist_append(NULL, hdr);
+	}
 }
 
 /**
@@ -402,6 +422,45 @@ fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_pre
 	self->path_prefix = g_strdup(path_prefix);
 }
 
+/*
+ * Detect an NVIDIA DGX Station GB300 BMC by probing Chassis_0.
+ *
+ * Vendor="NVIDIA" at the Redfish root is necessary but not sufficient —
+ * other NVIDIA Redfish implementations (non-GB300 systems) must not receive
+ * GB300-specific update semantics (empty Targets, ForceUpdate, GB300 task
+ * lifecycle).  Always verify the chassis model.
+ */
+static gboolean
+fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
+{
+	const gchar *manufacturer;
+	const gchar *model;
+	g_autoptr(FuRedfishRequest) req = NULL;
+	g_autoptr(FwupdJsonObject) json_chassis = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	req = fu_redfish_backend_request_new(self);
+	if (!fu_redfish_request_perform(req,
+					"/redfish/v1/Chassis/Chassis_0",
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					&error_local)) {
+		g_debug("Chassis_0 probe failed: %s", error_local->message);
+		return FALSE;
+	}
+	json_chassis = fu_redfish_request_get_json_object(req);
+	manufacturer = fwupd_json_object_get_string(json_chassis, "Manufacturer", NULL);
+	model = fwupd_json_object_get_string(json_chassis, "Model", NULL);
+	if (g_strcmp0(manufacturer, "NVIDIA") != 0 || model == NULL)
+		return FALSE;
+	/* Match "GB300" and "Station" anywhere in the model string, in any order
+	 * and case — covers "GB300 Station", "DGX Station GB300", etc. */
+	{
+		g_autofree gchar *model_lower = g_ascii_strdown(model, -1);
+		return strstr(model_lower, "gb300") != NULL &&
+		       strstr(model_lower, "station") != NULL;
+	}
+}
+
 static gboolean
 fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 {
@@ -464,8 +523,10 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 		const gchar *tmp =
 		    fwupd_json_object_get_string(json_obj, "MultipartHttpPushUri", NULL);
 		if (tmp != NULL) {
-			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
-			    fu_redfish_backend_has_smc_update_path(json_obj)) {
+			if (fu_redfish_backend_is_nvidia_bmc(self)) {
+				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
+			} else if (g_strcmp0(self->vendor, "SMCI") == 0 &&
+				   fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
@@ -750,7 +811,8 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
 	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
-	fwupd_codec_string_append(str, idt, "SessionKey", self->session_key);
+	/* Never log the session key value — it is a bearer-equivalent token. */
+	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
 	fwupd_codec_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
 	fwupd_codec_string_append(str, idt, "PushUriPath", self->push_uri_path);
@@ -769,6 +831,7 @@ fu_redfish_backend_finalize(GObject *object)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(object);
 	g_hash_table_unref(self->request_cache);
+	curl_slist_free_all(self->session_xauth_header);
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
 	g_free(self->push_uri_path);
