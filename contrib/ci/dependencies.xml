@@ -1,4 +1,27 @@
 <?xml version="1.0"?>
+<!DOCTYPE dependencies [
+  <!ELEMENT dependencies (dependency*)>
+
+  <!ELEMENT dependency (distro*)>
+  <!ATTLIST dependency id   CDATA #REQUIRED
+                       type CDATA #IMPLIED>
+
+  <!ELEMENT distro (control | native | multi-arch | build-indep | package)*>
+  <!ATTLIST distro id CDATA #REQUIRED>
+
+  <!ELEMENT package (#PCDATA)>
+  <!ATTLIST package variant CDATA #IMPLIED>
+
+  <!ELEMENT control (version?, inclusive*, exclusive*)>
+
+  <!ELEMENT version (#PCDATA)>
+  <!ELEMENT inclusive (#PCDATA)>
+  <!ELEMENT exclusive (#PCDATA)>
+
+  <!ELEMENT native EMPTY>
+  <!ELEMENT multi-arch EMPTY>
+  <!ELEMENT build-indep EMPTY>
+]>
 <dependencies>
   <dependency id="hwdata">
     <distro id="arch">

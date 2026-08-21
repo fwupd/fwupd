@@ -36,6 +36,7 @@ jobs:
             meson \
             patch \
             pre-commit \
+            python3-lxml \
             shellcheck \
             shfmt
       - name: Run pre-commit hooks

@@ -216,6 +216,32 @@ def sync_xml_versions(xml_file: str, meson_versions: Dict[str, str]) -> List[str
     return updated_ids
 
 
+def validate_dtd(xml_file: str) -> int:
+    try:
+        from lxml import etree as lxml_etree
+    except ImportError:
+        print("WARNING: lxml not available, skipping DTD validation")
+        return 0
+
+    try:
+        tree = lxml_etree.parse(xml_file)
+    except lxml_etree.XMLSyntaxError as e:
+        print(f"ERROR: Failed to parse {xml_file}: {e}")
+        return 1
+
+    dtd = tree.docinfo.internalDTD
+    if dtd is None:
+        print("ERROR: No inline DTD found in dependencies.xml")
+        return 1
+
+    if dtd.validate(tree):
+        return 0
+
+    for error in dtd.error_log.filter_from_errors():
+        print(f"ERROR: DTD validation: {error}")
+    return 1
+
+
 def check_variant_names(xml_file: str) -> int:
     """Check that variant names in dependencies.xml use the canonical naming
     (gcc/fedora style) rather than OS-native names that get mapped away by
@@ -287,6 +313,7 @@ def check_versions(fix: bool = False) -> int:
             rc = 1
 
     rc |= check_variant_names(xml_file)
+    rc |= validate_dtd(xml_file)
 
     return rc
 
