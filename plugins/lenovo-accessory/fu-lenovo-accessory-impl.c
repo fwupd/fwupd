@@ -94,6 +94,16 @@ fu_lenovo_accessory_impl_get_fwversion(FuLenovoAccessoryImpl *self,
 	buf = fu_lenovo_accessory_impl_process(self, st_cmd->buf, error);
 	if (buf == NULL)
 		return FALSE;
+	if (buf->len < FU_STRUCT_LENOVO_FW_VERSION_RSP_SIZE) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "firmware returned insufficient data for fw_version: got %u bytes, expected %u",
+		    buf->len,
+		    (guint)FU_STRUCT_LENOVO_FW_VERSION_RSP_SIZE);
+		return FALSE;
+	}
 	st_rsp = fu_struct_lenovo_fw_version_rsp_parse(buf->data, buf->len, 0x0, error);
 	if (st_rsp == NULL)
 		return FALSE;
@@ -126,6 +136,14 @@ fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self,
 	if (buf == NULL) {
 		g_prefix_error_literal(error, "get device mode: ");
 		return FALSE;
+	}
+	/* workaround: some firmware returns data_size=0 (empty payload) even though
+	 * the request asks for 1 byte; assume normal mode to avoid parsing empty buffer */
+	if (buf->len < 1) {
+		g_debug("firmware returned empty payload for get_mode (data_size=0), "
+			"assuming normal mode");
+		*mode = FU_LENOVO_ACCESSORY_DEVICE_MODE_NORMAL_MODE;
+		return TRUE;
 	}
 	st_rsp = fu_struct_lenovo_devicemode_rsp_parse(buf->data, buf->len, 0x0, error);
 	if (st_rsp == NULL)
@@ -346,6 +364,16 @@ fu_lenovo_accessory_impl_dfu_attribute(FuLenovoAccessoryImpl *self,
 	buf = fu_lenovo_accessory_impl_process(self, st_cmd->buf, error);
 	if (buf == NULL)
 		return FALSE;
+	if (buf->len < FU_STRUCT_LENOVO_DFU_ATTRIBUTE_RSP_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware returned insufficient data for dfu_attribute: got %u bytes, "
+			    "expected %u",
+			    buf->len,
+			    (guint)FU_STRUCT_LENOVO_DFU_ATTRIBUTE_RSP_SIZE);
+		return FALSE;
+	}
 	st_rsp = fu_struct_lenovo_dfu_attribute_rsp_parse(buf->data, buf->len, 0x0, error);
 	if (st_rsp == NULL)
 		return FALSE;
@@ -450,6 +478,16 @@ fu_lenovo_accessory_impl_dfu_crc(FuLenovoAccessoryImpl *self, guint32 *crc32, GE
 	buf = fu_lenovo_accessory_impl_process(self, st_cmd->buf, error);
 	if (buf == NULL)
 		return FALSE;
+	if (buf->len < FU_STRUCT_LENOVO_DFU_CRC_RSP_SIZE) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "firmware returned insufficient data for dfu_crc: got %u bytes, expected %u",
+		    buf->len,
+		    (guint)FU_STRUCT_LENOVO_DFU_CRC_RSP_SIZE);
+		return FALSE;
+	}
 	st_rsp = fu_struct_lenovo_dfu_crc_rsp_parse(buf->data, buf->len, 0x0, error);
 	if (st_rsp == NULL)
 		return FALSE;
