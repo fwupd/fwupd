@@ -38,6 +38,7 @@ if get_option('tests')
   )
   e = executable(
     'synaptics-rmi-self-test',
+    rustgen.process('fu-synaptics-rmi.rs'),
     sources: [
       'fu-self-test.c',
     ],
