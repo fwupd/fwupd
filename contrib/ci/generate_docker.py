@@ -94,6 +94,13 @@ def generate_dockerfile(
 
     data = {"VERSION": version}
 
+    # special cases
+    match (distro, variant):
+        case ("debian", "i386"):
+            data["PLATFORM"] = "linux/i386"
+        case _:
+            pass
+
     # insert commands to prepare cross compile
     if cross:
         cross_setup = f"""\
@@ -131,13 +138,6 @@ def generate_dockerfile(
         data["RUSTUP"] = "\n".join(rustup)
 
     content = replace(content, data)
-
-    # special cases
-    match (distro, variant):
-        case ("debian", "i386"):
-            content = content.replace(
-                f"FROM debian:{version}", f"FROM i386/debian:{version}"
-            )
 
     return content
 
