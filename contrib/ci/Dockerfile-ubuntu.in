@@ -9,6 +9,9 @@ ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
     sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/{{DISTRO}}.sources; \
+{?CROSSARCH-}
+    dpkg --add-architecture {{CROSSARCH}}; \
+{-CROSSARCH?}
     apt-get update -qq; \
     apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \

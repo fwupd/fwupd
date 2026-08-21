@@ -104,13 +104,8 @@ def generate_dockerfile(
         case _:
             pass
 
-    # insert commands to prepare cross compile
     if cross:
-        cross_setup = f"""\
-    dpkg --add-architecture {cross};"""
-    else:
-        cross_setup = "    "
-    data["SETUP"] = cross_setup
+        data["CROSSARCH"] = cross
 
     # insert dependencies to install
     if cross:
