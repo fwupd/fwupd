@@ -163,7 +163,7 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 	gboolean found_report = FALSE;
 
 	/* the command interface is a vendor HID collection (UsagePage 0xFF00,
-	 * Usage 0x02) carrying a 64-byte report; confirm it is present so we
+	 * Usage 0x01 or 0x02) carrying a 64-byte report; confirm it is present so we
 	 * fail early on a device that does not speak this protocol */
 	descriptors = fu_hid_device_parse_descriptors(FU_HID_DEVICE(self), error);
 	if (descriptors == NULL)
@@ -171,17 +171,32 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 	for (guint i = 0; i < descriptors->len; i++) {
 		FuHidDescriptor *desc = g_ptr_array_index(descriptors, i);
 		g_autoptr(FuHidReport) report = NULL;
+		/* try Usage 0x01 first (newer devices like Chrome AI Mouse) */
 		report = fu_hid_descriptor_find_report(desc,
 						       NULL,
 						       "usage-page",
 						       0xFF00,
 						       "usage",
-						       0x02,
+						       0x01,
 						       "report-size",
 						       8,
 						       "report-count",
 						       0x40,
 						       NULL);
+		/* fallback to Usage 0x02 for older devices */
+		if (report == NULL) {
+			report = fu_hid_descriptor_find_report(desc,
+							       NULL,
+							       "usage-page",
+							       0xFF00,
+							       "usage",
+							       0x02,
+							       "report-size",
+							       8,
+							       "report-count",
+							       0x40,
+							       NULL);
+		}
 		if (report != NULL) {
 			found_report = TRUE;
 			break;
@@ -191,7 +206,7 @@ fu_lenovo_accessory_hid_dual_device_setup(FuDevice *device, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no vendor command report (0xFF00/0x02) found");
+				    "no vendor command report (0xFF00/0x01 or 0xFF00/0x02) found");
 		return FALSE;
 	}
 	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
@@ -216,6 +231,30 @@ fu_lenovo_accessory_hid_dual_device_set_progress(FuDevice *device, FuProgress *p
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gboolean
+fu_lenovo_accessory_hid_dual_device_set_quirk_kv(FuDevice *device,
+						 const gchar *key,
+						 const gchar *value,
+						 GError **error)
+{
+	FuLenovoAccessoryHidDualDevice *self = FU_LENOVO_ACCESSORY_HID_DUAL_DEVICE(device);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "LenovoAccessoryInterface") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		fu_hid_device_set_interface(FU_HID_DEVICE(self), (guint8)tmp);
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_lenovo_accessory_hid_dual_device_impl_iface_init(FuLenovoAccessoryImplInterface *iface)
 {
@@ -232,6 +271,7 @@ fu_lenovo_accessory_hid_dual_device_class_init(FuLenovoAccessoryHidDualDeviceCla
 	device_class->set_progress = fu_lenovo_accessory_hid_dual_device_set_progress;
 	device_class->setup = fu_lenovo_accessory_hid_dual_device_setup;
 	device_class->attach = fu_lenovo_accessory_hid_dual_device_attach;
+	device_class->set_quirk_kv = fu_lenovo_accessory_hid_dual_device_set_quirk_kv;
 }
 
 static void
@@ -246,5 +286,7 @@ fu_lenovo_accessory_hid_dual_device_init(FuLenovoAccessoryHidDualDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	/* default for dual-bank dongles with 4 interfaces, may be overridden by the
+	 * LenovoAccessoryInterface quirk */
 	fu_hid_device_set_interface(FU_HID_DEVICE(self), FU_LENOVO_ACCESSORY_IFACE_CMD);
 }
