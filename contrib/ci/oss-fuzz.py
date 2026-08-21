@@ -454,6 +454,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd"),
         Fuzzer("ifd-bios", pattern="ifd-bios"),
+        Fuzzer("tpm-eventlog-v1", pattern="tpm-eventlog-v1"),
+        Fuzzer("tpm-eventlog-v2", pattern="tpm-eventlog-v2"),
         Fuzzer("zip"),
     ]:
         src = bld.substitute(
