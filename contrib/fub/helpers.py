@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as etree
+from dataclasses import dataclass
 from pathlib import Path
 
 MARKERFILE = "fwupd.venv"
@@ -222,11 +223,32 @@ class RunCmd:
         return self.p.returncode == 0
 
 
-def detect_os():
-    """Detect the OS profile.
+@dataclass
+class OsRelease:
+    """Distribution identification from /etc/os-release."""
 
-    Returns one of the OS_PROFILES strings, or empty string on failure.
-    """
+    distro: str = ""
+    version: str = ""
+
+    @classmethod
+    def instance(cls) -> OsRelease:
+        os_release = Path("/etc/os-release")
+        distro = None
+        version = None
+        with os_release.open() as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("ID="):
+                    distro = line[3:].strip('"')
+                elif line.startswith("VERSION_ID="):
+                    version = line[11:].strip('"')
+        if distro is None or version is None:
+            raise FileNotFoundError(os_release)
+        return OsRelease(distro, version)
+
+
+def detect_os() -> str | None:
+    """Detect the OS profile."""
     # macOS
     if (Path("/") / "Library" / "Apple").exists():
         return "darwin"
@@ -244,21 +266,28 @@ def detect_os():
     except ModuleNotFoundError:
         pass
 
-    # Fall back to /etc/os-release
-    os_release = Path("/etc/os-release")
     try:
-        with os_release.open() as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("ID="):
-                    target = line[3:].strip('"')
-                    if target == "rhel":
-                        return "centos"
-                    return target
+        target = OsRelease.instance().distro
+        if target == "rhel":
+            return "centos"
+        return target
     except FileNotFoundError:
+        return None
+
+
+def detect_os_version() -> str | None:
+    """Detect the OS version."""
+    try:
+        import distro
+
+        return distro.version()
+    except ModuleNotFoundError:
         pass
 
-    return ""
+    try:
+        return OsRelease.instance().version
+    except FileNotFoundError:
+        return None
 
 
 def get_variant():
