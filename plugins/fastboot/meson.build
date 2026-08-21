@@ -9,6 +9,7 @@ plugin_builtins += static_library(
   sources: [
     'fu-fastboot-plugin.c',
     'fu-fastboot-device.c',
+    'fu-fastboot-rolling-device.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
