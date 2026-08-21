@@ -96,6 +96,8 @@ def generate_dockerfile(
         "VERSION": version,
         "DISTRO": distro,
     }
+    if variant:
+        data["VARIANT"] = variant
 
     # special cases
     match (distro, variant):
@@ -125,14 +127,6 @@ def generate_dockerfile(
     deps = [f"    {i}" for i in deps]
     deps = " \\\n".join(deps)
     data["DEPENDENCIES"] = deps
-
-    # install android rust target
-    rustup: list[str] = []
-    if variant == "android":
-        rustup.append("COPY contrib/ci/android.sh .")
-        rustup.append("RUN sh android.sh")
-    if rustup:
-        data["RUSTUP"] = "\n".join(rustup)
 
     content = replace(content, data)
 

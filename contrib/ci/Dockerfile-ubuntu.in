@@ -22,5 +22,8 @@ RUN set -euxo pipefail; \
     sudo \
 {{DEPENDENCIES}}; \
     apt-get clean
-{{RUSTUP}}
+{?VARIANT=="android"-}
+RUN --mount=type=bind,source=contrib/ci/android.sh,target=android.sh \
+    sh android.sh
+{-VARIANT?}
 WORKDIR /github/workspace
