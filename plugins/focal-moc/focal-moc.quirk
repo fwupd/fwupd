@@ -7,6 +7,9 @@ Plugin = focal_moc
 [USB\VID_2808&PID_A27A]
 Plugin = focal_moc
 
+[USB\VID_2808&PID_A101]
+Plugin = focal_moc
+
 [USB\VID_2808&PID_A959]
 Plugin = focal_moc
 
@@ -14,6 +17,9 @@ Plugin = focal_moc
 Plugin = focal_moc
 
 [USB\VID_2808&PID_A57A]
+Plugin = focal_moc
+
+[USB\VID_2808&PID_A77A]
 Plugin = focal_moc
 
 [USB\VID_2808&PID_A78A]
@@ -36,3 +42,15 @@ Plugin = focal_moc
 
 [USB\VID_2808&PID_6553]
 Plugin = focal_moc
+
+# newer devices require an encrypted TransportSec channel to enter IAP
+[USB\VID_2808&PID_AA7A]
+Plugin = focal_moc
+GType = FuFocalMocSignedDevice
+CounterpartGuid = USB\VID_2808&PID_0201
+
+[USB\VID_2808&PID_0201]
+Plugin = focal_moc
+GType = FuFocalMocSignedDevice
+Flags = is-bootloader
+CounterpartGuid = USB\VID_2808&PID_AA7A

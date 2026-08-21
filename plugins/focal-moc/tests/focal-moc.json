@@ -4,13 +4,26 @@
   "steps": [
     {
       "url": "de9796f65f2a5c8927d0aea99e0fdf40b71db22d6da9663d3c8c063b2ae5bceb-FT9769DL_APP_FT9001_USB_DEC_SV0.1_7396.cab",
-      "emulation-url": "9c7a37cae5b6942acb3822e28cc74770b5431892aa483137e4d32da68f97ca49-focal-moc-emulation-FT9769-v7396.zip",
+      "emulation-url": "7b798cec687920a8c4bf2df9662682e9004675bdadf9b8a4f8453e1258340ffd-focal-moc-emulation-FT9769-v7396.zip",
       "components": [
         {
           "version": "7396",
           "protocol": "com.focal.moc",
           "guids": [
             "0561579a-6745-57b5-8593-f981a90a99af"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "87b2d06726d05935907061a3ba4dcce1955f6e44730131708d58279942deb7e2-FT9349_APP_FT9001_AA7A_USB_DEC_SV0.1_0104.cab",
+      "emulation-url": "e12fbcc031c6356983ea6521cbd209704320a7f933de1e8170b898ffac3e1a3c-focal-moc-emulation-AA7A-v0104.zip",
+      "components": [
+        {
+          "version": "0104",
+          "protocol": "com.focal.moc",
+          "guids": [
+            "847bfb91-b443-50a2-afe2-4530c06955b6"
           ]
         }
       ]

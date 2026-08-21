@@ -1,66 +1,141 @@
 // Copyright 2024 FocalTech Systems Co., Ltd.
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-// Command codes
 #[repr(u8)]
 enum FuFocalMocCmd {
-    GetFwVersion = 0x30,  // request firmware version string
-    SetBootMode  = 0x32,  // switch device mode; data[0] = FuFocalMocBootMode
-    FwDownload   = 0x33,  // firmware download (3-phase: SHO → STX×N → EOT)
-    Ack          = 0x04,  // device acknowledgment (response to all commands)
+    GetFwVersion = 0x30,
+    GetFpVersion = 0x31,
+    SetBootMode = 0x32,
+    SendFirmware = 0x33,
+    WakeUp = 0x34,
+    TransportKeyExchange = 0xB0,
+    TransportKeyConfirm = 0xB1,
 }
 
-// Boot mode argument for SetBootMode
+#[repr(u8)]
+enum FuFocalMocStatus {
+    Ok = 0x04,
+    InvalidParameter = 0x05,
+    Timeout = 0x06,
+    NoMemory = 0x07,
+    CheckError = 0x08,
+    InvalidCommand = 0x09,
+    ExecutionFailure = 0x0A,
+    CommandMasterKeyInvalid = 0x20,
+    MasterKeyInvalid = 0x21,
+    FirmwareSequence = 0x40,
+    FirmwareFlash = 0x41,
+    FirmwareNoSession = 0x42,
+    FirmwareVerify = 0x43,
+    FirmwareRecover = 0x44,
+}
+
+#[derive(ToString)]
+enum FuFocalMocIapStatusLayout {
+    Unknown,
+    Legacy,
+    Aligned,
+}
+
+#[repr(u32le)]
+enum FuFocalMocFirmwareKind {
+    App = 0x02,
+}
+
 #[repr(u8)]
 enum FuFocalMocBootMode {
-    EnterApp     = 0x00,  // return to normal application mode
-    EnterBoot    = 0x01,  // enter bootloader (IAP) mode for firmware update
-    EnterRomBoot = 0x02,  // enter ROM bootloader mode
+    App = 0x00,
+    Iap = 0x01,
 }
 
-// Magic byte in the firmware-download packet
+#[derive(ToString)]
 #[repr(u8)]
-enum FuFocalMocMagic {
-    Sho = 0x01,  // Start-of-Header: first packet, carries filename + size + CRC32
-    Stx = 0x02,  // Start-of-Text: middle data block (1024 bytes each)
-    Eot = 0x04,  // End-of-Text: last (possibly partial) data block
+enum FuFocalMocFrame {
+    Soh = 0x01,
+    Stx = 0x02,
+    Eot = 0x04,
 }
 
-// Standard command request header
-#[derive(New, Default)]
+#[derive(New, Parse, Default)]
 #[repr(C, packed)]
-struct FuStructFocalMocCmdReq {
-    head: u8 == 0x02,
-    ln: u16be,             // payload length (data bytes + 1 for BCC)
-    cmd: FuFocalMocCmd,
+struct FuStructFocalMocPacketHeader {
+    magic: u8 == 0x02,
+    length: u16be,
+    command: FuFocalMocCmd,
 }
 
-// Device response header
 #[derive(Parse, Default)]
 #[repr(C, packed)]
-struct FuStructFocalMocCmdRsp {
-    head: u8 == 0x02,
-    ln: u16be,
-    st: FuFocalMocCmd == Ack,
+struct FuStructFocalMocWakeUp {
+    magic: u16be == 0x55AA,
 }
 
-// Firmware-download packet header
+#[derive(New, Parse, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocCipherHeader {
+    magic: u8 == 0x03,
+    length: u16be,
+    sequence: u32be,
+}
+
+#[derive(New, Parse, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocFragmentHeader {
+    more: u8,
+    message_id: u8,
+    index: u8,
+    total: u8,
+}
+
 #[derive(New, Default)]
 #[repr(C, packed)]
-struct FuStructFocalMocDlHdr {
-    head: u8 == 0x02,
-    ln: u16be,
-    cmd: FuFocalMocCmd = FwDownload,
-    magic: FuFocalMocMagic,
-    seq: u8,                   // incrementing sequence number
+struct FuStructFocalMocSohV1 {
+    kind: FuFocalMocFrame == Soh,
+    sequence: u8,
+    filename: [char; 64],
+    firmware_size: u32be,
+    crc32: u32be,
+    _reserved: [u8; 56],
 }
 
-// SHO packet data payload
-#[derive(New, Setters)]
+#[derive(New, Default)]
 #[repr(C, packed)]
-struct FuStructFocalMocShoData {
+struct FuStructFocalMocDataV1 {
+    kind: FuFocalMocFrame,
+    sequence: u8,
+    data: [u8; 1024],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocSohV2 {
+    kind: FuFocalMocFrame == Soh,
+    sequence: u16be,
     filename: [char; 64],
-    filesize: u32be,
+    firmware_size: u32be,
     crc32: u32be,
-    _padding: [u8; 56],
+    frame_size: u16be == 1024,
+    _reserved: [u8; 54],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocDataV2 {
+    kind: FuFocalMocFrame,
+    sequence: u16be,
+    data: [u8; 1024],
+}
+
+#[derive(New, ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
+struct FuStructFocalMocFirmwareHeader {
+    magic: u32le == 0x46574844,
+    kind: u32le,
+    version: u32le,
+    size: u32le,
+    entry_offset: u32le,
+    _reserved1: [u8; 28],
+    digest: [u8; 32],
+    signature: [u8; 64],
+    _reserved2: [u8; 112],
 }
