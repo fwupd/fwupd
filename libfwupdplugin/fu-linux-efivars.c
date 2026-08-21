@@ -229,7 +229,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	gssize attr_sz;
 	gssize data_sz_tmp;
 	FuEfiVariableAttrs attr_tmp;
-	guint64 sz;
+	gsize sz;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
@@ -242,9 +242,8 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	sz = fu_file_input_stream_get_file_size(FU_FILE_INPUT_STREAM(istr), NULL, error);
-	if (sz == 0 && error != NULL && *error != NULL) {
-		g_prefix_error_literal(error, "failed to get file size: ");
+	if (!fu_input_stream_size(istr, &sz, error)) {
+		g_prefix_error_literal(error, "failed to get stream size: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -253,7 +252,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "efivars file too small: %" G_GUINT64_FORMAT,
+			    "efivars file too small: %" G_GSIZE_FORMAT,
 			    sz);
 		return FALSE;
 	}

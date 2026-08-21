@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-stream-input-stream-private.h"
-
 static void
 fu_stream_input_stream_read_func(void)
 {
