@@ -30,6 +30,7 @@ plugin_quirks += files('modem-manager.quirk')
 shared_module(
   'fu_plugin_modem_manager',
   rustgen.process('fu-mm-fdl.rs'),
+  rustgen.process('fu-mm-mbim.rs'),
   sources: [
     'fu-mm-backend.c',
     'fu-mm-common.c',

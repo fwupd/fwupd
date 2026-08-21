@@ -24,6 +24,7 @@ static void
 fu_mm_plugin_load(FuContext *ctx)
 {
 	fu_context_add_quirk_key(ctx, "ModemManagerBranchAtCommand");
+	fu_context_add_quirk_key(ctx, "ModemManagerMbimDetachMethod");
 }
 
 static gboolean

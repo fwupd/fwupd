@@ -8,9 +8,11 @@
 #include "config.h"
 
 #include "fu-mm-mbim-device.h"
+#include "fu-mm-mbim-struct.h"
 
 typedef struct {
 	FuMmDevice parent_instance;
+	FuMmMbimDetachMethod detach_method;
 	MbimDevice *mbim_device;
 	GMainContext *main_ctx;
 } FuMmMbimDevicePrivate;
@@ -437,9 +439,8 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 }
 
 static gboolean
-fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_mm_mbim_device_detach_qdu_quectel(FuMmMbimDevice *self, GError **error)
 {
-	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(MbimMessage) request = NULL;
@@ -459,8 +460,82 @@ fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* success */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
+}
+
+static gboolean
+fu_mm_mbim_device_detach_fibocom(FuMmMbimDevice *self, GError **error)
+{
+	const gchar *at = "AT\r\n";
+	const gchar *detach_at = "FIXME SOMETHING HERE";
+	const guint8 *resp_data = NULL;
+	guint32 resp_size = 0;
+	g_autofree gchar *cmd_crlf = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(MbimMessage) request1 = NULL;
+	g_autoptr(MbimMessage) request2 = NULL;
+	g_autoptr(MbimMessage) response1 = NULL;
+	g_autoptr(MbimMessage) response2 = NULL;
+
+	request1 = mbim_message_fibocom_at_command_set_new(strlen(at), (const guint8 *)at, error);
+	if (request1 == NULL)
+		return FALSE;
+	response1 = fu_mm_mbim_device_command_sync(self, request1, 10 * 1000, error);
+	if (response1 == NULL) {
+		g_prefix_error_literal(error, "AT channel pre-check transaction failed: ");
+		return FALSE;
+	}
+	if (!mbim_message_fibocom_at_command_response_parse(response1,
+							    &resp_size,
+							    &resp_data,
+							    error)) {
+		g_prefix_error_literal(error, "AT cmd pre-check response parse failed: ");
+		return FALSE;
+	}
+	if (g_strrstr_len((const gchar *)resp_data, resp_size, "\r\nOK\r\n") == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "AT pre-check did not contain 'OK'");
+		return FALSE;
+	}
+
+	cmd_crlf = g_strdup_printf("%s\r\n", detach_at);
+	if (cmd_crlf == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Out of memory");
+		return FALSE;
+	}
+
+	/* send detach at command,
+	 * and modem need reboot, so ignore response */
+	request2 = mbim_message_fibocom_at_command_set_new(strlen(cmd_crlf),
+							   (const guint8 *)cmd_crlf,
+							   error);
+	if (request2 == NULL)
+		return FALSE;
+	response2 = fu_mm_mbim_device_command_sync(self, request2, 10 * 1000, &error_local);
+	if (response2 == NULL)
+		g_debug("detach AT command transaction failed: %s", error_local->message);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_QDU_QUECTEL)
+		return fu_mm_mbim_device_detach_qdu_quectel(self, error);
+	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_FIBOCOM)
+		return fu_mm_mbim_device_detach_fibocom(self, error);
+
+	/* not supported */
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no detach method");
+	return FALSE;
 }
 
 static gboolean
@@ -533,6 +608,36 @@ fu_mm_mbim_device_cleanup(FuDevice *device,
 	return fu_mm_device_set_autosuspend_delay(FU_MM_DEVICE(self), 2000, error);
 }
 
+static gboolean
+fu_mm_mbim_device_set_quirk_kv(FuDevice *device,
+			       const gchar *key,
+			       const gchar *value,
+			       GError **error)
+{
+	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (g_strcmp0(key, "ModemManagerMbimDetachMethod") == 0) {
+		priv->detach_method = fu_mm_mbim_detach_method_from_string(value);
+		if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "detach method %s not supported",
+				    value);
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_mm_mbim_device_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -557,6 +662,7 @@ fu_mm_mbim_device_init(FuMmMbimDevice *self)
 	/* we must only use one context per device because MBIM messages are only delivered to the
 	 * main context which the device is opened with */
 	priv->main_ctx = g_main_context_new();
+	priv->detach_method = FU_MM_MBIM_DETACH_METHOD_QDU_QUECTEL;
 }
 
 static void
@@ -583,4 +689,5 @@ fu_mm_mbim_device_class_init(FuMmMbimDeviceClass *klass)
 	device_class->prepare = fu_mm_mbim_device_prepare;
 	device_class->cleanup = fu_mm_mbim_device_cleanup;
 	device_class->set_progress = fu_mm_mbim_device_set_progress;
+	device_class->set_quirk_kv = fu_mm_mbim_device_set_quirk_kv;
 }
