@@ -34,13 +34,14 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command", help="available commands")
 
     # Import and register all command modules
-    from . import init_cmd, setup_cmd, build_cmd, test_cmd, run_cmd
+    from . import init_cmd, setup_cmd, build_cmd, test_cmd, run_cmd, format_cmd
 
     init_cmd.register(subparsers)
     setup_cmd.register(subparsers)
     build_cmd.register(subparsers)
     test_cmd.register(subparsers)
     run_cmd.register(subparsers)
+    format_cmd.register(subparsers)
 
     args = parser.parse_args(argv)
 
