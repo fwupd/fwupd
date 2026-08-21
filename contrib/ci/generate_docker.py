@@ -92,7 +92,10 @@ def generate_dockerfile(
     with open(template_file) as file:
         content = file.read()
 
-    data = {"VERSION": version}
+    data = {
+        "VERSION": version,
+        "DISTRO": distro,
+    }
 
     # special cases
     match (distro, variant):
@@ -104,7 +107,6 @@ def generate_dockerfile(
     # insert commands to prepare cross compile
     if cross:
         cross_setup = f"""\
-    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
     dpkg --add-architecture {cross};"""
     else:
         cross_setup = "    "
