@@ -1,5 +1,5 @@
 # -*- mode: dockerfile -*-
-FROM {?PLATFORM-}--platform={{PLATFORM}} {-PLATFORM?}ubuntu:{{VERSION}}
+FROM {?PLATFORM-}--platform={{PLATFORM}} {-PLATFORM?}{{DISTRO}}:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
