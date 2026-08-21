@@ -238,6 +238,9 @@ add_project_arguments(
 if get_option('build') == 'dbus'
   build_standalone = true
   build_daemon = 'dbus'
+elif get_option('build') == 'binder'
+  build_standalone = true
+  build_daemon = 'binder'
 elif get_option('build') == 'standalone'
   build_standalone = true
   build_daemon = 'none'
@@ -520,6 +523,17 @@ if jcat_crypto == 'none'
     jcat_crypto = 'libcrypto'
     conf.set('HAVE_LIBCRYPTO', '1')
   endif
+endif
+
+if build_daemon == 'binder'
+  ndk_arch_dir = meson.get_external_property('android_ndk_sysroot_arch')
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/' + ndk_arch_dir + '/35'
+  binder_ndk = cc.find_library(
+    'binder_ndk',
+    dirs: ndk_sysroot_lib,
+    required: true,
+  )
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
 endif
 
 lzma = dependency('liblzma')
@@ -816,6 +830,14 @@ configure_file(
   output: 'config.h',
   configuration: conf,
 )
+
+if build_daemon == 'binder'
+  configure_file(
+    input: 'contrib/android/adb_fwupd_env.sh.in',
+    output: 'adb_fwupd_env.sh',
+    configuration: conf,
+  )
+endif
 
 libdrm_amdgpu = dependency(
   'libdrm_amdgpu',

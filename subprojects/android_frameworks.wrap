@@ -3,7 +3,7 @@ directory = android_frameworks
 patch_directory = android_frameworks
 diff_files = android_frameworks/types.patch
 url = https://android.googlesource.com/platform/frameworks/native
-revision = 8e5bde5d91847dc2fe289cab162fcebd372f35dd
+revision = a9546201f8aadc436e5c8d4d75e9b8467122fe44
 depth = 1
 
 [provide]

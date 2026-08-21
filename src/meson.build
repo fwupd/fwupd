@@ -332,6 +332,89 @@ if build_daemon == 'dbus'
 
 endif
 
+if build_daemon == 'binder'
+  add_languages(
+    'cpp',
+    native: false,
+  )
+
+  aidl_prog = find_program(
+    'aidl',
+    required: true,
+  )
+  aidl_dir = join_paths(
+    meson.project_source_root(),
+    'contrib',
+    'android',
+    'aidl',
+  )
+
+  aidl_files = [
+    'FwupdDevice',
+    'FwupdRelease',
+    'FwupdRemote',
+    'FwupdRequest',
+  ]
+
+  aidl_generated_src = []
+  foreach a : aidl_files
+    aidl_generated_src += custom_target(
+      'aidl_gen_' + a,
+      input: join_paths(aidl_dir, 'org', 'freedesktop', 'fwupd', a + '.aidl'),
+      output: [a + '.cpp', a + '.h'],
+      command: [
+        'sh',
+        '-c',
+        # Run AIDL with VINTF stability flags, then copy to root
+        '"$2" --lang=ndk --structured --stability vintf -I"$3" --out="$1" --header_out="$1" "$4" && ' + 'cp "$1/org/freedesktop/fwupd/$5.cpp" "$1/" && ' + 'cp "$1/aidl/org/freedesktop/fwupd/$5.h" "$1/"',
+        'sh',
+        '@OUTDIR@',
+        aidl_prog.full_path(),
+        aidl_dir,
+        '@INPUT@',
+        a,
+      ],
+    )
+  endforeach
+
+  # include the src/ build directory, which holds the generated AIDL headers
+  aidl_inc = include_directories('.')
+
+  if get_option('tests')
+    # binder-specific
+    e = executable(
+      'fu-binder-test',
+      sources: [
+        'fu-binder-common.cpp',
+        'fu-binder-test.cpp',
+      ] + aidl_generated_src,
+      include_directories: [
+        root_incdir,
+        fwupd_incdir,
+        fwupdplugin_incdir,
+        binder_ndk_platform_incdir,
+        aidl_inc,
+      ],
+      dependencies: [
+        libfwupd_deps,
+        client_dep,
+        binder_ndk,
+      ],
+      link_with: [
+        fwupd,
+        fwupdplugin,
+        libfutest,
+      ],
+      link_language: 'c',
+    )
+    test(
+      'fu-binder-test',
+      e,
+      timeout: 30,
+    )
+  endif
+endif
+
 if get_option('tests')
   src_tests_env = {
     'G_TEST_BUILDDIR': meson.current_build_dir(),

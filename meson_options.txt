@@ -22,7 +22,7 @@ option(
 option(
   'build',
   type: 'combo',
-  choices: ['dbus', 'standalone', 'library'],
+  choices: ['dbus', 'binder', 'standalone', 'library'],
   value: 'dbus',
   description: 'build type',
 )
