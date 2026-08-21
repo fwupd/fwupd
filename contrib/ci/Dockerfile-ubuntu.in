@@ -23,5 +23,8 @@ RUN set -euxo pipefail; \
 {{DEPENDENCIES}}; \
     apt-get clean
 RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
-{{RUSTUP}}
+{% if VARIANT=="android" %}
+RUN --mount=type=bind,source=contrib/ci/android.sh,target=android.sh \
+    sh android.sh
+{% endif %}
 WORKDIR /github/workspace
