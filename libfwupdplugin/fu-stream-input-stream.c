@@ -8,7 +8,9 @@
 
 #include "config.h"
 
-#include "fu-stream-input-stream-private.h"
+#include "fwupd-rust-cstream.h"
+
+#include "fu-input-stream.h"
 #include "fu-stream-input-stream.h"
 
 /**
@@ -18,11 +20,58 @@
  * #FuInputStream type hierarchy.
  */
 
-typedef struct {
-	GInputStream *base_stream; /* nocheck:blocked */
-} FuStreamInputStreamPrivate;
+static gssize
+fu_stream_input_stream_read_cb(void *handle,
+			       guint8 *buf,
+			       gsize count,
+			       GError **error) /* nocheck:name */
+{
+	return g_input_stream_read(G_INPUT_STREAM(handle), /* nocheck:blocked */
+				   buf,
+				   count,
+				   NULL,
+				   error);
+}
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuStreamInputStream, fu_stream_input_stream, FU_TYPE_INPUT_STREAM)
+static gboolean
+fu_stream_input_stream_seek_cb(void *handle,
+			       gint64 offset,
+			       gint32 type,
+			       GError **error) /* nocheck:name */
+{
+	if (!G_IS_SEEKABLE(handle)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "base stream is not seekable"); /* nocheck:error */
+		return FALSE;
+	}
+	return g_seekable_seek(G_SEEKABLE(handle), offset, (GSeekType)type, NULL, error);
+}
+
+static gboolean
+fu_stream_input_stream_can_seek_cb(void *handle) /* nocheck:name */
+{
+	if (!G_IS_SEEKABLE(handle))
+		return FALSE;
+	return g_seekable_can_seek(G_SEEKABLE(handle));
+}
+
+static gint64
+fu_stream_input_stream_tell_cb(void *handle) /* nocheck:name */
+{
+	if (!G_IS_SEEKABLE(handle))
+		return 0;
+	return g_seekable_tell(G_SEEKABLE(handle));
+}
+
+struct _FuStreamInputStream {
+	FuInputStream parent_instance;
+	GInputStream *base_stream; /* GObject ref to keep alive */ /* nocheck:blocked */
+	FuRsCStream *rust;
+};
+
+G_DEFINE_TYPE(FuStreamInputStream, fu_stream_input_stream, FU_TYPE_INPUT_STREAM)
 
 static gssize
 fu_stream_input_stream_read_fn(FuInputStream *stream,
@@ -32,39 +81,25 @@ fu_stream_input_stream_read_fn(FuInputStream *stream,
 			       GError **error)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
-	g_return_val_if_fail(priv->base_stream != NULL, -1);
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
+		return -1;
 
-	return g_input_stream_read(priv->base_stream, /* nocheck:blocked */
-				   buffer,
-				   count,
-				   cancellable,
-				   error);
+	return fu_rs_cstream_read(self->rust, buffer, count, error);
 }
 
 static goffset
 fu_stream_input_stream_tell(FuInputStream *stream)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
-
-	if (!G_IS_SEEKABLE(priv->base_stream))
-		return 0;
-
-	return g_seekable_tell(G_SEEKABLE(priv->base_stream));
+	return fu_rs_cstream_tell(self->rust);
 }
 
 static gboolean
 fu_stream_input_stream_can_seek(FuInputStream *stream)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
-
-	if (!G_IS_SEEKABLE(priv->base_stream))
-		return FALSE;
-
-	return g_seekable_can_seek(G_SEEKABLE(priv->base_stream));
+	return fu_rs_cstream_can_seek(self->rust);
 }
 
 static gboolean
@@ -75,26 +110,28 @@ fu_stream_input_stream_seek(FuInputStream *stream,
 			    GError **error)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
 
-	if (!G_IS_SEEKABLE(priv->base_stream)) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "base stream is not seekable"); /* nocheck:error */
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
 		return FALSE;
-	}
 
-	return g_seekable_seek(G_SEEKABLE(priv->base_stream), offset, type, cancellable, error);
+	return fu_rs_cstream_seek(self->rust, offset, (gint32)type, error);
 }
 
 static void
 fu_stream_input_stream_finalize(GObject *object)
 {
 	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(object);
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
-	g_clear_object(&priv->base_stream);
+	/* must free the Rust stream first */
+	fu_rs_cstream_free(self->rust);
+	g_clear_object(&self->base_stream);
 	G_OBJECT_CLASS(fu_stream_input_stream_parent_class)->finalize(object);
+}
+
+static FuRsStreamImpl *
+fu_stream_input_stream_get_stream_impl(FuInputStream *stream)
+{
+	FuStreamInputStream *self = FU_STREAM_INPUT_STREAM(stream);
+	return fu_rs_cstream_get_stream_impl(self->rust);
 }
 
 static void
@@ -107,33 +144,12 @@ fu_stream_input_stream_class_init(FuStreamInputStreamClass *klass)
 	istream_class->tell = fu_stream_input_stream_tell;
 	istream_class->can_seek = fu_stream_input_stream_can_seek;
 	istream_class->seek = fu_stream_input_stream_seek;
+	istream_class->get_stream_impl = fu_stream_input_stream_get_stream_impl;
 }
 
 static void
 fu_stream_input_stream_init(FuStreamInputStream *self)
 {
-}
-
-/**
- * fu_stream_input_stream_set_base_stream:
- * @self: a #FuStreamInputStream
- * @base_stream: (transfer none): a #GInputStream
- *
- * Sets the underlying #GInputStream that this stream wraps.
- * The @base_stream is reffed.
- * This is intended for use by subclasses during construction.
- *
- * Since: 2.0.7
- **/
-void
-fu_stream_input_stream_set_base_stream(FuStreamInputStream *self, GInputStream *base_stream)
-{
-	FuStreamInputStreamPrivate *priv = fu_stream_input_stream_get_instance_private(self);
-
-	g_return_if_fail(FU_IS_STREAM_INPUT_STREAM(self));
-	g_return_if_fail(G_IS_INPUT_STREAM(base_stream));
-
-	g_set_object(&priv->base_stream, base_stream);
 }
 
 /**
@@ -151,12 +167,20 @@ fu_stream_input_stream_set_base_stream(FuStreamInputStream *self, GInputStream *
 FuInputStream *
 fu_stream_input_stream_from_stream(GInputStream *stream)
 {
+	FuRsStreamCallbacks callbacks = {
+	    .read_fn = fu_stream_input_stream_read_cb,
+	    .seek_fn = fu_stream_input_stream_seek_cb,
+	    .can_seek_fn = fu_stream_input_stream_can_seek_cb,
+	    .tell_fn = fu_stream_input_stream_tell_cb,
+	    .destroy_fn = NULL,
+	};
 	g_autoptr(FuStreamInputStream) self = NULL;
 
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 
 	self = g_object_new(FU_TYPE_STREAM_INPUT_STREAM, NULL);
-	fu_stream_input_stream_set_base_stream(self, stream);
+	self->base_stream = g_object_ref(stream);
+	self->rust = fu_rs_cstream_new(stream, callbacks);
 
 	return FU_INPUT_STREAM(g_steal_pointer(&self));
 }

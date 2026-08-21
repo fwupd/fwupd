@@ -14,6 +14,8 @@
 
 G_BEGIN_DECLS
 
+typedef struct FuRsStreamImpl FuRsStreamImpl;
+
 #define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GObject)
 
@@ -31,6 +33,7 @@ struct _FuInputStreamClass {
 			 GSeekType type,
 			 GCancellable *cancellable,
 			 GError **error);
+	FuRsStreamImpl *(*get_stream_impl)(FuInputStream *stream);
 };
 
 FuInputStream *
@@ -144,5 +147,8 @@ fu_input_stream_find(FuInputStream *stream,
 		     gsize offset,
 		     gsize *offset_found,
 		     GError **error) G_GNUC_NON_NULL(1, 2);
+
+FuRsStreamImpl *
+fu_input_stream_get_stream_impl(FuInputStream *stream) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

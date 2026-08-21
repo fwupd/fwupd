@@ -15,4 +15,7 @@
 //! `fwupd` crate, producing a static library that can be linked into other
 //! components of fwupd.
 
+pub mod compressor;
 pub mod glib;
+pub mod json;
+pub mod streams;

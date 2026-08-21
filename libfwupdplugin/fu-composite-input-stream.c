@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fwupd-codec.h"
+#include "fwupd-rust-composite-input-stream.h"
 
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
@@ -34,18 +35,10 @@
  * yyy offset: 0, sz: 4
  */
 
-typedef struct {
-	FuPartialInputStream *partial_stream;
-	gsize global_offset;
-} FuCompositeInputStreamItem;
-
 struct _FuCompositeInputStream {
 	FuInputStream parent_instance;
-	GPtrArray *items;		       /* of FuCompositeInputStreamItem */
-	FuCompositeInputStreamItem *last_item; /* no-ref */
-	goffset pos;
-	goffset pos_offset;
-	gsize total_size;
+	GPtrArray *partial_streams; /* of FuPartialInputStream (GObject refs) */
+	FuRsCompositeInputStream *rust;
 };
 
 static void
@@ -61,13 +54,17 @@ static void
 fu_composite_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(codec);
-	fwupd_codec_string_append_hex(str, idt, "Pos", self->pos);
-	fwupd_codec_string_append_hex(str, idt, "PosOffset", self->pos_offset);
-	fwupd_codec_string_append_hex(str, idt, "TotalSize", self->total_size);
-	for (guint i = 0; i < self->items->len; i++) {
-		FuCompositeInputStreamItem *item = g_ptr_array_index(self->items, i);
-		fwupd_codec_add_string(FWUPD_CODEC(item->partial_stream), idt, str);
-		fwupd_codec_string_append_hex(str, idt + 1, "GlobalOffset", item->global_offset);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "Pos",
+				      fu_rs_composite_input_stream_tell(self->rust));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "TotalSize",
+				      fu_rs_composite_input_stream_size(self->rust));
+	for (guint i = 0; i < self->partial_streams->len; i++) {
+		FuPartialInputStream *pstream = g_ptr_array_index(self->partial_streams, i);
+		fwupd_codec_add_string(FWUPD_CODEC(pstream), idt, str);
 	}
 }
 
@@ -76,15 +73,6 @@ fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_composite_input_stream_add_string;
 }
-
-static void
-fu_composite_input_stream_item_free(FuCompositeInputStreamItem *item)
-{
-	g_object_unref(item->partial_stream);
-	g_free(item);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCompositeInputStreamItem, fu_composite_input_stream_item_free)
 
 /**
  * fu_composite_input_stream_add_bytes:
@@ -134,48 +122,30 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 					     FuPartialInputStream *partial_stream,
 					     GError **error)
 {
-	g_autoptr(FuCompositeInputStreamItem) item = NULL;
-	gsize global_offset = 0;
+	gsize psize;
+	FuRsStreamImpl *impl;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(partial_stream), FALSE);
 	g_return_val_if_fail(FU_INPUT_STREAM(self) != FU_INPUT_STREAM(partial_stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* get the last-added item */
-	if (self->items->len > 0) {
-		FuCompositeInputStreamItem *item_last =
-		    g_ptr_array_index(self->items, self->items->len - 1);
-		gsize last_size = fu_partial_input_stream_get_size(
-		    FU_PARTIAL_INPUT_STREAM(item_last->partial_stream));
+	psize = fu_partial_input_stream_get_size(partial_stream);
 
-		/* calculate global offset with overflow checking */
-		if (!g_size_checked_add(&global_offset, item_last->global_offset, last_size)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "composite stream global offset overflow");
-			return FALSE;
-		}
-	}
-
-	/* add a new item */
-	item = g_new0(FuCompositeInputStreamItem, 1);
-	item->partial_stream = g_object_ref(partial_stream);
-	item->global_offset = global_offset;
-
-	g_debug("adding partial stream global_offset:0x%x", (guint)item->global_offset);
-
-	/* increment total size  */
-	if (!fu_size_checked_inc(&self->total_size,
-				 fu_partial_input_stream_get_size(item->partial_stream),
-				 error)) {
-		g_prefix_error_literal(error, "total size overflow: ");
+	/* tell the Rust side about this sub-stream */
+	impl = fu_input_stream_get_stream_impl(FU_INPUT_STREAM(partial_stream));
+	if (impl == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Composite streams only support Rust-based streams");
 		return FALSE;
 	}
 
-	/* success */
-	g_ptr_array_add(self->items, g_steal_pointer(&item));
+	/* keep a GObject ref for lifecycle management */
+	g_ptr_array_add(self->partial_streams, g_object_ref(partial_stream));
+
+	fu_rs_composite_input_stream_add_stream(self->rust, impl, psize);
 	return TRUE;
 }
 
@@ -221,32 +191,14 @@ fu_composite_input_stream_tell(FuInputStream *stream)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), -1);
-	return self->pos;
+	return fu_rs_composite_input_stream_tell(self->rust);
 }
 
 static gboolean
 fu_composite_input_stream_can_seek(FuInputStream *stream)
 {
-	return TRUE;
-}
-
-static FuCompositeInputStreamItem *
-fu_composite_input_stream_get_item_for_offset(FuCompositeInputStream *self,
-					      gsize offset,
-					      GError **error)
-{
-	for (guint i = 0; i < self->items->len; i++) {
-		FuCompositeInputStreamItem *item = g_ptr_array_index(self->items, i);
-		gsize item_size = fu_partial_input_stream_get_size(item->partial_stream);
-		if (offset < item->global_offset + item_size)
-			return item;
-	}
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_DATA,
-		    "offset is 0x%x out of range",
-		    (guint)offset);
-	return NULL;
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
+	return fu_rs_composite_input_stream_can_seek(self->rust);
 }
 
 static gboolean
@@ -261,16 +213,21 @@ fu_composite_input_stream_seek(FuInputStream *stream,
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* reset */
-	self->pos_offset = 0;
-	self->last_item = NULL;
-
-	if (type == G_SEEK_CUR) {
-		self->pos += offset;
-	} else if (type == G_SEEK_END) {
-		self->pos = self->total_size + offset;
-	} else {
-		self->pos = offset;
+	if (!fu_rs_composite_input_stream_seek(self->rust, offset, (gint32)type)) {
+		if (offset >= 0)
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "seek to 0x%" G_GINT64_MODIFIER "x failed",
+				    (guint64)offset); /* nocheck:error */
+		else
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "seek to %" G_GINT64_MODIFIER "d failed",
+				    offset); /* nocheck:error */
+		fwupd_error_convert(error);
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -298,36 +255,30 @@ fu_composite_input_stream_read_fn(FuInputStream *stream,
 				  GError **error)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
-	FuCompositeInputStreamItem *item;
 	gssize rc;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
 
-	item =
-	    fu_composite_input_stream_get_item_for_offset(self, self->pos + self->pos_offset, NULL);
-	if (item == NULL)
-		return 0;
-	if (item != self->last_item) {
-		if (!g_seekable_seek(G_SEEKABLE(item->partial_stream),
-				     self->pos + self->pos_offset - item->global_offset,
-				     G_SEEK_SET,
-				     cancellable,
-				     error))
-			return -1;
-		self->last_item = item;
-	}
-	rc = fu_input_stream_read(FU_INPUT_STREAM(item->partial_stream),
-				  buffer,
-				  count,
-				  cancellable,
-				  error);
-	if (rc < 0)
-		return rc;
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
+		return -1;
 
-	/* we have to keep track of this in case we have to switch the FuCompositeInputStreamItem
-	 * without an explicit seek */
-	self->pos += rc;
+	rc = fu_rs_composite_input_stream_read(self->rust, buffer, count);
+	if (rc < 0) {
+		g_set_error(error,
+			    G_IO_ERROR, /* nocheck:error */
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(-rc),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "failed to read %zu bytes: %s",
+			    count,
+			    fwupd_strerror(-rc));
+		fwupd_error_convert(error);
+		return -1;
+	}
+
 	return rc;
 }
 
@@ -335,8 +286,17 @@ static void
 fu_composite_input_stream_finalize(GObject *object)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(object);
-	g_ptr_array_unref(self->items);
+	/* must free the Rust stream first */
+	fu_rs_composite_input_stream_free(self->rust);
+	g_ptr_array_unref(self->partial_streams);
 	G_OBJECT_CLASS(fu_composite_input_stream_parent_class)->finalize(object);
+}
+
+static FuRsStreamImpl *
+fu_composite_input_stream_get_stream_impl(FuInputStream *stream)
+{
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
+	return fu_rs_composite_input_stream_get_stream_impl(self->rust);
 }
 
 static void
@@ -348,12 +308,13 @@ fu_composite_input_stream_class_init(FuCompositeInputStreamClass *klass)
 	istream_class->tell = fu_composite_input_stream_tell;
 	istream_class->can_seek = fu_composite_input_stream_can_seek;
 	istream_class->seek = fu_composite_input_stream_seek;
+	istream_class->get_stream_impl = fu_composite_input_stream_get_stream_impl;
 	object_class->finalize = fu_composite_input_stream_finalize;
 }
 
 static void
 fu_composite_input_stream_init(FuCompositeInputStream *self)
 {
-	self->items =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_composite_input_stream_item_free);
+	self->rust = fu_rs_composite_input_stream_new();
+	self->partial_streams = g_ptr_array_new_with_free_func(g_object_unref);
 }

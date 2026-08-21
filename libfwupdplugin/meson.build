@@ -176,6 +176,7 @@ fwupdplugin_src = [
   'fu-io-channel.c', # fuzzing
   'fu-ioctl.c', # fuzzing
   'fu-json-firmware.c', # fuzzing
+  'fu-json-parser.c',
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
@@ -345,6 +346,7 @@ fwupdplugin_headers = [
   'fu-io-channel.h',
   'fu-ioctl.h',
   'fu-json-firmware.h',
+  'fu-json-parser.h',
   'fu-kenv.h',
   'fu-kernel.h',
   'fu-kernel-search-path.h',
@@ -378,7 +380,6 @@ fwupdplugin_headers = [
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
   'fu-stream-input-stream.h',
-  'fu-stream-input-stream-private.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',

@@ -23,6 +23,9 @@ gboolean
 fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
+fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, gpointer stream_impl, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
 fwupd_jcat_file_import_bytes(FwupdJcatFile *self, GBytes *blob, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean

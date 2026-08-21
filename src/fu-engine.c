@@ -4845,7 +4845,6 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuInputStream) istream = NULL;
-	g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
@@ -4859,8 +4858,9 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	g_istream = fu_input_stream_as_g_input_stream(istream);
-	if (!fwupd_jcat_file_import_stream(jcat_file, g_istream, error))
+	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
+						fu_input_stream_get_stream_impl(istream),
+						error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -4950,7 +4950,6 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuInputStream) istream = NULL;
-	g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
@@ -4980,8 +4979,9 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 
 	/* verify JCatFile, or create a dummy one from legacy data */
 	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
-	g_istream = fu_input_stream_as_g_input_stream(istream);
-	if (!fwupd_jcat_file_import_stream(jcat_file, g_istream, error))
+	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
+						fu_input_stream_get_stream_impl(istream),
+						error))
 		return FALSE;
 
 	/* distrusting RSA? */
@@ -7710,7 +7710,6 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
-	g_autoptr(GInputStream) g_istream_json = NULL; /* nocheck:blocked */
 	g_autoptr(FuInputStream) istream_json = NULL;
 	g_autoptr(FuInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -7741,11 +7740,10 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
-	g_istream_json = fu_input_stream_as_g_input_stream(istream_json);
-	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       g_istream_json,
-						       FWUPD_JSON_LOAD_FLAG_NONE,
-						       error);
+	json_node = fu_json_parser_load_from_stream(json_parser,
+						    istream_json,
+						    FWUPD_JSON_LOAD_FLAG_NONE,
+						    error);
 	if (json_node == NULL)
 		return FALSE;
 	json_obj = fwupd_json_node_get_object(json_node, error);

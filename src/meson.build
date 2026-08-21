@@ -13,6 +13,7 @@ engine_dep = [
   polkit,
   sqlite,
   fwupdplugin_rs_dep,
+  fwupd_rust_ffi_dep,
 ]
 
 if get_option('passim').allowed()
