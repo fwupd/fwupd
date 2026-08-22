@@ -248,11 +248,14 @@ fu_ioctl_execute(FuIoctl *self,
 {
 	FuDeviceEvent *event = NULL;
 	g_autoptr(GString) event_id = NULL;
+	gboolean emulated =
+	    fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
+	gboolean save_events =
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS);
 
 	/* need event ID */
-	if (fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+	if (emulated || save_events) {
 		event_id = g_string_new(self->event_id->str);
 		if (g_strcmp0(event_id->str, "Ioctl:") == 0) {
 			fu_ioctl_append_key_as_u16(event_id, "Request", request);
@@ -265,7 +268,7 @@ fu_ioctl_execute(FuIoctl *self,
 	}
 
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED)) {
+	if (emulated) {
 		event = fu_device_load_event(FU_DEVICE(self->udev_device), event_id->str, error);
 		if (event == NULL)
 			return FALSE;
@@ -302,10 +305,8 @@ fu_ioctl_execute(FuIoctl *self,
 	}
 
 	/* save */
-	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+	if (save_events)
 		event = fu_device_save_event(FU_DEVICE(self->udev_device), event_id->str);
-	}
 
 	/* the buffer might be specified indirectly */
 	if (buf != NULL) {

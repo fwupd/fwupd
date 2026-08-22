@@ -2031,13 +2031,21 @@ GPtrArray *
 fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) interfaces = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!fu_usb_device_ensure_interfaces(self, error))
 		return NULL;
-	return g_ptr_array_ref(priv->interfaces);
+
+	interfaces = g_ptr_array_ref(priv->interfaces);
+	if (interfaces == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no interfaces");
+		return NULL;
+	}
+
+	return g_steal_pointer(&interfaces);
 }
 
 /**
