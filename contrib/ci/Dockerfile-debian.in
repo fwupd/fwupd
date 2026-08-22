@@ -1,5 +1,5 @@
 # -*- mode: dockerfile -*-
-FROM debian:%%%VERSION%%%
+FROM debian:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
@@ -7,13 +7,13 @@ ENV CI_NETWORK=true
 ENV DEBIAN_FRONTEND=noninteractive
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-%%%SETUP%%% \
+{{SETUP}} \
     apt-get update -qq; \
     apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends \
     dpkg-dev \
     python3-apt \
-%%%DEPENDENCIES%%%; \
+{{DEPENDENCIES}}; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /github/workspace
