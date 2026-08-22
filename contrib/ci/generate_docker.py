@@ -7,9 +7,13 @@
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
+import jinja2
+import jinja2.environment
+
 from pathlib import Path
 
 from fwupd_setup_helpers import ARCH_TO_DEPS_MAP, parse_dependencies
@@ -26,7 +30,7 @@ def get_container_cmd():
 
 def generate_dockerfile(
     distro: str, version: str, arch: str, variant: str | None
-) -> str:
+) -> jinja2.environment.TemplateStream:
     """Generate a Dockerfile from the template for the given distro/version/arch/variant."""
 
     directory = os.path.dirname(sys.argv[0])
@@ -43,17 +47,8 @@ def generate_dockerfile(
         template_file = next(p for p in dockerfiles if p.exists())
     except StopIteration:
         raise FileNotFoundError(f"Missing template Dockerfile for {distro}") from None
-    with open(template_file) as file:
-        content = file.read()
 
-    content = content.replace("%%%VERSION%%%", version)
-
-    # special cases
-    match (distro, variant):
-        case ("debian", "i386"):
-            content = content.replace(
-                f"FROM debian:{version}", f"FROM i386/debian:{version}"
-            )
+    data = {"VERSION": version}
 
     # insert commands to prepare cross compile
     if cross:
@@ -62,7 +57,7 @@ def generate_dockerfile(
     dpkg --add-architecture {cross};"""
     else:
         cross_setup = "    "
-    content = content.replace("%%%SETUP%%%", cross_setup)
+    data["SETUP"] = cross_setup
 
     # insert dependencies to install
     if cross:
@@ -81,16 +76,29 @@ def generate_dockerfile(
     deps = sorted(set(deps))
     deps = [f"    {i}" for i in deps]
     deps = " \\\n".join(deps)
-    content = content.replace("%%%DEPENDENCIES%%%", deps)
+    data["DEPENDENCIES"] = deps
 
     # install android rust target
     rustup: list[str] = []
     if variant == "android":
         rustup.append("COPY contrib/ci/android.sh .")
         rustup.append("RUN sh android.sh")
-    content = content.replace("%%%RUSTUP%%%", "\n".join(rustup))
+    if rustup:
+        data["RUSTUP"] = "\n".join(rustup)
 
-    return content
+    # special cases
+    match (distro, variant):
+        case ("debian", "i386"):
+            data["ARCH_PREFIX"] = "i386/"
+
+    loader = jinja2.FileSystemLoader(template_file.parent)
+    jinja_env = jinja2.Environment(
+        loader=loader,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    jinja_tmpl = jinja_env.get_template(template_file.name)
+    return jinja_tmpl.stream(data)
 
 
 parser = argparse.ArgumentParser(
@@ -116,10 +124,9 @@ subparsers.add_parser(
 
 args = parser.parse_args()
 
-content = generate_dockerfile(args.distro, args.version, args.arch, args.variant)
-
+stream = generate_dockerfile(args.distro, args.version, args.arch, args.variant)
 with open("Dockerfile", "w") as file:
-    file.write(content)
+    stream.dump(file)
 
 if args.command == "build":
     cmd = get_container_cmd()
