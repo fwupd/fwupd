@@ -31,7 +31,7 @@ env:
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
   ARCH_CONTAINER_TAG: "latest"  # 0002
-  CENTOS_CONTAINER_TAG: "2026-09-18.2"
+  CENTOS_CONTAINER_TAG: "2026-10-02.0"
   DEBIAN_CONTAINER_TAG: "2026-09-18.2"
   UBUNTU_CONTAINER_TAG: "2026-09-18.2"
   FEDORA_CONTAINER_TAG: "2026-09-18.2"
@@ -47,7 +47,7 @@ jobs:
       matrix:
         distros:
           - { DISTRO: arch, VERSION: latest, ARCH: amd64 , FORCE_REBUILD: true }
-          - { DISTRO: centos, VERSION: stream9, ARCH: amd64 }
+          - { DISTRO: centos, VERSION: stream10, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: i386 }
           # - { DISTRO: debian, VERSION: unstable, ARCH: amd64, VARIANT: tartan }
