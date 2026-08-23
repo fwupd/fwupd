@@ -15,7 +15,7 @@ jobs:
       matrix:
         distros:
           - { DISTRO: arch, VERSION: latest, ARCH: amd64 }
-          - { DISTRO: centos, VERSION: stream9, ARCH: amd64 }
+          - { DISTRO: centos, VERSION: stream10, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: amd64, VARIANT: i386 }
           - { DISTRO: debian, VERSION: unstable, ARCH: amd64, VARIANT: tartan }

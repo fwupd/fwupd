@@ -551,13 +551,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 2.68.0)</version>
+        <version>(>= 2.80.0)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 2.68.0)</version>
+        <version>(>= 2.80.0)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />

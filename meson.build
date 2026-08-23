@@ -284,16 +284,16 @@ localedir = join_paths(prefix, get_option('localedir'))
 diffcmd = find_program('diff')
 glib = dependency(
   'glib-2.0',
-  version: '>= 2.68.0',
+  version: '>= 2.80.0',
   include_type: 'system',
-) # limited by RHEL-9, which has v2.68.4
+)
 gio = dependency(
   'gio-2.0',
-  version: '>= 2.68.0',
-) # limited by RHEL-9, which has v2.68.4
+  version: '>= 2.80.0',
+)
 giounix = dependency(
   'gio-unix-2.0',
-  version: '>= 2.68.0',
+  version: '>= 2.80.0',
   required: false,
 )
 if giounix.found()
