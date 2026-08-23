@@ -152,22 +152,33 @@ class Builder:
                 sys.exit(1)
         return dst
 
-    def build_automake_project(self, srcdir: str, argv=None) -> None:
+    def build_automake_project(
+        self, srcdir: str, argv=None, autogen_in_root=False
+    ) -> None:
         """configure and build the autoconf/automake project"""
         if not argv:
             argv = []
         srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
         if not os.path.exists(srcdir_build):
             os.makedirs(srcdir_build, exist_ok=True)
-            subprocess.run(
-                [
-                    "../autogen.sh",
-                    f"--prefix={self.builddir}",
-                ]
-                + argv,
-                cwd=srcdir_build,
-                check=True,
-            )
+
+            if autogen_in_root:
+                subprocess.run(
+                    ["./autogen.sh"] + argv,
+                    cwd=srcdir,
+                    check=True,
+                )
+                subprocess.run(
+                    ["../configure", f"--prefix={self.builddir}"] + argv,
+                    cwd=srcdir_build,
+                    check=True,
+                )
+            else:
+                subprocess.run(
+                    ["../autogen.sh", f"--prefix={self.builddir}"] + argv,
+                    cwd=srcdir_build,
+                    check=True,
+                )
             subprocess.run(["make", "install"], cwd=srcdir_build, check=True)
 
     def add_work_includedir(self, value: str) -> None:
@@ -357,6 +368,16 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
+
+    # pcre
+    src = bld.checkout_source(
+        "pcre2", url="https://github.com/PCRE2Project/pcre2.git", commit="pcre2-10.42"
+    )
+    bld.build_automake_project(src, autogen_in_root=True, argv=["--disable-shared"])
+    # NOTE: the pcre2 ldflags are added *after* GLib below, as glib-2-80 links
+    # gregex.c against pcre2 and static archives must be listed after the lib
+    # that references them
+
     # libusb
     src = bld.checkout_source(
         "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"
@@ -367,7 +388,7 @@ def _build(bld: Builder) -> None:
 
     # GLib
     src = bld.checkout_source(
-        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
+        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-80"
     )
     bld.build_meson_project(
         src,
@@ -376,10 +397,9 @@ def _build(bld: Builder) -> None:
             "-Dselinux=disabled",
             "-Dnls=disabled",
             "-Dlibelf=disabled",
+            "-Dintrospection=disabled",
             "-Dbsymbolic_functions=false",
             "-Dtests=false",
-            "-Dinternal_pcre=true",
-            "--force-fallback-for=libpcre",
         ],
     )
     bld.add_work_includedir("include/glib-2.0")
@@ -389,6 +409,10 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgobject-2.0.a")
     bld.add_build_ldflag("lib/libglib-2.0.a")
     bld.add_build_ldflag("lib/libgthread-2.0.a")
+
+    # pcre2, listed after GLib as gregex.c references it (see above)
+    bld.add_build_ldflag("lib/libpcre2-8.a")
+    bld.add_build_ldflag("lib/libpcre2-posix.a")
 
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
