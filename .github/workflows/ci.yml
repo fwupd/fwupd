@@ -42,6 +42,14 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run -v --show-diff-on-failure --hook-stage commit --all-files
 
+  containers:
+    permissions:
+      contents: read
+      packages: write
+    needs: pre-commit
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    uses: ./.github/workflows/create_containers.yml
+
   bsd:
     permissions:
       contents: read
@@ -52,11 +60,12 @@ jobs:
   linux:
     permissions:
       contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    needs: [pre-commit, containers]
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') && needs.containers.result == 'success' }}
     uses: ./.github/workflows/linux.yml
     with:
       publish: false
+      container_lut: ${{ needs.containers.outputs.container_lut }}
     secrets: inherit
 
   macos:
