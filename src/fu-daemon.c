@@ -91,10 +91,7 @@ fu_daemon_set_status(FuDaemon *self, FwupdStatus status)
 	g_return_if_fail(FU_IS_DAEMON(self));
 
 	/* cancel anything pending */
-	if (priv->set_status_id != 0) {
-		g_source_remove(priv->set_status_id);
-		priv->set_status_id = 0;
-	}
+	g_clear_handle_id(&priv->set_status_id, g_source_remove);
 
 	/* sanity check */
 	if (priv->status == status)
