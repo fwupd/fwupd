@@ -551,8 +551,11 @@ fu_mm_mbim_device_probe(FuDevice *device, GError **error)
 					       "USB\\VID_05C6&PID_9008",
 					       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 	}
-	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_FIBOCOM)
+	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_FIBOCOM) {
 		fu_device_add_protocol(device, "com.google.fastboot");
+		fu_device_set_remove_delay(device, 20000);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	}
 	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_MBIM, error);
 }
 
