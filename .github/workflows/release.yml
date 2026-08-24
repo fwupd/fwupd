@@ -6,12 +6,20 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
+  containers:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/create_containers.yml
+
   linux:
     permissions:
       contents: read
+    needs: [containers]
+    if: ${{ always() && needs.containers.result == 'success' }}
     uses: ./.github/workflows/linux.yml
     with:
       publish: true
+      container_lut: ${{ needs.containers.outputs.container_lut }}
     secrets: inherit
 
   windows:

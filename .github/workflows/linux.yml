@@ -4,6 +4,9 @@ on:
       publish:
         required: true
         type: boolean
+      container_lut:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -39,6 +42,32 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find container image
+        id: find_container
+        env:
+          DISTRO: ${{ matrix.env.DISTRO }}
+          ARCH: ${{ matrix.env.ARCH }}
+          VARIANT: ${{ matrix.env.VARIANT }}
+          CONTAINER: ${{ matrix.env.CONTAINER }}
+          CONTAINER_LUT: ${{ inputs.container_lut }}
+        run: |
+          if [ -z "${CONTAINER}" ]; then
+            IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
+          else
+            IDENTIFIER="${CONTAINER}"
+          fi
+          CONTAINER_URI=$(echo "$CONTAINER_LUT" | jq -r --arg key "$IDENTIFIER" '.[$key]')
+          if [ "${CONTAINER_URI}" = "null" ]; then
+            echo "$CONTAINER_LUT" | jq
+            echo "::error::Unable to find key '${IDENTIFIER}' in above container LUT"
+            exit 1
+          fi
+          echo "Using container ${CONTAINER_URI}"
+          if ! docker manifest inspect "${CONTAINER_URI}"; then
+            echo "::error::The requested image ${CONTAINER_URI} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
+            exit 1
+          fi
+          echo "container_uri=${CONTAINER_URI}" >> "$GITHUB_OUTPUT"
       - name: Download tarball
         if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -49,6 +78,7 @@ jobs:
           CI_NETWORK: true
           VERSION: ${{ needs.library.outputs.version }}
           PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+          CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
@@ -57,7 +87,7 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "${CONTAINER_URI}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
         if: ${{ !cancelled() }}
@@ -81,6 +111,7 @@ jobs:
         env:
           CI_NETWORK: true
           PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+          CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
@@ -89,7 +120,7 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "${CONTAINER_URI}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
       - name: Save any coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

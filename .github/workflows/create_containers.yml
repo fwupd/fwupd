@@ -1,8 +1,19 @@
 name: Create containers
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches: ['**']
+    paths:
+      - '.github/workflows/create_containers.yml'
+  workflow_call:
+    outputs:
+      container_lut:
+        description: "A JSON lookup table for container URIs"
+        value: ${{ jobs.container_mapping.outputs.container_lut }}
+
+env:
+  # We currently have one tag for all containers, bumping it will rebuild
+  # them all.
+  CONTAINER_TAG: "2026-08-25.1"
 
 jobs:
   push_to_registry:
@@ -29,7 +40,52 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Assemble container tag
+        id: tag
+        env:
+          DISTRO: ${{ matrix.distros.DISTRO }}
+          ARCH: ${{ matrix.distros.ARCH }}
+          VARIANT: ${{ matrix.distros.VARIANT }}
+          CONTAINER_TAG: ${{ env.CONTAINER_TAG }}
+          USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
+          IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
+          TAG="ghcr.io/${REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+          echo "Using container tag ${TAG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "{\"$IDENTIFIER\": \"$TAG\"}" > "image_${IDENTIFIER}.json"
+      - name: Save the json files containing the container mappings
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: image-map-${{ strategy.job-index }}
+          path: image_*.json
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check if the image already exists
+        id: check_container
+        run: |
+          TAG="${{steps.tag.outputs.tag}}"
+          if docker manifest inspect "${TAG}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Container ${TAG} already exists."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Container ${TAG} does not exist."
+          fi
+      - name: Let the user know
+        if: steps.check_container.outputs.exists != 'true' && github.event_name == 'pull_request'
+        run: |
+          TAG="${{steps.tag.outputs.tag}}"
+          echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
+          exit 1
+      # Steps below here are skipped for pull requests because we don't have permission anyway
       - name: Generate Dockerfile
+        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
         run: >-
           ./contrib/ci/generate_docker.py
           --distro "${{ matrix.distros.DISTRO }}"
@@ -37,28 +93,29 @@ jobs:
           --arch "${{ matrix.distros.ARCH }}"
           ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }}
       - name: Set up Docker Buildx
+        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build container tag
-        id: tag
-        env:
-          DISTRO: ${{ matrix.distros.DISTRO }}
-          ARCH: ${{ matrix.distros.ARCH }}
-          VARIANT: ${{ matrix.distros.VARIANT }}
-        run: |
-          tag="ghcr.io/fwupd/fwupd/fwupd-${DISTRO}-${ARCH}"
-          if [ -n "${VARIANT}" ]; then
-            tag="${tag}-${VARIANT}"
-          fi
-          echo "tag=${tag}:latest" >> "$GITHUB_OUTPUT"
       - name: Push to GitHub Packages
+        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           push: true
           tags: ${{ steps.tag.outputs.tag }}
+
+  container_mapping:
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    outputs:
+      container_lut: ${{ steps.merge.outputs.container_lut }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: image-map-*
+          merge-multiple: true
+      - name: merge individual JSON files into one
+        id: merge
+        run: |
+          jq -s 'add' image_*.json > container_lut.json
+          cat container_lut.json
+          echo "container_lut=$(jq -c . container_lut.json)" >> "$GITHUB_OUTPUT"
