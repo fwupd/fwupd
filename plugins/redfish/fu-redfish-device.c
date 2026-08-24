@@ -1000,10 +1000,7 @@ static void
 fu_redfish_device_set_member(FuRedfishDevice *self, FwupdJsonObject *json_obj_member)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->json_obj_member != NULL) {
-		fwupd_json_object_unref(priv->json_obj_member);
-		priv->json_obj_member = NULL;
-	}
+	g_clear_pointer(&priv->json_obj_member, fwupd_json_object_unref);
 	if (json_obj_member != NULL)
 		priv->json_obj_member = fwupd_json_object_ref(json_obj_member);
 }

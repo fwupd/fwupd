@@ -506,8 +506,7 @@ fu_usb_device_close_internal(FuUsbDevice *self, GError **error)
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
 
-	libusb_close(priv->handle);
-	priv->handle = NULL;
+	g_clear_pointer(&priv->handle, libusb_close);
 	return TRUE;
 }
 

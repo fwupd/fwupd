@@ -717,10 +717,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 	g_autofree gchar *str = NULL;
 
 	/* clear timeout if scheduled */
-	if (item->remove_source != NULL) {
-		g_source_destroy(item->remove_source);
-		item->remove_source = NULL;
-	}
+	g_clear_pointer(&item->remove_source, g_source_destroy);
 
 	/* remove flag on both old and new devices */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {

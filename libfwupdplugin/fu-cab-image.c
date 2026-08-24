@@ -95,10 +95,7 @@ void
 fu_cab_image_set_created(FuCabImage *self, GDateTime *created)
 {
 	g_return_if_fail(FU_IS_CAB_IMAGE(self));
-	if (self->created != NULL) {
-		g_date_time_unref(self->created);
-		self->created = NULL;
-	}
+	g_clear_pointer(&self->created, g_date_time_unref);
 	if (created != NULL)
 		self->created = g_date_time_ref(created);
 }
