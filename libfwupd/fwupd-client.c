@@ -568,7 +568,16 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
 	fwupd_client_object_notify(self, "host-bkc");
 }
 
-static void
+/**
+ * fwupd_client_set_status:
+ * @self: a #FwupdClient
+ * @status: a #FwupdStatus
+ *
+ * Sets the client status. This is thread-safe and can be called from any thread.
+ *
+ * Since: 2.1.8
+ **/
+void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -579,7 +588,16 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 	fwupd_client_object_notify(self, "status");
 }
 
-static void
+/**
+ * fwupd_client_set_percentage:
+ * @self: a #FwupdClient
+ * @percentage: a percentage value from 0 to 100
+ *
+ * Sets the client percentage. This is thread-safe and can be called from any thread.
+ *
+ * Since: 2.1.8
+ **/
+void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);

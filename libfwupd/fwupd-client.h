@@ -673,6 +673,10 @@ void
 fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_set_status(FwupdClient *self, FwupdStatus status) G_GNUC_NON_NULL(1);
+void
+fwupd_client_set_percentage(FwupdClient *self, gdouble percentage) G_GNUC_NON_NULL(1);
 
 /* only needed when not using D-Bus in in-tree CLIs */
 typedef struct FwupdClientSyncImpl FwupdClientSyncImpl;
