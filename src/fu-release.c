@@ -69,7 +69,7 @@ fu_release_to_string(FuRelease *self)
 	if (self->hard_reqs != NULL)
 		fwupd_codec_string_append_hex(str, idt, "HardReqs", self->hard_reqs->len);
 	fwupd_codec_string_append_hex(str, idt, "Priority", self->priority);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**
@@ -346,7 +346,7 @@ fu_release_get_localized_xpath(FuRelease *self, const gchar *element)
 		xpath_locale = g_strdup_printf("%s[@xml:lang='%s']|", element, locale);
 		g_string_prepend(xpath, xpath_locale);
 	}
-	return g_string_free(xpath, FALSE);
+	return g_string_free_and_steal(xpath);
 }
 
 /* convert hex and decimal versions to dotted style */
@@ -593,7 +593,7 @@ fu_release_verfmts_to_string(GPtrArray *verfmts)
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static gboolean

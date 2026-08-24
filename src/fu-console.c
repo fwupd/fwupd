@@ -208,7 +208,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 			    _("Please enter a number from 0 to %u:"),
 			    maxnum);
 			g_string_append(str, " ");
-			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free_and_steal(g_steal_pointer(&str));
 		}
 	} while (TRUE);
 	return answer;
@@ -254,7 +254,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 					       "Y",
 					       "N");
 			g_string_append(str, " ");
-			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free_and_steal(g_steal_pointer(&str));
 		}
 	} while (TRUE);
 	return FALSE;

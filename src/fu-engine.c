@@ -398,7 +398,7 @@ fu_engine_config_get_esp_location(FuEngine *self)
 		g_autoptr(GString) esp_location_tmp = g_string_new(esp_location);
 		g_warning("removing trailing slash from EspLocation");
 		g_string_truncate(esp_location_tmp, esp_location_tmp->len - 1);
-		return g_string_free(g_steal_pointer(&esp_location_tmp), FALSE);
+		return g_string_free_and_steal(g_steal_pointer(&esp_location_tmp));
 	}
 	return g_steal_pointer(&esp_location);
 }
@@ -7239,7 +7239,7 @@ fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob)
 	g_return_if_fail(plugin_glob != NULL);
 	str = g_string_new(plugin_glob);
 	g_string_replace(str, "-", "_", 0);
-	g_ptr_array_add(self->plugin_filter, g_string_free(str, FALSE));
+	g_ptr_array_add(self->plugin_filter, g_string_free_and_steal(str));
 }
 
 static gboolean

@@ -690,7 +690,7 @@ fu_usb_device_build_physical_id(struct libusb_device *dev)
 	g_string_append_printf(platform_id, "%02x:", libusb_get_bus_number(dev));
 	fu_usb_device_build_parent_port_number(platform_id, dev);
 	g_string_truncate(platform_id, platform_id->len - 1);
-	return g_string_free(platform_id, FALSE);
+	return g_string_free_and_steal(platform_id);
 }
 
 static gboolean

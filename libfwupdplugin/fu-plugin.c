@@ -625,7 +625,7 @@ fu_plugin_to_string(FuPlugin *self)
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
 	fu_plugin_add_string(self, 0, str);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /* order of usefulness to the user */
@@ -3123,7 +3123,7 @@ fu_plugin_convert_gtype_to_name(GType gtype)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void

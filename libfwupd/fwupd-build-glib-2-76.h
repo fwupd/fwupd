@@ -39,4 +39,6 @@ _g_clear_fd_ignore_error(int *fd_ptr)
 
 #define g_autofd _GLIB_CLEANUP(_g_clear_fd_ignore_error)
 
+#define g_string_free_and_steal(str) g_string_free(str, FALSE)
+
 G_END_DECLS

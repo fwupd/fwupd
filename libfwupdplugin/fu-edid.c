@@ -215,7 +215,7 @@ fu_edid_strsafe(const guint8 *buf, gsize bufsz)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static gboolean

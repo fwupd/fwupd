@@ -37,7 +37,7 @@ fu_engine_emulator_phase_to_filename(guint composite_cnt,
 	if (write_cnt != FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT)
 		g_string_append_printf(fn, "-%u", write_cnt);
 	g_string_append(fn, ".json");
-	return g_string_free(g_steal_pointer(&fn), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&fn));
 }
 
 gboolean

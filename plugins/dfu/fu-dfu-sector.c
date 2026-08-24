@@ -128,5 +128,5 @@ fu_dfu_sector_to_string(FuDfuSector *self)
 			       priv->size,
 			       priv->cap,
 			       caps_str);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }

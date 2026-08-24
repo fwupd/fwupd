@@ -681,7 +681,7 @@ fu_history_convert_hash_to_string(GHashTable *hash)
 			g_string_append(str, ";");
 		g_string_append_printf(str, "%s=%s", key, value);
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 /* nocheck:name unset some flags we don't want to store */

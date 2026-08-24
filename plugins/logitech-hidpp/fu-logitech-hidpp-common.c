@@ -19,7 +19,7 @@ fu_logitech_hidpp_msg_to_string(FuStructLogitechHidppMsg *st)
 
 	if (!fu_logitech_hidpp_msg_is_error(st, &error))
 		g_string_append_printf(str, "\nerror:       %s", error->message);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /* filter HID++1.0 messages */
@@ -330,5 +330,5 @@ fu_logitech_hidpp_format_version(const gchar *name, guint8 major, guint8 minor, 
 		g_string_append_c(str, name[i]);
 	}
 	g_string_append_printf(str, "%02x.%02x_B%04x", major, minor, build);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }

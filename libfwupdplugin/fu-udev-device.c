@@ -821,7 +821,7 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /* private */
