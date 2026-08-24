@@ -353,8 +353,7 @@ fu_processor_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ProcessorEntrysignPspVersion") == 0) {
-		g_free(self->entrysign_psp_ver);
-		self->entrysign_psp_ver = g_strdup(value);
+		g_set_str(&self->entrysign_psp_ver, value);
 		return TRUE;
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no supported");

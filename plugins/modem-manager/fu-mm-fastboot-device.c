@@ -29,8 +29,7 @@ fu_mm_fastboot_device_set_detach_at(FuMmFastbootDevice *self, const gchar *detac
 {
 	g_return_if_fail(FU_IS_MM_FASTBOOT_DEVICE(self));
 	g_return_if_fail(detach_at != NULL);
-	g_free(self->detach_at);
-	self->detach_at = g_strdup(detach_at);
+	g_set_str(&self->detach_at, detach_at);
 }
 
 static gboolean

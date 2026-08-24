@@ -89,8 +89,7 @@ fu_efi_signature_set_owner(FuEfiSignature *self, const gchar *owner)
 {
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_EFI_SIGNATURE(self));
-	g_free(priv->owner);
-	priv->owner = g_strdup(owner);
+	g_set_str(&priv->owner, owner);
 }
 
 /* private */

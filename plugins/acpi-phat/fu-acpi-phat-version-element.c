@@ -77,16 +77,14 @@ fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 static void
 fu_acpi_phat_version_element_set_guid(FuAcpiPhatVersionElement *self, const gchar *guid)
 {
-	g_free(self->guid);
-	self->guid = g_strdup(guid);
+	g_set_str(&self->guid, guid);
 }
 
 static void
 fu_acpi_phat_version_element_set_producer_id(FuAcpiPhatVersionElement *self,
 					     const gchar *producer_id)
 {
-	g_free(self->producer_id);
-	self->producer_id = g_strdup(producer_id);
+	g_set_str(&self->producer_id, producer_id);
 }
 
 static gboolean

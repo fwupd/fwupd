@@ -58,8 +58,7 @@ fu_uefi_pk_device_get_key_id(FuUefiPkDevice *self)
 static void
 fu_uefi_pk_device_set_key_id(FuUefiPkDevice *self, const gchar *key_id)
 {
-	g_free(self->key_id);
-	self->key_id = g_strdup(key_id);
+	g_set_str(&self->key_id, key_id);
 }
 
 static gboolean

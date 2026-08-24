@@ -35,8 +35,7 @@ fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const
 	g_return_if_fail(apply_time != NULL);
 	if (g_strcmp0(self->apply_time, apply_time) == 0)
 		return;
-	g_free(self->apply_time);
-	self->apply_time = g_strdup(apply_time);
+	g_set_str(&self->apply_time, apply_time);
 }
 
 static GString *
@@ -166,8 +165,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		location_tmp = fwupd_json_object_get_string(json_obj, "@odata.id", error);
 		if (location_tmp == NULL)
 			return FALSE;
-		g_free(location);
-		location = g_strdup(location_tmp);
+		g_set_str(&location, location_tmp);
 	}
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }

@@ -30,8 +30,7 @@ fu_volume_write_file_cb(FuVolume *volume, const gchar *filename, gpointer user_d
 {
 	FuVolumeWriteFileHelper *helper = (FuVolumeWriteFileHelper *)user_data;
 	helper->cnt++;
-	g_free(helper->filename);
-	helper->filename = g_strdup(filename);
+	g_set_str(&helper->filename, filename);
 }
 
 static void

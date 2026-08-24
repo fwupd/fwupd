@@ -323,8 +323,7 @@ fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id)
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(self));
 	if (g_strcmp0(priv->dpcd_dev_id, dpcd_dev_id) == 0)
 		return;
-	g_free(priv->dpcd_dev_id);
-	priv->dpcd_dev_id = g_strdup(dpcd_dev_id);
+	g_set_str(&priv->dpcd_dev_id, dpcd_dev_id);
 }
 
 /**

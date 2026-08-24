@@ -111,8 +111,7 @@ fu_jcat_context_set_keyring_path(FuJcatContext *self, const gchar *path)
 {
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(path != NULL);
-	g_free(self->keyring_path);
-	self->keyring_path = g_strdup(path);
+	g_set_str(&self->keyring_path, path);
 }
 
 /**

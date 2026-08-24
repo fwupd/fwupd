@@ -84,8 +84,7 @@ fu_acpi_phat_record_parse(FuAcpiPhat *self,
 static void
 fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 {
-	g_free(self->oem_id);
-	self->oem_id = g_strdup(oem_id);
+	g_set_str(&self->oem_id, oem_id);
 }
 
 static gboolean

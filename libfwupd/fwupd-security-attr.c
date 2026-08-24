@@ -202,8 +202,7 @@ fwupd_security_attr_set_bios_setting_id(FwupdSecurityAttr *self, const gchar *id
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
 	if (priv->bios_setting_id == id)
 		return;
-	g_free(priv->bios_setting_id);
-	priv->bios_setting_id = g_strdup(id);
+	g_set_str(&priv->bios_setting_id, id);
 }
 
 /**
@@ -389,16 +388,11 @@ fwupd_security_attr_set_appstream_id(FwupdSecurityAttr *self, const gchar *appst
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->appstream_id, appstream_id) == 0)
-		return;
-
 	/* sanity check */
 	if (appstream_id != NULL && !g_str_has_prefix(appstream_id, "org.fwupd.hsi."))
 		g_critical("HSI attributes need to have a 'org.fwupd.hsi.' prefix");
 
-	g_free(priv->appstream_id);
-	priv->appstream_id = g_strdup(appstream_id);
+	g_set_str(&priv->appstream_id, appstream_id);
 }
 
 /**
@@ -433,13 +427,7 @@ fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->name, name) == 0)
-		return;
-
-	g_free(priv->name);
-	priv->name = g_strdup(name);
+	g_set_str(&priv->name, name);
 }
 
 /**
@@ -474,13 +462,7 @@ void
 fwupd_security_attr_set_bios_setting_target_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->bios_setting_target_value, value) == 0)
-		return;
-
-	g_free(priv->bios_setting_target_value);
-	priv->bios_setting_target_value = g_strdup(value);
+	g_set_str(&priv->bios_setting_target_value, value);
 }
 
 /**
@@ -514,13 +496,7 @@ void
 fwupd_security_attr_set_bios_setting_current_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->bios_setting_current_value, value) == 0)
-		return;
-
-	g_free(priv->bios_setting_current_value);
-	priv->bios_setting_current_value = g_strdup(value);
+	g_set_str(&priv->bios_setting_current_value, value);
 }
 
 /**
@@ -554,13 +530,7 @@ void
 fwupd_security_attr_set_kernel_current_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->kernel_current_value, value) == 0)
-		return;
-
-	g_free(priv->kernel_current_value);
-	priv->kernel_current_value = g_strdup(value);
+	g_set_str(&priv->kernel_current_value, value);
 }
 
 /**
@@ -594,13 +564,7 @@ void
 fwupd_security_attr_set_kernel_target_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->kernel_target_value, value) == 0)
-		return;
-
-	g_free(priv->kernel_target_value);
-	priv->kernel_target_value = g_strdup(value);
+	g_set_str(&priv->kernel_target_value, value);
 }
 
 /**
@@ -617,13 +581,7 @@ fwupd_security_attr_set_title(FwupdSecurityAttr *self, const gchar *title)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->title, title) == 0)
-		return;
-
-	g_free(priv->title);
-	priv->title = g_strdup(title);
+	g_set_str(&priv->title, title);
 }
 
 /**
@@ -640,13 +598,7 @@ fwupd_security_attr_set_description(FwupdSecurityAttr *self, const gchar *descri
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->description, description) == 0)
-		return;
-
-	g_free(priv->description);
-	priv->description = g_strdup(description);
+	g_set_str(&priv->description, description);
 }
 
 /**
@@ -663,13 +615,7 @@ fwupd_security_attr_set_plugin(FwupdSecurityAttr *self, const gchar *plugin)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->plugin, plugin) == 0)
-		return;
-
-	g_free(priv->plugin);
-	priv->plugin = g_strdup(plugin);
+	g_set_str(&priv->plugin, plugin);
 }
 
 /**
@@ -686,13 +632,7 @@ fwupd_security_attr_set_fwupd_version(FwupdSecurityAttr *self, const gchar *fwup
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->fwupd_version, fwupd_version) == 0)
-		return;
-
-	g_free(priv->fwupd_version);
-	priv->fwupd_version = g_strdup(fwupd_version);
+	g_set_str(&priv->fwupd_version, fwupd_version);
 }
 
 /**
@@ -709,13 +649,7 @@ fwupd_security_attr_set_url(FwupdSecurityAttr *self, const gchar *url)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->url, url) == 0)
-		return;
-
-	g_free(priv->url);
-	priv->url = g_strdup(url);
+	g_set_str(&priv->url, url);
 }
 /**
  * fwupd_security_attr_get_created:
