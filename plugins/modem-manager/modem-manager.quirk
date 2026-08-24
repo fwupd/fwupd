@@ -215,28 +215,32 @@ Flags = disable-zlp
 
 # Rolling RW101
 [USB\VID_33F8&PID_0301]
-GType = FuMmFastbootDevice
+GType = FuMmMbimDevice
 Summary = Rolling RW101-GL Module
+ModemManagerMbimDetachMethod = fibocom
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_33F8&PID_D00D
 
 # Rolling RW101-CAT12
 [USB\VID_33F8&PID_0302]
-GType = FuMmFastbootDevice
+GType = FuMmMbimDevice
 Summary = Rolling RW101-GL Module
+ModemManagerMbimDetachMethod = fibocom
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_33F8&PID_D00D
 
 # Rolling RW101 Debug
 [USB\VID_33F8&PID_01A8]
-GType = FuMmFastbootDevice
+GType = FuMmMbimDevice
 Summary = Rolling RW101-GL Module
+ModemManagerMbimDetachMethod = fibocom
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_33F8&PID_D00D
 
 # Rolling RW101-CAT12 Debug
 [USB\VID_33F8&PID_01A9]
-GType = FuMmFastbootDevice
+GType = FuMmMbimDevice
 Summary = Rolling RW101-GL-12 Module
+ModemManagerMbimDetachMethod = fibocom
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_33F8&PID_D00D
