@@ -856,11 +856,12 @@
     </distro>
   </dependency>
   <dependency id="libumockdev-dev">
-    <control />
     <distro id="debian">
+      <control />
       <multi-arch />
     </distro>
     <distro id="ubuntu">
+      <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
