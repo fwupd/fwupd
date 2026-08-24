@@ -677,8 +677,7 @@ fu_config_set_basename(FuConfig *self, const gchar *basename)
 	g_return_if_fail(FU_IS_CONFIG(self));
 	if (g_strcmp0(priv->basename, basename) == 0)
 		return;
-	g_free(priv->basename);
-	priv->basename = g_strdup(basename);
+	g_set_str(&priv->basename, basename);
 }
 
 static gboolean

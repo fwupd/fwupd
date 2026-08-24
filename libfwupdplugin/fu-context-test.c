@@ -48,8 +48,7 @@ fu_context_esp_write_cb(FuContext *ctx, FuVolume *volume, const gchar *filename,
 	FuContextEspWriteHelper *helper = (FuContextEspWriteHelper *)user_data;
 	helper->cnt++;
 	helper->volume = volume;
-	g_free(helper->filename);
-	helper->filename = g_strdup(filename);
+	g_set_str(&helper->filename, filename);
 }
 
 static void

@@ -135,26 +135,14 @@ void
 fu_release_set_firmware_basename(FuRelease *self, const gchar *firmware_basename)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(self->firmware_basename, firmware_basename) == 0)
-		return;
-
-	g_free(self->firmware_basename);
-	self->firmware_basename = g_strdup(firmware_basename);
+	g_set_str(&self->firmware_basename, firmware_basename);
 }
 
 static void
 fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_old)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(self->device_version_old, device_version_old) == 0)
-		return;
-
-	g_free(self->device_version_old);
-	self->device_version_old = g_strdup(device_version_old);
+	g_set_str(&self->device_version_old, device_version_old);
 }
 
 /**
@@ -264,13 +252,7 @@ static void
 fu_release_set_update_request_id(FuRelease *self, const gchar *update_request_id)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(self->update_request_id, update_request_id) == 0)
-		return;
-
-	g_free(self->update_request_id);
-	self->update_request_id = g_strdup(update_request_id);
+	g_set_str(&self->update_request_id, update_request_id);
 }
 
 /**

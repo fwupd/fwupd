@@ -48,8 +48,7 @@ fwupd_jcat_item_set_id(FwupdJcatItem *self, const gchar *id)
 {
 	g_return_if_fail(FWUPD_IS_JCAT_ITEM(self));
 	g_return_if_fail(id != NULL);
-	g_free(self->id);
-	self->id = g_strdup(id);
+	g_set_str(&self->id, id);
 }
 
 static gboolean

@@ -86,13 +86,7 @@ fwupd_bios_setting_set_id(FwupdBiosSetting *self, const gchar *id)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
+	g_set_str(&priv->id, id);
 }
 
 /**
@@ -132,13 +126,7 @@ fwupd_bios_setting_set_appstream_id(FwupdBiosSetting *self, const gchar *appstre
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->appstream_id, appstream_id) == 0)
-		return;
-
-	g_free(priv->appstream_id);
-	priv->appstream_id = g_strdup(appstream_id);
+	g_set_str(&priv->appstream_id, appstream_id);
 }
 
 /**
@@ -173,13 +161,7 @@ fwupd_bios_setting_set_icon(FwupdBiosSetting *self, const gchar *icon)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->icon, icon) == 0)
-		return;
-
-	g_free(priv->icon);
-	priv->icon = g_strdup(icon);
+	g_set_str(&priv->icon, icon);
 }
 
 /**
@@ -251,13 +233,7 @@ fwupd_bios_setting_set_filename(FwupdBiosSetting *self, const gchar *filename)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->value_filename, filename) == 0)
-		return;
-
-	g_free(priv->value_filename);
-	priv->value_filename = g_strdup(filename);
+	g_set_str(&priv->value_filename, filename);
 }
 
 /**
@@ -418,13 +394,7 @@ fwupd_bios_setting_set_name(FwupdBiosSetting *self, const gchar *name)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->name, name) == 0)
-		return;
-
-	g_free(priv->name);
-	priv->name = g_strdup(name);
+	g_set_str(&priv->name, name);
 }
 
 /**
@@ -441,13 +411,7 @@ fwupd_bios_setting_set_path(FwupdBiosSetting *self, const gchar *path)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->path, path) == 0)
-		return;
-
-	g_free(priv->path);
-	priv->path = g_strdup(path);
+	g_set_str(&priv->path, path);
 }
 
 /**
@@ -464,13 +428,7 @@ fwupd_bios_setting_set_description(FwupdBiosSetting *self, const gchar *descript
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->description, description) == 0)
-		return;
-
-	g_free(priv->description);
-	priv->description = g_strdup(description);
+	g_set_str(&priv->description, description);
 }
 
 /* determine if key is supposed to be positive */
@@ -784,13 +742,7 @@ void
 fwupd_bios_setting_set_current_value(FwupdBiosSetting *self, const gchar *value)
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->current_value, value) == 0)
-		return;
-
-	g_free(priv->current_value);
-	priv->current_value = g_strdup(value);
+	g_set_str(&priv->current_value, value);
 }
 
 static gboolean

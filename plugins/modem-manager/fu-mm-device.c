@@ -65,8 +65,7 @@ fu_mm_device_set_branch_at(FuMmDevice *self, const gchar *branch_at)
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(priv->branch_at, branch_at) == 0)
 		return;
-	g_free(priv->branch_at);
-	priv->branch_at = g_strdup(branch_at);
+	g_set_str(&priv->branch_at, branch_at);
 }
 
 static void

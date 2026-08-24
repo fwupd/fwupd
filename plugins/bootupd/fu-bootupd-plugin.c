@@ -200,8 +200,7 @@ fu_bootupd_plugin_set_varlink_address(FuBootupdPlugin *self, const gchar *varlin
 
 	if (g_strcmp0(self->varlink_address, varlink_address) == 0)
 		return;
-	g_free(self->varlink_address);
-	self->varlink_address = g_strdup(varlink_address);
+	g_set_str(&self->varlink_address, varlink_address);
 }
 
 static void

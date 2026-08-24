@@ -2029,8 +2029,7 @@ fu_context_set_esp_location(FuContext *self, const gchar *location)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(location != NULL);
-	g_free(priv->esp_location);
-	priv->esp_location = g_strdup(location);
+	g_set_str(&priv->esp_location, location);
 }
 
 /**

@@ -114,14 +114,8 @@ fwupd_release_set_remote_id(FwupdRelease *self, const gchar *remote_id)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->remote_id, remote_id) == 0)
-		return;
-
-	g_free(priv->remote_id);
-	priv->remote_id = g_strdup(remote_id);
-	g_object_notify(G_OBJECT(self), "remote-id");
+	if (g_set_str(&priv->remote_id, remote_id))
+		g_object_notify(G_OBJECT(self), "remote-id");
 }
 
 /**
@@ -156,13 +150,7 @@ fwupd_release_set_version(FwupdRelease *self, const gchar *version)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->version, version) == 0)
-		return;
-
-	g_free(priv->version);
-	priv->version = g_strdup(version);
+	g_set_str(&priv->version, version);
 }
 
 /**
@@ -197,13 +185,7 @@ fwupd_release_set_filename(FwupdRelease *self, const gchar *filename)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->filename, filename) == 0)
-		return;
-
-	g_free(priv->filename);
-	priv->filename = g_strdup(filename);
+	g_set_str(&priv->filename, filename);
 }
 
 /**
@@ -238,13 +220,7 @@ fwupd_release_set_update_message(FwupdRelease *self, const gchar *update_message
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_message, update_message) == 0)
-		return;
-
-	g_free(priv->update_message);
-	priv->update_message = g_strdup(update_message);
+	g_set_str(&priv->update_message, update_message);
 }
 
 /**
@@ -279,13 +255,7 @@ fwupd_release_set_update_image(FwupdRelease *self, const gchar *update_image)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_image, update_image) == 0)
-		return;
-
-	g_free(priv->update_image);
-	priv->update_image = g_strdup(update_image);
+	g_set_str(&priv->update_image, update_image);
 }
 
 /**
@@ -320,13 +290,7 @@ fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->protocol, protocol) == 0)
-		return;
-
-	g_free(priv->protocol);
-	priv->protocol = g_strdup(protocol);
+	g_set_str(&priv->protocol, protocol);
 }
 
 static void
@@ -789,13 +753,7 @@ fwupd_release_set_homepage(FwupdRelease *self, const gchar *homepage)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->homepage, homepage) == 0)
-		return;
-
-	g_free(priv->homepage);
-	priv->homepage = g_strdup(homepage);
+	g_set_str(&priv->homepage, homepage);
 }
 
 /**
@@ -830,13 +788,7 @@ fwupd_release_set_details_url(FwupdRelease *self, const gchar *details_url)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->details_url, details_url) == 0)
-		return;
-
-	g_free(priv->details_url);
-	priv->details_url = g_strdup(details_url);
+	g_set_str(&priv->details_url, details_url);
 }
 
 /**
@@ -871,13 +823,7 @@ fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->source_url, source_url) == 0)
-		return;
-
-	g_free(priv->source_url);
-	priv->source_url = g_strdup(source_url);
+	g_set_str(&priv->source_url, source_url);
 }
 
 /**
@@ -894,13 +840,7 @@ fwupd_release_set_sbom_url(FwupdRelease *self, const gchar *sbom_url)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->sbom_url, sbom_url) == 0)
-		return;
-
-	g_free(priv->sbom_url);
-	priv->sbom_url = g_strdup(sbom_url);
+	g_set_str(&priv->sbom_url, sbom_url);
 }
 
 /**
@@ -953,13 +893,7 @@ fwupd_release_set_description(FwupdRelease *self, const gchar *description)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->description, description) == 0)
-		return;
-
-	g_free(priv->description);
-	priv->description = g_strdup(description);
+	g_set_str(&priv->description, description);
 }
 
 /**
@@ -994,13 +928,7 @@ fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->appstream_id, appstream_id) == 0)
-		return;
-
-	g_free(priv->appstream_id);
-	priv->appstream_id = g_strdup(appstream_id);
+	g_set_str(&priv->appstream_id, appstream_id);
 }
 
 /**
@@ -1035,13 +963,7 @@ fwupd_release_set_id(FwupdRelease *self, const gchar *id)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
+	g_set_str(&priv->id, id);
 }
 
 /**
@@ -1076,13 +998,7 @@ fwupd_release_set_detach_caption(FwupdRelease *self, const gchar *detach_caption
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->detach_caption, detach_caption) == 0)
-		return;
-
-	g_free(priv->detach_caption);
-	priv->detach_caption = g_strdup(detach_caption);
+	g_set_str(&priv->detach_caption, detach_caption);
 }
 
 /**
@@ -1117,13 +1033,7 @@ fwupd_release_set_detach_image(FwupdRelease *self, const gchar *detach_image)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->detach_image, detach_image) == 0)
-		return;
-
-	g_free(priv->detach_image);
-	priv->detach_image = g_strdup(detach_image);
+	g_set_str(&priv->detach_image, detach_image);
 }
 
 /**
@@ -1228,13 +1138,7 @@ fwupd_release_set_summary(FwupdRelease *self, const gchar *summary)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->summary, summary) == 0)
-		return;
-
-	g_free(priv->summary);
-	priv->summary = g_strdup(summary);
+	g_set_str(&priv->summary, summary);
 }
 
 /**
@@ -1269,13 +1173,7 @@ fwupd_release_set_branch(FwupdRelease *self, const gchar *branch)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->branch, branch) == 0)
-		return;
-
-	g_free(priv->branch);
-	priv->branch = g_strdup(branch);
+	g_set_str(&priv->branch, branch);
 }
 
 /**
@@ -1310,13 +1208,7 @@ fwupd_release_set_vendor(FwupdRelease *self, const gchar *vendor)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->vendor, vendor) == 0)
-		return;
-
-	g_free(priv->vendor);
-	priv->vendor = g_strdup(vendor);
+	g_set_str(&priv->vendor, vendor);
 }
 
 /**
@@ -1351,13 +1243,7 @@ fwupd_release_set_license(FwupdRelease *self, const gchar *license)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->license, license) == 0)
-		return;
-
-	g_free(priv->license);
-	priv->license = g_strdup(license);
+	g_set_str(&priv->license, license);
 }
 
 /**
@@ -1392,13 +1278,7 @@ fwupd_release_set_name(FwupdRelease *self, const gchar *name)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->name, name) == 0)
-		return;
-
-	g_free(priv->name);
-	priv->name = g_strdup(name);
+	g_set_str(&priv->name, name);
 }
 
 /**
@@ -1433,13 +1313,7 @@ fwupd_release_set_name_variant_suffix(FwupdRelease *self, const gchar *name_vari
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->name_variant_suffix, name_variant_suffix) == 0)
-		return;
-
-	g_free(priv->name_variant_suffix);
-	priv->name_variant_suffix = g_strdup(name_variant_suffix);
+	g_set_str(&priv->name_variant_suffix, name_variant_suffix);
 }
 
 /**

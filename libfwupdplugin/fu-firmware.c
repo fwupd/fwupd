@@ -162,13 +162,7 @@ fu_firmware_set_version(FuFirmware *self, const gchar *version)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->version, version) == 0)
-		return;
-
-	g_free(priv->version);
-	priv->version = g_strdup(version);
+	g_set_str(&priv->version, version);
 }
 
 /**
@@ -299,13 +293,7 @@ fu_firmware_set_filename(FuFirmware *self, const gchar *filename)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->filename, filename) == 0)
-		return;
-
-	g_free(priv->filename);
-	priv->filename = g_strdup(filename);
+	g_set_str(&priv->filename, filename);
 }
 
 /**
@@ -320,13 +308,7 @@ fu_firmware_set_id(FuFirmware *self, const gchar *id)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
+	g_set_str(&priv->id, id);
 }
 
 /**

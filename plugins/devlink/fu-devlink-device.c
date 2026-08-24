@@ -724,15 +724,13 @@ fu_devlink_device_get_bus_name(FuDevlinkDevice *self)
 static void
 fu_devlink_device_set_bus_name(FuDevlinkDevice *self, const gchar *bus_name)
 {
-	g_free(self->bus_name);
-	self->bus_name = g_strdup(bus_name);
+	g_set_str(&self->bus_name, bus_name);
 }
 
 static void
 fu_devlink_device_set_dev_name(FuDevlinkDevice *self, const gchar *dev_name)
 {
-	g_free(self->dev_name);
-	self->dev_name = g_strdup(dev_name);
+	g_set_str(&self->dev_name, dev_name);
 }
 
 FuDevice *

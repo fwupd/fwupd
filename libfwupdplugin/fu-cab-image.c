@@ -61,8 +61,7 @@ void
 fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename)
 {
 	g_return_if_fail(FU_IS_CAB_IMAGE(self));
-	g_free(self->win32_filename);
-	self->win32_filename = g_strdup(win32_filename);
+	g_set_str(&self->win32_filename, win32_filename);
 }
 
 /**

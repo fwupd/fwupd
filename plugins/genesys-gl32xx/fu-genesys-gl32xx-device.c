@@ -28,8 +28,7 @@ static void
 fu_genesys_gl32xx_device_set_chip_name(FuGenesysGl32xxDevice *self, const gchar *chip_name)
 {
 	g_return_if_fail(chip_name != NULL);
-	g_free(self->chip_name);
-	self->chip_name = g_strdup(chip_name);
+	g_set_str(&self->chip_name, chip_name);
 }
 
 static GByteArray *

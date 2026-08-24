@@ -150,14 +150,8 @@ void
 fu_udev_device_set_subsystem(FuUdevDevice *self, const gchar *subsystem)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->subsystem, subsystem) == 0)
-		return;
-
-	g_free(priv->subsystem);
-	priv->subsystem = g_strdup(subsystem);
-	g_object_notify(G_OBJECT(self), "subsystem");
+	if (g_set_str(&priv->subsystem, subsystem))
+		g_object_notify(G_OBJECT(self), "subsystem");
 }
 
 /**
@@ -173,28 +167,16 @@ void
 fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->bind_id, bind_id) == 0)
-		return;
-
-	g_free(priv->bind_id);
-	priv->bind_id = g_strdup(bind_id);
-	g_object_notify(G_OBJECT(self), "bind-id");
+	if (g_set_str(&priv->bind_id, bind_id))
+		g_object_notify(G_OBJECT(self), "bind-id");
 }
 
 static void
 fu_udev_device_set_driver(FuUdevDevice *self, const gchar *driver)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->driver, driver) == 0)
-		return;
-
-	g_free(priv->driver);
-	priv->driver = g_strdup(driver);
-	g_object_notify(G_OBJECT(self), "driver");
+	if (g_set_str(&priv->driver, driver))
+		g_object_notify(G_OBJECT(self), "driver");
 }
 
 /**
@@ -210,14 +192,8 @@ void
 fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->device_file, device_file) == 0)
-		return;
-
-	g_free(priv->device_file);
-	priv->device_file = g_strdup(device_file);
-	g_object_notify(G_OBJECT(self), "device-file");
+	if (g_set_str(&priv->device_file, device_file))
+		g_object_notify(G_OBJECT(self), "device-file");
 }
 
 static gchar *
@@ -282,14 +258,8 @@ void
 fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->devtype, devtype) == 0)
-		return;
-
-	g_free(priv->devtype);
-	priv->devtype = g_strdup(devtype);
-	g_object_notify(G_OBJECT(self), "devtype");
+	if (g_set_str(&priv->devtype, devtype))
+		g_object_notify(G_OBJECT(self), "devtype");
 }
 
 /* private */

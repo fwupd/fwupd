@@ -56,8 +56,7 @@ fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(priv->uuid, uuid) == 0)
 		return FALSE;
-	g_free(priv->uuid);
-	priv->uuid = g_strdup(uuid);
+	g_set_str(&priv->uuid, uuid);
 	return TRUE;
 }
 
