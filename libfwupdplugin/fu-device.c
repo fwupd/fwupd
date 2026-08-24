@@ -3305,7 +3305,9 @@ fu_device_fixup_vendor_name(FuDevice *self)
 			return;
 		}
 		if (g_str_has_prefix(name_up, vendor_up)) {
-			gsize vendor_len = strlen(vendor);
+			/* Case folding alters UTF-8 byte length, e.g. 'ı' -> 'I' is 2 vs 1 bytes.
+			 * Use the length of the matched prefix, not the original vendor length */
+			gsize vendor_len = strlen(vendor_up);
 			g_autofree gchar *name1 = g_strdup(priv->name + vendor_len);
 			g_autofree gchar *name2 = fu_strstrip(name1);
 			g_debug("removing vendor prefix of '%s' from '%s'", vendor, priv->name);
