@@ -1102,7 +1102,7 @@ fu_context_convert_firmware_gtype_to_id(GType gtype)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**

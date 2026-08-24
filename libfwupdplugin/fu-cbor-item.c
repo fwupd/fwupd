@@ -726,5 +726,5 @@ fu_cbor_item_to_string(FuCborItem *self)
 {
 	GString *str = g_string_new(NULL);
 	fu_cbor_item_append_string(self, str);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }

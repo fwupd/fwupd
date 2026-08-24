@@ -19,7 +19,7 @@ fu_redfish_common_buffer_to_ipv4(const guint8 *buffer)
 		if (i != 3)
 			g_string_append(str, ".");
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 gchar *
@@ -36,7 +36,7 @@ fu_redfish_common_buffer_to_ipv6(const guint8 *buffer)
 		if (i != 12)
 			g_string_append(str, ":");
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 gchar *
@@ -48,7 +48,7 @@ fu_redfish_common_buffer_to_mac(const guint8 *buffer)
 		if (i != 5)
 			g_string_append(str, ":");
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 gchar *

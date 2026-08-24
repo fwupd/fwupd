@@ -100,7 +100,7 @@ fu_efi_x509_signature_normalize_vendor(const gchar *text)
 	/* make the certificate match DMI for LVFS permissions */
 	for (guint i = 0; i < G_N_ELEMENTS(dmi_map); i++)
 		g_string_replace(str, dmi_map[i].search, dmi_map[i].replace, 0);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static void

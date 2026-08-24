@@ -116,7 +116,7 @@ fu_device_event_build_id(const gchar *id)
 	g_string_append_c(id_hash, '#');
 	for (guint i = 0; i < FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE / 2; i++)
 		g_string_append_printf(id_hash, "%02x", buf[i]);
-	return g_string_free(g_steal_pointer(&id_hash), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&id_hash));
 }
 
 /**

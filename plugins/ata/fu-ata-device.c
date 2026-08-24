@@ -109,7 +109,7 @@ fu_ata_device_get_string(const guint16 *buf, guint start, guint end)
 		if (str->str[0] == '\0')
 			return NULL;
 	}
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void
@@ -131,7 +131,7 @@ fu_ata_device_pad_string_for_id(const gchar *name)
 	g_string_replace(str, " ", "_", 0);
 	for (guint i = str->len; i < 40; i++)
 		g_string_append_c(str, '_');
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static gchar *

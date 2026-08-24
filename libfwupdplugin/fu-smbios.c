@@ -141,7 +141,8 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 				g_prefix_error_literal(error, "string offset overflow: ");
 				return FALSE;
 			}
-			g_ptr_array_add(item->strings, g_string_free(g_steal_pointer(&str), FALSE));
+			g_ptr_array_add(item->strings,
+					g_string_free_and_steal(g_steal_pointer(&str)));
 		}
 
 		if (!fu_size_checked_inc(&offset, 1, error)) {

@@ -164,7 +164,7 @@ fu_cli_get_release_description_with_fallback(FwupdRelease *rel)
 				       _("The vendor did not supply any release notes."));
 	}
 
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 const gchar *
@@ -563,7 +563,7 @@ fu_cli_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 			}
 		}
 	}
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**
@@ -1177,7 +1177,7 @@ fu_cli_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 					  issue);
 	}
 
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 gchar *
@@ -1340,7 +1340,7 @@ fu_cli_plugin_to_string(FwupdPlugin *plugin, guint idt)
 		}
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static gchar *
@@ -1638,7 +1638,7 @@ fu_cli_release_to_string(FwupdRelease *rel, guint idt)
 		fwupd_codec_string_append(str, idt + 1, _("Checksum"), checksum);
 	}
 
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 gchar *
@@ -1761,7 +1761,7 @@ fu_cli_remote_to_string(FwupdRemote *remote, guint idt)
 										       : "false");
 	}
 
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 const gchar *
@@ -2181,7 +2181,7 @@ fu_cli_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags 
 		return NULL;
 
 	/* success */
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 gchar *
@@ -2216,7 +2216,7 @@ fu_cli_security_issues_to_string(GPtrArray *devices)
 		return NULL;
 
 	/* success */
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 gchar *
@@ -2310,7 +2310,7 @@ fu_cli_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags st
 		    "https://fwupd.github.io/hsi.html#pcr0-tpm-event-log-reconstruction");
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)

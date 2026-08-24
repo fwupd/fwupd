@@ -3381,7 +3381,7 @@ fu_device_sanitize_name(const gchar *value)
 	g_string_replace(new, "(R)", "", 0);
 	if (new->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&new), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&new));
 }
 
 /**
@@ -5577,7 +5577,7 @@ fu_device_to_string(FuDevice *self)
 {
 	GString *str = g_string_new(NULL);
 	fu_device_add_string(self, 0, str);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 /**
@@ -7721,7 +7721,7 @@ fu_device_strsafe_instance_id(const gchar *str)
 		return NULL;
 
 	/* success */
-	return g_string_free(g_steal_pointer(&tmp), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&tmp));
 }
 
 /**

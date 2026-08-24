@@ -81,7 +81,7 @@ fu_fdt_image_strlist_from_blob(GBytes *blob, GError **error)
 		if (tmp == NULL)
 			return NULL;
 		i += tmp->len;
-		g_ptr_array_add(strs, g_string_free(tmp, FALSE));
+		g_ptr_array_add(strs, g_string_free_and_steal(tmp));
 	}
 
 	/* copy to GStrv */

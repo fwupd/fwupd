@@ -1095,7 +1095,7 @@ fu_progress_traceback(FuProgress *self)
 	fu_progress_traceback_cb(self, 0, G_MAXUINT, threshold_ms, str);
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void

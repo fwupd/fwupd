@@ -269,7 +269,7 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 				       (const gchar *)value);
 	}
 
-	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&cmdline_safe));
 }
 
 gchar *

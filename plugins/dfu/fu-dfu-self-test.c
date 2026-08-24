@@ -30,7 +30,7 @@ fu_dfu_target_sectors_to_string(FuDfuTarget *target)
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static void

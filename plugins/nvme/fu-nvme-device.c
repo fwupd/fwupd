@@ -73,7 +73,7 @@ fu_nvme_device_get_string_safe(const guint8 *buf, guint16 addr_start, guint16 ad
 		g_string_free(str, TRUE);
 		return NULL;
 	}
-	return g_strchomp(g_string_free(str, FALSE));
+	return g_strchomp(g_string_free_and_steal(str));
 }
 
 static gchar *

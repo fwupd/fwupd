@@ -441,7 +441,7 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 
 	/* success */
 	g_free(priv->user_agent);
-	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
+	priv->user_agent = g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void
@@ -7751,7 +7751,7 @@ fwupd_client_build_report_devices(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 static FwupdJsonObject *
@@ -7955,7 +7955,7 @@ fwupd_client_build_report_history(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**
@@ -8024,7 +8024,7 @@ fwupd_client_build_report_security(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**

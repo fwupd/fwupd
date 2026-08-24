@@ -361,7 +361,7 @@ fu_tpm_plugin_eventlog_report_metadata(FuPlugin *plugin)
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static gboolean

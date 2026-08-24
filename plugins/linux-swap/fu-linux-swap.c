@@ -28,7 +28,7 @@ fu_linux_swap_strip_spaces(const gchar *line)
 	GString *str = g_string_new(NULL);
 	for (guint i = 0; line[i] != '\0' && !g_ascii_isspace(line[i]); i++)
 		g_string_append_c(str, line[i]);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 /* walk device-mapper dependencies and report encrypted if any layer has a
