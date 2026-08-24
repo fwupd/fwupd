@@ -519,6 +519,7 @@ fu_mm_mbim_device_detach_fibocom(FuMmMbimDevice *self, GError **error)
 		g_debug("detach AT command transaction failed: %s", error_local->message);
 
 	/* success */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
