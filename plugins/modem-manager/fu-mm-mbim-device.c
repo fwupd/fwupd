@@ -542,10 +542,16 @@ static gboolean
 fu_mm_mbim_device_probe(FuDevice *device, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-	fu_device_add_protocol(device, "com.qualcomm.firehose");
-	fu_device_add_instance_id_full(device,
-				       "USB\\VID_05C6&PID_9008",
-				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_QDU_QUECTEL) {
+		fu_device_add_protocol(device, "com.qualcomm.firehose");
+		fu_device_add_instance_id_full(device,
+					       "USB\\VID_05C6&PID_9008",
+					       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
+	}
+	if (priv->detach_method == FU_MM_MBIM_DETACH_METHOD_FIBOCOM)
+		fu_device_add_protocol(device, "com.google.fastboot");
 	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_MBIM, error);
 }
 
