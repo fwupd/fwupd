@@ -350,15 +350,31 @@ if build_daemon == 'binder'
   )
 
   aidl_files = [
+    'IFwupd',
+    'IFwupdEventListener',
     'FwupdDevice',
+    'FwupdHwid',
+    'FwupdInstallRequest',
+    'FwupdMetadata',
+    'FwupdProperties',
     'FwupdRelease',
     'FwupdRemote',
     'FwupdRequest',
   ]
 
+  # the interface AIDL files generate C++ with global constructors that call
+  # into libbinder_ndk at load time (to register the binder interface class),
+  # which is only functional when running on a real Android binder stack
+  aidl_interface_files = [
+    'IFwupd',
+    'IFwupdEventListener',
+  ]
+
   aidl_generated_src = []
+  # parcelable-only subset, safe to link into host-run unit tests
+  aidl_generated_parcelable_src = []
   foreach a : aidl_files
-    aidl_generated_src += custom_target(
+    aidl_target = custom_target(
       'aidl_gen_' + a,
       input: join_paths(aidl_dir, 'org', 'freedesktop', 'fwupd', a + '.aidl'),
       output: [a + '.cpp', a + '.h'],
@@ -375,11 +391,86 @@ if build_daemon == 'binder'
         a,
       ],
     )
+    aidl_generated_src += aidl_target
+    if a not in aidl_interface_files
+      aidl_generated_parcelable_src += aidl_target
+    endif
   endforeach
 
   # include the src/ build directory, which holds the generated AIDL headers
   aidl_inc = include_directories('.')
 
+  executable(
+    'fwupd',
+    fwupdengine_rs,
+    plugins_hdr,
+    sources: [
+      daemon_loader_src,
+      'fu-daemon.c',
+      'fu-binder-common.cpp',
+      'fu-binder-daemon.c',
+      'fu-binder-daemon-bridge.cpp',
+    ] + aidl_generated_src,
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
+      aidl_inc,
+    ],
+    dependencies: [
+      valgrind,
+      libsystemd,
+      engine_dep,
+      binder_ndk,
+    ],
+    link_with: [
+      fwupdengine,
+      plugin_libs,
+    ],
+    link_language: 'cpp',
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: daemon_dir,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    # needed for AIBinder_markVintfStability
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
+  )
+
+  fwupdmgr = executable(
+    'fwupdmgr',
+    sources: [
+      'fu-binder-cli.c',
+      'fu-binder-common.cpp',
+      'fu-debug.c',
+      'fu-binder-cli-bridge.cpp',
+    ] + aidl_generated_src,
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
+      aidl_inc,
+    ],
+    dependencies: [
+      libfwupd_deps,
+      client_dep,
+      binder_ndk,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+      fwupdcli,
+    ],
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_language: 'cpp',
+    install: true,
+    install_rpath: libdir_pkg,
+    # needed for AIBinder_markVintfStability
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
+  )
   if get_option('tests')
     # binder-specific
     e = executable(
@@ -387,7 +478,7 @@ if build_daemon == 'binder'
       sources: [
         'fu-binder-common.cpp',
         'fu-binder-test.cpp',
-      ] + aidl_generated_src,
+      ] + aidl_generated_parcelable_src,
       include_directories: [
         root_incdir,
         fwupd_incdir,
