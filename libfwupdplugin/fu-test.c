@@ -36,7 +36,6 @@ fu_test_loop_quit(void)
 	g_clear_handle_id(&_test_loop_timeout_id, g_source_remove);
 	if (_test_loop != NULL) {
 		g_main_loop_quit(_test_loop);
-		g_main_loop_unref(_test_loop);
-		_test_loop = NULL;
+		g_clear_pointer(&_test_loop, g_main_loop_unref);
 	}
 }
