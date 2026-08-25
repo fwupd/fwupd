@@ -4392,6 +4392,10 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		id = fu_device_event_get_str(event, "PhysicalId", NULL);
 		if (id != NULL)
 			fu_device_set_physical_id(parent, id);
+		if (fu_device_event_get_i64(event, "Vid", NULL) != G_MAXINT64)
+			fu_device_set_vid(parent, fu_device_event_get_i64(event, "Vid", NULL));
+		if (fu_device_event_get_i64(event, "Pid", NULL) != G_MAXINT64)
+			fu_device_set_pid(parent, fu_device_event_get_i64(event, "Pid", NULL));
 		if (parent != self)
 			fu_device_set_target(parent, self);
 		return g_steal_pointer(&parent);
@@ -4431,6 +4435,10 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 						"PhysicalId",
 						fu_device_get_physical_id(parent));
 		}
+		if (fu_device_get_vid(parent) != 0x0)
+			fu_device_event_set_i64(event, "Vid", fu_device_get_vid(parent));
+		if (fu_device_get_pid(parent) != 0x0)
+			fu_device_event_set_i64(event, "Pid", fu_device_get_pid(parent));
 	}
 
 	if (parent != self)
