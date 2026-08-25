@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-device-event.h"
 #include "fu-ioctl-private.h"
 #include "fu-udev-device-private.h"
 
@@ -268,6 +269,8 @@ fu_ioctl_execute(FuIoctl *self,
 	if (fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self->udev_device), event_id->str, error);
 		if (event == NULL)
+			return FALSE;
+		if (!fu_device_event_check_error(event, error))
 			return FALSE;
 		if (self->fixups->len == 0) {
 			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
