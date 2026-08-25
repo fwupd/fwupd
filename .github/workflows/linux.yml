@@ -27,7 +27,7 @@ jobs:
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
-          - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android, CONTAINER: ubuntu-amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android }
     env: ${{ matrix.env }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
