@@ -9259,9 +9259,11 @@ fu_engine_dispose(GObject *obj)
 	}
 	if (self->device_list != NULL)
 		fu_device_list_remove_all(self->device_list);
-	if (fu_context_get_config(self->ctx) != NULL)
-		g_signal_handlers_disconnect_by_data(fu_context_get_config(self->ctx), self);
-
+	if (self->ctx != NULL) {
+		FuConfig *config = fu_context_get_config(self->ctx);
+		if (config != NULL)
+			g_signal_handlers_disconnect_by_data(config, self);
+	}
 	if (self->ctx != NULL) {
 		GPtrArray *backends = fu_context_get_backends(self->ctx);
 		for (guint i = 0; i < backends->len; i++) {
