@@ -83,6 +83,17 @@ fu_lenovo_accessory_impl_dfu_file(FuLenovoAccessoryImpl *self,
 				  gsize datasz,
 				  GError **error) G_GNUC_NON_NULL(1, 4);
 gboolean
+fu_lenovo_accessory_impl_dfu_signature_file(FuLenovoAccessoryImpl *self,
+					    guint16 total_length,
+					    guint16 address,
+					    const guint8 *data,
+					    gsize datasz,
+					    GError **error) G_GNUC_NON_NULL(1, 4);
+gboolean
+fu_lenovo_accessory_impl_dfu_signature_verify(FuLenovoAccessoryImpl *self,
+					      FuLenovoAccessorySignatureAlgo algo,
+					      GError **error) G_GNUC_NON_NULL(1);
+gboolean
 fu_lenovo_accessory_impl_dfu_crc(FuLenovoAccessoryImpl *self, guint32 *crc32, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
