@@ -138,6 +138,70 @@ fu_test_mtd_device_new_for_security_attrs(FuTest *self, gboolean add_event, gboo
 		fu_test_mtd_device_add_memislocked_event(FU_MTD_DEVICE(device), locked);
 	return FU_MTD_DEVICE(g_steal_pointer(&device));
 }
+
+/* record a MEMISLOCKED ioctl that fails with NOT_SUPPORTED (EOPNOTSUPP), as the spi_intel_pci
+ * driver does -- this is what makes fu_mtd_device_get_locked() use the intel_spi_* sysfs fallback
+ */
+static void
+fu_test_mtd_device_add_memislocked_error_event(FuMtdDevice *device)
+{
+	struct erase_info_user erase = {0x0};
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuDeviceEvent) event = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_set_error_literal(&error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+	erase.start = 0x0;
+	erase.length = FU_TEST_MTD_DEVICE_SIZE;
+	data = fu_base64_encode((const guint8 *)&erase, sizeof(erase));
+	event_id = g_strdup_printf("Ioctl:Request=0x%04x,Data=%s,Length=0x%x",
+				   (guint)MEMISLOCKED,
+				   data,
+				   (guint)sizeof(erase));
+	event = fu_device_event_new(event_id);
+	fu_device_event_set_error(event, error);
+	fu_device_add_event(FU_DEVICE(device), event);
+}
+
+/* record the PCI backend parent returned to fu_mtd_device_get_locked_intel_pci() */
+static void
+fu_test_mtd_device_add_pci_parent_event(FuMtdDevice *device, guint16 vid)
+{
+	g_autoptr(FuDeviceEvent) event = fu_device_event_new("GetBackendParent:Subsystem=pci");
+	fu_device_event_set_str(event, "GType", "FuUdevDevice");
+	fu_device_event_set_i64(event, "Vid", vid);
+	fu_device_add_event(FU_DEVICE(device), event);
+}
+
+/* record one intel_spi_* sysfs attribute read on the PCI parent (redirected to the child) */
+static void
+fu_test_mtd_device_add_read_attr_event(FuMtdDevice *device, const gchar *attr, const gchar *value)
+{
+	g_autofree gchar *event_id = g_strdup_printf("ReadAttr:Attr=%s", attr);
+	g_autoptr(FuDeviceEvent) event = fu_device_event_new(event_id);
+	fu_device_event_set_str(event, "Data", value);
+	fu_device_add_event(FU_DEVICE(device), event);
+}
+
+static void
+fu_test_mtd_device_add_intel_pci_events(FuMtdDevice *device,
+					guint16 vid,
+					const gchar *locked,
+					const gchar *bios_locked,
+					const gchar *protected)
+{
+	fu_test_mtd_device_add_memislocked_error_event(device);
+	fu_test_mtd_device_add_pci_parent_event(device, vid);
+	if (locked != NULL)
+		fu_test_mtd_device_add_read_attr_event(device, "intel_spi_locked", locked);
+	if (bios_locked != NULL)
+		fu_test_mtd_device_add_read_attr_event(device,
+						       "intel_spi_bios_locked",
+						       bios_locked);
+	if (protected != NULL)
+		fu_test_mtd_device_add_read_attr_event(device, "intel_spi_protected", protected);
+}
 #endif
 
 static FuFirmware *
@@ -380,6 +444,93 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_intel_pci_locked_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "context", self->ctx, NULL);
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_set_backend(FU_DEVICE(device), backend);
+	fu_device_set_fwupd_version(FU_DEVICE(device), "2.0.13");
+	fu_test_mtd_device_add_intel_pci_events(device, FU_PCI_VENDOR_ID_INTEL, "1", "1", "1");
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result_success(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_intel_pci_unlocked_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "context", self->ctx, NULL);
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_set_backend(FU_DEVICE(device), backend);
+	fu_device_set_fwupd_version(FU_DEVICE(device), "2.0.13");
+	fu_test_mtd_device_add_intel_pci_events(device, FU_PCI_VENDOR_ID_INTEL, "1", "0", "1");
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_intel_pci_not_intel_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "context", self->ctx, NULL);
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_set_backend(FU_DEVICE(device), backend);
+	fu_device_set_fwupd_version(FU_DEVICE(device), "2.0.13");
+	fu_test_mtd_device_add_intel_pci_events(device, 0x1022, "1", "1", "1");
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -763,6 +914,15 @@ main(int argc, char **argv)
 	g_test_add_data_func("/mtd/device/security-attrs/missing",
 			     self,
 			     fu_test_mtd_device_security_attrs_missing_func);
+	g_test_add_data_func("/mtd/device/security-attrs/intel-pci-locked",
+			     self,
+			     fu_test_mtd_device_security_attrs_intel_pci_locked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/intel-pci-unlocked",
+			     self,
+			     fu_test_mtd_device_security_attrs_intel_pci_unlocked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/intel-pci-not-intel",
+			     self,
+			     fu_test_mtd_device_security_attrs_intel_pci_not_intel_func);
 	g_test_add_data_func("/mtd/device/quirk/metadata-offset",
 			     self,
 			     fu_test_mtd_device_quirk_metadata_offset_func);
