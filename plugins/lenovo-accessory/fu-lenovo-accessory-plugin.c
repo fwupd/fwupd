@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-lenovo-accessory-ble-device.h"
+#include "fu-lenovo-accessory-firmware.h"
 #include "fu-lenovo-accessory-hid-bootloader.h"
 #include "fu-lenovo-accessory-hid-device.h"
 #include "fu-lenovo-accessory-hid-dual-device.h"
@@ -32,6 +33,7 @@ fu_lenovo_accessory_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_HID_DUAL_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_HID_BOOTLOADER);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_BLE_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_FIRMWARE);
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 
 	/* chain up to parent */

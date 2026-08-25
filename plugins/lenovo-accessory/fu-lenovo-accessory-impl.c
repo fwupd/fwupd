@@ -419,6 +419,7 @@ fu_lenovo_accessory_impl_dfu_prepare(FuLenovoAccessoryImpl *self,
 	fu_struct_lenovo_dfu_prepare_req_set_start_address(st_req, start_address);
 	fu_struct_lenovo_dfu_prepare_req_set_end_address(st_req, end_address);
 	fu_struct_lenovo_dfu_prepare_req_set_crc32(st_req, crc32);
+
 	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
@@ -452,9 +453,102 @@ fu_lenovo_accessory_impl_dfu_file(FuLenovoAccessoryImpl *self,
 	fu_struct_lenovo_dfu_fw_req_set_offset_address(st_req, address);
 	if (!fu_struct_lenovo_dfu_fw_req_set_data(st_req, data, datasz, error))
 		return FALSE;
+
 	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_lenovo_accessory_impl_dfu_signature_file(FuLenovoAccessoryImpl *self,
+					    guint16 total_length,
+					    guint16 address,
+					    const guint8 *data,
+					    gsize datasz,
+					    GError **error)
+{
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoDfuSignatureFileReq) st_req =
+	    fu_struct_lenovo_dfu_signature_file_req_new();
+	g_autoptr(GByteArray) buf = NULL;
+
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, datasz + 4);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_SIGNATURE_FILE |
+		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	if (!fu_struct_lenovo_dfu_signature_file_req_set_cmd(st_req, st_cmd, error))
+		return FALSE;
+	fu_struct_lenovo_dfu_signature_file_req_set_total_length(st_req, total_length);
+	fu_struct_lenovo_dfu_signature_file_req_set_offset_address(st_req, address);
+	if (!fu_struct_lenovo_dfu_signature_file_req_set_data(st_req, data, datasz, error))
+		return FALSE;
+
+	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
+	if (buf == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_lenovo_accessory_impl_dfu_signature_verify(FuLenovoAccessoryImpl *self,
+					      FuLenovoAccessorySignatureAlgo algo,
+					      GError **error)
+{
+	FuLenovoAccessoryVerifyResult result;
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoDfuSignatureVerifyReq) st_req =
+	    fu_struct_lenovo_dfu_signature_verify_req_new();
+	g_autoptr(FuStructLenovoDfuSignatureVerifyRsp) st_rsp = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x02);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_SIGNATURE_VERIFY |
+		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	if (!fu_struct_lenovo_dfu_signature_verify_req_set_cmd(st_req, st_cmd, error))
+		return FALSE;
+	fu_struct_lenovo_dfu_signature_verify_req_set_algo(st_req, algo);
+
+	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
+	if (buf == NULL)
+		return FALSE;
+	if (buf->len < FU_STRUCT_LENOVO_DFU_SIGNATURE_VERIFY_RSP_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware returned insufficient data for signature verify: got %u "
+			    "bytes, expected %u",
+			    buf->len,
+			    (guint)FU_STRUCT_LENOVO_DFU_SIGNATURE_VERIFY_RSP_SIZE);
+		return FALSE;
+	}
+	st_rsp = fu_struct_lenovo_dfu_signature_verify_rsp_parse(buf->data, buf->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	result = fu_struct_lenovo_dfu_signature_verify_rsp_get_result(st_rsp);
+	if (result != FU_LENOVO_ACCESSORY_VERIFY_RESULT_PASS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    result == FU_LENOVO_ACCESSORY_VERIFY_RESULT_ALGO_NOT_SUPPORTED
+				? FWUPD_ERROR_NOT_SUPPORTED
+				: FWUPD_ERROR_INVALID_DATA,
+			    "signature verification failed: %s",
+			    fu_lenovo_accessory_verify_result_to_string(result));
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
