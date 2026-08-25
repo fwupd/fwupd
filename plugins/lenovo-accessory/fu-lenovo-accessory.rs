@@ -22,6 +22,26 @@ enum FuLenovoAccessoryDfuId {
     DfuCrc = 0x04,
     DfuExit = 0x05,
     DfuEntry = 0x06,
+    DfuSignatureFile = 0x07,
+    DfuSignatureVerify = 0x08,
+}
+
+#[derive(ToString)]
+#[repr(u8)]
+enum FuLenovoAccessorySignatureAlgo {
+    Unsigned = 0x00,
+    Rsa2048 = 0x01,
+    Rsa3072 = 0x02,
+    Ecc256 = 0x10,
+    Ecc384 = 0x11,
+}
+
+#[derive(ToString)]
+#[repr(u8)]
+enum FuLenovoAccessoryVerifyResult {
+    Fail = 0x00,
+    Pass = 0x01,
+    AlgoNotSupported = 0x02,
 }
 
 #[repr(u8)]
@@ -119,6 +139,34 @@ struct FuStructLenovoDfuFwReq {
     file_type: FuLenovoAccessoryDfuFileType,
     offset_address: u32be,
     data: [u8; 32],
+}
+
+// the signature blob is transferred in 32 byte chunks, and `total_length` is
+// repeated in every chunk so that the device can size its staging buffer
+// without depending on the first chunk being received
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructLenovoDfuSignatureFileReq {
+    cmd: FuStructLenovoAccessoryCmd,
+    total_length: u16be,
+    offset_address: u16be,
+    data: [u8; 32],
+}
+
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructLenovoDfuSignatureVerifyReq {
+    cmd: FuStructLenovoAccessoryCmd,
+    algo: FuLenovoAccessorySignatureAlgo,
+}
+
+// the device echoes back the algorithm it was asked to verify with, and the
+// verify result follows it
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructLenovoDfuSignatureVerifyRsp {
+    algo: FuLenovoAccessorySignatureAlgo,
+    result: FuLenovoAccessoryVerifyResult,
 }
 
 #[derive(New)]
