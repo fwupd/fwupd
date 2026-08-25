@@ -8,6 +8,7 @@ plugins += {
 plugin_quirks += files('mtd.quirk')
 plugin_builtin_mtd = static_library(
   'fu_plugin_mtd',
+  rustgen.process('fu-mtd.rs'),
   sources: [
     'fu-mtd-plugin.c',
     'fu-mtd-device.c',
