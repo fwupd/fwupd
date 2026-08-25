@@ -1,5 +1,6 @@
 /*
  * Copyright 2026 NVIDIA Corporation
+ * Author: Vishnu Raghav <vraghav@nvidia.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -18,7 +19,6 @@ G_DECLARE_FINAL_TYPE(FuRedfishNvidiaDevice,
 typedef enum {
 	FU_REDFISH_NVIDIA_TASK_RUNNING,
 	FU_REDFISH_NVIDIA_TASK_COMPLETED,
-	FU_REDFISH_NVIDIA_TASK_FAILED,
 } FuRedfishNvidiaTaskState;
 
 typedef enum {
@@ -33,8 +33,9 @@ fu_redfish_nvidia_device_classify_task_response(glong status_code,
 						gboolean request_succeeded,
 						gboolean has_json,
 						gboolean allow_empty_200);
-FuRedfishNvidiaTaskState
+gboolean
 fu_redfish_nvidia_device_parse_task(const gchar *task_uri,
 				    FwupdJsonObject *json_task,
-				    guint *out_percent,
-				    GError **error);
+				    FuRedfishNvidiaTaskState *task_state,
+				    guint *percentage,
+				    GError **error) G_GNUC_WARN_UNUSED_RESULT;
