@@ -433,6 +433,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 #endif
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
+	g_autofree gchar *session_key_file = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
 #ifdef HAVE_LINUX_IPMI_H
@@ -510,6 +511,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
 	if (bearer_token != NULL)
 		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
+	session_key_file = fu_plugin_get_config_value(plugin, "SessionKeyFile");
+	if (session_key_file != NULL)
+		fu_redfish_backend_set_session_key_file(self->backend, session_key_file);
 	fu_redfish_backend_set_cacheck(self->backend,
 				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))

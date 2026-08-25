@@ -208,8 +208,8 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	FuRedfishHpeDevice *self = FU_REDFISH_HPE_DEVICE(device);
 	FuRedfishBackend *backend;
 	CURL *curl;
-	const gchar *sessionkey;
 	curl_mimepart *part;
+	g_autofree gchar *sessionkey = NULL;
 	g_autofree gchar *sessionkey_kv = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(_curl_slist) hs = NULL;
@@ -235,7 +235,9 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_redfish_backend_create_session(backend, error))
 		return FALSE;
-	sessionkey = fu_redfish_backend_get_session_key(backend);
+	sessionkey = fu_redfish_backend_get_session_key(backend, error);
+	if (sessionkey == NULL)
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* create the multipart request */

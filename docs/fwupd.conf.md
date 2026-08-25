@@ -327,6 +327,14 @@ The `[redfish]` section can contain the following parameters:
 
   The bearer token to use for authenticating to the Redfish service.
 
+**SessionKeyFile={{redfish_SessionKeyFile}}**
+
+  Instead of storing a password as `Password=`, the plugin can reuse a Redfish `X-Auth-Token`
+  created out of band.
+
+  The file should live on tmpfs and be readable only by root so that the secret is not written to
+  persistent storage.
+
 **CACheck={{redfish_CACheck}}**
 
   Whether to verify the server certificate or not. This is turned off by default.

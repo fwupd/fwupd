@@ -33,6 +33,8 @@ fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password);
 void
 fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token);
 void
+fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file);
+void
 fu_redfish_backend_set_port(FuRedfishBackend *self, guint port);
 void
 fu_redfish_backend_set_https(FuRedfishBackend *self, gboolean use_https);
@@ -44,8 +46,8 @@ void
 fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix);
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
-const gchar *
-fu_redfish_backend_get_session_key(FuRedfishBackend *self);
+gchar *
+fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error);
 gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
 gboolean

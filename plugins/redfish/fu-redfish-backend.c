@@ -23,6 +23,7 @@ struct _FuRedfishBackend {
 	gchar *username;
 	gchar *password;
 	gchar *bearer_token;
+	gchar *session_key_file;
 	gchar *session_key;
 	gchar *session_uri;
 	guint port;
@@ -289,9 +290,14 @@ gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 {
 	const gchar *session_uri;
+	g_autofree gchar *session_key = NULL;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonObject) json_obj_resp = NULL;
+
+	/* not needed */
+	if (self->session_key != NULL || self->session_key_file != NULL)
+		return TRUE;
 
 	fwupd_json_object_add_string(json_obj, "UserName", self->username);
 	fwupd_json_object_add_string(json_obj, "Password", self->password);
@@ -309,13 +315,11 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					     error))
 		return FALSE;
-	if (fu_redfish_backend_get_session_key(self) == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to get session key");
+
+	/* check this was set */
+	session_key = fu_redfish_backend_get_session_key(self, error);
+	if (session_key == NULL)
 		return FALSE;
-	}
 
 	/* save the session URI so we can log out later */
 	json_obj_resp = fu_redfish_request_get_json_object(request);
@@ -720,6 +724,13 @@ fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_
 	g_set_str(&self->bearer_token, bearer_token);
 }
 
+void
+fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	g_set_str(&self->session_key_file, session_key_file);
+}
+
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 {
@@ -727,10 +738,33 @@ fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 	return self->push_uri_path;
 }
 
-const gchar *
-fu_redfish_backend_get_session_key(FuRedfishBackend *self)
+gchar *
+fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error)
 {
-	return self->session_key;
+	g_autofree gchar *session_key = NULL;
+
+	/* pre-cooked or indirect */
+	if (self->session_key != NULL) {
+		session_key = g_strdup(self->session_key);
+	} else if (self->session_key_file != NULL) {
+		if (!g_file_get_contents(self->session_key_file, &session_key, NULL, error)) {
+			fwupd_error_convert(error);
+			return NULL;
+		}
+		g_strstrip(session_key);
+	}
+
+	/* sanity check */
+	if (session_key == NULL || session_key[0] == '\0') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get session key");
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&session_key);
 }
 
 static void
@@ -741,7 +775,8 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
 	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
-	fwupd_codec_string_append(str, idt, "SessionKey", self->session_key);
+	fwupd_codec_string_append(str, idt, "SessionKeyFile", self->session_key_file);
+	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
 	fwupd_codec_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
 	fwupd_codec_string_append(str, idt, "PushUriPath", self->push_uri_path);
@@ -768,6 +803,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->username);
 	g_free(self->password);
 	g_free(self->bearer_token);
+	g_free(self->session_key_file);
 	g_free(self->session_key);
 	g_free(self->session_uri);
 	g_free(self->vendor);
