@@ -705,8 +705,7 @@ fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 				    (guint)RMI_PRODUCT_ID_LENGTH);
 			return FALSE;
 		}
-		g_free(self->product_id);
-		self->product_id = g_strdup(product_id);
+		g_set_str(&self->product_id, product_id);
 	}
 
 	/* success */

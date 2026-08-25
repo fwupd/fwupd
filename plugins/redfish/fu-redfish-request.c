@@ -277,8 +277,7 @@ void
 fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_prefix)
 {
 	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
-	g_free(self->path_prefix);
-	self->path_prefix = g_strdup(path_prefix);
+	g_set_str(&self->path_prefix, path_prefix);
 }
 
 void

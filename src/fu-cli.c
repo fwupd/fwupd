@@ -5932,7 +5932,7 @@ fu_cli_cmd_array_to_string(FuCli *self)
 	if (string->len > 0)
 		g_string_set_size(string, string->len - 1);
 
-	return g_string_free(string, FALSE);
+	return g_string_free_and_steal(string);
 }
 
 static void

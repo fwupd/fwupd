@@ -1102,7 +1102,7 @@ fu_context_convert_firmware_gtype_to_id(GType gtype)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**
@@ -2029,8 +2029,7 @@ fu_context_set_esp_location(FuContext *self, const gchar *location)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(location != NULL);
-	g_free(priv->esp_location);
-	priv->esp_location = g_strdup(location);
+	g_set_str(&priv->esp_location, location);
 }
 
 /**

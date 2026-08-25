@@ -18,7 +18,6 @@ Checks:
   - -bugprone-branch-clone # TODO: enable and autofix
   - -bugprone-easily-swappable-parameters
   - -bugprone-implicit-widening-of-multiplication-result
-  - -bugprone-macro-parentheses
   - -bugprone-multi-level-implicit-pointer-conversion
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier

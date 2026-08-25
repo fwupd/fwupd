@@ -68,22 +68,19 @@ fu_redfish_smbios_get_ip_addr(FuRedfishSmbios *self)
 static void
 fu_redfish_smbios_set_hostname(FuRedfishSmbios *self, const gchar *hostname)
 {
-	g_free(self->hostname);
-	self->hostname = g_strdup(hostname);
+	g_set_str(&self->hostname, hostname);
 }
 
 static void
 fu_redfish_smbios_set_mac_addr(FuRedfishSmbios *self, const gchar *mac_addr)
 {
-	g_free(self->mac_addr);
-	self->mac_addr = g_strdup(mac_addr);
+	g_set_str(&self->mac_addr, mac_addr);
 }
 
 static void
 fu_redfish_smbios_set_ip_addr(FuRedfishSmbios *self, const gchar *ip_addr)
 {
-	g_free(self->ip_addr);
-	self->ip_addr = g_strdup(ip_addr);
+	g_set_str(&self->ip_addr, ip_addr);
 }
 
 static void

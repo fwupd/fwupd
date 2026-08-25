@@ -30,7 +30,7 @@ fu_byte_array_to_string(GByteArray *array)
 	g_return_val_if_fail(array != NULL, NULL);
 	for (guint i = 0; i < array->len; i++)
 		g_string_append_printf(str, "%02x", array->data[i]);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**

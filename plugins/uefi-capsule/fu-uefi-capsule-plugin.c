@@ -713,7 +713,7 @@ fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiCapsuleDeviceKi
 	display_name = g_string_new(fu_uefi_capsule_plugin_uefi_type_to_string(device_kind));
 	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE)
 		g_string_prepend(display_name, "UEFI ");
-	return g_string_free(display_name, FALSE);
+	return g_string_free_and_steal(display_name);
 }
 
 static gboolean

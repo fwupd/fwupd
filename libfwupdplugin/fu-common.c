@@ -648,7 +648,7 @@ fu_common_get_random_string(guint length, GError **error)
 	}
 
 	/* success */
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**

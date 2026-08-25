@@ -494,7 +494,7 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 	}
 
 	/* success */
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static gchar *
@@ -540,7 +540,7 @@ fu_version_ensure_semver_internal(const gchar *version)
 	/* found no digits */
 	if (digit_cnt == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&version_safe), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&version_safe));
 }
 
 /**

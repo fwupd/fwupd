@@ -97,8 +97,7 @@ fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
 	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
 	if (g_strcmp0(issuer, self->issuer) == 0)
 		return;
-	g_free(self->issuer);
-	self->issuer = g_strdup(issuer);
+	g_set_str(&self->issuer, issuer);
 }
 
 /**
@@ -116,8 +115,7 @@ fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
 	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
 	if (g_strcmp0(subject, self->subject) == 0)
 		return;
-	g_free(self->subject);
-	self->subject = g_strdup(subject);
+	g_set_str(&self->subject, subject);
 }
 
 /**

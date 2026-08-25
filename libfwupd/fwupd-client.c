@@ -441,49 +441,31 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 
 	/* success */
 	g_free(priv->user_agent);
-	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
+	priv->user_agent = g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_vendor, host_vendor) == 0)
-		return;
-
-	g_free(priv->host_vendor);
-	priv->host_vendor = g_strdup(host_vendor);
-	fwupd_client_object_notify(self, "host-vendor");
+	if (g_set_str(&priv->host_vendor, host_vendor))
+		fwupd_client_object_notify(self, "host-vendor");
 }
 
 static void
 fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_product, host_product) == 0)
-		return;
-
-	g_free(priv->host_product);
-	priv->host_product = g_strdup(host_product);
-	fwupd_client_object_notify(self, "host-product");
+	if (g_set_str(&priv->host_product, host_product))
+		fwupd_client_object_notify(self, "host-product");
 }
 
 static void
 fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_machine_id, host_machine_id) == 0)
-		return;
-
-	g_free(priv->host_machine_id);
-	priv->host_machine_id = g_strdup(host_machine_id);
-	fwupd_client_object_notify(self, "host-machine-id");
+	if (g_set_str(&priv->host_machine_id, host_machine_id))
+		fwupd_client_object_notify(self, "host-machine-id");
 }
 
 /**
@@ -499,14 +481,8 @@ void
 fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_security_id, host_security_id) == 0)
-		return;
-
-	g_free(priv->host_security_id);
-	priv->host_security_id = g_strdup(host_security_id);
-	fwupd_client_object_notify(self, "host-security-id");
+	if (g_set_str(&priv->host_security_id, host_security_id))
+		fwupd_client_object_notify(self, "host-security-id");
 }
 
 /**
@@ -522,15 +498,10 @@ void
 fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->daemon_version, daemon_version) == 0)
-		return;
-
-	g_free(priv->daemon_version);
-	priv->daemon_version = g_strdup(daemon_version);
-	fwupd_client_object_notify(self, "daemon-version");
-	fwupd_client_rebuild_user_agent(self);
+	if (g_set_str(&priv->daemon_version, daemon_version)) {
+		fwupd_client_object_notify(self, "daemon-version");
+		fwupd_client_rebuild_user_agent(self);
+	}
 }
 
 /**
@@ -559,13 +530,8 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
 	if (g_strcmp0(host_bkc, "") == 0)
 		host_bkc = NULL;
 
-	/* not changed */
-	if (g_strcmp0(priv->host_bkc, host_bkc) == 0)
-		return;
-
-	g_free(priv->host_bkc);
-	priv->host_bkc = g_strdup(host_bkc);
-	fwupd_client_object_notify(self, "host-bkc");
+	if (g_set_str(&priv->host_bkc, host_bkc))
+		fwupd_client_object_notify(self, "host-bkc");
 }
 
 /**
@@ -6163,12 +6129,7 @@ fwupd_client_set_user_agent(FwupdClient *self, const gchar *user_agent)
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(user_agent != NULL);
 
-	/* not changed */
-	if (g_strcmp0(priv->user_agent, user_agent) == 0)
-		return;
-
-	g_free(priv->user_agent);
-	priv->user_agent = g_strdup(user_agent);
+	g_set_str(&priv->user_agent, user_agent);
 }
 
 /**
@@ -7769,7 +7730,7 @@ fwupd_client_build_report_devices(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 static FwupdJsonObject *
@@ -7973,7 +7934,7 @@ fwupd_client_build_report_history(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**
@@ -8042,7 +8003,7 @@ fwupd_client_build_report_security(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**

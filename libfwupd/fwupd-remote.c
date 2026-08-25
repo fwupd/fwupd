@@ -270,13 +270,7 @@ void
 fwupd_remote_set_username(FwupdRemote *self, const gchar *username)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->username, username) == 0)
-		return;
-
-	g_free(priv->username);
-	priv->username = g_strdup(username);
+	g_set_str(&priv->username, username);
 }
 
 /**
@@ -292,15 +286,8 @@ void
 fwupd_remote_set_title(FwupdRemote *self, const gchar *title)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->title, title) == 0)
-		return;
-
-	g_free(priv->title);
-	priv->title = g_strdup(title);
+	g_set_str(&priv->title, title);
 }
 
 /**
@@ -316,15 +303,8 @@ void
 fwupd_remote_set_privacy_uri(FwupdRemote *self, const gchar *privacy_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->privacy_uri, privacy_uri) == 0)
-		return;
-
-	g_free(priv->privacy_uri);
-	priv->privacy_uri = g_strdup(privacy_uri);
+	g_set_str(&priv->privacy_uri, privacy_uri);
 }
 
 /**
@@ -340,15 +320,8 @@ void
 fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->agreement, agreement) == 0)
-		return;
-
-	g_free(priv->agreement);
-	priv->agreement = g_strdup(agreement);
+	g_set_str(&priv->agreement, agreement);
 }
 
 /**
@@ -364,30 +337,16 @@ void
 fwupd_remote_set_checksum_sig(FwupdRemote *self, const gchar *checksum_sig)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->checksum_sig, checksum_sig) == 0)
-		return;
-
-	g_free(priv->checksum_sig);
-	priv->checksum_sig = g_strdup(checksum_sig);
+	g_set_str(&priv->checksum_sig, checksum_sig);
 }
 
 static void
 fwupd_remote_set_checksum_sig_metadata(FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->checksum, checksum) == 0)
-		return;
-
-	g_free(priv->checksum);
-	priv->checksum = g_strdup(checksum);
+	g_set_str(&priv->checksum, checksum);
 }
 
 /**
@@ -403,13 +362,7 @@ void
 fwupd_remote_set_password(FwupdRemote *self, const gchar *password)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->password, password) == 0)
-		return;
-
-	g_free(priv->password);
-	priv->password = g_strdup(password);
+	g_set_str(&priv->password, password);
 }
 
 /**
@@ -444,14 +397,9 @@ void
 fwupd_remote_set_id(FwupdRemote *self, const gchar *id)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
-	g_strdelimit(priv->id, ".", '\0');
+	g_set_str(&priv->id, id);
+	if (priv->id != NULL)
+		g_strdelimit(priv->id, ".", '\0');
 }
 
 /**
@@ -470,8 +418,7 @@ fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	if (priv->filename_source == filename_source)
 		return;
-	g_free(priv->filename_source);
-	priv->filename_source = g_strdup(filename_source);
+	g_set_str(&priv->filename_source, filename_source);
 }
 
 static gchar *
@@ -606,8 +553,7 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 		return;
 
 	/* save this so we can export the object as a GVariant */
-	g_free(priv->metadata_uri);
-	priv->metadata_uri = g_strdup(metadata_uri);
+	g_set_str(&priv->metadata_uri, metadata_uri);
 
 	/* generate the signature URI too */
 	g_clear_pointer(&priv->metadata_uri_sig, g_free);
@@ -632,13 +578,7 @@ void
 fwupd_remote_set_firmware_base_uri(FwupdRemote *self, const gchar *firmware_base_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->firmware_base_uri, firmware_base_uri) == 0)
-		return;
-
-	g_free(priv->firmware_base_uri);
-	priv->firmware_base_uri = g_strdup(firmware_base_uri);
+	g_set_str(&priv->firmware_base_uri, firmware_base_uri);
 }
 
 /**
@@ -680,18 +620,12 @@ fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->filename_cache, filename) == 0)
-		return;
-
-	g_free(priv->filename_cache);
-	priv->filename_cache = g_strdup(filename);
+	g_set_str(&priv->filename_cache, filename);
+	g_clear_pointer(&priv->filename_cache_sig, g_free);
 
 	/* create for all non-local remote types */
-	if (priv->kind != FWUPD_REMOTE_KIND_LOCAL) {
-		g_free(priv->filename_cache_sig);
+	if (priv->kind != FWUPD_REMOTE_KIND_LOCAL)
 		priv->filename_cache_sig = g_strconcat(filename, ".jcat", NULL);
-	}
 }
 
 /**
@@ -972,13 +906,7 @@ fwupd_remote_set_remotes_dir(FwupdRemote *self, const gchar *directory)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->remotes_dir, directory) == 0)
-		return;
-
-	g_free(priv->remotes_dir);
-	priv->remotes_dir = g_strdup(directory);
+	g_set_str(&priv->remotes_dir, directory);
 }
 
 /**

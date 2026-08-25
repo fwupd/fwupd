@@ -425,5 +425,5 @@ fu_path_sanitize_basename(const gchar *str)
 	if (g_str_has_prefix(result->str, "."))
 		result->str[0] = '_';
 
-	return g_string_free(g_steal_pointer(&result), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&result));
 }

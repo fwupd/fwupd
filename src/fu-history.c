@@ -650,8 +650,7 @@ fu_history_load(FuHistory *self, GError **error)
 			g_warning("failed to migrate %s database: %s",
 				  filename,
 				  error_migrate->message);
-			sqlite3_close(self->db);
-			self->db = NULL;
+			g_clear_pointer(&self->db, sqlite3_close);
 			if (g_unlink(filename) != 0) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -682,7 +681,7 @@ fu_history_convert_hash_to_string(GHashTable *hash)
 			g_string_append(str, ";");
 		g_string_append_printf(str, "%s=%s", key, value);
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 /* nocheck:name unset some flags we don't want to store */

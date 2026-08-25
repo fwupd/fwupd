@@ -958,7 +958,7 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 
 	/* trivial case */
 	if (reqs == NULL)
-		return g_string_free(g_steal_pointer(&newest_version), FALSE);
+		return g_string_free_and_steal(g_steal_pointer(&newest_version));
 
 	/* find the newest fwupd requirement */
 	for (guint i = 0; i < reqs->len; i++) {
@@ -993,7 +993,7 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 	}
 
 	/* success */
-	return g_string_free(g_steal_pointer(&newest_version), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&newest_version));
 }
 
 gboolean

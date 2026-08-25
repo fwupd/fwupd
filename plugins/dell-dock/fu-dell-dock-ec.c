@@ -917,8 +917,7 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockVersionLowest") == 0) {
-		g_free(self->ec_minimum_version);
-		self->ec_minimum_version = g_strdup(value);
+		g_set_str(&self->ec_minimum_version, value);
 		return TRUE;
 	}
 	if (g_str_has_prefix(key, "DellDockBoard")) {

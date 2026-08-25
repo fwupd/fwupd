@@ -371,7 +371,7 @@ fu_bytes_to_string(GBytes *bytes)
 	buf = g_bytes_get_data(bytes, &bufsz);
 	for (gsize i = 0; i < bufsz; i++)
 		g_string_append_printf(str, "%02x", buf[i]);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**

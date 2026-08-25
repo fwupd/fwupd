@@ -724,8 +724,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 
 	/* update the version only on "success" simulations */
 	if (ctx->result == UPDATE_SUCCESS) {
-		g_free(ctx->node->nvm_version);
-		ctx->node->nvm_version = g_strdup(ctx->version);
+		g_set_str(&ctx->node->nvm_version, ctx->version);
 	}
 
 	g_debug("simulating update to '%s' with result: 0x%x",

@@ -34,8 +34,7 @@ G_DEFINE_TYPE(FuHuddlyUsbDevice, fu_huddly_usb_device, FU_TYPE_USB_DEVICE)
 static void
 fu_huddly_usb_device_set_state(FuHuddlyUsbDevice *self, const gchar *product_state)
 {
-	g_free(self->product_state);
-	self->product_state = g_strdup(product_state);
+	g_set_str(&self->product_state, product_state);
 }
 
 static gboolean

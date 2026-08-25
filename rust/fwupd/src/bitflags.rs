@@ -408,6 +408,7 @@ macro_rules! declare_bitflags {
 }
 
 #[cfg(test)]
+#[allow(clippy::upper_case_acronyms)]
 mod tests {
     use super::*;
 
