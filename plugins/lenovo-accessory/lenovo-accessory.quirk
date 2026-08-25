@@ -171,12 +171,15 @@ GType = FuLenovoAccessoryBleDevice
 [BLUETOOTH\VID_17EF&PID_62F6]
 Name = Lenovo AI Mouse
 Plugin = lenovo_accessory
-Flags = no-generic-version,use-notify
+Flags = no-generic-version,use-notify,signed-payload
 GType = FuLenovoAccessoryBleDevice
+FirmwareGType = FuLenovoAccessoryFirmware
 
 # Lenovo AI Mouse
 [USB\VID_17EF&PID_62F5]
 Name = Lenovo AI Mouse
 Plugin = lenovo_accessory
+Flags = signed-payload
 GType = FuLenovoAccessoryHidDualDevice
+FirmwareGType = FuLenovoAccessoryFirmware
 LenovoAccessoryInterface = 0x02

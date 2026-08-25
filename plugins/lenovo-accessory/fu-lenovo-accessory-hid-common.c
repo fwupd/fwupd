@@ -182,13 +182,30 @@ fu_lenovo_accessory_hid_poll_cb(FuDevice *device, gpointer user_data, GError **e
 		return FALSE;
 	}
 
-	/* the firmware can leave a frame from a previous command in the report
+	status = target_status & 0x0F;
+	if (status == FU_LENOVO_ACCESSORY_STATUS_COMMAND_BUSY) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command busy");
+		return FALSE;
+	}
+	if (status != FU_LENOVO_ACCESSORY_STATUS_COMMAND_SUCCESSFUL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "command failed with status 0x%02x",
+			    status);
+		return FALSE;
+	}
+
+	/* The firmware can leave a frame from a previous command in the report
 	 * buffer; the command_id carries the direction bit (e.g. GET 0x03 -> 0x83)
-	 * so the answer must echo our class/id exactly. Detect this before the
-	 * status check, as a stale frame may carry an unrelated status (e.g. a
-	 * timeout from the previous command) that would otherwise be misread as a
-	 * failure of the current command. Flag it so the caller re-issues the
-	 * write rather than spinning on the same stale frame */
+	 * so the answer must echo our class/id exactly.
+	 *
+	 * Note: status is checked first because some firmware returns all-zeros
+	 * when busy (instead of correctly echoing the command_class/command_id).
+	 * If we checked class/id before status, those all-zero busy frames would
+	 * trigger a stale-frame rewrite, which can cause download failures.
+	 * Checking status first lets us bail early on busy without mistaking it
+	 * for a stale frame. */
 	rsp_cmd_class = fu_struct_lenovo_accessory_cmd_get_command_class(st_cmd);
 	rsp_cmd_id = fu_struct_lenovo_accessory_cmd_get_command_id(st_cmd);
 	if (rsp_cmd_class != helper->req_cmd_class || rsp_cmd_id != helper->req_cmd_id) {
@@ -223,19 +240,6 @@ fu_lenovo_accessory_hid_poll_cb(FuDevice *device, gpointer user_data, GError **e
 		return FALSE;
 	}
 
-	status = target_status & 0x0F;
-	if (status == FU_LENOVO_ACCESSORY_STATUS_COMMAND_BUSY) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command busy");
-		return FALSE;
-	}
-	if (status != FU_LENOVO_ACCESSORY_STATUS_COMMAND_SUCCESSFUL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "command failed with status 0x%02x",
-			    status);
-		return FALSE;
-	}
 	offset += FU_STRUCT_LENOVO_ACCESSORY_CMD_SIZE;
 
 	/* success */
