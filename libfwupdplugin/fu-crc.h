@@ -13,7 +13,7 @@
 G_BEGIN_DECLS
 
 guint
-fu_crc_size(FuCrcKind kind) G_GNUC_PURE;
+fu_crc_size(FuCrcKind kind) G_GNUC_CONST;
 
 guint32
 fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz) G_GNUC_PURE;
