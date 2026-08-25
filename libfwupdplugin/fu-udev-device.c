@@ -1246,6 +1246,13 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 					    "no such device");
 			return FALSE;
 		}
+		if (errno == EOPNOTSUPP) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "not supported");
+			return FALSE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
