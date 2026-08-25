@@ -38,6 +38,13 @@ Additionally, this Instance ID is added for quirk and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
 
+On the NVIDIA DGX Station GB300 two further Instance IDs are added, as the BMC
+reports `Name=Software Inventory` for every FirmwareInventory entry:
+
+* `NVIDIA_OOB\URI_${odata.id}` -- always added, and unique per inventory entry
+* `NVIDIA_OOB\SWID_${RedfishSoftwareId}` -- added when a `SoftwareId` is present,
+  so that a unified-image archive can target several components at once
+
 ## Update Behavior
 
 The firmware will be deployed as appropriate. The Redfish API does not specify
@@ -89,6 +96,64 @@ Use unsigned development builds.
 ### `Flags=manager-reset`
 
 Reset the manager (typically the BMC) after updating this device.
+
+## Session Token Authentication
+
+Instead of storing a password in `/etc/fwupd/redfish.conf` the plugin can reuse a
+Redfish `X-Auth-Token` created out of band. Set `FWUPD_SESSION_TOKEN_FILE` to the
+path of a file containing the token, for example with a systemd drop-in:
+
+```ini
+[Service]
+Environment=FWUPD_SESSION_TOKEN_FILE=/run/example-bmc-auth/session
+```
+
+The file should live on tmpfs and be readable only by root so that no secret is
+written to persistent storage. When the variable is unset, or the file does not
+exist, the plugin falls back to the configured username and password.
+
+The file is re-read before each request rather than cached at startup, as the
+session it names expires independently of the daemon. Replacing the file is
+therefore enough to re-authenticate, with no need to restart `fwupd`.
+
+## NVIDIA DGX Station GB300
+
+The BMC is detected by probing `/redfish/v1/Chassis/Chassis_0` for
+`Manufacturer=NVIDIA` and a `Model` containing both `GB300` and `Station`. A
+matching BMC gets GB300-specific update semantics, which diverge from DMTF
+DSP0266 in several places:
+
+* `Targets` must be an empty array, as the BMC resolves the components to update
+  from the PLDM bundle manifest; naming a component returns HTTP 400.
+* `ForceUpdate` must be `true`, as the BMC otherwise rejects same-version installs.
+* `@Redfish.OperationApplyTime` must be `Immediate`, as `OnReset` is not in the
+  BMC's list of acceptable values.
+* `PercentComplete` is only updated on `/redfish/v1/TaskService/Tasks/<id>`, so
+  polling `/Tasks/<id>/Monitor` always reports 0%.
+* Once a task completes the BMC returns HTTP 200 with an empty body for the task
+  monitor rather than the HTTP 404 that normally signals it has been reaped.
+
+This device requires a session token, so see **Session Token Authentication**
+above before installing firmware:
+
+```shell
+fwupdmgr get-devices        # lists FW_BMC_0, FW_GPU_0, FW_CPU_0, ...
+fwupdmgr install firmware.cab --allow-reinstall
+```
+
+A full PLDM bundle flash takes about 20 minutes. The firmware is staged rather
+than applied, and the device is marked as needing activation: it becomes active
+only after an aux-rail power cycle.
+
+```shell
+fwupdmgr activate
+```
+
+This POSTs `{"ResetType":"AuxPowerCycleForce"}` to the OEM
+`NvidiaChassis.AuxPowerReset` action advertised by `/redfish/v1/Chassis/BMC_0`,
+which is not the chassis used to detect the GB300. The `Force` variant does not
+wait for the host to shut down, so the system loses power as soon as the BMC
+accepts the request -- save your work before activating.
 
 ## Setting Service IP Manually
 
