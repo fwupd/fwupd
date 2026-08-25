@@ -140,7 +140,6 @@ fu_file_input_stream_init(FuFileInputStream *self)
 /**
  * fu_file_input_stream_from_file:
  * @file: a #GFile
- * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
  * Opens a #GFile for reading and returns a #FuFileInputStream. Use
@@ -151,16 +150,13 @@ fu_file_input_stream_init(FuFileInputStream *self)
  * Since: 2.1.7
  **/
 FuFileInputStream *
-fu_file_input_stream_from_file(GFile *file, GCancellable *cancellable, GError **error)
+fu_file_input_stream_from_file(GFile *file, GError **error)
 {
 	g_autoptr(FuFileInputStream) self = NULL;
 	g_autofree gchar *path = NULL;
 
 	g_return_val_if_fail(G_IS_FILE(file), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	if (g_cancellable_set_error_if_cancelled(cancellable, error))
-		return NULL;
 
 	path = g_file_get_path(file);
 	if (path == NULL) {

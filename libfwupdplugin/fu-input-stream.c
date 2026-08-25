@@ -242,7 +242,7 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	file = g_file_new_for_path(path);
-	stream = fu_file_input_stream_from_file(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return NULL;

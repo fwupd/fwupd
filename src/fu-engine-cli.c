@@ -3049,9 +3049,7 @@ fu_engine_cli_jcat_load_filename(FuEngineCli *self, const gchar *filename, GErro
 	if (g_file_query_exists(gfile, fu_cli_get_cancellable(FU_CLI(self)))) {
 		g_autoptr(FuFileInputStream) istream = NULL;
 		g_autoptr(GInputStream) g_istream = NULL; /* nocheck:blocked */
-		istream = fu_file_input_stream_from_file(gfile,
-							 fu_cli_get_cancellable(FU_CLI(self)),
-							 error);
+		istream = fu_file_input_stream_from_file(gfile, error);
 		if (istream == NULL)
 			return NULL;
 		g_istream = fu_input_stream_as_g_input_stream(FU_INPUT_STREAM(istream));
