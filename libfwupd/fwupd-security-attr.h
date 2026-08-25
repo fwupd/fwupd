@@ -156,7 +156,7 @@ fwupd_security_attr_has_flag(FwupdSecurityAttr *self,
 FwupdSecurityAttrFlags
 fwupd_security_attr_flag_from_string(const gchar *flag) G_GNUC_PURE;
 const gchar *
-fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag) G_GNUC_PURE;
+fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag) G_GNUC_CONST;
 FwupdSecurityAttrResult
 fwupd_security_attr_result_from_string(const gchar *result) G_GNUC_PURE;
 

@@ -84,7 +84,7 @@ fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind) G_GNUC_NON_
 GChecksumType
 fwupd_checksum_guess_kind(const gchar *checksum) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_checksum_type_to_string_display(GChecksumType checksum_type) G_GNUC_PURE;
+fwupd_checksum_type_to_string_display(GChecksumType checksum_type) G_GNUC_CONST;
 gchar *
 fwupd_checksum_format_for_display(const gchar *checksum) G_GNUC_NON_NULL(1);
 
@@ -122,8 +122,8 @@ fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags) G_G
 #define FWUPD_PERCENTAGE_UNKNOWN (-1.0)
 
 gboolean
-fwupd_percentage_is_valid(gdouble value) G_GNUC_PURE;
+fwupd_percentage_is_valid(gdouble value) G_GNUC_CONST;
 gboolean
-fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new) G_GNUC_PURE;
+fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new) G_GNUC_CONST;
 
 G_END_DECLS
