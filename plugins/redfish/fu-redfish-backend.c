@@ -660,60 +660,70 @@ fu_redfish_backend_invalidate(FuBackend *backend)
 void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->hostname, hostname);
 }
 
 void
 fu_redfish_backend_set_port(FuRedfishBackend *self, guint port)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	self->port = port;
 }
 
 void
 fu_redfish_backend_set_https(FuRedfishBackend *self, gboolean use_https)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	self->use_https = use_https;
 }
 
 void
 fu_redfish_backend_set_cacheck(FuRedfishBackend *self, gboolean cacheck)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	self->cacheck = cacheck;
 }
 
 void
 fu_redfish_backend_set_wildcard_targets(FuRedfishBackend *self, gboolean wildcard_targets)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	self->wildcard_targets = wildcard_targets;
 }
 
 void
 fu_redfish_backend_set_username(FuRedfishBackend *self, const gchar *username)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->username, username);
 }
 
 const gchar *
 fu_redfish_backend_get_username(FuRedfishBackend *self)
 {
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
 	return self->username;
 }
 
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->password, password);
 }
 
 void
 fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
 {
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->bearer_token, bearer_token);
 }
 
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 {
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
 	return self->push_uri_path;
 }
 
