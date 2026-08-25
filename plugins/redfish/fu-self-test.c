@@ -13,6 +13,7 @@
 #include "fu-ipmi-device.h"
 #endif
 #include "fu-plugin-private.h"
+#include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
@@ -201,6 +202,91 @@ fu_redfish_ipmi_func(void)
 #else
 	g_test_skip("no linux/ipmi.h, so skipping");
 #endif
+}
+
+static void
+fu_redfish_backend_session_key_none_func(void)
+{
+	g_autofree gchar *session_key = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* no session key and no session key file set */
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_null(session_key);
+}
+
+static void
+fu_redfish_backend_session_key_missing_func(void)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *session_key = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* session key file that does not exist */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "does-not-exist", NULL);
+	fu_redfish_backend_set_session_key_file(backend, fn);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(session_key);
+}
+
+static void
+fu_redfish_backend_session_key_valid_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *session_key = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* valid session key file, with leading and trailing whitespace to strip */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "session-key", NULL);
+	ret = g_file_set_contents(fn, "  abc123\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_redfish_backend_set_session_key_file(backend, fn);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "abc123");
+}
+
+static void
+fu_redfish_backend_session_key_empty_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *session_key = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* session key file with only whitespace */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "session-key", NULL);
+	ret = g_file_set_contents(fn, "   \n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_redfish_backend_set_session_key_file(backend, fn);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_null(session_key);
 }
 
 static void
@@ -669,6 +755,14 @@ main(int argc, char **argv)
 
 	fu_self_init(self);
 	g_test_add_func("/redfish/ipmi", fu_redfish_ipmi_func);
+	g_test_add_func("/redfish/backend/session-key/none",
+			fu_redfish_backend_session_key_none_func);
+	g_test_add_func("/redfish/backend/session-key/missing",
+			fu_redfish_backend_session_key_missing_func);
+	g_test_add_func("/redfish/backend/session-key/valid",
+			fu_redfish_backend_session_key_valid_func);
+	g_test_add_func("/redfish/backend/session-key/empty",
+			fu_redfish_backend_session_key_empty_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
