@@ -458,6 +458,44 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
 }
 
 static gboolean
+fu_mtd_device_get_locked_intel_pci(FuMtdDevice *self, gboolean *locked, GError **error)
+{
+	g_autoptr(FuDevice) pci_parent = NULL;
+	gboolean locked_tmp = TRUE;
+	const gchar *basenames[] = {
+	    "intel_spi_locked",
+	    "intel_spi_bios_locked",
+	    "intel_spi_protected",
+	};
+
+	pci_parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	if (pci_parent == NULL)
+		return FALSE;
+	if (fu_device_get_vid(pci_parent) != FU_PCI_VENDOR_ID_INTEL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not Intel mtd, got %s",
+			    fu_device_get_vendor(pci_parent));
+		return FALSE;
+	}
+	for (guint i = 0; i < G_N_ELEMENTS(basenames); i++) {
+		g_autofree gchar *value = NULL;
+		value =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(pci_parent), basenames[i], 100, error);
+		if (value == NULL)
+			return FALSE;
+		g_debug("%s=%s", basenames[i], value);
+		if (g_strcmp0(value, "1") != 0)
+			locked_tmp = FALSE;
+	}
+
+	/* success */
+	*locked = locked_tmp;
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
@@ -465,6 +503,7 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
 	struct erase_info_user erase = {0x0};
 	g_autoptr(FuIoctl) ioctl = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	if (firmware_size_max == 0) {
 		g_set_error_literal(error,
@@ -493,8 +532,17 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 			      &rc,
 			      FU_MTD_DEVICE_IOCTL_TIMEOUT,
 			      FU_IOCTL_FLAG_NONE,
-			      error)) {
-		g_prefix_error_literal(error, "failed to get MTD lock status: ");
+			      &error_local)) {
+		/* the spi_intel_pci driver doesn't support ->_is_locked (i.e. we're getting
+		 * EOPNOTSUPP) -- but this is probably the most popular mtd kernel driver we're
+		 * going to see in reality */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring: %s", error_local->message);
+			return fu_mtd_device_get_locked_intel_pci(self, locked, error);
+		}
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to get MTD lock status: ");
 		return FALSE;
 	}
 
