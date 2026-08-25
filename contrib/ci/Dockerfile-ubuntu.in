@@ -16,7 +16,6 @@ RUN set -euxo pipefail; \
     python3-apt \
     sudo \
 %%%DEPENDENCIES%%%; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean
 WORKDIR /github/workspace
 %%%RUSTUP%%%
