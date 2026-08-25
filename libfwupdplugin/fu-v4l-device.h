@@ -19,8 +19,8 @@ struct _FuV4lDeviceClass {
 };
 
 guint8
-fu_v4l_device_get_index(FuV4lDevice *self) G_GNUC_NON_NULL(1);
+fu_v4l_device_get_index(FuV4lDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuV4lCap
-fu_v4l_device_get_caps(FuV4lDevice *self) G_GNUC_NON_NULL(1);
+fu_v4l_device_get_caps(FuV4lDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

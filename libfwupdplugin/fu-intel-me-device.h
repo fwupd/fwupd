@@ -15,12 +15,12 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(FuIntelMeDevice, fu_intel_me_device, FU, INTEL_ME_DEVICE, FuDevice)
 
 FuIntelMeFamily
-fu_intel_me_device_get_family(FuIntelMeDevice *self) G_GNUC_NON_NULL(1);
+fu_intel_me_device_get_family(FuIntelMeDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuIntelMeIssue
-fu_intel_me_device_get_issue(FuIntelMeDevice *self) G_GNUC_NON_NULL(1);
+fu_intel_me_device_get_issue(FuIntelMeDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 FuStructIntelMeHfsts *
-fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx) G_GNUC_NON_NULL(1);
+fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHfsts *hfsts)
     G_GNUC_NON_NULL(1, 3);

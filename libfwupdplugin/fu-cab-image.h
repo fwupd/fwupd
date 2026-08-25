@@ -19,7 +19,7 @@ fu_cab_image_get_win32_filename(FuCabImage *self) G_GNUC_NON_NULL(1);
 void
 fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename) G_GNUC_NON_NULL(1);
 GDateTime *
-fu_cab_image_get_created(FuCabImage *self) G_GNUC_NON_NULL(1);
+fu_cab_image_get_created(FuCabImage *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cab_image_set_created(FuCabImage *self, GDateTime *created) G_GNUC_NON_NULL(1);
 

@@ -23,10 +23,10 @@ FuFirmware *
 fu_oprom_firmware_new(void);
 
 FuOpromMachineType
-fu_oprom_firmware_get_machine_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_machine_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuOpromSubsystem
-fu_oprom_firmware_get_subsystem(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_subsystem(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuOpromCompressionType
-fu_oprom_firmware_get_compression_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_compression_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

@@ -11,8 +11,8 @@
 G_BEGIN_DECLS
 
 gsize
-fu_partial_input_stream_get_offset(FuPartialInputStream *self) G_GNUC_NON_NULL(1);
+fu_partial_input_stream_get_offset(FuPartialInputStream *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gsize
-fu_partial_input_stream_get_size(FuPartialInputStream *self) G_GNUC_NON_NULL(1);
+fu_partial_input_stream_get_size(FuPartialInputStream *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

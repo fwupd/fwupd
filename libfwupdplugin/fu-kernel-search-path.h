@@ -23,6 +23,7 @@ fu_kernel_search_path_locker_new(FuPathStore *pstore,
 				 const gchar *path,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 const gchar *
-fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self) G_GNUC_NON_NULL(1);
+fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self)
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

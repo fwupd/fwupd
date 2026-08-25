@@ -17,6 +17,6 @@ fu_efivars_set_boot_current(FuEfivars *self, guint16 idx, GError **error) G_GNUC
 gboolean
 fu_efivars_build_boot_order(FuEfivars *self, GError **error, ...) G_GNUC_NON_NULL(1);
 FuPathStore *
-fu_efivars_get_path_store(FuEfivars *self) G_GNUC_NON_NULL(1);
+fu_efivars_get_path_store(FuEfivars *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

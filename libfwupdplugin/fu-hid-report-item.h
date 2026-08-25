@@ -18,8 +18,8 @@ FuHidReportItem *
 fu_hid_report_item_new(void);
 
 FuHidItemKind
-fu_hid_report_item_get_kind(FuHidReportItem *self) G_GNUC_NON_NULL(1);
+fu_hid_report_item_get_kind(FuHidReportItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_hid_report_item_get_value(FuHidReportItem *self) G_GNUC_NON_NULL(1);
+fu_hid_report_item_get_value(FuHidReportItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

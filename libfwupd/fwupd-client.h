@@ -460,31 +460,31 @@ fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res
     G_GNUC_NON_NULL(1, 2);
 
 FwupdStatus
-fwupd_client_get_status(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_status(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fwupd_client_get_tainted(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_tainted(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fwupd_client_get_only_trusted(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_only_trusted(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fwupd_client_get_daemon_interactive(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_daemon_interactive(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint
-fwupd_client_get_percentage(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_percentage(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gdouble
-fwupd_client_get_percentage_full(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_percentage_full(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_client_get_daemon_version(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_daemon_version(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_client_get_host_bkc(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_host_bkc(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_client_get_host_vendor(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_host_vendor(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_client_get_host_product(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_host_product(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_client_get_host_machine_id(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_host_machine_id(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_client_get_host_security_id(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_host_security_id(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_id)
     G_GNUC_NON_NULL(1);
@@ -494,9 +494,9 @@ void
 fwupd_client_add_hwid(FwupdClient *self, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2);
 guint32
-fwupd_client_get_battery_level(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_battery_level(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fwupd_client_get_battery_threshold(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_battery_threshold(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 void
 fwupd_client_get_remotes_async(FwupdClient *self,
@@ -583,7 +583,7 @@ fwupd_client_set_feature_flags_finish(FwupdClient *self,
 				      GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 const gchar *
-fwupd_client_get_user_agent(FwupdClient *self) G_GNUC_NON_NULL(1);
+fwupd_client_get_user_agent(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_client_set_user_agent(FwupdClient *self, const gchar *user_agent) G_GNUC_NON_NULL(1);
 void

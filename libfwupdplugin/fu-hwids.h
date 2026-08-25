@@ -130,13 +130,13 @@ G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
 GPtrArray *
 fu_hwids_get_keys(FuHwids *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_hwids_get_value(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+fu_hwids_get_value(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 void
 fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_hwids_get_chid_keys(FuHwids *self);
 const gchar *
-fu_hwids_get_replace_keys(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+fu_hwids_get_replace_keys(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gchar *
 fu_hwids_get_replace_values(FuHwids *self,
 			    const gchar *keys,
@@ -145,10 +145,10 @@ gchar *
 fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_hwids_get_guids(FuHwids *self) G_GNUC_NON_NULL(1);
+fu_hwids_get_guids(FuHwids *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_hwids_add_guid(FuHwids *self, const gchar *guid) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_has_guid(FuHwids *self, const gchar *guid) G_GNUC_NON_NULL(1);
+fu_hwids_has_guid(FuHwids *self, const gchar *guid) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

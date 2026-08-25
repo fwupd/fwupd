@@ -19,7 +19,7 @@ struct _FuCabFirmwareClass {
 };
 
 gboolean
-fu_cab_firmware_get_compressed(FuCabFirmware *self) G_GNUC_NON_NULL(1);
+fu_cab_firmware_get_compressed(FuCabFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed) G_GNUC_NON_NULL(1);
 

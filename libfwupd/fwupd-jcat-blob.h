@@ -24,18 +24,19 @@ FwupdJcatBlob *
 fwupd_jcat_blob_new_utf8(FwupdJcatBlobKind kind, const gchar *data) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(2);
 GBytes *
-fwupd_jcat_blob_get_data(FwupdJcatBlob *self) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+fwupd_jcat_blob_get_data(FwupdJcatBlob *self) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fwupd_jcat_blob_get_data_as_string(FwupdJcatBlob *self) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FwupdJcatBlobKind
-fwupd_jcat_blob_get_kind(FwupdJcatBlob *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_blob_get_kind(FwupdJcatBlob *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FwupdJcatBlobKind
-fwupd_jcat_blob_get_target(FwupdJcatBlob *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_blob_get_target(FwupdJcatBlob *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_jcat_blob_set_target(FwupdJcatBlob *self, FwupdJcatBlobKind target) G_GNUC_NON_NULL(1);
 guint64
-fwupd_jcat_blob_get_timestamp(FwupdJcatBlob *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_blob_get_timestamp(FwupdJcatBlob *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_jcat_blob_set_timestamp(FwupdJcatBlob *self, guint64 timestamp) G_GNUC_NON_NULL(1);
 

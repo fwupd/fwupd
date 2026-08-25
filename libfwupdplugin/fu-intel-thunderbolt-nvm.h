@@ -25,19 +25,19 @@ struct _FuIntelThunderboltNvmClass {
 };
 
 guint16
-fu_intel_thunderbolt_nvm_get_vendor_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_get_vendor_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_intel_thunderbolt_nvm_get_device_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_get_device_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_intel_thunderbolt_nvm_get_model_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_get_model_id(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_intel_thunderbolt_nvm_is_host(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_is_host(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_intel_thunderbolt_nvm_is_native(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_is_native(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_intel_thunderbolt_nvm_has_pd(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_has_pd(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_intel_thunderbolt_nvm_get_flash_size(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1);
+fu_intel_thunderbolt_nvm_get_flash_size(FuIntelThunderboltNvm *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 FuFirmware *
 fu_intel_thunderbolt_nvm_new(void);

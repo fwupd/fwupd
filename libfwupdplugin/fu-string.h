@@ -44,7 +44,7 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error);
 gchar *
 fu_strstrip(const gchar *str) G_GNUC_NON_NULL(1);
 gsize
-fu_strwidth(const gchar *text) G_GNUC_NON_NULL(1);
+fu_strwidth(const gchar *text) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens) G_GNUC_NON_NULL(1);
 gchar **

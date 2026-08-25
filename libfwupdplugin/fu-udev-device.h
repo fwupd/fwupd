@@ -34,25 +34,26 @@ struct _FuUdevDeviceClass {
 #define FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID "sysfs-use-physical-id"
 
 const gchar *
-fu_udev_device_get_device_file(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_device_file(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_sysfs_path(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_sysfs_path(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_udev_device_get_devpath(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_subsystem(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_subsystem(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fu_udev_device_get_bind_id(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_driver(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_driver(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fu_udev_device_get_number(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_number(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint
-fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);
+fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self,
 			       const gchar *subsystems,
@@ -63,7 +64,7 @@ void
 fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag) G_GNUC_NON_NULL(1);
 
 FuIOChannel *
-fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
 FuIoctl *
@@ -156,7 +157,7 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 				 guint timeout_ms,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
-fu_udev_device_get_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+fu_udev_device_get_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_udev_device_get_subsystem_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 gboolean
