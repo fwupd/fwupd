@@ -19,7 +19,8 @@ fwupd_json_array_unref(FwupdJsonArray *self) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdJsonArray, fwupd_json_array_unref);
 
 guint
-fwupd_json_array_get_size(FwupdJsonArray *self) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_json_array_get_size(FwupdJsonArray *self)
+    G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE;
 FwupdJsonNode *
 fwupd_json_array_get_node(FwupdJsonArray *self, guint idx, GError **error)
     G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;

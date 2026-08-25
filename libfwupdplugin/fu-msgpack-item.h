@@ -35,20 +35,20 @@ FuMsgpackItem *
 fu_msgpack_item_new_array(guint64 items);
 
 FuMsgpackItemKind
-fu_msgpack_item_get_kind(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_kind(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_msgpack_item_get_boolean(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_boolean(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gint64
-fu_msgpack_item_get_integer(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_integer(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gdouble
-fu_msgpack_item_get_float(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_float(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GByteArray *
-fu_msgpack_item_get_binary(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_binary(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GString *
-fu_msgpack_item_get_string(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_string(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fu_msgpack_item_get_map(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_map(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fu_msgpack_item_get_array(FuMsgpackItem *self) G_GNUC_NON_NULL(1);
+fu_msgpack_item_get_array(FuMsgpackItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

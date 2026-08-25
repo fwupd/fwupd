@@ -11,20 +11,20 @@
 G_BEGIN_DECLS
 
 guint32
-fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc);
+fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc) G_GNUC_PURE;
 guint32
-fu_crc32_done(FuCrcKind kind, guint32 crc);
+fu_crc32_done(FuCrcKind kind, guint32 crc) G_GNUC_PURE;
 guint32
-fu_crc32_fast(const guint8 *buf, gsize bufsz, guint32 crc);
+fu_crc32_fast(const guint8 *buf, gsize bufsz, guint32 crc) G_GNUC_PURE;
 
 guint16
-fu_crc16_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint16 crc);
+fu_crc16_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint16 crc) G_GNUC_PURE;
 guint16
-fu_crc16_done(FuCrcKind kind, guint16 crc);
+fu_crc16_done(FuCrcKind kind, guint16 crc) G_GNUC_PURE;
 
 guint8
-fu_crc8_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint8 crc);
+fu_crc8_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint8 crc) G_GNUC_PURE;
 guint8
-fu_crc8_done(FuCrcKind kind, guint8 crc);
+fu_crc8_done(FuCrcKind kind, guint8 crc) G_GNUC_PURE;
 
 G_END_DECLS

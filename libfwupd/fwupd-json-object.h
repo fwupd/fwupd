@@ -20,7 +20,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdJsonObject, fwupd_json_object_unref);
 void
 fwupd_json_object_clear(FwupdJsonObject *self) G_GNUC_NON_NULL(1);
 guint
-fwupd_json_object_get_size(FwupdJsonObject *self) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_json_object_get_size(FwupdJsonObject *self)
+    G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE;
 GRefString *
 fwupd_json_object_get_key_for_index(FwupdJsonObject *self, guint idx, GError **error)
     G_GNUC_NON_NULL(1);
@@ -63,7 +64,7 @@ fwupd_json_object_get_boolean_with_default(FwupdJsonObject *self,
 					   GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_json_object_has_node(FwupdJsonObject *self, const gchar *key)
-    G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT G_GNUC_PURE;
 FwupdJsonNode *
 fwupd_json_object_get_node(FwupdJsonObject *self, const gchar *key, GError **error)
     G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;

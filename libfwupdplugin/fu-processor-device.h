@@ -18,13 +18,15 @@ FuProcessorDevice *
 fu_processor_device_new(FuContext *ctx);
 
 FuProcessorKind
-fu_processor_device_get_kind(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
+fu_processor_device_get_kind(FuProcessorDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_processor_device_needs_mitigation(FuProcessorDevice *self,
-				     FuProcessorMitigationFlags mitigation_flag) G_GNUC_NON_NULL(1);
+				     FuProcessorMitigationFlags mitigation_flag)
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
+fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self)
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
+fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

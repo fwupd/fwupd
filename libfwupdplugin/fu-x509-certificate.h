@@ -16,9 +16,9 @@ G_DECLARE_FINAL_TYPE(FuX509Certificate, fu_x509_certificate, FU, X509_CERTIFICAT
 FuX509Certificate *
 fu_x509_certificate_new(void);
 const gchar *
-fu_x509_certificate_get_issuer(FuX509Certificate *self) G_GNUC_NON_NULL(1);
+fu_x509_certificate_get_issuer(FuX509Certificate *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_x509_certificate_get_subject(FuX509Certificate *self) G_GNUC_NON_NULL(1);
+fu_x509_certificate_get_subject(FuX509Certificate *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer) G_GNUC_NON_NULL(1);
 void

@@ -18,12 +18,12 @@ G_DECLARE_FINAL_TYPE(FuEfiX509Signature,
 		     FuEfiSignature)
 
 const gchar *
-fu_efi_x509_signature_get_issuer(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
+fu_efi_x509_signature_get_issuer(FuEfiX509Signature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_efi_x509_signature_get_subject(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
+fu_efi_x509_signature_get_subject(FuEfiX509Signature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_efi_x509_signature_get_subject_name(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
+fu_efi_x509_signature_get_subject_name(FuEfiX509Signature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
+fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

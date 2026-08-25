@@ -21,25 +21,25 @@ fu_plugin_set_context(FuPlugin *self, FuContext *ctx) G_GNUC_NON_NULL(1);
 void
 fu_plugin_set_name(FuPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 gboolean
-fu_plugin_is_open(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_is_open(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint
-fu_plugin_get_order(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_order(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_plugin_set_order(FuPlugin *self, guint order) G_GNUC_NON_NULL(1);
 guint
-fu_plugin_get_priority(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_priority(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_plugin_set_priority(FuPlugin *self, guint priority) G_GNUC_NON_NULL(1);
 GArray *
-fu_plugin_get_device_gtypes(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_device_gtypes(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_plugin_to_string(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
 fu_plugin_add_string(FuPlugin *self, guint idt, GString *str) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_plugin_get_rules(FuPlugin *self, FuPluginRule rule) G_GNUC_NON_NULL(1);
+fu_plugin_get_rules(FuPlugin *self, FuPluginRule rule) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GHashTable *
-fu_plugin_get_report_metadata(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_report_metadata(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
@@ -165,9 +165,9 @@ gboolean
 fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
 gint
-fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1, 2);
+fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gint
-fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1, 2);
+fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 
 /* utils */
 gchar *

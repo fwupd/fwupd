@@ -32,7 +32,7 @@ fu_chunk_array_new_from_stream(FuInputStream *stream,
 			       gsize packet_sz,
 			       GError **error) G_GNUC_NON_NULL(1);
 guint
-fu_chunk_array_length(FuChunkArray *self) G_GNUC_NON_NULL(1);
+fu_chunk_array_length(FuChunkArray *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuChunk *
 fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error) G_GNUC_NON_NULL(1);
 

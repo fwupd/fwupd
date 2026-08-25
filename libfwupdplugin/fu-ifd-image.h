@@ -24,6 +24,6 @@ void
 fu_ifd_image_set_access(FuIfdImage *self, FuIfdRegion region, FuIfdAccess access)
     G_GNUC_NON_NULL(1);
 FuIfdAccess
-fu_ifd_image_get_access(FuIfdImage *self, FuIfdRegion region) G_GNUC_NON_NULL(1);
+fu_ifd_image_get_access(FuIfdImage *self, FuIfdRegion region) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

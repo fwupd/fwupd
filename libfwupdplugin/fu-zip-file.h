@@ -20,7 +20,7 @@ struct _FuZipFileClass {
 };
 
 FuZipCompression
-fu_zip_file_get_compression(FuZipFile *self) G_GNUC_NON_NULL(1);
+fu_zip_file_get_compression(FuZipFile *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_zip_file_set_compression(FuZipFile *self, FuZipCompression compression) G_GNUC_NON_NULL(1);
 

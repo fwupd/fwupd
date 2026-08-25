@@ -18,8 +18,8 @@ G_DECLARE_FINAL_TYPE(FuUsbConfigDescriptor,
 		     FuUsbDescriptor)
 
 guint8
-fu_usb_config_descriptor_get_configuration(FuUsbConfigDescriptor *self);
+fu_usb_config_descriptor_get_configuration(FuUsbConfigDescriptor *self) G_GNUC_PURE;
 guint8
-fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self);
+fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self) G_GNUC_PURE;
 
 G_END_DECLS

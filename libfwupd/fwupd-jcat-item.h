@@ -26,7 +26,7 @@ fwupd_jcat_item_get_blob_by_kind(FwupdJcatItem *self, FwupdJcatBlobKind kind, GE
 void
 fwupd_jcat_item_add_blob(FwupdJcatItem *self, FwupdJcatBlob *blob) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fwupd_jcat_item_get_id(FwupdJcatItem *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_item_get_id(FwupdJcatItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fwupd_jcat_item_get_id_safe(FwupdJcatItem *self, GError **error) G_GNUC_NON_NULL(1);
 void
@@ -36,6 +36,6 @@ fwupd_jcat_item_remove_alias_id(FwupdJcatItem *self, const gchar *id) G_GNUC_NON
 GPtrArray *
 fwupd_jcat_item_get_alias_ids(FwupdJcatItem *self) G_GNUC_NON_NULL(1);
 gboolean
-fwupd_jcat_item_has_target(FwupdJcatItem *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_item_has_target(FwupdJcatItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

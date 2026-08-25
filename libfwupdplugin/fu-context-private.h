@@ -35,9 +35,9 @@ gboolean
 fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);
 GHashTable *
-fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GHashTable *
-fu_context_get_compile_versions(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_compile_versions(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_add_firmware_gtype(FuContext *self, GType gtype) G_GNUC_NON_NULL(1);
 GPtrArray *
@@ -45,16 +45,17 @@ fu_context_get_firmware_gtype_ids(FuContext *self) G_GNUC_NON_NULL(1);
 GArray *
 fu_context_get_firmware_gtypes(FuContext *self) G_GNUC_NON_NULL(1);
 GType
-fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
+fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id)
+    G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 void
 fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name)
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_context_has_backend(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2);
+fu_context_has_backend(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       const gchar *subsystem,
@@ -62,22 +63,22 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume) G_GNUC_NON_NULL(1);
 FuSmbios *
-fu_context_get_smbios(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_smbios(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_smbios(FuContext *self, FuSmbios *smbios) G_GNUC_NON_NULL(1, 2);
 FuHwids *
-fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuConfig *
-fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 gchar *
 fu_context_get_config_str(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gchar **
 fu_context_get_config_strv(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_context_get_config_bool(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+fu_context_get_config_bool(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 guint64
-fu_context_get_config_u64(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+fu_context_get_config_u64(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind) G_GNUC_NON_NULL(1);
@@ -85,7 +86,7 @@ void
 fu_context_set_cpu_vendor(FuContext *self, FuCpuVendor cpu_vendor) G_GNUC_NON_NULL(1);
 
 gpointer
-fu_context_get_data(FuContext *self, const gchar *key);
+fu_context_get_data(FuContext *self, const gchar *key) G_GNUC_PURE;
 void
 fu_context_set_data(FuContext *self, const gchar *key, gpointer data);
 

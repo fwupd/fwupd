@@ -32,11 +32,11 @@ FwupdPlugin *
 fwupd_plugin_new(void);
 
 const gchar *
-fwupd_plugin_get_name(FwupdPlugin *self) G_GNUC_NON_NULL(1);
+fwupd_plugin_get_name(FwupdPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_plugin_set_name(FwupdPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 guint64
-fwupd_plugin_get_flags(FwupdPlugin *self) G_GNUC_NON_NULL(1);
+fwupd_plugin_get_flags(FwupdPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_plugin_set_flags(FwupdPlugin *self, guint64 flags) G_GNUC_NON_NULL(1);
 void
@@ -45,6 +45,6 @@ void
 fwupd_plugin_remove_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

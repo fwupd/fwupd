@@ -25,19 +25,19 @@ struct _FuDpauxDeviceClass {
 #define FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE	0x500
 
 goffset
-fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
+fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset) G_GNUC_NON_NULL(1);
 guint32
-fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
+fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui) G_GNUC_NON_NULL(1);
 guint8
-fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
+fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev) G_GNUC_NON_NULL(1);
 const gchar *
-fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
+fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id) G_GNUC_NON_NULL(1);
 

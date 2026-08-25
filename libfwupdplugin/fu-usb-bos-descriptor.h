@@ -18,6 +18,6 @@ G_DECLARE_FINAL_TYPE(FuUsbBosDescriptor,
 		     FuUsbDescriptor)
 
 guint8
-fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self);
+fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self) G_GNUC_PURE;
 
 G_END_DECLS

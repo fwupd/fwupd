@@ -20,7 +20,7 @@ struct _FuHidrawDeviceClass {
 };
 
 FuHidBusType
-fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1);
+fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,

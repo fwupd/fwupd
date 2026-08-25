@@ -19,12 +19,12 @@ FuTpmEventlogItem *
 fu_tpm_eventlog_item_new(void) G_GNUC_WARN_UNUSED_RESULT;
 
 FuTpmEventlogItemKind
-fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self) G_GNUC_NON_NULL(1);
+fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_tpm_eventlog_item_set_kind(FuTpmEventlogItem *self, FuTpmEventlogItemKind kind)
     G_GNUC_NON_NULL(1);
 guint8
-fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self) G_GNUC_NON_NULL(1);
+fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_tpm_eventlog_item_set_pcr(FuTpmEventlogItem *self, guint8 pcr) G_GNUC_NON_NULL(1);
 void

@@ -20,6 +20,6 @@ struct _FuIfdFirmwareClass {
 FuFirmware *
 fu_ifd_firmware_new(void);
 gboolean
-fu_ifd_firmware_check_jedec_cmd(FuIfdFirmware *self, guint8 cmd) G_GNUC_NON_NULL(1);
+fu_ifd_firmware_check_jedec_cmd(FuIfdFirmware *self, guint8 cmd) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

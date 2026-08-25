@@ -11,7 +11,7 @@
 G_BEGIN_DECLS
 
 guint8
-fu_xor8(const guint8 *buf, gsize bufsz) G_GNUC_NON_NULL(1);
+fu_xor8(const guint8 *buf, gsize bufsz) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_xor8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *value, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

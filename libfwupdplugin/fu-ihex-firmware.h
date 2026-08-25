@@ -35,7 +35,7 @@ typedef struct {
 FuFirmware *
 fu_ihex_firmware_new(void);
 GPtrArray *
-fu_ihex_firmware_get_records(FuIhexFirmware *self) G_GNUC_NON_NULL(1);
+fu_ihex_firmware_get_records(FuIhexFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_ihex_firmware_set_padding_value(FuIhexFirmware *self, guint8 padding_value) G_GNUC_NON_NULL(1);
 

@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 #define FU_EFI_SIGNATURE_GUID_EXTERNAL "452e8ced-dfff-4b8c-ae01-5118862e682c"
 
 const gchar *
-fu_efi_guid_to_name(const gchar *guid);
+fu_efi_guid_to_name(const gchar *guid) G_GNUC_PURE;
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
 		      FuInputStream *stream,

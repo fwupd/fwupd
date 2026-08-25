@@ -11,7 +11,7 @@
 G_BEGIN_DECLS
 
 const gchar *
-fu_device_event_get_id(FuDeviceEvent *self) G_GNUC_NON_NULL(1);
+fu_device_event_get_id(FuDeviceEvent *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_device_event_build_id(const gchar *id) G_GNUC_NON_NULL(1);
 

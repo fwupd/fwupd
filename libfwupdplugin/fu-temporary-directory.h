@@ -17,7 +17,7 @@ G_DECLARE_FINAL_TYPE(FuTemporaryDirectory, fu_temporary_directory, FU, TEMPORARY
 FuTemporaryDirectory *
 fu_temporary_directory_new(const gchar *prefix, GError **error);
 const gchar *
-fu_temporary_directory_get_path(FuTemporaryDirectory *self) G_GNUC_NON_NULL(1);
+fu_temporary_directory_get_path(FuTemporaryDirectory *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_temporary_directory_build(FuTemporaryDirectory *self, ...) G_GNUC_NULL_TERMINATED;
 

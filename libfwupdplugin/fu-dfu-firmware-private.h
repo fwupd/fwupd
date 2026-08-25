@@ -12,7 +12,7 @@
 G_BEGIN_DECLS
 
 guint8
-fu_dfu_firmware_get_footer_len(FuDfuFirmware *self) G_GNUC_NON_NULL(1);
+fu_dfu_firmware_get_footer_len(FuDfuFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GByteArray *
 fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **error)
     G_GNUC_NON_NULL(1, 2);
