@@ -15,7 +15,6 @@ G_DECLARE_FINAL_TYPE(FuFileInputStream, fu_file_input_stream, FU, FILE_INPUT_STR
 
 FuFileInputStream *
 fu_file_input_stream_from_file(GFile *file,
-			       GCancellable *cancellable,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 G_END_DECLS

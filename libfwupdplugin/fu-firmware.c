@@ -1637,7 +1637,7 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = fu_file_input_stream_from_file(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
