@@ -10,7 +10,7 @@ libqmi_glib = dependency(
 )
 libmbim_glib = dependency(
   'mbim-glib',
-  version: '>= 1.28.0',
+  version: '>= 1.31.2',
   required: get_option('plugin_modem_manager'),
 )
 
@@ -30,6 +30,7 @@ plugin_quirks += files('modem-manager.quirk')
 shared_module(
   'fu_plugin_modem_manager',
   rustgen.process('fu-mm-fdl.rs'),
+  rustgen.process('fu-mm-mbim.rs'),
   sources: [
     'fu-mm-backend.c',
     'fu-mm-common.c',
@@ -63,10 +64,12 @@ device_tests += files(
   'tests/lenovo-em061kgl-mbim.json',
   'tests/foxconn-t99w373-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
+  'tests/qc-rw101r-fastboot.json',
 )
 enumeration_data += files(
   'tests/foxconn-t99w373-mbim-setup.json',
   'tests/qc-eg25ggc-fastboot-setup.json',
+  'tests/qc-rw101r-fastboot-setup.json',
 )
 
 if get_option('tests')

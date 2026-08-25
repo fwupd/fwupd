@@ -33,6 +33,15 @@ Firehose program file to use during the QCDM switch to EDL (Emergency Download) 
 
 Since: 1.8.10
 
+### ModemManagerMbimDetachMethod
+
+The quirk key specifies which detach method the MBIM device should use when transitioning the
+modem from MBIM mode into bootloader mode for firmware update.
+
+Possible values are `fibocom` or `qdu-quectel` (the default).
+
+Since: 2.2.1
+
 ### `Flags=use-branch`
 
 Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade
