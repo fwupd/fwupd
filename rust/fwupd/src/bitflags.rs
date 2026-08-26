@@ -408,114 +408,113 @@ macro_rules! declare_bitflags {
 }
 
 #[cfg(test)]
-#[allow(clippy::upper_case_acronyms)]
 mod tests {
     use super::*;
 
     declare_bitflags! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct TestFlags / TestFlag : u32 {
-            const READ = 1 << 0;
-            const WRITE = 1 << 1;
-            const EXECUTE = 1 << 2;
+            const Read = 1 << 0;
+            const Write = 1 << 1;
+            const Execute = 1 << 2;
 
-            const READWRITE = 0x3;
+            const ReadWrite = 0x3;
         }
     }
 
     #[test]
     fn single_flag_into_mask() {
-        let mask: TestFlags = TestFlag::READ.into();
-        assert!(mask.contains(TestFlag::READ));
-        assert!(!mask.contains(TestFlag::WRITE));
+        let mask: TestFlags = TestFlag::Read.into();
+        assert!(mask.contains(TestFlag::Read));
+        assert!(!mask.contains(TestFlag::Write));
     }
 
     #[test]
     fn as_mask() {
-        let mask = TestFlag::WRITE.as_mask();
-        assert!(mask.contains(TestFlag::WRITE));
-        assert!(!mask.contains(TestFlag::READ));
-        assert_eq!(mask.bits(), TestFlag::WRITE.bits());
+        let mask = TestFlag::Write.as_mask();
+        assert!(mask.contains(TestFlag::Write));
+        assert!(!mask.contains(TestFlag::Read));
+        assert_eq!(mask.bits(), TestFlag::Write.bits());
     }
 
     #[test]
     fn aliases() {
-        let mask = TestFlag::READWRITE.as_mask();
-        assert!(mask.contains(TestFlag::READ));
-        assert!(mask.contains(TestFlag::WRITE));
-        assert!(!mask.contains(TestFlag::EXECUTE));
+        let mask = TestFlag::ReadWrite.as_mask();
+        assert!(mask.contains(TestFlag::Read));
+        assert!(mask.contains(TestFlag::Write));
+        assert!(!mask.contains(TestFlag::Execute));
     }
 
     #[test]
     fn combine_flags() {
-        let mask = TestFlag::READ | TestFlag::WRITE;
-        assert!(mask.contains(TestFlag::READ));
-        assert!(mask.contains(TestFlag::WRITE));
-        assert!(!mask.contains(TestFlag::EXECUTE));
+        let mask = TestFlag::Read | TestFlag::Write;
+        assert!(mask.contains(TestFlag::Read));
+        assert!(mask.contains(TestFlag::Write));
+        assert!(!mask.contains(TestFlag::Execute));
 
-        let mask = TestFlag::READWRITE | TestFlag::WRITE;
-        assert!(mask.contains(TestFlag::READ));
-        assert!(mask.contains(TestFlag::WRITE));
-        assert!(!mask.contains(TestFlag::EXECUTE));
+        let mask = TestFlag::ReadWrite | TestFlag::Write;
+        assert!(mask.contains(TestFlag::Read));
+        assert!(mask.contains(TestFlag::Write));
+        assert!(!mask.contains(TestFlag::Execute));
     }
 
     #[test]
     fn bitor_assign_flag() {
         let mut mask = TestFlags::empty();
-        mask |= TestFlag::READ;
-        mask |= TestFlag::EXECUTE;
-        assert!(mask.contains(TestFlag::READ));
-        assert!(!mask.contains(TestFlag::WRITE));
-        assert!(mask.contains(TestFlag::EXECUTE));
+        mask |= TestFlag::Read;
+        mask |= TestFlag::Execute;
+        assert!(mask.contains(TestFlag::Read));
+        assert!(!mask.contains(TestFlag::Write));
+        assert!(mask.contains(TestFlag::Execute));
     }
 
     #[test]
     fn mask_or_flag() {
-        let mask = TestFlag::READ | TestFlag::WRITE;
-        let mask2 = mask | TestFlag::EXECUTE;
-        assert!(mask2.contains(TestFlag::EXECUTE));
+        let mask = TestFlag::Read | TestFlag::Write;
+        let mask2 = mask | TestFlag::Execute;
+        assert!(mask2.contains(TestFlag::Execute));
     }
 
     #[test]
     fn flag_or_mask() {
-        let mask = TestFlag::READ | TestFlag::WRITE;
-        let mask2 = TestFlag::EXECUTE | mask;
-        assert!(mask2.contains(TestFlag::READ));
-        assert!(mask2.contains(TestFlag::EXECUTE));
+        let mask = TestFlag::Read | TestFlag::Write;
+        let mask2 = TestFlag::Execute | mask;
+        assert!(mask2.contains(TestFlag::Read));
+        assert!(mask2.contains(TestFlag::Execute));
     }
 
     #[test]
     fn any_flags() {
-        let mask = TestFlag::READ | TestFlag::WRITE;
-        assert!(mask.any(TestFlag::READ | TestFlag::EXECUTE));
-        assert!(!mask.any(TestFlag::EXECUTE.into()));
+        let mask = TestFlag::Read | TestFlag::Write;
+        assert!(mask.any(TestFlag::Read | TestFlag::Execute));
+        assert!(!mask.any(TestFlag::Execute.into()));
 
-        let mask = TestFlag::READ.as_mask();
-        assert!(mask.any(TestFlag::READWRITE.as_mask()));
+        let mask = TestFlag::Read.as_mask();
+        assert!(mask.any(TestFlag::ReadWrite.as_mask()));
 
-        let mask = TestFlag::READWRITE.as_mask();
-        assert!(mask.any(TestFlag::READ | TestFlag::EXECUTE));
-        assert!(!mask.any(TestFlag::EXECUTE.into()));
+        let mask = TestFlag::ReadWrite.as_mask();
+        assert!(mask.any(TestFlag::Read | TestFlag::Execute));
+        assert!(!mask.any(TestFlag::Execute.into()));
     }
 
     #[test]
     fn all_flags() {
-        let mask = TestFlag::READ | TestFlag::WRITE;
-        assert!(mask.all(TestFlag::READ | TestFlag::WRITE));
-        assert!(!mask.all(TestFlag::READ | TestFlag::EXECUTE));
+        let mask = TestFlag::Read | TestFlag::Write;
+        assert!(mask.all(TestFlag::Read | TestFlag::Write));
+        assert!(!mask.all(TestFlag::Read | TestFlag::Execute));
 
-        let mask = TestFlag::READWRITE.as_mask();
-        assert!(mask.all(TestFlag::READ | TestFlag::WRITE));
-        assert!(!mask.all(TestFlag::READ | TestFlag::EXECUTE));
+        let mask = TestFlag::ReadWrite.as_mask();
+        assert!(mask.all(TestFlag::Read | TestFlag::Write));
+        assert!(!mask.all(TestFlag::Read | TestFlag::Execute));
     }
 
     #[test]
     fn empty_and_is_empty() {
         let mask = TestFlags::empty();
         assert!(mask.is_empty());
-        assert!(!mask.contains(TestFlag::READ));
+        assert!(!mask.contains(TestFlag::Read));
 
-        let mask2: TestFlags = TestFlag::READ.into();
+        let mask2: TestFlags = TestFlag::Read.into();
         assert!(!mask2.is_empty());
     }
 
@@ -527,41 +526,41 @@ mod tests {
 
     #[test]
     fn iter_single() {
-        let mask: TestFlags = TestFlag::WRITE.into();
+        let mask: TestFlags = TestFlag::Write.into();
         let flags: Vec<TestFlag> = mask.iter().collect();
-        assert_eq!(flags, vec![TestFlag::WRITE]);
+        assert_eq!(flags, vec![TestFlag::Write]);
     }
 
     #[test]
     fn iter_combined() {
-        let mask = TestFlag::READ | TestFlag::EXECUTE;
+        let mask = TestFlag::Read | TestFlag::Execute;
         let flags: Vec<TestFlag> = mask.iter().collect();
-        assert_eq!(flags, vec![TestFlag::READ, TestFlag::EXECUTE]);
+        assert_eq!(flags, vec![TestFlag::Read, TestFlag::Execute]);
 
-        let mask = TestFlag::READWRITE | TestFlag::EXECUTE;
+        let mask = TestFlag::ReadWrite | TestFlag::Execute;
         let flags: Vec<TestFlag> = mask.iter().collect();
         assert_eq!(
             flags,
             vec![
-                TestFlag::READ,
-                TestFlag::WRITE,
-                TestFlag::EXECUTE,
-                TestFlag::READWRITE
+                TestFlag::Read,
+                TestFlag::Write,
+                TestFlag::Execute,
+                TestFlag::ReadWrite
             ]
         );
     }
 
     #[test]
     fn iter_all() {
-        let mask = TestFlag::READ | TestFlag::WRITE | TestFlag::EXECUTE;
+        let mask = TestFlag::Read | TestFlag::Write | TestFlag::Execute;
         let flags: Vec<TestFlag> = mask.iter().collect();
         assert_eq!(
             flags,
             vec![
-                TestFlag::READ,
-                TestFlag::WRITE,
-                TestFlag::EXECUTE,
-                TestFlag::READWRITE
+                TestFlag::Read,
+                TestFlag::Write,
+                TestFlag::Execute,
+                TestFlag::ReadWrite
             ]
         );
     }
@@ -575,21 +574,21 @@ mod tests {
 
     #[test]
     fn mask_or_mask() {
-        let m1 = TestFlag::READ | TestFlag::WRITE;
-        let m2: TestFlags = TestFlag::EXECUTE.into();
+        let m1 = TestFlag::Read | TestFlag::Write;
+        let m2: TestFlags = TestFlag::Execute.into();
         let m3 = m1 | m2;
-        assert!(m3.contains(TestFlag::READ));
-        assert!(m3.contains(TestFlag::WRITE));
-        assert!(m3.contains(TestFlag::EXECUTE));
+        assert!(m3.contains(TestFlag::Read));
+        assert!(m3.contains(TestFlag::Write));
+        assert!(m3.contains(TestFlag::Execute));
     }
 
     #[test]
     fn bitor_assign_mask() {
-        let mut m1: TestFlags = TestFlag::READ.into();
-        let m2 = TestFlag::WRITE | TestFlag::EXECUTE;
+        let mut m1: TestFlags = TestFlag::Read.into();
+        let m2 = TestFlag::Write | TestFlag::Execute;
         m1 |= m2;
-        assert!(m1.contains(TestFlag::READ));
-        assert!(m1.contains(TestFlag::WRITE));
-        assert!(m1.contains(TestFlag::EXECUTE));
+        assert!(m1.contains(TestFlag::Read));
+        assert!(m1.contains(TestFlag::Write));
+        assert!(m1.contains(TestFlag::Execute));
     }
 }
