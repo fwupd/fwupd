@@ -13,6 +13,7 @@ from .helpers import (
     logger,
     require_venv,
     venv_path,
+    Meson,
     RunCmd,
 )
 
@@ -54,17 +55,15 @@ def run(args):
             if flag.startswith(("-Dvendor_ids_dir=", "-Dplugin_uefi_capsule_splash=")):
                 extra_args.append(flag)
 
-    # Only run meson setup if build.ninja doesn't exist
-    if not (build / "build.ninja").exists():
-        setup_cmd = (
-            ["meson", "setup", build, f"--prefix={dist}"] + extra_args + args.meson_args
-        )
-        if not RunCmd(setup_cmd, cwd=root, capture=False).success:
+    meson = Meson(
+        builddir=build, prefix=dist, meson_args=extra_args + args.meson_args, cwd=root
+    )
+    if meson.needs_setup:
+        if not meson.setup().success:
             return 1
 
-    # Build and install
-    if not RunCmd(["meson", "install", "-C", build], capture=False).success:
-        return 1
+    meson.build()
+    meson.install()
 
     symlink_efi_binaries(dist)
 

@@ -7,8 +7,10 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as etree
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 MARKERFILE = "fwupd.venv"
 
@@ -221,6 +223,92 @@ class RunCmd:
     @property
     def success(self) -> bool:
         return self.p.returncode == 0
+
+
+@dataclass
+class Meson:
+    builddir: Path
+    meson_args: list[str]
+    prefix: Path | None = None
+    cwd: Path | None = None
+    capture_logs: bool = False
+
+    @property
+    def needs_setup(self) -> bool:
+        return not (self.builddir / "build.ninja").exists()
+
+    def setup(self) -> RunCmd:
+        args = self.meson_args
+        if self.prefix:
+            args.insert(0, f"--prefix={self.prefix}")
+        setup_cmd = ["meson", "setup", str(self.builddir)] + args
+        kwargs = {
+            "capture": self.capture_logs,
+        }
+        if self.cwd:
+            kwargs["cwd"] = str(self.cwd)
+        return RunCmd(setup_cmd, **kwargs)
+
+    def build(self) -> RunCmd:
+        return RunCmd(
+            ["meson", "compile", "-C", self.builddir], capture=self.capture_logs
+        )
+
+    def install(self, destdir=None) -> RunCmd:
+        kwargs = {
+            "capture": self.capture_logs,
+        }
+        if destdir:
+            env = {"DESTDIR": destdir}
+            kwargs["env"] = env
+
+        return RunCmd(["meson", "install", "-C", self.builddir], **kwargs)
+
+
+@dataclass
+class GitRepo:
+    root: Path
+
+    @property
+    def current_sha(self) -> str:
+        cmd = RunCmd(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.root, check=True
+        )
+        sha = cmd.stdout.strip()
+        if sha == "HEAD":
+            cmd = RunCmd(["git", "rev-parse", "HEAD"], cwd=self.root, check=True)
+            sha = cmd.stdout.strip()
+        return sha
+
+    def as_sha(self, ref: str) -> str:
+        cmd = RunCmd(["git", "rev-parse", ref], cwd=self.root, check=True)
+        return cmd.stdout.strip()
+
+    @classmethod
+    def default(cls) -> Self:
+        return cls(find_repo_root())
+
+    def clone_into(self, destdir: Path, depth: int = 0) -> GitRepo:
+        """Clones the git repo into the given target directory. The resulting
+        repo is destdir/<reponame>."""
+
+        git_args = []
+        if depth > 0:
+            git_args.append(f"--depth={depth}")
+
+        destdir.mkdir(exist_ok=True, parents=True)
+        RunCmd(["git", "clone", str(self.root)] + git_args, cwd=destdir, check=True)
+        return GitRepo(destdir / self.root.name)
+
+    @contextmanager
+    def checkout(self, sha: str):
+        current_sha = self.current_sha
+        try:
+            RunCmd(["git", "checkout", sha], cwd=self.root, check=True)
+            assert self.current_sha == sha
+            yield
+        finally:
+            RunCmd(["git", "checkout", current_sha], cwd=self.root, check=True)
 
 
 @dataclass
