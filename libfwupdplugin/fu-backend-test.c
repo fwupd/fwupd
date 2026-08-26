@@ -20,6 +20,51 @@ fu_backend_emulate_count_cb(FuBackend *backend, FuDevice *device, gpointer user_
 }
 
 static void
+fu_backend_ioctl_error_func(void)
+{
+	gboolean ret;
+	guint8 buf[] = {0x00, 0x00};
+	g_autofree gchar *error_message = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuIoctl) ioctl = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_recorded = NULL;
+	GPtrArray *events;
+	gint error_code;
+
+	/* record a real failed ioctl */
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	device = g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, NULL);
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device));
+	g_assert_nonnull(ioctl);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
+	g_assert_false(ret);
+	g_assert_nonnull(error);
+	error_code = error->code;
+	error_message = g_strdup(error->message);
+	g_clear_error(&error);
+
+	/* verify the failure was saved in the device event */
+	events = fu_device_get_events(device);
+	g_assert_cmpint(events->len, ==, 1);
+	g_assert_false(fu_device_event_check_error(g_ptr_array_index(events, 0), &error_recorded));
+	g_assert_nonnull(error_recorded);
+	g_assert_cmpint(error_recorded->code, ==, error_code);
+	g_assert_cmpstr(error_recorded->message, ==, error_message);
+
+	/* replay must fail even when the caller does not request the error details */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, error_code);
+	g_assert_cmpstr(error->message, ==, error_message);
+	g_clear_error(&error);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, NULL);
+	g_assert_false(ret);
+}
+
+static void
 fu_backend_emulate_func(void)
 {
 	gboolean ret;
@@ -227,5 +272,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
+	g_test_add_func("/fwupd/backend/ioctl-error", fu_backend_ioctl_error_func);
 	return g_test_run();
 }

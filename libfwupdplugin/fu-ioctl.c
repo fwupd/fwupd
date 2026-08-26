@@ -247,6 +247,7 @@ fu_ioctl_execute(FuIoctl *self,
 		 GError **error)
 {
 	FuDeviceEvent *event = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) event_id = NULL;
 
 	/* need event ID */
@@ -269,6 +270,10 @@ fu_ioctl_execute(FuIoctl *self,
 		event = fu_device_load_event(FU_DEVICE(self->udev_device), event_id->str, error);
 		if (event == NULL)
 			return FALSE;
+		if (!fu_device_event_check_error(event, &error_local)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 		if (self->fixups->len == 0) {
 			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
 				if (!fu_device_event_copy_data(event,
@@ -322,8 +327,12 @@ fu_ioctl_execute(FuIoctl *self,
 				  rc,
 				  timeout,
 				  flags,
-				  error))
+				  &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 
 	/* save response */
 	if (event != NULL) {
