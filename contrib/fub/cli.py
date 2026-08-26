@@ -36,6 +36,7 @@ def main(argv=None):
     # Import and register all command modules
     from . import (
         check_abi_cmd,
+        check_headers_cmd,
         init_cmd,
         setup_cmd,
         build_cmd,
@@ -53,6 +54,7 @@ def main(argv=None):
     format_cmd.register(subparsers)
     docker_cmd.register(subparsers)
     check_abi_cmd.register(subparsers)
+    check_headers_cmd.register(subparsers)
 
     args = parser.parse_args(argv)
 
