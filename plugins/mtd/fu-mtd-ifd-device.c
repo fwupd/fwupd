@@ -256,3 +256,19 @@ fu_mtd_ifd_device_new(FuDevice *proxy, FuIfdImage *img)
 	self->img = g_object_ref(img);
 	return self;
 }
+
+guint64
+fu_mtd_ifd_device_get_region_offset(FuMtdIfdDevice *self)
+{
+	g_return_val_if_fail(FU_IS_MTD_IFD_DEVICE(self), 0);
+	g_return_val_if_fail(self->img != NULL, 0);
+	return fu_firmware_get_addr(FU_FIRMWARE(self->img));
+}
+
+guint64
+fu_mtd_ifd_device_get_region_size(FuMtdIfdDevice *self)
+{
+	g_return_val_if_fail(FU_IS_MTD_IFD_DEVICE(self), 0);
+	g_return_val_if_fail(self->img != NULL, 0);
+	return fu_firmware_get_size(FU_FIRMWARE(self->img));
+}

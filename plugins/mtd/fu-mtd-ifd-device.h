@@ -13,3 +13,7 @@ G_DECLARE_FINAL_TYPE(FuMtdIfdDevice, fu_mtd_ifd_device, FU, MTD_IFD_DEVICE, FuDe
 
 FuMtdIfdDevice *
 fu_mtd_ifd_device_new(FuDevice *proxy, FuIfdImage *img);
+guint64
+fu_mtd_ifd_device_get_region_offset(FuMtdIfdDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+guint64
+fu_mtd_ifd_device_get_region_size(FuMtdIfdDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
