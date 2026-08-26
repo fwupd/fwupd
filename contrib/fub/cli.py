@@ -44,6 +44,7 @@ def main(argv=None):
         run_cmd,
         format_cmd,
         docker_cmd,
+        observe_cmd,
     )
 
     init_cmd.register(subparsers)
@@ -55,6 +56,7 @@ def main(argv=None):
     docker_cmd.register(subparsers)
     check_abi_cmd.register(subparsers)
     check_headers_cmd.register(subparsers)
+    observe_cmd.register(subparsers)
 
     args = parser.parse_args(argv)
 
