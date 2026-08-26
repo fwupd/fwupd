@@ -19,5 +19,13 @@ struct _FuFmapFirmwareClass {
 
 FuFirmware *
 fu_fmap_firmware_new(void);
+gboolean
+fu_fmap_firmware_find(FuFmapFirmware *self,
+		      FuInputStream *stream,
+		      gsize offset,
+		      gsize search_size,
+		      gsize image_size,
+		      gsize *offset_found,
+		      GError **error) G_GNUC_NON_NULL(1, 2, 6) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS

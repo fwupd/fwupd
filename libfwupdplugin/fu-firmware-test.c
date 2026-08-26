@@ -14,6 +14,148 @@
 #include "fu-fmap-struct.h"
 #include "fu-ifwi-struct.h"
 
+/* nocheck:magic-inlines=100 */
+
+#define FU_TYPE_TEST_FMAP_INPUT_STREAM (fu_test_fmap_input_stream_get_type())
+G_DECLARE_FINAL_TYPE(FuTestFmapInputStream,
+		     fu_test_fmap_input_stream,
+		     FU,
+		     TEST_FMAP_INPUT_STREAM,
+		     FuInputStream)
+
+struct _FuTestFmapInputStream {
+	FuInputStream parent_instance;
+	GBytes *blob;
+	gsize offset;
+	gsize short_offset;
+	gsize error_offset;
+};
+
+G_DEFINE_TYPE(FuTestFmapInputStream, fu_test_fmap_input_stream, FU_TYPE_INPUT_STREAM)
+
+static gssize
+fu_test_fmap_input_stream_read(FuInputStream *stream,
+			       void *buffer,
+			       gsize count,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	FuTestFmapInputStream *self = FU_TEST_FMAP_INPUT_STREAM(stream);
+	gsize bufsz = 0;
+	gsize count_safe;
+	const guint8 *buf = g_bytes_get_data(self->blob, &bufsz);
+
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
+		return -1;
+	if (self->offset == self->error_offset) {
+		g_set_error_literal(error, /* nocheck:error */
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "injected read failure");
+		return -1;
+	}
+	if (self->offset == self->short_offset || self->offset >= bufsz)
+		return 0;
+	count_safe = MIN(count, bufsz - self->offset);
+	if (!fu_memcpy_safe(buffer, count, 0x0, buf, bufsz, self->offset, count_safe, error))
+		return -1;
+	self->offset += count_safe;
+	return count_safe;
+}
+
+static goffset
+fu_test_fmap_input_stream_tell(FuInputStream *stream)
+{
+	FuTestFmapInputStream *self = FU_TEST_FMAP_INPUT_STREAM(stream);
+	return self->offset;
+}
+
+static gboolean
+fu_test_fmap_input_stream_can_seek(FuInputStream *stream)
+{
+	return TRUE;
+}
+
+static gboolean
+fu_test_fmap_input_stream_seek(FuInputStream *stream,
+			       goffset offset,
+			       GSeekType type,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	FuTestFmapInputStream *self = FU_TEST_FMAP_INPUT_STREAM(stream);
+	goffset offset_new = 0;
+	gsize bufsz = g_bytes_get_size(self->blob);
+
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
+		return FALSE;
+	switch (type) {
+	case G_SEEK_SET:
+		offset_new = offset;
+		break;
+	case G_SEEK_CUR:
+		offset_new = (goffset)self->offset + offset;
+		break;
+	case G_SEEK_END:
+		offset_new = (goffset)bufsz + offset;
+		break;
+	default:
+		g_set_error_literal(error, /* nocheck:error */
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "invalid seek type");
+		return FALSE;
+	}
+	if (offset_new < 0 || (guint64)offset_new > bufsz) {
+		g_set_error_literal(error, /* nocheck:error */
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "invalid seek");
+		return FALSE;
+	}
+	self->offset = (gsize)offset_new;
+	return TRUE;
+}
+
+static void
+fu_test_fmap_input_stream_finalize(GObject *object)
+{
+	FuTestFmapInputStream *self = FU_TEST_FMAP_INPUT_STREAM(object);
+	g_bytes_unref(self->blob);
+	G_OBJECT_CLASS(fu_test_fmap_input_stream_parent_class)->finalize(object);
+}
+
+static void
+fu_test_fmap_input_stream_class_init(FuTestFmapInputStreamClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuInputStreamClass *stream_class = FU_INPUT_STREAM_CLASS(klass);
+
+	object_class->finalize = fu_test_fmap_input_stream_finalize;
+	stream_class->read_fn = fu_test_fmap_input_stream_read;
+	stream_class->tell = fu_test_fmap_input_stream_tell;
+	stream_class->can_seek = fu_test_fmap_input_stream_can_seek;
+	stream_class->seek = fu_test_fmap_input_stream_seek;
+}
+
+static void
+fu_test_fmap_input_stream_init(FuTestFmapInputStream *self)
+{
+	self->short_offset = G_MAXSIZE;
+	self->error_offset = G_MAXSIZE;
+}
+
+static FuInputStream *
+fu_test_fmap_input_stream_new(GBytes *blob, gsize short_offset, gsize error_offset)
+{
+	FuTestFmapInputStream *self = g_object_new(FU_TYPE_TEST_FMAP_INPUT_STREAM, NULL);
+
+	self->blob = g_bytes_ref(blob);
+	self->short_offset = short_offset;
+	self->error_offset = error_offset;
+	return FU_INPUT_STREAM(self);
+}
+
 static void
 fu_firmware_raw_aligned_func(void)
 {
@@ -324,6 +466,215 @@ fu_firmware_fmap_add_search_header(GByteArray *buf,
 				     st_area->buf->len,
 				     &error));
 	g_assert_no_error(error);
+}
+
+static void
+fu_firmware_fmap_search_func(void)
+{
+	const gsize image_size = 0x100000;
+	/* unaligned and crossing a search-block boundary exercises the linear fallback */
+	const gsize fmap_offset = 0x7fffc;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+
+	/* structurally invalid candidates must not hide later valid FMAPs */
+	fu_firmware_fmap_add_search_header(buf, 0x100, image_size, 0x1000, "NOT VALID", "FALSE");
+	/* a valid nested FMAP must not be selected for the full image */
+	fu_firmware_fmap_add_search_header(buf, 0x40000, 0x20000, 0x1000, "NESTED", "RW_SECTION_A");
+	fu_firmware_fmap_add_search_header(buf,
+					   fmap_offset,
+					   image_size,
+					   fmap_offset + 0x1000,
+					   "FLASH",
+					   "WP_RO");
+
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_true(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					    stream,
+					    0x0,
+					    image_size,
+					    image_size,
+					    &offset_found,
+					    &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(offset_found, ==, fmap_offset);
+
+	g_assert_true(fu_firmware_parse_stream(firmware,
+					       stream,
+					       offset_found,
+					       FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						   FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+					       &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(fu_firmware_get_size(firmware), ==, image_size);
+	img = fu_firmware_get_image_by_id(firmware, "WP_RO", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img);
+	g_assert_cmpint(fu_firmware_get_size(img), ==, 0x1000);
+}
+
+static void
+fu_firmware_fmap_search_ambiguous_func(void)
+{
+	const gsize image_size = 0x100000;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	fu_firmware_fmap_add_search_header(buf, 0x10000, image_size, 0x20000, "DECOY", "WP_RO");
+	fu_firmware_fmap_add_search_header(buf, 0x80000, image_size, 0x90000, "FLASH", "WP_RO");
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_false(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					     stream,
+					     0x0,
+					     image_size,
+					     image_size,
+					     &offset_found,
+					     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "multiple valid FMAPs"));
+}
+
+static void
+fu_firmware_fmap_search_range_func(void)
+{
+	const gsize image_size = 0x100000;
+	const gsize search_offset = 0x80000;
+	const gsize search_size = 0x20000;
+	const gsize fmap_offset = 0x90000;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	/* this inaccessible region and decoy are outside the supplied search range */
+	fu_firmware_fmap_add_search_header(buf, 0x10000, image_size, 0x20000, "DECOY", "WP_RO");
+	fu_firmware_fmap_add_search_header(buf,
+					   fmap_offset,
+					   image_size,
+					   fmap_offset,
+					   "FLASH",
+					   "WP_RO");
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_test_fmap_input_stream_new(blob, G_MAXSIZE, 0x0);
+
+	g_assert_true(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					    stream,
+					    search_offset,
+					    search_size,
+					    image_size,
+					    &offset_found,
+					    &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(offset_found, ==, fmap_offset);
+}
+
+static void
+fu_firmware_fmap_search_excessive_candidates_func(void)
+{
+	const gsize image_size = 0x100000;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	for (guint i = 0; i < 128; i++) {
+		g_assert_true(fu_memcpy_safe(buf->data,
+					     buf->len,
+					     i * 0x10,
+					     (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+					     FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					     0x0,
+					     FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					     &error));
+		g_assert_no_error(error);
+	}
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_false(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					     stream,
+					     0x0,
+					     image_size,
+					     image_size,
+					     &offset_found,
+					     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "too many FMAP candidates"));
+}
+
+static void
+fu_firmware_fmap_search_short_read_func(void)
+{
+	const gsize image_size = 0x20000;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_test_fmap_input_stream_new(blob, 0x8000, G_MAXSIZE);
+
+	g_assert_false(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					     stream,
+					     0x0,
+					     image_size,
+					     image_size,
+					     &offset_found,
+					     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "short read"));
+}
+
+static void
+fu_firmware_fmap_search_candidate_read_error_func(void)
+{
+	const gsize image_size = 0x10000;
+	gsize offset_found = 0;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	fu_firmware_fmap_add_search_header(buf, 0x100, image_size, 0x1000, "FLASH", "WP_RO");
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_test_fmap_input_stream_new(blob, G_MAXSIZE, 0x100);
+
+	g_assert_false(fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+					     stream,
+					     0x0,
+					     image_size,
+					     image_size,
+					     &offset_found,
+					     &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "candidate"));
 }
 
 static void
@@ -1420,6 +1771,16 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/dfu-patch", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware/dfuse", fu_firmware_dfuse_func);
 	g_test_add_func("/fwupd/firmware/fmap", fu_firmware_fmap_func);
+	g_test_add_func("/fwupd/firmware/fmap-search", fu_firmware_fmap_search_func);
+	g_test_add_func("/fwupd/firmware/fmap-search-ambiguous",
+			fu_firmware_fmap_search_ambiguous_func);
+	g_test_add_func("/fwupd/firmware/fmap-search-range", fu_firmware_fmap_search_range_func);
+	g_test_add_func("/fwupd/firmware/fmap-search-excessive-candidates",
+			fu_firmware_fmap_search_excessive_candidates_func);
+	g_test_add_func("/fwupd/firmware/fmap-search-short-read",
+			fu_firmware_fmap_search_short_read_func);
+	g_test_add_func("/fwupd/firmware/fmap-search-candidate-read-error",
+			fu_firmware_fmap_search_candidate_read_error_func);
 	g_test_add_func("/fwupd/firmware/fmap-area-bounds", fu_firmware_fmap_area_bounds_func);
 	g_test_add_func("/fwupd/firmware/fmap-table-bounds", fu_firmware_fmap_table_bounds_func);
 	g_test_add_func("/fwupd/firmware/fmap-zero-sized-area",

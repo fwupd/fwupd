@@ -12,6 +12,7 @@
 #include "fu-fmap-firmware.h"
 #include "fu-fmap-struct.h"
 #include "fu-input-stream.h"
+#include "fu-mem.h"
 #include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
@@ -36,7 +37,9 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private(o))
 
-#define FU_FMAP_FIRMWARE_AREAS_MAX 1024
+#define FU_FMAP_FIRMWARE_AREAS_MAX	   1024
+#define FU_FMAP_FIRMWARE_CANDIDATES_MAX	   64
+#define FU_FMAP_FIRMWARE_SEARCH_BLOCK_SIZE (64 * FU_KB)
 
 static gboolean
 fu_fmap_firmware_name_is_valid(const guint8 *name, gsize namesz)
@@ -254,6 +257,191 @@ fu_fmap_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize off
 		if (!fu_size_checked_inc(&offset, st_area->buf->len, error))
 			return FALSE;
 	}
+	return TRUE;
+}
+
+static gboolean
+fu_fmap_firmware_validate_image_size(FuFmapFirmware *self,
+				     FuInputStream *stream,
+				     gsize offset,
+				     gsize image_size,
+				     GError **error)
+{
+	guint32 fmap_size = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_fmap_firmware_validate(FU_FIRMWARE(self), stream, offset, error))
+		return FALSE;
+	if (image_size == 0)
+		return TRUE;
+	if (!fu_input_stream_read_u32(stream,
+				      offset + FU_STRUCT_FMAP_OFFSET_SIZE,
+				      &fmap_size,
+				      G_LITTLE_ENDIAN,
+				      &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "failed to read FMAP image size @0x%x: %s",
+			    (guint)(offset + FU_STRUCT_FMAP_OFFSET_SIZE),
+			    error_local != NULL ? error_local->message : "unknown error");
+		return FALSE;
+	}
+	if (fmap_size != image_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP image size 0x%x does not match expected size 0x%x",
+			    fmap_size,
+			    (guint)image_size);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_fmap_firmware_find:
+ * @self: a #FuFmapFirmware
+ * @stream: firmware image stream
+ * @offset: offset to start searching
+ * @search_size: size of the range to search
+ * @image_size: expected FMAP image size, or 0 to accept any size
+ * @offset_found: (out): offset of the validated FMAP
+ * @error: (nullable): optional return location for an error
+ *
+ * Finds exactly one structurally valid FMAP in @stream. Unreadable ranges and
+ * excessive candidate signatures are rejected, as are multiple matching maps.
+ *
+ * Returns: %TRUE if a valid FMAP was found
+ *
+ * Since: 2.2.2
+ **/
+gboolean
+fu_fmap_firmware_find(FuFmapFirmware *self,
+		      FuInputStream *stream,
+		      gsize offset,
+		      gsize search_size,
+		      gsize image_size,
+		      gsize *offset_found,
+		      GError **error)
+{
+	gsize offset_match = G_MAXSIZE;
+	gsize search_end;
+	gsize streamsz = 0;
+	guint candidates_cnt = 0;
+	guint8 overlap[FU_STRUCT_FMAP_SIZE_SIGNATURE - 1] = {0x0};
+	gsize overlap_sz = 0;
+
+	g_return_val_if_fail(FU_IS_FMAP_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(offset_found != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (offset > streamsz || search_size > streamsz - offset ||
+	    search_size < FU_STRUCT_FMAP_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "FMAP search range 0x%x+0x%x is invalid for stream size 0x%x",
+			    (guint)offset,
+			    (guint)search_size,
+			    (guint)streamsz);
+		return FALSE;
+	}
+	search_end = offset + search_size;
+	/* preserve enough overlap to find a signature that crosses a block boundary */
+	for (gsize block_offset = offset; block_offset < search_end;) {
+		gsize blocksz = MIN(FU_FMAP_FIRMWARE_SEARCH_BLOCK_SIZE, search_end - block_offset);
+		gsize search_offset = 0;
+		g_autoptr(GByteArray) buf = NULL;
+		g_autoptr(GByteArray) buf_search = g_byte_array_new();
+		g_autoptr(GError) error_local = NULL;
+
+		buf = fu_fmap_firmware_read_exact(stream, block_offset, blocksz, &error_local);
+		if (buf == NULL) {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to read FMAP search block @0x%x: ",
+						   (guint)block_offset);
+			return FALSE;
+		}
+		if (overlap_sz > 0)
+			g_byte_array_append(buf_search, overlap, overlap_sz);
+		g_byte_array_append(buf_search, buf->data, buf->len);
+
+		while (search_offset + FU_STRUCT_FMAP_SIZE_SIGNATURE <= buf_search->len) {
+			gsize offset_tmp = 0;
+			gsize offset_fmap;
+			g_autoptr(GError) error_fmap = NULL;
+
+			if (!fu_memmem_safe(buf_search->data + search_offset,
+					    buf_search->len - search_offset,
+					    (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+					    FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					    &offset_tmp,
+					    NULL))
+				break;
+			offset_tmp += search_offset;
+			search_offset = offset_tmp + 1;
+			offset_fmap = block_offset - overlap_sz + offset_tmp;
+			if (++candidates_cnt > FU_FMAP_FIRMWARE_CANDIDATES_MAX) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "too many FMAP candidates, maximum is %u",
+					    (guint)FU_FMAP_FIRMWARE_CANDIDATES_MAX);
+				return FALSE;
+			}
+			if (!fu_fmap_firmware_validate_image_size(self,
+								  stream,
+								  offset_fmap,
+								  image_size,
+								  &error_fmap)) {
+				if (g_error_matches(error_fmap, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+					g_propagate_prefixed_error(
+					    error,
+					    g_steal_pointer(&error_fmap),
+					    "failed to validate FMAP candidate @0x%x: ",
+					    (guint)offset_fmap);
+					return FALSE;
+				}
+				continue;
+			}
+			if (offset_match != G_MAXSIZE) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "multiple valid FMAPs found at 0x%x and 0x%x",
+					    (guint)offset_match,
+					    (guint)offset_fmap);
+				return FALSE;
+			}
+			offset_match = offset_fmap;
+		}
+
+		overlap_sz = MIN(sizeof(overlap), buf_search->len);
+		if (!fu_memcpy_safe(overlap,
+				    sizeof(overlap),
+				    0x0,
+				    buf_search->data,
+				    buf_search->len,
+				    buf_search->len - overlap_sz,
+				    overlap_sz,
+				    error))
+			return FALSE;
+		block_offset += blocksz;
+	}
+
+	if (offset_match == G_MAXSIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to find a valid FMAP");
+		return FALSE;
+	}
+	*offset_found = offset_match;
 	return TRUE;
 }
 
