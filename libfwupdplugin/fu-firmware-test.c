@@ -11,6 +11,7 @@
 #include "fwupd-test.h"
 
 #include "fu-context-private.h"
+#include "fu-fmap-struct.h"
 #include "fu-ifwi-struct.h"
 
 static void
@@ -282,6 +283,169 @@ fu_firmware_fmap_func(void)
 	g_assert_cmpstr(csum,
 			==,
 			"229fcd952264f42ae4853eda7e716cc5c1ae18e7f804a6ba39ab1dfde5737d7e");
+}
+
+static void
+fu_firmware_fmap_add_search_header(GByteArray *buf,
+				   gsize offset,
+				   guint32 size,
+				   guint32 area_offset,
+				   const gchar *name,
+				   const gchar *area_name)
+{
+	g_autoptr(FuStructFmap) st_hdr = fu_struct_fmap_new();
+	g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_struct_fmap_set_size(st_hdr, size);
+	g_assert_true(fu_struct_fmap_set_name(st_hdr, name, &error));
+	g_assert_no_error(error);
+	fu_struct_fmap_set_nareas(st_hdr, 0x1);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     offset,
+				     st_hdr->buf->data,
+				     st_hdr->buf->len,
+				     0x0,
+				     st_hdr->buf->len,
+				     &error));
+	g_assert_no_error(error);
+
+	fu_struct_fmap_area_set_offset(st_area, area_offset);
+	fu_struct_fmap_area_set_size(st_area, 0x1000);
+	g_assert_true(fu_struct_fmap_area_set_name(st_area, area_name, &error));
+	g_assert_no_error(error);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     offset + st_hdr->buf->len,
+				     st_area->buf->data,
+				     st_area->buf->len,
+				     0x0,
+				     st_area->buf->len,
+				     &error));
+	g_assert_no_error(error);
+}
+
+static void
+fu_firmware_fmap_area_bounds_func(void)
+{
+	const gsize image_size = 0x100000;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	fu_firmware_fmap_add_search_header(buf, 0x1000, 0x20000, 0x1f800, "FLASH", "WP_RO");
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_false(fu_firmware_parse_stream(firmware,
+						stream,
+						0x1000,
+						FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						    FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+						&error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "exceeds image size"));
+}
+
+static void
+fu_firmware_fmap_table_bounds_func(void)
+{
+	const gsize image_size = 0x100000;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	fu_firmware_fmap_add_search_header(buf, 0x1ffe0, 0x20000, 0x1000, "FLASH", "WP_RO");
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_false(fu_firmware_parse_stream(firmware,
+						stream,
+						0x1ffe0,
+						FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						    FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+						&error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "structure"));
+}
+
+static void
+fu_firmware_fmap_zero_sized_area_func(void)
+{
+	const gsize image_size = 0x10000;
+	const gsize fmap_offset = 0x1000;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuStructFmap) st_hdr = fu_struct_fmap_new();
+	g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(image_size);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_byte_array_set_size(buf, image_size, 0x0);
+	fu_struct_fmap_set_size(st_hdr, image_size);
+	g_assert_true(fu_struct_fmap_set_name(st_hdr, "FLASH", &error));
+	g_assert_no_error(error);
+	fu_struct_fmap_set_nareas(st_hdr, 0x2);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     fmap_offset,
+				     st_hdr->buf->data,
+				     st_hdr->buf->len,
+				     0x0,
+				     st_hdr->buf->len,
+				     &error));
+	g_assert_no_error(error);
+	fu_struct_fmap_area_set_offset(st_area, 0x2000);
+	fu_struct_fmap_area_set_size(st_area, 0x0);
+	g_assert_true(fu_struct_fmap_area_set_name(st_area, "EMPTY", &error));
+	g_assert_no_error(error);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     fmap_offset + st_hdr->buf->len,
+				     st_area->buf->data,
+				     st_area->buf->len,
+				     0x0,
+				     st_area->buf->len,
+				     &error));
+	g_assert_no_error(error);
+	fu_struct_fmap_area_set_offset(st_area, 0x3000);
+	fu_struct_fmap_area_set_size(st_area, 0x1000);
+	g_assert_true(fu_struct_fmap_area_set_name(st_area, "WP_RO", &error));
+	g_assert_no_error(error);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     fmap_offset + st_hdr->buf->len + st_area->buf->len,
+				     st_area->buf->data,
+				     st_area->buf->len,
+				     0x0,
+				     st_area->buf->len,
+				     &error));
+	g_assert_no_error(error);
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+
+	g_assert_true(fu_firmware_parse_stream(firmware,
+					       stream,
+					       fmap_offset,
+					       FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						   FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+					       &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(fu_firmware_get_size(firmware), ==, image_size);
+	img = fu_firmware_get_image_by_id(firmware, "WP_RO", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img);
+	g_assert_cmpint(fu_firmware_get_addr(img), ==, 0x3000);
+	g_assert_cmpint(fu_firmware_get_size(img), ==, 0x1000);
 }
 
 static void
@@ -1256,6 +1420,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/dfu-patch", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware/dfuse", fu_firmware_dfuse_func);
 	g_test_add_func("/fwupd/firmware/fmap", fu_firmware_fmap_func);
+	g_test_add_func("/fwupd/firmware/fmap-area-bounds", fu_firmware_fmap_area_bounds_func);
+	g_test_add_func("/fwupd/firmware/fmap-table-bounds", fu_firmware_fmap_table_bounds_func);
+	g_test_add_func("/fwupd/firmware/fmap-zero-sized-area",
+			fu_firmware_fmap_zero_sized_area_func);
 	g_test_add_func("/fwupd/firmware/gtypes", fu_firmware_new_from_gtypes_func);
 	g_test_add_func("/fwupd/firmware/sorted", fu_firmware_sorted_func);
 	return g_test_run();

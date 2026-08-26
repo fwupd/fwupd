@@ -12,6 +12,7 @@
 #include "fu-fmap-firmware.h"
 #include "fu-fmap-struct.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 #include "fu-uswid-firmware.h"
@@ -36,6 +37,48 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private(o))
 
 #define FU_FMAP_FIRMWARE_AREAS_MAX 1024
+
+static gboolean
+fu_fmap_firmware_name_is_valid(const guint8 *name, gsize namesz)
+{
+	for (gsize i = 0; i < namesz; i++) {
+		if (name[i] == '\0')
+			return TRUE;
+		if (!g_ascii_isgraph(name[i]))
+			return FALSE;
+	}
+	return FALSE;
+}
+
+static GByteArray *
+fu_fmap_firmware_read_exact(FuInputStream *stream, gsize offset, gsize count, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	buf = fu_input_stream_read_byte_array(stream, offset, count, NULL, &error_local);
+	if (buf == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "failed to read 0x%x bytes @0x%x: %s",
+			    (guint)count,
+			    (guint)offset,
+			    error_local != NULL ? error_local->message : "unknown error");
+		return NULL;
+	}
+	if (buf->len != count) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "short read @0x%x, expected 0x%x bytes and got 0x%x",
+			    (guint)offset,
+			    (guint)count,
+			    buf->len);
+		return NULL;
+	}
+	return g_steal_pointer(&buf);
+}
 
 static void
 fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -84,7 +127,134 @@ fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static gboolean
 fu_fmap_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_fmap_validate_stream(stream, offset, error);
+	gsize fmap_struct_sz = FU_STRUCT_FMAP_SIZE;
+	gsize streamsz = 0;
+	guint32 fmap_size;
+	guint16 nareas;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuInputStream) fmap_stream = NULL;
+	g_autoptr(FuStructFmap) st_hdr = NULL;
+
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (offset > streamsz || streamsz - offset < FU_STRUCT_FMAP_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP header @0x%x exceeds stream size 0x%x",
+			    (guint)offset,
+			    (guint)streamsz);
+		return FALSE;
+	}
+	buf = fu_fmap_firmware_read_exact(stream, offset, FU_STRUCT_FMAP_SIZE, error);
+	if (buf == NULL)
+		return FALSE;
+	blob = g_bytes_new(buf->data, buf->len);
+	fmap_stream = fu_memory_input_stream_new_from_bytes(blob);
+	st_hdr = fu_struct_fmap_parse_stream(fmap_stream, 0x0, error);
+	if (st_hdr == NULL)
+		return FALSE;
+	if (fu_struct_fmap_get_ver_major(st_hdr) != FU_STRUCT_FMAP_DEFAULT_VER_MAJOR) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "unsupported FMAP major version 0x%x",
+			    fu_struct_fmap_get_ver_major(st_hdr));
+		return FALSE;
+	}
+	if (!fu_fmap_firmware_name_is_valid(st_hdr->buf->data + FU_STRUCT_FMAP_OFFSET_NAME,
+					    FU_STRUCT_FMAP_SIZE_NAME)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP name is invalid");
+		return FALSE;
+	}
+
+	nareas = fu_struct_fmap_get_nareas(st_hdr);
+	if (nareas < 1 || nareas > FU_FMAP_FIRMWARE_AREAS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "number of FMAP areas invalid: %u",
+			    (guint)nareas);
+		return FALSE;
+	}
+	if (!fu_size_checked_inc_product(&fmap_struct_sz, FU_STRUCT_FMAP_AREA_SIZE, nareas, error))
+		return FALSE;
+
+	fmap_size = fu_struct_fmap_get_size(st_hdr);
+	if (fmap_size < fmap_struct_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP image size 0x%x is smaller than the map structure 0x%x",
+			    fmap_size,
+			    (guint)fmap_struct_sz);
+		return FALSE;
+	}
+	if (fmap_size > streamsz || offset > streamsz - fmap_struct_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP exceeds stream size 0x%x",
+			    (guint)streamsz);
+		return FALSE;
+	}
+	if (offset > fmap_size - fmap_struct_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP structure @0x%x exceeds image size 0x%x",
+			    (guint)offset,
+			    fmap_size);
+		return FALSE;
+	}
+
+	/* read the table once so validating each area cannot amplify stream reads */
+	g_clear_pointer(&buf, g_byte_array_unref);
+	g_clear_pointer(&blob, g_bytes_unref);
+	g_clear_object(&fmap_stream);
+	buf = fu_fmap_firmware_read_exact(stream, offset, fmap_struct_sz, error);
+	if (buf == NULL)
+		return FALSE;
+	blob = g_bytes_new(buf->data, buf->len);
+	fmap_stream = fu_memory_input_stream_new_from_bytes(blob);
+	offset = st_hdr->buf->len;
+	for (guint16 i = 0; i < nareas; i++) {
+		guint32 area_offset;
+		guint32 area_size;
+		g_autoptr(FuStructFmapArea) st_area = NULL;
+
+		st_area = fu_struct_fmap_area_parse_stream(fmap_stream, offset, error);
+		if (st_area == NULL)
+			return FALSE;
+		if (!fu_fmap_firmware_name_is_valid(st_area->buf->data +
+							FU_STRUCT_FMAP_AREA_OFFSET_NAME,
+						    FU_STRUCT_FMAP_AREA_SIZE_NAME)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP area 0x%x name is invalid",
+				    (guint)i);
+			return FALSE;
+		}
+		area_offset = fu_struct_fmap_area_get_offset(st_area);
+		area_size = fu_struct_fmap_area_get_size(st_area);
+		if (area_offset > fmap_size || area_size > fmap_size - area_offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP area 0x%x exceeds image size 0x%x",
+				    (guint)i,
+				    fmap_size);
+			return FALSE;
+		}
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -105,6 +275,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
+	fu_firmware_set_size(firmware, fu_struct_fmap_get_size(st_hdr));
 	priv->ver_major = fu_struct_fmap_get_ver_major(st_hdr);
 	priv->ver_minor = fu_struct_fmap_get_ver_minor(st_hdr);
 
@@ -152,6 +323,10 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		st_area = fu_struct_fmap_area_parse_stream(stream, offset, error);
 		if (st_area == NULL)
 			return FALSE;
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
+			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
+			return FALSE;
+		}
 		area_size = fu_struct_fmap_area_get_size(st_area);
 		if (area_size == 0)
 			continue;
@@ -185,12 +360,9 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
+		fu_firmware_set_size(img, area_size);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
-			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
-			return FALSE;
-		}
 	}
 
 	/* success */
