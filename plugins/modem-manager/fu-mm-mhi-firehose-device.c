@@ -260,7 +260,7 @@ fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* in the mhi_pci_generic driver, mbim channel name definitely be configured as MBIM
-	 * FIXME: skip until emulation is re-recorded */
+	 * skip until emulation is re-recorded */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
 		if (!fu_device_query_file_exists(device, devnode, &devnode_exists, error))
