@@ -242,7 +242,7 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	file = g_file_new_for_path(path);
-	stream = fu_file_input_stream_from_file(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return NULL;
@@ -1009,4 +1009,27 @@ fu_input_stream_find(FuInputStream *stream,
 		    "failed to find buffer of size 0x%x",
 		    (guint)bufsz);
 	return FALSE;
+}
+
+/**
+ * fu_input_stream_get_stream_impl: (skip):
+ * @stream: a #FuInputStream
+ *
+ * Returns the Rust-side stream implementation handle for the given stream.
+ *
+ * Returns: (transfer full): an opaque #FuRsStreamImpl, free with fu_stream_impl_free()
+ *
+ * Since: 2.1.8
+ */
+FuRsStreamImpl *
+fu_input_stream_get_stream_impl(FuInputStream *stream)
+{
+	FuInputStreamClass *klass;
+
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+
+	klass = FU_INPUT_STREAM_GET_CLASS(stream);
+	g_return_val_if_fail(klass->get_stream_impl != NULL, NULL);
+
+	return klass->get_stream_impl(stream);
 }

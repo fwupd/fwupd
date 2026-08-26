@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fwupd-codec.h"
+#include "fwupd-rust-partial-input-stream.h"
 
 #include "fu-common.h"
 #include "fu-input-stream.h"
@@ -33,9 +34,8 @@
 
 struct _FuPartialInputStream {
 	FuInputStream parent_instance;
-	FuInputStream *base_stream;
-	gsize offset;
-	gsize size;
+	FuInputStream *base_stream; /* GObject ref to keep alive */
+	FuRsPartialInputStream *rust;
 };
 
 static void
@@ -51,8 +51,14 @@ static void
 fu_partial_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(codec);
-	fwupd_codec_string_append_hex(str, idt, "Offset", self->offset);
-	fwupd_codec_string_append_hex(str, idt, "Size", self->size);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "Offset",
+				      fu_rs_partial_input_stream_offset(self->rust));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "Size",
+				      fu_rs_partial_input_stream_size(self->rust));
 }
 
 static void
@@ -65,14 +71,14 @@ static goffset
 fu_partial_input_stream_tell(FuInputStream *stream)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
-	return g_seekable_tell(G_SEEKABLE(self->base_stream)) - self->offset;
+	return fu_rs_partial_input_stream_tell(self->rust);
 }
 
 static gboolean
 fu_partial_input_stream_can_seek(FuInputStream *stream)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
-	return g_seekable_can_seek(G_SEEKABLE(self->base_stream));
+	return fu_rs_partial_input_stream_can_seek(self->rust);
 }
 
 static gboolean
@@ -87,26 +93,23 @@ fu_partial_input_stream_seek(FuInputStream *stream,
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (type == G_SEEK_CUR) {
-		goffset pos = g_seekable_tell(G_SEEKABLE(self->base_stream));
-		return g_seekable_seek(G_SEEKABLE(self->base_stream),
-				       self->offset + pos + offset,
-				       G_SEEK_SET,
-				       cancellable,
-				       error);
+	if (!fu_rs_partial_input_stream_seek(self->rust, offset, (gint32)type)) {
+		if (offset >= 0)
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "seek to 0x%" G_GINT64_MODIFIER "x failed",
+				    (guint64)offset); /* nocheck:error */
+		else
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "seek to %" G_GINT64_MODIFIER "d failed",
+				    offset); /* nocheck:error */
+		fwupd_error_convert(error);
+		return FALSE;
 	}
-	if (type == G_SEEK_END) {
-		return g_seekable_seek(G_SEEKABLE(self->base_stream),
-				       self->offset + self->size + offset,
-				       G_SEEK_SET,
-				       cancellable,
-				       error);
-	}
-	return g_seekable_seek(G_SEEKABLE(self->base_stream),
-			       self->offset + offset,
-			       G_SEEK_SET,
-			       cancellable,
-			       error);
+	return TRUE;
 }
 
 /**
@@ -127,12 +130,12 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 {
 	gsize base_sz = 0;
 	g_autoptr(FuPartialInputStream) self = g_object_new(FU_TYPE_PARTIAL_INPUT_STREAM, NULL);
+	FuRsStreamImpl *impl;
 
 	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	self->base_stream = g_object_ref(stream);
-	self->offset = offset;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &base_sz, error)) {
@@ -150,7 +153,7 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 				    (guint)offset);
 			return NULL;
 		}
-		self->size = base_sz - offset;
+		size = base_sz - offset;
 	} else {
 		if (fu_size_checked_add(offset, size) > base_sz) {
 			g_set_error(error,
@@ -163,8 +166,17 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 				    (guint)size);
 			return NULL;
 		}
-		self->size = size;
 	}
+
+	impl = fu_input_stream_get_stream_impl(stream);
+	if (impl == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Partial streams only support Rust-based streams");
+		return NULL;
+	}
+	self->rust = fu_rs_partial_input_stream_new(impl, offset, size);
 
 	/* success */
 	return FU_INPUT_STREAM(g_steal_pointer(&self));
@@ -184,14 +196,14 @@ gsize
 fu_partial_input_stream_get_offset(FuPartialInputStream *self)
 {
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), G_MAXSIZE);
-	return self->offset;
+	return fu_rs_partial_input_stream_offset(self->rust);
 }
 
 /**
  * fu_partial_input_stream_get_size:
  * @self: a #FuPartialInputStream
  *
- * Gets the offset of the stream.
+ * Gets the size of the stream.
  *
  * Returns: integer
  *
@@ -201,7 +213,7 @@ gsize
 fu_partial_input_stream_get_size(FuPartialInputStream *self)
 {
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), G_MAXSIZE);
-	return self->size;
+	return fu_rs_partial_input_stream_size(self->rust);
 }
 
 static gssize
@@ -212,26 +224,47 @@ fu_partial_input_stream_read_fn(FuInputStream *stream,
 				GError **error)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
+	gssize rc;
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
-	if (self->size < (gsize)g_seekable_tell(G_SEEKABLE(stream))) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "base stream is outside seekable range");
+
+	if (g_cancellable_set_error_if_cancelled(cancellable, error))
+		return -1;
+
+	rc = fu_rs_partial_input_stream_read(self->rust, buffer, count);
+	if (rc < 0) {
+		g_set_error(error,
+			    G_IO_ERROR, /* nocheck:error */
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(-rc),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "failed to read %zu bytes: %s",
+			    count,
+			    fwupd_strerror(-rc));
+		fwupd_error_convert(error);
 		return -1;
 	}
-	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
-	return fu_input_stream_read(self->base_stream, buffer, count, cancellable, error);
+	return rc;
 }
 
 static void
 fu_partial_input_stream_finalize(GObject *object)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(object);
+	/* must free the Rust stream first */
+	fu_rs_partial_input_stream_free(self->rust);
 	if (self->base_stream != NULL)
 		g_object_unref(self->base_stream);
 	G_OBJECT_CLASS(fu_partial_input_stream_parent_class)->finalize(object);
+}
+
+static FuRsStreamImpl *
+fu_partial_input_stream_get_stream_impl(FuInputStream *stream)
+{
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
+	return fu_rs_partial_input_stream_get_stream_impl(self->rust);
 }
 
 static void
@@ -243,6 +276,7 @@ fu_partial_input_stream_class_init(FuPartialInputStreamClass *klass)
 	istream_class->tell = fu_partial_input_stream_tell;
 	istream_class->can_seek = fu_partial_input_stream_can_seek;
 	istream_class->seek = fu_partial_input_stream_seek;
+	istream_class->get_stream_impl = fu_partial_input_stream_get_stream_impl;
 	object_class->finalize = fu_partial_input_stream_finalize;
 }
 

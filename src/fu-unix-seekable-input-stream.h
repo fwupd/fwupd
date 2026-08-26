@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-stream-input-stream.h"
+#include "fu-input-stream.h"
 
 G_BEGIN_DECLS
 
@@ -16,7 +16,7 @@ G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
 		     fu_unix_seekable_input_stream,
 		     FU,
 		     UNIX_SEEKABLE_INPUT_STREAM,
-		     FuStreamInputStream)
+		     FuInputStream)
 
 FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error);
