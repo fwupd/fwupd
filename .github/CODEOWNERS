@@ -2,9 +2,6 @@
 # Format: [path pattern] [space-separated list of owners]
 # Order is important: last matching pattern takes precedence
 
-# Default owners for everything
-* @superm1 @hughsie
-
 # Plugin-specific owners
 plugins/algoltek-usb/ @MasonLyu
 plugins/amd-gpu/ @superm1
