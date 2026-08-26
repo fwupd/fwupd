@@ -126,6 +126,32 @@ class Builder:
             )
             subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
+    def build_cargo_staticlib(self, package: str, libname: str) -> str:
+        """build a rust crate as a static library and return the archive path"""
+        srcdir = os.path.join(self.srcdir, "fwupd")
+        targetdir = os.path.join(self.builddir, "cargo")
+        dst = os.path.join(targetdir, "release", f"lib{libname}.a")
+        if not os.path.exists(dst):
+            print(f"building rust package {package} into {dst}")
+            try:
+                subprocess.run(
+                    [
+                        "cargo",
+                        "build",
+                        "--release",
+                        "--package",
+                        package,
+                        "--target-dir",
+                        targetdir,
+                    ],
+                    cwd=srcdir,
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                print(e)
+                sys.exit(1)
+        return dst
+
     def build_automake_project(self, srcdir: str, argv=None) -> None:
         """configure and build the autoconf/automake project"""
         if not argv:
@@ -403,6 +429,7 @@ def _build(bld: Builder) -> None:
     built_objs: List[str] = []
     fuzzing_objs: List[str] = []
     bld.add_src_includedir("fwupd")
+    bld.add_src_includedir("fwupd/rust/fwupd-ffi")
     for path in ["fwupd/libfwupd"]:
         bld.add_src_includedir(path)
         for src in bld.grep_meson(path):
@@ -419,6 +446,11 @@ def _build(bld: Builder) -> None:
                 built_objs.append(bld.compile(src))
             elif src.endswith(".rs"):
                 built_objs.append(bld.compile(bld.rustgen(src, includes=["fwupd.h"])))
+
+    # the rust FFI implementation, e.g. fu_rs_file_input_stream_new_from_path()
+    # -- appended last so the archive is pulled in after the C objects that
+    # reference it, and before the glib static libs it depends on in LDFLAGS
+    built_objs.append(bld.build_cargo_staticlib("fwupd-ffi", "fwupd_ffi"))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
