@@ -64,9 +64,10 @@ impl FileInputStream {
 
 impl IsSeekable for FileInputStream {
     fn is_seekable(&self) -> bool {
-        if self.file.metadata().is_ok_and(|md| md.is_file()) {
-            return true;
-        }
+        // do not trust `metadata().is_file()` as a proxy for seekability: special
+        // filesystems such as efivarfs, procfs and sysfs expose regular files that
+        // report a size via stat() but fail every lseek() with ESPIPE. Probe the
+        // file descriptor directly instead.
         self.file
             .try_clone()
             .and_then(|mut f| f.stream_position())
@@ -117,5 +118,60 @@ mod tests {
     #[test]
     fn file_open_nonexistent() {
         assert!(FileInputStream::open("/nonexistent/path/file").is_err());
+    }
+
+    #[test]
+    fn file_is_seekable() {
+        let dir = std::env::temp_dir();
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("fwupd-test-file-seekable");
+        std::fs::write(&path, b"hello").unwrap();
+
+        let stream = FileInputStream::open(path.to_str().unwrap()).unwrap();
+        assert!(stream.is_seekable());
+
+        std::fs::remove_file(&path).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn socket_is_not_seekable() {
+        use std::os::fd::{FromRawFd, IntoRawFd};
+        use std::os::unix::net::UnixStream;
+
+        // a socket -- like a pipe, or an efivarfs entry -- is a valid file
+        // descriptor that reads fine but fails every lseek() with ESPIPE, so it
+        // must not be reported as seekable
+        let (sock, _peer) = UnixStream::pair().unwrap();
+        let file = unsafe { File::from_raw_fd(sock.into_raw_fd()) };
+        let stream = FileInputStream::from_file(file);
+        assert!(!stream.is_seekable());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn regular_file_but_unseekable_is_not_seekable() {
+        use std::fs::OpenOptions;
+        use std::os::unix::fs::OpenOptionsExt;
+
+        // an O_PATH descriptor reports as a regular file via fstat() but fails
+        // every lseek() -- exactly like an efivarfs entry, where is_file() is
+        // true yet seeking is unsupported. This guards against reintroducing an
+        // is_file() short-circuit in is_seekable().
+        const O_PATH: i32 = 0o10_000_000;
+        let dir = std::env::temp_dir();
+        let path = dir.join("fwupd-test-opath");
+        std::fs::write(&path, b"hello").unwrap();
+
+        let file = OpenOptions::new()
+            .read(true)
+            .custom_flags(O_PATH)
+            .open(&path)
+            .unwrap();
+        assert!(file.metadata().unwrap().is_file());
+        let stream = FileInputStream::from_file(file);
+        assert!(!stream.is_seekable());
+
+        std::fs::remove_file(&path).unwrap();
     }
 }
