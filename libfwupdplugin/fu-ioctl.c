@@ -247,6 +247,7 @@ fu_ioctl_execute(FuIoctl *self,
 		 GError **error)
 {
 	FuDeviceEvent *event = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) event_id = NULL;
 	gboolean emulated =
 	    fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
@@ -272,6 +273,23 @@ fu_ioctl_execute(FuIoctl *self,
 		event = fu_device_load_event(FU_DEVICE(self->udev_device), event_id->str, error);
 		if (event == NULL)
 			return FALSE;
+		if (rc != NULL) {
+			gint64 rc_tmp = fu_device_event_get_i64(event, "Rc", NULL);
+			if (rc_tmp != G_MAXINT64) {
+				if (rc_tmp > G_MAXINT || rc_tmp < G_MININT) {
+					g_set_error_literal(error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
+							    "rc oversize");
+					return FALSE;
+				}
+				*rc = (gint)rc_tmp;
+			}
+		}
+		if (!fu_device_event_check_error(event, &error_local)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 		if (self->fixups->len == 0) {
 			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
 				if (!fu_device_event_copy_data(event,
@@ -296,11 +314,6 @@ fu_ioctl_execute(FuIoctl *self,
 						       error))
 				return FALSE;
 		}
-		if (rc != NULL) {
-			gint64 rc_tmp = fu_device_event_get_i64(event, "Rc", NULL);
-			if (rc_tmp != G_MAXINT64)
-				*rc = (gint)rc_tmp;
-		}
 		return TRUE;
 	}
 
@@ -323,8 +336,15 @@ fu_ioctl_execute(FuIoctl *self,
 				  rc,
 				  timeout,
 				  flags,
-				  error))
+				  &error_local)) {
+		if (event != NULL) {
+			if (rc != NULL)
+				fu_device_event_set_i64(event, "Rc", *rc);
+			fu_device_event_set_error(event, error_local);
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 
 	/* save response */
 	if (event != NULL) {
