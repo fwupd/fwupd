@@ -528,8 +528,17 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean locked = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_vboot = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* only applicable when VBOOT provides the firmware root of trust */
+	attr_vboot = fu_security_attrs_get_by_appstream_id(attrs,
+							   FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+							   NULL);
+	if (attr_vboot == NULL ||
+	    !fwupd_security_attr_has_flag(attr_vboot, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+		return;
 
 	/* MEMISLOCKED is only meaningful for this HSI attribute on NOR flash. */
 	if (g_strcmp0(priv->mtd_type, "nor") != 0)

@@ -140,6 +140,21 @@ fu_test_mtd_device_new_for_security_attrs(FuTest *self, gboolean add_event, gboo
 		fu_test_mtd_device_add_memislocked_event(FU_MTD_DEVICE(device), locked);
 	return FU_MTD_DEVICE(g_steal_pointer(&device));
 }
+
+static void
+fu_test_mtd_security_attrs_add_vboot(FuSecurityAttrs *attrs, gboolean enabled)
+{
+	g_autoptr(FwupdSecurityAttr) attr =
+	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT);
+
+	fwupd_security_attr_set_plugin(attr, "tpm");
+	fwupd_security_attr_set_result(attr,
+				       enabled ? FWUPD_SECURITY_ATTR_RESULT_ENABLED
+					       : FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	if (enabled)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr);
+}
 #endif
 
 static FuFirmware *
@@ -340,6 +355,7 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 	g_assert_nonnull(rules);
 	g_assert_cmpint(rules->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(rules, 0), ==, "tpm");
+	fu_test_mtd_security_attrs_add_vboot(attrs, TRUE);
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
@@ -364,6 +380,7 @@ fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, FALSE);
+	fu_test_mtd_security_attrs_add_vboot(attrs, TRUE);
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -390,6 +407,7 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_test_mtd_security_attrs_add_vboot(attrs, TRUE);
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -400,6 +418,32 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_no_vboot_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_null(attr);
+
+	/* detecting coreboot without enabled VBOOT is not sufficient */
+	fu_test_mtd_security_attrs_add_vboot(attrs, FALSE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_null(attr);
 #endif
 }
 
@@ -773,6 +817,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/mtd/device/security-attrs/missing",
 			     self,
 			     fu_test_mtd_device_security_attrs_missing_func);
+	g_test_add_data_func("/mtd/device/security-attrs/no-vboot",
+			     self,
+			     fu_test_mtd_device_security_attrs_no_vboot_func);
 	g_test_add_data_func("/mtd/device/quirk/metadata-offset",
 			     self,
 			     fu_test_mtd_device_quirk_metadata_offset_func);
