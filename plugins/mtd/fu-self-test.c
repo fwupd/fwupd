@@ -21,6 +21,8 @@
 #include "fu-device-private.h"
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
+#include "fu-mtd-plugin.h"
+#include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
 
@@ -325,12 +327,20 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 	g_test_skip("no mtd-user.h support");
 #else
 	FuTest *self = (FuTest *)user_data;
+	GPtrArray *rules;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_mtd_plugin_get_type(), self->ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
+	fu_plugin_runner_init(plugin);
 	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, TRUE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	fu_plugin_add_device(plugin, FU_DEVICE(device));
+	rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_RUN_AFTER);
+	g_assert_nonnull(rules);
+	g_assert_cmpint(rules->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(rules, 0), ==, "tpm");
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
