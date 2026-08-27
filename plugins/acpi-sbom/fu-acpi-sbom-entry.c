@@ -152,8 +152,9 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 		}
 		if (!g_seekable_seek(G_SEEKABLE(istream1), 0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		istream2 =
-		    fu_compressor_stream_new_decompress(istream1, FU_COMPRESSOR_FORMAT_ZLIB, error);
+		istream2 = fu_compressor_stream_new_decompress(istream1,
+							       FWUPD_COMPRESSOR_FORMAT_ZLIB,
+							       error);
 		if (istream2 == NULL)
 			return FALSE;
 		blob_uncompressed =
@@ -226,8 +227,9 @@ fu_acpi_sbom_entry_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuInputStream) istream2 = NULL;
 
 		istream1 = fu_memory_input_stream_new_from_bytes(blob_uncompressed);
-		istream2 =
-		    fu_compressor_stream_new_compress(istream1, FU_COMPRESSOR_FORMAT_ZLIB, error);
+		istream2 = fu_compressor_stream_new_compress(istream1,
+							     FWUPD_COMPRESSOR_FORMAT_ZLIB,
+							     error);
 		if (istream2 == NULL)
 			return NULL;
 		blob_compressed = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
