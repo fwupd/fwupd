@@ -54,7 +54,6 @@ fu_focal_moc_device_send(FuFocalMocDevice *self, GByteArray *pkt, GError **error
 					 pkt->len,
 					 &actual,
 					 FU_FOCAL_MOC_USB_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "send failed: ");
 		return FALSE;
@@ -88,7 +87,6 @@ fu_focal_moc_device_recv(FuFocalMocDevice *self, guint timeout_ms, gsize bufsz, 
 					 bufsz,
 					 &actual,
 					 timeout_ms,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "recv failed: ");
 		return NULL;

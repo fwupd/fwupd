@@ -64,7 +64,6 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 					 0,
 					 NULL,
 					 GX_USB_DATAOUT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
@@ -83,7 +82,6 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 					 st->buf->len,
 					 &actual_len,
 					 GX_USB_DATAOUT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
@@ -123,7 +121,6 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 						 reply->len,
 						 &actual_len, /* allowed to return short read */
 						 GX_USB_DATAIN_TIMEOUT,
-						 NULL,
 						 error)) {
 			g_prefix_error_literal(error, "failed to reply: ");
 			return NULL;
