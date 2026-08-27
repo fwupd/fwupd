@@ -70,7 +70,6 @@ fu_parade_usbhub_device_mmio_read_u8(FuParadeUsbhubDevice *self,
 					      sizeof(*data),
 					      NULL,
 					      FU_PARADE_USBHUB_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -106,7 +105,6 @@ fu_parade_usbhub_device_mmio_write_raw(FuParadeUsbhubDevice *self,
 					      bufsz,
 					      NULL,
 					      FU_PARADE_USBHUB_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 

@@ -40,7 +40,6 @@ fu_vli_pd_device_read_regs(FuVliPdDevice *self,
 					    bufsz,
 					    NULL,
 					    1000,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write register @0x%x: ", addr);
 		return FALSE;
@@ -71,7 +70,6 @@ fu_vli_pd_device_write_reg(FuVliPdDevice *self, guint16 addr, guint8 value, GErr
 					    sizeof(value),
 					    NULL,
 					    1000,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write register @0x%x: ", addr);
 		return FALSE;
@@ -99,7 +97,6 @@ fu_vli_pd_device_spi_read_status(FuVliDevice *self, guint8 *status, GError **err
 					      0x1,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -131,7 +128,6 @@ fu_vli_pd_device_spi_read_data(FuVliDevice *self,
 					      bufsz,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -157,7 +153,6 @@ fu_vli_pd_device_spi_write_status(FuVliDevice *self, guint8 status, GError **err
 					    0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -187,7 +182,6 @@ fu_vli_pd_device_spi_write_enable(FuVliDevice *self, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -214,7 +208,6 @@ fu_vli_pd_device_spi_chip_erase(FuVliDevice *self, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -245,7 +238,6 @@ fu_vli_pd_device_spi_sector_erase(FuVliDevice *self, guint32 addr, GError **erro
 					      0x0,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -283,7 +275,6 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 					    bufsz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -335,7 +326,6 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 					    sizeof(verbuf),
 					    NULL,
 					    1000,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
@@ -720,7 +710,6 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 						    0x0,
 						    NULL,
 						    FU_VLI_DEVICE_TIMEOUT,
-						    NULL,
 						    &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
@@ -770,7 +759,6 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error))
 		return FALSE;
 
@@ -786,7 +774,6 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -840,7 +827,6 @@ fu_vli_pd_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||

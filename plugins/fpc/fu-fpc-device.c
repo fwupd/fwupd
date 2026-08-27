@@ -90,7 +90,6 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		length,
 		length ? &actual_len : NULL,
 		FPC_USB_TRANSFER_TIMEOUT,
-		NULL,
 		error)) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -129,7 +128,6 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 					    length,
 					    length ? &actual_len : NULL,
 					    FPC_USB_TRANSFER_TIMEOUT,
-					    NULL,
 					    error)) {
 		fwupd_error_convert(error);
 		return FALSE;

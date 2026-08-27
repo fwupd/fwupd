@@ -55,7 +55,6 @@ fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubMsp430Device *self,
 					    bufsz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
@@ -112,7 +111,6 @@ fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubMsp430Device *self,
 					    bufsz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write I2C @0x%x: ", value);
 		return FALSE;

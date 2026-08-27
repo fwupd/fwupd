@@ -69,7 +69,6 @@ fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubRtd21xxDevice *self,
 					    datasz + 2,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
@@ -103,7 +102,6 @@ fu_vli_usbhub_rtd21xx_device_i2c_read(FuVliUsbhubRtd21xxDevice *self,
 					    datasz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
