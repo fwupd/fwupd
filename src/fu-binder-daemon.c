@@ -763,6 +763,34 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 	self->event_listener_binders = g_ptr_array_new_with_free_func(g_object_unref);
 }
 
+static void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
+                        const gchar* message, gpointer user_data) {
+  g_autoptr(GDateTime) dt = g_date_time_new_now_local();
+  g_autofree gchar* timestamp = g_strdup_printf(
+      "%02i:%02i:%02i.%03i", g_date_time_get_hour(dt),
+      g_date_time_get_minute(dt), g_date_time_get_second(dt),
+      g_date_time_get_microsecond(dt) / 1000);
+  g_autofree gchar* log_path =
+      g_build_filename(FWUPD_LOCALSTATEDIR, "fwupd.log", NULL);
+  GStatBuf st;
+
+  /* rotate if > 5MB */
+  if (g_stat(log_path, &st) == 0 && st.st_size > 5 * 1024 * 1024) {
+    for (guint i = 2; i > 0; i--) {
+      g_autofree gchar* path_old = g_strdup_printf("%s.%u", log_path, i);
+      g_autofree gchar* path_new = g_strdup_printf("%s.%u", log_path, i + 1);
+      (void)g_rename(path_old, path_new);
+    }
+    g_autofree gchar* log_path_1 = g_strdup_printf("%s.1", log_path);
+    (void)g_rename(log_path, log_path_1);
+  }
+
+  FILE* fp = g_fopen(log_path, "a");
+  if (fp == NULL) return;
+  fprintf(fp, "%s %s: %s\n", timestamp, log_domain, message);
+  fclose(fp);
+}
+
 /* Global tracker to pass the context into the C++ bridge */
 void *g_daemon_instance = NULL;
 
@@ -772,6 +800,9 @@ fu_binder_daemon_setup(FuDaemon *daemon, const gchar *address, FuProgress *progr
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon);
 	FuEngine *engine = fu_daemon_get_engine(daemon);
 	g_autoptr(GSource) source = NULL;
+
+	/* logging */
+	g_log_set_default_handler(log_handler, NULL);
 
 	/* save the daemon context so c++ can trigger install logic */
 	g_daemon_instance = self;
