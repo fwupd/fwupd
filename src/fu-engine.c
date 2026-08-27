@@ -2841,7 +2841,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	if (remote_tmp != NULL) {
 		g_info("enabling remote %s", fwupd_remote_get_id(remote_tmp));
 		fwupd_remote_add_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED);
-		return fu_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
+		return fu_remote_save_to_filename(remote_tmp, remotes_fn, error);
 	}
 
 	/* create a new remote we can use for re-installing */
@@ -2850,7 +2850,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 	fwupd_remote_set_title(remote, "Backup");
 	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
-	return fu_remote_save_to_filename(remote, remotes_fn, NULL, error);
+	return fu_remote_save_to_filename(remote, remotes_fn, error);
 }
 
 static gboolean

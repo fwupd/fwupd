@@ -36,7 +36,7 @@ fu_engine_save_remote_broken(FuTemporaryDirectory *tmpdir)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 
 	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "broken.conf", NULL);
-	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	ret = fu_remote_save_to_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -56,7 +56,7 @@ fu_engine_save_remote_stable(FuTemporaryDirectory *tmpdir)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 
 	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "stable.conf", NULL);
-	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	ret = fu_remote_save_to_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -76,7 +76,7 @@ fu_engine_save_remote_directory(FuTemporaryDirectory *tmpdir)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 
 	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "directory.conf", NULL);
-	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	ret = fu_remote_save_to_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -97,7 +97,7 @@ fu_engine_save_remote_testing(FuTemporaryDirectory *tmpdir)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 
 	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "testing.conf", NULL);
-	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	ret = fu_remote_save_to_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
