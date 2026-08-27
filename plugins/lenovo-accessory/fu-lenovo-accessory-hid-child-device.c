@@ -466,7 +466,6 @@ fu_lenovo_accessory_hid_child_device_notify_poll_cb(FuDevice *device,
 					      sizeof(buf),
 					      &actual_len,
 					      500, /* ms */
-					      NULL,
 					      error))
 		return FALSE;
 	st = fu_struct_lenovo_accessory_notify_parse(buf, actual_len, 0x0, error);
