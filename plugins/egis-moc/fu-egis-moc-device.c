@@ -66,7 +66,6 @@ fu_egis_moc_device_ctrl_cmd(FuEgisMocDevice *self,
 					    length,
 					    length ? &actual_len : NULL,
 					    FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
-					    NULL,
 					    error)) {
 		fwupd_error_convert(error);
 		return FALSE;

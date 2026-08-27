@@ -165,7 +165,6 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 				       gsize length,
 				       gsize *actual_length,
 				       guint timeout,
-				       GCancellable *cancellable,
 				       GError **error)
 {
 	FuDevice *proxy;
@@ -196,7 +195,6 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 					      length,
 					      actual_length,
 					      timeout,
-					      cancellable,
 					      error);
 }
 
@@ -254,7 +252,6 @@ fu_genesys_usbhub_device_read_flash(FuGenesysUsbhubDevice *self,
 			fu_chunk_get_data_sz(chk),		 /* data length */
 			NULL,					 /* actual length */
 			GENESYS_USBHUB_USB_TIMEOUT,
-			NULL,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
@@ -321,7 +318,6 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 			fu_chunk_get_data_sz(chk),		 /* data length */
 			NULL,					 /* actual length */
 			GENESYS_USBHUB_USB_TIMEOUT,
-			NULL,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
@@ -387,7 +383,6 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 			fu_chunk_get_data_sz(chk),		 /* data length */
 			NULL,					 /* actual length */
 			GENESYS_USBHUB_USB_TIMEOUT,
-			NULL,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
@@ -429,7 +424,6 @@ fu_genesys_usbhub_device_reset(FuGenesysUsbhubDevice *self, GError **error)
 						    0,	    /* data length */
 						    NULL,   /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error resetting device: ");
 		return FALSE;
@@ -468,7 +462,6 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 							    rdid[i].len, /* data length */
 							    NULL,	 /* actual length */
 							    GENESYS_USBHUB_USB_TIMEOUT,
-							    NULL,
 							    error)) {
 			g_prefix_error_literal(error, "error reading flash chip: ");
 			return NULL;
@@ -526,7 +519,6 @@ fu_genesys_usbhub_device_wait_flash_status_register_cb(FuDevice *device,
 						    1,			     /* data length */
 						    NULL,		     /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error,
 			       "error getting flash status register (0x%02x): ",
@@ -562,7 +554,6 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 						    0,	  /* data length */
 						    NULL, /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error,
 			       "error setting isp mode - "
@@ -610,7 +601,6 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 						    1,	  /* data length */
 						    NULL, /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error,
 			       "control transfer error (req: 0x%0x): ",
@@ -630,7 +620,6 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 						    1,	  /* data length */
 						    NULL, /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error,
 			       "control transfer error (req: 0x%0x): ",
@@ -2233,7 +2222,6 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 							    0,	    /* data length */
 							    NULL,   /* actual length */
 							    GENESYS_USBHUB_USB_TIMEOUT,
-							    NULL,
 							    error)) {
 			g_prefix_error(error,
 				       "error erasing flash at sector 0x%02x in block 0x%02x: ",
@@ -2298,7 +2286,6 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 			buf_write->len,				 /* data length */
 			NULL,					 /* actual length */
 			GENESYS_USBHUB_USB_TIMEOUT,
-			NULL,
 			error)) {
 			g_prefix_error(error,
 				       "error writing flash at 0x%02x%04x: ",
@@ -2558,7 +2545,6 @@ fu_genesys_usbhub_device_setup_hw_module(FuGenesysUsbhubDevice *self, GError **e
 						    0,	  /* data length */
 						    NULL, /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error setting up HW module: ");
 		return FALSE;
@@ -2587,7 +2573,6 @@ fu_genesys_usbhub_device_send_hash_data_length(FuGenesysUsbhubDevice *self,
 						    0,		  /* data length */
 						    NULL,	  /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error, "error sending hash data length by 4k(0x%x): ", length_by_4k);
 		return FALSE;
@@ -2633,7 +2618,6 @@ fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
 						    hash_bufsz, /* data length */
 						    NULL,	/* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error sending hash digest: ");
 		return FALSE;
@@ -2660,7 +2644,6 @@ fu_genesys_usbhub_device_check_hash_digest_verification(FuGenesysUsbhubDevice *s
 						    1,		   /* data length */
 						    NULL,	   /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error getting hash digest verification: ");
 		return FALSE;
@@ -2696,7 +2679,6 @@ fu_genesys_usbhub_device_toggle_hw_read_key(FuGenesysUsbhubDevice *self,
 						    0,	      /* data length */
 						    NULL,     /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error(error, "error sending key addr 0x%x: ", key_addr);
 		return FALSE;
@@ -2742,7 +2724,6 @@ fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
 						    sig_bufsz, /* data length */
 						    NULL,      /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error sending signature: ");
 		return FALSE;
@@ -2769,7 +2750,6 @@ fu_genesys_usbhub_device_check_signature_verification(FuGenesysUsbhubDevice *sel
 						    1,		   /* data length */
 						    NULL,	   /* actual length */
 						    GENESYS_USBHUB_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 		g_prefix_error_literal(error, "error getting signature verification: ");
 		return FALSE;

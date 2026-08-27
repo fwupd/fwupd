@@ -90,7 +90,6 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 					    total_length,
 					    &actual_length,
 					    500,
-					    NULL, /* cancellable */
 					    error)) {
 		g_prefix_error(error, "requested vendor code 0x%02x: ", vendor_code);
 		return FALSE;

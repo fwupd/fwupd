@@ -79,7 +79,6 @@ fu_vli_usbhub_device_vdr_unlock_813(FuVliUsbhubDevice *self, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to UnLock_VL813: ");
 		return FALSE;
@@ -101,7 +100,6 @@ fu_vli_usbhub_device_read_reg(FuVliUsbhubDevice *self, guint16 addr, guint8 *buf
 					    0x1,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to read register 0x%x: ", addr);
 		return FALSE;
@@ -123,7 +121,6 @@ fu_vli_usbhub_device_write_reg(FuVliUsbhubDevice *self, guint16 addr, guint8 val
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write register 0x%x: ", addr);
 		return FALSE;
@@ -151,7 +148,6 @@ fu_vli_usbhub_device_spi_read_status(FuVliDevice *self, guint8 *status, GError *
 					      0x1,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -183,7 +179,6 @@ fu_vli_usbhub_device_spi_read_data(FuVliDevice *self,
 					      bufsz,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -207,7 +202,6 @@ fu_vli_usbhub_device_spi_write_status(FuVliDevice *self, guint8 status, GError *
 					    0x1,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -237,7 +231,6 @@ fu_vli_usbhub_device_spi_write_enable(FuVliDevice *self, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to write enable SPI: ");
 		return FALSE;
@@ -265,7 +258,6 @@ fu_vli_usbhub_device_spi_chip_erase(FuVliDevice *self, GError **error)
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -296,7 +288,6 @@ fu_vli_usbhub_device_spi_sector_erase(FuVliDevice *self, guint32 addr, GError **
 					      0x0,
 					      NULL,
 					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL,
 					      error);
 }
 
@@ -333,7 +324,6 @@ fu_vli_usbhub_device_spi_write_data(FuVliDevice *self,
 					    bufsz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -417,7 +407,6 @@ fu_vli_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **err
 						    0x0,
 						    NULL,
 						    FU_VLI_DEVICE_TIMEOUT,
-						    NULL,
 						    &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||

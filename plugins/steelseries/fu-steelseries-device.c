@@ -50,7 +50,6 @@ fu_steelseries_device_request(FuSteelseriesDevice *self, const GByteArray *buf, 
 					    buf_padded->len,
 					    &actual_len,
 					    FU_STEELSERIES_TRANSACTION_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to do control transfer: ");
 		return FALSE;

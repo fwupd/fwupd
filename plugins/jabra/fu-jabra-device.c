@@ -112,7 +112,6 @@ fu_jabra_device_prepare(FuDevice *device,
 					    33,
 					    NULL,
 					    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-					    NULL, /* cancellable */
 					    &error_local)) {
 		g_debug("whilst sending magic: %s, ignoring", error_local->message);
 	}

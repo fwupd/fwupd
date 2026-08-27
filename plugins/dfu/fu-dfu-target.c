@@ -716,7 +716,6 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					    buf->len,
 					    &actual_length,
 					    timeout_ms,
-					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(FU_DFU_DEVICE(proxy), &error_local);
@@ -786,7 +785,6 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 					    buf_sz,
 					    &actual_length,
 					    fu_dfu_device_get_timeout(FU_DFU_DEVICE(proxy)),
-					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(FU_DFU_DEVICE(proxy), &error_local);

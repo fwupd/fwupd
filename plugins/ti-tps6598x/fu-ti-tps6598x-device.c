@@ -61,7 +61,6 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 					    buf->len,
 					    &actual_length,
 					    TI_TPS6598X_DEVICE_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to contact device: ");
 		return NULL;
@@ -148,7 +147,6 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 						    fu_chunk_get_data_sz(chk),
 						    &actual_length,
 						    TI_TPS6598X_DEVICE_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "failed to contact device: ");
 			return FALSE;

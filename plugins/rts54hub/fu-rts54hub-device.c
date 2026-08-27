@@ -95,7 +95,6 @@ fu_rts54hub_device_i2c_config(FuRts54hubDevice *self,
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to issue i2c Conf cmd 0x%02x: ", target_addr);
 		return FALSE;
@@ -124,7 +123,6 @@ fu_rts54hub_device_i2c_write(FuRts54hubDevice *self,
 					    datasz, /* data */
 					    NULL,
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to write I2C: ");
 		return FALSE;
@@ -150,7 +148,6 @@ fu_rts54hub_device_i2c_read(FuRts54hubDevice *self,
 					    datasz,
 					    NULL,
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
@@ -172,7 +169,6 @@ fu_rts54hub_device_highclockmode(FuRts54hubDevice *self, guint16 value, GError *
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to set highclockmode: ");
 		return FALSE;
@@ -194,7 +190,6 @@ fu_rts54hub_device_reset_flash(FuRts54hubDevice *self, GError **error)
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to reset flash: ");
 		return FALSE;
@@ -228,7 +223,6 @@ fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
 					    datasz, /* data */
 					    &actual_len,
 					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to write flash: ");
 		return FALSE;
@@ -263,7 +257,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 					    data, datasz,	/* data */
 					    &actual_len,
 					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
-					    NULL, error)) {
+					    error)) {
 		g_prefix_error_literal(error, "failed to read flash: ");
 		return FALSE;
 	}
@@ -290,7 +284,6 @@ fu_rts54hub_device_flash_authentication(FuRts54hubDevice *self, GError **error)
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT_AUTH,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to authenticate: ");
 		return FALSE;
@@ -312,7 +305,6 @@ fu_rts54hub_device_erase_flash(FuRts54hubDevice *self, guint8 erase_type, GError
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT_ERASE,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to erase flash: ");
 		return FALSE;
@@ -341,7 +333,6 @@ fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self,
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_autofree gchar *str = fu_rts54hub_vendor_cmd_to_string(vendor_cmd);
 		g_prefix_error(error, "failed to issue vendor cmd %s: ", str);
@@ -368,7 +359,6 @@ fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
 					    sizeof(data),
 					    &actual_len, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get status: ");
 		return FALSE;

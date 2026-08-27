@@ -90,7 +90,6 @@ fu_hpi_cfu_device_start_entire_transaction(FuHpiCfuDevice *self, GError **error)
 					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -156,7 +155,6 @@ fu_hpi_cfu_device_send_start_offer_list(FuHpiCfuDevice *self, GError **error)
 					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -246,7 +244,6 @@ fu_hpi_cfu_device_send_offer_update_command(FuHpiCfuDevice *self,
 					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -395,7 +392,6 @@ fu_hpi_cfu_device_send_end_offer_list(FuHpiCfuDevice *self, GError **error)
 					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -622,7 +618,6 @@ fu_hpi_cfu_device_send_payload(FuHpiCfuDevice *self, GByteArray *cfu_buf, GError
 					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1465,7 +1460,6 @@ fu_hpi_cfu_device_setup(FuDevice *device, GError **error)
 					    sizeof(buf),
 					    &actual_length,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to do device setup: ");
 		return FALSE;
