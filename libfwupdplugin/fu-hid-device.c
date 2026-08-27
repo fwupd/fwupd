@@ -439,7 +439,6 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						      helper->bufsz,
 						      &actual_len,
 						      helper->timeout,
-						      NULL, /* cancellable */
 						      error)) {
 			g_prefix_error_literal(error, "failed to SetReport [interrupt-transfer]: ");
 			return FALSE;
@@ -567,7 +566,6 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						      helper->bufsz,
 						      &actual_len,
 						      helper->timeout,
-						      NULL, /* cancellable */
 						      error))
 			return FALSE;
 		title = g_strdup_printf("HID::GetReport [EP=0x%02x]", priv->ep_addr_in);

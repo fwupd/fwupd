@@ -28,7 +28,6 @@ fu_elan_kbd_debug_device_detach(FuDevice *device, FuProgress *progress, GError *
 					      sizeof(buf),
 					      NULL,
 					      1000,
-					      NULL,
 					      &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {

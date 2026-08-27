@@ -86,7 +86,6 @@ fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
 					      buf->len,
 					      &actual_len,
 					      FU_STEELSERIES_TRANSACTION_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to do EP transfer: ");
 		return NULL;

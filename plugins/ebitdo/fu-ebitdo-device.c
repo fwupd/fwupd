@@ -88,7 +88,6 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 					      st_hdr->buf->len,
 					      &actual_length,
 					      FU_EBITDO_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -121,7 +120,6 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 					      sizeof(packet),
 					      &actual_length,
 					      FU_EBITDO_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
