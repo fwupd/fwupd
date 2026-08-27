@@ -34,7 +34,7 @@ fu_remote_download_func(void)
 	expected_signature = g_strdup_printf("%s.jcat", expected_metadata);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "remotes2.d", "lvfs-testing.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fwupd_remote_setup(remote, &error);
@@ -70,7 +70,7 @@ fu_remote_baseuri_func(void)
 	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-base-uri.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
@@ -108,7 +108,7 @@ fu_remote_auth_func(void)
 	fwupd_remote_set_remotes_dir(remote, remotes_dir);
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "auth.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
@@ -208,11 +208,11 @@ fu_remote_duplicate_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "stable.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fn2 = g_test_build_filename(G_TEST_DIST, "tests", "disabled.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn2, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn2, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fwupd_remote_setup(remote, &error);
@@ -254,7 +254,7 @@ fu_remote_empty_credentials_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
@@ -281,7 +281,7 @@ fu_remote_nopath_func(void)
 	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-nopath.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
@@ -314,7 +314,7 @@ fu_remote_local_func(void)
 
 	remote = fwupd_remote_new();
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dell-esrt.conf", NULL);
-	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);
