@@ -32,9 +32,9 @@ use std::ops::{BitAnd, BitOr};
 /// declare_bitflags! {
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
-///         const Read = 1 << 0;
-///         const Write = 1 << 1;
-///         const Execute = 1 << 2;
+///         Read = 1 << 0;
+///         Write = 1 << 1;
+///         Execute = 1 << 2;
 ///     }
 /// }
 ///
@@ -79,11 +79,11 @@ use std::ops::{BitAnd, BitOr};
 /// declare_bitflags! {
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
-///         const Read = 0x1;
-///         const Write = 0x2;
-///         const Execute = 0x4;
+///         Read = 0x1;
+///         Write = 0x2;
+///         Execute = 0x4;
 ///         // Multiple bits and an alias to two other flags
-///         const ReadWrite = 0x3;
+///         ReadWrite = 0x3;
 ///     }
 /// }
 /// ```
@@ -260,11 +260,11 @@ where
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
 ///         /// Read permission.
-///         const Read = 1 << 0;
+///         Read = 1 << 0;
 ///         /// Write permission.
-///         const Write = 1 << 1;
+///         Write = 1 << 1;
 ///         /// Execute permission.
-///         const Execute = 1 << 2;
+///         Execute = 1 << 2;
 ///     }
 /// }
 /// ```
@@ -277,7 +277,7 @@ macro_rules! declare_bitflags {
         $vis:vis struct $Mask:ident / $Flag:ident : $T:ty {
             $(
                 $(#[$inner:meta])*
-                const $NAME:ident = $value:expr;
+                $NAME:ident = $value:expr;
             )*
         }
     ) => {
@@ -414,11 +414,11 @@ mod tests {
     declare_bitflags! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct TestFlags / TestFlag : u32 {
-            const Read = 1 << 0;
-            const Write = 1 << 1;
-            const Execute = 1 << 2;
+            Read = 1 << 0;
+            Write = 1 << 1;
+            Execute = 1 << 2;
 
-            const ReadWrite = 0x3;
+            ReadWrite = 0x3;
         }
     }
 
