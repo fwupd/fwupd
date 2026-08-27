@@ -289,7 +289,6 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 						      sizeof(buf),
 						      &actual_length,
 						      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
-						      NULL,
 						      &error_ignore)) {
 			g_debug("ignoring: %s", error_ignore->message);
 		} else {
@@ -305,7 +304,6 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 					      sizeof(buf),
 					      &actual_length,
 					      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get data: ");
 		return NULL;

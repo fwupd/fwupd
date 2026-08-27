@@ -233,7 +233,6 @@ fu_ccgx_hpi_device_wait_for_notify(FuCcgxHpiDevice *self, guint16 *bytes_pending
 					      sizeof(buf),
 					      NULL,
 					      FU_CCGX_HPI_WAIT_TIMEOUT,
-					      NULL,
 					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,

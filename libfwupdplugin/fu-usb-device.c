@@ -1677,7 +1677,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
  * @length: the length field for the setup packet.
  * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
  * @timeout: timeout (in milliseconds) that this function should wait -- use 0 for unlimited
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB interrupt transfer.
@@ -1695,7 +1694,6 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 				 gsize length,
 				 gsize *actual_length,
 				 guint timeout,
-				 GCancellable *cancellable,
 				 GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);

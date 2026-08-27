@@ -89,7 +89,6 @@ fu_jabra_file_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					      cmd_req->buf->len,
 					      NULL,
 					      FU_JABRA_FILE_STANDARD_SEND_TIMEOUT,
-					      NULL, /* cancellable */
 					      error)) {
 		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
@@ -122,7 +121,6 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 					      cmd_rsp->buf->len,
 					      NULL,
 					      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
-					      NULL, /* cancellable */
 					      error)) {
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
@@ -142,7 +140,6 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 						      cmd_rsp->buf->len,
 						      NULL,
 						      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
-						      NULL, /* cancellable */
 						      error)) {
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
