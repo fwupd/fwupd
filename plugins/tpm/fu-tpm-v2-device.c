@@ -482,8 +482,10 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 					    "no data returned");
 			return NULL;
 		}
-		if (data[0]->size == 0)
+		if (data[0]->size == 0) {
+			Esys_Free(data[0]);
 			break;
+		}
 
 		/* yes, the blocks are returned in reverse order */
 		g_byte_array_prepend(buf, data[0]->buffer, data[0]->size);
