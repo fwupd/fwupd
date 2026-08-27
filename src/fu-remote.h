@@ -16,7 +16,6 @@ G_DECLARE_FINAL_TYPE(FuRemote, fu_remote, FU, REMOTE, FwupdRemote)
 gboolean
 fu_remote_load_from_filename(FwupdRemote *self,
 			     const gchar *filename,
-			     GCancellable *cancellable,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_remote_save_to_filename(FwupdRemote *self,

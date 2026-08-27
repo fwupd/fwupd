@@ -24,7 +24,6 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
  * fu_remote_load_from_filename:
  * @self: a #FwupdRemote
  * @filename: (not nullable): a filename
- * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
  * Loads metadata about the remote from a keyfile.
@@ -35,7 +34,6 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
 gboolean
 fu_remote_load_from_filename(FwupdRemote *self,
 			     const gchar *filename,
-			     GCancellable *cancellable,
 			     GError **error)
 {
 	const gchar *group = "fwupd Remote";
@@ -44,7 +42,6 @@ fu_remote_load_from_filename(FwupdRemote *self,
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* set ID */
