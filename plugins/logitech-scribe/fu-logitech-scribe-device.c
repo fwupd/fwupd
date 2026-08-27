@@ -63,7 +63,6 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 {
 	gsize transferred = 0;
 	gint ep;
-	GCancellable *cancellable = NULL;
 	g_return_val_if_fail(buf != NULL, FALSE);
 
 	if (interface_id == BULK_INTERFACE_UPD) {
@@ -81,7 +80,6 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 					 buf->len,
 					 &transferred,
 					 BULK_TRANSFER_TIMEOUT,
-					 cancellable,
 					 error)) {
 		g_prefix_error_literal(error, "failed to send using bulk transfer: ");
 		return FALSE;
@@ -116,7 +114,6 @@ fu_logitech_scribe_device_recv(FuLogitechScribeDevice *self,
 					 buf->len,
 					 &received_length,
 					 timeout,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;

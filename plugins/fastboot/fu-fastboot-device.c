@@ -64,7 +64,6 @@ fu_fastboot_device_write(FuFastbootDevice *self, const guint8 *buf, gsize buflen
 					  buflen,
 					  &actual_len,
 					  FASTBOOT_TRANSACTION_TIMEOUT,
-					  NULL,
 					  error);
 
 	/* give device some time to handle action */
@@ -131,7 +130,6 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 						  sizeof(buf),
 						  &actual_len,
 						  FASTBOOT_TRANSACTION_TIMEOUT,
-						  NULL,
 						  &error_local);
 		/* give device some time to handle action */
 		fu_device_sleep(FU_DEVICE(self), self->operation_delay);

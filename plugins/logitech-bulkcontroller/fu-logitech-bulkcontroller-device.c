@@ -177,7 +177,6 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 					 st_req->buf->len,
 					 NULL, /* transferred */
 					 timeout,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to send sync bulk transfer: ");
 		return FALSE;
@@ -225,7 +224,6 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 					 self->transfer_bufsz,
 					 &actual_length,
 					 timeout,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
 		return NULL;
@@ -586,7 +584,6 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					 st_pkt->buf->len,
 					 NULL, /* transferred */
 					 BULK_TRANSFER_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to send upd bulk transfer: ");
 		fwupd_error_convert(error);
@@ -600,7 +597,6 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					 self->transfer_bufsz,
 					 &actual_length,
 					 timeout,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
@@ -1502,7 +1498,6 @@ fu_logitech_bulkcontroller_device_clear_queue_cb(FuDevice *device,
 					 self->transfer_bufsz,
 					 &actual_length,
 					 250, /* ms */
-					 NULL,
 					 &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("timed out successfully");
