@@ -402,7 +402,6 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 					    sizeof(data),
 					    &sz,
 					    1000,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get USB descriptor: ");
 		return FALSE;
@@ -1441,7 +1440,6 @@ fu_usb_device_convert_version(FuDevice *device, guint64 version_raw)
  * @timeout: timeout timeout (in milliseconds) that this function should wait
  * before giving up due to no response being received. For an unlimited
  * timeout, use 0.
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB control transfer.
@@ -1464,7 +1462,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 			       gsize length,
 			       gsize *actual_length,
 			       guint timeout,
-			       GCancellable *cancellable,
 			       GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -2746,7 +2743,6 @@ fu_usb_device_ensure_hid_descriptor(FuUsbDevice *self,
 					    bufsz,
 					    &actual_length,
 					    5000,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get HID report descriptor: ");
 		return FALSE;

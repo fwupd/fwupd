@@ -61,7 +61,6 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 		tx_data->buf->len,
 		NULL,
 		tx_data->timeout,
-		NULL, /* cancellable */
 		error)) {
 		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;

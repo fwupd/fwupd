@@ -98,7 +98,6 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 						    sendsz,
 						    &actual,
 						    CTRL_SEND_TIMEOUT_MS,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "failed to send command (ctrl transfer): ");
 			return FALSE;

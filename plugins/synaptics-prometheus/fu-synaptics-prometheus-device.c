@@ -434,7 +434,6 @@ fu_synaptics_prometheus_device_attach(FuDevice *device, FuProgress *progress, GE
 					   sizeof(data),
 					   &actual_len,
 					   2000,
-					   NULL,
 					   error);
 	if (!ret)
 		return FALSE;
@@ -479,7 +478,6 @@ fu_synaptics_prometheus_device_detach(FuDevice *device, FuProgress *progress, GE
 					    sizeof(data),
 					    &actual_len,
 					    2000,
-					    NULL,
 					    error))
 		return FALSE;
 	if (actual_len != sizeof(data)) {

@@ -40,7 +40,6 @@ fu_algoltek_usb_device_ctrl_transfer(FuAlgoltekUsbDevice *self,
 					      len,
 					      NULL,
 					      ALGOLTEK_DEVICE_USB_TIMEOUT,
-					      NULL,
 					      error);
 }
 

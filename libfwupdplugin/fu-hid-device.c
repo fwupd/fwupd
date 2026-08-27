@@ -467,7 +467,6 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						    helper->bufsz,
 						    &actual_len,
 						    helper->timeout,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "failed to SetReport: ");
 			return FALSE;
@@ -596,7 +595,6 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						    helper->bufsz,
 						    &actual_len, /* actual length */
 						    helper->timeout,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "failed to GetReport: ");
 			return FALSE;

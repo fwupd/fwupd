@@ -86,7 +86,6 @@ fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GE
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error entering Serial Debug Mode: ");
 		return FALSE;
@@ -118,7 +117,6 @@ fu_genesys_scaler_device_exit_serial_debug_mode(FuGenesysScalerDevice *self, GEr
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error exiting Serial Debug Mode: ");
 		return FALSE;
@@ -149,7 +147,6 @@ fu_genesys_scaler_device_enter_single_step_mode(FuGenesysScalerDevice *self, GEr
 					    sizeof(data1), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error entering Single Step Mode: ");
 		return FALSE;
@@ -166,7 +163,6 @@ fu_genesys_scaler_device_enter_single_step_mode(FuGenesysScalerDevice *self, GEr
 					    sizeof(data2), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error entering Single Step Mode: ");
 		return FALSE;
@@ -196,7 +192,6 @@ fu_genesys_scaler_device_exit_single_step_mode(FuGenesysScalerDevice *self, GErr
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error exiting Single Step Mode: ");
 		return FALSE;
@@ -226,7 +221,6 @@ fu_genesys_scaler_device_enter_debug_mode(FuGenesysScalerDevice *self, GError **
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error entering Debug Mode: ");
 		return FALSE;
@@ -257,7 +251,6 @@ fu_genesys_scaler_device_mst_i2c_bus_ctrl(FuGenesysScalerDevice *self, GError **
 						    sizeof(data[i]), /* data length */
 						    NULL,	     /* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error(error, "error sending i2c bus ctrl 0x%02x: ", data[i]);
 			return FALSE;
@@ -290,7 +283,6 @@ fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch0(FuGenesysScalerDevice *self, 
 						    sizeof(data[i]), /* data length */
 						    NULL,	     /* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error(error, "error sending i2c bus ch0 0x%02x: ", data[i]);
 			return FALSE;
@@ -323,7 +315,6 @@ fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch4(FuGenesysScalerDevice *self, 
 						    sizeof(data[i]), /* data length */
 						    NULL,	     /* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error(error, "error sending i2c bus ch4 0x%02x: ", data[i]);
 			return FALSE;
@@ -367,7 +358,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_out) - 1, /* data length */
 					    NULL,		  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
@@ -387,7 +377,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_out[3]), /* data length */
 					    NULL,		 /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
@@ -423,7 +412,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_out), /* data length */
 					    NULL,	      /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Out Register 0x%02x%02x=0x%02x: ",
@@ -450,7 +438,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_en) - 1, /* data length */
 					    NULL,		 /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Enable Register 0x%02x%02x: ",
@@ -470,7 +457,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_en[3]), /* data length */
 					    NULL,		/* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
@@ -503,7 +489,6 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 					    sizeof(data_en), /* data length */
 					    NULL,	     /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Enable Register 0x%02x%02x=0x%02x: ",
@@ -543,7 +528,6 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 					    sizeof(data) - 1, /* data length */
 					    NULL,	      /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error reading register 0x%02x%02x%02x%02x%02x: ",
@@ -566,7 +550,6 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 					    sizeof(data[5]), /* data length */
 					    NULL,	     /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error reading register 0x%02x%02x%02x%02x%02x: ",
@@ -603,7 +586,6 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error writing register 0x%02x%02x%02x%02x%02x: ",
@@ -642,7 +624,6 @@ fu_genesys_scaler_device_set_isp_mode_cb(FuDevice *device, gpointer user_data, G
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		return FALSE;
 	}
@@ -696,7 +677,6 @@ fu_genesys_scaler_device_exit_isp_mode(FuGenesysScalerDevice *self, GError **err
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error exiting ISP mode: ");
 		return FALSE;
@@ -790,7 +770,6 @@ fu_genesys_scaler_device_get_level(FuGenesysScalerDevice *self, guint8 *level, G
 					    1,	    /* data length */
 					    NULL,   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error getting level: ");
 		return FALSE;
@@ -823,7 +802,6 @@ fu_genesys_scaler_device_get_version(FuGenesysScalerDevice *self,
 					    bufsz,  /* data length */
 					    NULL,   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error getting version: ");
 		return FALSE;
@@ -865,7 +843,6 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 						    fu_chunk_get_data_sz(chk),	/* data length */
 						    NULL,			/* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "error getting public key: ");
 			return FALSE;
@@ -919,7 +896,6 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 					    sizeof(data1), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
@@ -936,7 +912,6 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 					    sizeof(data2), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
@@ -961,7 +936,6 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 						    fu_chunk_get_data_sz(chk),	/* data length */
 						    NULL,			/* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%06x: ",
@@ -982,7 +956,6 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 					    sizeof(data3), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
@@ -1016,7 +989,6 @@ fu_genesys_scaler_device_wait_flash_control_register_cb(FuDevice *dev,
 					    sizeof(status),	     /* data length */
 					    NULL,		     /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error reading flash control register: ");
 		return FALSE;
@@ -1063,7 +1035,6 @@ fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self,
 					    sizeof(data1), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error sending flash control write enable: ");
 		return FALSE;
@@ -1080,7 +1051,6 @@ fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self,
 					    sizeof(data2), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error sending flash control write enable: ");
 		return FALSE;
@@ -1125,7 +1095,6 @@ fu_genesys_scaler_device_flash_control_write_status(FuGenesysScalerDevice *self,
 					    sizeof(data1), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "error sending flash control write status 0x%02x: ", status);
 		return FALSE;
@@ -1142,7 +1111,6 @@ fu_genesys_scaler_device_flash_control_write_status(FuGenesysScalerDevice *self,
 					    sizeof(data2), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "error sending flash control write status 0x%02x: ", status);
 		return FALSE;
@@ -1220,7 +1188,6 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 					    sizeof(data1), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error sending flash control erase at address 0x%06x: ",
@@ -1239,7 +1206,6 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 					    sizeof(data2), /* data length */
 					    NULL,	   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "error sending flash control erase at address 0x%06x: ",
@@ -1381,7 +1347,6 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 						    fu_chunk_get_data_sz(chk),	/* data length */
 						    NULL,			/* actual length */
 						    GENESYS_SCALER_USB_TIMEOUT,
-						    NULL,
 						    error)) {
 			g_prefix_error(
 			    error,
@@ -1496,7 +1461,6 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					    sizeof(data), /* data length */
 					    NULL,	  /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error setting dddci data: ");
 		return FALSE;
@@ -1518,7 +1482,6 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					    bufsz,  /* data length */
 					    NULL,   /* actual length */
 					    GENESYS_SCALER_USB_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "error getting dddci data: ");
 		return FALSE;
