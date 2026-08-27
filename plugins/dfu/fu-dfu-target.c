@@ -129,7 +129,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 
 	/* parse sector size */
 	sector_size = g_ascii_strtoull(tmp + 1, &tmp, 10); /* nocheck:blocked */
-	if (sector_size > 999) {
+	if (sector_size == 0 || sector_size > 999) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
