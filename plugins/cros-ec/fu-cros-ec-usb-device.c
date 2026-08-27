@@ -160,7 +160,6 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 						 outlen,
 						 &actual,
 						 FU_CROS_EC_BULK_SEND_TIMEOUT,
-						 NULL,
 						 error))
 			return FALSE;
 		if (actual != outlen) {
@@ -183,7 +182,6 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 						 inlen,
 						 &actual,
 						 FU_CROS_EC_BULK_RECV_TIMEOUT,
-						 NULL,
 						 error)) {
 			fwupd_error_convert(error);
 			return FALSE;
@@ -222,7 +220,6 @@ fu_cros_ec_usb_device_flush_cb(FuDevice *device, gpointer user_data, GError **er
 					priv->chunk_len,
 					&actual,
 					FU_CROS_EC_FLUSH_TIMEOUT_MS,
-					NULL,
 					NULL)) {
 		g_debug("flushing %zu bytes", actual);
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "flushing %zu bytes", actual);

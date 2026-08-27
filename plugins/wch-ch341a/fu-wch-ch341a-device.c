@@ -73,7 +73,6 @@ fu_wch_ch341a_device_write(FuWchCh341aDevice *self, guint8 *buf, gsize bufsz, GE
 					 bufsz,
 					 &actual_length,
 					 WCH_CH341A_USB_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
@@ -103,7 +102,6 @@ fu_wch_ch341a_device_read(FuWchCh341aDevice *self, guint8 *buf, gsize bufsz, GEr
 					 bufsz,
 					 &actual_length,
 					 WCH_CH341A_USB_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;

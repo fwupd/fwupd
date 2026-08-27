@@ -83,7 +83,6 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 					 bufsz,
 					 &actual_length,
 					 FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to send using bulk transfer: ");
 		return FALSE;
@@ -113,7 +112,6 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 					 bufsz,
 					 &actual_length,
 					 timeout,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive using bulk transfer: ");
 		return FALSE;
