@@ -7733,7 +7733,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (g_str_has_suffix(fn, ".gz")) {
 		istream_json = fu_compressor_stream_new_decompress(istream_raw,
-								   FU_COMPRESSOR_FORMAT_GZIP,
+								   FWUPD_COMPRESSOR_FORMAT_GZIP,
 								   error);
 		if (istream_json == NULL)
 			return FALSE;

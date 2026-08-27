@@ -20,7 +20,7 @@ fu_test_create_pattern(gsize sz)
 }
 
 static GBytes *
-fu_test_compress(GBytes *blob, FuCompressorFormat format, GError **error)
+fu_test_compress(GBytes *blob, FwupdCompressorFormat format, GError **error)
 {
 	g_autoptr(FuInputStream) source = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) cstream = fu_compressor_stream_new_compress(source, format, error);
@@ -30,7 +30,7 @@ fu_test_compress(GBytes *blob, FuCompressorFormat format, GError **error)
 }
 
 static GBytes *
-fu_test_decompress(GBytes *blob, FuCompressorFormat format, GError **error)
+fu_test_decompress(GBytes *blob, FwupdCompressorFormat format, GError **error)
 {
 	g_autoptr(FuInputStream) source = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) dstream =
@@ -41,7 +41,7 @@ fu_test_decompress(GBytes *blob, FuCompressorFormat format, GError **error)
 }
 
 static GBytes *
-fu_test_decompress_gconverter(GBytes *blob, FuCompressorFormat format, GError **error)
+fu_test_decompress_gconverter(GBytes *blob, FwupdCompressorFormat format, GError **error)
 {
 	GZlibCompressorFormat gformat;
 	gssize rc;
@@ -51,9 +51,9 @@ fu_test_decompress_gconverter(GBytes *blob, FuCompressorFormat format, GError **
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	guint8 tmp[4096] = {0}; /* nocheck:zero-init */
 
-	if (format == FU_COMPRESSOR_FORMAT_RAW)
+	if (format == FWUPD_COMPRESSOR_FORMAT_RAW)
 		gformat = G_ZLIB_COMPRESSOR_FORMAT_RAW;
-	else if (format == FU_COMPRESSOR_FORMAT_GZIP)
+	else if (format == FWUPD_COMPRESSOR_FORMAT_GZIP)
 		gformat = G_ZLIB_COMPRESSOR_FORMAT_GZIP;
 	else
 		gformat = G_ZLIB_COMPRESSOR_FORMAT_ZLIB;
@@ -88,13 +88,13 @@ fu_compressor_stream_roundtrip_zlib_func(void)
 	g_autoptr(GBytes) decompressed_gconv = NULL;
 	g_autoptr(GError) error = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
 	g_assert_cmpint(g_bytes_get_size(compressed), <, g_bytes_get_size(original));
 
-	decompressed = fu_test_decompress(compressed, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	decompressed = fu_test_decompress(compressed, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed);
 	ret = fu_bytes_compare(original, decompressed, &error);
@@ -103,7 +103,7 @@ fu_compressor_stream_roundtrip_zlib_func(void)
 
 	/* verify we've actually compressed properly */
 	decompressed_gconv =
-	    fu_test_decompress_gconverter(compressed, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	    fu_test_decompress_gconverter(compressed, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed_gconv);
 	ret = fu_bytes_compare(original, decompressed_gconv, &error);
@@ -121,12 +121,12 @@ fu_compressor_stream_roundtrip_gzip_func(void)
 	g_autoptr(GBytes) decompressed_gconv = NULL;
 	g_autoptr(GError) error = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 	g_assert_cmpint(g_bytes_get_size(compressed), <, g_bytes_get_size(original));
 
-	decompressed = fu_test_decompress(compressed, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	decompressed = fu_test_decompress(compressed, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed);
 	ret = fu_bytes_compare(original, decompressed, &error);
@@ -135,7 +135,7 @@ fu_compressor_stream_roundtrip_gzip_func(void)
 
 	/* verify we've actually compressed properly */
 	decompressed_gconv =
-	    fu_test_decompress_gconverter(compressed, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	    fu_test_decompress_gconverter(compressed, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed_gconv);
 	ret = fu_bytes_compare(original, decompressed_gconv, &error);
@@ -153,12 +153,12 @@ fu_compressor_stream_roundtrip_raw_func(void)
 	g_autoptr(GBytes) decompressed_gconv = NULL;
 	g_autoptr(GError) error = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_RAW, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_RAW, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 	g_assert_cmpint(g_bytes_get_size(compressed), <, g_bytes_get_size(original));
 
-	decompressed = fu_test_decompress(compressed, FU_COMPRESSOR_FORMAT_RAW, &error);
+	decompressed = fu_test_decompress(compressed, FWUPD_COMPRESSOR_FORMAT_RAW, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed);
 	ret = fu_bytes_compare(original, decompressed, &error);
@@ -167,7 +167,7 @@ fu_compressor_stream_roundtrip_raw_func(void)
 
 	/* verify we've actually compressed properly */
 	decompressed_gconv =
-	    fu_test_decompress_gconverter(compressed, FU_COMPRESSOR_FORMAT_RAW, &error);
+	    fu_test_decompress_gconverter(compressed, FWUPD_COMPRESSOR_FORMAT_RAW, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed_gconv);
 	ret = fu_bytes_compare(original, decompressed_gconv, &error);
@@ -182,7 +182,7 @@ fu_compressor_stream_type_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) source = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) stream =
-	    fu_compressor_stream_new_compress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	    fu_compressor_stream_new_compress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
@@ -205,12 +205,12 @@ fu_compressor_stream_read_func(void)
 	const guint8 *orig_data;
 	gsize orig_sz;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
 	source = fu_memory_input_stream_new_from_bytes(compressed);
-	dstream = fu_compressor_stream_new_decompress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	dstream = fu_compressor_stream_new_decompress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
@@ -237,7 +237,7 @@ fu_compressor_stream_decompress_invalid_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) source = fu_memory_input_stream_new_from_bytes(garbage);
 	g_autoptr(FuInputStream) dstream =
-	    fu_compressor_stream_new_decompress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	    fu_compressor_stream_new_decompress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 
 	/* construction succeeds -- the error happens on read */
 	g_assert_no_error(error);
@@ -259,12 +259,12 @@ fu_compressor_stream_read_bytes_func(void)
 	g_autoptr(FuInputStream) source = NULL;
 	g_autoptr(FuInputStream) dstream = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
 	source = fu_memory_input_stream_new_from_bytes(compressed);
-	dstream = fu_compressor_stream_new_decompress(source, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	dstream = fu_compressor_stream_new_decompress(source, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
@@ -285,7 +285,7 @@ fu_compressor_stream_truncate_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) source = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) stream =
-	    fu_compressor_stream_new_compress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	    fu_compressor_stream_new_compress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
@@ -307,7 +307,7 @@ fu_compressor_stream_empty_func(void)
 	g_autoptr(FuInputStream) source = NULL;
 	g_autoptr(FuInputStream) dstream = NULL;
 
-	compressed = fu_test_compress(empty, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	compressed = fu_test_compress(empty, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
@@ -316,7 +316,7 @@ fu_compressor_stream_empty_func(void)
 
 	/* decompressing should yield zero bytes */
 	source = fu_memory_input_stream_new_from_bytes(compressed);
-	dstream = fu_compressor_stream_new_decompress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	dstream = fu_compressor_stream_new_decompress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
@@ -336,13 +336,13 @@ fu_compressor_stream_format_mismatch_func(void)
 	g_autoptr(FuInputStream) source = NULL;
 	g_autoptr(FuInputStream) dstream = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
 	/* compressed as GZIP, decompress as ZLIB -- expected to fail */
 	source = fu_memory_input_stream_new_from_bytes(compressed);
-	dstream = fu_compressor_stream_new_decompress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	dstream = fu_compressor_stream_new_decompress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dstream);
 
@@ -360,12 +360,12 @@ fu_compressor_stream_large_func(void)
 	g_autoptr(GBytes) decompressed = NULL;
 	g_autoptr(GError) error = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 	g_assert_cmpint(g_bytes_get_size(compressed), <, g_bytes_get_size(original));
 
-	decompressed = fu_test_decompress(compressed, FU_COMPRESSOR_FORMAT_GZIP, &error);
+	decompressed = fu_test_decompress(compressed, FWUPD_COMPRESSOR_FORMAT_GZIP, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed);
 
@@ -386,7 +386,7 @@ fu_compressor_stream_no_close_source_func(void)
 	/* create and destroy a compressor stream */
 	{
 		g_autoptr(FuInputStream) cstream =
-		    fu_compressor_stream_new_compress(source, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+		    fu_compressor_stream_new_compress(source, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(cstream);
 	}
@@ -413,11 +413,11 @@ fu_compressor_stream_checksum_func(void)
 	g_autofree gchar *csum_original = NULL;
 	g_autofree gchar *csum_decompressed = NULL;
 
-	compressed = fu_test_compress(original, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	compressed = fu_test_compress(original, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(compressed);
 
-	decompressed = fu_test_decompress(compressed, FU_COMPRESSOR_FORMAT_ZLIB, &error);
+	decompressed = fu_test_decompress(compressed, FWUPD_COMPRESSOR_FORMAT_ZLIB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(decompressed);
 
