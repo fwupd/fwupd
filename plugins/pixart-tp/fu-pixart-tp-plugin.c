@@ -34,7 +34,6 @@ fu_pixart_tp_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "PixartTpHidVersionBank");
 	fu_context_add_quirk_key(ctx, "PixartTpHidVersionAddr");
 	fu_context_add_quirk_key(ctx, "PixartTpSramSelect");
-	fu_context_add_quirk_key(ctx, "PixartTpHasHaptic");
 
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_PIXART_TP_DEVICE);

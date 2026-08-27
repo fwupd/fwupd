@@ -33,15 +33,15 @@ Plugin = pixart_tp
 
 [HIDRAW\VEN_093A&DEV_4F07]
 Plugin = pixart_tp
-PixartTpHasHaptic = true
+Flags = has-haptic
 
 [HIDRAW\VEN_093A&DEV_4F0D]
 Plugin = pixart_tp
-PixartTpHasHaptic = true
+Flags = has-haptic
 
 [HIDRAW\VEN_093A&DEV_4F0E]
 Plugin = pixart_tp
-PixartTpHasHaptic = true
+Flags = has-haptic
 
 [PIXARTTP\PARTID_0274]
 PixartTpSramSelect = 0x08

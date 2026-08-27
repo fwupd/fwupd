@@ -17,7 +17,6 @@ typedef struct {
 	guint8 ver_bank;
 	guint16 ver_addr;
 	guint16 part_id;
-	gboolean has_tf_child;
 } FuPixartTpDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW_DEVICE)
@@ -26,6 +25,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW
 
 #define FU_PIXART_TP_DEVICE_SECTOR_SIZE 4096
 #define FU_PIXART_TP_DEVICE_PAGE_SIZE	256
+
+#define FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC "has-haptic"
 
 static void
 fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -36,7 +37,6 @@ fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "SramSelect", priv->sram_select);
 	fwupd_codec_string_append_hex(str, idt, "VerBank", priv->ver_bank);
 	fwupd_codec_string_append_hex(str, idt, "VerAddr", priv->ver_addr);
-	fwupd_codec_string_append_bool(str, idt, "HasTfChild", priv->has_tf_child);
 }
 
 #define REPORT_ID_SINGLE 0x42
@@ -1471,8 +1471,6 @@ fu_pixart_tp_device_set_quirk_kv(FuDevice *device,
 		priv->sram_select = (guint8)tmp;
 		return TRUE;
 	}
-	if (g_strcmp0(key, "PixartTpHasHaptic") == 0)
-		return fu_strtobool(value, &priv->has_tf_child, error);
 
 	/* unknown quirk */
 	g_set_error(error,
@@ -1563,10 +1561,7 @@ fu_pixart_tp_device_set_progress(FuDevice *device, FuProgress *progress)
 static gboolean
 fu_pixart_tp_device_probe(FuDevice *device, GError **error)
 {
-	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
-	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
-
-	if (priv->has_tf_child) {
+	if (fu_device_has_private_flag(device, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC)) {
 		g_autoptr(FuPixartTpHapticDevice) child = fu_pixart_tp_haptic_device_new(device);
 		fu_device_add_child(device, FU_DEVICE(child));
 	}
@@ -1616,4 +1611,5 @@ fu_pixart_tp_device_class_init(FuPixartTpDeviceClass *klass)
 	device_class->set_quirk_kv = fu_pixart_tp_device_set_quirk_kv;
 	device_class->convert_version = fu_pixart_tp_device_convert_version;
 	device_class->reload = fu_pixart_tp_device_reload;
+	fu_device_register_private_flag(device_class, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC);
 }
