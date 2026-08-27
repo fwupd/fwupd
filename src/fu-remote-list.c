@@ -295,7 +295,7 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 
 	/* load from keyfile */
 	g_info("loading remote from %s", filename);
-	if (!fu_remote_load_from_filename(remote, filename, NULL, error)) {
+	if (!fu_remote_load_from_filename(remote, filename, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return FALSE;
 	}
@@ -500,7 +500,7 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 	}
 
 	/* reload values */
-	if (!fu_remote_load_from_filename(remote, filename_new, NULL, error)) {
+	if (!fu_remote_load_from_filename(remote, filename_new, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename_new);
 		return FALSE;
 	}
