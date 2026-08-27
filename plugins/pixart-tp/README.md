@@ -77,7 +77,7 @@ Defines which address to read the device firmware version from; the plugin reads
 Selects the SRAM type used for 256-byte page programming.
 **Default**: `0x0f`.
 
-### `PixartTpHasHaptic`
+### `Flags:has-haptic`
 
 Whether this TP has a TF/haptic child IC.
 
