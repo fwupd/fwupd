@@ -32,39 +32,39 @@ use std::ops::{BitAnd, BitOr};
 /// declare_bitflags! {
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
-///         const READ = 1 << 0;
-///         const WRITE = 1 << 1;
-///         const EXECUTE = 1 << 2;
+///         const Read = 1 << 0;
+///         const Write = 1 << 1;
+///         const Execute = 1 << 2;
 ///     }
 /// }
 ///
 /// // convert a single flag to a bitmask
-/// let mask = MyFlag::READ.as_mask();
-/// assert!(mask.contains(MyFlag::READ));
+/// let mask = MyFlag::Read.as_mask();
+/// assert!(mask.contains(MyFlag::Read));
 ///
 /// // combine flags with `|`
-/// let mask = MyFlag::READ | MyFlag::WRITE;
+/// let mask = MyFlag::Read | MyFlag::Write;
 ///
 /// // check whether a single flag is set
-/// assert!(mask.contains(MyFlag::READ));
-/// assert!(!mask.contains(MyFlag::EXECUTE));
+/// assert!(mask.contains(MyFlag::Read));
+/// assert!(!mask.contains(MyFlag::Execute));
 ///
 /// // check whether any/all of several flags are set
-/// assert!(mask.any(MyFlag::READ | MyFlag::EXECUTE));
-/// assert!(mask.all(MyFlag::READ | MyFlag::WRITE));
-/// assert!(!mask.all(MyFlag::READ | MyFlag::EXECUTE));
+/// assert!(mask.any(MyFlag::Read | MyFlag::Execute));
+/// assert!(mask.all(MyFlag::Read | MyFlag::Write));
+/// assert!(!mask.all(MyFlag::Read | MyFlag::Execute));
 ///
 /// // iterate over set flags
 /// let flags: Vec<MyFlag> = mask.iter().collect();
-/// assert_eq!(flags, vec![MyFlag::READ, MyFlag::WRITE]);
+/// assert_eq!(flags, vec![MyFlag::Read, MyFlag::Write]);
 ///
 /// // access the raw bits
 /// assert_eq!(mask.bits(), 0b011);
 ///
 /// // create a bitmask from raw bits (undefined bits are masked off)
 /// let mask = MyFlags::from_bits(0b011);
-/// assert!(mask.contains(MyFlag::READ));
-/// assert!(mask.contains(MyFlag::WRITE));
+/// assert!(mask.contains(MyFlag::Read));
+/// assert!(mask.contains(MyFlag::Write));
 /// let mask = MyFlags::from_bits(0xFF);
 /// assert_eq!(mask.bits(), 0b111);
 ///
@@ -79,11 +79,11 @@ use std::ops::{BitAnd, BitOr};
 /// declare_bitflags! {
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
-///         const READ = 0x1;
-///         const WRITE = 0x2;
-///         const EXECUTE = 0x4;
+///         const Read = 0x1;
+///         const Write = 0x2;
+///         const Execute = 0x4;
 ///         // Multiple bits and an alias to two other flags
-///         const READWRITE = 0x3;
+///         const ReadWrite = 0x3;
 ///     }
 /// }
 /// ```
@@ -134,17 +134,17 @@ where
     /// Returns `true` if all bits of the given flag are set.
     ///
     /// ```ignore
-    /// let mask = MyFlag::READ | MyFlag::WRITE;
-    /// assert!(mask.contains(MyFlag::READ));
-    /// assert!(!mask.contains(MyFlag::EXECUTE));
+    /// let mask = MyFlag::Read | MyFlag::Write;
+    /// assert!(mask.contains(MyFlag::Read));
+    /// assert!(!mask.contains(MyFlag::Execute));
     /// ```
     /// This function operates on the underlying bits, a flag
     /// may have multiple bits set:
     /// ```ignore
-    /// let mask = MyFlag::READWRITE;
-    /// assert!(mask.contains(MyFlag::READ));
-    /// assert!(mask.contains(MyFlag::WRITE));
-    /// assert!(mask.contains(MyFlag::READWRITE));
+    /// let mask = MyFlag::ReadWrite;
+    /// assert!(mask.contains(MyFlag::Read));
+    /// assert!(mask.contains(MyFlag::Write));
+    /// assert!(mask.contains(MyFlag::ReadWrite));
     /// ```
     fn contains(self, flag: Self::Flag) -> bool {
         let flag_bits = Self::flag_bits(flag);
@@ -157,13 +157,13 @@ where
     /// is set if any of the flag's bits are set.
     ///
     /// ```ignore
-    /// let mask = MyFlag::READ | MyFlag::WRITE;
-    /// assert!(mask.any(MyFlag::READ | MyFlag::EXECUTE));
-    /// assert!(!mask.any(MyFlag::EXECUTE.as_mask()));
+    /// let mask = MyFlag::Read | MyFlag::Write;
+    /// assert!(mask.any(MyFlag::Read | MyFlag::Execute));
+    /// assert!(!mask.any(MyFlag::Execute.as_mask()));
     ///
     /// // A single bit of a multi-bit flag is enough
-    /// let mask = MyFlag::READ.as_mask();
-    /// assert!(mask.any(MyFlag::READWRITE.as_mask()));
+    /// let mask = MyFlag::Read.as_mask();
+    /// assert!(mask.any(MyFlag::ReadWrite.as_mask()));
     /// ```
     fn any(self, other: Self) -> bool {
         self.bits() & other.bits() != Self::Bits::default()
@@ -175,9 +175,9 @@ where
     /// is set if all of the flag's bits are set.
     ///
     /// ```ignore
-    /// let mask = MyFlag::READ | MyFlag::WRITE;
-    /// assert!(mask.all(MyFlag::READ | MyFlag::WRITE));
-    /// assert!(!mask.all(MyFlag::READ | MyFlag::EXECUTE));
+    /// let mask = MyFlag::Read | MyFlag::Write;
+    /// assert!(mask.all(MyFlag::Read | MyFlag::Write));
+    /// assert!(!mask.all(MyFlag::Read | MyFlag::Execute));
     /// ```
     fn all(self, other: Self) -> bool {
         self.bits() & other.bits() == other.bits()
@@ -188,23 +188,23 @@ where
     /// Yields each defined flag whose bit is set, **in declaration order**.
     ///
     /// ```ignore
-    /// let mask = MyFlag::READ | MyFlag::EXECUTE;
+    /// let mask = MyFlag::Read | MyFlag::Execute;
     /// let flags: Vec<MyFlag> = mask.iter().collect();
-    /// assert_eq!(flags, vec![MyFlag::READ, MyFlag::EXECUTE]);
+    /// assert_eq!(flags, vec![MyFlag::Read, MyFlag::Execute]);
     /// ```
     /// Care must be taken for flags that alias other flags as they may
     /// yield flags not explicitly set:
     ///
     /// ```ignore
-    /// let mask = MyFlag::READWRITE | MyFlag::WRITE;
+    /// let mask = MyFlag::ReadWrite | MyFlag::Write;
     /// let flags: Vec<MyFlag> = mask.iter().collect();
-    /// // The READ flag is present even though it was not explicitly set
-    /// assert_eq!(flags, vec![MyFlag::READ, MyFlag::WRITE, MyFlag::READWRITE]);
+    /// // The Read flag is present even though it was not explicitly set
+    /// assert_eq!(flags, vec![MyFlag::Read, MyFlag::Write, MyFlag::ReadWrite]);
     ///
-    /// let mask = MyFlag::READ | MyFlag::WRITE;
+    /// let mask = MyFlag::Read | MyFlag::Write;
     /// let flags: Vec<MyFlag> = mask.iter().collect();
-    /// // The READWRITE flag is present even though it was not explicitly set
-    /// assert_eq!(flags, vec![MyFlag::READ, MyFlag::WRITE, MyFlag::READWRITE]);
+    /// // The ReadWrite flag is present even though it was not explicitly set
+    /// assert_eq!(flags, vec![MyFlag::Read, MyFlag::Write, MyFlag::ReadWrite]);
     /// ```
     fn iter(self) -> BitflagIter<Self> {
         BitflagIter {
@@ -260,11 +260,11 @@ where
 ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 ///     pub struct MyFlags / MyFlag : u32 {
 ///         /// Read permission.
-///         const READ = 1 << 0;
+///         const Read = 1 << 0;
 ///         /// Write permission.
-///         const WRITE = 1 << 1;
+///         const Write = 1 << 1;
 ///         /// Execute permission.
-///         const EXECUTE = 1 << 2;
+///         const Execute = 1 << 2;
 ///     }
 /// }
 /// ```
@@ -309,9 +309,9 @@ macro_rules! declare_bitflags {
             /// const and method-chain contexts.
             ///
             /// ```ignore
-            /// let mask = MyFlag::READ.as_mask();
-            /// assert!(mask.contains(MyFlag::READ));
-            /// assert!(!mask.contains(MyFlag::WRITE));
+            /// let mask = MyFlag::Read.as_mask();
+            /// assert!(mask.contains(MyFlag::Read));
+            /// assert!(!mask.contains(MyFlag::Write));
             /// ```
             #[inline]
             $vis const fn as_mask(self) -> $Mask {
