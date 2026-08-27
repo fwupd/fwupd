@@ -464,7 +464,7 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 				       ESYS_TR_NONE,
 				       ESYS_TR_NONE,
 				       i /* seqnum */,
-				       (TPM2B_MAX_BUFFER **)&data);
+				       data);
 		if (rc == TPM2_RC_COMMAND_CODE ||
 		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_RC_LAYER)) ||
 		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_TPM_RC_LAYER))) {
