@@ -162,6 +162,7 @@ if umockdev.found()
         'GI_TYPELIB_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
         'LD_LIBRARY_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
         'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state'),
+        'PYTHONWARNINGS': 'ignore::DeprecationWarning:gi.events',
       },
     )
   endforeach
