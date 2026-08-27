@@ -292,7 +292,6 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self,
 					      intr_rqt->buf->len,
 					      NULL,
 					      DMC_GET_REQUEST_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to read intr rqt: ");
 		return FALSE;

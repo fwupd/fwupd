@@ -66,7 +66,6 @@ fu_corsair_device_send(FuCorsairDevice *self, GByteArray *buf, guint timeout, GE
 					      buf2->len,
 					      &actual_len,
 					      timeout,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to write command: ");
 		return FALSE;
@@ -103,7 +102,6 @@ fu_corsair_device_recv(FuCorsairDevice *self, guint timeout, GError **error)
 					      buf->len,
 					      &actual_len,
 					      timeout,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get command response: ");
 		return NULL;
@@ -155,7 +153,6 @@ fu_corsair_device_flush_input_reports(FuCorsairDevice *self)
 						      self->cmd_read_size,
 						      &actual_len,
 						      10, /* ms */
-						      NULL,
 						      &error_local))
 			g_debug("flushing status: %s", error_local->message);
 	}

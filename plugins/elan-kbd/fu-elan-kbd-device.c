@@ -83,7 +83,6 @@ fu_elan_kbd_device_cmd(FuElanKbdDevice *self, GByteArray *buf, GError **error)
 					      buf->len,
 					      NULL,
 					      1000,
-					      NULL,
 					      error)) {
 		return NULL;
 	}
@@ -94,7 +93,6 @@ fu_elan_kbd_device_cmd(FuElanKbdDevice *self, GByteArray *buf, GError **error)
 					      buf_out->len,
 					      NULL,
 					      1000,
-					      NULL,
 					      error)) {
 		return NULL;
 	}
@@ -118,7 +116,6 @@ fu_elan_kbd_device_read_data(FuElanKbdDevice *self,
 					      buf_mut->len,
 					      NULL,
 					      1000,
-					      NULL,
 					      error)) {
 		return FALSE;
 	}
@@ -163,7 +160,6 @@ fu_elan_kbd_device_write_data(FuElanKbdDevice *self,
 					      buf_mut->len,
 					      NULL,
 					      1000,
-					      NULL,
 					      error)) {
 		return FALSE;
 	}

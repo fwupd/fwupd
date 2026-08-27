@@ -92,7 +92,6 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 					      st_report->buf->len,
 					      &actual_len,
 					      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get report over interrupt ep: ");
 		return FALSE;

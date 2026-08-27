@@ -82,7 +82,6 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 					      sizeof(buf),
 					      &actual_length,
 					      CH_DEVICE_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		if (cmd == FU_HUGHSKI_COLORHUG_CMD_RESET &&
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -135,7 +134,6 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 					      sizeof(buf),
 					      &actual_length,
 					      CH_DEVICE_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		if (cmd == FU_HUGHSKI_COLORHUG_CMD_RESET &&
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
