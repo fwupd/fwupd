@@ -1116,7 +1116,11 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* ensure the stream is seekable */
 	if (!G_IS_SEEKABLE(stream) || !g_seekable_can_seek(G_SEEKABLE(stream))) {
-		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
+		blob = fu_input_stream_read_bytes(stream,
+						  offset,
+						  fu_firmware_get_size_max(self) + 0x1,
+						  NULL,
+						  error);
 		if (blob == NULL)
 			return FALSE;
 		seekable_stream = fu_memory_input_stream_new_from_bytes(blob);
