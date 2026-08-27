@@ -229,7 +229,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 			return NULL;
 
 		fustream = fu_compressor_stream_new_decompress(stream_compressed,
-							       FU_COMPRESSOR_FORMAT_RAW,
+							       FWUPD_COMPRESSOR_FORMAT_RAW,
 							       error);
 		if (fustream == NULL)
 			return NULL;
@@ -459,7 +459,7 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 			g_autoptr(FuInputStream) istream_out = NULL;
 			istream_raw = fu_memory_input_stream_new_from_bytes(blob);
 			istream_out = fu_compressor_stream_new_compress(istream_raw,
-									FU_COMPRESSOR_FORMAT_RAW,
+									FWUPD_COMPRESSOR_FORMAT_RAW,
 									error);
 			if (istream_out == NULL)
 				return NULL;

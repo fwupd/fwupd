@@ -162,8 +162,9 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		}
 		if (!g_seekable_seek(G_SEEKABLE(istream1), 0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		istream2 =
-		    fu_compressor_stream_new_decompress(istream1, FU_COMPRESSOR_FORMAT_ZLIB, error);
+		istream2 = fu_compressor_stream_new_decompress(istream1,
+							       FWUPD_COMPRESSOR_FORMAT_ZLIB,
+							       error);
 		if (istream2 == NULL)
 			return FALSE;
 		payload = fu_input_stream_read_bytes(istream2, 0, payloadsz_max + 1, NULL, error);
@@ -271,8 +272,9 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuInputStream) istream2 = NULL;
 
 		istream1 = fu_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
-		istream2 =
-		    fu_compressor_stream_new_compress(istream1, FU_COMPRESSOR_FORMAT_ZLIB, error);
+		istream2 = fu_compressor_stream_new_compress(istream1,
+							     FWUPD_COMPRESSOR_FORMAT_ZLIB,
+							     error);
 		if (istream2 == NULL)
 			return NULL;
 		payload_blob = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);

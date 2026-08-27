@@ -12,23 +12,22 @@
 
 #include <glib.h>
 
+#include "fwupd-compressor-private.h"
 #include "fwupd-rust-streams.h"
-
-#include "fu-compressor-struct.h"
 
 G_BEGIN_DECLS
 
-G_STATIC_ASSERT(sizeof(FuCompressorFormat) == 4);
+G_STATIC_ASSERT(sizeof(FwupdCompressorFormat) == 4);
 
 gint32
-fu_rs_compressor_decompress(FuCompressorFormat format,
+fu_rs_compressor_decompress(FwupdCompressorFormat format,
 			    const guint8 *in_buf,
 			    gsize in_len,
 			    guint8 **out_buf,
 			    gsize *out_len,
 			    GError **error);
 gint32
-fu_rs_compressor_compress(FuCompressorFormat format,
+fu_rs_compressor_compress(FwupdCompressorFormat format,
 			  const guint8 *in_buf,
 			  gsize in_len,
 			  guint8 **out_buf,

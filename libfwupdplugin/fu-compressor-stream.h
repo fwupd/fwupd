@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "fu-compressor-struct.h"
+#include "fwupd-compressor-private.h"
+
 #include "fu-input-stream.h"
 
 G_BEGIN_DECLS
@@ -17,11 +18,11 @@ G_DECLARE_FINAL_TYPE(FuCompressorStream, fu_compressor_stream, FU, COMPRESSOR_ST
 
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,
-				    FuCompressorFormat format,
+				    FwupdCompressorFormat format,
 				    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FuInputStream *
 fu_compressor_stream_new_compress(FuInputStream *source,
-				  FuCompressorFormat format,
+				  FwupdCompressorFormat format,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 G_END_DECLS
