@@ -1575,7 +1575,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
  * @timeout: timeout timeout (in milliseconds) that this function should wait
  * before giving up due to no response being received. For an unlimited
  * timeout, use 0.
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB bulk transfer.
@@ -1593,7 +1592,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    gsize length,
 			    gsize *actual_length,
 			    guint timeout,
-			    GCancellable *cancellable,
 			    GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);

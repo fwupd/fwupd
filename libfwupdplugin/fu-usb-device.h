@@ -85,7 +85,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    gsize length,
 			    gsize *actual_length,
 			    guint timeout,
-			    GCancellable *cancellable,
 			    GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_interrupt_transfer(FuUsbDevice *self,

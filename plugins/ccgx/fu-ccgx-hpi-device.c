@@ -307,7 +307,6 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "i2c read error: bulk xfer: ");
 		return FALSE;
@@ -358,7 +357,6 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "i2c write error: bulk xfer: ");
 		return FALSE;
@@ -412,7 +410,6 @@ fu_ccgx_hpi_device_i2c_write_no_resp(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 &error_local)) {
 		g_debug("ignoring i2c write error: bulk xfer: %s", error_local->message);
 	}

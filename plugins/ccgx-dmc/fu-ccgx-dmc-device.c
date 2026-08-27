@@ -349,7 +349,6 @@ fu_ccgx_dmc_device_send_row_data(FuCcgxDmcDevice *self,
 					 row_size,
 					 NULL,
 					 DMC_BULK_OUT_PIPE_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to write row data: ");
 		return FALSE;

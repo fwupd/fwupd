@@ -94,7 +94,6 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 chunk_size,
 						 &transmitted,
 						 5000,
-						 NULL,
 						 error)) {
 			return FALSE;
 		}
@@ -118,7 +117,6 @@ fu_huddly_usb_device_bulk_read(FuHuddlyUsbDevice *self,
 					   buf->len,
 					   received_length,
 					   20000,
-					   NULL,
 					   error);
 }
 
