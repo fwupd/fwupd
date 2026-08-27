@@ -88,7 +88,6 @@ fu_intel_usb4_device_get_mmio(FuIntelUsb4Device *self,
 					    bufsz,
 					    NULL, /* actual length */
 					    MBOX_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error,
 			       "GET_MMIO failed to set control on mbox register index [0x%x]: ",
@@ -146,7 +145,6 @@ fu_intel_usb4_device_set_mmio(FuIntelUsb4Device *self,
 					    bufsz,
 					    NULL, /* actual length */
 					    MBOX_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to set mmio 0x%x: ", mbox_reg);
 		return FALSE;

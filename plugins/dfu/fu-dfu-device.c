@@ -587,7 +587,6 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 					    sizeof(buf),
 					    &actual_length,
 					    timeout_ms,
-					    NULL, /* cancellable */
 					    &error_local)) {
 		/* got STALL */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -653,7 +652,6 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 					    0,
 					    NULL,
 					    priv->timeout_ms,
-					    NULL, /* cancellable */
 					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
@@ -756,7 +754,6 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 					    0,
 					    NULL,
 					    priv->timeout_ms,
-					    NULL, /* cancellable */
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(self, &error_local);
@@ -798,7 +795,6 @@ fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 					    0,
 					    NULL,
 					    priv->timeout_ms,
-					    NULL, /* cancellable */
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(self, &error_local);

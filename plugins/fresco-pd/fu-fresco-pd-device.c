@@ -50,7 +50,6 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 					    bufsz,
 					    &actual_length,
 					    5000,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to read from offset 0x%x: ", offset);
 		fwupd_error_convert(error);
@@ -95,7 +94,6 @@ fu_fresco_pd_device_transfer_write(FuFrescoPdDevice *self,
 					    bufsz,
 					    &actual_length,
 					    5000,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write offset 0x%x: ", offset);
 		return FALSE;

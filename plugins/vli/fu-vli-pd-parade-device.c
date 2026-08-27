@@ -72,7 +72,6 @@ fu_vli_pd_parade_device_i2c_read(FuVliPdParadeDevice *self,
 					    bufsz,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to read 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
@@ -105,7 +104,6 @@ fu_vli_pd_parade_device_i2c_write(FuVliPdParadeDevice *self,
 					    0x0,
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to write 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
