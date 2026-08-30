@@ -103,7 +103,7 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 
 /**
  * fu_dfu_device_get_transfer_size:
- * @device: a USB device
+ * @self: a USB device
  *
  * Gets the transfer size in bytes.
  *
@@ -401,7 +401,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 
 /**
  * fu_dfu_device_get_timeout:
- * @device: a #FuDfuDevice
+ * @self: a #FuDfuDevice
  *
  * Gets the device timeout.
  *
@@ -417,7 +417,7 @@ fu_dfu_device_get_timeout(FuDfuDevice *self)
 
 /**
  * fu_dfu_device_get_state:
- * @device: a #FuDfuDevice
+ * @self: a #FuDfuDevice
  *
  * Gets the device state.
  *
@@ -433,7 +433,7 @@ fu_dfu_device_get_state(FuDfuDevice *self)
 
 /**
  * fu_dfu_device_get_status:
- * @device: a USB device
+ * @self: a USB device
  *
  * Gets the device status.
  *
@@ -824,7 +824,7 @@ fu_dfu_device_get_interface(FuDfuDevice *self)
 
 /**
  * fu_dfu_device_open:
- * @self: a #FuDfuDevice
+ * @device: a #FuDfuDevice
  * @error: (nullable): optional return location for an error
  *
  * Opens a DFU-capable device.
