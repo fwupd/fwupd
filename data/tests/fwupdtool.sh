@@ -7,6 +7,7 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf -- "$TMPDIR"' EXIT
 
 export NO_COLOR=1
+export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 CAB=fakedevice124.cab
 INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.jcat \
