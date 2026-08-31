@@ -1,0 +1,16 @@
+name: Force-rebuild containers
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  rebuild-arch-container:
+    uses: ./.github/workflows/create_containers.yml
+    with:
+      force_rebuild: true
+      distro_filter: 'arch'

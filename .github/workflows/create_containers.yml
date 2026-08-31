@@ -5,6 +5,17 @@ on:
     paths:
       - '.github/workflows/create_containers.yml'
   workflow_call:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild of the container"
+        required: false
+        type: boolean
+        default: false
+      distro_filter:
+        description: "Only consider containers for the given distro name (e.g. 'arch')"
+        required: false
+        type: string
+        default: ''
     outputs:
       container_lut:
         description: "A JSON lookup table for container URIs"
@@ -12,6 +23,9 @@ on:
 
 env:
   # Our containers are currently per-distro. This can be changed if needed.
+  #
+  # The Arch container is force-rebuilt on schedule so we always run against the
+  # latest one.
   ARCH_CONTAINER_TAG: "latest"
   CENTOS_CONTAINER_TAG: "2026-09-03.1"
   DEBIAN_CONTAINER_TAG: "2026-09-03.1"
@@ -39,11 +53,20 @@ jobs:
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64 }
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64, VARIANT: android }
     steps:
+      # We don't have matrix.* available at the jobs.if stage and
+      # GitHub doesn't have an option to say "skip the rest of the jobs"
+      - name: Check if we should run this job
+        id: should_we
+        if: ${{ github.event_name == 'push' || !inputs.distro_filter || matrix.distros.DISTRO == inputs.distro_filter }}
+        run: |
+          echo "run=true" >> "$GITHUB_OUTPUT"
       - name: Check out the repo
+        if: steps.should_we.outputs.run == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Assemble container tag
+        if: steps.should_we.outputs.run == 'true'
         id: tag
         env:
           DISTRO: ${{ matrix.distros.DISTRO }}
@@ -67,17 +90,20 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "{\"$IDENTIFIER\": \"$TAG\"}" > "image_${IDENTIFIER}.json"
       - name: Save the json files containing the container mappings
+        if: steps.should_we.outputs.run == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: image-map-${{ strategy.job-index }}
           path: image_*.json
       - name: Login to GitHub Container Registry
+        if: steps.should_we.outputs.run == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Check if the image already exists
+        if: steps.should_we.outputs.run == 'true'
         id: check_container
         run: |
           TAG="${{steps.tag.outputs.tag}}"
@@ -89,14 +115,14 @@ jobs:
             echo "Container ${TAG} does not exist."
           fi
       - name: Let the user know
-        if: steps.check_container.outputs.exists != 'true' && github.event_name == 'pull_request'
+        if: steps.should_we.outputs.run == 'true' && steps.check_container.outputs.exists != 'true' && github.event_name == 'pull_request'
         run: |
           TAG="${{steps.tag.outputs.tag}}"
           echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
           exit 1
       # Steps below here are skipped for pull requests because we don't have permission anyway
       - name: Generate Dockerfile
-        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
+        if: steps.should_we.outputs.run == 'true' && ((github.event_name == 'workflow_call' && inputs.force_rebuild) || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
         run: >-
           ./contrib/ci/generate_docker.py
           --distro "${{ matrix.distros.DISTRO }}"
@@ -104,10 +130,10 @@ jobs:
           --arch "${{ matrix.distros.ARCH }}"
           ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }}
       - name: Set up Docker Buildx
-        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
+        if: steps.should_we.outputs.run == 'true' && ((github.event_name == 'workflow_call' && inputs.force_rebuild) || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Push to GitHub Packages
-        if: steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'
+        if: steps.should_we.outputs.run == 'true' && ((github.event_name == 'workflow_call' && inputs.force_rebuild) || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
