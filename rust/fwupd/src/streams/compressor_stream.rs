@@ -15,6 +15,22 @@ use crate::streams::{IsSeekable, ReadSeek, StreamError};
 use std::io::{self, Read, Seek, SeekFrom};
 use std::sync::{Arc, Mutex};
 
+/// Used with [`Error::other`](std::io::Error::other) to signal the stream
+/// is not seekable.
+///
+/// This is equivalent to [`ErrorKind::NotSeekable`](std::io::ErrorKind::NotSeekable),
+/// which requires a newer rust version than we support.
+#[derive(Debug)]
+pub struct NotSeekableError {}
+
+impl std::error::Error for NotSeekableError {}
+
+impl std::fmt::Display for NotSeekableError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "stream is not seekable")
+    }
+}
+
 /// An adapter to bridge between our base stream
 /// and the [`Compressor`]/[`Decompressor`]. The latter
 /// requires a `Box<dyn Read>` but we can't permanently
@@ -74,10 +90,7 @@ impl Read for CompressorStream {
 
 impl Seek for CompressorStream {
     fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        Err(std::io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "CompressorStreams are not seekable",
-        ))
+        Err(std::io::Error::other(NotSeekableError {}))
     }
 }
 
@@ -128,10 +141,7 @@ impl Read for DecompressorStream {
 
 impl Seek for DecompressorStream {
     fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        Err(std::io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "DecompressorStreams are not seekable",
-        ))
+        Err(std::io::Error::other(NotSeekableError {}))
     }
 }
 
