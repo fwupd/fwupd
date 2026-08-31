@@ -624,6 +624,17 @@ fu_mtd_device_open(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void
+fu_mtd_device_set_mtd_type(FuMtdDevice *self, const gchar *mtd_type)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *mtd_type_safe = NULL;
+
+	if (mtd_type != NULL)
+		mtd_type_safe = fu_strstrip(mtd_type);
+	g_set_str(&priv->mtd_type, mtd_type_safe);
+}
+
 static gboolean
 fu_mtd_device_probe(FuDevice *device, GError **error)
 {
@@ -677,8 +688,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 					      "type",
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      NULL);
-	if (attr_type != NULL)
-		priv->mtd_type = fu_strstrip(attr_type);
+	fu_mtd_device_set_mtd_type(self, attr_type);
 
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
