@@ -11,9 +11,12 @@ on:
         value: ${{ jobs.container_mapping.outputs.container_lut }}
 
 env:
-  # We currently have one tag for all containers, bumping it will rebuild
-  # them all.
-  CONTAINER_TAG: "2026-08-25.1"
+  # Our containers are currently per-distro. This can be changed if needed.
+  ARCH_CONTAINER_TAG: "latest"
+  CENTOS_CONTAINER_TAG: "2026-09-03.1"
+  DEBIAN_CONTAINER_TAG: "2026-09-03.1"
+  UBUNTU_CONTAINER_TAG: "2026-09-03.1"
+  FEDORA_CONTAINER_TAG: "2026-09-03.1"
 
 jobs:
   push_to_registry:
@@ -46,9 +49,17 @@ jobs:
           DISTRO: ${{ matrix.distros.DISTRO }}
           ARCH: ${{ matrix.distros.ARCH }}
           VARIANT: ${{ matrix.distros.VARIANT }}
-          CONTAINER_TAG: ${{ env.CONTAINER_TAG }}
+          ARCH_CONTAINER_TAG: ${{ env.ARCH_CONTAINER_TAG }}
+          CENTOS_CONTAINER_TAG: ${{ env.CENTOS_CONTAINER_TAG }}
+          DEBIAN_CONTAINER_TAG: ${{ env.DEBIAN_CONTAINER_TAG }}
+          UBUNTU_CONTAINER_TAG: ${{ env.UBUNTU_CONTAINER_TAG }}
+          FEDORA_CONTAINER_TAG: ${{ env.FEDORA_CONTAINER_TAG }}
           USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
+          DISTRO_UPPERCASE="$(echo "${DISTRO}" | tr '[:lower:]' '[:upper:]')"
+          TAG_VAR="${DISTRO_UPPERCASE}_CONTAINER_TAG"
+          CONTAINER_TAG="${!TAG_VAR}"
+
           REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
           IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
           TAG="ghcr.io/${REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
