@@ -82,9 +82,156 @@ impl OwnedGError {
     }
 
     /// Return this error's message as string
+    #[allow(dead_code)]
     pub(crate) fn message(&self) -> Option<String> {
         let e = unsafe { self.0.as_ref() };
         e.and_then(GError::message)
+    }
+}
+
+impl TryFrom<OwnedGError> for std::io::Error {
+    type Error = OwnedGError;
+
+    /// Convert this `GError` into an [`io::Error`], if the `GError`
+    /// is a `G_IO_ERROR`. If failed, return the `GError`.
+    fn try_from(error: OwnedGError) -> Result<Self, Self::Error> {
+        let Some(gerror) = (unsafe { error.0.as_ref() }) else {
+            return Err(error);
+        };
+
+        if gerror.domain != unsafe { g_io_error_quark() } {
+            return Err(error);
+        }
+
+        let msg = gerror
+            .message()
+            .unwrap_or_else(|| String::from("Unspecified error"));
+
+        let kind = GIOError::try_from(gerror.code)
+            .map_or(std::io::ErrorKind::Other, std::io::ErrorKind::from);
+        Ok(std::io::Error::new(kind, msg))
+    }
+}
+
+/// `GIOErrorEnum` -- matches the `GLib` `GIOErrorEnum` values.
+///
+/// Note: `G_IO_ERROR_CONNECTION_CLOSED` (44) is an alias for
+/// `G_IO_ERROR_BROKEN_PIPE` in `GLib` and is handled by the same variant.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
+pub(crate) enum GIOError {
+    Failed = 0,
+    NotFound = 1,
+    Exists = 2,
+    IsDirectory = 3,
+    NotDirectory = 4,
+    NotEmpty = 5,
+    NotRegularFile = 6,
+    NotSymbolicLink = 7,
+    NotMountableFile = 8,
+    FilenameTooLong = 9,
+    InvalidFilename = 10,
+    TooManyLinks = 11,
+    NoSpace = 12,
+    InvalidArgument = 13,
+    PermissionDenied = 14,
+    NotSupported = 15,
+    NotMounted = 16,
+    AlreadyMounted = 17,
+    Closed = 18,
+    Cancelled = 19,
+    Pending = 20,
+    ReadOnly = 21,
+    CantCreateBackup = 22,
+    WrongEtag = 23,
+    TimedOut = 24,
+    WouldRecurse = 25,
+    Busy = 26,
+    WouldBlock = 27,
+    HostNotFound = 28,
+    WouldMerge = 29,
+    FailedHandled = 30,
+    TooManyOpenFiles = 31,
+    NotInitialized = 32,
+    AddressInUse = 33,
+    PartialInput = 34,
+    InvalidData = 35,
+    DbusError = 36,
+    HostUnreachable = 37,
+    NetworkUnreachable = 38,
+    ConnectionRefused = 39,
+    ProxyFailed = 40,
+    ProxyAuthFailed = 41,
+    ProxyNeedAuth = 42,
+    ProxyNotAllowed = 43,
+    /// Also known as `G_IO_ERROR_CONNECTION_CLOSED` (same value 44).
+    BrokenPipe = 44,
+    NotConnected = 45,
+    MessageTooLarge = 46,
+    NoSuchDevice = 47,
+}
+
+impl TryFrom<i32> for GIOError {
+    type Error = i32;
+
+    /// Try to convert a raw `i32` GIO error code to a [`GIOError`].
+    fn try_from(code: i32) -> Result<Self, Self::Error> {
+        // SAFETY: all values 0..=47 are valid discriminants of this #[repr(i32)] enum.
+        if (0..=47).contains(&code) {
+            Ok(unsafe { std::mem::transmute::<i32, GIOError>(code) })
+        } else {
+            Err(code)
+        }
+    }
+}
+
+impl From<GIOError> for std::io::ErrorKind {
+    fn from(e: GIOError) -> Self {
+        match e {
+            GIOError::NotFound | GIOError::NoSuchDevice => Self::NotFound,
+            GIOError::Exists | GIOError::AlreadyMounted => Self::AlreadyExists,
+            GIOError::InvalidArgument | GIOError::InvalidFilename => Self::InvalidInput,
+            GIOError::PermissionDenied | GIOError::ReadOnly | GIOError::ProxyNotAllowed => {
+                Self::PermissionDenied
+            }
+            GIOError::NotSupported
+            | GIOError::IsDirectory
+            | GIOError::NotDirectory
+            | GIOError::NotRegularFile
+            | GIOError::NotSymbolicLink
+            | GIOError::NotMountableFile => Self::Unsupported,
+            GIOError::Closed | GIOError::BrokenPipe => Self::BrokenPipe,
+            GIOError::Cancelled => Self::Interrupted,
+            GIOError::TimedOut => Self::TimedOut,
+            GIOError::Busy | GIOError::WouldBlock | GIOError::Pending => Self::WouldBlock,
+            GIOError::PartialInput => Self::UnexpectedEof,
+            GIOError::InvalidData => Self::InvalidData,
+            GIOError::ConnectionRefused
+            | GIOError::HostNotFound
+            | GIOError::ProxyFailed
+            | GIOError::ProxyAuthFailed
+            | GIOError::ProxyNeedAuth => Self::ConnectionRefused,
+            GIOError::NotConnected => Self::NotConnected,
+            GIOError::AddressInUse => Self::AddrInUse,
+            GIOError::NoSpace // no StorageFull on 1.75
+            | GIOError::NotEmpty
+            | GIOError::TooManyLinks
+            | GIOError::FilenameTooLong
+            | GIOError::NotMounted
+            | GIOError::CantCreateBackup
+            | GIOError::WrongEtag
+            | GIOError::WouldRecurse
+            | GIOError::WouldMerge
+            | GIOError::FailedHandled
+            | GIOError::TooManyOpenFiles
+            | GIOError::NotInitialized
+            | GIOError::DbusError
+            | GIOError::HostUnreachable
+            | GIOError::NetworkUnreachable
+            | GIOError::MessageTooLarge
+            | GIOError::Failed => Self::Other,
+        }
     }
 }
 
@@ -96,6 +243,10 @@ extern "C" {
     /// `GQuark fwupd_error_quark(void)` -- defined in libfwupd.
     #[cfg(not(test))]
     fn fwupd_error_quark() -> GQuark;
+
+    /// `GQuark g_io_error_quark(void)` -- defined in GIO.
+    #[cfg(not(test))]
+    fn g_io_error_quark() -> GQuark;
 
     /// `void g_set_error_literal(GError **err, GQuark domain, gint code, const gchar *message)`
     fn g_set_error_literal(
@@ -113,6 +264,12 @@ extern "C" {
 #[cfg(test)]
 fn fwupd_error_quark() -> GQuark {
     0x1234
+}
+
+/// Fake `g_io_error_quark` for tests
+#[cfg(test)]
+unsafe fn g_io_error_quark() -> GQuark {
+    0x5678
 }
 
 #[cfg(test)]
