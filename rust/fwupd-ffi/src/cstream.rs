@@ -164,10 +164,13 @@ impl Read for CStream {
             (self.callbacks.read_fn)(self.handle, buf.as_mut_ptr(), buf.len(), gerror.as_ptr())
         };
         if rc < 0 {
-            let msg = gerror
-                .message()
-                .unwrap_or_else(|| format!("C stream read returned error {rc}"));
-            return Err(io::Error::other(msg));
+            return Err(io::Error::try_from(gerror).unwrap_or_else(|gerror| {
+                io::Error::other(
+                    gerror
+                        .message()
+                        .unwrap_or_else(|| format!("C stream read returned error {rc}")),
+                )
+            }));
         }
         let n = usize::try_from(rc).unwrap();
         if n > buf.len() {
@@ -195,10 +198,13 @@ impl Seek for CStream {
         let ok =
             unsafe { (self.callbacks.seek_fn)(self.handle, offset, seek_type, gerror.as_ptr()) };
         if ok == 0 {
-            let msg = gerror
-                .message()
-                .unwrap_or_else(|| "C stream seek failed".to_string());
-            return Err(io::Error::other(msg));
+            return Err(io::Error::try_from(gerror).unwrap_or_else(|gerror| {
+                io::Error::other(
+                    gerror
+                        .message()
+                        .unwrap_or_else(|| "C stream seek failed".to_string()),
+                )
+            }));
         }
         let pos = unsafe { (self.callbacks.tell_fn)(self.handle) };
         if pos < 0 {
