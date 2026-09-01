@@ -57,6 +57,18 @@ fu_jcat_gnutls_datum_from_bytes(gnutls_datum_t *d, GBytes *blob, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_jcat_gnutls_datum_from_sbytes(gnutls_datum_t *d, FuSecureBytes *sbytes, GError **error)
+{
+	if (fu_secure_bytes_get_size(sbytes) > G_MAXUINT) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "blob too large");
+		return FALSE;
+	}
+	d->size = (unsigned int)fu_secure_bytes_get_size(sbytes);
+	d->data = (unsigned char *)fu_secure_bytes_get_data(sbytes);
+	return TRUE;
+}
+
 gnutls_x509_crt_t
 fu_jcat_gnutls_pkcs7_load_crt_from_blob(GBytes *blob, gnutls_x509_crt_fmt_t format, GError **error)
 {
@@ -83,7 +95,7 @@ fu_jcat_gnutls_pkcs7_load_crt_from_blob(GBytes *blob, gnutls_x509_crt_fmt_t form
 }
 
 gnutls_privkey_t
-fu_jcat_gnutls_pkcs7_load_privkey_from_blob(GBytes *blob, GError **error)
+fu_jcat_gnutls_pkcs7_load_privkey_from_sbytes(FuSecureBytes *sbytes, GError **error)
 {
 	int rc;
 	gnutls_datum_t d = {0};
@@ -95,7 +107,7 @@ fu_jcat_gnutls_pkcs7_load_privkey_from_blob(GBytes *blob, GError **error)
 		g_prefix_error_literal(error, "failed to privkey_init: ");
 		return NULL;
 	}
-	if (!fu_jcat_gnutls_datum_from_bytes(&d, blob, error))
+	if (!fu_jcat_gnutls_datum_from_sbytes(&d, sbytes, error))
 		return NULL;
 	rc = gnutls_privkey_import_x509_raw(key, &d, GNUTLS_X509_FMT_PEM, NULL, 0);
 	if (!fu_jcat_gnutls_rc_to_error(rc, error)) {
@@ -150,7 +162,7 @@ fu_jcat_gnutls_pkcs7_datum_to_dn_str(const gnutls_datum_t *raw)
 }
 
 /* generates a private key just like `certtool --generate-privkey` */
-GBytes *
+FuSecureBytes *
 fu_jcat_gnutls_pkcs7_create_private_key(gnutls_pk_algorithm_t algo, GError **error)
 {
 	gnutls_datum_t d = {0};
@@ -158,6 +170,7 @@ fu_jcat_gnutls_pkcs7_create_private_key(gnutls_pk_algorithm_t algo, GError **err
 	int rc;
 	g_auto(gnutls_x509_privkey_t) key = NULL;
 	g_autoptr(gnutls_data_t) d_payload = NULL;
+	g_autoptr(FuSecureBytes) sbytes = NULL;
 
 	/* initialize key and SPKI */
 	rc = gnutls_x509_privkey_init(&key);
@@ -195,7 +208,9 @@ fu_jcat_gnutls_pkcs7_create_private_key(gnutls_pk_algorithm_t algo, GError **err
 		return NULL;
 	}
 	d_payload = d.data;
-	return g_bytes_new(d_payload, d.size);
+
+	/* wipe when required */
+	return fu_secure_bytes_new(g_steal_pointer(&d_payload), d.size, gnutls_free);
 }
 
 gboolean

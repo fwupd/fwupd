@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fwupd-jcat-blob.h"
+#include <fwupdplugin.h>
 
 #include "fu-engine-struct.h"
 #include "fu-jcat-result.h"
@@ -28,7 +28,7 @@ struct _FuJcatEngineClass {
 	FwupdJcatBlob *(*pubkey_sign)(FuJcatEngine *self,
 				      GBytes *blob,
 				      GBytes *cert,
-				      GBytes *privkey,
+				      FuSecureBytes *privkey,
 				      FuJcatSignFlags flags,
 				      GError **error);
 	FuJcatResult *(*self_verify)(FuJcatEngine *self,
@@ -57,7 +57,7 @@ FwupdJcatBlob *
 fu_jcat_engine_pubkey_sign(FuJcatEngine *self,
 			   GBytes *blob,
 			   GBytes *cert,
-			   GBytes *privkey,
+			   FuSecureBytes *privkey,
 			   FuJcatSignFlags flags,
 			   GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 FuJcatResult *

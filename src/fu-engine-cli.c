@@ -603,7 +603,7 @@ fu_engine_cli_firmware_sign(FuCli *cli, gchar **values, GError **error)
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) archive_blob_new = NULL;
 	g_autoptr(GBytes) cert = NULL;
-	g_autoptr(GBytes) privkey = NULL;
+	g_autoptr(FuSecureBytes) privkey = NULL;
 	g_autoptr(GFile) archive_file_old = NULL;
 
 	/* invalid args */
@@ -620,7 +620,7 @@ fu_engine_cli_firmware_sign(FuCli *cli, gchar **values, GError **error)
 	cert = fu_bytes_get_contents(values[1], error);
 	if (cert == NULL)
 		return FALSE;
-	privkey = fu_bytes_get_contents(values[2], error);
+	privkey = fu_secure_bytes_get_contents(values[2], error);
 	if (privkey == NULL)
 		return FALSE;
 
@@ -3463,7 +3463,7 @@ fu_engine_cli_jcat_sign(FuCli *cli, gchar **values, GError **error)
 	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	FwupdJcatBlobKind target = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
 	g_autoptr(GBytes) cert = NULL;
-	g_autoptr(GBytes) privkey = NULL;
+	g_autoptr(FuSecureBytes) privkey = NULL;
 	g_autoptr(GBytes) source = NULL;
 	g_autoptr(FwupdJcatBlob) blob = NULL;
 	g_autoptr(FwupdJcatFile) file = NULL;
@@ -3518,7 +3518,7 @@ fu_engine_cli_jcat_sign(FuCli *cli, gchar **values, GError **error)
 	cert = fu_bytes_get_contents(values[2], error);
 	if (cert == NULL)
 		return FALSE;
-	privkey = fu_bytes_get_contents(values[3], error);
+	privkey = fu_secure_bytes_get_contents(values[3], error);
 	if (privkey == NULL)
 		return FALSE;
 

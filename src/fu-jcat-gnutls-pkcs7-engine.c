@@ -340,7 +340,7 @@ static FwupdJcatBlob *
 fu_jcat_gnutls_pkcs7_engine_pubkey_sign(FuJcatEngine *engine,
 					GBytes *blob,
 					GBytes *cert,
-					GBytes *privkey,
+					FuSecureBytes *privkey,
 					FuJcatSignFlags flags,
 					GError **error)
 {
@@ -362,7 +362,7 @@ fu_jcat_gnutls_pkcs7_engine_pubkey_sign(FuJcatEngine *engine,
 	}
 
 	/* load keys */
-	key = fu_jcat_gnutls_pkcs7_load_privkey_from_blob(privkey, error);
+	key = fu_jcat_gnutls_pkcs7_load_privkey_from_sbytes(privkey, error);
 	if (key == NULL)
 		return NULL;
 	crt = fu_jcat_gnutls_pkcs7_load_crt_from_blob(cert, GNUTLS_X509_FMT_PEM, error);
@@ -430,7 +430,7 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 	g_autofree gchar *fn_cert = NULL;
 	g_autofree gchar *fn_privkey = NULL;
 	g_autoptr(GBytes) cert = NULL;
-	g_autoptr(GBytes) privkey = NULL;
+	g_autoptr(FuSecureBytes) privkey = NULL;
 
 	/* check private key exists, otherwise generate and save */
 	if (flags & FU_JCAT_SIGN_FLAG_USE_PQ) {
@@ -445,7 +445,7 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 					      NULL);
 	}
 	if (g_file_test(fn_privkey, G_FILE_TEST_EXISTS)) {
-		privkey = fu_bytes_get_contents(fn_privkey, error);
+		privkey = fu_secure_bytes_get_contents(fn_privkey, error);
 		if (privkey == NULL)
 			return NULL;
 	} else {
@@ -468,7 +468,7 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 		}
 		if (!fu_path_mkdir_parent(fn_privkey, error))
 			return NULL;
-		if (!fu_bytes_set_contents_full(fn_privkey, privkey, 0600, error))
+		if (!fu_secure_bytes_set_contents(privkey, fn_privkey, 0600, error))
 			return NULL;
 	}
 
@@ -490,7 +490,7 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 			return NULL;
 	} else {
 		g_auto(gnutls_privkey_t) key = NULL;
-		key = fu_jcat_gnutls_pkcs7_load_privkey_from_blob(privkey, error);
+		key = fu_jcat_gnutls_pkcs7_load_privkey_from_sbytes(privkey, error);
 		if (key == NULL)
 			return NULL;
 		cert = fu_jcat_gnutls_pkcs7_create_client_certificate(key, error);

@@ -763,7 +763,7 @@ fu_cabinet_sign_filename(FuCabinet *self,
 			 FuJcatContext *jcat_context,
 			 FwupdJcatFile *jcat_file,
 			 GBytes *cert,
-			 GBytes *privkey,
+			 FuSecureBytes *privkey,
 			 GError **error)
 {
 	g_autoptr(FuFirmware) img = NULL;
@@ -900,7 +900,7 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
  * fu_cabinet_sign:
  * @self: a #FuCabinet
  * @cert: a PCKS#7 certificate
- * @privkey: a private key
+ * @privkey: a private key #FuSecureBytes
  * @flags: signing flags, e.g. %FU_CABINET_SIGN_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
@@ -913,7 +913,7 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
 gboolean
 fu_cabinet_sign(FuCabinet *self,
 		GBytes *cert,
-		GBytes *privkey,
+		FuSecureBytes *privkey,
 		FuCabinetSignFlags flags,
 		GError **error)
 {
