@@ -8,12 +8,12 @@
 
 #include <string.h>
 
+#include "fu-redfish-ami-device.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
-#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -424,26 +424,31 @@ fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 	       0;
 }
 
-/* helper function to check the manufacturer is nvidia type */
+/* check for a supported GB300 Station platform using SMBIOS Type 1 data. */
 static gboolean
-fu_redfish_backend_is_manufacturer_nvidia(FuRedfishBackend *self)
+fu_redfish_backend_is_gb300_station(FuRedfishBackend *self)
 {
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
-	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(GError) error_local = NULL;
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	const gchar *manufacturer;
+	const gchar *product_name;
+	g_autofree gchar *product_name_lower = NULL;
 
-	if (!fu_redfish_request_perform(request,
-					"/redfish/v1/Chassis/Chassis_0",
-					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					&error_local)) {
-		g_debug("failed to query Chassis_0 : %s", error_local->message);
+	manufacturer = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
+	product_name = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
+
+	if (product_name == NULL)
 		return FALSE;
-	}
-	json_obj = fu_redfish_request_get_json_object(request);
-	if (g_strcmp0(fwupd_json_object_get_string(json_obj, "Manufacturer", NULL), "NVIDIA") == 0)
-		return TRUE;
 
-	return FALSE;
+	product_name_lower = g_ascii_strdown(product_name, -1);
+	/*
+	 * Match "GB300" and "Station" anywhere in the product name, in any order
+	 * and case, covering "GB300 Station"
+	 */
+	if (g_strstr_len(product_name_lower, -1, "gb300") == NULL ||
+	    g_strstr_len(product_name_lower, -1, "station") == NULL)
+		return FALSE;
+
+	return g_strcmp0(manufacturer, "HP") == 0 || g_strcmp0(manufacturer, "Dell Inc.") == 0;
 }
 
 static gboolean
@@ -492,8 +497,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else if (g_strcmp0(self->vendor, "AMI") == 0 &&
-				   fu_redfish_backend_is_manufacturer_nvidia(self)) {
-				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
+				   fu_redfish_backend_is_gb300_station(self)) {
+				self->device_gtype = FU_TYPE_REDFISH_AMI_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
 			}
