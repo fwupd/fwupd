@@ -83,6 +83,13 @@ pub trait IsSeekable {
 /// This is a supertrait of [`Read`] and [`Seek`] used as a trait object
 /// in [`PartialInputStream`] and [`CompositeInputStream`] to support both
 /// native Rust streams and C-backed streams.
-pub trait ReadSeek: Read + Seek {}
+pub trait ReadSeek: Read + Seek {
+    // Trait upcasting requires rust 1.76
+    fn as_read(&mut self) -> &mut dyn Read;
+}
 
-impl<T: Read + Seek> ReadSeek for T {}
+impl<T: Read + Seek> ReadSeek for T {
+    fn as_read(&mut self) -> &mut dyn Read {
+        self
+    }
+}
