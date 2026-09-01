@@ -10,6 +10,8 @@
 
 #include "fu-endian.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_memcmp_safe(const guint8 *buf1,
 	       gsize buf1_sz,
@@ -107,13 +109,15 @@ fu_memwrite_uint32(guint8 *buf, guint32 val_native, FuEndianType endian) G_GNUC_
 void
 fu_memwrite_uint64(guint8 *buf, guint64 val_native, FuEndianType endian) G_GNUC_NON_NULL(1);
 guint16
-fu_memread_uint16(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1);
+fu_memread_uint16(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_memread_uint24(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1);
+fu_memread_uint24(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_memread_uint32(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1);
+fu_memread_uint32(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fu_memread_uint64(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1);
+fu_memread_uint64(const guint8 *buf, FuEndianType endian) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError **error)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

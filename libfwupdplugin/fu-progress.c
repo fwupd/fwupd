@@ -76,7 +76,7 @@ struct _FuProgress {
 	guint step_done;
 	guint step_scaling;
 	FuProgress *parent; /* no-ref */
-	guint sleep_timeout_id;
+	GSource *sleep_timeout_source;
 };
 
 enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_STATUS_CHANGED, SIGNAL_LAST };
@@ -124,14 +124,7 @@ fu_progress_set_id(FuProgress *self, const gchar *id)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(id != NULL);
-
-	/* not changed */
-	if (g_strcmp0(self->id, id) == 0)
-		return;
-
-	/* set id */
-	g_free(self->id);
-	self->id = g_strdup(id);
+	g_set_str(&self->id, id);
 }
 
 /**
@@ -173,14 +166,7 @@ fu_progress_set_name(FuProgress *self, const gchar *name)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(name != NULL);
-
-	/* not changed */
-	if (g_strcmp0(self->name, name) == 0)
-		return;
-
-	/* set name */
-	g_free(self->name);
-	self->name = g_strdup(name);
+	g_set_str(&self->name, name);
 }
 
 /**
@@ -235,9 +221,10 @@ fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
 static void
 fu_progress_sleep_idle_stop(FuProgress *self)
 {
-	if (self->sleep_timeout_id == 0)
-		return;
-	g_clear_handle_id(&self->sleep_timeout_id, g_source_remove);
+	if (self->sleep_timeout_source != NULL) {
+		g_source_destroy(self->sleep_timeout_source);
+		g_clear_pointer(&self->sleep_timeout_source, g_source_unref);
+	}
 }
 
 /**
@@ -1007,24 +994,30 @@ fu_progress_sleep_idle_cb(gpointer user_data)
 /**
  * fu_progress_sleep_idle:
  * @self: a #FuProgress
+ * @main_ctx: a #GMainContext
  * @delay_ms: delay in milliseconds
  *
  * Sleeps, setting the device progress from 0..100% as time continues. If the parent progress
  * percentage is changed or finalized then the idle action will be cancelled.
  *
- * Since: 2.1.2
+ * Since: 2.1.8
  **/
 void
-fu_progress_sleep_idle(FuProgress *self, guint delay_ms)
+fu_progress_sleep_idle(FuProgress *self, GMainContext *main_ctx, guint delay_ms)
 {
+	g_autoptr(GSource) source = NULL;
+
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(delay_ms > 0);
 
 	fu_progress_sleep_idle_stop(self);
 	fu_progress_set_percentage(self, 0.0);
 	fu_progress_set_duration(self, (gdouble)delay_ms / 1000.f);
-	self->sleep_timeout_id =
-	    g_timeout_add(MAX(delay_ms / 1000, 1), fu_progress_sleep_idle_cb, self);
+
+	source = g_timeout_source_new(MAX(delay_ms / 100, 1));
+	g_source_set_callback(source, fu_progress_sleep_idle_cb, self, NULL);
+	g_source_attach(source, main_ctx);
+	self->sleep_timeout_source = g_steal_pointer(&source);
 }
 
 static void
@@ -1088,7 +1081,7 @@ fu_progress_traceback(FuProgress *self)
 	fu_progress_traceback_cb(self, 0, G_MAXUINT, threshold_ms, str);
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void
@@ -1150,8 +1143,10 @@ fu_progress_finalize(GObject *object)
 	g_ptr_array_unref(self->children);
 	g_timer_destroy(self->timer);
 	g_timer_destroy(self->timer_child);
-	if (self->sleep_timeout_id != 0)
-		g_source_remove(self->sleep_timeout_id);
+	if (self->sleep_timeout_source != NULL) {
+		g_source_destroy(self->sleep_timeout_source);
+		g_source_unref(self->sleep_timeout_source);
+	}
 
 	G_OBJECT_CLASS(fu_progress_parent_class)->finalize(object);
 }

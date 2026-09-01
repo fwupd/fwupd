@@ -9,6 +9,8 @@
 #include <fwupd.h>
 #include <gio/gio.h>
 
+G_BEGIN_DECLS
+
 gint
 fu_version_compare(const gchar *version_a, const gchar *version_b, FwupdVersionFormat fmt);
 gchar *
@@ -33,3 +35,5 @@ gboolean
 fu_version_verify_format(const gchar *version,
 			 FwupdVersionFormat fmt,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

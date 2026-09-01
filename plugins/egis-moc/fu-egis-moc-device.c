@@ -66,7 +66,6 @@ fu_egis_moc_device_ctrl_cmd(FuEgisMocDevice *self,
 					    length,
 					    length ? &actual_len : NULL,
 					    FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
-					    NULL,
 					    error)) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -107,7 +106,6 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 					 st_hdr->buf->len,
 					 &actual_len,
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
@@ -139,7 +137,6 @@ fu_egis_moc_device_cmd_recv_cb(FuDevice *device, gpointer user_data, GError **er
 					 buf->len,
 					 &actual_len, /* allowed to return short read */
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to reply: ");
 		return FALSE;

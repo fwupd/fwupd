@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: install dependencies
         run: |
-          brew install meson usb.ids gobject-introspection vala gi-docgen
+          brew install meson usb.ids gobject-introspection gi-docgen
           python3 -m pip install --user jinja2 --break-system-packages
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

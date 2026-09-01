@@ -82,7 +82,6 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 					      sizeof(buf),
 					      &actual_length,
 					      CH_DEVICE_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		if (cmd == FU_HUGHSKI_COLORHUG_CMD_RESET &&
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -135,7 +134,6 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 					      sizeof(buf),
 					      &actual_length,
 					      CH_DEVICE_USB_TIMEOUT,
-					      NULL, /* cancellable */
 					      &error_local)) {
 		if (cmd == FU_HUGHSKI_COLORHUG_CMD_RESET &&
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -288,7 +286,7 @@ fu_hughski_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError
 	}
 
 	/* this takes some time */
-	fu_progress_sleep_idle(progress, 1000);
+	fu_device_sleep_idle(device, 1000, progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -320,7 +318,7 @@ fu_hughski_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError
 	}
 
 	/* this takes some time */
-	fu_progress_sleep_idle(progress, 1000);
+	fu_device_sleep_idle(device, 1000, progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }

@@ -8,10 +8,12 @@
 
 #include "fu-cbor-struct.h"
 
+G_BEGIN_DECLS
+
 typedef struct FuCborItem FuCborItem;
 
 FuCborItemKind
-fu_cbor_item_get_kind(FuCborItem *self) G_GNUC_NON_NULL(1);
+fu_cbor_item_get_kind(FuCborItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuCborItem *
 fu_cbor_item_ref(FuCborItem *self) G_GNUC_NON_NULL(1);
 FuCborItem *
@@ -46,9 +48,9 @@ fu_cbor_item_get_bytes(FuCborItem *self, GError **error) G_GNUC_WARN_UNUSED_RESU
 gboolean
 fu_cbor_item_array_append(FuCborItem *self, FuCborItem *item, GError **error) G_GNUC_NON_NULL(1, 2);
 FuCborItem *
-fu_cbor_item_array_index(FuCborItem *self, guint idx) G_GNUC_NON_NULL(1);
+fu_cbor_item_array_index(FuCborItem *self, guint idx) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint
-fu_cbor_item_array_length(FuCborItem *self) G_GNUC_NON_NULL(1);
+fu_cbor_item_array_length(FuCborItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 gboolean
 fu_cbor_item_map_append(FuCborItem *self,
@@ -59,9 +61,11 @@ void
 fu_cbor_item_map_index(FuCborItem *self, guint idx, FuCborItem **item_key, FuCborItem **item_value)
     G_GNUC_NON_NULL(1);
 guint
-fu_cbor_item_map_length(FuCborItem *self) G_GNUC_NON_NULL(1);
+fu_cbor_item_map_length(FuCborItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 GByteArray *
 fu_cbor_item_write(FuCborItem *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gchar *
 fu_cbor_item_to_string(FuCborItem *self) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

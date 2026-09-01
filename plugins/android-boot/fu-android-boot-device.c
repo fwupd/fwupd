@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include "fu-android-boot-device.h"
+
 #include <fcntl.h>
 #include <string.h>
-
-#include "fu-android-boot-device.h"
 
 #define ANDROID_BOOT_UNKNOWN_VERSION "0.0.0"
 #define ANDROID_BOOT_SECTOR_SIZE     512

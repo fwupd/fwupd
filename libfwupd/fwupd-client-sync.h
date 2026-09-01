@@ -250,6 +250,12 @@ fwupd_client_download_bytes(FwupdClient *self,
 			    FwupdClientDownloadFlags flags,
 			    GCancellable *cancellable,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+GBytes *
+fwupd_client_download_bytes2(FwupdClient *self,
+			     GPtrArray *urls,
+			     FwupdClientDownloadFlags flags,
+			     GCancellable *cancellable,
+			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_client_download_file(FwupdClient *self,
 			   const gchar *url,

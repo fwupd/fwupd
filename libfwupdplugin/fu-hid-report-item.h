@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-hid-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HID_REPORT_ITEM (fu_hid_report_item_get_type())
 G_DECLARE_FINAL_TYPE(FuHidReportItem, fu_hid_report_item, FU, HID_REPORT_ITEM, FuFirmware)
 
@@ -16,6 +18,8 @@ FuHidReportItem *
 fu_hid_report_item_new(void);
 
 FuHidItemKind
-fu_hid_report_item_get_kind(FuHidReportItem *self) G_GNUC_NON_NULL(1);
+fu_hid_report_item_get_kind(FuHidReportItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_hid_report_item_get_value(FuHidReportItem *self) G_GNUC_NON_NULL(1);
+fu_hid_report_item_get_value(FuHidReportItem *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

@@ -2,9 +2,12 @@ host_machine.system() == 'linux' or subdir_done()
 hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_linux_swap = static_library('fu_plugin_linux_swap',
+plugin_builtin_linux_swap = static_library(
+  'fu_plugin_linux_swap',
   sources: [
     'fu-linux-swap-plugin.c',
     'fu-linux-swap.c',
@@ -45,7 +48,8 @@ if get_option('tests')
     },
   )
 
-  install_subdir('tests',
+  install_subdir(
+    'tests',
     install_dir: installed_test_datadir,
     install_tag: 'tests',
   )

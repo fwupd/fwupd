@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelUsb4"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('intel-usb4.quirk')
-plugin_builtins += static_library('fu_plugin_intel_usb4',
+plugin_builtins += static_library(
+  'fu_plugin_intel_usb4',
   rustgen.process('fu-intel-usb4.rs'),
   sources: [
     'fu-intel-usb4-device.c',

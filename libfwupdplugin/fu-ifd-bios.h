@@ -8,6 +8,8 @@
 
 #include "fu-ifd-image.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IFD_BIOS (fu_ifd_bios_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIfdBios, fu_ifd_bios, FU, IFD_BIOS, FuIfdImage)
 
@@ -17,3 +19,5 @@ struct _FuIfdBiosClass {
 
 FuFirmware *
 fu_ifd_bios_new(void);
+
+G_END_DECLS

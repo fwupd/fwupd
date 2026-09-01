@@ -11,6 +11,8 @@
 #include "fwupd-codec-struct.h"
 #include "fwupd-json-object.h"
 
+G_BEGIN_DECLS
+
 #define FWUPD_TYPE_CODEC (fwupd_codec_get_type())
 G_DECLARE_INTERFACE(FwupdCodec, fwupd_codec, FWUPD, CODEC, GObject)
 
@@ -100,3 +102,5 @@ fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64
 void
 fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboolean value)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

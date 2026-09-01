@@ -8,5 +8,9 @@
 
 #include "fu-efivars.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DARWIN_EFIVARS (fu_darwin_efivars_get_type())
 G_DECLARE_FINAL_TYPE(FuDarwinEfivars, fu_darwin_efivars, FU, DARWIN_EFIVARS, FuEfivars)
+
+G_END_DECLS

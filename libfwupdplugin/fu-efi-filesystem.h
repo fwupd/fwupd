@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_FILESYSTEM (fu_efi_filesystem_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU, EFI_FILESYSTEM, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuEfiFilesystemClass {
 
 FuFirmware *
 fu_efi_filesystem_new(void);
+
+G_END_DECLS

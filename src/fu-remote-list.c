@@ -67,8 +67,7 @@ fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_me
 	g_return_if_fail(lvfs_metadata_format != NULL);
 	if (g_strcmp0(lvfs_metadata_format, self->lvfs_metadata_format) == 0)
 		return;
-	g_free(self->lvfs_metadata_format);
-	self->lvfs_metadata_format = g_strdup(lvfs_metadata_format);
+	g_set_str(&self->lvfs_metadata_format, lvfs_metadata_format);
 }
 
 static void
@@ -296,7 +295,7 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 
 	/* load from keyfile */
 	g_info("loading remote from %s", filename);
-	if (!fu_remote_load_from_filename(remote, filename, NULL, error)) {
+	if (!fu_remote_load_from_filename(remote, filename, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return FALSE;
 	}
@@ -501,7 +500,7 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 	}
 
 	/* reload values */
-	if (!fu_remote_load_from_filename(remote, filename_new, NULL, error)) {
+	if (!fu_remote_load_from_filename(remote, filename_new, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename_new);
 		return FALSE;
 	}

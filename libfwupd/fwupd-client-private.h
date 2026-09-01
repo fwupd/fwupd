@@ -12,6 +12,8 @@
 #include <gio/gunixinputstream.h>
 #endif
 
+G_BEGIN_DECLS
+
 /* allow overrides for synchronous clients that are not using DBus */
 struct FwupdClientSyncImpl {
 	gboolean (*activate)(FwupdClient *self,
@@ -19,6 +21,16 @@ struct FwupdClientSyncImpl {
 			     gpointer user_data,
 			     GCancellable *cancellable,
 			     GError **error);
+	gboolean (*clean_remote)(FwupdClient *self,
+				 const gchar *remote_id,
+				 gpointer user_data,
+				 GCancellable *cancellable,
+				 GError **error);
+	gboolean (*clear_results)(FwupdClient *self,
+				  const gchar *device_id,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 	gboolean (*connect)(FwupdClient *self,
 			    gpointer user_data,
 			    GCancellable *cancellable,
@@ -56,6 +68,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	GPtrArray *(*get_downgrades)(FwupdClient *self,
+				     const gchar *device_id,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
 	GPtrArray *(*get_history)(FwupdClient *self,
 				  gpointer user_data,
 				  GCancellable *cancellable,
@@ -101,6 +118,11 @@ struct FwupdClientSyncImpl {
 					 gpointer user_data,
 					 GCancellable *cancellable,
 					 GError **error);
+	gchar *(*inhibit)(FwupdClient *self,
+			  const gchar *reason,
+			  gpointer user_data,
+			  GCancellable *cancellable,
+			  GError **error);
 	gboolean (*install)(FwupdClient *self,
 			    const gchar *device_id,
 			    const gchar *filename,
@@ -128,6 +150,13 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	gboolean (*modify_device)(FwupdClient *self,
+				  const gchar *device_id,
+				  const gchar *key,
+				  const gchar *value,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 	gboolean (*modify_remote)(FwupdClient *self,
 				  const gchar *remote_id,
 				  const gchar *key,
@@ -135,6 +164,10 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	gboolean (*quit)(FwupdClient *self,
+			 gpointer user_data,
+			 GCancellable *cancellable,
+			 GError **error);
 	gboolean (*refresh_remote)(FwupdClient *self,
 				   FwupdRemote *remote,
 				   FwupdClientDownloadFlags download_flags,
@@ -156,6 +189,16 @@ struct FwupdClientSyncImpl {
 				      gpointer user_data,
 				      GCancellable *cancellable,
 				      GError **error);
+	gboolean (*uninhibit)(FwupdClient *self,
+			      const gchar *inhibit_id,
+			      gpointer user_data,
+			      GCancellable *cancellable,
+			      GError **error);
+	gboolean (*unlock)(FwupdClient *self,
+			   const gchar *device_id,
+			   gpointer user_data,
+			   GCancellable *cancellable,
+			   GError **error);
 	gboolean (*update_metadata)(FwupdClient *self,
 				    const gchar *remote_id,
 				    const gchar *metadata_fn,
@@ -177,14 +220,6 @@ struct FwupdClientSyncImpl {
 
 const FwupdClientSyncImpl *
 fwupd_client_get_sync_impl(FwupdClient *self, gpointer *impl_userdata) G_GNUC_NON_NULL(1);
-
-void
-fwupd_client_download_bytes2_async(FwupdClient *self,
-				   GPtrArray *urls,
-				   FwupdClientDownloadFlags flags,
-				   GCancellable *cancellable,
-				   GAsyncReadyCallback callback,
-				   gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 
 #ifdef HAVE_GIO_UNIX
 void
@@ -211,3 +246,5 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  GAsyncReadyCallback callback,
 					  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3, 4);
 #endif
+
+G_END_DECLS

@@ -10,9 +10,13 @@
 
 #include "fu-usb-device.h"
 
+G_BEGIN_DECLS
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(libusb_context, libusb_exit)
 
 FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, libusb_device *usb_device) G_GNUC_NON_NULL(1);
 libusb_device *
-fu_usb_device_get_dev(FuUsbDevice *self);
+fu_usb_device_get_dev(FuUsbDevice *self) G_GNUC_PURE;
+
+G_END_DECLS

@@ -132,7 +132,7 @@ expect_rc 0
 # ---
 echo " ● Switch branch of device (impossible)…"
 fwupdmgr switch-branch ${DEVICE} impossible
-expect_rc 1
+expect_rc 3
 
 # ---
 echo " ● Activate device (not required)…"
@@ -160,7 +160,7 @@ fwupdmgr get-devices --json --filter emulation-tag | jq -e '(.Devices | length) 
 rc=$?
 if [ $rc = 0 ]; then
     echo " ● Save device emulation"
-    fwupdmgr emulation-save /dev/null
+    fwupdmgr emulation-save /dev/null --force
     expect_rc 0
     echo " ● Save device emulation (bad args)"
     fwupdmgr emulation-save

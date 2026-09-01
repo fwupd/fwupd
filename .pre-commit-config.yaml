@@ -109,7 +109,13 @@ repos:
         name: clang-format
         language: script
         entry: ./contrib/reformat-code.py
-        types: [c]
+        types_or: [c, c++]
+      - id: meson-format
+        name: meson-format
+        language: system
+        entry: meson format -i
+        files: (meson\.build|meson\.options|meson_options\.txt)$
+        exclude: subprojects/
       - id: check-cli-actions
         name: check cli actions
         language: script
@@ -142,3 +148,20 @@ repos:
     rev: v8.28.0
     hooks:
       - id: gitleaks
+  - repo: local
+    hooks:
+      - id: rustfmt
+        name: rustfmt
+        entry: rustfmt --check
+        language: system
+        # Only run on our real Rust code
+        files: ^rust/
+        types: [rust]
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets --all-features --  -D warnings
+        language: system
+        # Only run on our real Rust code
+        files: ^rust/
+        types: [rust]
+        pass_filenames: false

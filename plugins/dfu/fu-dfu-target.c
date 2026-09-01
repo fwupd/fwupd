@@ -129,7 +129,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 
 	/* parse sector size */
 	sector_size = g_ascii_strtoull(tmp + 1, &tmp, 10); /* nocheck:blocked */
-	if (sector_size > 999) {
+	if (sector_size == 0 || sector_size > 999) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -716,7 +716,6 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					    buf->len,
 					    &actual_length,
 					    timeout_ms,
-					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(FU_DFU_DEVICE(proxy), &error_local);
@@ -786,7 +785,6 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 					    buf_sz,
 					    &actual_length,
 					    fu_dfu_device_get_timeout(FU_DFU_DEVICE(proxy)),
-					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(FU_DFU_DEVICE(proxy), &error_local);

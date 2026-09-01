@@ -111,7 +111,6 @@ fu_ccgx_hpi_device_i2c_reset_cb(FuDevice *device, gpointer user_data, GError **e
 					    0x0,
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -139,7 +138,6 @@ fu_ccgx_hpi_device_check_i2c_status(FuCcgxHpiDevice *self, guint8 mode, GError *
 					    sizeof(buf),
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -184,7 +182,6 @@ fu_ccgx_hpi_device_get_i2c_config(FuCcgxHpiDevice *self,
 					    sizeof(*i2c_config),
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -213,7 +210,6 @@ fu_ccgx_hpi_device_set_i2c_config(FuCcgxHpiDevice *self,
 					    sizeof(*i2c_config),
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -237,7 +233,6 @@ fu_ccgx_hpi_device_wait_for_notify(FuCcgxHpiDevice *self, guint16 *bytes_pending
 					      sizeof(buf),
 					      NULL,
 					      FU_CCGX_HPI_WAIT_TIMEOUT,
-					      NULL,
 					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -301,7 +296,6 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 					    0x0,
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "i2c read error: control xfer: ");
 		return FALSE;
@@ -312,7 +306,6 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "i2c read error: bulk xfer: ");
 		return FALSE;
@@ -353,7 +346,6 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 					    0x0,
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "i2c write error: control xfer: ");
 		return FALSE;
@@ -364,7 +356,6 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "i2c write error: bulk xfer: ");
 		return FALSE;
@@ -406,7 +397,6 @@ fu_ccgx_hpi_device_i2c_write_no_resp(FuCcgxHpiDevice *self,
 					    0x0,
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "i2c write error: control xfer: ");
 		return FALSE;
@@ -419,7 +409,6 @@ fu_ccgx_hpi_device_i2c_write_no_resp(FuCcgxHpiDevice *self,
 					 bufsz,
 					 NULL,
 					 FU_CCGX_HPI_WAIT_TIMEOUT,
-					 NULL,
 					 &error_local)) {
 		g_debug("ignoring i2c write error: bulk xfer: %s", error_local->message);
 	}

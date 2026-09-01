@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-context-private.h"
+#include "fu-volume-private.h"
 
 static void
 fu_context_efivars_func(void)
@@ -24,6 +25,66 @@ fu_context_efivars_func(void)
 	ret = fu_context_efivars_check_free_space(ctx, 10241, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM);
 	g_assert_false(ret);
+}
+
+typedef struct {
+	guint cnt;
+	FuVolume *volume; /* no-ref */
+	gchar *filename;
+} FuContextEspWriteHelper;
+
+static void
+fu_context_esp_write_helper_free(FuContextEspWriteHelper *helper)
+{
+	g_free(helper->filename);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuContextEspWriteHelper, fu_context_esp_write_helper_free)
+
+static void
+fu_context_esp_write_cb(FuContext *ctx, FuVolume *volume, const gchar *filename, gpointer user_data)
+{
+	FuContextEspWriteHelper *helper = (FuContextEspWriteHelper *)user_data;
+	helper->cnt++;
+	helper->volume = volume;
+	g_set_str(&helper->filename, filename);
+}
+
+static void
+fu_context_esp_write_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContextEspWriteHelper) helper = g_new0(FuContextEspWriteHelper, 1);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("context-esp-write", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	volume = fu_volume_new_from_mount_path(fu_temporary_directory_get_path(tmpdir));
+
+	/* adding the ESP volume connects to the write-file signal */
+	fu_context_add_esp_volume(ctx, volume);
+	g_signal_connect(FU_CONTEXT(ctx), "esp-write", G_CALLBACK(fu_context_esp_write_cb), helper);
+
+	/* writing to the volume re-emits from the context */
+	filename =
+	    g_build_filename(fu_temporary_directory_get_path(tmpdir), "EFI", "hello.cap", NULL);
+	bytes = g_bytes_new_static("hello", 5);
+	ret = fu_volume_write_file(volume, filename, bytes, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the ::esp-write signal was emitted with the correct volume and filename */
+	g_assert_cmpint(helper->cnt, ==, 1);
+	g_assert_true(helper->volume == volume);
+	g_assert_cmpstr(helper->filename, ==, filename);
 }
 
 static void
@@ -310,6 +371,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context/quirks", fu_context_quirks_func);
 	g_test_add_func("/fwupd/context/flags", fu_context_flags_func);
 	g_test_add_func("/fwupd/context/backends", fu_context_backends_func);
+	g_test_add_func("/fwupd/context/esp-write", fu_context_esp_write_func);
 	g_test_add_func("/fwupd/context/efivars", fu_context_efivars_func);
 	g_test_add_func("/fwupd/context/hwids-dmi", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/context/hwids-unset", fu_context_hwids_unset_func);

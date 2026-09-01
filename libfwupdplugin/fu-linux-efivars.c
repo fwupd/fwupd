@@ -28,6 +28,7 @@
 #include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-linux-efivars.h"
+#include "fu-mem.h"
 #include "fu-path.h"
 
 struct _FuLinuxEfivars {
@@ -207,33 +208,9 @@ fu_linux_efivars_delete_with_glob(FuEfivars *efivars,
 }
 
 static gboolean
-fu_linux_efivars_exists_guid(FuEfivars *efivars, const gchar *guid)
-{
-	const gchar *fn;
-	g_autofree gchar *efivarsdir = NULL;
-	g_autoptr(GDir) dir = NULL;
-
-	efivarsdir = fu_linux_efivars_get_path(efivars, NULL);
-	if (efivarsdir == NULL)
-		return FALSE;
-	dir = g_dir_open(efivarsdir, 0, NULL);
-	if (dir == NULL)
-		return FALSE;
-	while ((fn = g_dir_read_name(dir)) != NULL) {
-		if (g_str_has_suffix(fn, guid))
-			return TRUE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_linux_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
 	g_autofree gchar *fn = NULL;
-
-	/* any name */
-	if (name == NULL)
-		return fu_linux_efivars_exists_guid(efivars, guid);
 
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, NULL);
 	if (fn == NULL)
@@ -250,12 +227,12 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 			  FuEfiVariableAttrs *attr,
 			  GError **error)
 {
-	gssize attr_sz;
-	gssize data_sz_tmp;
-	FuEfiVariableAttrs attr_tmp;
-	guint64 sz;
+	const guint8 *buf;
+	gsize bufsz = 0;
+	guint32 attr_tmp = 0;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	/* open file as stream */
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
@@ -266,51 +243,37 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	sz = fu_file_input_stream_get_file_size(FU_FILE_INPUT_STREAM(istr), NULL, error);
-	if (sz == 0 && error != NULL && *error != NULL) {
-		g_prefix_error_literal(error, "failed to get file size: ");
+
+	/* the efivars file is not seekable, so we cannot query the size ahead of
+	 * time -- just read the whole variable until we hit EOF */
+	blob = fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, NULL, error);
+	if (blob == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
 
-	if (sz < 4) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "efivars file too small: %" G_GUINT64_FORMAT,
-			    sz);
+	/* the leading bytes are the attributes */
+	buf = g_bytes_get_data(blob, &bufsz);
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &attr_tmp, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	}
-
-	/* read out the attributes */
-	attr_sz = fu_input_stream_read(istr, &attr_tmp, sizeof(attr_tmp), NULL, error);
-	if (attr_sz == -1) {
-		g_prefix_error_literal(error, "failed to read attr: ");
-		fwupd_error_convert(error);
-		return FALSE;
-	}
 	if (attr != NULL)
-		*attr = attr_tmp;
+		*attr = (FuEfiVariableAttrs)attr_tmp;
 
-	/* read out the data */
-	data_sz_tmp = sz - sizeof(attr_tmp);
-	if (data_sz_tmp == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no data to read");
-		return FALSE;
-	}
+	/* the rest is the data */
 	if (data_sz != NULL)
-		*data_sz = data_sz_tmp;
+		*data_sz = bufsz - sizeof(attr_tmp);
 	if (data != NULL) {
-		g_autofree guint8 *data_tmp = g_malloc0(data_sz_tmp);
-		if (!fu_input_stream_read_all(istr, data_tmp, data_sz_tmp, NULL, NULL, error)) {
-			g_prefix_error_literal(error, "failed to read data: ");
+		if (bufsz == sizeof(attr_tmp)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "no data to read");
 			return FALSE;
 		}
-		*data = g_steal_pointer(&data_tmp);
+		*data = g_memdup2(buf + sizeof(attr_tmp), bufsz - sizeof(attr_tmp));
 	}
+
+	/* success */
 	return TRUE;
 }
 

@@ -1,11 +1,21 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.8',
+  'rust',
+  version: '2.2.1',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.11.0',
-  default_options: ['warning_level=2', 'c_std=c17'],
+  default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
+
+if host_machine.system() == 'android'
+  add_project_link_arguments(
+    '-lc++abi',
+    '-lc++_static',
+    language: ['c', 'cpp'],
+  )
+endif
+
 
 fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
@@ -225,15 +235,18 @@ add_project_arguments(
 )
 
 # sanity check
-if get_option('build') == 'all'
+if get_option('build') == 'dbus'
   build_standalone = true
-  build_daemon = true
+  build_daemon = 'dbus'
+elif get_option('build') == 'binder'
+  build_standalone = true
+  build_daemon = 'binder'
 elif get_option('build') == 'standalone'
   build_standalone = true
-  build_daemon = false
+  build_daemon = 'none'
 elif get_option('build') == 'library'
   build_standalone = false
-  build_daemon = false
+  build_daemon = 'none'
 endif
 
 prefix = get_option('prefix')
@@ -244,7 +257,10 @@ libexecdir = join_paths(prefix, get_option('libexecdir'))
 #this ends up in compiled code, ignore prefix
 if host_machine.system() == 'windows'
   # require Windows 8+ for GetFirmwareType() and other modern APIs
-  add_project_arguments('-D_WIN32_WINNT=0x0602', language: 'c')
+  add_project_arguments(
+    '-D_WIN32_WINNT=0x0602',
+    language: 'c',
+  )
   sysconfdir = get_option('sysconfdir')
   localstatedir = get_option('localstatedir')
   datadir = get_option('datadir')
@@ -257,6 +273,10 @@ else
   includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  if host_machine.system() == 'android'
+    datadir = join_paths(prefix, 'usr/share')
+    localstatedir = '/data/vendor/fwupd'
+  endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
   installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
   daemon_dir = join_paths(libexecdir, 'fwupd')
@@ -287,7 +307,7 @@ if host_machine.system() in ['linux', 'android']
   conf.set('HAVE_UDEV', '1')
 endif
 if get_option('udev_hotplug')
-  conf.set('HAVE_UDEV_HOTPLUG' , '1')
+  conf.set('HAVE_UDEV_HOTPLUG', '1')
 endif
 if build_standalone
   bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
@@ -321,33 +341,40 @@ if build_standalone
     version: '>= 0.1.27',
   )
   conf.set_quoted('LIBUSB_VERSION', libusb.version())
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_set_option',
-    dependencies: libusb,
-  )
+  if libusb.type_name() == 'internal'
     conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_init_context',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_get_parent',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_GET_PARENT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_wrap_sys_device',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+  else
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_set_option',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_init_context',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_get_parent',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_wrap_sys_device',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+    endif
   endif
 
   readline = dependency(
@@ -391,18 +418,26 @@ libdrm = dependency(
   required: get_option('libdrm'),
 )
 if libdrm.found()
-  conf.set('HAVE_LIBDRM' , '1')
+  conf.set('HAVE_LIBDRM', '1')
 endif
-polkit = dependency('polkit-gobject-1', version: '>= 0.103',
-         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
+polkit = dependency(
+  'polkit-gobject-1',
+  version: '>= 0.103',
+  required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'),
+)
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
-  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
+  conf.set_quoted(
+    'POLKIT_ACTIONDIR',
+    polkit.get_variable(
+      pkgconfig: 'actiondir'
+    ),
+  )
 endif
-if build_daemon
+if build_daemon != 'none'
   if not polkit.found()
     warning('Polkit is disabled, the daemon will allow ALL client actions')
   endif
@@ -469,7 +504,11 @@ gnutls = dependency(
 if gnutls.found()
   jcat_crypto = 'gnutls'
   conf.set('HAVE_GNUTLS', '1')
-  if cc.has_header_symbol('gnutls/gnutls.h', 'GNUTLS_SIGN_MLDSA87', dependencies: gnutls)
+  if cc.has_header_symbol(
+    'gnutls/gnutls.h',
+    'GNUTLS_SIGN_MLDSA87',
+    dependencies: gnutls,
+  )
     conf.set('HAVE_GNUTLS_PQC', '1')
   endif
 endif
@@ -484,6 +523,17 @@ if jcat_crypto == 'none'
     jcat_crypto = 'libcrypto'
     conf.set('HAVE_LIBCRYPTO', '1')
   endif
+endif
+
+if build_daemon == 'binder'
+  ndk_arch_dir = meson.get_external_property('android_ndk_sysroot_arch')
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/' + ndk_arch_dir + '/35'
+  binder_ndk = cc.find_library(
+    'binder_ndk',
+    dirs: ndk_sysroot_lib,
+    required: true,
+  )
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
 endif
 
 lzma = dependency('liblzma')
@@ -562,9 +612,10 @@ endif
 if cc.has_header_symbol('linux/sed-opal.h', 'IOC_OPAL_GET_STATUS')
   conf.set('HAVE_LINUX_SED_OPAL_H', '1')
 endif
-has_HIDIOCGINPUT = cc.has_header_symbol('linux/hidraw.h',
+has_HIDIOCGINPUT = cc.has_header_symbol(
+  'linux/hidraw.h',
   'HIDIOCGINPUT',
-   required: false,
+  required: false,
 )
 if has_HIDIOCGINPUT
   conf.set('HAVE_HIDRAW_H', '1')
@@ -681,7 +732,8 @@ if build_standalone
 endif
 
 logind = dependency(
-  'systemd', 'libelogind',
+  'systemd',
+  'libelogind',
   required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
 )
 
@@ -694,7 +746,7 @@ if libsystemd.found()
     version: '>= 249',
     required: get_option('systemd'),
   )
-  conf.set('HAVE_SYSTEMD' , '1')
+  conf.set('HAVE_SYSTEMD', '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
     systemdunitdir = systemd.get_variable(
@@ -779,6 +831,14 @@ configure_file(
   configuration: conf,
 )
 
+if build_daemon == 'binder'
+  configure_file(
+    input: 'contrib/android/adb_fwupd_env.sh.in',
+    output: 'adb_fwupd_env.sh',
+    configuration: conf,
+  )
+endif
+
 libdrm_amdgpu = dependency(
   'libdrm_amdgpu',
   version: '>= 2.4.113',
@@ -843,11 +903,15 @@ rustgen = generator(
   depfile: '@BASENAME@.deps',
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
-    '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
+    '--use',
+    'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
-    '--depfile', '@DEPFILE@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
+    '--depfile',
+    '@DEPFILE@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
@@ -870,10 +934,18 @@ umockdev = dependency(
   ),
 )
 
-allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
-  host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
+allow_uefi = host_machine.system() in ['linux', 'freebsd'] and host_machine.cpu_family() in [
+  'x86_64',
+  'aarch64',
+  'riscv64',
+  'loongarch64',
+]
+
+rustmod = import('rust')
+cargo_ws = rustmod.workspace()
 
 subdir('generate-build')
+subdir('rust')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')
@@ -924,7 +996,7 @@ endif
 summary(
   {
     'fwupdtool': build_standalone,
-    'fwupd (daemon)': build_daemon,
+    'fwupd': build_daemon,
   },
   section: 'build targets',
   bool_yn: true,
@@ -952,7 +1024,7 @@ summary(
   bool_yn: true,
 )
 
-if build_daemon
+if build_daemon != 'none'
   summary(
     {
       'bluez': bluez.allowed(),

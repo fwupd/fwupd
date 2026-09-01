@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_COSWID_FIRMWARE (fu_coswid_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCoswidFirmware, fu_coswid_firmware, FU, COSWID_FIRMWARE, FuFirmware)
 
@@ -18,8 +20,10 @@ struct _FuCoswidFirmwareClass {
 FuFirmware *
 fu_coswid_firmware_new(void);
 const gchar *
-fu_coswid_firmware_get_product(FuCoswidFirmware *self) G_GNUC_NON_NULL(1);
+fu_coswid_firmware_get_product(FuCoswidFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_coswid_firmware_get_persistent_id(FuCoswidFirmware *self) G_GNUC_NON_NULL(1);
+fu_coswid_firmware_get_persistent_id(FuCoswidFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_coswid_firmware_get_device_id(FuCoswidFirmware *self) G_GNUC_NON_NULL(1);
+fu_coswid_firmware_get_device_id(FuCoswidFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

@@ -20,6 +20,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-bytes.h"
 #include "fu-common-private.h"
 #include "fu-volume-private.h"
 
@@ -48,6 +49,10 @@ enum {
 	PROP_PROXY_PARTITION,
 	PROP_LAST
 };
+
+enum { SIGNAL_WRITE_FILE, SIGNAL_LAST };
+
+static guint signals[SIGNAL_LAST] = {0};
 
 static void
 fu_volume_codec_iface_init(FwupdCodecInterface *iface);
@@ -161,6 +166,26 @@ fu_volume_class_init(FuVolumeClass *klass)
 	object_class->finalize = fu_volume_finalize;
 	object_class->get_property = fu_volume_get_property;
 	object_class->set_property = fu_volume_set_property;
+
+	/**
+	 * FuVolume::write-file:
+	 * @self: the #FuVolume instance that emitted the signal
+	 * @filename: the filename being written
+	 *
+	 * The ::write-file signal is emitted when fu_volume_write_file() is used.
+	 *
+	 * Since: 2.1.8
+	 **/
+	signals[SIGNAL_WRITE_FILE] = g_signal_new("write-file",
+						  G_TYPE_FROM_CLASS(object_class),
+						  G_SIGNAL_RUN_LAST,
+						  0,
+						  NULL,
+						  NULL,
+						  g_cclosure_marshal_VOID__STRING,
+						  G_TYPE_NONE,
+						  1,
+						  G_TYPE_STRING);
 
 	/**
 	 * FuVolume:proxy-block:
@@ -650,6 +675,35 @@ fu_volume_set_filesystem_free(FuVolume *self, guint64 fs_free)
 {
 	g_return_if_fail(FU_IS_VOLUME(self));
 	self->fs_free = fs_free;
+}
+
+/**
+ * fu_volume_write_file:
+ * @self: a @FuVolume
+ * @filename: (not nullable): a filename
+ * @bytes: (not nullable): data to write
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes a blob of data to a volume, creating the parent directories as required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GError **error)
+{
+	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(bytes, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_bytes_set_contents(filename, bytes, error))
+		return FALSE;
+
+	/* success */
+	g_signal_emit(self, signals[SIGNAL_WRITE_FILE], 0, filename);
+	return TRUE;
 }
 
 /**

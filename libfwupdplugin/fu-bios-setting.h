@@ -8,9 +8,13 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BIOS_SETTING (fu_bios_setting_get_type())
 
 G_DECLARE_FINAL_TYPE(FuBiosSetting, fu_bios_setting, FU, BIOS_SETTING, FwupdBiosSetting)
 
 FwupdBiosSetting *
 fu_bios_setting_new(void);
+
+G_END_DECLS

@@ -1,10 +1,13 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalFp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('focal-fp.quirk')
-plugin_builtins += static_library('fu_plugin_focal_fp',
+plugin_builtins += static_library(
+  'fu_plugin_focal_fp',
   rustgen.process('fu-focal-fp.rs'),
   sources: [
     'fu-focal-fp-plugin.c',

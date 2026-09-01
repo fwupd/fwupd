@@ -116,7 +116,7 @@ fu_device_event_build_id(const gchar *id)
 	g_string_append_c(id_hash, '#');
 	for (guint i = 0; i < FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE / 2; i++)
 		g_string_append_printf(id_hash, "%02x", buf[i]);
-	return g_string_free(g_steal_pointer(&id_hash), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&id_hash));
 }
 
 /**
@@ -474,8 +474,14 @@ fu_device_event_copy_data(FuDeviceEvent *self,
 	buf_src = g_base64_decode(blobstr, &bufsz_src);
 	if (actual_length != NULL)
 		*actual_length = bufsz_src;
-	if (buf != NULL)
+	if (buf != NULL) {
+		/* the recorded blob may be shorter than the buffer the caller asked us to
+		 * fill, so we zero the remainder so a short event cannot leave the caller
+		 * looking at whatever was already in the allocation */
+		if (bufsz_src < bufsz)
+			memset(buf + bufsz_src, 0x0, bufsz - bufsz_src);
 		return fu_memcpy_safe(buf, bufsz, 0x0, buf_src, bufsz_src, 0x0, bufsz_src, error);
+	}
 	return TRUE;
 }
 

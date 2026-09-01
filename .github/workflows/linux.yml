@@ -27,13 +27,14 @@ jobs:
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64, VARIANT: android }
     env: ${{ matrix.env }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -47,12 +48,14 @@ jobs:
         env:
           CI_NETWORK: true
           VERSION: ${{ needs.library.outputs.version }}
+          PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
+              -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
@@ -77,12 +80,14 @@ jobs:
         if: steps.supported.outputs.supported == 'true'
         env:
           CI_NETWORK: true
+          PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
+              -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
@@ -103,6 +108,8 @@ jobs:
 
   library:
     runs-on: ubuntu-latest
+    env:
+      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:

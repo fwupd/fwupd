@@ -64,8 +64,10 @@ foreach fwupdplugin_struct : fwupdplugin_structs
       python3,
       join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
       '@INPUT@',
-      '--outc', '@OUTPUT0@',
-      '--outh', '@OUTPUT1@',
+      '--outc',
+      '@OUTPUT0@',
+      '--outh',
+      '@OUTPUT1@',
       '--include',
       'fwupd.h',
       '--prefix',
@@ -376,7 +378,6 @@ fwupdplugin_headers = [
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
   'fu-stream-input-stream.h',
-  'fu-stream-input-stream-private.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',
@@ -430,6 +431,7 @@ library_deps = [
   libdrm,
   gnutls,
   platform_deps,
+  fwupd_rust_ffi_dep,
 ]
 
 fwupdplugin = library(
@@ -509,7 +511,7 @@ if get_option('tests')
     link_with: [fwupd, libfwupdtest],
   )
 
-  foreach test_name: [
+  foreach test_name : [
     'backend',
     'bios-settings',
     'byte-array',

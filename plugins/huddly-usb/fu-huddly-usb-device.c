@@ -34,8 +34,7 @@ G_DEFINE_TYPE(FuHuddlyUsbDevice, fu_huddly_usb_device, FU_TYPE_USB_DEVICE)
 static void
 fu_huddly_usb_device_set_state(FuHuddlyUsbDevice *self, const gchar *product_state)
 {
-	g_free(self->product_state);
-	self->product_state = g_strdup(product_state);
+	g_set_str(&self->product_state, product_state);
 }
 
 static gboolean
@@ -95,7 +94,6 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 chunk_size,
 						 &transmitted,
 						 5000,
-						 NULL,
 						 error)) {
 			return FALSE;
 		}
@@ -119,7 +117,6 @@ fu_huddly_usb_device_bulk_read(FuHuddlyUsbDevice *self,
 					   buf->len,
 					   received_length,
 					   20000,
-					   NULL,
 					   error);
 }
 

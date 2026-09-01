@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_DEVICE_PATH (fu_efi_device_path_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiDevicePath, fu_efi_device_path, FU, EFI_DEVICE_PATH, FuFirmware)
 
@@ -18,6 +20,8 @@ struct _FuEfiDevicePathClass {
 FuEfiDevicePath *
 fu_efi_device_path_new(void);
 guint8
-fu_efi_device_path_get_subtype(FuEfiDevicePath *self) G_GNUC_NON_NULL(1);
+fu_efi_device_path_get_subtype(FuEfiDevicePath *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

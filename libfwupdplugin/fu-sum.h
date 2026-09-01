@@ -10,29 +10,33 @@
 
 #include "fu-endian.h"
 
+G_BEGIN_DECLS
+
 guint8
-fu_sum8(const guint8 *buf, gsize bufsz);
+fu_sum8(const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 gboolean
 fu_sum8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *value, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 guint8
-fu_sum8_bytes(GBytes *blob);
+fu_sum8_bytes(GBytes *blob) G_GNUC_PURE;
 guint16
-fu_sum16(const guint8 *buf, gsize bufsz);
+fu_sum16(const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 gboolean
 fu_sum16_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint16 *value, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 guint16
-fu_sum16_bytes(GBytes *blob);
+fu_sum16_bytes(GBytes *blob) G_GNUC_PURE;
 guint16
-fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian);
+fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian) G_GNUC_PURE;
 guint16
-fu_sum16w_bytes(GBytes *blob, FuEndianType endian);
+fu_sum16w_bytes(GBytes *blob, FuEndianType endian) G_GNUC_PURE;
 guint32
-fu_sum32(const guint8 *buf, gsize bufsz);
+fu_sum32(const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 guint32
-fu_sum32_bytes(GBytes *blob);
+fu_sum32_bytes(GBytes *blob) G_GNUC_PURE;
 guint32
-fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian);
+fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian) G_GNUC_PURE;
 guint32
-fu_sum32w_bytes(GBytes *blob, FuEndianType endian);
+fu_sum32w_bytes(GBytes *blob, FuEndianType endian) G_GNUC_PURE;
+
+G_END_DECLS

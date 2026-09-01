@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define g_prefix_error_literal	  g_prefix_error
 #define g_spawn_check_wait_status g_spawn_check_exit_status
 #define g_source_set_static_name(n1, n2)
@@ -19,3 +21,5 @@ g_steal_fd(int *fd_ptr)
 	*fd_ptr = -1;
 	return fd;
 }
+
+G_END_DECLS

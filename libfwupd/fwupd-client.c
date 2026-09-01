@@ -85,12 +85,14 @@ typedef struct {
 	gchar *package_name;
 	gchar *package_version;
 	gchar *user_agent;
-	GHashTable *hints;		/* str:str */
-	GHashTable *immediate_requests; /* str:FwupdRequest */
-	GPtrArray *hwids;		/* FwupdClientHwid */
-	GMutex download_items_mutex; /* for @download_items */
-	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
+	GHashTable *hints;		 /* str:str */
+	GHashTable *immediate_requests;	 /* str:FwupdRequest */
+	GMutex immediate_requests_mutex; /* for @immediate_requests */
+	GPtrArray *hwids;		 /* FwupdClientHwid */
+	GMutex download_items_mutex;	 /* for @download_items */
+	GPtrArray *download_items;	 /* element-type FwupdClientDownloadItem */
 	FwupdClientSyncImpl impl;
+	GPtrArray *connect_items; /* element-type FwupdClientConnectItem */
 	gpointer impl_userdata;
 	GDestroyNotify impl_userdata_destroy; /* nullable */
 } FwupdClientPrivate;
@@ -106,6 +108,12 @@ typedef struct {
 	gchar *key;
 	gchar *value;
 } FwupdClientHwid;
+
+typedef struct {
+	FwupdClientConnectFunc func;
+	gpointer user_data;
+	GDestroyNotify user_data_destroy;
+} FwupdClientConnectItem;
 
 enum {
 	SIGNAL_CHANGED,
@@ -152,6 +160,16 @@ fwupd_client_hwid_free(FwupdClientHwid *hwid)
 	g_free(hwid->value);
 	g_free(hwid);
 }
+
+static void
+fwupd_client_connect_item_free(FwupdClientConnectItem *item)
+{
+	if (item->user_data_destroy != NULL)
+		item->user_data_destroy(item->user_data);
+	g_free(item);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientConnectItem, fwupd_client_connect_item_free)
 
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
@@ -423,49 +441,31 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 
 	/* success */
 	g_free(priv->user_agent);
-	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
+	priv->user_agent = g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_vendor, host_vendor) == 0)
-		return;
-
-	g_free(priv->host_vendor);
-	priv->host_vendor = g_strdup(host_vendor);
-	fwupd_client_object_notify(self, "host-vendor");
+	if (g_set_str(&priv->host_vendor, host_vendor))
+		fwupd_client_object_notify(self, "host-vendor");
 }
 
 static void
 fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_product, host_product) == 0)
-		return;
-
-	g_free(priv->host_product);
-	priv->host_product = g_strdup(host_product);
-	fwupd_client_object_notify(self, "host-product");
+	if (g_set_str(&priv->host_product, host_product))
+		fwupd_client_object_notify(self, "host-product");
 }
 
 static void
 fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_machine_id, host_machine_id) == 0)
-		return;
-
-	g_free(priv->host_machine_id);
-	priv->host_machine_id = g_strdup(host_machine_id);
-	fwupd_client_object_notify(self, "host-machine-id");
+	if (g_set_str(&priv->host_machine_id, host_machine_id))
+		fwupd_client_object_notify(self, "host-machine-id");
 }
 
 /**
@@ -481,14 +481,8 @@ void
 fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->host_security_id, host_security_id) == 0)
-		return;
-
-	g_free(priv->host_security_id);
-	priv->host_security_id = g_strdup(host_security_id);
-	fwupd_client_object_notify(self, "host-security-id");
+	if (g_set_str(&priv->host_security_id, host_security_id))
+		fwupd_client_object_notify(self, "host-security-id");
 }
 
 /**
@@ -504,15 +498,10 @@ void
 fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->daemon_version, daemon_version) == 0)
-		return;
-
-	g_free(priv->daemon_version);
-	priv->daemon_version = g_strdup(daemon_version);
-	fwupd_client_object_notify(self, "daemon-version");
-	fwupd_client_rebuild_user_agent(self);
+	if (g_set_str(&priv->daemon_version, daemon_version)) {
+		fwupd_client_object_notify(self, "daemon-version");
+		fwupd_client_rebuild_user_agent(self);
+	}
 }
 
 /**
@@ -541,16 +530,20 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
 	if (g_strcmp0(host_bkc, "") == 0)
 		host_bkc = NULL;
 
-	/* not changed */
-	if (g_strcmp0(priv->host_bkc, host_bkc) == 0)
-		return;
-
-	g_free(priv->host_bkc);
-	priv->host_bkc = g_strdup(host_bkc);
-	fwupd_client_object_notify(self, "host-bkc");
+	if (g_set_str(&priv->host_bkc, host_bkc))
+		fwupd_client_object_notify(self, "host-bkc");
 }
 
-static void
+/**
+ * fwupd_client_set_status:
+ * @self: a #FwupdClient
+ * @status: a #FwupdStatus
+ *
+ * Sets the client status. This is thread-safe and can be called from any thread.
+ *
+ * Since: 2.1.8
+ **/
+void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -561,7 +554,16 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 	fwupd_client_object_notify(self, "status");
 }
 
-static void
+/**
+ * fwupd_client_set_percentage:
+ * @self: a #FwupdClient
+ * @percentage: a percentage value from 0 to 100
+ *
+ * Sets the client percentage. This is thread-safe and can be called from any thread.
+ *
+ * Since: 2.1.8
+ **/
+void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -725,6 +727,108 @@ fwupd_client_name_owner_changed_cb(GDBusProxy *proxy, GParamSpec *pspec, FwupdCl
 	fwupd_client_update_proxy_name_owner(self);
 }
 
+/**
+ * fwupd_client_emit_device_request:
+ * @self: a #FwupdClient
+ * @req: a #FwupdRequest
+ *
+ * Emits a `::device-request` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_REQUEST(req));
+
+	g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
+
+	/* we may need to invalidate this later */
+	if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
+	    fwupd_request_get_device_id(req) != NULL) {
+		g_autoptr(GMutexLocker) locker =
+		    g_mutex_locker_new(&priv->immediate_requests_mutex);
+		g_hash_table_insert(priv->immediate_requests,
+				    g_strdup(fwupd_request_get_device_id(req)),
+				    g_object_ref(req));
+	}
+}
+
+/**
+ * fwupd_client_emit_device_added:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-added` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
+{
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
+}
+
+/**
+ * fwupd_client_emit_device_removed:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-removed` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
+{
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
+}
+
+/**
+ * fwupd_client_emit_device_changed:
+ * @self: a #FwupdClient
+ * @dev: a #FwupdDevice
+ *
+ * Emits a `::device-changed` signal into the assigned mainloop.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(dev));
+
+	g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
+	fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
+
+	/* invalidate request */
+	if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
+		g_autoptr(GMutexLocker) locker =
+		    g_mutex_locker_new(&priv->immediate_requests_mutex);
+		FwupdRequest *req =
+		    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
+		if (req != NULL) {
+			fwupd_client_request_invalidate(self, req);
+			g_hash_table_remove(priv->immediate_requests, fwupd_device_get_id(dev));
+		}
+	}
+}
+
 static void
 fwupd_client_signal_cb(GDBusProxy *proxy,
 		       const gchar *sender_name,
@@ -732,7 +836,6 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		       GVariant *parameters,
 		       FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
@@ -746,8 +849,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
+		fwupd_client_emit_device_added(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRemoved") == 0) {
@@ -756,8 +858,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
+		fwupd_client_emit_device_removed(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceChanged") == 0) {
@@ -766,19 +867,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
-
-		/* invalidate request */
-		if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
-			FwupdRequest *req =
-			    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
-			if (req != NULL) {
-				fwupd_client_request_invalidate(self, req);
-				g_hash_table_remove(priv->immediate_requests,
-						    fwupd_device_get_id(dev));
-			}
-		}
+		fwupd_client_emit_device_changed(self, dev);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRequest") == 0) {
@@ -787,16 +876,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to convert DeviceRequest: %s", error->message);
 			return;
 		}
-		g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
-		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
-
-		/* we may need to invalidate this later */
-		if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
-		    fwupd_request_get_device_id(req) != NULL) {
-			g_hash_table_insert(priv->immediate_requests,
-					    g_strdup(fwupd_request_get_device_id(req)),
-					    g_object_ref(req));
-		}
+		fwupd_client_emit_device_request(self, req);
 		return;
 	}
 	g_debug("unknown signal name '%s' from %s", signal_name, sender_name);
@@ -980,12 +1060,41 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	return g_steal_pointer(&helper);
 }
 
+/**
+ * fwupd_client_run_connect_funcs:
+ * @self: a #FwupdClient
+ * @error: (nullable): optional return location for an error
+ *
+ * Manually runs functions to run after the connection has been completed. In the usual case, this
+ * function is called as the last step of fwupd_client_connect_async(), but must be called manually
+ * if the connect action is overridden by fwupd_client_set_sync_impl().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	for (guint i = 0; i < priv->connect_items->len; i++) {
+		FwupdClientConnectItem *item = g_ptr_array_index(priv->connect_items, i);
+		if (!item->func(self, item->user_data, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
+	FwupdClient *self = g_task_get_source_object(task);
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
@@ -996,6 +1105,12 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			return;
 		}
 		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* any post-connect extra checks */
+	if (!fwupd_client_run_connect_funcs(self, &error)) {
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -6014,12 +6129,7 @@ fwupd_client_set_user_agent(FwupdClient *self, const gchar *user_agent)
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(user_agent != NULL);
 
-	/* not changed */
-	if (g_strcmp0(priv->user_agent, user_agent) == 0)
-		return;
-
-	g_free(priv->user_agent);
-	priv->user_agent = g_strdup(user_agent);
+	g_set_str(&priv->user_agent, user_agent);
 }
 
 /**
@@ -6158,7 +6268,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
 	fwupd_client_set_percentage(self, 100.0);
-	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR || res == CURLE_HTTP2_STREAM) {
+	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR || res == CURLE_HTTP2_STREAM ||
+	    res == CURLE_SSL_CONNECT_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_TIMED_OUT,
@@ -6449,7 +6560,27 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 	g_task_return_pointer(task, g_steal_pointer(&blob), (GDestroyNotify)g_bytes_unref);
 }
 
-/* private */
+/**
+ * fwupd_client_download_bytes2_async:
+ * @self: a #FwupdClient
+ * @urls: (not nullable) (element-type utf8): the remote URLs
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 2.1.8
+ **/
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
 				   GPtrArray *urls,
@@ -6489,6 +6620,27 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 
 	/* download data */
 	g_task_run_in_thread(task, fwupd_client_download_bytes_thread_cb);
+}
+
+/**
+ * fwupd_client_download_bytes2_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.download_bytes2_async].
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 2.1.8
+ **/
+GBytes *
+fwupd_client_download_bytes2_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
 /**
@@ -7578,7 +7730,7 @@ fwupd_client_build_report_devices(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 static FwupdJsonObject *
@@ -7782,7 +7934,7 @@ fwupd_client_build_report_history(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**
@@ -7851,7 +8003,38 @@ fwupd_client_build_report_security(FwupdClient *self,
 
 	/* export as a string */
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
+}
+
+/**
+ * fwupd_client_add_connect_func:
+ * @self: a #FwupdClient
+ * @func: (not nullable) (scope notified) (closure user_data) (destroy user_data_destroy): a
+ * #FwupdClientConnectFunc
+ * @user_data: (nullable): userdata to use with both @func and @user_data_destroy
+ * @user_data_destroy: (nullable): function to destroy @user_data when @self is finalized
+ *
+ * Adds a function to run after the connection has been completed. For example, checking that
+ * the client version matches the daemon version.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_client_add_connect_func(FwupdClient *self,
+			      FwupdClientConnectFunc func,
+			      gpointer user_data,
+			      GDestroyNotify user_data_destroy)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdClientConnectItem) item = g_new0(FwupdClientConnectItem, 1);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(func != NULL);
+
+	item->func = func;
+	item->user_data = user_data;
+	item->user_data_destroy = user_data_destroy;
+	g_ptr_array_add(priv->connect_items, g_steal_pointer(&item));
 }
 
 /**
@@ -8343,6 +8526,8 @@ fwupd_client_init(FwupdClient *self)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	static FwupdClientSyncImpl impl = {
 	    .activate = fwupd_client_sync_impl_activate,
+	    .clean_remote = fwupd_client_sync_impl_clean_remote,
+	    .clear_results = fwupd_client_sync_impl_clear_results,
 	    .connect = fwupd_client_sync_impl_connect,
 	    .emulation_load = fwupd_client_sync_impl_emulation_load,
 	    .emulation_save = fwupd_client_sync_impl_emulation_save,
@@ -8351,6 +8536,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_devices = fwupd_client_sync_impl_get_devices,
 	    .get_devices_by_guid = fwupd_client_sync_impl_get_devices_by_guid,
 	    .get_device_by_id = fwupd_client_sync_impl_get_device_by_id,
+	    .get_downgrades = fwupd_client_sync_impl_get_downgrades,
 	    .get_history = fwupd_client_sync_impl_get_history,
 	    .get_host_security_attrs = fwupd_client_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fwupd_client_sync_impl_get_host_security_events,
@@ -8361,15 +8547,20 @@ fwupd_client_init(FwupdClient *self)
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
+	    .inhibit = fwupd_client_sync_impl_inhibit,
 	    .install = fwupd_client_sync_impl_install,
 	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,
+	    .modify_device = fwupd_client_sync_impl_modify_device,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
+	    .quit = fwupd_client_sync_impl_quit,
 	    .refresh_remote = fwupd_client_sync_impl_refresh_remote,
 	    .reset_config = fwupd_client_sync_impl_reset_config,
 	    .search = fwupd_client_sync_impl_search,
 	    .set_feature_flags = fwupd_client_sync_impl_set_feature_flags,
+	    .uninhibit = fwupd_client_sync_impl_uninhibit,
+	    .unlock = fwupd_client_sync_impl_unlock,
 	    .update_metadata = fwupd_client_sync_impl_update_metadata,
 	    .verify = fwupd_client_sync_impl_verify,
 	    .verify_update = fwupd_client_sync_impl_verify_update,
@@ -8389,8 +8580,10 @@ fwupd_client_init(FwupdClient *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->immediate_requests =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+	g_mutex_init(&priv->immediate_requests_mutex);
 	priv->hwids = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_hwid_free);
-
+	priv->connect_items =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_connect_item_free);
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
 }
@@ -8402,6 +8595,7 @@ fwupd_client_finalize(GObject *object)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
 	g_ptr_array_unref(priv->hwids);
+	g_ptr_array_unref(priv->connect_items);
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->package_name);
@@ -8417,6 +8611,7 @@ fwupd_client_finalize(GObject *object)
 	g_hash_table_unref(priv->immediate_requests);
 	g_mutex_clear(&priv->idle_mutex);
 	g_mutex_clear(&priv->download_items_mutex);
+	g_mutex_clear(&priv->immediate_requests_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);
 	g_ptr_array_unref(priv->idle_sources);

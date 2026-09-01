@@ -3,18 +3,21 @@ host_machine.system() == 'linux' or subdir_done()
 subdir('tests')
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('synaptics-mst.quirk')
 
-plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
+plugin_builtin_synaptics_mst = static_library(
+  'fu_plugin_synaptics_mst',
   rustgen.process(
-    'fu-synaptics-mst.rs', # fuzzing
+    'fu-synaptics-mst.rs' # fuzzing
   ),
   sources: [
     'fu-synaptics-mst-plugin.c',
     'fu-synaptics-mst-device.c',
-    'fu-synaptics-mst-firmware.c',      # fuzzing
+    'fu-synaptics-mst-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   c_args: [
@@ -25,12 +28,8 @@ plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
 )
 plugin_builtins += plugin_builtin_synaptics_mst
 
-device_tests += files(
-  'tests/synaptics-panamera.json',
-)
-enumeration_data += files(
-  'tests/synaptics-panamera-setup.json',
-)
+device_tests += files('tests/synaptics-panamera.json')
+enumeration_data += files('tests/synaptics-panamera-setup.json')
 
 if get_option('tests')
   e = executable(

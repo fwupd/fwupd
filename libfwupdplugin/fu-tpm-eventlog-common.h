@@ -8,9 +8,13 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 /* hash algorithm sizes */
 #define FU_TPM_DIGEST_SIZE_SHA1	   20
 #define FU_TPM_DIGEST_SIZE_SHA256  32
 #define FU_TPM_DIGEST_SIZE_SHA384  48
 #define FU_TPM_DIGEST_SIZE_SHA512  64
 #define FU_TPM_DIGEST_SIZE_SM3_256 32
+
+G_END_DECLS

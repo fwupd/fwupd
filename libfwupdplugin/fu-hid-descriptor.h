@@ -8,6 +8,8 @@
 
 #include "fu-hid-report.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HID_DESCRIPTOR (fu_hid_descriptor_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuHidDescriptor, fu_hid_descriptor, FU, HID_DESCRIPTOR, FuFirmware)
 
@@ -21,3 +23,5 @@ fu_hid_descriptor_new(void);
 FuHidReport *
 fu_hid_descriptor_find_report(FuHidDescriptor *self, GError **error, ...) G_GNUC_NULL_TERMINATED
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

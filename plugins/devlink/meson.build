@@ -1,12 +1,19 @@
 host_machine.system() == 'linux' or subdir_done()
 libmnl.found() or subdir_done()
-cc.has_header_symbol('linux/devlink.h', 'DEVLINK_ATTR_RELOAD_ACTION', required: false) or subdir_done()
+cc.has_header_symbol(
+  'linux/devlink.h',
+  'DEVLINK_ATTR_RELOAD_ACTION',
+  required: false,
+) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDevlink"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('devlink.quirk')
-plugin_builtin_devlink = static_library('fu_plugin_devlink',
+plugin_builtin_devlink = static_library(
+  'fu_plugin_devlink',
   sources: [
     'fu-devlink-plugin.c',
     'fu-devlink-backend.c',
@@ -28,9 +35,7 @@ plugin_builtin_devlink = static_library('fu_plugin_devlink',
 )
 plugin_builtins += plugin_builtin_devlink
 
-device_tests += files(
-  'tests/devlink-netdevsim.json',
-)
+device_tests += files('tests/devlink-netdevsim.json')
 
 if get_option('tests')
   e = executable(

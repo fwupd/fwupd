@@ -78,18 +78,18 @@ typedef guint8 fwupd_guid_t[16];
 #endif
 
 const gchar *
-fwupd_checksum_get_best(GPtrArray *checksums) G_GNUC_NON_NULL(1);
+fwupd_checksum_get_best(GPtrArray *checksums) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind) G_GNUC_NON_NULL(1);
+fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GChecksumType
-fwupd_checksum_guess_kind(const gchar *checksum) G_GNUC_NON_NULL(1);
+fwupd_checksum_guess_kind(const gchar *checksum) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_checksum_type_to_string_display(GChecksumType checksum_type);
+fwupd_checksum_type_to_string_display(GChecksumType checksum_type) G_GNUC_CONST;
 gchar *
 fwupd_checksum_format_for_display(const gchar *checksum) G_GNUC_NON_NULL(1);
 
 gboolean
-fwupd_device_id_is_valid(const gchar *device_id);
+fwupd_device_id_is_valid(const gchar *device_id) G_GNUC_PURE;
 #ifndef __GI_SCANNER__
 gchar *
 fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags) G_GNUC_NON_NULL(1);
@@ -105,7 +105,7 @@ gboolean
 fwupd_guid_from_string(const gchar *guidstr, guint8 guid[16], FwupdGuidFlags flags, GError **error);
 #endif
 gboolean
-fwupd_guid_is_valid(const gchar *guid);
+fwupd_guid_is_valid(const gchar *guid) G_GNUC_PURE;
 gchar *
 fwupd_guid_hash_string(const gchar *str);
 gchar *
@@ -122,8 +122,8 @@ fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags) G_G
 #define FWUPD_PERCENTAGE_UNKNOWN (-1.0)
 
 gboolean
-fwupd_percentage_is_valid(gdouble value);
+fwupd_percentage_is_valid(gdouble value) G_GNUC_CONST;
 gboolean
-fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new);
+fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new) G_GNUC_CONST;
 
 G_END_DECLS

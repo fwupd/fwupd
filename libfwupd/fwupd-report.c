@@ -121,13 +121,7 @@ fwupd_report_set_version_old(FwupdReport *self, const gchar *version_old)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->version_old, version_old) == 0)
-		return;
-
-	g_free(priv->version_old);
-	priv->version_old = g_strdup(version_old);
+	g_set_str(&priv->version_old, version_old);
 }
 
 /**
@@ -162,13 +156,7 @@ fwupd_report_set_vendor(FwupdReport *self, const gchar *vendor)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->vendor, vendor) == 0)
-		return;
-
-	g_free(priv->vendor);
-	priv->vendor = g_strdup(vendor);
+	g_set_str(&priv->vendor, vendor);
 }
 
 /**
@@ -240,13 +228,7 @@ fwupd_report_set_device_name(FwupdReport *self, const gchar *device_name)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->device_name, device_name) == 0)
-		return;
-
-	g_free(priv->device_name);
-	priv->device_name = g_strdup(device_name);
+	g_set_str(&priv->device_name, device_name);
 }
 
 /**
@@ -281,13 +263,7 @@ fwupd_report_set_distro_id(FwupdReport *self, const gchar *distro_id)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->distro_id, distro_id) == 0)
-		return;
-
-	g_free(priv->distro_id);
-	priv->distro_id = g_strdup(distro_id);
+	g_set_str(&priv->distro_id, distro_id);
 }
 
 /**
@@ -322,13 +298,7 @@ fwupd_report_set_distro_variant(FwupdReport *self, const gchar *distro_variant)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->distro_variant, distro_variant) == 0)
-		return;
-
-	g_free(priv->distro_variant);
-	priv->distro_variant = g_strdup(distro_variant);
+	g_set_str(&priv->distro_variant, distro_variant);
 }
 
 /**
@@ -363,13 +333,7 @@ fwupd_report_set_remote_id(FwupdReport *self, const gchar *remote_id)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->remote_id, remote_id) == 0)
-		return;
-
-	g_free(priv->remote_id);
-	priv->remote_id = g_strdup(remote_id);
+	g_set_str(&priv->remote_id, remote_id);
 }
 
 /**
@@ -404,13 +368,7 @@ fwupd_report_set_distro_version(FwupdReport *self, const gchar *distro_version)
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REPORT(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->distro_version, distro_version) == 0)
-		return;
-
-	g_free(priv->distro_version);
-	priv->distro_version = g_strdup(distro_version);
+	g_set_str(&priv->distro_version, distro_version);
 }
 
 /**

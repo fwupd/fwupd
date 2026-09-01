@@ -103,35 +103,59 @@ fu_focal_fp_hid_device_io(FuFocalFpHidDevice *self,
 }
 
 static gboolean
-fu_focal_fp_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GError **error)
+fu_focal_fp_hid_device_check_cmd_crc(const guint8 *buf,
+				     gsize bufsz,
+				     FuFocalFpCmd cmd,
+				     GError **error)
 {
+	FuFocalFpCmd cmd_rsp = 0;
 	guint8 csum = 0;
-	guint8 csum_actual = 0;
+	guint8 csum_rsp = 0;
+	guint8 len_rsp = 0;
+	g_autoptr(FuStructFocalFpHidRsp) st = NULL;
 
-	/* check was correct response */
-	if (buf[4] != cmd) {
+	/* parse */
+	st = fu_struct_focal_fp_hid_rsp_parse(buf, bufsz, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+
+	/* check it was the correct response */
+	cmd_rsp = fu_struct_focal_fp_hid_rsp_get_cmd(st);
+	if (cmd_rsp != cmd) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "got cmd 0x%02x, expected 0x%02x",
-			    buf[4],
-			    cmd);
+			    "got cmd %s, expected %s",
+			    fu_focal_fp_cmd_to_string(cmd_rsp),
+			    fu_focal_fp_cmd_to_string(cmd));
+		return FALSE;
+	}
+
+	/* the reported packet length cannot be smaller than the minimum length
+	 * and also can't be larger than the buffer that we received */
+	len_rsp = fu_struct_focal_fp_hid_rsp_get_length(st);
+	if (len_rsp < FU_STRUCT_FOCAL_FP_HID_RSP_SIZE || len_rsp >= bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid response length 0x%02x",
+			    len_rsp);
 		return FALSE;
 	}
 
 	/* check crc */
-	if (!fu_memread_uint8_safe(buf, bufsz, buf[3], &csum, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, len_rsp, &csum, error))
 		return FALSE;
-	if (!fu_xor8_safe(buf, bufsz, 0x1, buf[3] - 1, &csum_actual, error))
+	if (!fu_xor8_safe(buf, bufsz, 0x1, len_rsp - 1, &csum_rsp, error))
 		return FALSE;
-	csum_actual++;
-	if (csum != csum_actual) {
+	csum_rsp++;
+	if (csum != csum_rsp) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "got checksum 0x%02x, expected 0x%02x",
 			    csum,
-			    csum_actual);
+			    csum_rsp);
 		return FALSE;
 	}
 

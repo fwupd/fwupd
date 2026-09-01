@@ -108,7 +108,7 @@ parts:
         --prefix=/,
         -Defi_binary=false,
         -Ddocs=disabled,
-        -Dbuild=all,
+        -Dbuild=dbus,
         -Dintrospection=disabled,
         -Dman=false,
         -Dpython=/usr/bin/python3,
@@ -182,6 +182,7 @@ parts:
       - python3-gi
       - python3-jinja2
       - python3-dbusmock
+      - rustc
       - shim-signed
       - systemd
       - umockdev
@@ -249,7 +250,6 @@ parts:
       - -usr/share/lintian
       - -usr/share/pkgconfig
       - -usr/share/polkit-1
-      - -usr/share/vala
       - -usr/share/doc
       - -usr/share/info
       - -usr/share/gir-1.0

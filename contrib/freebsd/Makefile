@@ -13,7 +13,6 @@ LICENSE=	LGPL21
 
 BUILD_DEPENDS=	gi-docgen:textproc/gi-docgen \
 		help2man:misc/help2man \
-		vala:lang/vala \
 		${LOCALBASE}/libexec/fwupd/efi/fwupdx64.efi:sysutils/fwupd-efi \
 		${PYTHON_PKGNAMEPREFIX}gobject3>0:devel/py-gobject3@${PY_FLAVOR}
 LIB_DEPENDS=	libcurl.so:ftp/curl \

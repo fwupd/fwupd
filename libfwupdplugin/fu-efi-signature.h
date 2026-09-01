@@ -11,6 +11,8 @@
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_SIGNATURE (fu_efi_signature_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
 
@@ -25,6 +27,8 @@ struct _FuEfiSignatureClass {
 #define FU_EFI_SIGNATURE_GUID_OVMF_LEGACY "d5c1df0b-1bac-4edf-ba48-08834009ca5a"
 
 FuEfiSignatureKind
-fu_efi_signature_get_kind(FuEfiSignature *self) G_GNUC_NON_NULL(1);
+fu_efi_signature_get_kind(FuEfiSignature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_efi_signature_get_owner(FuEfiSignature *self) G_GNUC_NON_NULL(1);
+fu_efi_signature_get_owner(FuEfiSignature *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

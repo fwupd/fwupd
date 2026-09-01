@@ -92,8 +92,8 @@ fu_tpm_v2_device_get_string(FuTpmV2Device *self, guint32 query, GError **error)
 	/* return four bytes */
 	if (!fu_tpm_v2_device_get_uint32(self, query, &val_be, error))
 		return NULL;
-	val = GUINT32_FROM_BE(val_be);	  /* nocheck:blocked */
-	memcpy(result, (gchar *)&val, 4); /* nocheck:blocked */
+	val = GUINT32_FROM_BE(val_be);		/* nocheck:blocked */
+	memcpy(result, (const gchar *)&val, 4); /* nocheck:blocked */
 
 	/* convert non-ASCII into spaces */
 	for (guint i = 0; i < 4; i++) {
@@ -464,7 +464,7 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 				       ESYS_TR_NONE,
 				       ESYS_TR_NONE,
 				       i /* seqnum */,
-				       (TPM2B_MAX_BUFFER **)&data);
+				       data);
 		if (rc == TPM2_RC_COMMAND_CODE ||
 		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_RC_LAYER)) ||
 		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_TPM_RC_LAYER))) {
@@ -482,8 +482,10 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 					    "no data returned");
 			return NULL;
 		}
-		if (data[0]->size == 0)
+		if (data[0]->size == 0) {
+			Esys_Free(data[0]);
 			break;
+		}
 
 		/* yes, the blocks are returned in reverse order */
 		g_byte_array_prepend(buf, data[0]->buffer, data[0]->size);

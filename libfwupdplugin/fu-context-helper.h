@@ -9,6 +9,8 @@
 #include "fu-backend.h"
 #include "fu-context.h"
 
+G_BEGIN_DECLS
+
 /* this header exists to prevent an #include loop between fu-context.h and fu-backend.h */
 
 void
@@ -18,3 +20,5 @@ fu_context_get_backend_by_name(FuContext *self, const gchar *name, GError **erro
     G_GNUC_NON_NULL(1, 2);
 void
 fu_context_add_firmware_gtypes(FuContext *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

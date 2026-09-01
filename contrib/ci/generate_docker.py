@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
+import argparse
 import os
 import shutil
 import subprocess
@@ -12,14 +13,6 @@ import sys
 from pathlib import Path
 
 from fwupd_setup_helpers import ARCH_TO_DEPS_MAP, parse_dependencies
-
-
-def getenv_unwrap(name: str) -> str:
-    val = os.getenv(name)
-    if val is None:
-        print(f"environment variable has not been set: '{name}'")
-        sys.exit(1)
-    return val
 
 
 def get_container_cmd():
@@ -31,69 +24,109 @@ def get_container_cmd():
         return "podman"
 
 
-directory = os.path.dirname(sys.argv[0])
-DISTRO = getenv_unwrap("DISTRO")
-ARCH = getenv_unwrap("ARCH")
-VARIANT = os.getenv("VARIANT")
-CROSS = c if VARIANT and (c := str(VARIANT).removeprefix("cross-")) != VARIANT else None
+def generate_dockerfile(
+    distro: str, version: str, arch: str, variant: str | None
+) -> str:
+    """Generate a Dockerfile from the template for the given distro/version/arch/variant."""
 
-
-# find first existing
-dockerfiles = [
-    Path(directory) / f"Dockerfile-{DISTRO}-{VARIANT}.in",
-    Path(directory) / f"Dockerfile-{DISTRO}.in",
-]
-try:
-    template_file = next(p for p in dockerfiles if p.exists())
-except StopIteration:
-    raise FileNotFoundError("Missing template Dockerfile for {DISTRO}") from None
-with open(template_file) as file:
-    content = file.read()
-
-
-# special cases
-match (DISTRO, VARIANT):
-    case ("debian", "i386"):
-        content = content.replace("FROM debian:testing", "FROM i386/debian:testing")
-
-
-# insert commands to prepare cross compile
-if CROSS:
-    cross_setup = f"""\
-    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
-    dpkg --add-architecture {CROSS};"""
-else:
-    cross_setup = "    "
-content = content.replace("%%%SETUP%%%", cross_setup)
-
-
-# insert dependencies to install
-if CROSS:
-    deps_parsed, build_indep = parse_dependencies(
-        DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True
+    directory = os.path.dirname(sys.argv[0])
+    cross = (
+        c if variant and (c := str(variant).removeprefix("cross-")) != variant else None
     )
-    deps = deps_parsed + build_indep + [f"crossbuild-essential-{CROSS}"]
-elif VARIANT == "i386":
-    deps_parsed, build_indep = parse_dependencies(DISTRO, VARIANT, False)
-    deps = deps_parsed + build_indep
-else:
-    deps_parsed, build_indep = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
-    deps = deps_parsed + build_indep
-deps = sorted(set(deps))
-deps = [f"    {i}" for i in deps]
-deps = " \\\n".join(deps)
-content = content.replace("%%%DEPENDENCIES%%%", deps)
 
+    # find first existing
+    dockerfiles = [
+        Path(directory) / f"Dockerfile-{distro}-{variant}.in",
+        Path(directory) / f"Dockerfile-{distro}.in",
+    ]
+    try:
+        template_file = next(p for p in dockerfiles if p.exists())
+    except StopIteration:
+        raise FileNotFoundError(f"Missing template Dockerfile for {distro}") from None
+    with open(template_file) as file:
+        content = file.read()
+
+    content = content.replace("%%%VERSION%%%", version)
+
+    # special cases
+    match (distro, variant):
+        case ("debian", "i386"):
+            content = content.replace(
+                f"FROM debian:{version}", f"FROM i386/debian:{version}"
+            )
+
+    # insert commands to prepare cross compile
+    if cross:
+        cross_setup = f"""\
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
+    dpkg --add-architecture {cross};"""
+    else:
+        cross_setup = "    "
+    content = content.replace("%%%SETUP%%%", cross_setup)
+
+    # insert dependencies to install
+    if cross:
+        deps_parsed, build_indep = parse_dependencies(
+            distro, ARCH_TO_DEPS_MAP[cross], False, cross=True
+        )
+        deps = deps_parsed + build_indep + [f"crossbuild-essential-{cross}"]
+    elif variant in ["i386", "android"]:
+        deps_parsed, build_indep = parse_dependencies(distro, variant, False)
+        deps = deps_parsed + build_indep
+    else:
+        deps_parsed, build_indep = parse_dependencies(
+            distro, ARCH_TO_DEPS_MAP[arch], False
+        )
+        deps = deps_parsed + build_indep
+    deps = sorted(set(deps))
+    deps = [f"    {i}" for i in deps]
+    deps = " \\\n".join(deps)
+    content = content.replace("%%%DEPENDENCIES%%%", deps)
+
+    # install android rust target
+    rustup: list[str] = []
+    if variant == "android":
+        rustup.append("COPY contrib/ci/android.sh .")
+        rustup.append("RUN sh android.sh")
+    content = content.replace("%%%RUSTUP%%%", "\n".join(rustup))
+
+    return content
+
+
+parser = argparse.ArgumentParser(
+    description="Generate and optionally build a Dockerfile for CI"
+)
+parser.add_argument(
+    "--distro", required=True, help="Distribution name (e.g. fedora, debian)"
+)
+parser.add_argument("--arch", default="amd64", help="Architecture (e.g. amd64, arm64)")
+parser.add_argument(
+    "--version",
+    required=True,
+    help="Distribution version/tag (e.g. 44, testing, rolling)",
+)
+parser.add_argument(
+    "--variant", default=None, help="Build variant (e.g. i386, android, cross-s390x)"
+)
+
+subparsers = parser.add_subparsers(dest="command")
+subparsers.add_parser(
+    "build", help="Build the container image after generating the Dockerfile"
+)
+
+args = parser.parse_args()
+
+content = generate_dockerfile(args.distro, args.version, args.arch, args.variant)
 
 with open("Dockerfile", "w") as file:
     file.write(content)
 
-if len(sys.argv) == 2 and sys.argv[1] == "build":
+if args.command == "build":
     cmd = get_container_cmd()
-    args = [cmd, "build", "-t", f"fwupd-{DISTRO}"]
-    if "http_proxy" in os.environ:
-        args += [f"--build-arg=http_proxy={os.environ['http_proxy']}"]
-    if "https_proxy" in os.environ:
-        args += [f"--build-arg=https_proxy={os.environ['https_proxy']}"]
-    args += ["-f", "./Dockerfile", "."]
-    subprocess.check_call(args)
+    build_args = [cmd, "build", "-t", f"fwupd-{args.distro}"]
+    if http_proxy := os.environ.get("http_proxy"):
+        build_args += [f"--build-arg=http_proxy={http_proxy}"]
+    if https_proxy := os.environ.get("https_proxy"):
+        build_args += [f"--build-arg=https_proxy={https_proxy}"]
+    build_args += ["-f", "./Dockerfile", "."]
+    subprocess.check_call(build_args)

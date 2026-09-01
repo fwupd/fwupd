@@ -6,6 +6,9 @@ on: workflow_call
 permissions:
   contents: read
 
+env:
+  PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CHUNK (fu_chunk_get_type())
 
 G_DECLARE_FINAL_TYPE(FuChunk, fu_chunk, FU, CHUNK, GObject)
@@ -35,21 +37,21 @@ fu_chunk_bytes_new(GBytes *bytes);
 void
 fu_chunk_set_idx(FuChunk *self, guint idx) G_GNUC_NON_NULL(1);
 guint
-fu_chunk_get_idx(FuChunk *self) G_GNUC_NON_NULL(1);
+fu_chunk_get_idx(FuChunk *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_chunk_set_page(FuChunk *self, guint page) G_GNUC_NON_NULL(1);
 guint
-fu_chunk_get_page(FuChunk *self) G_GNUC_NON_NULL(1);
+fu_chunk_get_page(FuChunk *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_chunk_set_address(FuChunk *self, gsize address) G_GNUC_NON_NULL(1);
 gsize
-fu_chunk_get_address(FuChunk *self) G_GNUC_NON_NULL(1);
+fu_chunk_get_address(FuChunk *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const guint8 *
-fu_chunk_get_data(FuChunk *self) G_GNUC_NON_NULL(1);
+fu_chunk_get_data(FuChunk *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8 *
 fu_chunk_get_data_out(FuChunk *self) G_GNUC_NON_NULL(1);
 gsize
-fu_chunk_get_data_sz(FuChunk *self) G_GNUC_NON_NULL(1);
+fu_chunk_get_data_sz(FuChunk *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_chunk_set_bytes(FuChunk *self, GBytes *bytes) G_GNUC_NON_NULL(1);
 GBytes *
@@ -76,3 +78,5 @@ fu_chunk_array_mutable_new(guint8 *data,
 			   gsize page_sz,
 			   gsize packet_sz,
 			   GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

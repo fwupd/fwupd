@@ -10,6 +10,8 @@
 #include "fu-usb-interface.h"
 #include "fu-usb-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuUdevDevice)
 
@@ -29,24 +31,24 @@ typedef enum {
 } G_GNUC_FLAG_ENUM FuUsbDeviceClaimFlags;
 
 guint8
-fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_device_get_address(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_address(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuUsbClass
-fu_usb_device_get_class(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_class(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 guint8
 fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
 guint8
-fu_usb_device_get_serial_number_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_serial_number_index(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_device_get_manufacturer_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_manufacturer_index(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_device_get_product_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_product_index(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
 fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 class_id,
@@ -61,7 +63,7 @@ fu_usb_device_add_interface(FuUsbDevice *device, guint8 number) G_GNUC_NON_NULL(
 void
 fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count) G_GNUC_NON_NULL(1);
 guint
-fu_usb_device_get_claim_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_get_claim_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,
@@ -75,7 +77,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 			       gsize length,
 			       gsize *actual_length,
 			       guint timeout,
-			       GCancellable *cancellable,
 			       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_bulk_transfer(FuUsbDevice *self,
@@ -84,7 +85,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    gsize length,
 			    gsize *actual_length,
 			    guint timeout,
-			    GCancellable *cancellable,
 			    GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_interrupt_transfer(FuUsbDevice *self,
@@ -93,7 +93,6 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 				 gsize length,
 				 gsize *actual_length,
 				 guint timeout,
-				 GCancellable *cancellable,
 				 GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_claim_interface(FuUsbDevice *self,
@@ -134,3 +133,5 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 					       GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

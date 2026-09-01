@@ -11,7 +11,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build
-        uses: vmactions/freebsd-vm@77ed28d336d03fe19a3f4f7266c1d2c4714dd79d # v1.5.2
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
         env:
           CC: gcc
         with:

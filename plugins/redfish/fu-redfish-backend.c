@@ -256,8 +256,7 @@ fu_redfish_backend_check_wildcard_targets(FuRedfishBackend *self)
 static void
 fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_key)
 {
-	g_free(self->session_key);
-	self->session_key = g_strdup(session_key);
+	g_set_str(&self->session_key, session_key);
 }
 
 /**
@@ -270,8 +269,7 @@ fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_
 static void
 fu_redfish_backend_set_session_uri(FuRedfishBackend *self, const gchar *session_uri)
 {
-	g_free(self->session_uri);
-	self->session_uri = g_strdup(session_uri);
+	g_set_str(&self->session_uri, session_uri);
 }
 
 static size_t
@@ -391,15 +389,13 @@ fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 static void
 fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_uri_path)
 {
-	g_free(self->push_uri_path);
-	self->push_uri_path = g_strdup(push_uri_path);
+	g_set_str(&self->push_uri_path, push_uri_path);
 }
 
 void
 fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix)
 {
-	g_free(self->path_prefix);
-	self->path_prefix = g_strdup(path_prefix);
+	g_set_str(&self->path_prefix, path_prefix);
 }
 
 static gboolean
@@ -517,12 +513,7 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 static void
 fu_redfish_backend_set_update_uri_path(FuRedfishBackend *self, const gchar *update_uri_path)
 {
-	/* not changed */
-	if (g_strcmp0(self->update_uri_path, update_uri_path) == 0)
-		return;
-
-	g_free(self->update_uri_path);
-	self->update_uri_path = g_strdup(update_uri_path);
+	g_set_str(&self->update_uri_path, update_uri_path);
 }
 
 static gboolean
@@ -639,18 +630,12 @@ fu_redfish_backend_setup(FuBackend *backend,
 	} else if (fwupd_json_object_has_node(json_obj, "RedfishVersion")) {
 		version = fwupd_json_object_get_string(json_obj, "RedfishVersion", NULL);
 	}
-	if (version != NULL) {
-		g_free(self->version);
-		self->version = g_strdup(version);
-	}
-	if (fwupd_json_object_has_node(json_obj, "UUID")) {
-		g_free(self->uuid);
-		self->uuid = g_strdup(fwupd_json_object_get_string(json_obj, "UUID", NULL));
-	}
-	if (fwupd_json_object_has_node(json_obj, "Vendor")) {
-		g_free(self->vendor);
-		self->vendor = g_strdup(fwupd_json_object_get_string(json_obj, "Vendor", NULL));
-	}
+	if (version != NULL)
+		g_set_str(&self->version, version);
+	if (fwupd_json_object_has_node(json_obj, "UUID"))
+		g_set_str(&self->uuid, fwupd_json_object_get_string(json_obj, "UUID", NULL));
+	if (fwupd_json_object_has_node(json_obj, "Vendor"))
+		g_set_str(&self->vendor, fwupd_json_object_get_string(json_obj, "Vendor", NULL));
 	if (g_strcmp0(self->vendor, "Dell") == 0) {
 		if (!fu_redfish_backend_setup_dell(self, error))
 			return FALSE;
@@ -675,8 +660,7 @@ fu_redfish_backend_invalidate(FuBackend *backend)
 void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname)
 {
-	g_free(self->hostname);
-	self->hostname = g_strdup(hostname);
+	g_set_str(&self->hostname, hostname);
 }
 
 void
@@ -706,8 +690,7 @@ fu_redfish_backend_set_wildcard_targets(FuRedfishBackend *self, gboolean wildcar
 void
 fu_redfish_backend_set_username(FuRedfishBackend *self, const gchar *username)
 {
-	g_free(self->username);
-	self->username = g_strdup(username);
+	g_set_str(&self->username, username);
 }
 
 const gchar *
@@ -719,15 +702,13 @@ fu_redfish_backend_get_username(FuRedfishBackend *self)
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 {
-	g_free(self->password);
-	self->password = g_strdup(password);
+	g_set_str(&self->password, password);
 }
 
 void
 fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
 {
-	g_free(self->bearer_token);
-	self->bearer_token = g_strdup(bearer_token);
+	g_set_str(&self->bearer_token, bearer_token);
 }
 
 const gchar *

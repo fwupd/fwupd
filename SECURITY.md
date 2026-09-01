@@ -5,16 +5,17 @@ If you have any concerns please [let us know](https://github.com/fwupd/fwupd/sec
 
 ## Supported Versions
 
-The `main` and `2_0_X` branches are fully supported by the upstream authors and releases are
+The `main` and `2_1_X` branches are fully supported by the upstream authors and releases are
 tagged approximately monthly.
 
-Additionally, the `1_9_X` branch is supported just for security fixes, although no further releases
-will be tagged.
+Additionally, the `2_0_X` and `1_9_X` branches are supported just for security fixes, although it
+is unlikely further releases will be tagged.
 
 | Version | Supported          | EOL        |
 | ------- | ------------------ | ---------- |
+| 2.2.x   | :heavy_check_mark: | 2029-01-01 |
 | 2.1.x   | :heavy_check_mark: | 2029-01-01 |
-| 2.0.x   | :heavy_check_mark: | 2028-01-01 |
+| 2.0.x   | :white_check_mark: | 2028-01-01 |
 | 1.9.x   | :white_check_mark: | 2027-01-01 |
 | 1.8.x   | :x:                | 2026-01-01 |
 | 1.7.x   | :x:                | 2024-06-01 |

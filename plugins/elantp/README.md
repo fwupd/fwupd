@@ -84,6 +84,12 @@ The IC supports querying the haptic functionality.
 
 Since: 2.1.1
 
+### ElantpFwPageDelay
+
+The IC Page delay.
+
+Since: 2.1.8
+
 ## External Interface Access
 
 This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.

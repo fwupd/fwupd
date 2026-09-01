@@ -10,6 +10,8 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+G_BEGIN_DECLS
+
 static inline gboolean
 g_clear_fd(int *fd_ptr, GError **error)
 {
@@ -36,3 +38,19 @@ _g_clear_fd_ignore_error(int *fd_ptr)
 }
 
 #define g_autofd _GLIB_CLEANUP(_g_clear_fd_ignore_error)
+
+#define g_string_free_and_steal(str) g_string_free(str, FALSE)
+
+static inline gboolean
+g_set_str(gchar **str_pointer, const gchar *new_str)
+{
+	gchar *copy;
+	if (g_strcmp0(*str_pointer, new_str) == 0)
+		return FALSE;
+	copy = g_strdup(new_str);
+	g_free(*str_pointer);
+	*str_pointer = copy;
+	return TRUE;
+}
+
+G_END_DECLS

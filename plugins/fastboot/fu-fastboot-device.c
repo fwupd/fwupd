@@ -17,19 +17,21 @@
 #define FASTBOOT_EP_OUT			   0x01
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
 
-struct _FuFastbootDevice {
-	FuUsbDevice parent_instance;
+typedef struct {
 	guint blocksz;
 	guint operation_delay;
-};
+} FuFastbootDevicePrivate;
 
-G_DEFINE_TYPE(FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
+
+#define GET_PRIVATE(o) (fu_fastboot_device_get_instance_private(o))
 
 static void
 fu_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "BlockSize", self->blocksz);
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append_hex(str, idt, "BlockSize", priv->blocksz);
 }
 
 static gboolean
@@ -49,6 +51,7 @@ fu_fastboot_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_fastboot_device_write(FuFastbootDevice *self, const guint8 *buf, gsize buflen, GError **error)
 {
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean ret;
 	gsize actual_len = 0;
 	g_autofree guint8 *buf2 = NULL;
@@ -64,11 +67,10 @@ fu_fastboot_device_write(FuFastbootDevice *self, const guint8 *buf, gsize buflen
 					  buflen,
 					  &actual_len,
 					  FASTBOOT_TRANSACTION_TIMEOUT,
-					  NULL,
 					  error);
 
 	/* give device some time to handle action */
-	fu_device_sleep(FU_DEVICE(self), self->operation_delay);
+	fu_device_sleep(FU_DEVICE(self), priv->operation_delay);
 
 	if (!ret) {
 		g_prefix_error_literal(error, "failed to do bulk transfer: ");
@@ -112,6 +114,7 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 			FuFastbootDeviceReadFlags flags,
 			GError **error)
 {
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
 	guint retries = 1;
 
 	/* these commands may return INFO or take some time to complete */
@@ -131,10 +134,9 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 						  sizeof(buf),
 						  &actual_len,
 						  FASTBOOT_TRANSACTION_TIMEOUT,
-						  NULL,
 						  &error_local);
 		/* give device some time to handle action */
-		fu_device_sleep(FU_DEVICE(self), self->operation_delay);
+		fu_device_sleep(FU_DEVICE(self), priv->operation_delay);
 
 		if (!ret) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
@@ -259,6 +261,7 @@ fu_fastboot_device_download(FuFastbootDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = g_bytes_get_size(fw);
 	g_autofree gchar *tmp = g_strdup_printf("download:%08x", (guint)sz);
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -276,7 +279,7 @@ fu_fastboot_device_download(FuFastbootDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       self->blocksz,
+					       priv->blocksz,
 					       error);
 	if (chunks == NULL)
 		return FALSE;
@@ -678,19 +681,20 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 				GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
 	guint64 tmp = 0;
 
 	/* load from quirks */
 	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
 		if (!fu_strtoull(value, &tmp, 0x40, 1 * FU_MB, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->blocksz = tmp;
+		priv->blocksz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "FastbootOperationDelay") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->operation_delay = tmp;
+		priv->operation_delay = tmp;
 		return TRUE;
 	}
 
@@ -730,10 +734,11 @@ fu_fastboot_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_fastboot_device_init(FuFastbootDevice *self)
 {
+	FuFastbootDevicePrivate *priv = GET_PRIVATE(self);
 	/* this is a safe default, even using USBv1 */
-	self->blocksz = 512;
+	priv->blocksz = 512;
 	/* no delay is applied by default after a read or write operation */
-	self->operation_delay = 0;
+	priv->operation_delay = 0;
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);

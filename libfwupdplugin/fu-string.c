@@ -647,7 +647,7 @@ fu_strsafe(const gchar *str, gsize maxsz)
 
 	/* replace non-printable chars with '.' */
 	for (gsize i = 0; i < maxsz && str[i] != '\0'; i++) {
-		if (!g_ascii_isgraph(str[i]) && !g_ascii_isspace(str[i])) {
+		if (!g_ascii_isprint(str[i])) {
 			g_string_append_c(tmp, '.');
 			continue;
 		}
@@ -659,7 +659,7 @@ fu_strsafe(const gchar *str, gsize maxsz)
 	/* if just junk, don't return 'all dots' */
 	if (tmp->len == 0 || !valid)
 		return NULL;
-	return g_string_free(g_steal_pointer(&tmp), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&tmp));
 }
 
 /**
@@ -755,7 +755,7 @@ fu_strpassmask(const gchar *str)
 			}
 		}
 	}
-	return g_string_free(g_steal_pointer(&tmp), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&tmp));
 }
 
 /**

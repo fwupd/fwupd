@@ -15,13 +15,15 @@
 #include "fu-engine-struct.h"
 #include "fu-release.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ENGINE (fu_engine_get_type())
 G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)
 
 FuEngine *
 fu_engine_new(FuContext *ctx) G_GNUC_NON_NULL(1);
-gboolean
-fu_engine_get_loaded(FuEngine *self) G_GNUC_NON_NULL(1);
+FuEnginePhase
+fu_engine_get_phase(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob) G_GNUC_NON_NULL(1, 2);
 void
@@ -170,10 +172,9 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
-			   GError **error) G_GNUC_NON_NULL(1, 2, 3, 4, 5);
+			   GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
 fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
@@ -252,3 +253,5 @@ gboolean
 fu_engine_plugin_allows_enumeration(FuEngine *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);
 void
 fu_engine_ensure_devices_supported(FuEngine *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

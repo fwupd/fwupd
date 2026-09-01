@@ -29,8 +29,10 @@ static void
 fu_pixart_rf_wireless_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPixartRfWirelessDevice *self = FU_PIXART_RF_WIRELESS_DEVICE(device);
+	g_autofree gchar *model_name =
+	    fu_strsafe((const gchar *)self->model.name, sizeof(self->model.name));
 	fu_pixart_rf_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fwupd_codec_string_append(str, idt, "ModelName", (gchar *)self->model.name);
+	fwupd_codec_string_append(str, idt, "ModelName", model_name);
 	fwupd_codec_string_append_hex(str, idt, "ModelType", self->model.type);
 	fwupd_codec_string_append_hex(str, idt, "ModelTarget", self->model.target);
 }

@@ -332,7 +332,7 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 				       FWUPD_MICRO_VERSION);
 	}
 
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static gchar *
@@ -359,7 +359,7 @@ fu_security_attrs_get_sort_key(FwupdSecurityAttr *attr)
 	} else {
 		g_string_append(str, fwupd_security_attr_get_appstream_id(attr));
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 static gint

@@ -9,6 +9,8 @@
 #include "fu-context.h"
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BACKEND (fu_backend_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBackend, fu_backend, FU, BACKEND, GObject)
 
@@ -57,17 +59,17 @@ struct _FuBackendClass {
 };
 
 const gchar *
-fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1);
+fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuContext *
-fu_backend_get_context(FuBackend *self) G_GNUC_NON_NULL(1);
+fu_backend_get_context(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_backend_get_enabled(FuBackend *self) G_GNUC_NON_NULL(1);
+fu_backend_get_enabled(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_backend_set_enabled(FuBackend *self, gboolean enabled) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_backend_get_devices(FuBackend *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
+fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gboolean
 fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
@@ -97,3 +99,5 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
 FuDevice *
 fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **error)
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

@@ -7,6 +7,7 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf -- "$TMPDIR"' EXIT
 
 export NO_COLOR=1
+export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 CAB=fakedevice124.cab
 INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.jcat \
@@ -235,9 +236,9 @@ run firmware-export ${TMPDIR}/blob.srec srec
 expect_rc 0
 
 # ---
-echo " ● Firmware convert (not working)…"
-run firmware-convert ${TMPDIR}/blob.srec ${TMPDIR}/blob.bin srec srec
-expect_rc 3
+echo " ● Firmware convert…"
+run firmware-convert ${TMPDIR}/blob.srec ${TMPDIR}/blob.bin srec raw
+expect_rc 0
 
 if [ -z "$CI_NETWORK" ]; then
     echo " ● Skipping remaining tests due to CI_NETWORK not being set"
@@ -366,7 +367,7 @@ expect_rc 2
 # ---
 echo " ● Activating (not possible)…"
 run switch-branch ${DEVICE} impossible
-expect_rc 2
+expect_rc 3
 
 # ---
 echo " ● Resetting config…"

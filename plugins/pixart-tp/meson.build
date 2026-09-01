@@ -1,9 +1,12 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartTp"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('pixart-tp.quirk')
 
-plugin_builtin_pixart_tp = static_library('fu_plugin_pixart_tp',
+plugin_builtin_pixart_tp = static_library(
+  'fu_plugin_pixart_tp',
   rustgen.process('fu-pixart-tp.rs'),
   sources: [
     'fu-pixart-tp-pjp360-device.c',

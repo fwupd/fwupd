@@ -2,9 +2,12 @@ allow_uefi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiMok"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtin_uefi_mok = static_library('fu_plugin_uefi_mok',
+plugin_builtin_uefi_mok = static_library(
+  'fu_plugin_uefi_mok',
   rustgen.process('fu-uefi-mok.rs'),
   sources: [
     'fu-uefi-mok-common.c',

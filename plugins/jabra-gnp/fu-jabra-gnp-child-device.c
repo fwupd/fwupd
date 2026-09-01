@@ -61,7 +61,6 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 		tx_data->buf->len,
 		NULL,
 		tx_data->timeout,
-		NULL, /* cancellable */
 		error)) {
 		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
@@ -96,7 +95,6 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 		FU_JABRA_GNP_BUF_SIZE,
 		NULL,
 		rx_data->timeout,
-		NULL, /* cancellable */
 		error)) {
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
@@ -110,7 +108,6 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 						      FU_JABRA_GNP_BUF_SIZE,
 						      NULL,
 						      rx_data->timeout,
-						      NULL, /* cancellable */
 						      error)) {
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;

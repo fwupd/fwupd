@@ -24,6 +24,7 @@
 #include "fu-input-stream.h"
 #include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
+#include "fu-progress-private.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -78,10 +79,11 @@ typedef struct {
 	guint event_idx;
 	guint remove_delay;    /* ms */
 	guint acquiesce_delay; /* ms */
+	guint poll_interval;   /* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint order;
 	guint priority;
-	guint poll_id;
+	GSource *poll_source;
 	gint poll_locker_cnt;
 	gboolean done_probe;
 	gboolean done_setup;
@@ -791,6 +793,29 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 }
 
 /**
+ * fu_device_sleep_idle:
+ * @self: a #FuDevice
+ * @duration_ms: duration in milliseconds
+ * @progress: a #FuProgress
+ *
+ * Sleeps, setting the device progress from 0..100% as time continues.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_device_sleep_idle(FuDevice *self, guint duration_ms, FuProgress *progress)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_CONTEXT(priv->ctx));
+	g_return_if_fail(duration_ms < 1000000);
+	g_return_if_fail(FU_IS_PROGRESS(progress));
+
+	fu_progress_sleep_idle(progress, fu_context_get_main_context(priv->ctx), duration_ms);
+}
+
+/**
  * fu_device_set_contents:
  * @self: a #FuDevice
  * @filename: full path to a file
@@ -1002,7 +1027,7 @@ fu_device_get_contents_bytes(FuDevice *self,
  * @progress: (nullable): optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
- * Reads a blob of ASCII text from the file, emulating if required.
+ * Reads a blob of UTF-8 text from the file, emulating if required.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
  *
@@ -1018,7 +1043,6 @@ fu_device_get_contents(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
@@ -1049,17 +1073,9 @@ fu_device_get_contents(FuDevice *self,
 	istr = fu_input_stream_from_path(filename, error);
 	if (istr == NULL)
 		return NULL;
-	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
-	if (blob == NULL)
+	str = fu_input_stream_read_string(istr, 0, count, error);
+	if (str == NULL)
 		return NULL;
-	str = fu_strsafe_bytes(blob, G_MAXSIZE);
-	if (str == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid ASCII data");
-		return NULL;
-	}
 
 	/* save response */
 	if (event != NULL)
@@ -1288,10 +1304,36 @@ fu_device_poll_cb(gpointer user_data)
 
 	if (!fu_device_poll(self, &error_local)) {
 		g_warning("disabling polling: %s", error_local->message);
-		priv->poll_id = 0;
+		g_clear_pointer(&priv->poll_source, g_source_unref);
 		return G_SOURCE_REMOVE;
 	}
 	return G_SOURCE_CONTINUE;
+}
+
+static void
+fu_device_ensure_poll_interval(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* called from _init(); will call again from _constructed() */
+	if (priv->ctx == NULL)
+		return;
+
+	if (priv->poll_source != NULL) {
+		g_source_destroy(priv->poll_source);
+		g_clear_pointer(&priv->poll_source, g_source_unref);
+	}
+	if (priv->poll_interval == 0)
+		return;
+	if (priv->poll_interval % 1000 == 0) {
+		priv->poll_source = fu_context_add_timeout_seconds(priv->ctx,
+								   priv->poll_interval / 1000,
+								   fu_device_poll_cb,
+								   self);
+	} else {
+		priv->poll_source =
+		    fu_context_add_timeout(priv->ctx, priv->poll_interval, fu_device_poll_cb, self);
+	}
 }
 
 /**
@@ -1309,17 +1351,11 @@ void
 fu_device_set_poll_interval(FuDevice *self, guint interval)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	g_clear_handle_id(&priv->poll_id, g_source_remove);
-	if (interval == 0)
+	if (priv->poll_interval == interval)
 		return;
-	if (interval % 1000 == 0) {
-		priv->poll_id = g_timeout_add_seconds(interval / 1000, fu_device_poll_cb, self);
-	} else {
-		priv->poll_id = g_timeout_add(interval, fu_device_poll_cb, self);
-	}
+	priv->poll_interval = interval;
+	fu_device_ensure_poll_interval(self);
 }
 
 /**
@@ -1427,10 +1463,6 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->equivalent_id, equivalent_id) == 0)
-		return;
-
 	/* sanity check */
 	if (!fwupd_device_id_is_valid(equivalent_id)) {
 		g_critical("%s is not a valid device ID", equivalent_id);
@@ -1441,9 +1473,8 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 		return;
 	}
 
-	g_free(priv->equivalent_id);
-	priv->equivalent_id = g_strdup(equivalent_id);
-	g_object_notify(G_OBJECT(self), "equivalent-id");
+	if (g_set_str(&priv->equivalent_id, equivalent_id))
+		g_object_notify(G_OBJECT(self), "equivalent-id");
 }
 
 /**
@@ -3274,7 +3305,9 @@ fu_device_fixup_vendor_name(FuDevice *self)
 			return;
 		}
 		if (g_str_has_prefix(name_up, vendor_up)) {
-			gsize vendor_len = strlen(vendor);
+			/* Case folding alters UTF-8 byte length, e.g. 'ı' -> 'I' is 2 vs 1 bytes.
+			 * Use the length of the matched prefix, not the original vendor length */
+			gsize vendor_len = strlen(vendor_up);
 			g_autofree gchar *name1 = g_strdup(priv->name + vendor_len);
 			g_autofree gchar *name2 = fu_strstrip(name1);
 			g_debug("removing vendor prefix of '%s' from '%s'", vendor, priv->name);
@@ -3345,7 +3378,7 @@ fu_device_sanitize_name(const gchar *value)
 	g_string_replace(new, "(R)", "", 0);
 	if (new->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&new), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&new));
 }
 
 /**
@@ -4140,10 +4173,6 @@ fu_device_set_logical_id(FuDevice *self, const gchar *logical_id)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(logical_id == NULL || logical_id[0] != '\0');
 
-	/* not changed */
-	if (g_strcmp0(priv->logical_id, logical_id) == 0)
-		return;
-
 	/* not allowed after ->probe() and ->setup() have completed */
 	if (priv->done_setup) {
 		g_warning("cannot change %s logical ID from %s to %s as "
@@ -4154,10 +4183,10 @@ fu_device_set_logical_id(FuDevice *self, const gchar *logical_id)
 		return;
 	}
 
-	g_free(priv->logical_id);
-	priv->logical_id = g_strdup(logical_id);
-	priv->device_id_valid = FALSE;
-	g_object_notify(G_OBJECT(self), "logical-id");
+	if (g_set_str(&priv->logical_id, logical_id)) {
+		priv->device_id_valid = FALSE;
+		g_object_notify(G_OBJECT(self), "logical-id");
+	}
 }
 
 /**
@@ -4200,14 +4229,10 @@ fu_device_set_backend_id(FuDevice *self, const gchar *backend_id)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(backend_id == NULL || backend_id[0] != '\0');
 
-	/* not changed */
-	if (g_strcmp0(priv->backend_id, backend_id) == 0)
-		return;
-
-	g_free(priv->backend_id);
-	priv->backend_id = g_strdup(backend_id);
-	priv->device_id_valid = FALSE;
-	g_object_notify(G_OBJECT(self), "backend-id");
+	if (g_set_str(&priv->backend_id, backend_id)) {
+		priv->device_id_valid = FALSE;
+		g_object_notify(G_OBJECT(self), "backend-id");
+	}
 }
 
 /**
@@ -4367,6 +4392,10 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		id = fu_device_event_get_str(event, "PhysicalId", NULL);
 		if (id != NULL)
 			fu_device_set_physical_id(parent, id);
+		if (fu_device_event_get_i64(event, "Vid", NULL) != G_MAXINT64)
+			fu_device_set_vid(parent, fu_device_event_get_i64(event, "Vid", NULL));
+		if (fu_device_event_get_i64(event, "Pid", NULL) != G_MAXINT64)
+			fu_device_set_pid(parent, fu_device_event_get_i64(event, "Pid", NULL));
 		if (parent != self)
 			fu_device_set_target(parent, self);
 		return g_steal_pointer(&parent);
@@ -4406,6 +4435,10 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 						"PhysicalId",
 						fu_device_get_physical_id(parent));
 		}
+		if (fu_device_get_vid(parent) != 0x0)
+			fu_device_event_set_i64(event, "Vid", fu_device_get_vid(parent));
+		if (fu_device_get_pid(parent) != 0x0)
+			fu_device_event_set_i64(event, "Pid", fu_device_get_pid(parent));
 	}
 
 	if (parent != self)
@@ -4468,13 +4501,7 @@ fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_request_id, update_request_id) == 0)
-		return;
-
-	g_free(priv->update_request_id);
-	priv->update_request_id = g_strdup(update_request_id);
+	g_set_str(&priv->update_request_id, update_request_id);
 }
 
 /**
@@ -4509,14 +4536,8 @@ fu_device_set_update_message(FuDevice *self, const gchar *update_message)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_message, update_message) == 0)
-		return;
-
-	g_free(priv->update_message);
-	priv->update_message = g_strdup(update_message);
-	g_object_notify(G_OBJECT(self), "update-message");
+	if (g_set_str(&priv->update_message, update_message))
+		g_object_notify(G_OBJECT(self), "update-message");
 }
 
 /**
@@ -4551,14 +4572,8 @@ fu_device_set_update_image(FuDevice *self, const gchar *update_image)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_image, update_image) == 0)
-		return;
-
-	g_free(priv->update_image);
-	priv->update_image = g_strdup(update_image);
-	g_object_notify(G_OBJECT(self), "update-image");
+	if (g_set_str(&priv->update_image, update_image))
+		g_object_notify(G_OBJECT(self), "update-image");
 }
 
 /**
@@ -4602,13 +4617,7 @@ fu_device_set_fwupd_version(FuDevice *self, const gchar *fwupd_version)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED));
-
-	/* not changed */
-	if (g_strcmp0(priv->fwupd_version, fwupd_version) == 0)
-		return;
-
-	g_free(priv->fwupd_version);
-	priv->fwupd_version = g_strdup(fwupd_version);
+	g_set_str(&priv->fwupd_version, fwupd_version);
 }
 
 /**
@@ -4644,13 +4653,7 @@ fu_device_set_proxy_guid(FuDevice *self, const gchar *proxy_guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->proxy_guid, proxy_guid) == 0)
-		return;
-
-	g_free(priv->proxy_guid);
-	priv->proxy_guid = g_strdup(proxy_guid);
+	g_set_str(&priv->proxy_guid, proxy_guid);
 }
 
 /**
@@ -4677,10 +4680,6 @@ fu_device_set_physical_id(FuDevice *self, const gchar *physical_id)
 	g_return_if_fail(physical_id != NULL);
 	g_return_if_fail(physical_id[0] != '\0');
 
-	/* not changed */
-	if (g_strcmp0(priv->physical_id, physical_id) == 0)
-		return;
-
 	/* not allowed after ->probe() and ->setup() have completed */
 	if (priv->done_setup) {
 		g_warning("cannot change %s physical ID from %s to %s as "
@@ -4691,10 +4690,10 @@ fu_device_set_physical_id(FuDevice *self, const gchar *physical_id)
 		return;
 	}
 
-	g_free(priv->physical_id);
-	priv->physical_id = g_strdup(physical_id);
-	priv->device_id_valid = FALSE;
-	g_object_notify(G_OBJECT(self), "physical-id");
+	if (g_set_str(&priv->physical_id, physical_id)) {
+		priv->device_id_valid = FALSE;
+		g_object_notify(G_OBJECT(self), "physical-id");
+	}
 }
 
 /**
@@ -4934,8 +4933,7 @@ fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags)
 	g_return_if_fail(custom_flags != NULL);
 
 	/* save what was set so we can use it for incorporating a superclass */
-	g_free(priv->custom_flags);
-	priv->custom_flags = g_strdup(custom_flags);
+	g_set_str(&priv->custom_flags, custom_flags);
 
 	/* look for any standard FwupdDeviceFlags */
 	if (custom_flags != NULL) {
@@ -5371,6 +5369,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
+	fwupd_codec_string_append_int(str, idt, "PollInterval", priv->poll_interval);
 	fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
 		fwupd_codec_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
@@ -5540,7 +5539,7 @@ fu_device_to_string(FuDevice *self)
 {
 	GString *str = g_string_new(NULL);
 	fu_device_add_string(self, 0, str);
-	return g_string_free(str, FALSE);
+	return g_string_free_and_steal(str);
 }
 
 /**
@@ -7684,7 +7683,7 @@ fu_device_strsafe_instance_id(const gchar *str)
 		return NULL;
 
 	/* success */
-	return g_string_free(g_steal_pointer(&tmp), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&tmp));
 }
 
 /**
@@ -8386,6 +8385,14 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 }
 
 static void
+fu_device_constructed(GObject *obj)
+{
+	FuDevice *self = FU_DEVICE(obj);
+	fu_device_ensure_poll_interval(self);
+	G_OBJECT_CLASS(fu_device_parent_class)->constructed(obj);
+}
+
+static void
 fu_device_dispose(GObject *object)
 {
 	FuDevice *self = FU_DEVICE(object);
@@ -8466,6 +8473,7 @@ fu_device_class_init(FuDeviceClass *klass)
 	    FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER,
 	};
 
+	object_class->constructed = fu_device_constructed;
 	object_class->dispose = fu_device_dispose;
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
@@ -8772,8 +8780,10 @@ fu_device_finalize(GObject *object)
 	}
 	if (priv->backend != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
-	if (priv->poll_id != 0)
-		g_source_remove(priv->poll_id);
+	if (priv->poll_source != NULL) {
+		g_source_destroy(priv->poll_source);
+		g_source_unref(priv->poll_source);
+	}
 	if (priv->metadata != NULL)
 		g_hash_table_unref(priv->metadata);
 	if (priv->inhibits != NULL)

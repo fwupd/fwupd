@@ -43,19 +43,19 @@ G_DEFINE_TYPE(FuSynapticsCapeDevice, fu_synaptics_cape_device, FU_TYPE_HID_DEVIC
 /* sends SET_REPORT to device */
 static gboolean
 fu_synaptics_cape_device_set_report(FuSynapticsCapeDevice *self,
-				    const FuSynapticsCapeCmdHidReport *data,
+				    const FuStructSynapticsCapeCmdHidReport *st_report,
 				    GError **error)
 {
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
-	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(st_report != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	fu_dump_raw(G_LOG_DOMAIN, "SetReport", (guint8 *)data, sizeof(*data));
+	fu_dump_raw(G_LOG_DOMAIN, "SetReport", st_report->buf->data, st_report->buf->len);
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
-					FU_SYNAPTICS_CAPE_CMD_HID_REPORT_DEFAULT_REPORT_ID,
-					(guint8 *)data,
-					sizeof(*data),
+					FU_STRUCT_SYNAPTICS_CAPE_CMD_HID_REPORT_DEFAULT_REPORT_ID,
+					st_report->buf->data,
+					st_report->buf->len,
 					FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
@@ -64,11 +64,11 @@ fu_synaptics_cape_device_set_report(FuSynapticsCapeDevice *self,
 /* gets HID report over control ep */
 static gboolean
 fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
-				    FuSynapticsCapeCmdHidReport *st_report,
+				    FuStructSynapticsCapeCmdHidReport *st_report,
 				    GError **error)
 {
 	return fu_hid_device_get_report(FU_HID_DEVICE(self),
-					FU_SYNAPTICS_CAPE_CMD_HID_REPORT_DEFAULT_REPORT_ID,
+					FU_STRUCT_SYNAPTICS_CAPE_CMD_HID_REPORT_DEFAULT_REPORT_ID,
 					st_report->buf->data,
 					st_report->buf->len,
 					FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT,
@@ -79,26 +79,25 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 /* gets HID report over interrupt ep */
 static gboolean
 fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
-					 FuSynapticsCapeCmdHidReport *data,
+					 FuStructSynapticsCapeCmdHidReport *st_report,
 					 GError **error)
 {
 	gsize actual_len = 0;
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
-	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(st_report != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      FU_SYNAPTICS_CAPE_FM3_HID_INTR_IN_EP,
-					      (guint8 *)data,
-					      sizeof(*data),
+					      st_report->buf->data,
+					      st_report->buf->len,
 					      &actual_len,
 					      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get report over interrupt ep: ");
 		return FALSE;
 	}
 
-	fu_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport", st_report->buf->data, st_report->buf->len);
 
 	/* success */
 	return TRUE;
@@ -146,7 +145,8 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 {
 	gint16 value;
 	guint elapsed_ms = 0;
-	g_autoptr(FuSynapticsCapeCmdHidReport) st_report = fu_synaptics_cape_cmd_hid_report_new();
+	g_autoptr(FuStructSynapticsCapeCmdHidReport) st_report =
+	    fu_struct_synaptics_cape_cmd_hid_report_new();
 	g_autoptr(FuSynapticsCapeMsg) st_msg_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -160,7 +160,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 	}
 
 	/* first two bytes are report id */
-	if (!fu_synaptics_cape_cmd_hid_report_set_msg(st_report, st_msg_req, error))
+	if (!fu_struct_synaptics_cape_cmd_hid_report_set_msg(st_report, st_msg_req, error))
 		return NULL;
 
 	if (!fu_synaptics_cape_device_set_report(self, st_report, error)) {
@@ -218,7 +218,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 							   "failed to get GET_REPORT: ");
 				return NULL;
 			}
-			st_msg2 = fu_synaptics_cape_cmd_hid_report_get_msg(st_report);
+			st_msg2 = fu_struct_synaptics_cape_cmd_hid_report_get_msg(st_report);
 			if (fu_synaptics_cape_msg_get_cmd_id(st_msg2) &
 			    FU_SYNAPTICS_CAPE_CMD_IS_REPLY)
 				break;
@@ -227,7 +227,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 		}
 	}
 
-	st_msg_res = fu_synaptics_cape_cmd_hid_report_get_msg(st_report);
+	st_msg_res = fu_struct_synaptics_cape_cmd_hid_report_get_msg(st_report);
 	if ((fu_synaptics_cape_msg_get_cmd_id(st_msg_res) & FU_SYNAPTICS_CAPE_CMD_IS_REPLY) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

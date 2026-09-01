@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginStarlabsCoreboot"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('starlabs-coreboot.quirk')
-plugin_builtin_starlabs_coreboot = static_library('fu_plugin_starlabs_coreboot',
+plugin_builtin_starlabs_coreboot = static_library(
+  'fu_plugin_starlabs_coreboot',
   sources: [
     'fu-starlabs-coreboot-device.c',
     'fu-starlabs-coreboot-plugin.c',

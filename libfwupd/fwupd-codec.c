@@ -135,7 +135,7 @@ fwupd_codec_to_string(FwupdCodec *self)
 	if (iface->add_string != NULL || iface->add_json != NULL) {
 		GString *str = g_string_new(NULL);
 		fwupd_codec_add_string(self, 0, str);
-		return g_string_free(str, FALSE);
+		return g_string_free_and_steal(str);
 	}
 	g_critical("FwupdCodec->to_string and iface->add_string not implemented");
 	return NULL;
@@ -261,7 +261,7 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 
 	fwupd_codec_to_json(self, json_obj, flags);
 	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&data), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&data));
 }
 
 /**

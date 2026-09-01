@@ -208,7 +208,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 			    _("Please enter a number from 0 to %u:"),
 			    maxnum);
 			g_string_append(str, " ");
-			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free_and_steal(g_steal_pointer(&str));
 		}
 	} while (TRUE);
 	return answer;
@@ -254,7 +254,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 					       "Y",
 					       "N");
 			g_string_append(str, " ");
-			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free_and_steal(g_steal_pointer(&str));
 		}
 	} while (TRUE);
 	return FALSE;
@@ -593,6 +593,14 @@ fu_console_refresh(FuConsole *self)
 	self->contents_to_clear = TRUE;
 }
 
+gchar *
+fu_console_color_format(const gchar *text, FuConsoleColor fg_color)
+{
+	if (g_getenv("NO_COLOR") != NULL)
+		return g_strdup(text);
+	return g_strdup_printf("\033[%um\033[1m%s\033[0m", fg_color, text);
+}
+
 /**
  * fu_console_print_full:
  * @self: a #FuConsole
@@ -724,7 +732,7 @@ fu_console_spin_end(FuConsole *self)
 {
 	if (self->timer_source != NULL) {
 		g_source_destroy(self->timer_source);
-		self->timer_source = NULL;
+		g_clear_pointer(&self->timer_source, g_source_unref);
 
 		/* reset when the spinner has been stopped */
 		g_timer_start(self->time_elapsed);
@@ -811,6 +819,13 @@ fu_console_set_interactive(FuConsole *self, gboolean interactive)
 	self->interactive = interactive;
 }
 
+gboolean
+fu_console_get_interactive(FuConsole *self)
+{
+	g_return_val_if_fail(FU_IS_CONSOLE(self), FALSE);
+	return self->interactive;
+}
+
 /**
  * fu_console_set_status_length:
  * @self: A #FuConsole
@@ -868,8 +883,10 @@ fu_console_finalize(GObject *obj)
 	FuConsole *self = FU_CONSOLE(obj);
 
 	fu_console_reset_line(self);
-	if (self->timer_source != 0)
+	if (self->timer_source != NULL) {
 		g_source_destroy(self->timer_source);
+		g_source_unref(self->timer_source);
+	}
 	if (self->main_ctx != NULL)
 		g_main_context_unref(self->main_ctx);
 	g_timer_destroy(self->time_elapsed);

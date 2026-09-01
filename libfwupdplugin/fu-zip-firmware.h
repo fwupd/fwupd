@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ZIP_FIRMWARE (fu_zip_firmware_get_type())
 
 G_DECLARE_DERIVABLE_TYPE(FuZipFirmware, fu_zip_firmware, FU, ZIP_FIRMWARE, FuFirmware)
@@ -18,3 +20,5 @@ struct _FuZipFirmwareClass {
 
 FuFirmware *
 fu_zip_firmware_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

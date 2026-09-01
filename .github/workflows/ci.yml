@@ -2,6 +2,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  merge_group:
+    branches: [main]
   push:
     branches: [main]
 
@@ -27,12 +29,14 @@ jobs:
       - name: Set up pre-commit
         run: |
           sudo apt-get update -qq
+          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11; \
           sudo apt-get install -qq --yes --no-install-recommends \
             clang-format \
             git \
             meson \
             patch \
             pre-commit \
+            python3-lxml \
             shellcheck \
             shfmt
       - name: Run pre-commit hooks

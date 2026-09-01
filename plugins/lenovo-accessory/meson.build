@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoAccessory"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('lenovo-accessory.quirk')
-plugin_builtins += static_library('fu_plugin_lenovo_accessory',
+plugin_builtins += static_library(
+  'fu_plugin_lenovo_accessory',
   rustgen.process('fu-lenovo-accessory.rs'),
   sources: [
     'fu-lenovo-accessory-ble-device.c',

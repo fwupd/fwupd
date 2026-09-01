@@ -54,7 +54,6 @@ fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 					    st_id->buf->len,
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "get_dock_id error: ");
 		return FALSE;
@@ -85,7 +84,6 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 					    st->buf->len,
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get_dock_status min size: ");
 		return FALSE;
@@ -118,7 +116,6 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 					    bufsz,
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get_dock_status actual size: ");
 		return FALSE;
@@ -167,7 +164,6 @@ fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **erro
 					    0,					      /* length */
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to reset state machine: ");
 		return FALSE;
@@ -189,7 +185,6 @@ fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, 
 					    0,				     /* length */
 					    NULL,			     /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to send reset: ");
 		return FALSE;
@@ -222,7 +217,6 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError 
 					    bufsz,   /* length */
 					    NULL,    /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to send reset: ");
 		return FALSE;
@@ -244,7 +238,6 @@ fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger,
 					    0,				  /* length */
 					    NULL,			  /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to send download trigger: ");
 		return FALSE;
@@ -276,7 +269,6 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 					    bufsz,			     /* length */
 					    NULL,			     /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to send fwct: ");
 		return FALSE;
@@ -300,7 +292,6 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self,
 					      intr_rqt->buf->len,
 					      NULL,
 					      DMC_GET_REQUEST_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to read intr rqt: ");
 		return FALSE;
@@ -336,7 +327,6 @@ fu_ccgx_dmc_device_send_write_command(FuCcgxDmcDevice *self,
 					    0,				    /* length */
 					    NULL,			    /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to send fwct: ");
 		return FALSE;
@@ -358,7 +348,6 @@ fu_ccgx_dmc_device_send_row_data(FuCcgxDmcDevice *self,
 					 row_size,
 					 NULL,
 					 DMC_BULK_OUT_PIPE_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to write row data: ");
 		return FALSE;
@@ -724,7 +713,7 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	}
 
 	/* increment the progressbar when waiting for replug */
-	fu_progress_sleep_idle(progress, fu_device_get_remove_delay(device));
+	fu_device_sleep_idle(device, fu_device_get_remove_delay(device), progress);
 
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

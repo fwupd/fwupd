@@ -25,6 +25,7 @@ Flags:
 	--allow-older:			Allow installing an older firmware version
 	--allow-reinstall:		Allow reinstalling the same firmware version
 	--force:			Force the firmware update even if not required
+	--ignore-postquantum:		Ignore pkcs7 failures for LVFS CA 2025PQ if at least one other CA signature is verified
 
 Help:
 ======================================================================

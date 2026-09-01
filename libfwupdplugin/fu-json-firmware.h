@@ -8,9 +8,13 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JSON_FIRMWARE (fu_json_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuJsonFirmware, fu_json_firmware, FU, JSON_FIRMWARE, FuFirmware)
 
 struct _FuJsonFirmwareClass {
 	FuFirmwareClass parent_class;
 };
+
+G_END_DECLS

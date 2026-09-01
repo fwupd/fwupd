@@ -11,6 +11,8 @@
 #include "fu-endian.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 typedef enum {
 	FU_INTEGER_BASE_AUTO = 0,
 	FU_INTEGER_BASE_10 = 10,
@@ -42,7 +44,7 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error);
 gchar *
 fu_strstrip(const gchar *str) G_GNUC_NON_NULL(1);
 gsize
-fu_strwidth(const gchar *text) G_GNUC_NON_NULL(1);
+fu_strwidth(const gchar *text) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens) G_GNUC_NON_NULL(1);
 gchar **
@@ -109,3 +111,5 @@ fu_utf8_to_utf16_bytes(const gchar *str,
 		       FuEndianType endian,
 		       FuUtfConvertFlags flags,
 		       GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

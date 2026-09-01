@@ -37,16 +37,16 @@ FwupdBiosSetting *
 fwupd_bios_setting_new(const gchar *name, const gchar *path);
 
 gboolean
-fwupd_bios_setting_get_read_only(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_read_only(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_read_only(FwupdBiosSetting *self, gboolean val) G_GNUC_NON_NULL(1);
 
 guint64
-fwupd_bios_setting_get_upper_bound(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_upper_bound(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fwupd_bios_setting_get_lower_bound(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_lower_bound(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint64
-fwupd_bios_setting_get_scalar_increment(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_scalar_increment(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 void
 fwupd_bios_setting_set_upper_bound(FwupdBiosSetting *self, guint64 val) G_GNUC_NON_NULL(1);
@@ -66,20 +66,20 @@ fwupd_bios_setting_set_description(FwupdBiosSetting *self, const gchar *descript
     G_GNUC_NON_NULL(1);
 
 FwupdBiosSettingKind
-fwupd_bios_setting_get_kind(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_kind(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_bios_setting_get_name(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_name(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_bios_setting_get_path(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_path(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fwupd_bios_setting_get_description(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_description(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_bios_setting_has_possible_value(FwupdBiosSetting *self,
 				      const gchar *val) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1, 2);
+    G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 void
 fwupd_bios_setting_add_possible_value(FwupdBiosSetting *self, const gchar *possible_value)
     G_GNUC_NON_NULL(1, 2);
@@ -89,10 +89,10 @@ fwupd_bios_setting_add_possible_value_full(FwupdBiosSetting *self,
 					   const gchar *possible_value_raw)
     G_GNUC_NON_NULL(1, 2, 3);
 GPtrArray *
-fwupd_bios_setting_get_possible_values(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_possible_values(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 const gchar *
-fwupd_bios_setting_get_current_value(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_current_value(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_current_value(FwupdBiosSetting *self, const gchar *value) G_GNUC_NON_NULL(1);
 
@@ -103,23 +103,23 @@ gboolean
 fwupd_bios_setting_setup(FwupdBiosSetting *self, GError **error) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_bios_setting_get_id(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_id(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_id(FwupdBiosSetting *self, const gchar *id) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_bios_setting_get_appstream_id(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_appstream_id(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_appstream_id(FwupdBiosSetting *self, const gchar *appstream_id)
     G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_bios_setting_get_icon(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_icon(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_icon(FwupdBiosSetting *self, const gchar *icon) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_bios_setting_get_filename(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
+fwupd_bios_setting_get_filename(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fwupd_bios_setting_set_filename(FwupdBiosSetting *self, const gchar *filename) G_GNUC_NON_NULL(1);
 

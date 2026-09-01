@@ -9,6 +9,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IFWI_CPD_FIRMWARE (fu_ifwi_cpd_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIfwiCpdFirmware, fu_ifwi_cpd_firmware, FU, IFWI_CPD_FIRMWARE, FuFirmware)
 
@@ -45,3 +47,5 @@ struct _FuIfwiCpdFirmwareClass {
 
 FuFirmware *
 fu_ifwi_cpd_firmware_new(void);
+
+G_END_DECLS

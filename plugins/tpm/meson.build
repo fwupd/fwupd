@@ -1,13 +1,20 @@
 hsi or subdir_done()
-tpm2tss_tpm = dependency('tss2-esys', version: '>= 2.0', required: false)
+tpm2tss_tpm = dependency(
+  'tss2-esys',
+  version: '>= 2.0',
+  required: false,
+)
 tpm2tss_tpm.found() or subdir_done()
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('tpm.quirk')
-plugin_builtin_tpm = static_library('fu_plugin_tpm',
+plugin_builtin_tpm = static_library(
+  'fu_plugin_tpm',
   sources: [
     'fu-tpm-plugin.c',
     'fu-tpm-device.c',
@@ -61,7 +68,8 @@ if get_option('tests')
     },
   )
 
-  install_data([
+  install_data(
+    [
       'tests/tpm0/active',
       'tests/tpm0/caps',
       'tests/tpm0/enabled',
@@ -70,7 +78,8 @@ if get_option('tests')
     ],
     install_dir: join_paths(installed_test_datadir, 'tests', 'tpm0'),
   )
-  install_data([
+  install_data(
+    [
       'tests/empty_pcr/tpm0/active',
       'tests/empty_pcr/tpm0/caps',
       'tests/empty_pcr/tpm0/enabled',

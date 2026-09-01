@@ -10,6 +10,8 @@
 
 #include "fu-endian.h"
 
+G_BEGIN_DECLS
+
 gchar *
 fu_byte_array_to_string(GByteArray *array) G_GNUC_NON_NULL(1);
 GByteArray *
@@ -45,3 +47,5 @@ fu_byte_array_append_safe(GByteArray *array,
 			  GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

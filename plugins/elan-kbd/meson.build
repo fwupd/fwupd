@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginElanKbd"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('elan-kbd.quirk')
-plugin_builtins += static_library('fu_plugin_elan_kbd',
+plugin_builtins += static_library(
+  'fu_plugin_elan_kbd',
   rustgen.process('fu-elan-kbd.rs'),
   sources: [
     'fu-elan-kbd-debug-device.c',

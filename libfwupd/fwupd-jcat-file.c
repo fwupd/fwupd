@@ -243,7 +243,7 @@ fwupd_jcat_file_export_json(FwupdJcatFile *self, FwupdCodecFlags flags, GError *
 
 	json_obj = fwupd_jcat_file_export_builder(self, flags);
 	str = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**

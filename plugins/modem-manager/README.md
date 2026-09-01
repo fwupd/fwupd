@@ -37,7 +37,16 @@ Since: 1.8.10
 
 The system firmware path to use during the mhi driver switch to EDL (Emergency Download) mode.
 
-Since: 2.1.8
+Since: 2.2.1
+
+### ModemManagerMbimDetachMethod
+
+The quirk key specifies which detach method the MBIM device should use when transitioning the
+modem from MBIM mode into bootloader mode for firmware update.
+
+Possible values are `fibocom` or `qdu-quectel` (the default).
+
+Since: 2.2.1
 
 ### `Flags=use-branch`
 

@@ -1,16 +1,19 @@
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 plugin_quirks += files('wacom-usb.quirk')
-plugin_builtin_wac = static_library('fu_plugin_wacom_usb',
+plugin_builtin_wac = static_library(
+  'fu_plugin_wacom_usb',
   rustgen.process(
-    'fu-wacom-usb.rs',              # fuzzing
+    'fu-wacom-usb.rs' # fuzzing
   ),
   sources: [
     'fu-wacom-usb-common.c',
     'fu-wacom-usb-android-device.c',
     'fu-wacom-usb-device.c',
-    'fu-wacom-usb-firmware.c',          # fuzzing
+    'fu-wacom-usb-firmware.c', # fuzzing
     'fu-wacom-usb-module.c',
     'fu-wacom-usb-module-bluetooth.c',
     'fu-wacom-usb-module-bluetooth-id6.c',
@@ -28,9 +31,7 @@ plugin_builtin_wac = static_library('fu_plugin_wacom_usb',
 )
 plugin_builtins += plugin_builtin_wac
 
-enumeration_data += files(
-  'tests/wacom-movink-13-setup.json',
-)
+enumeration_data += files('tests/wacom-movink-13-setup.json')
 
 device_tests += files(
   'tests/wacom-intuos-bt-m.json',
@@ -39,8 +40,10 @@ device_tests += files(
 )
 
 if get_option('tests')
-  install_data(['tests/wacom-usb.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/wacom-usb.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'wacom-usb-self-test',
     rustgen.process('fu-wacom-usb.rs'),

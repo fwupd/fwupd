@@ -1,10 +1,13 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginNordicHid"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('nordic-hid.quirk')
-plugin_builtins += static_library('fu_plugin_nordic_hid',
+plugin_builtins += static_library(
+  'fu_plugin_nordic_hid',
   rustgen.process('fu-nordic-hid.rs'),
   sources: [
     'fu-nordic-hid-plugin.c',
@@ -20,6 +23,7 @@ plugin_builtins += static_library('fu_plugin_nordic_hid',
   dependencies: plugin_deps,
 )
 
-device_tests += files('tests/nordic-hid-nrf52840-mcuboot.json',
-                      'tests/nordic-hid-nrf52840-b0.json',
+device_tests += files(
+  'tests/nordic-hid-nrf52840-mcuboot.json',
+  'tests/nordic-hid-nrf52840-b0.json',
 )

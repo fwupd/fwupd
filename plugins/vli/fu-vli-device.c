@@ -513,7 +513,6 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 					    sizeof(buf),
 					    NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read chip ID: ");
 		return FALSE;

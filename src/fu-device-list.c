@@ -31,6 +31,7 @@ fu_device_list_finalize(GObject *obj);
 
 struct _FuDeviceList {
 	GObject parent_instance;
+	FuContext *ctx;
 	GPtrArray *devices; /* of FuDeviceItem */
 	GRWLock devices_mutex;
 };
@@ -50,7 +51,7 @@ typedef struct {
 	FuDevice *device;
 	FuDevice *device_old;
 	FuDeviceList *self; /* no ref */
-	guint remove_id;
+	GSource *remove_source;
 } FuDeviceItem;
 
 static void
@@ -117,7 +118,7 @@ fu_device_list_add_string(FwupdCodec *codec, guint idt, GString *str)
 				       "%u [%p] %s\n",
 				       i,
 				       item,
-				       item->remove_id != 0 ? "IN_TIMEOUT" : "");
+				       item->remove_source != 0 ? "IN_TIMEOUT" : "");
 		wfr = fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		g_string_append_printf(str,
 				       "new: %s [%p] %s\n",
@@ -464,7 +465,7 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 	g_return_val_if_fail(locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (item->remove_id == 0)
+		if (item->remove_source == 0)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
@@ -480,7 +481,7 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
 		if (item->device_old == NULL)
 			continue;
-		if (item->remove_id == 0)
+		if (item->remove_source == 0)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
@@ -502,7 +503,7 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 	FuDeviceList *self = FU_DEVICE_LIST(item->self);
 
 	/* no longer valid */
-	item->remove_id = 0;
+	g_clear_pointer(&item->remove_source, g_source_unref);
 
 	/* remove any children associated with device */
 	if (!fu_device_has_private_flag(item->device,
@@ -533,7 +534,7 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 }
 
 static void
-fu_device_list_remove_with_delay(FuDeviceItem *item)
+fu_device_list_remove_with_delay(FuDeviceList *self, FuDeviceItem *item)
 {
 	g_autofree gchar *id_display = fu_device_get_id_display(item->device);
 	/* give the hardware time to re-enumerate or the user time to
@@ -541,9 +542,10 @@ fu_device_list_remove_with_delay(FuDeviceItem *item)
 	g_info("waiting %ums for %s device removal",
 	       fu_device_get_remove_delay(item->device),
 	       id_display);
-	item->remove_id = g_timeout_add(fu_device_get_remove_delay(item->device),
-					fu_device_list_device_delayed_remove_cb,
-					item);
+	item->remove_source = fu_context_add_timeout(self->ctx,
+						     fu_device_get_remove_delay(item->device),
+						     fu_device_list_device_delayed_remove_cb,
+						     item);
 }
 
 /* nocheck:name */
@@ -593,11 +595,14 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	fu_device_add_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/* ensure never fired if the remove delay is changed */
-	g_clear_handle_id(&item->remove_id, g_source_remove);
+	if (item->remove_source != NULL) {
+		g_source_destroy(item->remove_source);
+		g_clear_pointer(&item->remove_source, g_source_unref);
+	}
 
 	/* delay the removal and check for replug */
 	if (fu_device_list_should_remove_with_delay(item->device)) {
-		fu_device_list_remove_with_delay(item);
+		fu_device_list_remove_with_delay(self, item);
 		return;
 	}
 
@@ -712,7 +717,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 	g_autofree gchar *str = NULL;
 
 	/* clear timeout if scheduled */
-	g_clear_handle_id(&item->remove_id, g_source_remove);
+	g_clear_pointer(&item->remove_source, g_source_destroy);
 
 	/* remove flag on both old and new devices */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
@@ -898,7 +903,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 	item = fu_device_list_find_by_connection(self,
 						 fu_device_get_physical_id(device),
 						 fu_device_get_logical_id(device));
-	if (item != NULL && item->remove_id != 0) {
+	if (item != NULL && item->remove_source != NULL) {
 		g_info("found physical device %s recently removed, reusing "
 		       "item from plugin %s for plugin %s",
 		       fu_device_get_id(item->device),
@@ -1035,7 +1040,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 	do {
 		g_autoptr(GPtrArray) devices_wfr_tmp = NULL;
 		g_usleep(1000);
-		while (g_main_context_iteration(NULL, FALSE)) {
+		while (g_main_context_iteration(fu_context_get_main_context(self->ctx), FALSE)) {
 			/* nothing needs to be done here */
 		};
 		devices_wfr_tmp = fu_device_list_get_wait_for_replug(self);
@@ -1108,8 +1113,8 @@ fu_device_list_get_by_id(FuDeviceList *self, const gchar *device_id, GError **er
 static void
 fu_device_list_item_free(FuDeviceItem *item)
 {
-	if (item->remove_id != 0)
-		g_source_remove(item->remove_id);
+	if (item->remove_source != NULL)
+		g_source_destroy(item->remove_source);
 	if (item->device_old != NULL)
 		g_object_unref(item->device_old);
 	fu_device_list_item_set_device(item, NULL);
@@ -1209,6 +1214,7 @@ fu_device_list_finalize(GObject *obj)
 {
 	FuDeviceList *self = FU_DEVICE_LIST(obj);
 
+	g_clear_object(&self->ctx);
 	g_rw_lock_clear(&self->devices_mutex);
 	g_ptr_array_unref(self->devices);
 
@@ -1217,17 +1223,18 @@ fu_device_list_finalize(GObject *obj)
 
 /**
  * fu_device_list_new:
+ * @ctx: a #FuContext
  *
  * Creates a new device list.
  *
  * Returns: (transfer full): a device list
- *
- * Since: 1.0.2
  **/
 FuDeviceList *
-fu_device_list_new(void)
+fu_device_list_new(FuContext *ctx)
 {
 	FuDeviceList *self;
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 	self = g_object_new(FU_TYPE_DEVICE_LIST, NULL);
+	self->ctx = g_object_ref(ctx);
 	return FU_DEVICE_LIST(self);
 }

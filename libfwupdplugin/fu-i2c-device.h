@@ -8,6 +8,8 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_I2C_DEVICE (fu_i2c_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuI2cDevice, fu_i2c_device, FU, I2C_DEVICE, FuUdevDevice)
 
@@ -33,3 +35,5 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 gboolean
 fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

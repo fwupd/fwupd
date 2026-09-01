@@ -58,7 +58,6 @@ fu_analogix_device_send(FuAnalogixDevice *self,
 					    bufsz,	 /* length */
 					    &actual_len, /* actual length */
 					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "send data error: ");
 		return FALSE;
@@ -101,7 +100,6 @@ fu_analogix_device_receive(FuAnalogixDevice *self,
 					    bufsz,	 /* length */
 					    &actual_len, /* actual length */
 					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "receive data error: ");
 		return FALSE;

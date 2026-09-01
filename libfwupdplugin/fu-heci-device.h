@@ -9,6 +9,8 @@
 #include "fu-heci-struct.h"
 #include "fu-mei-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HECI_DEVICE (fu_heci_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuHeciDevice, fu_heci_device, FU, HECI_DEVICE, FuMeiDevice)
 
@@ -60,3 +62,5 @@ fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,
 				 guint8 *executing,
 				 guint8 *min_allowed,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

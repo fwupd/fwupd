@@ -18,6 +18,8 @@
 #include "fu-path-struct.h"
 #include "fu-smbios-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CONTEXT (fu_context_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuContext, fu_context, FU, CONTEXT, GObject)
 
@@ -26,6 +28,7 @@ struct _FuContextClass {
 	/* signals */
 	void (*security_changed)(FuContext *self);
 	void (*housekeeping)(FuContext *self);
+	void (*volume_write)(FuContext *self, FuVolume *volume, const gchar *filename);
 };
 
 /**
@@ -50,7 +53,7 @@ void
 fu_context_remove_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_has_flag(FuContext *context, FuContextFlags flag) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 const gchar *
 fu_context_get_smbios_string(FuContext *self,
@@ -68,13 +71,13 @@ GPtrArray *
 fu_context_get_smbios_data(FuContext *self, guint8 type, guint8 length, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
-fu_context_has_hwid_guid(FuContext *self, const gchar *guid) G_GNUC_NON_NULL(1);
+fu_context_has_hwid_guid(FuContext *self, const gchar *guid) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GPtrArray *
-fu_context_get_hwid_guids(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_hwid_guids(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_context_has_hwid_flag(FuContext *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+fu_context_has_hwid_flag(FuContext *self, const gchar *flag) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 const gchar *
-fu_context_get_hwid_value(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+fu_context_get_hwid_value(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gchar *
 fu_context_get_hwid_replace_value(FuContext *self,
 				  const gchar *keys,
@@ -83,13 +86,14 @@ void
 fu_context_add_runtime_version(FuContext *self, const gchar *component_id, const gchar *version)
     G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
-fu_context_get_runtime_version(FuContext *self, const gchar *component_id) G_GNUC_NON_NULL(1, 2);
+fu_context_get_runtime_version(FuContext *self, const gchar *component_id)
+    G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 void
 fu_context_add_compile_version(FuContext *self, const gchar *component_id, const gchar *version)
     G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
 fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *key)
-    G_GNUC_NON_NULL(1, 2, 3);
+    G_GNUC_NON_NULL(1, 2, 3) G_GNUC_PURE;
 gboolean
 fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
@@ -102,35 +106,35 @@ void
 fu_context_security_changed(FuContext *self) G_GNUC_NON_NULL(1);
 
 FuPowerState
-fu_context_get_power_state(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_power_state(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_power_state(FuContext *self, FuPowerState power_state) G_GNUC_NON_NULL(1);
 FuLidState
-fu_context_get_lid_state(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_lid_state(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_lid_state(FuContext *self, FuLidState lid_state) G_GNUC_NON_NULL(1);
 FuDisplayState
-fu_context_get_display_state(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_display_state(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_display_state(FuContext *self, FuDisplayState display_state) G_GNUC_NON_NULL(1);
 guint
-fu_context_get_battery_level(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_battery_level(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_battery_level(FuContext *self, guint battery_level) G_GNUC_NON_NULL(1);
 guint
-fu_context_get_battery_threshold(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_battery_threshold(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_battery_threshold(FuContext *self, guint battery_threshold) G_GNUC_NON_NULL(1);
 
 FuCpuVendor
-fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 FuBiosSettings *
 fu_context_get_bios_settings(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_get_bios_setting_pending_reboot(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_bios_setting_pending_reboot(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FwupdBiosSetting *
-fu_context_get_bios_setting(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2);
+fu_context_get_bios_setting(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 
 GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -147,23 +151,32 @@ fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
 FuFirmware *
 fu_context_get_fdt(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FuSmbiosChassisKind
-fu_context_get_chassis_kind(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_chassis_kind(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_context_set_esp_location(FuContext *self, const gchar *location);
 const gchar *
-fu_context_get_esp_location(FuContext *self);
+fu_context_get_esp_location(FuContext *self) G_GNUC_PURE;
 FuEfivars *
-fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+GMainContext *
+fu_context_get_main_context(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
     G_GNUC_NON_NULL(1);
+
+GSource *
+fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function, gpointer data)
+    G_GNUC_NON_NULL(1, 3);
+GSource *
+fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc function, gpointer data)
+    G_GNUC_NON_NULL(1, 3);
 
 GPtrArray *
 fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
     G_GNUC_NON_NULL(1);
 
 FuPathStore *
-fu_context_get_path_store(FuContext *self) G_GNUC_NON_NULL(1);
+fu_context_get_path_store(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fu_context_get_path(FuContext *self, FuPathKind kind, GError **error) G_GNUC_NON_NULL(1);
 void
@@ -174,3 +187,5 @@ fu_context_set_tmpdir(FuContext *self, FuPathKind kind, FuTemporaryDirectory *tm
 gchar *
 fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
     G_GNUC_NON_NULL(1) G_GNUC_NULL_TERMINATED;
+
+G_END_DECLS

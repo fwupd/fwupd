@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ELF_FIRMWARE (fu_elf_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuElfFirmware, fu_elf_firmware, FU, ELF_FIRMWARE, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuElfFirmwareClass {
 
 FuFirmware *
 fu_elf_firmware_new(void);
+
+G_END_DECLS

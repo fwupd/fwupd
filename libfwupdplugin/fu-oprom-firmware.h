@@ -10,6 +10,8 @@
 #include "fu-firmware.h"
 #include "fu-oprom-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_OPROM_FIRMWARE (fu_oprom_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuOpromFirmware, fu_oprom_firmware, FU, OPROM_FIRMWARE, FuFirmware)
 
@@ -21,8 +23,10 @@ FuFirmware *
 fu_oprom_firmware_new(void);
 
 FuOpromMachineType
-fu_oprom_firmware_get_machine_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_machine_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuOpromSubsystem
-fu_oprom_firmware_get_subsystem(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_subsystem(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuOpromCompressionType
-fu_oprom_firmware_get_compression_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1);
+fu_oprom_firmware_get_compression_type(FuOpromFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

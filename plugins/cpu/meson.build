@@ -1,10 +1,13 @@
 hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('cpu.quirk')
-plugin_builtins += static_library('fu_plugin_cpu',
+plugin_builtins += static_library(
+  'fu_plugin_cpu',
   sources: [
     'fu-cpu-plugin.c',
   ],
@@ -23,7 +26,8 @@ static void __attribute__((noinline,noclone)) f(void) {}
 
 # verify the compiler knows what to do
 if host_cpu == 'x86_64' and cc.has_argument('-fcf-protection')
-  build_fwupdcethelper = cc.compiles(code,
+  build_fwupdcethelper = cc.compiles(
+    code,
     name: '__attribute__((noinline,noclone))',
   )
 else
@@ -31,7 +35,8 @@ else
 endif
 
 if build_fwupdcethelper
-  libfwupdcethelper = static_library('fwupdcethelper',
+  libfwupdcethelper = static_library(
+    'fwupdcethelper',
     sources: [
       'fu-cpu-helper-cet-common.S',
     ],
@@ -55,6 +60,6 @@ if build_fwupdcethelper
     ],
     c_args: ['-fcf-protection=full'],
     install: true,
-    install_dir: join_paths(libexecdir, 'fwupd')
+    install_dir: join_paths(libexecdir, 'fwupd'),
   )
 endif

@@ -152,4 +152,8 @@
 #include <libfwupdplugin/fu-volume.h>
 #include <libfwupdplugin/fu-xor.h>
 
+G_BEGIN_DECLS
+
 #undef __FWUPDPLUGIN_H_INSIDE__
+
+G_END_DECLS

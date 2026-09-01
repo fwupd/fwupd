@@ -11,5 +11,9 @@
 
 #include "fu-usb-endpoint.h"
 
+G_BEGIN_DECLS
+
 FuUsbEndpoint *
 fu_usb_endpoint_new(const struct libusb_endpoint_descriptor *endpoint) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

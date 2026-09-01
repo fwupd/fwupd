@@ -13,6 +13,7 @@ engine_dep = [
   polkit,
   sqlite,
   fwupdplugin_rs_dep,
+  fwupd_rust_ffi_dep,
 ]
 
 if get_option('passim').allowed()
@@ -68,6 +69,7 @@ endif
 
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
+  fwupd_engine_src += 'fu-engine-installer.c'
 endif
 if host_machine.system() in ['linux', 'android']
   fwupd_engine_src += 'fu-udev-backend.c'
@@ -89,9 +91,33 @@ if host_machine.system() == 'windows'
   fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
-fwupdutil = library(
-  'fwupdutil',
-  sources: ['fu-console.c', 'fu-util-bios-setting.c', 'fu-util-common.c', systemd_src],
+fwupdcli_rs = custom_target(
+  'fu-cli-rs',
+  input: 'fu-cli.rs',
+  output: ['fu-cli-struct.c', 'fu-cli-struct.h'],
+  command: [
+    python3,
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
+  ],
+)
+fwupdcli = library(
+  'fwupdcli',
+  fwupdcli_rs,
+  sources: [
+    'fu-console.c',
+    'fu-cli-common.c',
+    'fu-cli.c',
+    systemd_src,
+  ],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
@@ -100,35 +126,49 @@ fwupdutil = library(
   link_with: [fwupd, fwupdplugin],
 )
 
-dbus_interface = custom_target(
-  'fwupd-generate-dbus-interface',
-  input: 'org.freedesktop.fwupd.xml',
-  output: 'org.freedesktop.fwupd.xml',
-  command: [generate_dbus_interface, '@INPUT@', '@OUTPUT@'],
-  install: build_daemon,
-  install_tag: 'runtime',
-  install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
-)
+if build_daemon == 'dbus'
+  dbus_interface = custom_target(
+    'fwupd-generate-dbus-interface',
+    input: 'org.freedesktop.fwupd.xml',
+    output: 'org.freedesktop.fwupd.xml',
+    command: [generate_dbus_interface, '@INPUT@', '@OUTPUT@'],
+    install: true,
+    install_tag: 'runtime',
+    install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
+  )
+endif
 
-if build_daemon
+if build_daemon == 'dbus'
   executable(
     'fwupdmgr',
-    sources: ['fu-util.c', client_src],
+    sources: [
+      'fu-debug.c',
+      'fu-dbus-cli.c',
+      client_src,
+    ],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
-    link_with: [fwupd, fwupdplugin, fwupdutil],
+    link_with: [fwupd, fwupdplugin, fwupdcli],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: bindir,
   )
 endif
 
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  c_name: 'fu',
-  dependencies: [dbus_interface],
-)
+if build_daemon == 'dbus'
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    'fwupd-dbus.gresource.xml',
+    c_name: 'fu',
+    dependencies: [dbus_interface],
+  )
+else
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    'fwupd.gresource.xml',
+    c_name: 'fu',
+  )
+endif
 
 # generate a header file that allows us to instantiate the plugins without copy-pasting or
 # duplicating the meson build logic in the engine
@@ -151,8 +191,10 @@ fwupdengine_rs = custom_target(
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
-    '--outc', '@OUTPUT0@',
-    '--outh', '@OUTPUT1@',
+    '--outc',
+    '@OUTPUT0@',
+    '--outh',
+    '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
     '--prefix',
@@ -176,19 +218,20 @@ fwupdengine = library(
 
 executable(
   'fwupdtool',
+  fwupdcli_rs,
   fwupdengine_rs,
   plugins_hdr,
   export_dynamic: true,
-  sources: ['fu-tool.c'],
+  sources: ['fu-engine-cli.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
   dependencies: [libfwupd_deps, client_dep, valgrind],
-  link_with: [fwupdengine, fwupdutil, plugin_libs],
+  link_with: [fwupdengine, fwupdcli, plugin_libs],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: bindir,
 )
 
-if build_daemon
+if build_daemon != 'none'
   if get_option('man')
     custom_target(
       'fwupdmgr.1',
@@ -267,15 +310,14 @@ if build_standalone
   endif
 endif
 
-if build_daemon
+# the StartServiceCtrlDispatcherA design is so different use a different source file
+if host_machine.system() == 'windows'
+  daemon_loader_src = 'fu-main-windows.c'
+else
+  daemon_loader_src = 'fu-main.c'
+endif
 
-  # the StartServiceCtrlDispatcherA design is so different use a different source file
-  if host_machine.system() == 'windows'
-    daemon_loader_src = 'fu-main-windows.c'
-  else
-    daemon_loader_src = 'fu-main.c'
-  endif
-
+if build_daemon == 'dbus'
   executable(
     'fwupd',
     fwupdengine_rs,
@@ -291,6 +333,180 @@ if build_daemon
 
 endif
 
+if build_daemon == 'binder'
+  add_languages(
+    'cpp',
+    native: false,
+  )
+
+  aidl_prog = find_program(
+    'aidl',
+    required: true,
+  )
+  aidl_dir = join_paths(
+    meson.project_source_root(),
+    'contrib',
+    'android',
+    'aidl',
+  )
+
+  aidl_files = [
+    'IFwupd',
+    'IFwupdEventListener',
+    'FwupdDevice',
+    'FwupdHwid',
+    'FwupdInstallRequest',
+    'FwupdMetadata',
+    'FwupdProperties',
+    'FwupdRelease',
+    'FwupdRemote',
+    'FwupdRequest',
+  ]
+
+  # the interface AIDL files generate C++ with global constructors that call
+  # into libbinder_ndk at load time (to register the binder interface class),
+  # which is only functional when running on a real Android binder stack
+  aidl_interface_files = [
+    'IFwupd',
+    'IFwupdEventListener',
+  ]
+
+  aidl_generated_src = []
+  # parcelable-only subset, safe to link into host-run unit tests
+  aidl_generated_parcelable_src = []
+  foreach a : aidl_files
+    aidl_target = custom_target(
+      'aidl_gen_' + a,
+      input: join_paths(aidl_dir, 'org', 'freedesktop', 'fwupd', a + '.aidl'),
+      output: [a + '.cpp', a + '.h'],
+      command: [
+        'sh',
+        '-c',
+        # Run AIDL with VINTF stability flags, then copy to root
+        '"$2" --lang=ndk --structured --stability vintf -I"$3" --out="$1" --header_out="$1" "$4" && ' + 'cp "$1/org/freedesktop/fwupd/$5.cpp" "$1/" && ' + 'cp "$1/aidl/org/freedesktop/fwupd/$5.h" "$1/"',
+        'sh',
+        '@OUTDIR@',
+        aidl_prog.full_path(),
+        aidl_dir,
+        '@INPUT@',
+        a,
+      ],
+    )
+    aidl_generated_src += aidl_target
+    if a not in aidl_interface_files
+      aidl_generated_parcelable_src += aidl_target
+    endif
+  endforeach
+
+  # include the src/ build directory, which holds the generated AIDL headers
+  aidl_inc = include_directories('.')
+
+  executable(
+    'fwupd',
+    fwupdengine_rs,
+    plugins_hdr,
+    sources: [
+      daemon_loader_src,
+      'fu-daemon.c',
+      'fu-binder-common.cpp',
+      'fu-binder-daemon.c',
+      'fu-binder-daemon-bridge.cpp',
+    ] + aidl_generated_src,
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
+      aidl_inc,
+    ],
+    dependencies: [
+      valgrind,
+      libsystemd,
+      engine_dep,
+      binder_ndk,
+    ],
+    link_with: [
+      fwupdengine,
+      plugin_libs,
+    ],
+    link_language: 'cpp',
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: daemon_dir,
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    # needed for AIBinder_markVintfStability
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
+  )
+
+  fwupdmgr = executable(
+    'fwupdmgr',
+    sources: [
+      'fu-binder-cli.c',
+      'fu-binder-common.cpp',
+      'fu-debug.c',
+      'fu-binder-cli-bridge.cpp',
+    ] + aidl_generated_src,
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
+      aidl_inc,
+    ],
+    dependencies: [
+      libfwupd_deps,
+      client_dep,
+      binder_ndk,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+      fwupdcli,
+    ],
+    c_args: ['-DBINDER_STABILITY_SUPPORT'],
+    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    link_language: 'cpp',
+    install: true,
+    install_rpath: libdir_pkg,
+    # needed for AIBinder_markVintfStability
+    link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
+  )
+  if get_option('tests')
+    # binder-specific
+    e = executable(
+      'fu-binder-test',
+      sources: [
+        'fu-binder-common.cpp',
+        'fu-binder-test.cpp',
+      ] + aidl_generated_parcelable_src,
+      include_directories: [
+        root_incdir,
+        fwupd_incdir,
+        fwupdplugin_incdir,
+        binder_ndk_platform_incdir,
+        aidl_inc,
+      ],
+      dependencies: [
+        libfwupd_deps,
+        client_dep,
+        binder_ndk,
+      ],
+      link_with: [
+        fwupd,
+        fwupdplugin,
+        libfutest,
+      ],
+      link_language: 'c',
+    )
+    test(
+      'fu-binder-test',
+      e,
+      timeout: 30,
+    )
+  endif
+endif
+
 if get_option('tests')
   src_tests_env = {
     'G_TEST_BUILDDIR': meson.current_build_dir(),
@@ -299,6 +515,7 @@ if get_option('tests')
 
   test_names = [
     'cabinet',
+    'cli',
     'client-list',
     'console',
     'device-list',
@@ -314,7 +531,6 @@ if get_option('tests')
     'remote',
     'remote-list',
     'usb-backend',
-    'util',
   ]
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
@@ -322,9 +538,10 @@ if get_option('tests')
   if giounix.found()
     test_names += 'unix-seekable-input-stream'
   endif
-  foreach test_name: test_names
+  foreach test_name : test_names
     e = executable(
       'fu-' + test_name + '-test',
+      fwupdcli_rs,
       fwupdengine_rs,
       colorhug_test_firmware,
       hwid_test_firmware,
@@ -335,7 +552,7 @@ if get_option('tests')
       sources: ['fu-' + test_name + '-test.c'],
       include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [engine_dep],
-      link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
+      link_with: [fwupdengine, fwupdcli, libfutest, plugin_libs],
       c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
     )
     test(

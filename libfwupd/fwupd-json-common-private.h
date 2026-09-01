@@ -8,5 +8,9 @@
 
 #include "fwupd-json-common.h"
 
+G_BEGIN_DECLS
+
 void
 fwupd_json_indent(GString *str, guint depth) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

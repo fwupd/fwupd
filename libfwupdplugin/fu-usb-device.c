@@ -274,6 +274,7 @@ fu_usb_device_init(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	priv->configuration = -1;
+	priv->claim_retry_count = 3;
 	priv->interfaces = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->bos_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -401,7 +402,6 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 					    sizeof(data),
 					    &sz,
 					    1000,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get USB descriptor: ");
 		return FALSE;
@@ -505,8 +505,7 @@ fu_usb_device_close_internal(FuUsbDevice *self, GError **error)
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
 
-	libusb_close(priv->handle);
-	priv->handle = NULL;
+	g_clear_pointer(&priv->handle, libusb_close);
 	return TRUE;
 }
 
@@ -690,7 +689,7 @@ fu_usb_device_build_physical_id(struct libusb_device *dev)
 	g_string_append_printf(platform_id, "%02x:", libusb_get_bus_number(dev));
 	fu_usb_device_build_parent_port_number(platform_id, dev);
 	g_string_truncate(platform_id, platform_id->len - 1);
-	return g_string_free(platform_id, FALSE);
+	return g_string_free_and_steal(platform_id);
 }
 
 static gboolean
@@ -1441,7 +1440,6 @@ fu_usb_device_convert_version(FuDevice *device, guint64 version_raw)
  * @timeout: timeout timeout (in milliseconds) that this function should wait
  * before giving up due to no response being received. For an unlimited
  * timeout, use 0.
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB control transfer.
@@ -1464,7 +1462,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 			       gsize length,
 			       gsize *actual_length,
 			       guint timeout,
-			       GCancellable *cancellable,
 			       GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -1578,7 +1575,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
  * @timeout: timeout timeout (in milliseconds) that this function should wait
  * before giving up due to no response being received. For an unlimited
  * timeout, use 0.
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB bulk transfer.
@@ -1596,7 +1592,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    gsize length,
 			    gsize *actual_length,
 			    guint timeout,
-			    GCancellable *cancellable,
 			    GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -1682,7 +1677,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
  * @length: the length field for the setup packet.
  * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
  * @timeout: timeout (in milliseconds) that this function should wait -- use 0 for unlimited
- * @cancellable: a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
  * Perform a USB interrupt transfer.
@@ -1700,7 +1694,6 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 				 gsize length,
 				 gsize *actual_length,
 				 guint timeout,
-				 GCancellable *cancellable,
 				 GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -2031,13 +2024,21 @@ GPtrArray *
 fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) interfaces = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!fu_usb_device_ensure_interfaces(self, error))
 		return NULL;
-	return g_ptr_array_ref(priv->interfaces);
+
+	interfaces = g_ptr_array_ref(priv->interfaces);
+	if (interfaces == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no interfaces");
+		return NULL;
+	}
+
+	return g_steal_pointer(&interfaces);
 }
 
 /**
@@ -2738,7 +2739,6 @@ fu_usb_device_ensure_hid_descriptor(FuUsbDevice *self,
 					    bufsz,
 					    &actual_length,
 					    5000,
-					    NULL,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get HID report descriptor: ");
 		return FALSE;

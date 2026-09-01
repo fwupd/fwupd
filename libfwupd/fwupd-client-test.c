@@ -6,9 +6,122 @@
 
 #include "config.h"
 
+#include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
 #include "fwupd-error.h"
 #include "fwupd-test.h"
+
+static gboolean
+fwupd_client_connect_success_cb(FwupdClient *self, gpointer user_data, GError **error)
+{
+	gboolean *run = (gboolean *)user_data;
+	*run = TRUE;
+	return TRUE;
+}
+
+static gboolean
+fwupd_client_connect_failure_cb(FwupdClient *self, gpointer user_data, GError **error)
+{
+	gboolean *run = (gboolean *)user_data;
+	*run = TRUE;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED, "ac needed");
+	return FALSE;
+}
+
+static void
+fwupd_client_connect_func(void)
+{
+	gboolean ret;
+	gboolean ran_func1 = FALSE;
+	gboolean ran_func2 = FALSE;
+	gboolean ran_func3 = FALSE;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(GError) error = NULL;
+
+	/* none */
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* all success */
+	fwupd_client_add_connect_func(client, fwupd_client_connect_success_cb, &ran_func1, NULL);
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(ran_func1);
+
+	/* 1 success, 1 failure (then abort) */
+	fwupd_client_add_connect_func(client, fwupd_client_connect_failure_cb, &ran_func2, NULL);
+	fwupd_client_add_connect_func(client, fwupd_client_connect_success_cb, &ran_func3, NULL);
+	ret = fwupd_client_run_connect_funcs(client, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED);
+	g_assert_false(ret);
+	g_assert_true(ran_func1);
+	g_assert_true(ran_func2);
+	g_assert_false(ran_func3);
+}
+
+typedef struct {
+	gboolean done_connect;
+	gboolean done_set_feature_flags;
+	FwupdFeatureFlags feature_flags;
+} FwupdClientImplHelper;
+
+static gboolean
+fwupd_client_impl_connect_cb(FwupdClient *self,
+			     gpointer user_data,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
+	helper->done_connect = TRUE;
+	return TRUE;
+}
+
+static gboolean
+fwupd_client_impl_set_feature_flags_cb(FwupdClient *self,
+				       FwupdFeatureFlags feature_flags,
+				       gpointer user_data,
+				       GCancellable *cancellable,
+				       GError **error)
+{
+	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
+	helper->done_set_feature_flags = TRUE;
+	helper->feature_flags = feature_flags;
+	return TRUE;
+}
+
+static void
+fwupd_client_sync_impl_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	FwupdClientSyncImpl impl = {
+	    .connect = fwupd_client_impl_connect_cb,
+	    .set_feature_flags = fwupd_client_impl_set_feature_flags_cb,
+	};
+	FwupdClientImplHelper helper = {};
+
+	fwupd_client_set_sync_impl(client, &impl, &helper, NULL);
+	ret = fwupd_client_connect(client, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(helper.done_connect);
+	g_assert_false(helper.done_set_feature_flags);
+
+	ret =
+	    fwupd_client_set_feature_flags(client, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(helper.feature_flags, ==, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
+	g_assert_true(helper.done_connect);
+	g_assert_true(helper.done_set_feature_flags);
+
+	ret = fwupd_client_reset_config(client, "daemon", NULL, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
 
 static void
 fwupd_client_download_func(void)
@@ -388,5 +501,7 @@ main(int argc, char **argv)
 		g_test_add_func("/fwupd/client/devices", fwupd_client_devices_func);
 	}
 	g_test_add_func("/fwupd/client/download", fwupd_client_download_func);
+	g_test_add_func("/fwupd/client/connect/func", fwupd_client_connect_func);
+	g_test_add_func("/fwupd/client/sync/impl", fwupd_client_sync_impl_func);
 	return g_test_run();
 }

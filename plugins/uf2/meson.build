@@ -1,17 +1,20 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('uf2.quirk')
-plugin_builtin_uf2 = static_library('fu_plugin_uf2',
+plugin_builtin_uf2 = static_library(
+  'fu_plugin_uf2',
   rustgen.process(
-    'fu-uf2.rs',          # fuzzing
+    'fu-uf2.rs' # fuzzing
   ),
   sources: [
     'fu-uf2-plugin.c',
     'fu-uf2-device.c',
-    'fu-uf2-firmware.c',      # fuzzing
+    'fu-uf2-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   c_args: cargs,
@@ -21,8 +24,10 @@ plugin_builtin_uf2 = static_library('fu_plugin_uf2',
 plugin_builtins += plugin_builtin_uf2
 
 if get_option('tests')
-  install_data(['tests/uf2.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(
+    ['tests/uf2.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'uf2-self-test',
     sources: [

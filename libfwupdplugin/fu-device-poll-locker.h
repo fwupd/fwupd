@@ -9,5 +9,9 @@
 #include "fu-device-locker.h"
 #include "fu-device.h"
 
+G_BEGIN_DECLS
+
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

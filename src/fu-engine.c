@@ -121,13 +121,14 @@ struct _FuEngine {
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
-	guint acquiesce_id;
+	GSource *acquiesce_source;
 	guint acquiesce_delay;
-	guint update_motd_id;
+	GSource *update_motd_source;
 	FuEngineEmulatorPhase emulator_phase;
 	guint emulator_write_cnt;
 	guint emulator_composite_cnt;
 	FuEngineLoadFlags load_flags;
+	FuEnginePhase phase;
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
@@ -171,10 +172,12 @@ G_DEFINE_TYPE_EXTENDED(FuEngine,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_codec_iface_init))
 
-gboolean
-fu_engine_get_loaded(FuEngine *self)
+/* private */
+FuEnginePhase
+fu_engine_get_phase(FuEngine *self)
 {
-	return (self->load_flags & FU_ENGINE_LOAD_FLAG_READY) > 0;
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	return self->phase;
 }
 
 static gboolean
@@ -190,7 +193,7 @@ fu_engine_update_motd_timeout_cb(gpointer user_data)
 	/* update now */
 	if (!fu_engine_update_motd(self, &error_local))
 		g_info("failed to update MOTD: %s", error_local->message);
-	self->update_motd_id = 0;
+	g_clear_pointer(&self->update_motd_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -198,11 +201,14 @@ static void
 fu_engine_update_motd_reset(FuEngine *self)
 {
 	g_info("resetting update motd timeout");
-	if (self->update_motd_id != 0)
-		g_source_remove(self->update_motd_id);
-	self->update_motd_id = g_timeout_add_seconds(FU_ENGINE_UPDATE_MOTD_DELAY,
-						     fu_engine_update_motd_timeout_cb,
-						     self);
+	if (self->update_motd_source != NULL) {
+		g_source_destroy(self->update_motd_source);
+		g_source_unref(self->update_motd_source);
+	}
+	self->update_motd_source = fu_context_add_timeout_seconds(self->ctx,
+								  FU_ENGINE_UPDATE_MOTD_DELAY,
+								  fu_engine_update_motd_timeout_cb,
+								  self);
 }
 
 static void
@@ -211,7 +217,7 @@ fu_engine_emit_changed(FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* do nothing */
-	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
+	if (self->phase != FU_ENGINE_PHASE_DONE)
 		return;
 
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
@@ -230,7 +236,7 @@ static void
 fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
 	/* do nothing */
-	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
+	if (self->phase != FU_ENGINE_PHASE_DONE)
 		return;
 
 	/* invalidate host security attributes */
@@ -392,7 +398,7 @@ fu_engine_config_get_esp_location(FuEngine *self)
 		g_autoptr(GString) esp_location_tmp = g_string_new(esp_location);
 		g_warning("removing trailing slash from EspLocation");
 		g_string_truncate(esp_location_tmp, esp_location_tmp->len - 1);
-		return g_string_free(g_steal_pointer(&esp_location_tmp), FALSE);
+		return g_string_free_and_steal(g_steal_pointer(&esp_location_tmp));
 	}
 	return g_steal_pointer(&esp_location);
 }
@@ -626,7 +632,7 @@ fu_engine_acquiesce_timeout_cb(gpointer user_data)
 	FuEngine *self = FU_ENGINE(user_data);
 	g_info("system acquiesced after %ums", self->acquiesce_delay);
 	g_main_loop_quit(self->acquiesce_loop);
-	self->acquiesce_id = 0;
+	g_clear_pointer(&self->acquiesce_source, g_source_unref);
 	return G_SOURCE_REMOVE;
 }
 
@@ -636,10 +642,14 @@ fu_engine_acquiesce_reset(FuEngine *self)
 	if (!g_main_loop_is_running(self->acquiesce_loop))
 		return;
 	g_info("resetting system acquiesce timeout");
-	if (self->acquiesce_id != 0)
-		g_source_remove(self->acquiesce_id);
-	self->acquiesce_id =
-	    g_timeout_add(self->acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
+	if (self->acquiesce_source != NULL) {
+		g_source_destroy(self->acquiesce_source);
+		g_source_unref(self->acquiesce_source);
+	}
+	self->acquiesce_source = fu_context_add_timeout(self->ctx,
+							self->acquiesce_delay,
+							fu_engine_acquiesce_timeout_cb,
+							self);
 }
 
 static void
@@ -648,7 +658,10 @@ fu_engine_wait_for_acquiesce(FuEngine *self, guint acquiesce_delay)
 	if (acquiesce_delay == 0)
 		return;
 	self->acquiesce_delay = acquiesce_delay;
-	self->acquiesce_id = g_timeout_add(acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
+	self->acquiesce_source = fu_context_add_timeout(self->ctx,
+							acquiesce_delay,
+							fu_engine_acquiesce_timeout_cb,
+							self);
 	g_main_loop_run(self->acquiesce_loop);
 }
 
@@ -2559,7 +2572,6 @@ fu_engine_install_release_version_check(FuEngine *self,
  * @self: a #FuEngine
  * @request: a #FuEngineRequest
  * @releases: (element-type FuRelease): a device
- * @cabinet: a #FuCabinet
  * @flags: install flags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: (nullable): optional return location for an error
  *
@@ -2575,7 +2587,6 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
@@ -2830,7 +2841,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	if (remote_tmp != NULL) {
 		g_info("enabling remote %s", fwupd_remote_get_id(remote_tmp));
 		fwupd_remote_add_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED);
-		return fu_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
+		return fu_remote_save_to_filename(remote_tmp, remotes_fn, error);
 	}
 
 	/* create a new remote we can use for re-installing */
@@ -2839,7 +2850,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 	fwupd_remote_set_title(remote, "Backup");
 	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
-	return fu_remote_save_to_filename(remote, remotes_fn, NULL, error);
+	return fu_remote_save_to_filename(remote, remotes_fn, error);
 }
 
 static gboolean
@@ -4356,6 +4367,8 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
 	g_autoptr(FuInputStream) memstream = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	gsize sz = 0;
 
 	/* convert the CAB into metadata XML */
 	cabinet = fu_engine_build_cabinet_from_stream(self, fustream, error);
@@ -4367,7 +4380,11 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
-	memstream = fu_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+
+	sz = strlen(xml);
+	bytes = g_bytes_new_take(g_steal_pointer(&xml), sz);
+
+	memstream = fu_memory_input_stream_new_from_bytes(bytes);
 	return fu_input_stream_as_g_input_stream(memstream);
 }
 
@@ -6709,7 +6726,7 @@ static void
 fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
 	fu_device_set_parent(device, parent);
-	if (fu_engine_get_loaded(self)) {
+	if (self->phase >= FU_ENGINE_PHASE_DONE) {
 		fu_engine_ensure_device_supported(self, device);
 		fu_engine_ensure_device_supported(self, parent);
 	}
@@ -7033,7 +7050,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	fu_engine_ensure_device_emulation_tag(self, device);
 
 	/* set or clear the SUPPORTED flag right away when doing device holdplug */
-	if (fu_engine_get_loaded(self))
+	if (self->phase >= FU_ENGINE_PHASE_DONE)
 		fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
@@ -7222,7 +7239,7 @@ fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob)
 	g_return_if_fail(plugin_glob != NULL);
 	str = g_string_new(plugin_glob);
 	g_string_replace(str, "-", "_", 0);
-	g_ptr_array_add(self->plugin_filter, g_string_free(str, FALSE));
+	g_ptr_array_add(self->plugin_filter, g_string_free_and_steal(str));
 }
 
 static gboolean
@@ -8880,9 +8897,18 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* avoid re-loading a second time if fu-tool or fu-util request to */
-	if (self->load_flags & FU_ENGINE_LOAD_FLAG_READY)
+	/* avoid re-loading a second time */
+	if (self->phase != FU_ENGINE_PHASE_IDLE) {
+		if (self->load_flags != flags) {
+			g_autofree gchar *old = fu_engine_load_flags_to_string(self->load_flags);
+			g_autofree gchar *new = fu_engine_load_flags_to_string(flags);
+			g_warning("originally started engine with %s and now loading with %s",
+				  old,
+				  new);
+		}
 		return TRUE;
+	}
+	self->phase = FU_ENGINE_PHASE_STARTUP;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -9181,7 +9207,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_info("failed to update list of devices: %s", error_json_devices->message);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
-	self->load_flags |= FU_ENGINE_LOAD_FLAG_READY;
+	self->phase = FU_ENGINE_PHASE_DONE;
 
 	/* let clients know engine finished starting up */
 	fu_engine_emit_changed(self);
@@ -9233,9 +9259,11 @@ fu_engine_dispose(GObject *obj)
 	}
 	if (self->device_list != NULL)
 		fu_device_list_remove_all(self->device_list);
-	if (fu_context_get_config(self->ctx) != NULL)
-		g_signal_handlers_disconnect_by_data(fu_context_get_config(self->ctx), self);
-
+	if (self->ctx != NULL) {
+		FuConfig *config = fu_context_get_config(self->ctx);
+		if (config != NULL)
+			g_signal_handlers_disconnect_by_data(config, self);
+	}
 	if (self->ctx != NULL) {
 		GPtrArray *backends = fu_context_get_backends(self->ctx);
 		for (guint i = 0; i < backends->len; i++) {
@@ -9559,7 +9587,9 @@ fu_engine_constructed(GObject *obj)
 #endif
 
 	self->history = fu_history_new(self->ctx);
+	self->device_list = fu_device_list_new(self->ctx);
 	self->emulation = fu_engine_emulator_new(self);
+	self->acquiesce_loop = g_main_loop_new(fu_context_get_main_context(self->ctx), FALSE);
 
 	self->remote_list = fu_remote_list_new(self->ctx);
 	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
@@ -9626,14 +9656,12 @@ fu_engine_constructed(GObject *obj)
 static void
 fu_engine_init(FuEngine *self)
 {
-	self->device_list = fu_device_list_new();
 	self->idle = fu_idle_new();
 	self->plugin_list = fu_plugin_list_new();
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
 	self->host_security_attrs = fu_security_attrs_new();
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->search_queries = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
@@ -9670,17 +9698,22 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->query_tag_by_guid_version);
 	if (self->approved_firmware != NULL)
 		g_hash_table_unref(self->approved_firmware);
-	if (self->acquiesce_id != 0)
-		g_source_remove(self->acquiesce_id);
-	if (self->update_motd_id != 0)
-		g_source_remove(self->update_motd_id);
+	if (self->acquiesce_source != NULL) {
+		g_source_destroy(self->acquiesce_source);
+		g_source_unref(self->acquiesce_source);
+	}
+	if (self->update_motd_source != NULL) {
+		g_source_destroy(self->update_motd_source);
+		g_source_unref(self->update_motd_source);
+	}
 	if (self->emulation != NULL)
 		g_object_unref(self->emulation);
 #ifdef HAVE_PASSIM
 	if (self->passim_client != NULL)
 		g_object_unref(self->passim_client);
 #endif
-	g_main_loop_unref(self->acquiesce_loop);
+	if (self->acquiesce_loop != NULL)
+		g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);
 	g_object_unref(self->host_security_attrs);

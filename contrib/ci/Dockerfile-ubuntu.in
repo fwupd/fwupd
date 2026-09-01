@@ -1,10 +1,13 @@
 # -*- mode: dockerfile -*-
-FROM ubuntu:rolling
+FROM ubuntu:%%%VERSION%%%
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
     apt-get update -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:peter-hutterer/meson1.11; \
@@ -15,3 +18,4 @@ RUN set -euxo pipefail; \
 %%%DEPENDENCIES%%%; \
     apt-get clean
 WORKDIR /github/workspace
+%%%RUSTUP%%%

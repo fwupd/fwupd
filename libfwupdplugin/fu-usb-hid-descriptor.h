@@ -8,9 +8,13 @@
 
 #include "fu-usb-descriptor.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_HID_DESCRIPTOR (fu_usb_hid_descriptor_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbHidDescriptor,
 		     fu_usb_hid_descriptor,
 		     FU,
 		     USB_HID_DESCRIPTOR,
 		     FuUsbDescriptor)
+
+G_END_DECLS

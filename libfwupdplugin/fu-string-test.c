@@ -11,6 +11,27 @@
 #include "fu-test.h"
 
 static void
+fu_string_strsafe_func(void)
+{
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} map[] = {
+	    {"same", "same"},
+	    {"a a ", "a a "},
+	    {"a\nb\n", "a.b."},
+	    {"....", "...."},
+	    {"!{}@ ", "!{}@"},
+	    {"xxx\x07", "xxx."},
+	    {"\x07\x07\x07\x07", NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		g_autofree gchar *str = fu_strsafe(map[i].old, 4);
+		g_assert_cmpstr(str, ==, map[i].new);
+	}
+}
+
+static void
 fu_string_utf16_func(void)
 {
 	g_autofree gchar *str1 = NULL;
@@ -245,6 +266,8 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
+
+	g_test_add_func("/fwupd/string/strsafe", fu_string_strsafe_func);
 	g_test_add_func("/fwupd/string/utf16", fu_string_utf16_func);
 	g_test_add_func("/fwupd/string/password-mask", fu_strpassmask_func);
 	g_test_add_func("/fwupd/string/strsplit-stream", fu_strsplit_stream_func);

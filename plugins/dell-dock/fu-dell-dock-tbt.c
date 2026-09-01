@@ -186,8 +186,7 @@ fu_dell_dock_tbt_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockHubVersionLowest") == 0) {
-		g_free(self->hub_minimum_version);
-		self->hub_minimum_version = g_strdup(value);
+		g_set_str(&self->hub_minimum_version, value);
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobMajorOffset") == 0) {

@@ -9,6 +9,8 @@
 #include "fu-pci-struct.h"
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PCI_DEVICE (fu_pci_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPciDevice, fu_pci_device, FU, PCI_DEVICE, FuUdevDevice)
 
@@ -17,16 +19,18 @@ struct _FuPciDeviceClass {
 };
 
 guint16
-fu_pci_device_get_subsystem_vid(FuPciDevice *self) G_GNUC_NON_NULL(1);
+fu_pci_device_get_subsystem_vid(FuPciDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_pci_device_get_subsystem_pid(FuPciDevice *self) G_GNUC_NON_NULL(1);
+fu_pci_device_get_subsystem_pid(FuPciDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_pci_device_set_subsystem_vid(FuPciDevice *self, guint16 subsystem_vid) G_GNUC_NON_NULL(1);
 void
 fu_pci_device_set_subsystem_pid(FuPciDevice *self, guint16 subsystem_pid) G_GNUC_NON_NULL(1);
 guint8
-fu_pci_device_get_revision(FuPciDevice *self) G_GNUC_NON_NULL(1);
+fu_pci_device_get_revision(FuPciDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_pci_device_set_revision(FuPciDevice *self, guint8 revision) G_GNUC_NON_NULL(1);
 FuPciDeviceClassCode
-fu_pci_device_get_class_code(FuPciDevice *self) G_GNUC_NON_NULL(1);
+fu_pci_device_get_class_code(FuPciDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

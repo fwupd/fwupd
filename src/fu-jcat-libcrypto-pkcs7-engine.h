@@ -10,6 +10,8 @@
 #include "fu-jcat-context.h"
 #include "fu-jcat-engine.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_JCAT_LIBCRYPTO_PKCS7_ENGINE (fu_jcat_libcrypto_pkcs7_engine_get_type())
 G_DECLARE_FINAL_TYPE(FuJcatLibcryptoPkcs7Engine,
 		     fu_jcat_libcrypto_pkcs7_engine,
@@ -19,3 +21,5 @@ G_DECLARE_FINAL_TYPE(FuJcatLibcryptoPkcs7Engine,
 
 FuJcatEngine *
 fu_jcat_libcrypto_pkcs7_engine_new(FuJcatContext *context) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

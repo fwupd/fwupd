@@ -11,7 +11,7 @@
 G_BEGIN_DECLS
 
 FwupdJsonNodeKind
-fwupd_json_node_get_kind(FwupdJsonNode *self) G_GNUC_NON_NULL(1);
+fwupd_json_node_get_kind(FwupdJsonNode *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FwupdJsonNode *
 fwupd_json_node_ref(FwupdJsonNode *self) G_GNUC_NON_NULL(1);
 FwupdJsonNode *

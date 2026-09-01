@@ -10,6 +10,8 @@
 #include "fu-firmware.h"
 #include "fu-input-stream.h"
 
+G_BEGIN_DECLS
+
 #define FU_EFI_VOLUME_GUID_FFS1	       "7a9354d9-0468-444a-81ce-0bf617d890df"
 #define FU_EFI_VOLUME_GUID_FFS2	       "8c8ce578-8a3d-4f1c-9935-896185c32dd3"
 #define FU_EFI_VOLUME_GUID_FFS3	       "5473c07a-3dcb-4dca-bd6f-1e9689e7349a"
@@ -39,7 +41,7 @@
 #define FU_EFI_SIGNATURE_GUID_EXTERNAL "452e8ced-dfff-4b8c-ae01-5118862e682c"
 
 const gchar *
-fu_efi_guid_to_name(const gchar *guid);
+fu_efi_guid_to_name(const gchar *guid) G_GNUC_PURE;
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
 		      FuInputStream *stream,
@@ -50,3 +52,5 @@ void
 fu_efi_timestamp_export(FuStructEfiTime *st, XbBuilderNode *bn) G_GNUC_NON_NULL(1, 2);
 void
 fu_efi_timestamp_build(FuStructEfiTime *st, XbNode *n) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

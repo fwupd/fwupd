@@ -9,16 +9,20 @@
 
 #include "fu-usb-descriptor.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USB_ENDPOINT (fu_usb_endpoint_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbEndpoint, fu_usb_endpoint, FU, USB_ENDPOINT, FuUsbDescriptor)
 
 guint16
-fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
+fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
+fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_endpoint_get_address(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
+fu_usb_endpoint_get_address(FuUsbEndpoint *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_usb_endpoint_get_number(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
+fu_usb_endpoint_get_number(FuUsbEndpoint *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuUsbDirection
-fu_usb_endpoint_get_direction(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
+fu_usb_endpoint_get_direction(FuUsbEndpoint *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

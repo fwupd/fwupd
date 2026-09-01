@@ -162,13 +162,7 @@ fu_firmware_set_version(FuFirmware *self, const gchar *version)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->version, version) == 0)
-		return;
-
-	g_free(priv->version);
-	priv->version = g_strdup(version);
+	g_set_str(&priv->version, version);
 }
 
 /**
@@ -299,13 +293,7 @@ fu_firmware_set_filename(FuFirmware *self, const gchar *filename)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->filename, filename) == 0)
-		return;
-
-	g_free(priv->filename);
-	priv->filename = g_strdup(filename);
+	g_set_str(&priv->filename, filename);
 }
 
 /**
@@ -320,13 +308,7 @@ fu_firmware_set_id(FuFirmware *self, const gchar *id)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
+	g_set_str(&priv->id, id);
 }
 
 /**
@@ -1134,7 +1116,11 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* ensure the stream is seekable */
 	if (!G_IS_SEEKABLE(stream) || !g_seekable_can_seek(G_SEEKABLE(stream))) {
-		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
+		blob = fu_input_stream_read_bytes(stream,
+						  offset,
+						  fu_firmware_get_size_max(self) + 0x1,
+						  NULL,
+						  error);
 		if (blob == NULL)
 			return FALSE;
 		seekable_stream = fu_memory_input_stream_new_from_bytes(blob);
@@ -1655,7 +1641,7 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = fu_file_input_stream_from_file(file, NULL, error);
+	stream = fu_file_input_stream_from_file(file, error);
 	if (stream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;

@@ -21,6 +21,8 @@
 /* only until HSI is declared stable */
 #include "fwupd-security-attr-private.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PLUGIN (fu_plugin_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 
@@ -36,7 +38,7 @@ fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1,
 void
 fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 
 /**
  * FuPluginVerifyFlags:
@@ -499,13 +501,13 @@ typedef struct FuPluginData FuPluginData;
 
 /* for plugins to use */
 const gchar *
-fu_plugin_get_name(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_name(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuPluginData *
-fu_plugin_get_data(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_data(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuPluginData *
 fu_plugin_alloc_data(FuPlugin *self, gsize data_sz) G_GNUC_NON_NULL(1);
 FuContext *
-fu_plugin_get_context(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_context(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_plugin_add_device(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
@@ -515,7 +517,7 @@ fu_plugin_device_register(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2
 void
 fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
 GType
-fu_plugin_get_device_gtype_default(FuPlugin *self) G_GNUC_NON_NULL(1);
+fu_plugin_get_device_gtype_default(FuPlugin *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
 void
@@ -525,7 +527,7 @@ fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem) G_GN
 void
 fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem) G_GNUC_NON_NULL(1, 2);
 gpointer
-fu_plugin_cache_lookup(FuPlugin *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
+fu_plugin_cache_lookup(FuPlugin *self, const gchar *id) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 void
 fu_plugin_cache_remove(FuPlugin *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
 void
@@ -549,3 +551,5 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
     G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

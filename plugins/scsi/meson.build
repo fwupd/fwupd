@@ -1,10 +1,13 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('scsi.quirk')
-plugin_builtins += static_library('fu_plugin_scsi',
+plugin_builtins += static_library(
+  'fu_plugin_scsi',
   rustgen.process('fu-scsi.rs'),
   sources: [
     'fu-scsi-plugin.c',

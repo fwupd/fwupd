@@ -141,15 +141,13 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 static void
 fu_acpi_phat_health_record_set_guid(FuAcpiPhatHealthRecord *self, const gchar *guid)
 {
-	g_free(self->guid);
-	self->guid = g_strdup(guid);
+	g_set_str(&self->guid, guid);
 }
 
 static void
 fu_acpi_phat_health_record_set_device_path(FuAcpiPhatHealthRecord *self, const gchar *device_path)
 {
-	g_free(self->device_path);
-	self->device_path = g_strdup(device_path);
+	g_set_str(&self->device_path, device_path);
 }
 
 static gboolean

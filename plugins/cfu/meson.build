@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('cfu.quirk')
-plugin_builtins += static_library('fu_plugin_cfu',
+plugin_builtins += static_library(
+  'fu_plugin_cfu',
   sources: [
     'fu-cfu-device.c',
     'fu-cfu-firmware.c',

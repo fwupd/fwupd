@@ -37,15 +37,13 @@ fu_uefi_update_info_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 void
 fu_uefi_update_info_set_guid(FuUefiUpdateInfo *self, const gchar *guid)
 {
-	g_free(self->guid);
-	self->guid = g_strdup(guid);
+	g_set_str(&self->guid, guid);
 }
 
 void
 fu_uefi_update_info_set_capsule_fn(FuUefiUpdateInfo *self, const gchar *capsule_fn)
 {
-	g_free(self->capsule_fn);
-	self->capsule_fn = g_strdup(capsule_fn);
+	g_set_str(&self->capsule_fn, capsule_fn);
 }
 
 void

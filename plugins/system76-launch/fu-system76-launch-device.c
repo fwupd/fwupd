@@ -40,7 +40,6 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 					      helper->len,
 					      &actual_len,
 					      SYSTEM76_LAUNCH_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to read response: ");
 		return FALSE;
@@ -75,7 +74,6 @@ fu_system76_launch_device_command(FuSystem76LaunchDevice *self,
 					      len,
 					      &actual_len,
 					      SYSTEM76_LAUNCH_TIMEOUT,
-					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to send command: ");
 		return FALSE;

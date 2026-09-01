@@ -8,6 +8,8 @@
 
 #include "fu-pci-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_OPROM_DEVICE (fu_oprom_device_get_type())
 
 G_DECLARE_DERIVABLE_TYPE(FuOpromDevice, fu_oprom_device, FU, OPROM_DEVICE, FuPciDevice)
@@ -15,3 +17,5 @@ G_DECLARE_DERIVABLE_TYPE(FuOpromDevice, fu_oprom_device, FU, OPROM_DEVICE, FuPci
 struct _FuOpromDeviceClass {
 	FuPciDeviceClass parent_class;
 };
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 void
 fu_udev_device_emit_changed(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 FuUdevDevice *
@@ -37,3 +39,5 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		     guint timeout,
 		     FuIoctlFlags flags,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

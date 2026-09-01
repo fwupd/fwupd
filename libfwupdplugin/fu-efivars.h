@@ -12,16 +12,19 @@
 #include "fu-path-store.h"
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfivars, fu_efivars, FU, EFIVARS, GObject)
 
 struct _FuEfivarsClass {
 	GObjectClass parent_class;
+#ifndef __cplusplus
 	gboolean (*supported)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_used)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_free)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	gboolean (*exists)(FuEfivars *self, const gchar *guid, const gchar *name)
-	    G_GNUC_NON_NULL(1, 2);
+	    G_GNUC_NON_NULL(1, 2, 3);
 	GFileMonitor *(*get_monitor)(FuEfivars *self,
 				     const gchar *guid,
 				     const gchar *name,
@@ -49,6 +52,7 @@ struct _FuEfivarsClass {
 	GPtrArray *(*get_names)(FuEfivars *self,
 				const gchar *guid,
 				GError **error)G_GNUC_NON_NULL(1, 2);
+#endif
 };
 
 #define FU_EFIVARS_GUID_EFI_GLOBAL	   "8be4df61-93ca-11d2-aa0d-00e098032b8c"
@@ -67,7 +71,7 @@ fu_efivars_space_used(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 guint64
 fu_efivars_space_free(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2);
+fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2, 3);
 GFileMonitor *
 fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
@@ -149,3 +153,5 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 					const gchar *name,
 					const gchar *target,
 					GError **error) G_GNUC_NON_NULL(1, 3, 4, 5);
+
+G_END_DECLS

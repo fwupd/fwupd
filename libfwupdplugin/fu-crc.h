@@ -10,11 +10,13 @@
 
 #include "fu-crc-struct.h"
 
+G_BEGIN_DECLS
+
 guint
-fu_crc_size(FuCrcKind kind);
+fu_crc_size(FuCrcKind kind) G_GNUC_CONST;
 
 guint32
-fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz);
+fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 gboolean
 fu_crc32_safe(FuCrcKind kind,
 	      const guint8 *buf,
@@ -24,9 +26,9 @@ fu_crc32_safe(FuCrcKind kind,
 	      guint32 *value,
 	      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 guint32
-fu_crc32_bytes(FuCrcKind kind, GBytes *blob);
+fu_crc32_bytes(FuCrcKind kind, GBytes *blob) G_GNUC_PURE;
 guint16
-fu_crc16(FuCrcKind kind, const guint8 *buf, gsize bufsz);
+fu_crc16(FuCrcKind kind, const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 gboolean
 fu_crc16_safe(FuCrcKind kind,
 	      const guint8 *buf,
@@ -36,9 +38,9 @@ fu_crc16_safe(FuCrcKind kind,
 	      guint16 *value,
 	      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 guint16
-fu_crc16_bytes(FuCrcKind kind, GBytes *blob);
+fu_crc16_bytes(FuCrcKind kind, GBytes *blob) G_GNUC_PURE;
 guint8
-fu_crc8(FuCrcKind kind, const guint8 *buf, gsize bufsz);
+fu_crc8(FuCrcKind kind, const guint8 *buf, gsize bufsz) G_GNUC_PURE;
 gboolean
 fu_crc8_safe(FuCrcKind kind,
 	     const guint8 *buf,
@@ -48,10 +50,12 @@ fu_crc8_safe(FuCrcKind kind,
 	     guint8 *value,
 	     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 guint8
-fu_crc8_bytes(FuCrcKind kind, GBytes *blob);
+fu_crc8_bytes(FuCrcKind kind, GBytes *blob) G_GNUC_PURE;
 
 gboolean
 fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target, FuCrcKind *kind, GError **error);
 
 guint16
-fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz);
+fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz) G_GNUC_PURE;
+
+G_END_DECLS

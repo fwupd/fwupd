@@ -166,3 +166,17 @@ Name = Helios Gen II Keyboard
 Plugin = lenovo_accessory
 Flags = no-generic-version
 GType = FuLenovoAccessoryBleDevice
+
+# Lenovo AI Mouse (BT Mode)
+[BLUETOOTH\VID_17EF&PID_62F6]
+Name = Lenovo AI Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version,use-notify
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo AI Mouse
+[USB\VID_17EF&PID_62F5]
+Name = Lenovo AI Mouse
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDualDevice
+LenovoAccessoryInterface = 0x02

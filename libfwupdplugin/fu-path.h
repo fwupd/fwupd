@@ -10,6 +10,8 @@
 
 #include "fu-path-struct.h"
 
+G_BEGIN_DECLS
+
 GPtrArray *
 fu_path_glob(const gchar *directory, const gchar *pattern, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
@@ -33,3 +35,5 @@ fu_path_verify_safe(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RE
     G_GNUC_NON_NULL(1);
 gchar *
 fu_path_sanitize_basename(const gchar *str) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

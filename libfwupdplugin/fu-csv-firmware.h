@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CSV_FIRMWARE (fu_csv_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCsvFirmware, fu_csv_firmware, FU, CSV_FIRMWARE, FuFirmware)
 
@@ -20,8 +22,10 @@ fu_csv_firmware_new(void);
 void
 fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx) G_GNUC_NON_NULL(1);
+fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids);
 gboolean
-fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self);
+fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self) G_GNUC_PURE;
+
+G_END_DECLS

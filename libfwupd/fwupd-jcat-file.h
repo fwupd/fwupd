@@ -43,8 +43,8 @@ fwupd_jcat_file_get_item_default(FwupdJcatFile *self, GError **error) G_GNUC_NON
 void
 fwupd_jcat_file_add_item(FwupdJcatFile *self, FwupdJcatItem *item) G_GNUC_NON_NULL(1, 2);
 guint32
-fwupd_jcat_file_get_version_major(FwupdJcatFile *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_file_get_version_major(FwupdJcatFile *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fwupd_jcat_file_get_version_minor(FwupdJcatFile *self) G_GNUC_NON_NULL(1);
+fwupd_jcat_file_get_version_minor(FwupdJcatFile *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

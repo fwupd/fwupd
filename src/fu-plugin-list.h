@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PLUGIN_LIST (fu_plugin_list_get_type())
 G_DECLARE_FINAL_TYPE(FuPluginList, fu_plugin_list, FU, PLUGIN_LIST, GObject)
 
@@ -24,3 +26,5 @@ fu_plugin_list_find_by_name(FuPluginList *self, const gchar *name, GError **erro
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_plugin_list_depsolve(FuPluginList *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

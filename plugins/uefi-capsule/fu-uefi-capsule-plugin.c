@@ -713,7 +713,7 @@ fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiCapsuleDeviceKi
 	display_name = g_string_new(fu_uefi_capsule_plugin_uefi_type_to_string(device_kind));
 	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE)
 		g_string_prepend(display_name, "UEFI ");
-	return g_string_free(display_name, FALSE);
+	return g_string_free_and_steal(display_name);
 }
 
 static gboolean
@@ -1338,6 +1338,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "dell");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "bootupd");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_UEFI);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_UEFI_UPDATE_INFO);

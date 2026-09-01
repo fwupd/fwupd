@@ -2,7 +2,9 @@ host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginNovatekTs"']
 
-plugins += { meson.current_source_dir().split('/')[-1] : true }
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('novatek-ts.quirk')
 plugin_builtins += static_library(

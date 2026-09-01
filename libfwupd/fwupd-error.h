@@ -17,9 +17,9 @@ G_BEGIN_DECLS
 GQuark
 fwupd_error_quark(void);
 const gchar *
-fwupd_error_to_string(FwupdError error);
+fwupd_error_to_string(FwupdError error) G_GNUC_CONST;
 FwupdError
-fwupd_error_from_string(const gchar *error);
+fwupd_error_from_string(const gchar *error) G_GNUC_PURE;
 void
 fwupd_error_convert(GError **perror);
 const gchar *

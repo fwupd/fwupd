@@ -1,0 +1,18 @@
+{
+  "name": "Rolling RW101R (Fastboot)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/qc-rw101r-fastboot-setup.json",
+      "components": [
+        {
+          "version": "19512.0000.00.11.03.01_6167.0001.001.304.010_E47",
+          "protocol": "com.google.fastboot",
+          "guids": [
+            "5f7386c4-8fd5-569d-ad01-beb359697db7"
+          ]
+        }
+      ]
+    }
+  ]
+}

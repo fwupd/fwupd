@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_SBATLEVEL_SECTION (fu_sbatlevel_section_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuSbatlevelSection,
 			 fu_sbatlevel_section,
@@ -21,3 +23,5 @@ struct _FuSbatlevelSectionClass {
 
 FuFirmware *
 fu_sbatlevel_section_new(void);
+
+G_END_DECLS

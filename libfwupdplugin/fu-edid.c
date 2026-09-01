@@ -57,8 +57,7 @@ fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
 	g_return_if_fail(FU_IS_EDID(self));
 	if (g_strcmp0(self->pnp_id, pnp_id) == 0)
 		return;
-	g_free(self->pnp_id);
-	self->pnp_id = g_strdup(pnp_id);
+	g_set_str(&self->pnp_id, pnp_id);
 }
 
 /**
@@ -93,8 +92,7 @@ fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
 	g_return_if_fail(FU_IS_EDID(self));
 	if (g_strcmp0(self->eisa_id, eisa_id) == 0)
 		return;
-	g_free(self->eisa_id);
-	self->eisa_id = g_strdup(eisa_id);
+	g_set_str(&self->eisa_id, eisa_id);
 }
 
 /**
@@ -130,8 +128,7 @@ fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
 	g_return_if_fail(FU_IS_EDID(self));
 	if (g_strcmp0(self->serial_number, serial_number) == 0)
 		return;
-	g_free(self->serial_number);
-	self->serial_number = g_strdup(serial_number);
+	g_set_str(&self->serial_number, serial_number);
 }
 
 /**
@@ -166,8 +163,7 @@ fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
 	g_return_if_fail(FU_IS_EDID(self));
 	if (g_strcmp0(self->product_name, product_name) == 0)
 		return;
-	g_free(self->product_name);
-	self->product_name = g_strdup(product_name);
+	g_set_str(&self->product_name, product_name);
 }
 
 /**
@@ -215,7 +211,7 @@ fu_edid_strsafe(const guint8 *buf, gsize bufsz)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 static gboolean

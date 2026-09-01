@@ -8,6 +8,8 @@
 
 #include "fu-block-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_BLOCK_PARTITION (fu_block_partition_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBlockPartition, fu_block_partition, FU, BLOCK_PARTITION, FuBlockDevice)
 
@@ -16,10 +18,12 @@ struct _FuBlockPartitionClass {
 };
 
 const gchar *
-fu_block_partition_get_fs_type(FuBlockPartition *self) G_GNUC_NON_NULL(1);
+fu_block_partition_get_fs_type(FuBlockPartition *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_block_partition_get_fs_uuid(FuBlockPartition *self) G_GNUC_NON_NULL(1);
+fu_block_partition_get_fs_uuid(FuBlockPartition *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
-fu_block_partition_get_fs_label(FuBlockPartition *self) G_GNUC_NON_NULL(1);
+fu_block_partition_get_fs_label(FuBlockPartition *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gchar *
 fu_block_partition_get_mount_point(FuBlockPartition *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

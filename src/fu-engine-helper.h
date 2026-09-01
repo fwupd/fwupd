@@ -8,6 +8,8 @@
 
 #include "fu-engine.h"
 
+G_BEGIN_DECLS
+
 gboolean
 fu_engine_update_motd(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
@@ -28,3 +30,5 @@ fu_engine_add_firmware_gtypes(FuEngine *self) G_GNUC_NON_NULL(1);
 
 FwupdReport *
 fu_engine_report_from_spec(const gchar *report_spec, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

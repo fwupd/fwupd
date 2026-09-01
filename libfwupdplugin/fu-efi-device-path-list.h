@@ -9,6 +9,8 @@
 #include "fu-efi-device-path.h"
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_DEVICE_PATH_LIST (fu_efi_device_path_list_get_type())
 
 G_DECLARE_FINAL_TYPE(FuEfiDevicePathList,
@@ -19,3 +21,5 @@ G_DECLARE_FINAL_TYPE(FuEfiDevicePathList,
 
 FuEfiDevicePathList *
 fu_efi_device_path_list_new(void) G_GNUC_WARN_UNUSED_RESULT;
+
+G_END_DECLS

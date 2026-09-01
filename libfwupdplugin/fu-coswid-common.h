@@ -9,6 +9,8 @@
 #include "fu-cbor-item.h"
 #include "fu-coswid-struct.h"
 
+G_BEGIN_DECLS
+
 gchar *
 fu_coswid_read_string(FuCborItem *item, GError **error) G_GNUC_NON_NULL(1);
 gboolean
@@ -39,3 +41,5 @@ fu_coswid_parse_one_or_many(FuCborItem *item,
 			    FuCoswidItemFunc func,
 			    gpointer user_data,
 			    GError **error) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

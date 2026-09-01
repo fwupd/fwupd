@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginHpiCfu"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('hpi-cfu.quirk')
-plugin_builtins += static_library('fu_plugin_hpi_cfu',
+plugin_builtins += static_library(
+  'fu_plugin_hpi_cfu',
   rustgen.process('fu-hpi-cfu.rs'),
   sources: [
     'fu-hpi-cfu-device.c',
@@ -14,6 +17,4 @@ plugin_builtins += static_library('fu_plugin_hpi_cfu',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/hp-dock-g6-ultra.json',
-)
+device_tests += files('tests/hp-dock-g6-ultra.json')

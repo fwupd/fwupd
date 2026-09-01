@@ -47,7 +47,12 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
         '--defines',
-        join_paths(meson.project_source_root(), 'plugins', 'dell-kestrel', 'fu-dell-kestrel-plugin.c'),
+        join_paths(
+          meson.project_source_root(),
+          'plugins',
+          'dell-kestrel',
+          'fu-dell-kestrel-plugin.c',
+        ),
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines',
@@ -124,7 +129,12 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
         '--defines',
-        join_paths(meson.project_source_root(), 'plugins', 'dell-kestrel', 'fu-dell-kestrel-plugin.c'),
+        join_paths(
+          meson.project_source_root(),
+          'plugins',
+          'dell-kestrel',
+          'fu-dell-kestrel-plugin.c',
+        ),
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines',
@@ -239,10 +249,8 @@ if build_docs
     meson.current_build_dir() / '../libfwupd',
     meson.current_build_dir() / '../libfwupdplugin',
   ] + fwupdplugin_gir_includes
-  foreach inc: doc_fwupdplugin_gir_includes
-    doc_fwupdplugin_include_args += [
-      '--add-include-path=@0@'.format(inc)
-    ]
+  foreach inc : doc_fwupdplugin_gir_includes
+    doc_fwupdplugin_include_args += ['--add-include-path=@0@'.format(inc)]
   endforeach
 
   custom_target(

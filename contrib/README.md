@@ -7,12 +7,12 @@ The build can be performed using Linux containers with [Docker](https://www.dock
 
 ## RPM packages
 
-A Dockerfile for Fedora can be generated in `contrib`.
+A Dockerfile for Fedora can be generated in `contrib/ci`.
 
 To prepare the Docker container run this command:
 
 ```shell
-OS=fedora ./generate_docker.py build
+./generate_docker.py --distro fedora --version 44 --arch amd64 build
 ```
 
 To build the RPMs run this command (from the root of your git checkout):
@@ -32,14 +32,14 @@ docker run --privileged -e QUBES=true  -t -v `pwd`:/github/workspace fwupd-fedor
 
 ## DEB packages
 
-A Dockerfile for Debian or Ubuntu can be generated in `contrib`.
+A Dockerfile for Debian or Ubuntu can be generated in `contrib/ci`.
 
 To prepare the Docker container run one of these commands:
 
 ```shell
-OS=debian-x86_64 ./generate_docker.py build
-OS=debian-i386 ./generate_docker.py build
-OS=ubuntu-x86_64 ./generate_docker.py build
+./generate_docker.py --distro debian --version testing --arch amd64 build
+./generate_docker.py --distro debian --version testing --arch amd64 --variant i386 build
+./generate_docker.py --distro ubuntu --version rolling --arch amd64 build
 ```
 
 To build the DEBs run one of these commands (from the root of your git checkout):
@@ -61,12 +61,12 @@ docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-x86_64-qubes
 
 ## PKG packages
 
-A Dockerfile for Arch can be generated in `contrib`.
+A Dockerfile for Arch can be generated in `contrib/ci`.
 
 To prepare the Docker container run this command:
 
 ```shell
-OS=arch ./generate_docker.py
+./generate_docker.py --distro arch --version latest --arch amd64 build
 ```
 
 To build the PKGs run this command (from the root of your git checkout):

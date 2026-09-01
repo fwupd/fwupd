@@ -6,49 +6,97 @@ set -e
 cd "$(dirname "$0")/.."
 
 HELPER=./contrib/ci/fwupd_setup_helpers.py
-HELPER_ARGS="-y"
+HELPER_ARGS=""
+INSTALL_BUILD_DEPS="n"
+SETUP_PRE_PUSH="n"
 
-rename_branch() {
-    OLD=master
-    NEW=main
-    if git log $OLD >/dev/null 2>&1 &&
-        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
-        echo ""
-        read -p "Rename existing $OLD branch to $NEW? (y/N) " question
-        if [ "$question" = "y" ]; then
-            git branch -m $OLD $NEW
-            git fetch origin
-            git branch -u origin/$NEW $NEW
-            git remote set-head origin -a
-        fi
-    fi
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    B="\033[1m" # bold
+    R="\033[0m" # regular
+else
+    B=""
+    R=""
+fi
+
+task() {
+    echo -e "${B}[$0]${R} $*"
+}
+
+howto() {
+    echo -e ""
+    echo -e "To enter fwupd development environment run:"
+    echo -e ""
+    echo -e "    # ${B}source venv/bin/activate${R}"
+    echo -e ""
+}
+
+instructions() {
+    cat <<'EOF'
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    B="\033[1m" # bold
+    R="\033[0m" # regular
+else
+    B=""
+    R=""
+fi
+echo -e "To build or rebuild fwupd within development environment run:"
+echo -e ""
+echo -e "${B}    # build-fwupd${R}"
+echo -e ""
+echo -e "To run the test suite run:"
+echo -e ""
+echo -e "${B}    # test-fwupd${R}"
+echo -e ""
+echo -e "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+echo -e ""
+echo -e "${B}    # DEBUG=1 fwupdtool get-devices${R}"
+echo -e ""
+echo -e "To leave fwupd development environment run:"
+echo -e ""
+echo -e "${B}    # deactivate${R}"
+EOF
+}
+
+usage() {
+    echo -e "${B}Usage: $(basename "$0") [OPTIONS]${R}"
+    echo -e ""
+    echo -e "Set up the fwupd build"
+    echo -e ""
+    echo -e "${B}OPTIONS:${R}"
+    echo -e "  ${B}--debug${R}                   ... enable debugging output"
+    echo -e "  ${B}--help${R}                    ... print this help"
+    echo -e "  ${B}--os=[fedora|ubuntu|...]${R}  ... the operating system to set up the build for."
+    echo -e ""
+    echo -e "Once set up, the following commands become available:"
+    howto
+    instructions | bash
 }
 
 setup_deps() {
-    if [ -z "$CI" ]; then
-        read -p "Install build dependencies? (y/N) " question
-    else
-        question=y
-    fi
-    if [ "$question" = "y" ]; then
-        python3 $HELPER install-dependencies $HELPER_ARGS -y
+    if [ "$INSTALL_BUILD_DEPS" = "y" ]; then
+        case $OS in
+        debian | ubuntu | arch | fedora | darwin | freebsd)
+            # shellcheck disable=SC2086
+            python3 "$HELPER" install-dependencies $HELPER_ARGS -y
+            ;;
+        nixos)
+            echo "NixOS detected, using nix-shell for build dependencies"
+            ;;
+        esac
     fi
 }
 
 setup_run_wrappers() {
     BASE=../../contrib/
     BIN=venv/bin/
-    TEMPLATE=${BASE}/launch-venv.sh
+    TEMPLATE="${BASE}/launch-venv.sh"
     # launch wrappers
     for F in fwupdtool fwupdmgr fwupd; do
-        rm -f ${BIN}/${F}
-        ln -s $TEMPLATE ${BIN}/${F}
+        ln -sf "$TEMPLATE" "${BIN}/${F}"
     done
     # build wrapper
-    rm -f ${BIN}/build-fwupd
-    ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
-    rm -f ${BIN}/test-fwupd
-    ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
+    ln -sf "${BASE}/build-venv.sh" "${BIN}/build-fwupd"
+    ln -sf "${BASE}/test-venv.sh" "${BIN}/test-fwupd"
 }
 
 setup_vscode() {
@@ -59,84 +107,68 @@ setup_vscode() {
     LAUNCH_F=launch.json
     TASK_F=tasks.json
     for f in $SETTINGS_F $LAUNCH_F $TASK_F; do
-        TEMPLATE=${SOURCED}/${f}
-        TARGETF=${TARGETD}/${f}
-        mkdir -p ${TARGETD}
-        echo "Copy ${TEMPLATE} to ${TARGETF}."
+        TEMPLATE="${SOURCED}/${f}"
+        TARGETF="${TARGETD}/${f}"
+        mkdir -p "${TARGETD}"
+        task "Copy ${TEMPLATE} to ${TARGETF}."
         cp "${TEMPLATE}" "${TARGETF}"
     done
 }
 
 setup_git() {
     if [ -z "$CI" ]; then
-        echo "Configuring git environment"
+        task "Configuring git environment"
         git config include.path ../.gitconfig
     fi
 }
 
 install_pip() {
     package=$1
-    args=$2
-    if ! python3 -m pip install $package $args; then
-        python3 $HELPER install-pip $HELPER_ARGS -y
+    if ! python3 -m pip install "$package"; then
+        # shellcheck disable=SC2086
+        python3 "$HELPER" install-pip $HELPER_ARGS -y
     fi
     #try once more
-    python3 -m pip install $package
+    python3 -m pip install "$package"
 }
 
 setup_virtualenv() {
-    echo "Setting up virtualenv"
+    VENV="${PWD}/venv"
+    task "Setting up virtualenv in ${VENV}"
     if [ "$OS" = "nixos" ]; then
-        python3 -m venv venv --prompt fwupd
-        touch venv/.nixos
+        python3 -m venv "${VENV}" --prompt fwupd
+        touch "${VENV}/.nixos"
     else
         if ! command -v virtualenv >/dev/null 2>&1; then
             install_pip virtualenv
         fi
-        virtualenv --system-site-packages venv --prompt fwupd
+        virtualenv --system-site-packages "${VENV}" --prompt fwupd
     fi
-    source venv/bin/activate
-    cat >>venv/bin/activate <<EOF
-echo "To build or rebuild fwupd within development environment run:"
-echo ""
-echo "# build-fwupd"
-echo ""
-echo "To run the test suite run:"
-echo ""
-echo "# test-fwupd"
-echo ""
-echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
-echo ""
-echo "# DEBUG=1 fwupdtool get-devices"
-echo ""
-echo "To leave fwupd development environment run:"
-echo ""
-echo "# deactivate"
-
+    # shellcheck disable=SC1091
+    source "${VENV}/bin/activate"
+    instructions >>"${VENV}/bin/activate"
+    cat >>"${VENV}/bin/activate" <<EOF
 if [ -n "\$BASH_VERSION" ]; then
     . data/bash-completion/fwupdtool
     . data/bash-completion/fwupdmgr
 fi
-export MANPATH=./venv/dist/share/man:
+export MANPATH=\${VIRTUAL_ENV}/dist/share/man:
 EOF
 }
 
 setup_precommit() {
     if [ -z "$CI" ]; then
-        echo "Configuring pre-commit hooks"
+        task "Configuring pre-commit hooks"
         install_pip pre-commit
         pre-commit install
     fi
 }
 
 setup_prepush() {
-    if [ -z "$CI" ]; then
-        echo ""
-        read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
-    else
-        question=y
+    if ! command -v pre-commit >/dev/null 2>&1; then
+        return
     fi
-    if [ "$question" = "y" ]; then
+    if [ "$SETUP_PRE_PUSH" = "y" ]; then
         pre-commit install -t pre-push
     else
         pre-commit uninstall -t pre-push
@@ -144,36 +176,23 @@ setup_prepush() {
 }
 
 check_markdown() {
-    python3 $HELPER test-markdown
+    python3 "$HELPER" test-markdown
 }
 
 check_jinja2() {
-    python3 $HELPER test-jinja2
+    python3 "$HELPER" test-jinja2
 }
 
 check_meson() {
-    python3 $HELPER test-meson
+    python3 "$HELPER" test-meson
 }
 
 detect_os() {
-    for i in "$@"; do
-        case $i in
-        --os=*)
-            OS="${i#*=}"
-            shift
-            ;;
-        --debug)
-            DEBUG=1
-            shift
-            ;;
-        *) ;;
-        esac
-    done
-    if [ -z $OS ]; then
-        OS=$(python3 $HELPER detect-profile)
+    if [ -z "${OS:-}" ]; then
+        OS="$(python3 "$HELPER" detect-profile)"
         if [ -z "$OS" ]; then
             install_pip distro
-            OS=$(python3 $HELPER detect-profile)
+            OS="$(python3 "$HELPER" detect-profile)"
         fi
         echo "Using OS profile $OS to setup"
     fi
@@ -181,47 +200,55 @@ detect_os() {
         HELPER_ARGS="$HELPER_ARGS --os $OS"
     fi
     if [ -n "$DEBUG" ]; then
-        set -x
         HELPER_ARGS="$HELPER_ARGS --debug"
     fi
 }
 
-howto() {
-    echo ""
-    echo "To enter fwupd development environment run:"
-    echo ""
-    echo "# source venv/bin/activate"
-    echo ""
-}
+for i in "$@"; do
+    case $i in
+    --os=*)
+        OS="${i#*=}"
+        shift
+        ;;
+    --debug)
+        set -x
+        DEBUG=1
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *) ;;
+    esac
+done
 
 #already setup
 if [ -f venv/bin/build-fwupd ]; then
-    echo "$0 has already been run"
+    echo -e "${B}$0 has already been run${R}"
     howto
     exit 0
 fi
 
-PYTHON_VERSION=$(python3 --version 2>/dev/null)
+PYTHON_VERSION="$(python3 --version 2>/dev/null)"
 if [ -z "$PYTHON_VERSION" ]; then
     echo "Install python3 to run this script" >&2
     exit 1
 fi
 
 #needed for arguments for some commands
-detect_os "$@"
+detect_os
 
 #if interactive install build deps and prepare environment
-if [ -t 2 ]; then
-    case $OS in
-    debian | ubuntu | arch | fedora | darwin | freebsd)
-        setup_deps
-        ;;
-    nixos)
-        echo "NixOS detected, using nix-shell for build dependencies"
-        ;;
-    esac
-    rename_branch
+if [ -n "$CI" ]; then
+    INSTALL_BUILD_DEPS="y"
+    SETUP_PRE_PUSH="y"
+elif [ -t 2 ]; then
+    read -rp "Install build dependencies? (y/N) " INSTALL_BUILD_DEPS
+    read -rp "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " SETUP_PRE_PUSH
 fi
+
+setup_deps
 setup_virtualenv
 setup_run_wrappers
 check_markdown
@@ -232,8 +259,7 @@ check_meson
 setup_precommit
 
 #needs to be after pre-commit is sourced
-if [ -t 2 ]; then
-    setup_prepush
-fi
+setup_prepush
 
+task "Setup complete"
 howto

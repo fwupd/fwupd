@@ -120,8 +120,7 @@ fu_cfi_device_set_flash_id(FuCfiDevice *self, const gchar *flash_id)
 	g_return_if_fail(FU_IS_CFI_DEVICE(self));
 	if (g_strcmp0(flash_id, priv->flash_id) == 0)
 		return;
-	g_free(priv->flash_id);
-	priv->flash_id = g_strdup(flash_id);
+	g_set_str(&priv->flash_id, flash_id);
 }
 
 static void

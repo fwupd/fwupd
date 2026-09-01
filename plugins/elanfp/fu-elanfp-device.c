@@ -81,7 +81,6 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 						 sendsz,
 						 &actual,
 						 BULK_SEND_TIMEOUT_MS,
-						 NULL,
 						 error)) {
 			g_prefix_error_literal(error, "failed to send command (bulk): ");
 			return FALSE;
@@ -98,7 +97,6 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 						    sendsz,
 						    &actual,
 						    CTRL_SEND_TIMEOUT_MS,
-						    NULL,
 						    error)) {
 			g_prefix_error_literal(error, "failed to send command (ctrl transfer): ");
 			return FALSE;
@@ -133,7 +131,6 @@ fu_elanfp_device_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz,
 					 bufsz,
 					 &actual,
 					 BULK_RECV_TIMEOUT_MS,
-					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive status: ");
 		return FALSE;
@@ -172,7 +169,6 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 						 outlen,
 						 &actual,
 						 BULK_SEND_TIMEOUT_MS,
-						 NULL,
 						 error)) {
 			return FALSE;
 		}
@@ -196,7 +192,6 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 						 inlen,
 						 &actual,
 						 BULK_RECV_TIMEOUT_MS,
-						 NULL,
 						 error)) {
 			return FALSE;
 		}

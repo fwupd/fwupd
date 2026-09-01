@@ -37,6 +37,7 @@
  */
 
 typedef struct {
+	GMainContext *main_ctx;
 	FuContextFlags flags;
 	FuPathStore *pstore;
 	FuHwids *hwids;
@@ -63,7 +64,12 @@ typedef struct {
 	FuCpuVendor cpu_vendor;
 } FuContextPrivate;
 
-enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
+enum {
+	SIGNAL_SECURITY_CHANGED,
+	SIGNAL_HOUSEKEEPING,
+	SIGNAL_ESP_WRITE,
+	SIGNAL_LAST,
+};
 
 enum {
 	PROP_0,
@@ -297,6 +303,101 @@ fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
 	g_return_if_fail(FU_IS_SMBIOS(smbios));
 	g_set_object(&priv->smbios, smbios);
 	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
+}
+
+/**
+ * fu_context_get_main_context:
+ * @self: a #FuContext
+ *
+ * Gets the main context.
+ *
+ * Returns: (transfer none): a #GMainContextm or %NULL if unset
+ *
+ * Since: 2.1.8
+ **/
+GMainContext *
+fu_context_get_main_context(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->main_ctx;
+}
+
+/**
+ * fu_context_add_timeout_seconds:
+ * @self: a #FuContext
+ * @interval: timeout interval in seconds
+ * @function: (scope call): function to call
+ * @data: data to pass to @function
+ *
+ * Creates a new timeout source and attaches it to the main context.
+ *
+ * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
+ *
+ * Since: 2.1.8
+ **/
+GSource *
+fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc function, gpointer data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GSource) source = g_timeout_source_new_seconds(interval);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(interval != 0, NULL);
+	g_return_val_if_fail(function != NULL, NULL);
+
+	g_source_set_callback(source, function, data, NULL);
+	g_source_attach(source, priv->main_ctx);
+	return g_steal_pointer(&source);
+}
+
+/**
+ * fu_context_add_timeout:
+ * @self: a #FuContext
+ * @interval_ms: timeout interval in ms
+ * @function: (scope call): function to call
+ * @data: data to pass to @function
+ *
+ * Creates a new timeout source and attaches it to the main context.
+ *
+ * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
+ *
+ * Since: 2.1.8
+ **/
+GSource *
+fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function, gpointer data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GSource) source = g_timeout_source_new(interval_ms);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(interval_ms != 0, NULL);
+	g_return_val_if_fail(function != NULL, NULL);
+
+	g_source_set_callback(source, function, data, NULL);
+	g_source_attach(source, priv->main_ctx);
+	return g_steal_pointer(&source);
+}
+
+/**
+ * fu_context_set_main_context:
+ * @self: a #FuContext
+ * @main_ctx: (nullable): a #GMainContext
+ *
+ * Sets or clears the main context. This is only required by fwupdtool.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_context_set_main_context(FuContext *self, GMainContext *main_ctx)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	if (main_ctx == priv->main_ctx)
+		return;
+	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
+	if (main_ctx != NULL)
+		priv->main_ctx = g_main_context_ref(main_ctx);
 }
 
 /**
@@ -1001,7 +1102,7 @@ fu_context_convert_firmware_gtype_to_id(GType gtype)
 	}
 	if (str->len == 0)
 		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&str));
 }
 
 /**
@@ -1874,6 +1975,12 @@ fu_context_has_flag(FuContext *context, FuContextFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
+static void
+fu_context_esp_write_file_cb(FuVolume *volume, const gchar *filename, FuContext *self)
+{
+	g_signal_emit(self, signals[SIGNAL_ESP_WRITE], 0, volume, filename);
+}
+
 /**
  * fu_context_add_esp_volume:
  * @self: a #FuContext
@@ -1901,6 +2008,11 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 	}
 
 	/* add */
+	g_signal_connect_object(FU_VOLUME(volume),
+				"write-file",
+				G_CALLBACK(fu_context_esp_write_file_cb),
+				self,
+				0);
 	g_ptr_array_add(priv->esp_volumes, g_object_ref(volume));
 }
 
@@ -1917,8 +2029,7 @@ fu_context_set_esp_location(FuContext *self, const gchar *location)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(location != NULL);
-	g_free(priv->esp_location);
-	priv->esp_location = g_strdup(location);
+	g_set_str(&priv->esp_location, location);
 }
 
 /**
@@ -2821,6 +2932,7 @@ fu_context_finalize(GObject *object)
 	FuContext *self = FU_CONTEXT(object);
 	FuContextPrivate *priv = GET_PRIVATE(self);
 
+	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
 	if (priv->efivars != NULL)
@@ -3000,6 +3112,28 @@ fu_context_class_init(FuContextClass *klass)
 						    g_cclosure_marshal_VOID__VOID,
 						    G_TYPE_NONE,
 						    0);
+	/**
+	 * FuContext::esp-write:
+	 * @self: the #FuContext instance that emitted the signal
+	 * @volume: the #FuVolume being written to
+	 * @filename: the filename being written
+	 *
+	 * The ::esp-write signal is emitted when plugins should be notified of a write to a
+	 * specific ESP volume.
+	 *
+	 * Since: 2.1.8
+	 **/
+	signals[SIGNAL_ESP_WRITE] = g_signal_new("esp-write",
+						 G_TYPE_FROM_CLASS(object_class),
+						 G_SIGNAL_RUN_LAST,
+						 G_STRUCT_OFFSET(FuContextClass, volume_write),
+						 NULL,
+						 NULL,
+						 g_cclosure_marshal_generic,
+						 G_TYPE_NONE,
+						 2,
+						 FU_TYPE_VOLUME,
+						 G_TYPE_STRING);
 
 	object_class->finalize = fu_context_finalize;
 }

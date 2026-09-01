@@ -9,6 +9,8 @@
 #include "fu-firmware.h"
 #include "fu-srec-struct.h"
 
+G_BEGIN_DECLS
+
 /* FIXME: rename */
 #define FuFirmwareSrecRecordKind FuFirmwareSrecRecordKind
 
@@ -39,8 +41,10 @@ fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min) G_GNUC_NON
 void
 fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_srec_firmware_get_records(FuSrecFirmware *self) G_GNUC_NON_NULL(1);
+fu_srec_firmware_get_records(FuSrecFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 GType
 fu_srec_firmware_record_get_type(void);
 FuSrecFirmwareRecord *
 fu_srec_firmware_record_new(guint ln, FuFirmwareSrecRecordKind kind, guint32 addr);
+
+G_END_DECLS

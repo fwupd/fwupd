@@ -1,9 +1,12 @@
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoDock"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('lenovo-dock.quirk')
-plugin_builtins += static_library('fu_plugin_lenovo_dock',
+plugin_builtins += static_library(
+  'fu_plugin_lenovo_dock',
   rustgen.process('fu-lenovo-dock.rs'),
   sources: [
     'fu-lenovo-dock-device.c',

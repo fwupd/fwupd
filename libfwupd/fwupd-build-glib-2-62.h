@@ -8,6 +8,8 @@
 
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 static inline void
 g_clear_signal_handler(gulong *handler_id_ptr, gpointer instance)
 {
@@ -40,3 +42,5 @@ g_date_time_format_iso8601(GDateTime *datetime)
 
 	return g_string_free(outstr, FALSE);
 }
+
+G_END_DECLS

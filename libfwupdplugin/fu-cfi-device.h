@@ -9,6 +9,8 @@
 #include "fu-cfi-struct.h"
 #include "fu-device-locker.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CFI_DEVICE (fu_cfi_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfiDevice, fu_cfi_device, FU, CFI_DEVICE, FuDevice)
 
@@ -28,23 +30,23 @@ struct _FuCfiDeviceClass {
 FuCfiDevice *
 fu_cfi_device_new(FuDevice *proxy, const gchar *flash_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_cfi_device_get_flash_id(FuCfiDevice *self) G_GNUC_NON_NULL(1);
+fu_cfi_device_get_flash_id(FuCfiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cfi_device_set_flash_id(FuCfiDevice *self, const gchar *flash_id) G_GNUC_NON_NULL(1);
 guint64
-fu_cfi_device_get_size(FuCfiDevice *self) G_GNUC_NON_NULL(1);
+fu_cfi_device_get_size(FuCfiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cfi_device_set_size(FuCfiDevice *self, guint64 size) G_GNUC_NON_NULL(1);
 guint32
-fu_cfi_device_get_page_size(FuCfiDevice *self) G_GNUC_NON_NULL(1);
+fu_cfi_device_get_page_size(FuCfiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size) G_GNUC_NON_NULL(1);
 guint32
-fu_cfi_device_get_sector_size(FuCfiDevice *self) G_GNUC_NON_NULL(1);
+fu_cfi_device_get_sector_size(FuCfiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cfi_device_set_sector_size(FuCfiDevice *self, guint32 sector_size) G_GNUC_NON_NULL(1);
 guint32
-fu_cfi_device_get_block_size(FuCfiDevice *self) G_GNUC_NON_NULL(1);
+fu_cfi_device_get_block_size(FuCfiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void
 fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size) G_GNUC_NON_NULL(1);
 gboolean
@@ -63,3 +65,5 @@ gboolean
 fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error) G_GNUC_NON_NULL(1);
 FuDeviceLocker *
 fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

@@ -11,6 +11,8 @@
 #include "fu-input-stream.h"
 #include "fu-io-channel-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IO_CHANNEL (fu_io_channel_get_type())
 
 G_DECLARE_FINAL_TYPE(FuIOChannel, fu_io_channel, FU, IO_CHANNEL, GObject)
@@ -26,7 +28,7 @@ fu_io_channel_new_file(const gchar *filename,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 gint
-fu_io_channel_unix_get_fd(FuIOChannel *self) G_GNUC_NON_NULL(1);
+fu_io_channel_unix_get_fd(FuIOChannel *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fu_io_channel_shutdown(FuIOChannel *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
@@ -78,3 +80,5 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 			      guint timeout_ms,
 			      FuIoChannelFlags flags,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+G_END_DECLS

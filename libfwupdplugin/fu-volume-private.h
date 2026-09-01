@@ -11,6 +11,8 @@
 
 #include "fu-volume.h"
 
+G_BEGIN_DECLS
+
 FuVolume *
 fu_volume_new_from_mount_path(const gchar *mount_path) G_GNUC_NON_NULL(1);
 
@@ -22,3 +24,5 @@ fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid) G_GNUC
 /* for tests */
 void
 fu_volume_set_filesystem_free(FuVolume *self, guint64 fs_free) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

@@ -1,10 +1,13 @@
 host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginAndroidBoot"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('android-boot.quirk')
-plugin_builtins += static_library('fu_plugin_android_boot',
+plugin_builtins += static_library(
+  'fu_plugin_android_boot',
   sources: [
     'fu-android-boot-plugin.c',
     'fu-android-boot-device.c',

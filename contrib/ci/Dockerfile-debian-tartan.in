@@ -1,13 +1,15 @@
 # -*- mode: dockerfile -*-
-FROM debian:unstable
+FROM debian:%%%VERSION%%%
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
 %%%SETUP%%% \
     apt-get update -qq; \
     apt-get install -qq --yes --no-install-recommends \
-    build-essential \
     clang-18 \
     clang-tools-18 \
     dpkg-dev \

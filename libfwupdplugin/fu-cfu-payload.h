@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CFU_PAYLOAD (fu_cfu_payload_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfuPayload, fu_cfu_payload, FU, CFU_PAYLOAD, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuCfuPayloadClass {
 
 FuFirmware *
 fu_cfu_payload_new(void);
+
+G_END_DECLS

@@ -24,8 +24,7 @@ fwupd_test_bios_setting_get_value_raw(FwupdTestBiosSetting *self)
 void
 fwupd_test_bios_setting_set_value_raw(FwupdTestBiosSetting *self, const gchar *value_raw)
 {
-	g_free(self->value_raw);
-	self->value_raw = g_strdup(value_raw);
+	g_set_str(&self->value_raw, value_raw);
 }
 
 static gboolean

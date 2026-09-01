@@ -239,7 +239,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	nvm_device = g_file_new_for_path(node->nvm_non_active);
 	nvm = g_file_get_child(nvm_device, "nvmem");
 
-	is = fu_file_input_stream_from_file(nvm, NULL, &error);
+	is = fu_file_input_stream_from_file(nvm, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(is);
 
@@ -724,8 +724,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 
 	/* update the version only on "success" simulations */
 	if (ctx->result == UPDATE_SUCCESS) {
-		g_free(ctx->node->nvm_version);
-		ctx->node->nvm_version = g_strdup(ctx->version);
+		g_set_str(&ctx->node->nvm_version, ctx->version);
 	}
 
 	g_debug("simulating update to '%s' with result: 0x%x",

@@ -9,6 +9,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_IFWI_FPT_FIRMWARE (fu_ifwi_fpt_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU, IFWI_FPT_FIRMWARE, FuFirmware)
 
@@ -63,3 +65,5 @@ struct _FuIfwiFptFirmwareClass {
 
 FuFirmware *
 fu_ifwi_fpt_firmware_new(void);
+
+G_END_DECLS

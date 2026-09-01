@@ -12,6 +12,8 @@
 #include "fu-common-struct.h"
 #include "fu-path-store.h"
 
+G_BEGIN_DECLS
+
 /**
  * FU_BIT_SET:
  * @val: integer value
@@ -101,20 +103,20 @@ gchar *
 fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error);
 
 guint16
-fu_common_to_bcd_u16(guint16 value);
+fu_common_to_bcd_u16(guint16 value) G_GNUC_CONST;
 guint8
-fu_common_to_bcd_u8(guint8 value);
+fu_common_to_bcd_u8(guint8 value) G_GNUC_CONST;
 guint16
-fu_common_from_bcd_u16(guint16 value);
+fu_common_from_bcd_u16(guint16 value) G_GNUC_CONST;
 guint8
-fu_common_from_bcd_u8(guint8 value);
+fu_common_from_bcd_u8(guint8 value) G_GNUC_CONST;
 
 gsize
-fu_common_align_up(gsize value, guint8 alignment);
+fu_common_align_up(gsize value, guint8 alignment) G_GNUC_CONST;
 gboolean
-fu_power_state_is_ac(FuPowerState power_state);
+fu_power_state_is_ac(FuPowerState power_state) G_GNUC_CONST;
 gsize
-fu_size_checked_add(gsize a, gsize b);
+fu_size_checked_add(gsize a, gsize b) G_GNUC_CONST;
 gboolean
 fu_size_checked_inc(gsize *value, gsize len, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
@@ -162,3 +164,5 @@ void
 fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
 void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

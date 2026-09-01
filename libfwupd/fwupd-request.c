@@ -105,13 +105,7 @@ fwupd_request_set_id(FwupdRequest *self, const gchar *id)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REQUEST(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->id, id) == 0)
-		return;
-
-	g_free(priv->id);
-	priv->id = g_strdup(id);
+	g_set_str(&priv->id, id);
 }
 
 /**
@@ -146,13 +140,7 @@ fwupd_request_set_device_id(FwupdRequest *self, const gchar *device_id)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REQUEST(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->device_id, device_id) == 0)
-		return;
-
-	g_free(priv->device_id);
-	priv->device_id = g_strdup(device_id);
+	g_set_str(&priv->device_id, device_id);
 }
 
 /**
@@ -329,14 +317,8 @@ fwupd_request_set_message(FwupdRequest *self, const gchar *message)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REQUEST(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->message, message) == 0)
-		return;
-
-	g_free(priv->message);
-	priv->message = g_strdup(message);
-	g_object_notify(G_OBJECT(self), "message");
+	if (g_set_str(&priv->message, message))
+		g_object_notify(G_OBJECT(self), "message");
 }
 
 /**
@@ -371,14 +353,8 @@ fwupd_request_set_image(FwupdRequest *self, const gchar *image)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REQUEST(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->image, image) == 0)
-		return;
-
-	g_free(priv->image);
-	priv->image = g_strdup(image);
-	g_object_notify(G_OBJECT(self), "image");
+	if (g_set_str(&priv->image, image))
+		g_object_notify(G_OBJECT(self), "image");
 }
 
 /**

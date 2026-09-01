@@ -51,3 +51,16 @@ install_symlink(
   pointing_to: '/usr/share/qubes-fwupd/src/qubes_fwupdmgr.py',
   install_dir: '/usr/sbin',
 )
+
+if get_option('tests')
+  test(
+    'qubes-fwupdmgr-test',
+    python3,
+    args: ['-m', 'pytest', '-v', 'test/'],
+    workdir: meson.current_source_dir(),
+    env: {
+      'PYTHONPATH': meson.current_source_dir() / 'src',
+    },
+    timeout: 180,
+  )
+endif

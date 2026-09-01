@@ -10,6 +10,8 @@
 #include "fu-config.h"
 #include "fu-path-store.h"
 
+G_BEGIN_DECLS
+
 FuConfig *
 fu_config_new(FuPathStore *pstore);
 gboolean
@@ -24,3 +26,5 @@ fu_config_set_value_internal(FuConfig *self,
 			     const gchar *section,
 			     const gchar *key,
 			     const gchar *value) G_GNUC_NON_NULL(1, 2, 3);
+
+G_END_DECLS

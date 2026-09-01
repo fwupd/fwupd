@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginQcS5gen2"']
 
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 plugin_quirks += files('qc-s5gen2.quirk')
-plugin_builtins += static_library('fu_plugin_qc_s5gen2',
+plugin_builtins += static_library(
+  'fu_plugin_qc_s5gen2',
   rustgen.process('fu-qc-s5gen2.rs'),
   rustgen.process('fu-qc-s5gen2-ble.rs'),
   rustgen.process('fu-qc-s5gen2-hid.rs'),
@@ -21,9 +24,7 @@ plugin_builtins += static_library('fu_plugin_qc_s5gen2',
   dependencies: plugin_deps,
 )
 
-enumeration_data += files(
-  'tests/ugreen-15765a-setup.json',
-)
+enumeration_data += files('tests/ugreen-15765a-setup.json')
 
 device_tests += files(
   'tests/google-gid8.json',

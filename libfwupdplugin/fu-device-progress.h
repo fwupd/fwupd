@@ -9,6 +9,8 @@
 #include "fu-device.h"
 #include "fu-progress.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_DEVICE_PROGRESS (fu_device_progress_get_type())
 
 G_DECLARE_FINAL_TYPE(FuDeviceProgress, fu_device_progress, FU, DEVICE_PROGRESS, GObject)
@@ -16,3 +18,5 @@ G_DECLARE_FINAL_TYPE(FuDeviceProgress, fu_device_progress, FU, DEVICE_PROGRESS, 
 FuDeviceProgress *
 fu_device_progress_new(FuDevice *device, FuProgress *progress) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

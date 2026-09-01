@@ -1214,3 +1214,19 @@ LIBFWUPD_2.1.7 {
     fwupd_device_get_id_display;
   local: *;
 } LIBFWUPD_2.1.6;
+
+LIBFWUPD_2.1.8 {
+  global:
+    fwupd_client_add_connect_func;
+    fwupd_client_download_bytes2;
+    fwupd_client_download_bytes2_async;
+    fwupd_client_download_bytes2_finish;
+    fwupd_client_emit_device_added;
+    fwupd_client_emit_device_changed;
+    fwupd_client_emit_device_removed;
+    fwupd_client_emit_device_request;
+    fwupd_client_run_connect_funcs;
+    fwupd_client_set_percentage;
+    fwupd_client_set_status;
+  local: *;
+} LIBFWUPD_2.1.7;

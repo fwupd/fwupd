@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_REMOTE_LIST (fu_remote_list_get_type())
 G_DECLARE_FINAL_TYPE(FuRemoteList, fu_remote_list, FU, REMOTE_LIST, GObject)
 
@@ -36,3 +38,5 @@ fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_me
 /* for the self tests */
 void
 fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote) G_GNUC_NON_NULL(1, 2);
+
+G_END_DECLS

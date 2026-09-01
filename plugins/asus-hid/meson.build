@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAsusHid"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('asus-hid.quirk')
-plugin_builtins += static_library('fu_plugin_asus_hid',
+plugin_builtins += static_library(
+  'fu_plugin_asus_hid',
   rustgen.process('fu-asus-hid.rs'),
   sources: [
     'fu-asus-hid-device.c',

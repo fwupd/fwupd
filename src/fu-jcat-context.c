@@ -111,8 +111,7 @@ fu_jcat_context_set_keyring_path(FuJcatContext *self, const gchar *path)
 {
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(path != NULL);
-	g_free(self->keyring_path);
-	self->keyring_path = g_strdup(path);
+	g_set_str(&self->keyring_path, path);
 }
 
 /**
@@ -163,9 +162,9 @@ fu_jcat_context_get_engine(FuJcatContext *self, FwupdJcatBlobKind kind, GError *
 		return NULL;
 	}
 	for (guint i = 0; i < self->engines->len; i++) {
-		FuJcatEngine *engine = g_ptr_array_index(self->engines, i);
+		g_autoptr(FuJcatEngine) engine = g_object_ref(g_ptr_array_index(self->engines, i));
 		if (fu_jcat_engine_get_kind(engine) == kind)
-			return g_object_ref(engine);
+			return g_steal_pointer(&engine);
 	}
 	g_set_error(error,
 		    FWUPD_ERROR,

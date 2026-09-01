@@ -10,6 +10,8 @@
 
 #include "fu-engine-struct.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_ENGINE_REQUEST (fu_engine_request_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)
 
@@ -42,3 +44,5 @@ fu_engine_request_get_converter_flags(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_request_set_converter_flags(FuEngineRequest *self, FwupdCodecFlags converter_flags)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

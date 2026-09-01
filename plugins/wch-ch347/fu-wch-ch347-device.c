@@ -64,7 +64,6 @@ fu_wch_ch347_device_write(FuWchCh347Device *self,
 					 st->buf->len,
 					 &actual_length,
 					 FU_WCH_CH347_USB_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
@@ -106,7 +105,6 @@ fu_wch_ch347_device_read(FuWchCh347Device *self,
 					 st->buf->len,
 					 &actual_length,
 					 FU_WCH_CH347_USB_TIMEOUT,
-					 NULL,
 					 error)) {
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;

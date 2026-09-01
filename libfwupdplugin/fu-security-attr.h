@@ -10,6 +10,8 @@
 
 #include "fu-context.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_SECURITY_ATTR (fu_security_attr_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuSecurityAttr, fu_security_attr, FU, SECURITY_ATTR, FwupdSecurityAttr)
 
@@ -25,4 +27,6 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 				       const gchar *needle) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_security_attr_check_fwupd_version(FwupdSecurityAttr *attr, const gchar *fwupd_version)
-    G_GNUC_NON_NULL(1);
+    G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+G_END_DECLS

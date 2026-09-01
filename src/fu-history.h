@@ -10,6 +10,8 @@
 
 #include "fu-release.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_PENDING (fu_history_get_type())
 G_DECLARE_FINAL_TYPE(FuHistory, fu_history, FU, HISTORY, GObject)
 
@@ -60,3 +62,5 @@ fu_history_remove_emulation_tag(FuHistory *self, const gchar *device_id, GError 
 gboolean
 fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

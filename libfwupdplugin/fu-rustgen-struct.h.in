@@ -1,3 +1,5 @@
+G_BEGIN_DECLS
+
 typedef struct {
   GByteArray *buf;
   guint refcount;
@@ -128,3 +130,5 @@ void {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value) G_GNUC_NON_NU
 {%- endif %}
 {%- endfor %}
 #endif
+
+G_END_DECLS

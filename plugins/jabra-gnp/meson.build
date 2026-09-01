@@ -1,8 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginJabraGnp"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('jabra-gnp.quirk')
-plugin_builtins += static_library('fu_plugin_jabra_gnp',
+plugin_builtins += static_library(
+  'fu_plugin_jabra_gnp',
   rustgen.process('fu-jabra-gnp.rs'),
   sources: [
     'fu-jabra-gnp-child-device.c',
@@ -18,6 +21,4 @@ plugin_builtins += static_library('fu_plugin_jabra_gnp',
   dependencies: plugin_deps,
 )
 
-device_tests += files(
-  'tests/jabra-evolve2-75.json',
-)
+device_tests += files('tests/jabra-evolve2-75.json')

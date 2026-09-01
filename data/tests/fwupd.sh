@@ -38,6 +38,7 @@ run_umockdev_test() {
 }
 
 export LSAN_OPTIONS="suppressions=@installedtestsdatadir@/lsan-suppressions.txt"
+export PYTHONWARNINGS="ignore::DeprecationWarning:gi.events"
 
 if [ -d @installedtestsbindir@ ]; then
     for f in @installedtestsbindir@/*-test; do

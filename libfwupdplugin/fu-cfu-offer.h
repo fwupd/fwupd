@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_CFU_OFFER (fu_cfu_offer_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfuOffer, fu_cfu_offer, FU, CFU_OFFER, FuFirmware)
 
@@ -18,25 +20,25 @@ struct _FuCfuOfferClass {
 FuFirmware *
 fu_cfu_offer_new(void);
 guint8
-fu_cfu_offer_get_segment_number(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_segment_number(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
-fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_cfu_offer_get_component_id(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_component_id(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_cfu_offer_get_token(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_token(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
-fu_cfu_offer_get_hw_variant(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_hw_variant(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_cfu_offer_get_protocol_revision(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_protocol_revision(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_cfu_offer_get_bank(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_bank(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint8
-fu_cfu_offer_get_milestone(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_milestone(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint16
-fu_cfu_offer_get_product_id(FuCfuOffer *self) G_GNUC_NON_NULL(1);
+fu_cfu_offer_get_product_id(FuCfuOffer *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 void
 fu_cfu_offer_set_segment_number(FuCfuOffer *self, guint8 segment_number) G_GNUC_NON_NULL(1);
@@ -60,3 +62,5 @@ void
 fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone) G_GNUC_NON_NULL(1);
 void
 fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id) G_GNUC_NON_NULL(1);
+
+G_END_DECLS

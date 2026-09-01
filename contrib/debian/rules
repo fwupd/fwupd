@@ -10,6 +10,9 @@ ifeq ($(DEB_HOST_ARCH_BITS),32)
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
+DEB_BUILD_ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DEB_HOST_ARCH  ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
 CONFARGS =
 
 ifneq ($(CI),)
@@ -20,6 +23,19 @@ endif
 
 ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
 	CONFARGS += -Dtests=false
+	CONFARGS += --cross-file=$(CURDIR)/debian/rust-cross.ini
+
+	# Map Debian host architectures to Rust target triples.
+	DEBIAN_RUST_TARGET_amd64     := x86_64-unknown-linux-gnu
+	DEBIAN_RUST_TARGET_arm64     := aarch64-unknown-linux-gnu
+	DEBIAN_RUST_TARGET_armhf     := arm-unknown-linux-gnueabihf
+	DEBIAN_RUST_TARGET_i386      := i686-unknown-linux-gnu
+	DEBIAN_RUST_TARGET_riscv64   := riscv64gc-unknown-linux-gnu
+	DEBIAN_RUST_TARGET_s390x     := s390x-unknown-linux-gnu
+	RUST_TARGET := $(DEBIAN_RUST_TARGET_$(DEB_HOST_ARCH))
+ifeq ($(strip $(RUST_TARGET)),)
+$(error Unable to determine Rust target triple for host arch '$(DEB_HOST_ARCH)')
+endif
 endif
 
 ifneq ($(QUBES_OPTION),)
@@ -47,6 +63,10 @@ override_dh_auto_clean:
 	rm -fr debian/build
 
 override_dh_auto_configure:
+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+	printf '[binaries]\nrust = ['\''rustc'\'', '\''--target'\'', '\''$(RUST_TARGET)'\'']\n' \
+		>$(CURDIR)/debian/rust-cross.ini
+endif
 	dh_auto_configure -- $(CONFARGS)
 
 override_dh_install:

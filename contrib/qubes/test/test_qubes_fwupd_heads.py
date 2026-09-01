@@ -23,6 +23,10 @@ QUBES_FWUPDMGR_REPO = "./src/qubes_fwupdmgr.py"
 QUBES_FWUPDMGR_BINDIR = "/usr/sbin/qubes-fwupdmgr"
 
 
+def running_in_dom0():
+    return "qubes" in platform.release() and os.path.exists("/etc/qubes-release")
+
+
 class TestQubesFwupdHeads(unittest.TestCase):
     def setUp(self):
         if os.path.exists(QUBES_FWUPDMGR_REPO):
@@ -40,7 +44,7 @@ class TestQubesFwupdHeads(unittest.TestCase):
         self.captured_output = io.StringIO()
         sys.stdout = self.captured_output
 
-    @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
+    @unittest.skipUnless(running_in_dom0(), "Requires Qubes OS dom0")
     def test_get_hwids(self):
         self.q._get_hwids()
         self.assertNotEqual(self.q.dom0_hwids_info, "")
@@ -55,7 +59,7 @@ class TestQubesFwupdHeads(unittest.TestCase):
         self.q._gather_firmware_version()
         self.assertEqual(self.q.heads_version, "0.2.2-917-g19f0e65")
 
-    @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
+    @unittest.skipUnless(running_in_dom0(), "Requires Qubes OS dom0")
     def test_parse_metadata(self):
         qmgr = self.qfwupd.QubesFwupdmgr()
         qmgr.metadata_file = CUSTOM_METADATA.replace(
@@ -101,7 +105,7 @@ class TestQubesFwupdHeads(unittest.TestCase):
         )
         self.assertEqual(self.q.heads_update_version, "0.2.3")
 
-    @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
+    @unittest.skipUnless(running_in_dom0(), "Requires Qubes OS dom0")
     def test_copy_heads_firmware(self):
         qmgr = self.qfwupd.QubesFwupdmgr()
         self.q.heads_update_url = "https://fwupd.org/downloads/e747a435bf24fd6081b77b6704b39cec5fa2dcf62e0ca6b86d8a6460121a1d07-heads_coreboot_x230-v0_2_3.cab"

@@ -108,7 +108,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [gio, giounix, glib, libcurl]
+libfwupd_deps = [gio, giounix, glib, libcurl, fwupd_rust_ffi_dep]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -251,13 +251,6 @@ if introspection.allowed()
     install: true,
   )
 
-  gnome.generate_vapi(
-    'fwupd',
-    sources: fwupd_gir[0],
-    packages: ['gio-2.0'],
-    install: true,
-  )
-
   # Verify the map file is correct -- note we can't actually use the generated
   # file for two reasons:
   #
@@ -287,7 +280,7 @@ if get_option('tests')
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps],
   )
-  foreach test_name: [
+  foreach test_name : [
     'bios-setting',
     'client',
     'common',

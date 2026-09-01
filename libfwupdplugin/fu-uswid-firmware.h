@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_USWID_FIRMWARE (fu_uswid_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUswidFirmware, fu_uswid_firmware, FU, USWID_FIRMWARE, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuUswidFirmwareClass {
 
 FuFirmware *
 fu_uswid_firmware_new(void);
+
+G_END_DECLS

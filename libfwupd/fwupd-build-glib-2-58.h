@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define g_assert_cmpfloat_with_epsilon(n1, n2, epsilon)                                            \
 	g_assert(((n1) < (n2) + (epsilon)) && (n2) < ((n1) + (epsilon)))
 
@@ -70,3 +72,5 @@ g_ref_string_length(char *str)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GRefString, g_ref_string_release)
+
+G_END_DECLS

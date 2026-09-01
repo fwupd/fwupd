@@ -171,7 +171,7 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 			    fu_struct_bnr_dp_aux_response_get_data_len(st_response));
 		return FALSE;
 	}
-	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response));
+	fu_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response), 0x0);
 	if (data->len > 0) {
 		if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
 					  FU_BNR_DP_DEVICE_DATA_OFFSET,

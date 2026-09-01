@@ -10,6 +10,8 @@
 #include "fu-hid-struct.h"
 #include "fu-udev-device.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_HIDRAW_DEVICE (fu_hidraw_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuHidrawDevice, fu_hidraw_device, FU, HIDRAW_DEVICE, FuUdevDevice)
 
@@ -18,7 +20,7 @@ struct _FuHidrawDeviceClass {
 };
 
 FuHidBusType
-fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1);
+fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,
@@ -53,3 +55,5 @@ fu_hidraw_device_get_report(FuHidrawDevice *self,
 FuHidDescriptor *
 fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+
+G_END_DECLS

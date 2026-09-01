@@ -259,15 +259,11 @@ fu_himax_tp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
 		self->cid = tmp;
 	str = xb_node_query_text(n, "ic_id", NULL);
-	if (str != NULL) {
-		g_free(self->ic_id);
-		self->ic_id = g_strdup(str);
-	}
+	if (str != NULL)
+		g_set_str(&self->ic_id, str);
 	str = xb_node_query_text(n, "ic_id_mod", NULL);
-	if (str != NULL) {
-		g_free(self->ic_id_mod);
-		self->ic_id_mod = g_strdup(str);
-	}
+	if (str != NULL)
+		g_set_str(&self->ic_id_mod, str);
 	tmp = xb_node_query_text_as_uint(n, "tp_cfg_ver", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
 		self->tp_cfg_ver = tmp;

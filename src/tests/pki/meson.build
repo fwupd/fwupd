@@ -1,4 +1,5 @@
-install_data([
+install_data(
+  [
     'LVFS-CA.pem',
     'test.pem',
   ],

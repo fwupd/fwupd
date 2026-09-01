@@ -274,6 +274,224 @@ fu_partial_input_stream_func(void)
 	g_assert_null(stream_error);
 }
 
+static void
+fu_partial_input_stream_shared_base_func(void)
+{
+	gboolean ret;
+	gssize rc;
+	guint8 buf[4] = {0};
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) partial1 = NULL;
+	g_autoptr(FuInputStream) partial2 = NULL;
+
+	/* create base stream and two partials, then drop the base */
+	{
+		g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
+		g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+
+		partial1 = fu_partial_input_stream_new(base, 0, 4, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(partial1);
+
+		partial2 = fu_partial_input_stream_new(base, 4, 4, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(partial2);
+	}
+
+	/* read from partial1 — base stream GObject is dead but the partial keeps it */
+	ret = g_seekable_seek(G_SEEKABLE(partial1), 0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = fu_input_stream_read(partial1, buf, 4, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 4);
+	g_assert_cmpint(buf[0], ==, 'A');
+	g_assert_cmpint(buf[1], ==, 'B');
+	g_assert_cmpint(buf[2], ==, 'C');
+	g_assert_cmpint(buf[3], ==, 'D');
+
+	/* read from partial2 */
+	ret = g_seekable_seek(G_SEEKABLE(partial2), 0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = fu_input_stream_read(partial2, buf, 4, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 4);
+	g_assert_cmpint(buf[0], ==, 'E');
+	g_assert_cmpint(buf[1], ==, 'F');
+	g_assert_cmpint(buf[2], ==, 'G');
+	g_assert_cmpint(buf[3], ==, 'H');
+}
+
+static void
+fu_partial_input_stream_nested_func(void)
+{
+	gboolean ret;
+	gssize rc;
+	guint8 buf[4] = {0};
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("0123456789", 10);
+	g_autoptr(FuInputStream) outer = NULL;
+
+	{
+		g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+
+		/* create partial-of-partial, then drop the base and middle one */
+		{
+			g_autoptr(FuInputStream) middle = NULL;
+
+			/* middle = "234567" */
+			middle = fu_partial_input_stream_new(base, 2, 6, &error);
+			g_assert_no_error(error);
+			g_assert_nonnull(middle);
+
+			/* outer = "45" */
+			outer = fu_partial_input_stream_new(middle, 2, 2, &error);
+			g_assert_no_error(error);
+			g_assert_nonnull(outer);
+		}
+	}
+
+	ret = g_seekable_seek(G_SEEKABLE(outer), 0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = fu_input_stream_read(outer, buf, 4, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, '4');
+	g_assert_cmpint(buf[1], ==, '5');
+}
+
+static void
+fu_partial_input_stream_composite_lifetime_func(void)
+{
+	gboolean ret;
+	gssize rc;
+	guint8 buf[8] = {0};
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) composite = fu_composite_input_stream_new();
+
+	/* add partial streams from two different base streams, both going out of scope */
+	{
+		g_autoptr(GBytes) blob1 = g_bytes_new_static("AAABBB", 6);
+		g_autoptr(GBytes) blob2 = g_bytes_new_static("CCCDDD", 6);
+		g_autoptr(FuInputStream) base1 = fu_memory_input_stream_new_from_bytes(blob1);
+		g_autoptr(FuInputStream) base2 = fu_memory_input_stream_new_from_bytes(blob2);
+		g_autoptr(FuInputStream) p1 = NULL;
+		g_autoptr(FuInputStream) p2 = NULL;
+
+		/* p1 = "AB" from base1, p2 = "CD" from base2 */
+		p1 = fu_partial_input_stream_new(base1, 2, 2, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(p1);
+
+		p2 = fu_partial_input_stream_new(base2, 2, 2, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(p2);
+
+		ret = fu_composite_input_stream_add_partial_stream(
+		    FU_COMPOSITE_INPUT_STREAM(composite),
+		    FU_PARTIAL_INPUT_STREAM(p1),
+		    &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		ret = fu_composite_input_stream_add_partial_stream(
+		    FU_COMPOSITE_INPUT_STREAM(composite),
+		    FU_PARTIAL_INPUT_STREAM(p2),
+		    &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		/* base1, base2, p1, p2 all go out of scope */
+	}
+
+	ret = g_seekable_seek(G_SEEKABLE(composite), 0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = fu_input_stream_read(composite, buf, 8, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, 'A');
+	g_assert_cmpint(buf[1], ==, 'B');
+
+	rc = fu_input_stream_read(composite, buf, 8, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, 'C');
+	g_assert_cmpint(buf[1], ==, 'D');
+
+	/* EOF */
+	rc = fu_input_stream_read(composite, buf, 8, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+}
+
+static void
+fu_partial_input_stream_same_base_composite_func(void)
+{
+	gboolean ret;
+	guint8 buf[2] = {0};
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("0123456789", 10);
+	g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) composite = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) p1 = NULL;
+	g_autoptr(FuInputStream) p2 = NULL;
+	g_autoptr(FuInputStream) p3 = NULL;
+
+	/* create three non-overlapping partials from the same base */
+	p1 = fu_partial_input_stream_new(base, 0, 3, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(p1);
+
+	p2 = fu_partial_input_stream_new(base, 3, 3, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(p2);
+
+	p3 = fu_partial_input_stream_new(base, 6, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(p3);
+
+	/* add all to composite */
+	ret = fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite),
+							   FU_PARTIAL_INPUT_STREAM(p1),
+							   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite),
+							   FU_PARTIAL_INPUT_STREAM(p2),
+							   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite),
+							   FU_PARTIAL_INPUT_STREAM(p3),
+							   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* read within first sub-stream (p1 = "012") */
+	ret = fu_input_stream_read_safe(composite, buf, 2, 0, 0, 2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(buf[0], ==, '0');
+	g_assert_cmpint(buf[1], ==, '1');
+
+	/* read within second sub-stream (p2 = "345") */
+	ret = fu_input_stream_read_safe(composite, buf, 2, 0, 3, 2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(buf[0], ==, '3');
+	g_assert_cmpint(buf[1], ==, '4');
+
+	/* read within third sub-stream (p3 = "6789") */
+	ret = fu_input_stream_read_safe(composite, buf, 2, 0, 8, 2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(buf[0], ==, '8');
+	g_assert_cmpint(buf[1], ==, '9');
+}
+
 int
 main(int argc, char **argv)
 {
@@ -282,5 +500,12 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/partial-input-stream/simple", fu_partial_input_stream_simple_func);
 	g_test_add_func("/fwupd/partial-input-stream/composite",
 			fu_partial_input_stream_composite_func);
+	g_test_add_func("/fwupd/partial-input-stream/shared-base",
+			fu_partial_input_stream_shared_base_func);
+	g_test_add_func("/fwupd/partial-input-stream/nested", fu_partial_input_stream_nested_func);
+	g_test_add_func("/fwupd/partial-input-stream/composite-lifetime",
+			fu_partial_input_stream_composite_lifetime_func);
+	g_test_add_func("/fwupd/partial-input-stream/same-base-composite",
+			fu_partial_input_stream_same_base_composite_func);
 	return g_test_run();
 }

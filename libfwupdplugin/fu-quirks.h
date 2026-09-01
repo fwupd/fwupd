@@ -9,6 +9,8 @@
 
 #include "fu-context.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_QUIRKS (fu_quirks_get_type())
 G_DECLARE_FINAL_TYPE(FuQuirks, fu_quirks, FU, QUIRKS, GObject)
 
@@ -453,3 +455,5 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE "CfiDeviceBlockSize"
+
+G_END_DECLS

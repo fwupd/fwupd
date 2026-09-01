@@ -1,14 +1,17 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginGenesys"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
 plugin_quirks += files('genesys.quirk', 'genesys-usbhub-fwbank.quirk')
-plugin_builtins += static_library('fu_plugin_genesys',
+plugin_builtins += static_library(
+  'fu_plugin_genesys',
   rustgen.process(
-    'fu-genesys-usbhub.rs', # fuzzing
+    'fu-genesys-usbhub.rs' # fuzzing
   ),
   sources: [
-    'fu-genesys-scaler-firmware.c',   # fuzzing
-    'fu-genesys-usbhub-firmware.c',   # fuzzing
+    'fu-genesys-scaler-firmware.c', # fuzzing
+    'fu-genesys-usbhub-firmware.c', # fuzzing
     'fu-genesys-usbhub-dev-firmware.c', # fuzzing
     'fu-genesys-usbhub-pd-firmware.c', # fuzzing
     'fu-genesys-usbhub-codesign-firmware.c', # fuzzing
@@ -26,7 +29,7 @@ plugin_builtins += static_library('fu_plugin_genesys',
 device_tests += files(
   'tests/genesys-evb-gl352510.json',
   'tests/genesys-evb-gl352530.json',
-#  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
+  #  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
   'tests/genesys-servo-dock.json',
   'tests/genesys-zdn-chromebook.json',
 )

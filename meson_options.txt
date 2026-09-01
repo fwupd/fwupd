@@ -1,4 +1,9 @@
 option(
+  'binder',
+  type: 'feature',
+  description: 'Android AIDL support',
+)
+option(
   'bash_completion',
   type: 'boolean',
   value: true,
@@ -17,8 +22,8 @@ option(
 option(
   'build',
   type: 'combo',
-  choices: ['all', 'standalone', 'library'],
-  value: 'all',
+  choices: ['dbus', 'binder', 'standalone', 'library'],
+  value: 'dbus',
   description: 'build type',
 )
 option(
@@ -32,7 +37,8 @@ option(
   type: 'feature',
   description: 'Build developer documentation',
 )
-option('efi_app_location',
+option(
+  'efi_app_location',
   type: 'string',
   value: '',
   description: 'EFI app location (empty uses $libexecdir/fwupd/efi)',

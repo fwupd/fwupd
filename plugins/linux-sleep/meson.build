@@ -3,9 +3,12 @@ hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSleep"']
-plugins += {meson.current_source_dir().split('/')[-1]: true}
+plugins += {
+  meson.current_source_dir().split('/')[-1]: true,
+}
 
-plugin_builtins += static_library('fu_plugin_linux_sleep',
+plugin_builtins += static_library(
+  'fu_plugin_linux_sleep',
   sources: [
     'fu-linux-sleep-plugin.c',
   ],

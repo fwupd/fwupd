@@ -10,6 +10,8 @@
 
 #include "fu-msgpack-struct.h"
 
+G_BEGIN_DECLS
+
 GPtrArray *
 fu_msgpack_parse(GByteArray *buf, GError **error) G_GNUC_NON_NULL(1);
 GByteArray *
@@ -17,3 +19,5 @@ fu_msgpack_write(GPtrArray *items, GError **error) G_GNUC_NON_NULL(1);
 FuMsgpackItem *
 fu_msgpack_map_lookup(GPtrArray *items, guint idx, const gchar *key, GError **error)
     G_GNUC_NON_NULL(1, 3);
+
+G_END_DECLS

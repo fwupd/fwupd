@@ -8,6 +8,8 @@
 
 #include "fu-firmware.h"
 
+G_BEGIN_DECLS
+
 #define FU_TYPE_EFI_VOLUME (fu_efi_volume_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiVolume, fu_efi_volume, FU, EFI_VOLUME, FuFirmware)
 
@@ -17,3 +19,5 @@ struct _FuEfiVolumeClass {
 
 FuFirmware *
 fu_efi_volume_new(void);
+
+G_END_DECLS

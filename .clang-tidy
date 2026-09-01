@@ -18,7 +18,6 @@ Checks:
   - -bugprone-branch-clone # TODO: enable and autofix
   - -bugprone-easily-swappable-parameters
   - -bugprone-implicit-widening-of-multiplication-result
-  - -bugprone-macro-parentheses
   - -bugprone-multi-level-implicit-pointer-conversion
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier
@@ -28,7 +27,6 @@ Checks:
   - -cert-err33-c
   - -cert-err34-c
   - -cert-int09-c # too useful for bitfields
-  - -clang-analyzer-core.NullDereference
   - -clang-analyzer-optin.core.EnumCastOutOfRange
   - -clang-analyzer-optin.performance.Padding # not useful enough
   - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling

@@ -1,0 +1,36 @@
+{
+  "FwupdVersion": "2.2.1",
+  "UsbDevices": [
+    {
+      "Created": "2026-08-26T08:22:03.013775Z",
+      "GType": "FuMmMbimDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb4/4-4",
+      "DeviceFile": "/dev/cdc-wdm0",
+      "Vendor": 13304,
+      "Model": 424,
+      "Version": "19512.0000.00.11.03.01_6167.0001.001.304.010_E47",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:14.0/usb4/4-4",
+      "DeviceIds": [
+        "USB\\VID_33F8&PID_01A8",
+        "USB\\VID_33F8&PID_01A8&REV_0504",
+        "USB\\VID_33F8&PID_01A8&CARRIER_VOLTE_OPENMKT-COMMERCIAL-CMCC",
+        "USB\\VID_33F8&PID_01A8&REV_0504&CARRIER_VOLTE_OPENMKT-COMMERCIAL-CMCC",
+        "USB\\VID_33F8"
+      ],
+      "Ports": {
+        "mbim": "/dev/cdc-wdm0",
+        "at": "/dev/ttyUSB1",
+        "gps": "/dev/ttyUSB2",
+        "net": "/dev/wwp0s20f0u4"
+      },
+      "Events": [
+        {
+          "Id": "MbimDeviceNew:Path=/dev/cdc-wdm0"
+        },
+        {
+          "Id": "MbimDeviceOpen"
+        }
+      ]
+    }
+  ]
+}

@@ -260,13 +260,16 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 		if (cmdline_safe->len > 0)
 			g_string_append(cmdline_safe, " ");
 		if (value == NULL) {
-			g_string_append(cmdline_safe, (gchar *)key);
+			g_string_append(cmdline_safe, (const gchar *)key);
 			continue;
 		}
-		g_string_append_printf(cmdline_safe, "%s=%s", (gchar *)key, (gchar *)value);
+		g_string_append_printf(cmdline_safe,
+				       "%s=%s",
+				       (const gchar *)key,
+				       (const gchar *)value);
 	}
 
-	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&cmdline_safe));
 }
 
 gchar *

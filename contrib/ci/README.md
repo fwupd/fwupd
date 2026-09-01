@@ -110,7 +110,8 @@ The following builds are performed for every commit or pull request:
 ## Adding a new target
 
 Dockerfiles are generated dynamically by the python script `generate_docker.py`.
-The python script will recognize the environment variable `DISTRO` to determine what target to generate a Dockerfile for.
+The python script takes `--distro`, `--version`, `--arch` and optionally `--variant`
+commandline arguments to determine what target to generate a Dockerfile for.
 
 ### dependencies.xml
 
