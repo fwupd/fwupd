@@ -122,7 +122,7 @@ fu_jcat_engine_pubkey_verify(FuJcatEngine *self,
  * @self: #FuJcatEngine
  * @blob: #GBytes
  * @cert: #GBytes
- * @privkey: #GBytes
+ * @privkey: #FuSecureBytes
  * @flags: #FuJcatSignFlags, e.g. %FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP
  * @error: #GError, or %NULL
  *
@@ -134,7 +134,7 @@ FwupdJcatBlob *
 fu_jcat_engine_pubkey_sign(FuJcatEngine *self,
 			   GBytes *blob,
 			   GBytes *cert,
-			   GBytes *privkey,
+			   FuSecureBytes *privkey,
 			   FuJcatSignFlags flags,
 			   GError **error)
 {
