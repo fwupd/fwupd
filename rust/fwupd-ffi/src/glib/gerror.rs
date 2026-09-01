@@ -61,8 +61,7 @@ extern "C" {
         message: *const c_char,
     );
 
-    #[cfg(test)]
-    fn g_error_free(err: *mut GError);
+    pub fn g_error_free(err: *mut GError);
 }
 
 /// Fake `fwupd_error_quark` so we don't need to

@@ -9,31 +9,18 @@
 //! Provides [`CStream`], a wrapper that delegates [`Read`] and [`Seek`]
 //! operations to a C-side `GInputStream` through a [`CStreamCallbacks`] vtable.
 //! This allows C-backed streams to be used as trait objects alongside native
-//! Rust stream types such as [`super::MemoryInputStream`].
+//! Rust stream types such as [`MemoryInputStream`](fwupd::streams::MemoryInputStream).
 //!
 //! [`CStream`] has a second API for reading and seeking, see [`CStream::read_stream`]
 //! and [`CStream::seek_stream`] that can be used by callers that rely on `GError`
 //! return values.
 
-use crate::streams::IsSeekable;
+use crate::glib::{GBoolean, GError, GSeekType, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET};
+use fwupd::streams::IsSeekable;
 use std::io::{self, Read, Seek, SeekFrom};
-
-/// `GLib` `GBoolean` type (an `i32`, not `bool`)
-pub type GBoolean = i32;
-
-/// `GLib` `GSeekType`
-pub type GSeekType = i32;
-
-/// `GLib` `GSeekType` constants for C callback interop.
-const G_SEEK_CUR: GSeekType = 0;
-const G_SEEK_SET: GSeekType = 1;
-const G_SEEK_END: GSeekType = 2;
 
 /// Opaque handle to a C-side `GInputStream`.
 pub type CStreamHandle = *mut std::ffi::c_void;
-
-/// Opaque handle for a `GError`
-pub type GError = *mut std::ffi::c_void;
 
 /// Callback vtable for reading/seeking on a C-side stream.
 ///
@@ -55,7 +42,7 @@ pub struct CStreamCallbacks {
         handle: CStreamHandle,
         buf: *mut u8,
         count: usize,
-        error: *mut GError,
+        error: *mut *mut GError,
     ) -> isize,
     /// Seek to `offset` with the given `seek_type`. (`GLib` `GSeekType` as i32).
     ///
@@ -71,7 +58,7 @@ pub struct CStreamCallbacks {
         handle: CStreamHandle,
         offset: i64,
         seek_type: GSeekType,
-        error: *mut GError,
+        error: *mut *mut GError,
     ) -> GBoolean,
     /// Return `GTRUE` if the stream is seekable.
     pub can_seek_fn: unsafe extern "C" fn(handle: CStreamHandle) -> GBoolean,
@@ -110,32 +97,35 @@ impl CStream {
     ///
     /// # Errors
     ///
-    /// Returns [`StreamError::Seek`](super::StreamError::Seek) if seeking
+    /// Returns [`StreamError::Seek`](fwupd::streams::StreamError::Seek) if seeking
     /// to the end or back to the original position fails, or if `tell`
     /// returns a negative value.
-    pub fn size(&mut self) -> Result<usize, super::StreamError> {
+    pub fn size(&mut self) -> Result<usize, fwupd::streams::StreamError> {
         let pos = unsafe { (self.callbacks.tell_fn)(self.handle) };
         if pos < 0 {
-            return Err(super::StreamError::Seek("tell failed".into()));
+            return Err(fwupd::streams::StreamError::Seek("tell failed".into()));
         }
         let ok =
             unsafe { (self.callbacks.seek_fn)(self.handle, 0, G_SEEK_END, std::ptr::null_mut()) };
         if ok == 0 {
-            return Err(super::StreamError::Seek("seek to end failed".into()));
+            return Err(fwupd::streams::StreamError::Seek(
+                "seek to end failed".into(),
+            ));
         }
         let end = unsafe { (self.callbacks.tell_fn)(self.handle) };
         let ok =
             unsafe { (self.callbacks.seek_fn)(self.handle, pos, G_SEEK_SET, std::ptr::null_mut()) };
         if ok == 0 {
-            return Err(super::StreamError::Seek("seek back failed".into()));
+            return Err(fwupd::streams::StreamError::Seek("seek back failed".into()));
         }
         if end < 0 {
-            return Err(super::StreamError::Seek(
+            return Err(fwupd::streams::StreamError::Seek(
                 "tell returned negative size".into(),
             ));
         }
-        usize::try_from(end)
-            .map_err(|_| super::StreamError::InvalidArgs("stream size exceeds usize".into()))
+        usize::try_from(end).map_err(|_| {
+            fwupd::streams::StreamError::InvalidArgs("stream size exceeds usize".into())
+        })
     }
 
     /// Read into `buf` and return the number of bytes read. On error
@@ -143,7 +133,7 @@ impl CStream {
     ///
     /// The `error` is passed as-is through to the [`CStreamCallbacks::read_fn`].
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn read_stream(&mut self, buf: &mut [u8], error: *mut GError) -> isize {
+    pub fn read_stream(&mut self, buf: &mut [u8], error: *mut *mut GError) -> isize {
         unsafe { (self.callbacks.read_fn)(self.handle, buf.as_mut_ptr(), buf.len(), error) }
     }
 
@@ -151,7 +141,7 @@ impl CStream {
     ///
     /// The `error` is passed as-is through to the [`CStreamCallbacks::seek_fn`].
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn seek_stream(&mut self, pos: SeekFrom, error: *mut GError) -> GBoolean {
+    pub fn seek_stream(&mut self, pos: SeekFrom, error: *mut *mut GError) -> GBoolean {
         let (offset, seek_type) = match pos {
             SeekFrom::Start(n) => match i64::try_from(n) {
                 Ok(offset) => (offset, G_SEEK_SET),
@@ -213,7 +203,6 @@ impl Seek for CStream {
         let pos = unsafe { (self.callbacks.tell_fn)(self.handle) };
         if pos < 0 {
             // FIXME: should have gerror to io::Error conversion here to be more useful
-            // but that requires linkage to glib for g_error_free
             return Err(io::Error::other(format!("C stream tell returned {pos}")));
         }
         let pos = u64::try_from(pos).unwrap();
@@ -242,15 +231,12 @@ impl Drop for CStream {
 /// Arc<Mutex<dyn `ReadSeek` + Send>>.
 unsafe impl Send for CStream {}
 
-/// Test helpers for C-backed stream tests.
-///
-/// These are used by [`PartialInputStream`] and [`CompositeInputStream`] tests
-/// to create a [`MemoryInputStream`]-backed C stream via callbacks.
 #[cfg(test)]
 pub(crate) mod test_helpers {
     use super::*;
-    use crate::streams::MemoryInputStream;
+    use fwupd::streams::MemoryInputStream;
     use std::io::{Read, Seek};
+    use std::sync::{Arc, Mutex};
 
     pub(crate) struct TestStream {
         pub(crate) inner: MemoryInputStream,
@@ -260,7 +246,7 @@ pub(crate) mod test_helpers {
         handle: CStreamHandle,
         buf: *mut u8,
         count: usize,
-        _gerror: *mut GError,
+        _gerror: *mut *mut GError,
     ) -> isize {
         let stream = unsafe { &mut *handle.cast::<TestStream>() };
         let slice = unsafe { std::slice::from_raw_parts_mut(buf, count) };
@@ -271,7 +257,7 @@ pub(crate) mod test_helpers {
         handle: CStreamHandle,
         offset: i64,
         seek_type: GSeekType,
-        _gerror: *mut GError,
+        _gerror: *mut *mut GError,
     ) -> GBoolean {
         let stream = unsafe { &mut *handle.cast::<TestStream>() };
         let seek_from = match seek_type {
@@ -300,5 +286,166 @@ pub(crate) mod test_helpers {
             tell_fn: test_tell,
             destroy_fn: None,
         }
+    }
+
+    /// Helper: create an `Arc<Mutex<CStream>>` from a `TestStream`.
+    #[allow(clippy::arc_with_non_send_sync)]
+    pub(crate) fn cstream_from(backing: &mut TestStream) -> Arc<Mutex<CStream>> {
+        let handle = backing as *mut TestStream as CStreamHandle;
+        Arc::new(Mutex::new(unsafe {
+            CStream::new(handle, test_callbacks())
+        }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::test_helpers::*;
+    use super::*;
+    use fwupd::streams::{CompositeInputStream, MemoryInputStream, PartialInputStream};
+
+    #[test]
+    fn partial_basic() {
+        let mut backing = TestStream {
+            inner: MemoryInputStream::from_data(vec![10, 20, 30, 40, 50, 60, 70, 80]),
+        };
+        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 2, 4);
+
+        assert_eq!(partial.size().unwrap(), 4);
+        assert_eq!(partial.offset(), 2);
+
+        partial.seek(SeekFrom::Start(0)).unwrap();
+        assert_eq!(partial.stream_position().unwrap(), 0);
+
+        let mut buf = [0u8; 10];
+        let n = partial.read(&mut buf).unwrap();
+        assert_eq!(n, 4);
+        assert_eq!(&buf[..4], &[30, 40, 50, 60]);
+
+        // Should be at EOF now
+        assert_eq!(partial.read(&mut buf).unwrap(), 0);
+    }
+
+    #[test]
+    fn partial_seek() {
+        let mut backing = TestStream {
+            inner: MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        };
+        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 2, 4);
+
+        // SeekFrom::Start
+        partial.seek(SeekFrom::Start(1)).unwrap();
+        assert_eq!(partial.stream_position().unwrap(), 1);
+        let mut buf = [0u8; 1];
+        partial.read_exact(&mut buf).unwrap();
+        assert_eq!(buf[0], 3); // offset 2 + 1 = index 3 in backing
+
+        // SeekFrom::End
+        partial.seek(SeekFrom::End(-1)).unwrap();
+        assert_eq!(partial.stream_position().unwrap(), 3);
+        partial.read_exact(&mut buf).unwrap();
+        assert_eq!(buf[0], 5); // offset 2 + 3 = index 5
+
+        // SeekFrom::Current
+        partial.seek(SeekFrom::Start(0)).unwrap();
+        partial.seek(SeekFrom::Current(2)).unwrap();
+        assert_eq!(partial.stream_position().unwrap(), 2);
+    }
+
+    #[test]
+    fn partial_clamps_read() {
+        let mut backing = TestStream {
+            inner: MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5]),
+        };
+        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 1, 3);
+
+        partial.seek(SeekFrom::Start(0)).unwrap();
+        let mut buf = [0u8; 10];
+        let n = partial.read(&mut buf).unwrap();
+        assert_eq!(n, 3); // clamped to size
+        assert_eq!(&buf[..3], &[1, 2, 3]);
+    }
+
+    #[test]
+    fn composite_single_stream() {
+        let mut backing = TestStream {
+            inner: MemoryInputStream::from_data(vec![1, 2, 3]),
+        };
+        let mut composite = CompositeInputStream::new();
+        composite.add_stream(cstream_from(&mut backing), 3);
+
+        assert_eq!(composite.size().unwrap(), 3);
+
+        let mut buf = [0u8; 10];
+        let n = composite.read(&mut buf).unwrap();
+        assert_eq!(n, 3);
+        assert_eq!(&buf[..3], &[1, 2, 3]);
+
+        // EOF
+        assert_eq!(composite.read(&mut buf).unwrap(), 0);
+    }
+
+    #[test]
+    fn composite_multiple_streams() {
+        let mut backing1 = TestStream {
+            inner: MemoryInputStream::from_data(vec![1, 2, 3]),
+        };
+        let mut backing2 = TestStream {
+            inner: MemoryInputStream::from_data(vec![4, 5]),
+        };
+        let mut backing3 = TestStream {
+            inner: MemoryInputStream::from_data(vec![6, 7, 8, 9]),
+        };
+
+        let mut composite = CompositeInputStream::new();
+        composite.add_stream(cstream_from(&mut backing1), 3);
+        composite.add_stream(cstream_from(&mut backing2), 2);
+        composite.add_stream(cstream_from(&mut backing3), 4);
+
+        assert_eq!(composite.size().unwrap(), 9);
+
+        let mut result = Vec::new();
+        let mut buf = [0u8; 4];
+        loop {
+            let n = composite.read(&mut buf).unwrap();
+            if n == 0 {
+                break;
+            }
+            result.extend_from_slice(&buf[..n]);
+        }
+        assert_eq!(result, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+
+    #[test]
+    fn composite_seek() {
+        let mut backing1 = TestStream {
+            inner: MemoryInputStream::from_data(vec![10, 20, 30]),
+        };
+        let mut backing2 = TestStream {
+            inner: MemoryInputStream::from_data(vec![40, 50, 60]),
+        };
+
+        let mut composite = CompositeInputStream::new();
+        composite.add_stream(cstream_from(&mut backing1), 3);
+        composite.add_stream(cstream_from(&mut backing2), 3);
+
+        // Seek into second stream
+        composite.seek(SeekFrom::Start(4)).unwrap();
+        assert_eq!(composite.stream_position().unwrap(), 4);
+
+        let mut buf = [0u8; 1];
+        composite.read_exact(&mut buf).unwrap();
+        assert_eq!(buf[0], 50);
+
+        // Seek from end
+        composite.seek(SeekFrom::End(-1)).unwrap();
+        assert_eq!(composite.stream_position().unwrap(), 5);
+        composite.read_exact(&mut buf).unwrap();
+        assert_eq!(buf[0], 60);
+
+        // Seek back to start
+        composite.seek(SeekFrom::Start(0)).unwrap();
+        composite.read_exact(&mut buf).unwrap();
+        assert_eq!(buf[0], 10);
     }
 }

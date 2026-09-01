@@ -16,5 +16,6 @@
 //! components of fwupd.
 
 pub mod compressor;
+pub mod cstream;
 pub mod glib;
 pub mod streams;
