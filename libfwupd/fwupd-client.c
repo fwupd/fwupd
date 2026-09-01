@@ -85,12 +85,12 @@ typedef struct {
 	gchar *package_name;
 	gchar *package_version;
 	gchar *user_agent;
-	GHashTable *hints;		/* str:str */
-	GHashTable *immediate_requests; /* str:FwupdRequest */
+	GHashTable *hints;		 /* str:str */
+	GHashTable *immediate_requests;	 /* str:FwupdRequest */
 	GMutex immediate_requests_mutex; /* for @immediate_requests */
-	GPtrArray *hwids;		/* FwupdClientHwid */
-	GMutex download_items_mutex; /* for @download_items */
-	GPtrArray *download_items;   /* element-type FwupdClientDownloadItem */
+	GPtrArray *hwids;		 /* FwupdClientHwid */
+	GMutex download_items_mutex;	 /* for @download_items */
+	GPtrArray *download_items;	 /* element-type FwupdClientDownloadItem */
 	FwupdClientSyncImpl impl;
 	GPtrArray *connect_items; /* element-type FwupdClientConnectItem */
 	gpointer impl_userdata;
