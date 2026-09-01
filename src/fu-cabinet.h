@@ -36,7 +36,7 @@ fu_cabinet_set_jcat_context(FuCabinet *self, FuJcatContext *jcat_context) G_GNUC
 gboolean
 fu_cabinet_sign(FuCabinet *self,
 		GBytes *cert,
-		GBytes *privkey,
+		FuSecureBytes *privkey,
 		FuCabinetSignFlags flags,
 		GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean

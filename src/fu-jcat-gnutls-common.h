@@ -61,7 +61,8 @@ gnutls_x509_crt_t
 fu_jcat_gnutls_pkcs7_load_crt_from_blob(GBytes *blob, gnutls_x509_crt_fmt_t format, GError **error)
     G_GNUC_NON_NULL(1);
 gnutls_privkey_t
-fu_jcat_gnutls_pkcs7_load_privkey_from_blob(GBytes *blob, GError **error) G_GNUC_NON_NULL(1);
+fu_jcat_gnutls_pkcs7_load_privkey_from_sbytes(FuSecureBytes *sbytes, GError **error)
+    G_GNUC_NON_NULL(1);
 gnutls_pubkey_t
 fu_jcat_gnutls_pkcs7_load_pubkey_from_privkey(gnutls_privkey_t privkey, GError **error)
     G_GNUC_NON_NULL(1);
@@ -69,7 +70,7 @@ gboolean
 fu_jcat_gnutls_ensure_trust_list_valid(gnutls_x509_trust_list_t tl, GError **error)
     G_GNUC_NON_NULL(1);
 
-GBytes *
+FuSecureBytes *
 fu_jcat_gnutls_pkcs7_create_private_key(gnutls_pk_algorithm_t algo, GError **error);
 gboolean
 fu_jcat_gnutls_pkcs7_ensure_sign_algo_pq_safe(gnutls_sign_algorithm_t algo, GError **error);

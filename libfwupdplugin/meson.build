@@ -202,6 +202,7 @@ fwupdplugin_src = [
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
   'fu-sbatlevel-section.c', # fuzzing
+  'fu-secure-bytes.c', # fuzzing
   'fu-security-attr.c', # fuzzing
   'fu-security-attrs.c', # fuzzing
   'fu-serio-device.c',
@@ -370,6 +371,7 @@ fwupdplugin_headers = [
   'fu-ptr-array.h',
   'fu-quirks.h',
   'fu-sbatlevel-section.h',
+  'fu-secure-bytes.h',
   'fu-security-attr.h',
   'fu-security-attrs.h',
   'fu-security-attrs-private.h',
@@ -551,6 +553,7 @@ if get_option('tests')
     'protobuf',
     'ptr-array',
     'quirks',
+    'secure-bytes',
     'security-attrs',
     'smbios',
     'srec-firmware',

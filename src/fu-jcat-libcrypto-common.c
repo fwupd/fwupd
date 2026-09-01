@@ -123,10 +123,10 @@ fu_jcat_libcrypto_pkcs7_load_crt_from_blob_der(GBytes *blob, GError **error)
 }
 
 EVP_PKEY *
-fu_jcat_libcrypto_pkcs7_load_privkey_from_blob_pem(GBytes *blob, GError **error)
+fu_jcat_libcrypto_pkcs7_load_privkey_from_sbytes(FuSecureBytes *sbytes, GError **error)
 {
-	gsize blob_size;
-	const guchar *blob_data = g_bytes_get_data(blob, &blob_size);
+	gsize blob_size = fu_secure_bytes_get_size(sbytes);
+	const guchar *blob_data = fu_secure_bytes_get_data(sbytes);
 	g_autoptr(EVP_PKEY) key = NULL;
 	g_autoptr(OSSL_DECODER_CTX) dec_ctx = NULL;
 
@@ -160,7 +160,7 @@ fu_jcat_libcrypto_pkcs7_load_privkey_from_blob_pem(GBytes *blob, GError **error)
 	return g_steal_pointer(&key);
 }
 
-GBytes *
+FuSecureBytes *
 fu_jcat_libcrypto_pkcs7_create_private_key(GError **error)
 {
 	gsize pem_data_size = 0;
@@ -232,7 +232,8 @@ fu_jcat_libcrypto_pkcs7_create_private_key(GError **error)
 		return NULL;
 	}
 
-	return g_bytes_new_take(g_steal_pointer(&pem_data), pem_data_size);
+	/* wipe when required */
+	return fu_secure_bytes_new(g_steal_pointer(&pem_data), pem_data_size, g_free);
 }
 
 GBytes *

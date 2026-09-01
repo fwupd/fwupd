@@ -61,9 +61,10 @@ fu_jcat_libcrypto_pkcs7_load_crt_from_blob_pem(GBytes *blob, GError **error) G_G
 X509 *
 fu_jcat_libcrypto_pkcs7_load_crt_from_blob_der(GBytes *blob, GError **error) G_GNUC_NON_NULL(1);
 EVP_PKEY *
-fu_jcat_libcrypto_pkcs7_load_privkey_from_blob_pem(GBytes *blob, GError **error) G_GNUC_NON_NULL(1);
+fu_jcat_libcrypto_pkcs7_load_privkey_from_sbytes(FuSecureBytes *sbytes, GError **error)
+    G_GNUC_NON_NULL(1);
 
-GBytes *
+FuSecureBytes *
 fu_jcat_libcrypto_pkcs7_create_private_key(GError **error);
 GBytes *
 fu_jcat_libcrypto_pkcs7_create_client_certificate(EVP_PKEY *privkey, GError **error)
