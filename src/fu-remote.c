@@ -32,9 +32,7 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_remote_load_from_filename(FwupdRemote *self,
-			     const gchar *filename,
-			     GError **error)
+fu_remote_load_from_filename(FwupdRemote *self, const gchar *filename, GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *id = NULL;
@@ -179,9 +177,7 @@ fu_remote_load_from_filename(FwupdRemote *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_remote_save_to_filename(FwupdRemote *self,
-			   const gchar *filename,
-			   GError **error)
+fu_remote_save_to_filename(FwupdRemote *self, const gchar *filename, GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autoptr(GKeyFile) kf = g_key_file_new();
