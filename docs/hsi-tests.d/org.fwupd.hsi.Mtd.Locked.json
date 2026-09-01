@@ -1,19 +1,19 @@
 {
   "id": "org.fwupd.hsi.Mtd.Locked",
-  "name": "Locked MTD",
+  "name": "VBOOT RO region",
   "description": [
-    "Memory Technology Devices can expose firmware data that must not be writable after startup.",
-    "fwupd can check this using MTD MEMISLOCKED when the firmware flash is exposed as NOR."
+    "VBOOT firmware images contain an FMAP WP_RO region that must not be writable after startup.",
+    "fwupd checks this region using MTD MEMISLOCKED when the firmware flash is exposed as NOR."
   ],
   "failure-impact": [
-    "Unlocked MTD devices may allow an attacker to modify firmware code or data."
+    "An unlocked VBOOT RO region may allow an attacker to modify firmware code or data."
   ],
   "failure-results": {
-    "not-locked": "MTD device is unlocked",
-    "not-supported": "MTD lock status could not be checked"
+    "not-locked": "VBOOT RO region is unlocked",
+    "not-supported": "VBOOT RO region lock status could not be checked"
   },
   "success-results": {
-    "locked": "MTD device is locked"
+    "locked": "VBOOT RO region is locked"
   },
   "hsi-level": 2,
   "resolution": "Contact your OEM, who may be able to issue a firmware update.",

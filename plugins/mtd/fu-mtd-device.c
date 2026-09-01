@@ -14,6 +14,7 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "fu-fmap-struct.h"
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 
@@ -32,7 +33,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
-#define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_MTD_DEVICE_IOCTL_TIMEOUT	5000 /* ms */
+#define FU_MTD_DEVICE_FMAP_REGION_WP_RO "WP_RO"
 
 static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -457,12 +459,176 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_MTD_USER_H
+static gboolean
+fu_mtd_device_find_wp_ro(FuMtdDevice *self,
+			 guint32 *region_start,
+			 guint32 *region_length,
+			 GError **error)
+{
+	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	gsize search_offset = 0;
+	gsize search_size = firmware_size_max;
+	guint wp_ro_cnt = 0;
+	gsize fmap_area_offset = 0;
+	gsize fmap_offset = 0;
+	gsize fmap_table_size = FU_STRUCT_FMAP_SIZE;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuFirmware) img_wp_ro = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuDevice) device_bios = NULL;
+	g_autoptr(FuStructFmap) st_hdr = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	stream = fu_mtd_device_read_stream(self, NULL, error);
+	if (stream == NULL)
+		return FALSE;
+	device_bios = fu_device_get_child_by_logical_id(FU_DEVICE(self), "bios", NULL);
+	if (FU_IS_MTD_IFD_DEVICE(device_bios)) {
+		guint64 region_offset =
+		    fu_mtd_ifd_device_get_region_offset(FU_MTD_IFD_DEVICE(device_bios));
+		guint64 region_size =
+		    fu_mtd_ifd_device_get_region_size(FU_MTD_IFD_DEVICE(device_bios));
+
+		if (region_offset > firmware_size_max || region_size > firmware_size_max ||
+		    region_size > firmware_size_max - region_offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "IFD BIOS region 0x%x+0x%x exceeds MTD size 0x%x",
+				    (guint)region_offset,
+				    (guint)region_size,
+				    (guint)firmware_size_max);
+			return FALSE;
+		}
+		search_offset = region_offset;
+		search_size = region_size;
+		g_debug("limiting FMAP discovery to IFD BIOS region @0x%x of size 0x%x",
+			(guint)search_offset,
+			(guint)search_size);
+	}
+	if (!fu_fmap_firmware_find(FU_FMAP_FIRMWARE(firmware),
+				   stream,
+				   search_offset,
+				   search_size,
+				   firmware_size_max,
+				   &fmap_offset,
+				   error)) {
+		g_prefix_error_literal(error, "failed to find top-level FMAP: ");
+		return FALSE;
+	}
+
+	/* count the raw area entries, as zero-sized areas are omitted when parsing */
+	st_hdr = fu_struct_fmap_parse_stream(stream, fmap_offset, error);
+	if (st_hdr == NULL)
+		return FALSE;
+	if (!fu_size_checked_inc_product(&fmap_table_size,
+					 FU_STRUCT_FMAP_AREA_SIZE,
+					 fu_struct_fmap_get_nareas(st_hdr),
+					 error))
+		return FALSE;
+	fmap_area_offset = fmap_offset;
+	if (!fu_size_checked_inc(&fmap_area_offset, st_hdr->buf->len, error))
+		return FALSE;
+	for (guint16 i = 0; i < fu_struct_fmap_get_nareas(st_hdr); i++) {
+		g_autofree gchar *area_name = NULL;
+		g_autoptr(FuStructFmapArea) st_area = NULL;
+
+		st_area = fu_struct_fmap_area_parse_stream(stream, fmap_area_offset, error);
+		if (st_area == NULL)
+			return FALSE;
+		area_name = fu_struct_fmap_area_get_name(st_area);
+		if (g_strcmp0(area_name, FU_MTD_DEVICE_FMAP_REGION_WP_RO) == 0)
+			wp_ro_cnt++;
+		if (!fu_size_checked_inc(&fmap_area_offset, st_area->buf->len, error))
+			return FALSE;
+	}
+	if (wp_ro_cnt > 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "multiple FMAP WP_RO regions found");
+		return FALSE;
+	}
+	if (wp_ro_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FMAP WP_RO region found");
+		return FALSE;
+	}
+
+	if (!fu_firmware_parse_stream(firmware,
+				      stream,
+				      fmap_offset,
+				      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse top-level FMAP: ");
+		return FALSE;
+	}
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+
+		if (g_strcmp0(fu_firmware_get_id(img), FU_MTD_DEVICE_FMAP_REGION_WP_RO) != 0)
+			continue;
+		if (img_wp_ro != NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "multiple FMAP WP_RO regions found");
+			return FALSE;
+		}
+		img_wp_ro = g_object_ref(img);
+	}
+	if (img_wp_ro == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FMAP WP_RO region found");
+		return FALSE;
+	}
+
+	/* the map controlling WP_RO must itself be part of the immutable root of trust */
+	g_debug("found FMAP WP_RO region @0x%x of size 0x%x",
+		(guint)fu_firmware_get_addr(img_wp_ro),
+		(guint)fu_firmware_get_size(img_wp_ro));
+	if (fu_firmware_get_size(img_wp_ro) == 0 || fu_firmware_get_addr(img_wp_ro) > G_MAXUINT32 ||
+	    fu_firmware_get_size(img_wp_ro) > G_MAXUINT32 ||
+	    fu_firmware_get_size(img_wp_ro) > firmware_size_max ||
+	    fu_firmware_get_addr(img_wp_ro) > firmware_size_max - fu_firmware_get_size(img_wp_ro)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP WP_RO region is invalid");
+		return FALSE;
+	}
+	if (fmap_offset < fu_firmware_get_addr(img_wp_ro) ||
+	    fmap_table_size > fu_firmware_get_size(img_wp_ro) ||
+	    fmap_offset - fu_firmware_get_addr(img_wp_ro) >
+		fu_firmware_get_size(img_wp_ro) - fmap_table_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "FMAP header and area table are outside WP_RO");
+		return FALSE;
+	}
+
+	*region_start = fu_firmware_get_addr(img_wp_ro);
+	*region_length = fu_firmware_get_size(img_wp_ro);
+	return TRUE;
+}
+#endif
+
 static gboolean
 fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
 	gint rc = 0;
 	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	guint32 region_start = 0;
+	guint32 region_length = 0;
 	struct erase_info_user erase = {0x0};
 	g_autoptr(FuIoctl) ioctl = NULL;
 
@@ -483,8 +649,10 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 		return FALSE;
 	}
 
-	erase.start = 0x0;
-	erase.length = firmware_size_max;
+	if (!fu_mtd_device_find_wp_ro(self, &region_start, &region_length, error))
+		return FALSE;
+	erase.start = region_start;
+	erase.length = region_length;
 	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	if (!fu_ioctl_execute(ioctl,
 			      MEMISLOCKED,
@@ -528,8 +696,17 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean locked = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_vboot = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* only applicable when VBOOT provides the firmware root of trust */
+	attr_vboot = fu_security_attrs_get_by_appstream_id(attrs,
+							   FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+							   NULL);
+	if (attr_vboot == NULL ||
+	    !fwupd_security_attr_has_flag(attr_vboot, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+		return;
 
 	/* MEMISLOCKED is only meaningful for this HSI attribute on NOR flash. */
 	if (g_strcmp0(priv->mtd_type, "nor") != 0)
