@@ -15,7 +15,7 @@
 //! and [`CStream::seek_stream`] that can be used by callers that rely on `GError`
 //! return values.
 
-use crate::glib::{GBoolean, GError, GSeekType, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET};
+use crate::glib::{GBoolean, GError, GSeekType, OwnedGError, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET};
 use fwupd::streams::IsSeekable;
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -159,18 +159,15 @@ impl CStream {
 
 impl Read for CStream {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut gerror = OwnedGError::default();
         let rc = unsafe {
-            (self.callbacks.read_fn)(
-                self.handle,
-                buf.as_mut_ptr(),
-                buf.len(),
-                std::ptr::null_mut(),
-            )
+            (self.callbacks.read_fn)(self.handle, buf.as_mut_ptr(), buf.len(), gerror.as_ptr())
         };
         if rc < 0 {
-            return Err(io::Error::other(format!(
-                "C stream read returned error {rc}"
-            )));
+            let msg = gerror
+                .message()
+                .unwrap_or_else(|| format!("C stream read returned error {rc}"));
+            return Err(io::Error::other(msg));
         }
         let n = usize::try_from(rc).unwrap();
         if n > buf.len() {
@@ -194,15 +191,17 @@ impl Seek for CStream {
             SeekFrom::Current(n) => (n, G_SEEK_CUR),
             SeekFrom::End(n) => (n, G_SEEK_END),
         };
-        let ok = unsafe {
-            (self.callbacks.seek_fn)(self.handle, offset, seek_type, std::ptr::null_mut())
-        };
+        let mut gerror = OwnedGError::default();
+        let ok =
+            unsafe { (self.callbacks.seek_fn)(self.handle, offset, seek_type, gerror.as_ptr()) };
         if ok == 0 {
-            return Err(io::Error::other("C stream seek failed"));
+            let msg = gerror
+                .message()
+                .unwrap_or_else(|| "C stream seek failed".to_string());
+            return Err(io::Error::other(msg));
         }
         let pos = unsafe { (self.callbacks.tell_fn)(self.handle) };
         if pos < 0 {
-            // FIXME: should have gerror to io::Error conversion here to be more useful
             return Err(io::Error::other(format!("C stream tell returned {pos}")));
         }
         let pos = u64::try_from(pos).unwrap();

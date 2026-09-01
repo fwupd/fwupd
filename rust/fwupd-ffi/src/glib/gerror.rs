@@ -42,6 +42,50 @@ impl GError {
             GError::set(error, e.kind() as u32, e.message());
         }
     }
+
+    // Return this error's message as string
+    pub(crate) fn message(&self) -> Option<String> {
+        if self.message.is_null() {
+            None
+        } else {
+            Some(unsafe {
+                std::ffi::CStr::from_ptr(self.message)
+                    .to_string_lossy()
+                    .into_owned()
+            })
+        }
+    }
+}
+
+/// A `GError` that we created and own in this crate.
+pub(crate) struct OwnedGError(*mut GError);
+
+impl Default for OwnedGError {
+    fn default() -> Self {
+        Self(std::ptr::null_mut())
+    }
+}
+
+impl Drop for OwnedGError {
+    fn drop(&mut self) {
+        if !self.0.is_null() {
+            unsafe { g_error_free(self.0) };
+        }
+    }
+}
+
+impl OwnedGError {
+    /// Return this error as pointer to be passed into
+    /// a C function.
+    pub(crate) fn as_ptr(&mut self) -> *mut *mut GError {
+        std::ptr::addr_of_mut!(self.0)
+    }
+
+    /// Return this error's message as string
+    pub(crate) fn message(&self) -> Option<String> {
+        let e = unsafe { self.0.as_ref() };
+        e.and_then(GError::message)
+    }
 }
 
 /// Opaque `GQuark` (a guint32 in `GLib`).
