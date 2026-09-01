@@ -365,7 +365,8 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/release/compare", fu_release_compare_func);
-	g_test_add_func("/fwupd/release/check-trust-metadata", fu_release_check_trust_metadata_func);
+	g_test_add_func("/fwupd/release/check-trust-metadata",
+			fu_release_check_trust_metadata_func);
 	g_test_add_func("/fwupd/release/uri-scheme", fu_release_uri_scheme_func);
 	g_test_add_func("/fwupd/release/trusted-report", fu_release_trusted_report_func);
 	g_test_add_func("/fwupd/release/trusted-report-oem", fu_release_trusted_report_oem_func);
