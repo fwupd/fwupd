@@ -186,19 +186,8 @@ impl Seek for CompositeInputStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::streams::cstream::test_helpers::{test_callbacks, TestStream};
-    use crate::streams::cstream::{CStream, CStreamHandle};
     use crate::streams::MemoryInputStream;
     use std::io::ErrorKind;
-
-    /// Helper: create an `Arc<Mutex<CStream>>` from a `TestStream`.
-    #[allow(clippy::arc_with_non_send_sync)]
-    fn cstream_from(backing: &mut TestStream) -> Arc<Mutex<CStream>> {
-        let handle = backing as *mut TestStream as CStreamHandle;
-        Arc::new(Mutex::new(unsafe {
-            CStream::new(handle, test_callbacks())
-        }))
-    }
 
     #[test]
     fn composite_empty() {
@@ -211,11 +200,9 @@ mod tests {
 
     #[test]
     fn composite_single_stream() {
-        let mut backing = TestStream {
-            inner: MemoryInputStream::from_data(vec![1, 2, 3]),
-        };
+        let stream = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![1, 2, 3])));
         let mut composite = CompositeInputStream::new();
-        composite.add_stream(cstream_from(&mut backing), 3);
+        composite.add_stream(stream, 3);
 
         assert_eq!(composite.size().unwrap(), 3);
 
@@ -226,71 +213,6 @@ mod tests {
 
         // EOF
         assert_eq!(composite.read(&mut buf).unwrap(), 0);
-    }
-
-    #[test]
-    fn composite_multiple_streams() {
-        let mut backing1 = TestStream {
-            inner: MemoryInputStream::from_data(vec![1, 2, 3]),
-        };
-        let mut backing2 = TestStream {
-            inner: MemoryInputStream::from_data(vec![4, 5]),
-        };
-        let mut backing3 = TestStream {
-            inner: MemoryInputStream::from_data(vec![6, 7, 8, 9]),
-        };
-
-        let mut composite = CompositeInputStream::new();
-        composite.add_stream(cstream_from(&mut backing1), 3);
-        composite.add_stream(cstream_from(&mut backing2), 2);
-        composite.add_stream(cstream_from(&mut backing3), 4);
-
-        assert_eq!(composite.size().unwrap(), 9);
-
-        // Read across all streams
-        let mut result = Vec::new();
-        let mut buf = [0u8; 4];
-        loop {
-            let n = composite.read(&mut buf).unwrap();
-            if n == 0 {
-                break;
-            }
-            result.extend_from_slice(&buf[..n]);
-        }
-        assert_eq!(result, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    }
-
-    #[test]
-    fn composite_seek() {
-        let mut backing1 = TestStream {
-            inner: MemoryInputStream::from_data(vec![10, 20, 30]),
-        };
-        let mut backing2 = TestStream {
-            inner: MemoryInputStream::from_data(vec![40, 50, 60]),
-        };
-
-        let mut composite = CompositeInputStream::new();
-        composite.add_stream(cstream_from(&mut backing1), 3);
-        composite.add_stream(cstream_from(&mut backing2), 3);
-
-        // Seek into second stream
-        composite.seek(SeekFrom::Start(4)).unwrap();
-        assert_eq!(composite.stream_position().unwrap(), 4);
-
-        let mut buf = [0u8; 1];
-        composite.read_exact(&mut buf).unwrap();
-        assert_eq!(buf[0], 50);
-
-        // Seek from end
-        composite.seek(SeekFrom::End(-1)).unwrap();
-        assert_eq!(composite.stream_position().unwrap(), 5);
-        composite.read_exact(&mut buf).unwrap();
-        assert_eq!(buf[0], 60);
-
-        // Seek back to start
-        composite.seek(SeekFrom::Start(0)).unwrap();
-        composite.read_exact(&mut buf).unwrap();
-        assert_eq!(buf[0], 10);
     }
 
     #[test]

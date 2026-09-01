@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * C header for the Rust CStream FFI functions.
- * Keep in sync with rust/fwupd-ffi/src/streams.rs.
+ * Keep in sync with rust/fwupd-ffi/src/cstream.rs and rust/fwupd-ffi/src/streams.rs.
  */
 
 #pragma once
