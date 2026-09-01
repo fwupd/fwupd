@@ -7,7 +7,6 @@
 //! Input stream types for fwupd.
 //!
 //! This module provides Rust implementations of the fwupd input stream types:
-//! - [`CStream`]: wraps a C-side `GInputStream` via callbacks, bridging it into Rust
 //! - [`MemoryInputStream`]: reads from an in-memory byte buffer
 //! - [`BorrowedMemoryInputStream`]: reads from an in-memory byte buffer where
 //!   the data is owned by the caller
@@ -23,7 +22,6 @@
 mod borrowed_memory_input_stream;
 mod composite_input_stream;
 mod compressor_stream;
-mod cstream;
 mod file_input_stream;
 mod memory_input_stream;
 mod partial_input_stream;
@@ -34,8 +32,6 @@ pub use borrowed_memory_input_stream::*;
 pub use composite_input_stream::*;
 #[doc(inline)]
 pub use compressor_stream::*;
-#[doc(inline)]
-pub use cstream::*;
 #[doc(inline)]
 pub use file_input_stream::*;
 #[doc(inline)]

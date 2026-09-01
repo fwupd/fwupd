@@ -26,13 +26,13 @@ use std::ptr;
 
 use std::sync::{Arc, Mutex};
 
+use crate::cstream::{CStream, CStreamCallbacks, CStreamHandle};
 use crate::glib::{
     GBoolean, GError, GOffset, GSeekType, GFALSE, GTRUE, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET,
 };
 use fwupd::streams::{
-    BorrowedMemoryInputStream, CStream, CStreamCallbacks, CStreamHandle, CompositeInputStream,
-    CompressorStream, DecompressorStream, FileInputStream, IsSeekable, MemoryInputStream,
-    PartialInputStream, ReadSeek,
+    BorrowedMemoryInputStream, CompositeInputStream, CompressorStream, DecompressorStream,
+    FileInputStream, IsSeekable, MemoryInputStream, PartialInputStream, ReadSeek,
 };
 
 /// The type of our underlying Rust stream implementation, wrapped
@@ -591,7 +591,7 @@ pub unsafe extern "C" fn fu_rs_cstream_read(
     let arc = unsafe { &mut *stream };
     let mut stream = arc.lock().unwrap();
     let slice = unsafe { std::slice::from_raw_parts_mut(buf, count) };
-    stream.read_stream(slice, gerror.cast())
+    stream.read_stream(slice, gerror)
 }
 
 /// Seek in the stream.  Returns gboolean (1 = TRUE, 0 = FALSE).
@@ -617,8 +617,7 @@ pub unsafe extern "C" fn fu_rs_cstream_seek(
     let Some(seek_from) = seek_from_glib(seek_type, offset) else {
         return GFALSE;
     };
-    // Note: cstream::GError is a pointer, our glib::GError (the function argument) is a struct
-    stream.seek_stream(seek_from, gerror.cast())
+    stream.seek_stream(seek_from, gerror)
 }
 
 /// Return the total stream size, or 0 on error.

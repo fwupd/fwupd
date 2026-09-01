@@ -154,81 +154,7 @@ impl IsSeekable for PartialInputStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::streams::cstream::test_helpers::{test_callbacks, TestStream};
-    use crate::streams::cstream::{CStream, CStreamHandle};
     use crate::streams::MemoryInputStream;
-
-    /// Helper: create an `Arc<Mutex<CStream>>` from a `TestStream`.
-    #[allow(clippy::arc_with_non_send_sync)]
-    fn cstream_from(backing: &mut TestStream) -> Arc<Mutex<CStream>> {
-        let handle = backing as *mut TestStream as CStreamHandle;
-        Arc::new(Mutex::new(unsafe {
-            CStream::new(handle, test_callbacks())
-        }))
-    }
-
-    #[test]
-    fn partial_basic() {
-        let mut backing = TestStream {
-            inner: MemoryInputStream::from_data(vec![10, 20, 30, 40, 50, 60, 70, 80]),
-        };
-        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 2, 4);
-
-        assert_eq!(partial.size().unwrap(), 4);
-        assert_eq!(partial.offset(), 2);
-
-        // Seek to start of partial stream
-        partial.seek(SeekFrom::Start(0)).unwrap();
-        assert_eq!(partial.stream_position().unwrap(), 0);
-
-        let mut buf = [0u8; 10];
-        let n = partial.read(&mut buf).unwrap();
-        assert_eq!(n, 4);
-        assert_eq!(&buf[..4], &[30, 40, 50, 60]);
-
-        // Should be at EOF now
-        assert_eq!(partial.read(&mut buf).unwrap(), 0);
-    }
-
-    #[test]
-    fn partial_seek() {
-        let mut backing = TestStream {
-            inner: MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5, 6, 7]),
-        };
-        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 2, 4);
-
-        // SeekFrom::Start
-        partial.seek(SeekFrom::Start(1)).unwrap();
-        assert_eq!(partial.stream_position().unwrap(), 1);
-        let mut buf = [0u8; 1];
-        partial.read_exact(&mut buf).unwrap();
-        assert_eq!(buf[0], 3); // offset 2 + 1 = index 3 in backing
-
-        // SeekFrom::End
-        partial.seek(SeekFrom::End(-1)).unwrap();
-        assert_eq!(partial.stream_position().unwrap(), 3);
-        partial.read_exact(&mut buf).unwrap();
-        assert_eq!(buf[0], 5); // offset 2 + 3 = index 5
-
-        // SeekFrom::Current
-        partial.seek(SeekFrom::Start(0)).unwrap();
-        partial.seek(SeekFrom::Current(2)).unwrap();
-        assert_eq!(partial.stream_position().unwrap(), 2);
-    }
-
-    #[test]
-    fn partial_clamps_read() {
-        let mut backing = TestStream {
-            inner: MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5]),
-        };
-        let mut partial = PartialInputStream::from_stream(cstream_from(&mut backing), 1, 3);
-
-        partial.seek(SeekFrom::Start(0)).unwrap();
-        let mut buf = [0u8; 10];
-        let n = partial.read(&mut buf).unwrap();
-        assert_eq!(n, 3); // clamped to size
-        assert_eq!(&buf[..3], &[1, 2, 3]);
-    }
 
     #[test]
     fn partial_from_rust_stream() {
@@ -276,5 +202,19 @@ mod tests {
         partial.seek(SeekFrom::Start(0)).unwrap();
         partial.seek(SeekFrom::Current(2)).unwrap();
         assert_eq!(partial.stream_position().unwrap(), 2);
+    }
+
+    #[test]
+    fn partial_clamps_read() {
+        let backing = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![
+            0, 1, 2, 3, 4, 5,
+        ])));
+        let mut partial = PartialInputStream::from_stream(backing, 1, 3);
+
+        partial.seek(SeekFrom::Start(0)).unwrap();
+        let mut buf = [0u8; 10];
+        let n = partial.read(&mut buf).unwrap();
+        assert_eq!(n, 3); // clamped to size
+        assert_eq!(&buf[..3], &[1, 2, 3]);
     }
 }
