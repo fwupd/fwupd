@@ -31,10 +31,7 @@ fu_stream_input_stream_read_cb(void *handle, guint8 *buf, gsize count, GError **
 }
 
 static gboolean
-fu_stream_input_stream_seek_cb(void *handle,
-			       gint64 offset,
-			       gint32 type,
-			       GError **error)
+fu_stream_input_stream_seek_cb(void *handle, gint64 offset, gint32 type, GError **error)
 {
 	if (!G_IS_SEEKABLE(handle)) {
 		g_set_error_literal(error,
