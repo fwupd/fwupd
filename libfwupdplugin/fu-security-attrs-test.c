@@ -191,11 +191,12 @@ fu_security_attrs_hsi_func(void)
 }
 
 static void
-fu_security_attrs_test_add_attr(FuSecurityAttrs *attrs,
-				const gchar *appstream_id,
-				const gchar *plugin,
-				FwupdSecurityAttrResult result,
-				gboolean success)
+fu_security_attrs_test_add_attr_with_obsolete(FuSecurityAttrs *attrs,
+					      const gchar *appstream_id,
+					      const gchar *plugin,
+					      FwupdSecurityAttrResult result,
+					      gboolean success,
+					      const gchar *obsolete)
 {
 	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(appstream_id);
 
@@ -203,7 +204,139 @@ fu_security_attrs_test_add_attr(FuSecurityAttrs *attrs,
 	fwupd_security_attr_set_result(attr, result);
 	if (success)
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	if (obsolete != NULL)
+		fwupd_security_attr_add_obsolete(attr, obsolete);
 	fu_security_attrs_append(attrs, attr);
+}
+
+static void
+fu_security_attrs_test_add_attr(FuSecurityAttrs *attrs,
+				const gchar *appstream_id,
+				const gchar *plugin,
+				FwupdSecurityAttrResult result,
+				gboolean success)
+{
+	fu_security_attrs_test_add_attr_with_obsolete(attrs,
+						      appstream_id,
+						      plugin,
+						      result,
+						      success,
+						      NULL);
+}
+
+static void
+fu_security_attrs_hsi_rollback_bios_fail_func(void)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	fu_security_attrs_test_add_attr(attrs,
+					FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE,
+					"spi",
+					FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+					TRUE);
+	fu_security_attrs_test_add_attr(attrs,
+					FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					"bios",
+					FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+					FALSE);
+	fu_security_attrs_depsolve(attrs);
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						  NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_level(attr),
+			==,
+			FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, "HSI:0");
+}
+
+static void
+fu_security_attrs_hsi_rollback_bios_success_func(void)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	fu_security_attrs_test_add_attr(attrs,
+					FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					"bios",
+					FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+					TRUE);
+	fu_security_attrs_depsolve(attrs);
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, "HSI:1");
+}
+
+static void
+fu_security_attrs_hsi_rollback_amd_success_func(void)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr_bios = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_amd = NULL;
+
+	fu_security_attrs_test_add_attr(attrs,
+					FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					"bios",
+					FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+					FALSE);
+	fu_security_attrs_test_add_attr_with_obsolete(
+	    attrs,
+	    FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+	    "pci_psp",
+	    FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	    TRUE,
+	    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+	fu_security_attrs_depsolve(attrs);
+	attr_bios =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						  NULL);
+	attr_amd =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+						  NULL);
+	g_assert_nonnull(attr_bios);
+	g_assert_nonnull(attr_amd);
+	g_assert_true(fwupd_security_attr_has_flag(attr_bios, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_cmpint(fwupd_security_attr_get_level(attr_amd),
+			==,
+			FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, "HSI:1");
+}
+
+static void
+fu_security_attrs_hsi_rollback_amd_fail_func(void)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr_bios = NULL;
+
+	fu_security_attrs_test_add_attr(attrs,
+					FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					"bios",
+					FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+					TRUE);
+	fu_security_attrs_test_add_attr_with_obsolete(
+	    attrs,
+	    FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+	    "pci_psp",
+	    FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	    FALSE,
+	    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+	fu_security_attrs_depsolve(attrs);
+	attr_bios =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						  NULL);
+	g_assert_nonnull(attr_bios);
+	g_assert_true(fwupd_security_attr_has_flag(attr_bios, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, "HSI:0");
 }
 
 static void
@@ -330,6 +463,14 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/security-attrs", fu_security_attrs_func);
 	g_test_add_func("/fwupd/security-attrs/hsi", fu_security_attrs_hsi_func);
+	g_test_add_func("/fwupd/security-attrs/hsi-rollback/bios-fail",
+			fu_security_attrs_hsi_rollback_bios_fail_func);
+	g_test_add_func("/fwupd/security-attrs/hsi-rollback/bios-success",
+			fu_security_attrs_hsi_rollback_bios_success_func);
+	g_test_add_func("/fwupd/security-attrs/hsi-rollback/amd-success",
+			fu_security_attrs_hsi_rollback_amd_success_func);
+	g_test_add_func("/fwupd/security-attrs/hsi-rollback/amd-fail",
+			fu_security_attrs_hsi_rollback_amd_fail_func);
 	g_test_add_func("/fwupd/security-attrs/hsi-suspend-to-ram",
 			fu_security_attrs_hsi_suspend_to_ram_func);
 	return g_test_run();
