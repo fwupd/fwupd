@@ -8,30 +8,30 @@
 
 #include <curl/curl.h>
 
+#include "fu-redfish-ami-device.h"
+#include "fu-redfish-ami-firmware.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-device.h"
-#include "fu-redfish-nvidia-device.h"
-#include "fu-redfish-nvidia-firmware.h"
 #include "fu-redfish-request.h"
 
-struct _FuRedfishNvidiaDevice {
+struct _FuRedfishAmiDevice {
 	FuRedfishDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuRedfishNvidiaDevice, fu_redfish_nvidia_device, FU_TYPE_REDFISH_DEVICE)
+G_DEFINE_TYPE(FuRedfishAmiDevice, fu_redfish_ami_device, FU_TYPE_REDFISH_DEVICE)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 /* build UpdateParameters with empty targets so PLDM matches by component descriptor only */
 static GString *
-fu_redfish_nvidia_device_get_parameters(FuRedfishNvidiaDevice *self)
+fu_redfish_ami_device_get_parameters(FuRedfishAmiDevice *self)
 {
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
 	/* empty Targets array — BMC resolves target from PLDM package descriptors */
 	fwupd_json_object_add_array(json_obj, "Targets", json_arr);
-	/* always force update for NVIDIA Redfish updates */
+	/* always force update for AMI Redfish updates */
 	fwupd_json_object_add_boolean(json_obj, "ForceUpdate", TRUE);
 	fwupd_json_object_add_string(json_obj, "@Redfish.OperationApplyTime", "Immediate");
 
@@ -39,13 +39,13 @@ fu_redfish_nvidia_device_get_parameters(FuRedfishNvidiaDevice *self)
 }
 
 static gboolean
-fu_redfish_nvidia_device_write_firmware(FuDevice *device,
-					FuFirmware *firmware,
-					FuProgress *progress,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_redfish_ami_device_write_firmware(FuDevice *device,
+				     FuFirmware *firmware,
+				     FuProgress *progress,
+				     FwupdInstallFlags flags,
+				     GError **error)
 {
-	FuRedfishNvidiaDevice *self = FU_REDFISH_NVIDIA_DEVICE(device);
+	FuRedfishAmiDevice *self = FU_REDFISH_AMI_DEVICE(device);
 	FuRedfishBackend *backend;
 	CURL *curl;
 	curl_mimepart *part;
@@ -69,12 +69,12 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	mime = curl_mime_init(curl);
 
 	/* part 1: UpdateParameters JSON with empty Targets and ForceUpdate=true */
-	params = fu_redfish_nvidia_device_get_parameters(self);
+	params = fu_redfish_ami_device_get_parameters(self);
 	part = curl_mime_addpart(mime);
 	curl_mime_name(part, "UpdateParameters");
 	(void)curl_mime_type(part, "application/json");
 	(void)curl_mime_data(part, params->str, CURL_ZERO_TERMINATED);
-	g_message("nvidia-oob: UpdateParameters JSON: %s", params->str);
+	g_message("ami-oob: UpdateParameters JSON: %s", params->str);
 
 	/* part 2: firmware binary */
 	part = curl_mime_addpart(mime);
@@ -119,7 +119,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 		return FALSE;
 	/* task polling should be shown as verify stage */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!fu_redfish_nvidia_device_poll_task(self, location, progress, error))
+	if (!fu_redfish_ami_device_poll_task(self, location, progress, error))
 		return FALSE;
 
 	/* firmware staged in BMC; explicit activation guidance for CLI and UI */
@@ -138,7 +138,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 
 /* build a human-readable failure detail from Messages array or TaskStatus fallback */
 static gchar *
-fu_redfish_nvidia_device_task_failure_detail(FwupdJsonObject *json_obj)
+fu_redfish_ami_device_task_failure_detail(FwupdJsonObject *json_obj)
 {
 	g_autoptr(FwupdJsonArray) json_msgs = NULL;
 	g_autoptr(GString) detail = g_string_new(NULL);
@@ -173,10 +173,10 @@ fu_redfish_nvidia_device_task_failure_detail(FwupdJsonObject *json_obj)
 
 /* poll the task URI every second for up to 40 minutes */
 gboolean
-fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
-				   const gchar *task_uri,
-				   FuProgress *progress,
-				   GError **error)
+fu_redfish_ami_device_poll_task(FuRedfishAmiDevice *self,
+				const gchar *task_uri,
+				FuProgress *progress,
+				GError **error)
 {
 	const guint poll_interval_ms = 1000;
 	const guint timeout_seconds = 2400;
@@ -251,7 +251,7 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 		    g_strcmp0(state_tmp, "Cancelled") == 0 ||
 			g_strcmp0(state_tmp, "Killed") == 0 ||
 		    g_strcmp0(state_tmp, "UserIntervention") == 0) {
-			detail = fu_redfish_nvidia_device_task_failure_detail(json_obj);
+			detail = fu_redfish_ami_device_task_failure_detail(json_obj);
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -273,10 +273,9 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 }
 
 static gboolean
-fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
+fu_redfish_ami_device_probe(FuDevice *device, GError **error)
 {
-	FuDeviceClass *parent_class =
-	    FU_DEVICE_CLASS(fu_redfish_nvidia_device_parent_class);
+	FuDeviceClass *parent_class = FU_DEVICE_CLASS(fu_redfish_ami_device_parent_class);
 	const gchar *name;
 
 	/* run standard Redfish probe: sets logical_id, backend_id, vendor, version, flags */
@@ -304,7 +303,7 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* derive a stable GUID from REDFISH\VENDOR_<vendor>&ID_<Id> for inventory
-	 * entries that carry no SoftwareId (common on NVIDIA/OpenBMC platforms) */
+	 * entries that carry no SoftwareId (common on AMI/OpenBMC platforms) */
 	if (fu_device_get_backend_id(device) != NULL &&
 	    !fu_device_build_instance_id(device, error, "REDFISH", "VENDOR", "ID", NULL))
 		return FALSE;
@@ -325,7 +324,7 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError **error)
+fu_redfish_ami_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
@@ -351,7 +350,7 @@ fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError
 }
 
 static void
-fu_redfish_nvidia_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_redfish_ami_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -362,19 +361,19 @@ fu_redfish_nvidia_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static void
-fu_redfish_nvidia_device_init(FuRedfishNvidiaDevice *self)
+fu_redfish_ami_device_init(FuRedfishAmiDevice *self)
 {
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_REDFISH_NVIDIA_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_REDFISH_AMI_FIRMWARE);
 	fu_device_set_install_duration(FU_DEVICE(self), 900);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 }
 
 static void
-fu_redfish_nvidia_device_class_init(FuRedfishNvidiaDeviceClass *klass)
+fu_redfish_ami_device_class_init(FuRedfishAmiDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->probe = fu_redfish_nvidia_device_probe;
-	device_class->activate = fu_redfish_nvidia_device_activate;
-	device_class->write_firmware = fu_redfish_nvidia_device_write_firmware;
-	device_class->set_progress = fu_redfish_nvidia_device_set_progress;
+	device_class->probe = fu_redfish_ami_device_probe;
+	device_class->activate = fu_redfish_ami_device_activate;
+	device_class->write_firmware = fu_redfish_ami_device_write_firmware;
+	device_class->set_progress = fu_redfish_ami_device_set_progress;
 }
