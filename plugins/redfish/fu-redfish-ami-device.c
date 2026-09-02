@@ -22,6 +22,12 @@ G_DEFINE_TYPE(FuRedfishAmiDevice, fu_redfish_ami_device, FU_TYPE_REDFISH_DEVICE)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
+static const gchar *ami_activation_message =
+    "The firmware update has been staged and will become active after an aux-rail power cycle.\n"
+    "To initiate this, run `fwupdmgr activate`. \n\nNote that the system will shut down "
+    "immediately during the process, \n"
+    "so save your work before proceeding...";
+
 /* build UpdateParameters with empty targets so PLDM matches by component descriptor only */
 static GString *
 fu_redfish_ami_device_get_parameters(FuRedfishAmiDevice *self)
@@ -124,15 +130,8 @@ fu_redfish_ami_device_write_firmware(FuDevice *device,
 
 	/* firmware staged in BMC; explicit activation guidance for CLI and UI */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_update_message(
-	    device,
-	    "Activation cannot be performed automatically on this hardware.\n\n"
-	    "BIOS-only firmware updates may require a DC cycle or AC cycle.\n"
-	    "BMC, Bundle firmware updates require an AC cycle.\n\n"
-	    "An AC (aux-rail) power cycle must be done out of band:\n"
-	    "  1. ipmitool chassis power off\n"
-	    "  2. After the host is fully off, physically unplug AC for at least 20 seconds\n"
-	    "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
+	fu_device_set_update_message(device, ami_activation_message);
+
 	return TRUE;
 }
 
@@ -326,26 +325,88 @@ fu_redfish_ami_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_redfish_ami_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	FuRedfishBackend *backend;
+	const gchar *action_target;
+	glong status_code;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_bmc = NULL;
+	g_autoptr(FwupdJsonObject) json_actions = NULL;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
+	g_autoptr(FwupdJsonObject) json_action = NULL;
+	g_autoptr(FwupdJsonObject) json_body = fwupd_json_object_new();
+	g_autoptr(GError) error_local = NULL;
 
-	/* show activation guidance during `fwupdmgr activate`. */
-	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
-	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "Activation cannot be performed automatically on this hardware.\n\n"
-	    "BIOS-only firmware updates may require a DC cycle or AC cycle.\n"
-	    "BMC, Bundle firmware updates require an AC cycle.\n\n"
-	    "An AC (aux-rail) power cycle must be done out of band:\n"
-	    "  1. ipmitool chassis power off\n"
-	    "  2. After the host is fully off, physically unplug AC for at least 20 seconds\n"
-	    "  3. Reconnect AC and power on; staged firmware will be active on next boot.");
-	if (!fu_device_emit_request(device, request, progress, error)) {
-		g_prefix_error_literal(error, "failed to emit activation guidance: ");
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
+	if (backend == NULL)
+		return FALSE;
+
+	/* discover the OEM aux-power-reset action target from BMC_0 */
+	request = fu_redfish_backend_request_new(backend);
+	if (!fu_redfish_request_perform(request,
+					"/redfish/v1/Chassis/BMC_0",
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					error)) {
+		g_prefix_error_literal(error, "failed to query BMC_0 chassis: ");
+		return FALSE;
+	}
+	json_bmc = fu_redfish_request_get_json_object(request);
+	json_actions = fwupd_json_object_get_object(json_bmc, "Actions", error);
+	if (json_actions == NULL) {
+		g_prefix_error_literal(error, "no Actions in BMC_0: ");
+		return FALSE;
+	}
+	json_oem = fwupd_json_object_get_object(json_actions, "Oem", error);
+	if (json_oem == NULL) {
+		g_prefix_error_literal(error, "no Actions/Oem in BMC_0: ");
+		return FALSE;
+	}
+	json_action = fwupd_json_object_get_object(json_oem, "#NvidiaChassis.AuxPowerReset", error);
+	if (json_action == NULL) {
+		g_prefix_error_literal(error, "no AuxPowerReset action in BMC_0: ");
+		return FALSE;
+	}
+	action_target = fwupd_json_object_get_string(json_action, "target", error);
+	if (action_target == NULL) {
+		g_prefix_error_literal(error, "no target in AuxPowerReset action: ");
 		return FALSE;
 	}
 
+	/* POST AuxPowerCycleForce; the BMC may drop the aux rail immediately */
+	fwupd_json_object_add_string(json_body, "ResetType", "AuxPowerCycleForce");
+	g_clear_object(&request);
+	request = fu_redfish_backend_request_new(backend);
+	if (!fu_redfish_request_perform_full(request,
+					     action_target,
+					     "POST",
+					     json_body,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
+					     &error_local)) {
+		/* The BMC drops the rail as it acts on the request, so losing the
+		 * connection before any status arrives is the expected outcome. */
+		if (fu_redfish_request_get_status_code(request) == 0) {
+			g_debug("connection lost as the aux rail dropped: %s",
+				error_local->message);
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		g_prefix_error_literal(error, "failed to trigger aux power cycle: ");
+		return FALSE;
+	}
+
+	/* fu_redfish_request_perform() only rejects HTTP 401, so check the status here
+	 * rather than report a rejected action as a successful activation. */
+	status_code = fu_redfish_request_get_status_code(request);
+	if (status_code != 200 && status_code != 202 && status_code != 204) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to trigger aux power cycle: HTTP %li",
+			    status_code);
+		return FALSE;
+	}
+
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	return TRUE;
 }
 

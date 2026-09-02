@@ -101,11 +101,10 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
 	if (self->bearer_token != NULL) {
-		/* Some custom implementations require special authentication through a bearer
-		 * token; let's use that if configured to do so. Per DSP0266 §13.3.4, Redfish
-		 * session login authentication uses X-Auth-Token */
-		if (!fu_redfish_request_set_x_auth_header_token(request, self->bearer_token, NULL))
-			g_info("failed to set X-Auth-Token header");
+		/* X-Auth-Token session authentication per Redfish DSP0266 §13.3.4 */
+		g_autofree gchar *auth_header =
+		    g_strdup_printf("X-Auth-Token: %s", self->bearer_token);
+		fu_redfish_request_add_header(request, auth_header);
 	} else {
 		/* Here is the common auth scenario, when no specific bearer token is configured.
 		 * since DSP0266 makes Basic Authorization a requirement,
