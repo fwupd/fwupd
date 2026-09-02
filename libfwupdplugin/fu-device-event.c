@@ -30,7 +30,7 @@ typedef struct {
 
 struct _FuDeviceEvent {
 	GObject parent_instance;
-	gchar *id;
+	GRefString *id;
 	gchar *id_uncompressed;
 	GPtrArray *values; /* element-type FuDeviceEventBlob */
 };
@@ -95,11 +95,11 @@ fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyN
  *
  * Return the hash of the event ID.
  *
- * Returns: string hash prefix
+ * Returns: (transfer full): string hash prefix
  *
  * Since: 2.0.3
  **/
-gchar *
+GRefString *
 fu_device_event_build_id(const gchar *id)
 {
 	guint8 buf[20] = {0};
@@ -116,7 +116,7 @@ fu_device_event_build_id(const gchar *id)
 	g_string_append_c(id_hash, '#');
 	for (guint i = 0; i < FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE / 2; i++)
 		g_string_append_printf(id_hash, "%02x", buf[i]);
-	return g_string_free_and_steal(g_steal_pointer(&id_hash));
+	return g_ref_string_new_len(id_hash->str, id_hash->len);
 }
 
 /**
@@ -516,24 +516,24 @@ fu_device_event_set_id(FuDeviceEvent *self, const gchar *id)
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(id != NULL);
 
-	g_clear_pointer(&self->id, g_free);
-	g_clear_pointer(&self->id_uncompressed, g_free);
+	g_clear_pointer(&self->id, g_ref_string_release);
+	g_clear_pointer(&self->id_uncompressed, g_ref_string_release);
 
 	/* already a truncated SHA1 hash? */
 	if (g_str_has_prefix(id, "#")) {
-		self->id = g_strdup(id);
+		self->id = g_ref_string_new(id);
 	} else {
-		self->id_uncompressed = g_strdup(id);
+		self->id_uncompressed = g_ref_string_new(id);
 		self->id = fu_device_event_build_id(id);
 	}
 }
 
 static void
-fu_device_event_set_id_from_json(FuDeviceEvent *self, const gchar *id)
+fu_device_event_set_id_from_json(FuDeviceEvent *self, GRefString *id)
 {
-	g_clear_pointer(&self->id, g_free);
+	g_clear_pointer(&self->id, g_ref_string_release);
 	if (g_str_has_prefix(id, "#")) {
-		self->id = g_strdup(id);
+		self->id = g_ref_string_acquire(id);
 	} else {
 		self->id = fu_device_event_build_id(id);
 	}
@@ -608,8 +608,8 @@ static void
 fu_device_event_finalize(GObject *object)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(object);
-	g_free(self->id);
-	g_free(self->id_uncompressed);
+	g_clear_pointer(&self->id, g_ref_string_release);
+	g_clear_pointer(&self->id_uncompressed, g_ref_string_release);
 	g_ptr_array_unref(self->values);
 	G_OBJECT_CLASS(fu_device_event_parent_class)->finalize(object);
 }
