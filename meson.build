@@ -494,15 +494,12 @@ else
   python3 = find_program(python3path)
 endif
 
-# prefer GnuTLS
-jcat_crypto = 'none'
 gnutls = dependency(
   'gnutls',
   version: '>= 3.6.0',
   required: get_option('gnutls'),
 )
 if gnutls.found()
-  jcat_crypto = 'gnutls'
   conf.set('HAVE_GNUTLS', '1')
   if cc.has_header_symbol(
     'gnutls/gnutls.h',
@@ -513,16 +510,23 @@ if gnutls.found()
   endif
 endif
 
-# fall back to OpenSSL
-if jcat_crypto == 'none'
-  libcrypto = dependency(
-    'libcrypto',
-    required: get_option('openssl'),
-  )
-  if libcrypto.found()
-    jcat_crypto = 'libcrypto'
-    conf.set('HAVE_LIBCRYPTO', '1')
-  endif
+libcrypto = dependency(
+  'libcrypto',
+  required: get_option('openssl'),
+)
+if libcrypto.found()
+  conf.set('HAVE_LIBCRYPTO', '1')
+endif
+
+# prefer GnuTLS for jcat, but fall back to OpenSSL
+if gnutls.found()
+  jcat_crypto = 'gnutls'
+  conf.set('USE_JCAT_GNUTLS', '1')
+elif libcrypto.found()
+  jcat_crypto = 'libcrypto'
+  conf.set('USE_JCAT_LIBCRYPTO', '1')
+else
+  jcat_crypto = 'none'
 endif
 
 if build_daemon == 'binder'
@@ -1008,6 +1012,7 @@ summary(
     'vendor_ids_dir': vendor_ids_dir,
     'docs': build_docs,
     'gnutls': gnutls,
+    'libcrypto': libcrypto,
     'introspection': introspection.allowed(),
     'libblkid': libblkid,
     'libdrm': libdrm,

@@ -14,10 +14,10 @@
 #include "fu-jcat-sha256-engine.h"
 #include "fu-jcat-sha512-engine.h"
 
-#ifdef HAVE_GNUTLS
+#ifdef USE_JCAT_GNUTLS
 #include "fu-jcat-gnutls-pkcs7-engine.h"
 #endif
-#ifdef HAVE_LIBCRYPTO
+#ifdef USE_JCAT_LIBCRYPTO
 #include "fu-jcat-libcrypto-pkcs7-engine.h"
 #endif
 
@@ -57,10 +57,10 @@ fu_jcat_context_init(FuJcatContext *self)
 
 	g_ptr_array_add(self->engines, fu_jcat_sha256_engine_new(self));
 	g_ptr_array_add(self->engines, fu_jcat_sha512_engine_new(self));
-#ifdef HAVE_GNUTLS
+#ifdef USE_JCAT_GNUTLS
 	g_ptr_array_add(self->engines, fu_jcat_gnutls_pkcs7_engine_new(self));
 #endif
-#ifdef HAVE_LIBCRYPTO
+#ifdef USE_JCAT_LIBCRYPTO
 	g_ptr_array_add(self->engines, fu_jcat_libcrypto_pkcs7_engine_new(self));
 #endif
 }
