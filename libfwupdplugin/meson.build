@@ -430,6 +430,7 @@ library_deps = [
   libblkid,
   libdrm,
   gnutls,
+  libcrypto,
   platform_deps,
   fwupd_rust_ffi_dep,
 ]

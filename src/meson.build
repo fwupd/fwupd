@@ -5,15 +5,12 @@ endif
 client_src = []
 systemd_src = []
 engine_dep = [
+  library_deps,
   libxmlb,
   giounix,
   glib,
-  gmodule,
-  libusb,
   polkit,
-  sqlite,
   fwupdplugin_rs_dep,
-  fwupd_rust_ffi_dep,
 ]
 
 if get_option('passim').allowed()
@@ -57,14 +54,13 @@ fwupd_engine_src = [
   'fu-jcat-result.c',
 ] + systemd_src
 
-if jcat_crypto == 'gnutls'
+if gnutls.found()
   fwupd_engine_src += 'fu-jcat-gnutls-common.c'
   fwupd_engine_src += 'fu-jcat-gnutls-pkcs7-engine.c'
-  engine_dep += gnutls
-elif jcat_crypto == 'libcrypto'
+endif
+if libcrypto.found()
   fwupd_engine_src += 'fu-jcat-libcrypto-common.c'
   fwupd_engine_src += 'fu-jcat-libcrypto-pkcs7-engine.c'
-  engine_dep += libcrypto
 endif
 
 if giounix.found()
