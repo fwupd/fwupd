@@ -28,6 +28,7 @@ struct _FuUefiCapsulePlugin {
 	FuFirmware *acpi_uefi; /* optional */
 	FuVolume *esp;
 	FuBackend *backend;
+	gboolean native_backend_available;
 	guint32 screen_width;
 	guint32 screen_height;
 	GFile *fwupd_efi_file;
@@ -656,9 +657,20 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	if (fu_device_get_metadata_boolean(device, FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK) &&
+	    fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
+		g_debug("ignoring proxy device because Capsule-on-Disk is disabled");
+		return;
+	}
+
 	/* load all configuration variables */
 	dev = fu_uefi_capsule_backend_device_new_from_dev(FU_UEFI_CAPSULE_BACKEND(self->backend),
 							  device);
+	if (fu_device_get_metadata_boolean(device,
+					   FU_DEVICE_METADATA_UEFI_CAPSULE_NO_RT_SET_VARIABLE)) {
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+	}
 	fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));
 	if (self->esp == NULL) {
 		self->esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_local);
@@ -916,8 +928,10 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		fu_plugin_add_report_metadata(plugin, "BootMgrDesc", "legacy");
 
 	/* some platforms have broken SMBIOS data */
-	if (fu_context_has_hwid_flag(ctx, "uefi-force-enable"))
+	if (fu_context_has_hwid_flag(ctx, "uefi-force-enable")) {
+		self->native_backend_available = TRUE;
 		return TRUE;
+	}
 
 	/* use GRUB to load updates */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
@@ -927,6 +941,11 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 
 	/* check we can use this backend */
 	if (!fu_backend_setup(self->backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("native UEFI capsule backend unavailable: %s",
+				error_local->message);
+			return TRUE;
+		}
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
@@ -935,6 +954,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
+	self->native_backend_available = TRUE;
 
 	/* get the fallback screen size for the UX capsule from fwupd.conf */
 	if (!fu_uefi_capsule_plugin_ensure_screen_size_config(self, error))
@@ -951,8 +971,16 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	}
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_efivars_supported(efivars, error))
+	if (!fu_efivars_supported(efivars, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			self->native_backend_available = FALSE;
+			g_debug("native UEFI capsule backend unavailable: %s",
+				error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
 	self->acpi_uefi = fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi);
@@ -1071,23 +1099,15 @@ fu_uefi_capsule_plugin_bootloader_supports_fwupd(FuContext *ctx)
 }
 
 static gboolean
-fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+fu_uefi_capsule_plugin_coldplug_native(FuPlugin *plugin,
+				       FuProgress *progress,
+				       gboolean bootloader_supports_fwupd,
+				       GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *str;
-	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 72, "coldplug");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
-
-	/* firmware may lie */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk") &&
 	    !fu_context_has_hwid_flag(ctx, "no-capsule-on-disk")) {
 		g_autoptr(GError) error_cod = NULL;
@@ -1149,6 +1169,37 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	}
 	fu_progress_step_done(progress);
+
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+{
+	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	const gchar *str;
+	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
+	g_autoptr(GError) error_local = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 72, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
+
+	if (self->native_backend_available) {
+		if (!fu_uefi_capsule_plugin_coldplug_native(plugin,
+							    progress,
+							    bootloader_supports_fwupd,
+							    error))
+			return FALSE;
+	} else {
+		fu_progress_step_done(progress);
+		fu_progress_step_done(progress);
+		fu_progress_step_done(progress);
+	}
 
 	/* for debugging problems later */
 	fu_uefi_capsule_plugin_test_secure_boot(plugin);
@@ -1250,6 +1301,9 @@ fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError
 
 	/* provide an escape hatch for debugging */
 	if (!fu_plugin_get_config_value_boolean(plugin, "RebootCleanup"))
+		return TRUE;
+	if (FU_IS_UEFI_CAPSULE_DEVICE(device) &&
+	    fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE))
 		return TRUE;
 
 	/* delete capsules */

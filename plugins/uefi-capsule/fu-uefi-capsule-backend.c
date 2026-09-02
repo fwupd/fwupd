@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-uefi-capsule-backend.h"
+#include "fu-uefi-cod-device.h"
 #include "fu-uefi-nvram-device.h"
 
 typedef struct {
@@ -45,13 +46,16 @@ fu_uefi_capsule_backend_device_new_from_dev(FuUefiCapsuleBackend *self, FuDevice
 {
 	FuUefiCapsuleDevice *device;
 	FuUefiCapsuleBackendPrivate *priv = GET_PRIVATE(self);
+	GType device_gtype = priv->device_gtype;
 	const gchar *tmp;
 
 	g_return_val_if_fail(fu_device_get_guid_default(dev) != NULL, NULL);
 
 	tmp = fu_device_get_metadata(dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
+	if (fu_device_get_metadata_boolean(dev, FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK))
+		device_gtype = FU_TYPE_UEFI_COD_DEVICE;
 	device =
-	    g_object_new(priv->device_gtype,
+	    g_object_new(device_gtype,
 			 "fw-class",
 			 fu_device_get_guid_default(dev),
 			 "kind",

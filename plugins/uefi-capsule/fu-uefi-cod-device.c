@@ -160,6 +160,9 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 	FuUefiCodDevice *self = FU_UEFI_COD_DEVICE(device);
 	guint capsule_last = 1024;
 
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE))
+		return TRUE;
+
 	/* tell us where to stop */
 	if (!fu_uefi_cod_device_get_variable_idx(self, "CapsuleLast", &capsule_last, error))
 		return FALSE;
