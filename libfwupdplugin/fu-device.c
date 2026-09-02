@@ -8111,7 +8111,7 @@ FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *id_hash = NULL;
+	g_autoptr(GRefString) id_hash = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
