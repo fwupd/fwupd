@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <time.h>
+
 #include "fu-jcat-engine.h"
 #include "fu-jcat-libcrypto-common.h"
 #include "fu-jcat-libcrypto-pkcs7-engine.h"
@@ -304,7 +306,11 @@ fu_jcat_libcrypto_pkcs7_engine_verify(FuJcatEngine *engine,
 		}
 
 		if (t != NULL) {
+#ifdef _WIN32
+			signing_time = _mkgmtime(&time_tm);
+#else
 			signing_time = timegm(&time_tm);
+#endif
 			if (signing_time == (time_t)-1) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
