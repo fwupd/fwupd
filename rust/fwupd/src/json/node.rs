@@ -52,9 +52,9 @@ pub enum JsonNode {
     /// The JSON `null` literal.
     Null,
     /// An unquoted raw value (number or boolean literal).
-    Raw(String),
+    Raw(Arc<str>),
     /// A quoted JSON string (with escapes already resolved).
-    Str(String),
+    Str(Arc<str>),
     /// A JSON array.
     Array(Arc<Mutex<JsonArray>>),
     /// A JSON object.
