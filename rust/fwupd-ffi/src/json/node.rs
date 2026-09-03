@@ -46,7 +46,9 @@ pub unsafe extern "C" fn fwupd_rs_json_node_new_raw(value: *const c_char) -> *mu
     let s = unsafe { std::ffi::CStr::from_ptr(value) }
         .to_string_lossy()
         .into_owned();
-    Box::into_raw(Box::new(FwupdRsJsonNode::new(Arc::new(JsonNode::Raw(s)))))
+    Box::into_raw(Box::new(FwupdRsJsonNode::new(Arc::new(JsonNode::Raw(
+        Arc::from(s),
+    )))))
 }
 
 /// Creates a new string JSON node.
@@ -63,7 +65,7 @@ pub unsafe extern "C" fn fwupd_rs_json_node_new_string(
         let s = unsafe { std::ffi::CStr::from_ptr(value) }
             .to_string_lossy()
             .into_owned();
-        Arc::new(JsonNode::Str(s))
+        Arc::new(JsonNode::Str(Arc::from(s)))
     };
     Box::into_raw(Box::new(FwupdRsJsonNode::new(node)))
 }

@@ -386,8 +386,8 @@ impl JsonParser {
                 let arr = self.load_array(&mut helper, reader)?;
                 Ok(JsonNode::Array(Arc::new(arr)))
             }
-            Token::String(s) => Ok(JsonNode::Str(s)),
-            Token::Raw(s) => Ok(JsonNode::Raw(s)),
+            Token::String(s) => Ok(JsonNode::Str(Arc::from(s.as_str()))),
+            Token::Raw(s) => Ok(JsonNode::Raw(Arc::from(s.as_str()))),
             _ => Err(JsonError::InvalidData(
                 "invalid JSON; token was not object, array, string or raw".to_owned(),
             )),
@@ -417,10 +417,10 @@ impl JsonParser {
                     arr.add_array(Arc::new(inner));
                 }
                 Token::String(s) => {
-                    arr.add_node(Arc::new(JsonNode::Str(s)));
+                    arr.add_node(Arc::new(JsonNode::Str(Arc::from(s.as_str()))));
                 }
                 Token::Raw(s) => {
-                    arr.add_node(Arc::new(JsonNode::Raw(s)));
+                    arr.add_node(Arc::new(JsonNode::Raw(Arc::from(s.as_str()))));
                 }
                 _ => {
                     return Err(JsonError::InvalidData(
@@ -482,9 +482,9 @@ impl JsonParser {
                     let inner = self.load_array(helper, reader)?;
                     Arc::new(JsonNode::Array(Arc::new(inner)))
                 }
-                Token::String(s) => Arc::new(JsonNode::Str(s)),
+                Token::String(s) => Arc::new(JsonNode::Str(Arc::from(s.as_str()))),
                 Token::Null => Arc::new(JsonNode::Null),
-                Token::Raw(s) => Arc::new(JsonNode::Raw(s)),
+                Token::Raw(s) => Arc::new(JsonNode::Raw(Arc::from(s.as_str()))),
                 _ => {
                     return Err(JsonError::InvalidData(format!(
                         "unexpected token for object value on line {}",

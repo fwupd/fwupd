@@ -270,7 +270,7 @@ fn object_construction() {
 // -- C test: fwupd_json_node_func --
 #[test]
 fn node_types() {
-    let node = JsonNode::Raw("dave".to_owned());
+    let node = JsonNode::Raw(Arc::from("dave".to_owned()));
 
     // get_raw on raw node
     assert_eq!(node.get_raw().unwrap(), Some("dave"));

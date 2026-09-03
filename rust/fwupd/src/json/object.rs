@@ -153,7 +153,7 @@ impl JsonObject {
 
     /// Adds or replaces a string value.
     pub fn add_string(&mut self, key: &str, value: &str) {
-        self.add_node(key, Arc::new(JsonNode::Str(value.to_owned())));
+        self.add_node(key, Arc::new(JsonNode::Str(Arc::from(value))));
     }
 
     /// Adds or replaces a null-valued string node (matching the C behavior of
@@ -164,21 +164,21 @@ impl JsonObject {
 
     /// Adds or replaces a raw value.
     pub fn add_raw(&mut self, key: &str, value: &str) {
-        self.add_node(key, Arc::new(JsonNode::Raw(value.to_owned())));
+        self.add_node(key, Arc::new(JsonNode::Raw(Arc::from(value))));
     }
 
     /// Adds or replaces an integer value (stored as a raw node).
     pub fn add_integer(&mut self, key: &str, value: i64) {
-        self.add_node(key, Arc::new(JsonNode::Raw(value.to_string())));
+        self.add_node(key, Arc::new(JsonNode::Raw(Arc::from(value.to_string()))));
     }
 
     /// Adds or replaces a boolean value (stored as a raw node).
     pub fn add_boolean(&mut self, key: &str, value: bool) {
         self.add_node(
             key,
-            Arc::new(JsonNode::Raw(
+            Arc::new(JsonNode::Raw(Arc::from(
                 if value { "true" } else { "false" }.to_owned(),
-            )),
+            ))),
         );
     }
 
