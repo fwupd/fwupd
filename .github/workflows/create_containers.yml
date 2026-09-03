@@ -128,7 +128,8 @@ jobs:
           --distro "${{ matrix.distros.DISTRO }}"
           --version "${{ matrix.distros.VERSION }}"
           --arch "${{ matrix.distros.ARCH }}"
-          ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }}
+          ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }};
+          cat Dockerfile
       - name: Set up Docker Buildx
         if: steps.should_we.outputs.run == 'true' && ((github.event_name == 'workflow_call' && inputs.force_rebuild) || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
