@@ -1,0 +1,9 @@
+# Realtek Billboard controller
+[USB\VID_32AC&PID_0029]
+Plugin = realtek_billboard
+GType = FuRealtekBillboardDevice
+Summary = Realtek USB Billboard controller
+Vendor = Realtek
+InstallDuration = 10
+FirmwareSizeMin = 0x1000
+FirmwareSizeMax = 0x100000
