@@ -431,6 +431,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 #ifdef HAVE_LINUX_IPMI_H
 	gboolean credentials_invalid = FALSE;
 #endif
+	const gchar *session_token_file;
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *redfish_uri = NULL;
@@ -510,6 +511,13 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
 	if (bearer_token != NULL)
 		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
+
+	/* optional session token provisioned out of band, falling through to
+	 * username and password when unset; see README.md */
+	session_token_file = g_getenv("FWUPD_SESSION_TOKEN_FILE");
+	if (session_token_file != NULL)
+		fu_redfish_backend_set_session_key_file(self->backend, session_token_file);
+
 	fu_redfish_backend_set_cacheck(self->backend,
 				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
@@ -537,8 +545,10 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		}
 	}
 
-	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
+	/* we got neither a type 42 entry or config value, lets try IPMI; a session
+	 * token needs no username or password so skip this when one is set */
+	if ((fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) &&
+	    fu_redfish_backend_get_session_key(self->backend) == NULL) {
 		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

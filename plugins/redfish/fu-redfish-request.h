@@ -41,3 +41,5 @@ void
 fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_prefix);
 void
 fu_redfish_request_set_cache(FuRedfishRequest *self, GHashTable *cache);
+void
+fu_redfish_request_add_header(FuRedfishRequest *self, const gchar *header);

@@ -46,6 +46,10 @@ const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
 const gchar *
 fu_redfish_backend_get_session_key(FuRedfishBackend *self);
+void
+fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_key);
+void
+fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file);
 gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
 gboolean
