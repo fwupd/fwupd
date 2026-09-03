@@ -7,7 +7,9 @@
 #include "config.h"
 
 #include "fu-focal-moc-device.h"
+#include "fu-focal-moc-firmware.h"
 #include "fu-focal-moc-plugin.h"
+#include "fu-focal-moc-signed-device.h"
 
 struct _FuFocalMocPlugin {
 	FuPlugin parent_instance;
@@ -25,7 +27,9 @@ fu_focal_moc_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "usb");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_FOCAL_MOC_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_FOCAL_MOC_SIGNED_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_FOCAL_MOC_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_FOCAL_MOC_FIRMWARE);
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_focal_moc_plugin_parent_class)->constructed(obj);
