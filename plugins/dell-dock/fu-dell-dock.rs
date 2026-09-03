@@ -61,3 +61,54 @@ struct FuStructDellDockData {
 	service_tag: [char; 7],
 	marketing_name: [char; 64],
 }
+
+#[derive(ParseBytes)]
+#[repr(C, packed)]
+struct FuStructDellDockInfoHeader {
+    total_devices: u8,
+    first_index: u8,
+    last_index: u8,
+}
+
+#[repr(u8)]
+enum FuDellDockDeviceType {
+    MainEc = 0,
+    Pd = 1,
+    Hub = 3,
+    Mst = 4,
+    Tbt = 5,
+}
+
+#[repr(u8)]
+enum FuDellDockDeviceSubtype {
+    Gen2,
+    Gen1,
+}
+
+#[repr(u8)]
+enum FuDellDockDeviceLocation {
+    Base,
+    Module,
+}
+
+#[derive(ParseBytes)]
+#[repr(C, packed)]
+struct FuStructDellDockInfoEntry {
+    location: FuDellDockDeviceLocation,
+    device_type: FuDellDockDeviceType,
+    sub_type: FuDellDockDeviceSubtype,
+    arg: u8,
+    instance: u8,
+    version: [u8; 4],
+}
+
+#[derive(ParseBytes)]
+#[repr(C, packed)]
+struct FuDellDockEcPackageFwVersion {
+    ec_version: u32le,
+    mst_version: u32le,
+    hub1_version: u32le,
+    hub2_version: u32le,
+    tbt_version: u32le,
+    pkg_version: u32le,
+}
