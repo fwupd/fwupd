@@ -110,12 +110,12 @@ impl JsonArray {
 
     /// Adds a string value to the end of the array.
     pub fn add_string(&mut self, value: &str) {
-        self.nodes.push(Arc::new(JsonNode::Str(value.to_owned())));
+        self.nodes.push(Arc::new(JsonNode::Str(Arc::from(value))));
     }
 
     /// Adds a raw value (number, boolean literal) to the end of the array.
     pub fn add_raw(&mut self, value: &str) {
-        self.nodes.push(Arc::new(JsonNode::Raw(value.to_owned())));
+        self.nodes.push(Arc::new(JsonNode::Raw(Arc::from(value))));
     }
 
     /// Adds an object to the end of the array.
