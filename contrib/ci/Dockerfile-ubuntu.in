@@ -9,6 +9,7 @@ ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
     apt-get update -qq; \
+    apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:peter-hutterer/meson1.11; \
     apt-get install -qq --yes --no-install-recommends \

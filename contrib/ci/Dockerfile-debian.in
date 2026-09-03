@@ -9,6 +9,7 @@ RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
 %%%SETUP%%% \
     apt-get update -qq; \
+    apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends \
     dpkg-dev \
     python3-apt \
