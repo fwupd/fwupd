@@ -13,9 +13,9 @@
 #include "fu-security-attr-common.h"
 
 gchar *
-fu_security_attr_get_name(FwupdSecurityAttr *attr)
+fu_security_attr_get_name_translated(FuSecurityAttr *attr)
 {
-	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+	const gchar *appstream_id = fu_security_attr_get_appstream_id(attr);
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0) {
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return g_strdup(_("SPI write"));
@@ -136,7 +136,7 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		return g_strdup(_("TPM v2.0"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0) {
-		const gchar *kind = fwupd_security_attr_get_metadata(attr, "kind");
+		const gchar *kind = fu_security_attr_get_metadata(attr, "kind");
 		if (kind != NULL) {
 			/* TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT */
 			return g_strdup_printf(_("%s manufacturing mode"), kind);
@@ -145,7 +145,7 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		return g_strdup(_("MEI manufacturing mode"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
-		const gchar *kind = fwupd_security_attr_get_metadata(attr, "kind");
+		const gchar *kind = fu_security_attr_get_metadata(attr, "kind");
 		if (kind != NULL) {
 			/* TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT */
 			return g_strdup_printf(_("%s override"), kind);
@@ -163,8 +163,8 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */
-		const gchar *kind = fwupd_security_attr_get_metadata(attr, "kind");
-		const gchar *version = fwupd_security_attr_get_metadata(attr, "version");
+		const gchar *kind = fu_security_attr_get_metadata(attr, "kind");
+		const gchar *version = fu_security_attr_get_metadata(attr, "version");
 		if (kind != NULL && version != NULL) {
 			/* TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 			 */
@@ -262,13 +262,13 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		return g_strdup(_("AMD microcode signature"));
 	}
 	/* we should not get here */
-	return g_strdup(fwupd_security_attr_get_name(attr));
+	return g_strdup(fu_security_attr_get_name(attr));
 }
 
 const gchar *
-fu_security_attr_get_title(FwupdSecurityAttr *attr)
+fu_security_attr_get_title_translated(FuSecurityAttr *attr)
 {
-	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+	const gchar *appstream_id = fu_security_attr_get_appstream_id(attr);
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0) {
 		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
 		return _("Firmware Write Protection");
@@ -487,9 +487,9 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 
 /* one line describing the attribute */
 const gchar *
-fu_security_attr_get_description(FwupdSecurityAttr *attr)
+fu_security_attr_get_description_translated(FuSecurityAttr *attr)
 {
-	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+	const gchar *appstream_id = fu_security_attr_get_appstream_id(attr);
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BLE) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {

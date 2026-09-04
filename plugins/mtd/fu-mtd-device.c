@@ -510,15 +510,15 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 }
 
 static void
-fu_mtd_device_security_attr_set_locked(FwupdSecurityAttr *attr, gboolean locked)
+fu_mtd_device_security_attr_set_locked(FuSecurityAttr *attr, gboolean locked)
 {
 	if (!locked) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -527,7 +527,7 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean locked = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -536,19 +536,19 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		return;
 
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	locker = fu_device_locker_new(device, &error_local);
 	if (locker == NULL) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("failed to open MTD device for lock status: %s", error_local->message);
 		return;
 	}
 	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("failed to get MTD lock status: %s", error_local->message);
 		return;
 	}

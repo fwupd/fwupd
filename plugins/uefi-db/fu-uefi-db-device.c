@@ -131,13 +131,13 @@ fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	GPtrArray *children = fu_device_get_children(device);
 	gboolean seen_old = FALSE;
 	gboolean seen_new = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_UEFI_DB);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 	fu_security_attrs_append(attrs, attr);
 
 	/* look for both versions of the Microsoft UEFI CA */
@@ -157,12 +157,12 @@ fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	if (!seen_new && !seen_old) {
 		/* user is using a custom UEFI db, just ignore this HSI attribute */
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 	} else if (seen_new) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	} else {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 	}
 }
 

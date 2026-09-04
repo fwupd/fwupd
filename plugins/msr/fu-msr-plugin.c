@@ -434,7 +434,7 @@ fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
@@ -443,24 +443,24 @@ fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED);
 	if (device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
 	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 	if (self->ia32_debug.fields.enabled) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -469,7 +469,7 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
@@ -484,37 +484,37 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_INTEL_GDS);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fu_security_attr_add_guids(attr, fu_device_get_guids(device));
 
 	/* processor is not vulnerable */
 	if (self->ia32_arch_capabilities.fields.gds_no) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 
 	/* enumeration for support of both IA32_MCU_OPT_CTRL[4] and IA32_MCU_OPT_CTRL[5] */
 	if (!self->ia32_arch_capabilities.fields.gds_ctrl) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* GDS mitigation has to be enabled [and locked] */
 	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -522,7 +522,7 @@ fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAt
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
@@ -534,31 +534,31 @@ fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAt
 						     NULL);
 	if (attr == NULL) {
 		attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
-		fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+		fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 		fu_security_attrs_append(attrs, attr);
 	}
 
 	/* check fields */
 	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_TME)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 	if (!self->ia32_tme_activation.fields.enable) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 	if (self->ia32_tme_activation.fields.bypass_enable) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
-		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		fu_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 	if (!self->ia32_tme_activation.fields.lock_ro) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 }
@@ -569,7 +569,7 @@ fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *at
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
@@ -578,24 +578,24 @@ fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *at
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
 	if (device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+		fu_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
 	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 	if (!self->ia32_debug.fields.locked) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static gboolean
@@ -611,8 +611,8 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_existing = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr_existing = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
@@ -624,7 +624,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 							      FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 							      NULL);
 	if (attr_existing != NULL &&
-	    fwupd_security_attr_has_flag(attr_existing, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+	    fu_security_attr_has_flag(attr_existing, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_debug("ignoring: TSME already verified by pci_psp");
 		return;
 	}
@@ -632,32 +632,32 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	if (device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+		fu_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
 	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 
 	if (!self->amd64_syscfg.fields.sme_is_enabled) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	if (!fu_msr_plugin_safe_kernel_for_sme(plugin, &error_local)) {
 		g_debug("unable to properly detect SME: %s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
 		return;
 	}
 
 	/* success: SMEE hardware bit is set and kernel is new enough to read it reliably */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_add_obsolete(attr, "pci_psp");
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_obsolete(attr, "pci_psp");
 }
 
 static void
@@ -667,7 +667,7 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	gboolean sinkclose_vuln = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
+	g_autoptr(FuSecurityAttr) attr1 = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
@@ -694,19 +694,19 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	/* create attr */
 	attr1 = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED);
 	if (device != NULL)
-		fwupd_security_attr_add_guids(attr1, fu_device_get_guids(device));
-	fwupd_security_attr_set_result_success(attr1, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+		fu_security_attr_add_guids(attr1, fu_device_get_guids(device));
+	fu_security_attr_set_result_success(attr1, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr1);
 
 	if (sinkclose_vuln) {
-		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+		fu_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	} else if (!self->amd64_hwcfg.fields.smm_locked ||
 		   !self->amd64_hwcfg.fields.smm_base_lock) {
-		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 	} else {
-		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	}
 }
 

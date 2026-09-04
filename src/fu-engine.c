@@ -5531,10 +5531,10 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 	/* add attributes */
 	vals = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < vals->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
+		FuSecurityAttr *attr = g_ptr_array_index(vals, i);
 		const gchar *tmp;
-		tmp = fwupd_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
-		fu_device_set_metadata(device, fwupd_security_attr_get_appstream_id(attr), tmp);
+		tmp = fwupd_security_attr_result_to_string(fu_security_attr_get_result(attr));
+		fu_device_set_metadata(device, fu_security_attr_get_appstream_id(attr), tmp);
 	}
 
 	/* computed value */
@@ -7293,13 +7293,13 @@ fu_engine_get_host_machine_id(FuEngine *self)
 static void
 fu_engine_ensure_security_attrs_supported_cpu(FuEngine *self)
 {
-	g_autoptr(FwupdSecurityAttr) attr =
-	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_set_plugin(attr, "core");
+	g_autoptr(FuSecurityAttr) attr =
+	    fu_security_attr_new(self->ctx, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
+	fu_security_attr_set_plugin(attr, "core");
 
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(self->host_security_attrs, attr);
 }
 
@@ -7307,11 +7307,11 @@ static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
 	gboolean disabled_plugins = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr =
-	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
-	fwupd_security_attr_set_plugin(attr, "core");
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	g_autoptr(FuSecurityAttr) attr =
+	    fu_security_attr_new(self->ctx, FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
+	fu_security_attr_set_plugin(attr, "core");
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 
 	fu_security_attrs_append(self->host_security_attrs, attr);
 	for (guint i = 0; i < self->disabled_plugins->len; i++) {
@@ -7322,13 +7322,13 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 		}
 	}
 	if (self->plugin_filter->len > 0 || disabled_plugins) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 /* private */
@@ -7434,21 +7434,25 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 	/* set the fallback names for clients without native translations */
 	items = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < items->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
-		if (fwupd_security_attr_get_name(attr) == NULL) {
-			g_autofree gchar *name_tmp = fu_security_attr_get_name(attr);
+		FuSecurityAttr *attr = g_ptr_array_index(items, i);
+		if (fu_security_attr_get_name(attr) == NULL) {
+			g_autofree gchar *name_tmp =
+			    fu_security_attr_get_name_translated(FU_SECURITY_ATTR(attr));
 			if (name_tmp == NULL) {
 				g_warning("failed to get fallback for %s",
-					  fwupd_security_attr_get_appstream_id(attr));
+					  fu_security_attr_get_appstream_id(attr));
 				continue;
 			}
-			fwupd_security_attr_set_name(attr, name_tmp);
+			fu_security_attr_set_name(attr, name_tmp);
 		}
-		if (fwupd_security_attr_get_title(attr) == NULL)
-			fwupd_security_attr_set_title(attr, fu_security_attr_get_title(attr));
-		if (fwupd_security_attr_get_description(attr) == NULL) {
-			fwupd_security_attr_set_description(attr,
-							    fu_security_attr_get_description(attr));
+		if (fu_security_attr_get_title(attr) == NULL)
+			fu_security_attr_set_title(
+			    attr,
+			    fu_security_attr_get_title_translated(FU_SECURITY_ATTR(attr)));
+		if (fu_security_attr_get_description(FU_SECURITY_ATTR(attr)) == NULL) {
+			fu_security_attr_set_description(
+			    attr,
+			    fu_security_attr_get_description_translated(FU_SECURITY_ATTR(attr)));
 		}
 	}
 }
@@ -7466,7 +7470,7 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
  *
  * Returns: (element-type #FuSecurityAttr) (transfer full): attr, or %NULL
  **/
-static FwupdSecurityAttr *
+static FuSecurityAttr *
 fu_engine_get_previous_bios_security_attr(FuEngine *self,
 					  const gchar *appstream_id,
 					  const gchar *current_setting,
@@ -7481,15 +7485,13 @@ fu_engine_get_previous_bios_security_attr(FuEngine *self,
 		FuSecurityAttrs *attrs = g_ptr_array_index(attrs_array, i);
 		g_autoptr(GPtrArray) attr_items = fu_security_attrs_get_all(attrs, NULL);
 		for (guint j = 0; j < attr_items->len; j++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(attr_items, j);
-			if (g_strcmp0(appstream_id, fwupd_security_attr_get_appstream_id(attr)) ==
-				0 &&
+			FuSecurityAttr *attr = g_ptr_array_index(attr_items, j);
+			if (g_strcmp0(appstream_id, fu_security_attr_get_appstream_id(attr)) == 0 &&
 			    g_strcmp0(current_setting,
-				      fwupd_security_attr_get_bios_setting_current_value(attr)) !=
-				0) {
+				      fu_security_attr_get_bios_setting_current_value(attr)) != 0) {
 				g_debug("found previous BIOS setting for %s: %s",
 					appstream_id,
-					fwupd_security_attr_get_bios_setting_id(attr));
+					fu_security_attr_get_bios_setting_id(attr));
 				return g_object_ref(attr);
 			}
 		}
@@ -7518,7 +7520,7 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 {
 	FuPlugin *plugin;
 	FwupdBiosSetting *bios_attr;
-	g_autoptr(FwupdSecurityAttr) hsi_attr = NULL;
+	g_autoptr(FuSecurityAttr) hsi_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -7528,7 +7530,7 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 	    fu_security_attrs_get_by_appstream_id(self->host_security_attrs, appstream_id, error);
 	if (hsi_attr == NULL)
 		return FALSE;
-	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)) {
+	if (!fu_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -7536,7 +7538,7 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 		return FALSE;
 	}
 	plugin = fu_plugin_list_find_by_name(self->plugin_list,
-					     fwupd_security_attr_get_plugin(hsi_attr),
+					     fu_security_attr_get_plugin(hsi_attr),
 					     error);
 	if (plugin == NULL)
 		return FALSE;
@@ -7549,31 +7551,31 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 		}
 		g_debug("ignoring %s", error_local->message);
 	} else {
-		g_info("fixed %s", fwupd_security_attr_get_appstream_id(hsi_attr));
+		g_info("fixed %s", fu_security_attr_get_appstream_id(hsi_attr));
 		return TRUE;
 	}
 
 	/* fall back to setting the BIOS attribute */
-	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
+	if (fu_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no BIOS setting ID set");
 		return FALSE;
 	}
-	bios_attr = fu_context_get_bios_setting(self->ctx,
-						fwupd_security_attr_get_bios_setting_id(hsi_attr));
+	bios_attr =
+	    fu_context_get_bios_setting(self->ctx, fu_security_attr_get_bios_setting_id(hsi_attr));
 	if (bios_attr == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get BIOS setting %s",
-			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
+			    fu_security_attr_get_bios_setting_id(hsi_attr));
 		return FALSE;
 	}
 	return fwupd_bios_setting_write_value(
 	    bios_attr,
-	    fwupd_security_attr_get_bios_setting_target_value(hsi_attr),
+	    fu_security_attr_get_bios_setting_target_value(hsi_attr),
 	    error);
 }
 
@@ -7592,8 +7594,8 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 {
 	FuPlugin *plugin;
 	FwupdBiosSetting *bios_attr;
-	g_autoptr(FwupdSecurityAttr) hsi_attr = NULL;
-	g_autoptr(FwupdSecurityAttr) hsi_attr_old = NULL;
+	g_autoptr(FuSecurityAttr) hsi_attr = NULL;
+	g_autoptr(FuSecurityAttr) hsi_attr_old = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -7603,7 +7605,7 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 	    fu_security_attrs_get_by_appstream_id(self->host_security_attrs, appstream_id, error);
 	if (hsi_attr == NULL)
 		return FALSE;
-	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)) {
+	if (!fu_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -7611,7 +7613,7 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 		return FALSE;
 	}
 	plugin = fu_plugin_list_find_by_name(self->plugin_list,
-					     fwupd_security_attr_get_plugin(hsi_attr),
+					     fu_security_attr_get_plugin(hsi_attr),
 					     error);
 	if (plugin == NULL)
 		return FALSE;
@@ -7625,24 +7627,24 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 	}
 
 	/* fall back to setting the BIOS attribute */
-	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
+	if (fu_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no BIOS setting ID");
 		return FALSE;
 	}
-	bios_attr = fu_context_get_bios_setting(self->ctx,
-						fwupd_security_attr_get_bios_setting_id(hsi_attr));
+	bios_attr =
+	    fu_context_get_bios_setting(self->ctx, fu_security_attr_get_bios_setting_id(hsi_attr));
 	if (bios_attr == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get BIOS setting %s",
-			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
+			    fu_security_attr_get_bios_setting_id(hsi_attr));
 		return FALSE;
 	}
-	if (fwupd_security_attr_get_bios_setting_current_value(hsi_attr) == NULL) {
+	if (fu_security_attr_get_bios_setting_current_value(hsi_attr) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -7652,13 +7654,13 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 	hsi_attr_old = fu_engine_get_previous_bios_security_attr(
 	    self,
 	    appstream_id,
-	    fwupd_security_attr_get_bios_setting_current_value(hsi_attr),
+	    fu_security_attr_get_bios_setting_current_value(hsi_attr),
 	    error);
 	if (hsi_attr_old == NULL)
 		return FALSE;
 	return fwupd_bios_setting_write_value(
 	    bios_attr,
-	    fwupd_security_attr_get_bios_setting_current_value(hsi_attr_old),
+	    fu_security_attr_get_bios_setting_current_value(hsi_attr_old),
 	    error);
 }
 
@@ -7713,7 +7715,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(GInputStream) g_istream_json = NULL; /* nocheck:blocked */
 	g_autoptr(FuInputStream) istream_json = NULL;
 	g_autoptr(FuInputStream) istream_raw = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 
 	/* set appropriate limits */
@@ -7722,10 +7724,10 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 
 	/* add an attr so we know this is emulated and do not offer to upload results */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_HOST_EMULATION);
-	fwupd_security_attr_set_plugin(attr, "core");
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	attr = fu_security_attr_new(self->ctx, FWUPD_SECURITY_ATTR_ID_HOST_EMULATION);
+	fu_security_attr_set_plugin(attr, "core");
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(self->host_security_attrs, attr);
 
 	/* add from file */
@@ -7799,16 +7801,16 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* sanity check */
 	vals = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < vals->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
-		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		FuSecurityAttr *attr = g_ptr_array_index(vals, i);
+		if (fu_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
 #ifdef SUPPORTED_BUILD
 			g_debug("HSI attribute %s (from %s) had unknown result",
-				fwupd_security_attr_get_appstream_id(attr),
-				fwupd_security_attr_get_plugin(attr));
+				fu_security_attr_get_appstream_id(attr),
+				fu_security_attr_get_plugin(attr));
 #else
 			g_warning("HSI attribute %s (from %s) had unknown result",
-				  fwupd_security_attr_get_appstream_id(attr),
-				  fwupd_security_attr_get_plugin(attr));
+				  fu_security_attr_get_appstream_id(attr),
+				  fu_security_attr_get_plugin(attr));
 #endif
 		}
 	}
@@ -7846,15 +7848,17 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 		FuSecurityAttrs *attrs_old = g_ptr_array_index(attrs_array, i - 0);
 		g_autoptr(GPtrArray) diffs = fu_security_attrs_compare(attrs_old, attrs_new);
 		for (guint j = 0; j < diffs->len; j++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(diffs, j);
-			if (fwupd_security_attr_get_title(attr) == NULL) {
-				fwupd_security_attr_set_title(attr,
-							      fu_security_attr_get_title(attr));
-			}
-			if (fwupd_security_attr_get_description(attr) == NULL) {
-				fwupd_security_attr_set_description(
+			FuSecurityAttr *attr = g_ptr_array_index(diffs, j);
+			if (fu_security_attr_get_title(attr) == NULL) {
+				fu_security_attr_set_title(
 				    attr,
-				    fu_security_attr_get_description(attr));
+				    fu_security_attr_get_title_translated(FU_SECURITY_ATTR(attr)));
+			}
+			if (fu_security_attr_get_description(attr) == NULL) {
+				fu_security_attr_set_description(
+				    attr,
+				    fu_security_attr_get_description_translated(
+					FU_SECURITY_ATTR(attr)));
 			}
 			fu_security_attrs_append_internal(events, attr);
 		}
