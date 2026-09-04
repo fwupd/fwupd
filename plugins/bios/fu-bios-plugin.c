@@ -79,19 +79,19 @@ fu_bios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 static void
 fu_bios_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	if (!fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_LEGACY_BIOS))
 		return;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+	fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
 static void

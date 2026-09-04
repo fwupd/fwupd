@@ -1868,17 +1868,17 @@ fu_cli_security_attr_result_to_string(FwupdSecurityAttrResult result)
 }
 
 static const gchar *
-fu_cli_security_attr_get_result(FwupdSecurityAttr *attr)
+fu_cli_security_attr_get_result(FuSecurityAttr *attr)
 {
 	const gchar *tmp;
 
 	/* common case */
-	tmp = fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	tmp = fu_cli_security_attr_result_to_string(fu_security_attr_get_result(attr));
 	if (tmp != NULL)
 		return tmp;
 
 	/* fallback */
-	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+	if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		/* TRANSLATORS: Suffix: the HSI result */
 		return _("OK");
 	}
@@ -1888,23 +1888,23 @@ fu_cli_security_attr_get_result(FwupdSecurityAttr *attr)
 }
 
 static void
-fu_cli_security_attr_append_str(FwupdSecurityAttr *attr,
+fu_cli_security_attr_append_str(FuSecurityAttr *attr,
 				GString *str,
 				FuSecurityAttrToStringFlags flags)
 {
 	const gchar *name;
 
 	/* hide obsoletes by default */
-	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
+	if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
 	    (flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES) == 0)
 		return;
 
-	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
+	name = dgettext(GETTEXT_PACKAGE, fu_security_attr_get_name(attr));
 	if (name == NULL)
-		name = fwupd_security_attr_get_appstream_id(attr);
-	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		name = fu_security_attr_get_appstream_id(attr);
+	if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append(str, "✦ ");
-	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+	} else if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_string_append(str, "✔ ");
 	} else {
 		g_string_append(str, "✘ ");
@@ -1912,12 +1912,12 @@ fu_cli_security_attr_append_str(FwupdSecurityAttr *attr,
 	g_string_append_printf(str, "%s:", name);
 	for (guint i = fu_strwidth(name); i < 30; i++)
 		g_string_append(str, " ");
-	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+	if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_autofree gchar *fmt =
 		    fu_console_color_format(fu_cli_security_attr_get_result(attr),
 					    FU_CONSOLE_COLOR_YELLOW);
 		g_string_append(str, fmt);
-	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+	} else if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_autofree gchar *fmt =
 		    fu_console_color_format(fu_cli_security_attr_get_result(attr),
 					    FU_CONSOLE_COLOR_GREEN);
@@ -1929,10 +1929,10 @@ fu_cli_security_attr_append_str(FwupdSecurityAttr *attr,
 		g_string_append(str, fmt);
 	}
 	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
-	    fwupd_security_attr_get_url(attr) != NULL) {
-		g_string_append_printf(str, ": %s", fwupd_security_attr_get_url(attr));
+	    fu_security_attr_get_url(attr) != NULL) {
+		g_string_append_printf(str, ": %s", fu_security_attr_get_url(attr));
 	}
-	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+	if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		/* TRANSLATORS: this is shown as a suffix for obsoleted tests */
 		g_string_append_printf(str, " %s", _("(obsoleted)"));
 	}
@@ -1940,7 +1940,7 @@ fu_cli_security_attr_append_str(FwupdSecurityAttr *attr,
 }
 
 static gchar *
-fu_cli_security_event_to_string(FwupdSecurityAttr *attr)
+fu_cli_security_event_to_string(FuSecurityAttr *attr)
 {
 	const gchar *name;
 	struct {
@@ -2083,53 +2083,53 @@ fu_cli_security_event_to_string(FwupdSecurityAttr *attr)
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
-	if (fwupd_security_attr_get_appstream_id(attr) == NULL)
+	if (fu_security_attr_get_appstream_id(attr) == NULL)
 		return NULL;
-	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
-	    fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+	if (fu_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
+	    fu_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
 		return NULL;
 
 	/* look for prepared text */
 	for (guint i = 0; items[i].appstream_id != NULL; i++) {
-		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
+		if (g_strcmp0(fu_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
 			0 &&
-		    fwupd_security_attr_get_result(attr) == items[i].result_new &&
-		    fwupd_security_attr_get_result_fallback(attr) == items[i].result_old)
+		    fu_security_attr_get_result(attr) == items[i].result_new &&
+		    fu_security_attr_get_result_fallback(attr) == items[i].result_old)
 			return g_strdup(items[i].text);
 	}
 
 	/* disappeared */
-	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
+	if (fu_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		name = dgettext(GETTEXT_PACKAGE, fu_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s disappeared: %s"),
 		    name,
 		    fu_cli_security_attr_result_to_string(
-			fwupd_security_attr_get_result_fallback(attr)));
+			fu_security_attr_get_result_fallback(attr)));
 	}
 
 	/* appeared */
-	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
+	if (fu_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		name = dgettext(GETTEXT_PACKAGE, fu_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s appeared: %s"),
 		    name,
-		    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+		    fu_cli_security_attr_result_to_string(fu_security_attr_get_result(attr)));
 	}
 
 	/* fall back to something sensible */
-	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
+	name = dgettext(GETTEXT_PACKAGE, fu_security_attr_get_name(attr));
 	return g_strdup_printf(
 	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
 	    _("%s changed: %s → %s"),
 	    name,
-	    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
-	    fu_cli_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	    fu_cli_security_attr_result_to_string(fu_security_attr_get_result_fallback(attr)),
+	    fu_cli_security_attr_result_to_string(fu_security_attr_get_result(attr)));
 }
 
 gchar *
@@ -2140,31 +2140,31 @@ fu_cli_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags 
 	/* debugging */
 	if (g_log_get_debug_enabled()) {
 		for (guint i = 0; i < events->len; i++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+			FuSecurityAttr *attr = g_ptr_array_index(events, i);
 			g_autofree gchar *tmp = fwupd_codec_to_string(FWUPD_CODEC(attr));
 			g_info("%s", tmp);
 		}
 	}
 
 	for (guint i = 0; i < events->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+		FuSecurityAttr *attr = g_ptr_array_index(events, i);
 		g_autoptr(GDateTime) date = NULL;
 		g_autofree gchar *dtstr = NULL;
 		g_autofree gchar *check = NULL;
 		g_autofree gchar *eventstr = NULL;
 
 		/* skip events that have either been added or removed with no prior value */
-		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN ||
-		    fwupd_security_attr_get_result_fallback(attr) ==
+		if (fu_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN ||
+		    fu_security_attr_get_result_fallback(attr) ==
 			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
 			continue;
 
-		date = g_date_time_new_from_unix_utc((gint64)fwupd_security_attr_get_created(attr));
+		date = g_date_time_new_from_unix_utc((gint64)fu_security_attr_get_created(attr));
 		dtstr = g_date_time_format(date, "%F %T");
 		eventstr = fu_cli_security_event_to_string(attr);
 		if (eventstr == NULL)
 			continue;
-		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 			check = fu_console_color_format("✔", FU_CONSOLE_COLOR_GREEN);
 		} else {
 			check = fu_console_color_format("✘", FU_CONSOLE_COLOR_RED);
@@ -2235,8 +2235,8 @@ fu_cli_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags st
 	for (guint j = 1; j <= FWUPD_SECURITY_ATTR_LEVEL_LAST; j++) {
 		gboolean has_header = FALSE;
 		for (guint i = 0; i < attrs->len; i++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-			if (fwupd_security_attr_get_level(attr) != j)
+			FuSecurityAttr *attr = g_ptr_array_index(attrs, i);
+			if (fu_security_attr_get_level(attr) != j)
 				continue;
 			if (!has_header) {
 				g_string_append_printf(str, "\n\033[1mHSI-%u\033[0m\n", j);
@@ -2245,22 +2245,21 @@ fu_cli_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags st
 			fu_cli_security_attr_append_str(attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
-			    !fwupd_security_attr_has_flag(attr,
-							  FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
-			    !fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+			    !fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
+			    !fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 				low_help = TRUE;
 
 			/* check for PCR0 not matching */
-			if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr),
+			if (g_strcmp0(fu_security_attr_get_appstream_id(attr),
 				      FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0 &&
-			    fwupd_security_attr_get_result(attr) ==
+			    fu_security_attr_get_result(attr) ==
 				FWUPD_SECURITY_ATTR_RESULT_NOT_VALID)
 				pcr0_help = TRUE;
 		}
 	}
 	for (guint i = 0; i < attrs->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-		flags |= fwupd_security_attr_get_flags(attr);
+		FuSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		flags |= fu_security_attr_get_flags(attr);
 	}
 	for (guint j = 0; hpi_suffixes[j] != FWUPD_SECURITY_ATTR_FLAG_NONE; j++) {
 		if (flags & hpi_suffixes[j]) {
@@ -2270,14 +2269,14 @@ fu_cli_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags st
 					       _("Runtime Suffix"),
 					       fwupd_security_attr_flag_to_suffix(hpi_suffixes[j]));
 			for (guint i = 0; i < attrs->len; i++) {
-				FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-				if (!fwupd_security_attr_has_flag(attr, hpi_suffixes[j]))
+				FuSecurityAttr *attr = g_ptr_array_index(attrs, i);
+				if (!fu_security_attr_has_flag(attr, hpi_suffixes[j]))
 					continue;
-				if (fwupd_security_attr_has_flag(
+				if (fu_security_attr_has_flag(
 					attr,
 					FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
-				    !fwupd_security_attr_has_flag(attr,
-								  FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+				    !fu_security_attr_has_flag(attr,
+							       FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 					runtime_help = TRUE;
 				fu_cli_security_attr_append_str(attr, str, strflags);
 			}

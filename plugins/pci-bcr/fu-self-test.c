@@ -78,9 +78,9 @@ fu_pci_bcr_plugin_no_device_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr_bioswe = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_ble = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_smm = NULL;
+	g_autoptr(FuSecurityAttr) attr_bioswe = NULL;
+	g_autoptr(FuSecurityAttr) attr_ble = NULL;
+	g_autoptr(FuSecurityAttr) attr_smm = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
 	plugin = fu_plugin_new_from_gtype(fu_pci_bcr_plugin_get_type(), ctx);
@@ -90,21 +90,21 @@ fu_pci_bcr_plugin_no_device_func(void)
 	attr_bioswe =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, NULL);
 	g_assert_nonnull(attr_bioswe);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_bioswe),
+	g_assert_cmpint(fu_security_attr_get_result(attr_bioswe),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 
 	attr_ble =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BLE, NULL);
 	g_assert_nonnull(attr_ble);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_ble),
+	g_assert_cmpint(fu_security_attr_get_result(attr_ble),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 
 	attr_smm =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, NULL);
 	g_assert_nonnull(attr_smm);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_smm),
+	g_assert_cmpint(fu_security_attr_get_result(attr_smm),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 }
@@ -115,7 +115,7 @@ fu_pci_bcr_plugin_not_intel_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr_bioswe = NULL;
+	g_autoptr(FuSecurityAttr) attr_bioswe = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
 	plugin = fu_plugin_new_from_gtype(fu_pci_bcr_plugin_get_type(), ctx);
@@ -136,7 +136,7 @@ fu_pci_bcr_plugin_bioswe_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -151,10 +151,8 @@ fu_pci_bcr_plugin_bioswe_enabled_func(void)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -166,7 +164,7 @@ fu_pci_bcr_plugin_bioswe_not_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -181,10 +179,10 @@ fu_pci_bcr_plugin_bioswe_not_enabled_func(void)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -196,7 +194,7 @@ fu_pci_bcr_plugin_ble_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -210,10 +208,8 @@ fu_pci_bcr_plugin_ble_enabled_func(void)
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
 	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BLE, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -225,7 +221,7 @@ fu_pci_bcr_plugin_ble_not_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -239,10 +235,10 @@ fu_pci_bcr_plugin_ble_not_enabled_func(void)
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
 	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BLE, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -254,7 +250,7 @@ fu_pci_bcr_plugin_smm_bwp_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -269,10 +265,8 @@ fu_pci_bcr_plugin_smm_bwp_locked_func(void)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -284,7 +278,7 @@ fu_pci_bcr_plugin_smm_bwp_not_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -299,10 +293,10 @@ fu_pci_bcr_plugin_smm_bwp_not_locked_func(void)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -314,9 +308,9 @@ fu_pci_bcr_plugin_all_secure_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr_bioswe = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_ble = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_smm = NULL;
+	g_autoptr(FuSecurityAttr) attr_bioswe = NULL;
+	g_autoptr(FuSecurityAttr) attr_ble = NULL;
+	g_autoptr(FuSecurityAttr) attr_smm = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -333,26 +327,26 @@ fu_pci_bcr_plugin_all_secure_func(void)
 	attr_bioswe =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, NULL);
 	g_assert_nonnull(attr_bioswe);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_bioswe),
+	g_assert_cmpint(fu_security_attr_get_result(attr_bioswe),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr_bioswe, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr_bioswe, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 
 	attr_ble =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_BLE, NULL);
 	g_assert_nonnull(attr_ble);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_ble),
+	g_assert_cmpint(fu_security_attr_get_result(attr_ble),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr_ble, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr_ble, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 
 	attr_smm =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, NULL);
 	g_assert_nonnull(attr_smm);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_smm),
+	g_assert_cmpint(fu_security_attr_get_result(attr_smm),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	g_assert_true(fwupd_security_attr_has_flag(attr_smm, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr_smm, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 int

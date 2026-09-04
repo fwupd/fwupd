@@ -15,10 +15,10 @@
 static gint
 fu_security_attrs_sort_cb(gconstpointer item1, gconstpointer item2)
 {
-	FwupdSecurityAttr *attr1 = *((FwupdSecurityAttr **)item1);
-	FwupdSecurityAttr *attr2 = *((FwupdSecurityAttr **)item2);
-	return g_strcmp0(fwupd_security_attr_get_appstream_id(attr1),
-			 fwupd_security_attr_get_appstream_id(attr2));
+	FuSecurityAttr *attr1 = *((FuSecurityAttr **)item1);
+	FuSecurityAttr *attr2 = *((FuSecurityAttr **)item2);
+	return g_strcmp0(fu_security_attr_get_appstream_id(attr1),
+			 fu_security_attr_get_appstream_id(attr2));
 }
 
 static void
@@ -26,12 +26,12 @@ fu_security_attrs_minimize(FuSecurityAttrs *attrs)
 {
 	g_autoptr(GPtrArray) attrs_arr = fu_security_attrs_get_all_mutable(attrs);
 	for (guint i = 0; i < attrs_arr->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs_arr, i);
-		fwupd_security_attr_set_url(attr, NULL);
-		fwupd_security_attr_set_plugin(attr, NULL);
-		fwupd_security_attr_set_fwupd_version(attr, NULL);
-		fwupd_security_attr_set_flags(attr, 0);
-		fwupd_security_attr_set_level(attr, 0);
+		FuSecurityAttr *attr = g_ptr_array_index(attrs_arr, i);
+		fu_security_attr_set_url(attr, NULL);
+		fu_security_attr_set_plugin(attr, NULL);
+		fu_security_attr_set_fwupd_version(attr, NULL);
+		fu_security_attr_set_flags(attr, 0);
+		fu_security_attr_set_level(attr, 0);
 	}
 	g_ptr_array_sort(attrs_arr, fu_security_attrs_sort_cb);
 }

@@ -66,7 +66,7 @@ fu_linux_swap_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(FuLinuxSwap) swap = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	if (self->file == NULL)
@@ -74,41 +74,41 @@ fu_linux_swap_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load list of swaps */
 	if (!g_file_load_contents(self->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
 		g_warning("could not open %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	swap = fu_linux_swap_new(pstore, buf, bufsz, &error_local);
 	if (swap == NULL) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
 		g_warning("could not parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
 	/* none configured */
 	if (!fu_linux_swap_get_enabled(swap)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 
 	/* add security attribute */
 	if (!fu_linux_swap_get_encrypted(swap)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

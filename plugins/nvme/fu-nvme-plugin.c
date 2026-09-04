@@ -23,7 +23,7 @@ fu_nvme_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	gboolean valid = FALSE;
 	gboolean supported = TRUE;
 	gboolean enabled = TRUE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuNvmeDevice *device = FU_NVME_DEVICE(g_ptr_array_index(devices, i));
@@ -43,21 +43,21 @@ fu_nvme_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	attr = fu_security_attr_new(ctx, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!supported) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 	if (!enabled) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
-	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

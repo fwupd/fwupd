@@ -7989,24 +7989,24 @@ fu_device_build_instance_id_full(FuDevice *self,
  * @self: a #FuDevice
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
- * Creates a new #FwupdSecurityAttr for this specific device.
+ * Creates a new #FuSecurityAttr for this specific device.
  *
- * Returns: (transfer full): a #FwupdSecurityAttr
+ * Returns: (transfer full): a #FuSecurityAttr
  *
  * Since: 1.8.4
  **/
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 {
 	FuDevicePrivate *priv = fu_device_get_instance_private(self);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(appstream_id != NULL, NULL);
 
 	attr = fu_security_attr_new(priv->ctx, appstream_id);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	fu_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
+	fu_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 
 	/* if the device is a child of the host firmware then add those GUIDs too */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD)) {
@@ -8015,7 +8015,7 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 			GPtrArray *guids = fu_device_get_guids(msf_device);
 			for (guint i = 0; i < guids->len; i++) {
 				const gchar *guid = g_ptr_array_index(guids, i);
-				fwupd_security_attr_add_guid(attr, guid);
+				fu_security_attr_add_guid(attr, guid);
 			}
 		}
 	}

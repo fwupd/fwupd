@@ -91,7 +91,7 @@ fu_linux_lockdown_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError 
 
 static gboolean
 fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
-						    FwupdSecurityAttr *attr,
+						    FuSecurityAttr *attr,
 						    GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
@@ -138,13 +138,13 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 
 	/* set the current and target values */
 	value = g_hash_table_lookup(cmdline, "lockdown");
-	fwupd_security_attr_set_kernel_current_value(attr, value);
+	fu_security_attr_set_kernel_current_value(attr, value);
 	if (g_strcmp0(value, "integrity") != 0) {
-		fwupd_security_attr_set_kernel_target_value(attr, "lockdown=integrity");
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+		fu_security_attr_set_kernel_target_value(attr, "lockdown=integrity");
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
 	} else {
-		fwupd_security_attr_set_kernel_target_value(attr, "lockdown=none");
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+		fu_security_attr_set_kernel_target_value(attr, "lockdown=none");
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
 	}
 	return TRUE;
 }
@@ -153,13 +153,13 @@ static void
 fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* we might be able to fix this */
@@ -167,23 +167,23 @@ fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 		g_info("failed to ensure attribute fix flags: %s", error_local->message);
 
 	if (self->lockdown == FU_LINUX_LOCKDOWN_UNKNOWN) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
 
 	/* load file */
 	if (self->lockdown == FU_LINUX_LOCKDOWN_INVALID) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (self->lockdown == FU_LINUX_LOCKDOWN_NONE) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -216,7 +216,7 @@ fu_linux_lockdown_plugin_finalize(GObject *obj)
 
 static gboolean
 fu_linux_lockdown_plugin_fix_host_security_attr(FuPlugin *plugin,
-						FwupdSecurityAttr *attr,
+						FuSecurityAttr *attr,
 						GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
@@ -226,7 +226,7 @@ fu_linux_lockdown_plugin_fix_host_security_attr(FuPlugin *plugin,
 
 static gboolean
 fu_linux_lockdown_plugin_undo_host_security_attr(FuPlugin *plugin,
-						 FwupdSecurityAttr *attr,
+						 FuSecurityAttr *attr,
 						 GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);

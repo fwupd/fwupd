@@ -144,23 +144,23 @@ static void
 fu_uefi_pk_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(device);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_UEFI_PK);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* test key is not secure */
 	if (self->has_pk_test_key) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static gchar *
