@@ -1,0 +1,19 @@
+{
+  "name": "MaxLinear MxL86252 Ethernet Switch",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/devlink-mxl86252-setup.json",
+      "components": [
+        {
+          "name": "fw",
+          "protocol": "org.kernel.devlink",
+          "version": "1.0.70",
+          "guids": [
+            "d2a6f602-d988-5425-b686-5c1081576cce"
+          ]
+        }
+      ]
+    }
+  ]
+}

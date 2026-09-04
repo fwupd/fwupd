@@ -1,0 +1,20 @@
+{
+  "FwupdVersion": "2.1.7",
+  "UsbDevices": [
+    {
+      "Created": "2026-08-27T13:11:45.986601Z",
+      "GType": "FuDevlinkDevice",
+      "BusName": "mdio_bus",
+      "DevName": "mdio-bus:10",
+      "Ven": "maxlinear",
+      "Dev": "mxl86252",
+      "Events": [
+        {
+          "Id": "cmd=info_get,bus_name=mdio_bus,dev_name=mdio-bus:10",
+          "ResponseData0": "tAAAABUAAACRN5BqDCpvtzMBAAANAAEAbWRpb19idXMAAAAAEAACAG1kaW8tYnVzOjEwAAgAuAACAAAAHABkAAwAZwBhc2ljLmlkAAkAaAA4NjI4AAAAABwAZAANAGcAYXNpYy5yZXYAAAAABgBoADAAAAAYAGUABwBnAGZ3AAALAGgAMS4wLjcwAAAYAGYABwBnAGZ3AAALAGgAMS4wLjcwAAANAGIAbXhsODYyeHgAAAAA",
+          "ResponseData1": "JAAAAAIAAAGRN5BqDCpvtwAAAAA0AAAAFQAFAJE3kGoAAAAA"
+        }
+      ]
+    }
+  ]
+}
