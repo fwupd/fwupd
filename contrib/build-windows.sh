@@ -11,7 +11,7 @@ if [ ! -f /usr/share/mingw/toolchain-mingw64.meson ]; then
     ./contrib/ci/fwupd_setup_helpers.py -v mingw64 install-dependencies
 fi
 
-# try to keep this and ../contrib/ci/build_windows.sh in sync as much as makes sense
+# try to keep this and ../contrib/ci/windows-build.sh in sync as much as makes sense
 meson setup .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
     --cross-file=../contrib/mingw64.cross \
