@@ -49,8 +49,8 @@ fu_uefi_mok_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 static void
 fu_uefi_mok_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr_fw = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_nx = NULL;
+	g_autoptr(FuSecurityAttr) attr_fw = NULL;
+	g_autoptr(FuSecurityAttr) attr_nx = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *fn = NULL;

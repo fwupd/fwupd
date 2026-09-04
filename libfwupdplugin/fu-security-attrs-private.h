@@ -24,7 +24,7 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1);
 void
-fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
+fu_security_attrs_append_internal(FuSecurityAttrs *self, FuSecurityAttr *attr)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_security_attrs_is_valid(FuSecurityAttrs *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;

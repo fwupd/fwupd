@@ -22,7 +22,7 @@ fu_linux_lockdown_none_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	tmpdir = fu_temporary_directory_new("linux-lockdown-none", &error);
@@ -46,10 +46,10 @@ fu_linux_lockdown_none_func(void)
 						     FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -63,7 +63,7 @@ fu_linux_lockdown_integrity_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	tmpdir = fu_temporary_directory_new("linux-lockdown-integrity", &error);
@@ -87,7 +87,7 @@ fu_linux_lockdown_integrity_func(void)
 						     FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -101,7 +101,7 @@ fu_linux_lockdown_confidentiality_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	tmpdir = fu_temporary_directory_new("linux-lockdown-confidentiality", &error);
@@ -125,7 +125,7 @@ fu_linux_lockdown_confidentiality_func(void)
 						     FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -139,7 +139,7 @@ fu_linux_lockdown_unknown_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	tmpdir = fu_temporary_directory_new("linux-lockdown-unknown", &error);
@@ -163,7 +163,7 @@ fu_linux_lockdown_unknown_func(void)
 						     FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void

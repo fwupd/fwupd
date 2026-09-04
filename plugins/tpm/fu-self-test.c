@@ -26,8 +26,8 @@ fu_tpm_device_1_2_func(void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr0 = NULL;
-	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
+	g_autoptr(FuSecurityAttr) attr0 = NULL;
+	g_autoptr(FuSecurityAttr) attr1 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrs = NULL;
@@ -78,7 +78,7 @@ fu_tpm_device_1_2_func(void)
 						      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr0);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr0),
+	g_assert_cmpint(fu_security_attr_get_result(attr0),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 
@@ -88,9 +88,7 @@ fu_tpm_device_1_2_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(attr1);
 	/* some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
-	g_assert_cmpint(fwupd_security_attr_get_result(attr1),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_VALID);
+	g_assert_cmpint(fu_security_attr_get_result(attr1), ==, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void
@@ -225,7 +223,7 @@ fu_tpm_empty_pcr_func(void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
 
@@ -261,7 +259,7 @@ fu_tpm_empty_pcr_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(attr);
 	/* PCR 6 is empty (tests/empty_pcr/tpm0/pcrs) */
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 }
@@ -291,7 +289,7 @@ fu_tpm_coreboot_vboot_not_found_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	FuHwids *hwids = fu_context_get_hwids(ctx);
 	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
@@ -332,12 +330,11 @@ fu_tpm_coreboot_vboot_not_found_func(void)
 						     &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 	g_assert_false(
-	    fwupd_security_attr_has_obsolete(attr,
-					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
+	    fu_security_attr_has_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 static void
@@ -352,7 +349,7 @@ fu_tpm_coreboot_vboot_enabled_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GBytes) eventlog_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	FuHwids *hwids = fu_context_get_hwids(ctx);
@@ -405,13 +402,10 @@ fu_tpm_coreboot_vboot_enabled_func(void)
 						     &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 	g_assert_true(
-	    fwupd_security_attr_has_obsolete(attr,
-					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
+	    fu_security_attr_has_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 static void
@@ -426,7 +420,7 @@ fu_tpm_coreboot_vboot_not_enabled_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GBytes) eventlog_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	FuHwids *hwids = fu_context_get_hwids(ctx);
@@ -479,14 +473,12 @@ fu_tpm_coreboot_vboot_not_enabled_func(void)
 						     &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_true(
-	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
 	g_assert_false(
-	    fwupd_security_attr_has_obsolete(attr,
-					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
+	    fu_security_attr_has_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 int

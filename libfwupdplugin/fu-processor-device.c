@@ -15,6 +15,7 @@
 #include "fu-mem.h"
 #include "fu-path.h"
 #include "fu-processor-device.h"
+#include "fu-security-attr.h"
 #include "fu-string.h"
 
 struct _FuProcessorDevice {
@@ -364,24 +365,24 @@ static void
 fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_CET_ENABLED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	fu_security_attrs_append(attrs, attr);
 
 	switch (fu_context_get_cpu_vendor(ctx)) {
 	case FU_CPU_VENDOR_INTEL:
 		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK) &&
 		    fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_IBT)) {
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
 		break;
 	case FU_CPU_VENDOR_AMD:
 		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK)) {
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
 		break;
@@ -389,7 +390,7 @@ fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSe
 		break;
 	}
 
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 }
 
 static void
@@ -398,8 +399,8 @@ fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSec
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(FwupdSecurityAttr) cet_plat_attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) cet_plat_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* check for CET */
@@ -407,13 +408,13 @@ fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSec
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_CET_ENABLED, NULL);
 	if (cet_plat_attr == NULL)
 		return;
-	if (!fwupd_security_attr_has_flag(cet_plat_attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+	if (!fu_security_attr_has_flag(cet_plat_attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 		return;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_CET_ACTIVE);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check that userspace has been compiled for CET support */
@@ -433,52 +434,52 @@ fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSec
 	}
 	if (!g_spawn_check_wait_status(exit_status, &error_local)) {
 		g_debug("CET does not function, not supported: %s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
 fu_processor_device_add_security_attrs_intel_tme(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for TME */
 	if (!fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_TME)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
 fu_processor_device_add_security_attrs_smap(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SMAP);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for SMEP and SMAP */
 	if (!fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SMAP)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 #ifdef HAVE_UTSNAME_H

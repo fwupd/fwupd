@@ -1315,7 +1315,7 @@ fu_device_has_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1,
 gboolean
 fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2);
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
 
 gboolean

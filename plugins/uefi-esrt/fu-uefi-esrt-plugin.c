@@ -37,7 +37,7 @@ fu_uefi_esrt_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	if (!fu_efivars_supported(efivars, NULL))
 		return;
@@ -45,12 +45,12 @@ fu_uefi_esrt_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES);
 	fu_security_attr_add_bios_target_value(attr, LENOVO_CAPSULE_SETTING, "enable");
 	fu_security_attr_add_bios_target_value(attr, DELL_CAPSULE_SETTING, "enabled");
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 
 	if (fu_uefi_esrt_plugin_check_esrt(plugin))
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	else
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 
 	fu_security_attrs_append(attrs, attr);
 }

@@ -2618,7 +2618,7 @@ fu_plugin_runner_get_results(FuPlugin *self, FuDevice *device, GError **error)
  * Since: 1.9.6
  **/
 gboolean
-fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 
@@ -2648,7 +2648,7 @@ fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr,
  * Since: 1.9.6
  **/
 gboolean
-fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 
@@ -2920,23 +2920,23 @@ fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *valu
  * @self: a #FuPlugin
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
- * Creates a new #FwupdSecurityAttr for this specific plugin.
+ * Creates a new #FuSecurityAttr for this specific plugin.
  *
- * Returns: (transfer full): a #FwupdSecurityAttr
+ * Returns: (transfer full): a #FuSecurityAttr
  *
  * Since: 1.8.4
  **/
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
 	g_return_val_if_fail(appstream_id != NULL, NULL);
 
 	attr = fu_security_attr_new(priv->ctx, appstream_id);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(self));
+	fu_security_attr_set_plugin(attr, fu_plugin_get_name(self));
 	return g_steal_pointer(&attr);
 }
 

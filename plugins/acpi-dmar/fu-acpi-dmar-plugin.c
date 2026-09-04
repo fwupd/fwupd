@@ -21,7 +21,7 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -31,20 +31,20 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load DMAR table */
 	fn = fu_context_build_filename(ctx, &error_local, FU_PATH_KIND_ACPI_TABLES, "DMAR", NULL);
 	if (fn == NULL) {
 		g_debug("failed to build: %s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	stream = fu_input_stream_from_path(fn, &error_local);
 	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(dmar),
@@ -53,18 +53,18 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error_local)) {
 		g_warning("failed to parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (!fu_acpi_dmar_get_opt_in(dmar)) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

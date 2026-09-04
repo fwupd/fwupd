@@ -37,13 +37,13 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) cmdline = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_IOMMU);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* we might be able to fix this */
@@ -52,16 +52,16 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		g_warning("failed to get kernel cmdline: %s", error_local->message);
 	} else if (fu_kernel_check_cmdline_mutable(pstore, NULL)) {
 		const gchar *value = g_hash_table_lookup(cmdline, "iommu");
-		fwupd_security_attr_set_kernel_current_value(attr, value);
+		fu_security_attr_set_kernel_current_value(attr, value);
 		if (!g_hash_table_contains(cmdline, "iommu") &&
 		    !g_hash_table_contains(cmdline, "intel_iommu") &&
 		    !g_hash_table_contains(cmdline, "amd_iommu")) {
-			fwupd_security_attr_set_kernel_target_value(attr, "iommu=force");
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+			fu_security_attr_set_kernel_target_value(attr, "iommu=force");
+			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
 		}
 		if (g_strcmp0(value, "force") == 0) {
-			fwupd_security_attr_set_kernel_target_value(attr, NULL);
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+			fu_security_attr_set_kernel_target_value(attr, NULL);
+			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
 		}
 	}
 
@@ -80,15 +80,15 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.ThunderboltAccess", "enable");
 
 	if (!fu_plugin_has_private_flag(plugin, FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -107,7 +107,7 @@ fu_iommu_plugin_constructed(GObject *obj)
 }
 
 static gboolean
-fu_iommu_plugin_fix_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_fix_host_security_attr(FuPlugin *plugin, FuSecurityAttr *attr, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
@@ -115,7 +115,7 @@ fu_iommu_plugin_fix_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr
 }
 
 static gboolean
-fu_iommu_plugin_undo_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_undo_host_security_attr(FuPlugin *plugin, FuSecurityAttr *attr, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);

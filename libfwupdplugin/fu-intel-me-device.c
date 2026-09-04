@@ -9,6 +9,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-intel-me-device.h"
+#include "fu-security-attr.h"
 #include "fu-string.h"
 
 struct _FuIntelMeDevice {
@@ -251,7 +252,7 @@ fu_intel_me_device_add_attrs_csme11_manufacturing_mode(FuIntelMeDevice *self,
 						       FuMeiCsme11Hfsts1 *hfsts1,
 						       FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/*
 	 * For CSMEv11->CSMEv15 `mfg_mode` is used to indicate the ME being in manufacturing mode,
@@ -264,19 +265,19 @@ fu_intel_me_device_add_attrs_csme11_manufacturing_mode(FuIntelMeDevice *self,
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* manufacturing mode */
-	fwupd_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
+	fu_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
 	if (fu_mei_csme11_hfsts1_get_mfg_mode(hfsts1)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -284,31 +285,31 @@ fu_intel_me_device_add_attrs_csme18_manufacturing_mode(FuIntelMeDevice *self,
 						       FuMeiCsme18Hfsts1 *hfsts1,
 						       FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* manufacturing mode, BIOS has access to the SPI descriptor */
 	if (fu_mei_csme18_hfsts1_get_spi_protection_mode(hfsts1)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* running in debug mode */
 	if (fu_mei_csme18_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_DEBUG ||
 	    fu_mei_csme18_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_ENHANCED_DEBUG) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -316,24 +317,24 @@ fu_intel_me_device_add_attrs_csme11_override_strap(FuIntelMeDevice *self,
 						   FuMeiCsme11Hfsts1 *hfsts1,
 						   FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr =
 	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* flash descriptor security override strap */
-	fwupd_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
+	fu_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
 	if (fu_mei_csme11_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_OVERRIDE_JUMPER) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -341,24 +342,24 @@ fu_intel_me_device_add_attrs_csme18_override_strap(FuIntelMeDevice *self,
 						   FuMeiCsme18Hfsts1 *hfsts1,
 						   FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr =
 	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* flash descriptor security override strap */
-	fwupd_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
+	fu_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
 	if (fu_mei_csme18_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_OVERRIDE_JUMPER) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -366,23 +367,23 @@ fu_intel_me_device_add_attrs_csme11_bootguard_enabled(FuIntelMeDevice *self,
 						      FuMeiCsme11Hfsts6 *hfsts6,
 						      FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* disabled at runtime? */
 	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -390,23 +391,23 @@ fu_intel_me_device_add_attrs_csme18_bootguard_enabled(FuIntelMeDevice *self,
 						      FuMeiCsme18Hfsts5 *hfsts5,
 						      FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* disabled at runtime? */
 	if (!fu_mei_csme18_hfsts5_get_valid(hfsts5)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -414,29 +415,29 @@ fu_intel_me_device_add_attrs_csme11_bootguard_verified(FuIntelMeDevice *self,
 						       FuMeiCsme11Hfsts6 *hfsts6,
 						       FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* actively disabled */
 	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* measured boot is not sufficient, verified is required */
 	if (!fu_mei_csme11_hfsts6_get_verified_boot(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -444,29 +445,29 @@ fu_intel_me_device_add_attrs_csme11_bootguard_acm(FuIntelMeDevice *self,
 						  FuMeiCsme11Hfsts6 *hfsts6,
 						  FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* actively disabled */
 	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* ACM protection required */
 	if (!fu_mei_csme11_hfsts6_get_force_boot_guard_acm(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -474,28 +475,28 @@ fu_intel_me_device_add_attrs_csme18_bootguard_acm(FuIntelMeDevice *self,
 						  FuMeiCsme18Hfsts5 *hfsts5,
 						  FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* ACM protection required */
 	if (!fu_mei_csme18_hfsts5_get_btg_acm_active(hfsts5)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 	if (!fu_mei_csme18_hfsts5_get_acm_done_sts(hfsts5)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -503,17 +504,17 @@ fu_intel_me_device_add_attrs_csme11_bootguard_policy(FuIntelMeDevice *self,
 						     FuMeiCsme11Hfsts6 *hfsts6,
 						     FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* actively disabled */
 	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
@@ -523,13 +524,13 @@ fu_intel_me_device_add_attrs_csme11_bootguard_policy(FuIntelMeDevice *self,
 		FU_ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW &&
 	    fu_mei_csme11_hfsts6_get_error_enforce_policy(hfsts6) !=
 		FU_ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_30MINS) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -537,29 +538,29 @@ fu_intel_me_device_add_attrs_csme11_bootguard_otp(FuIntelMeDevice *self,
 						  FuMeiCsme11Hfsts6 *hfsts6,
 						  FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* actively disabled */
 	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* ensure vendor set the FPF OTP fuse */
 	if (!fu_mei_csme11_hfsts6_get_fpf_soc_lock(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -567,55 +568,55 @@ fu_intel_me_device_add_attrs_csme18_bootguard_otp(FuIntelMeDevice *self,
 						  FuMeiCsme18Hfsts6 *hfsts6,
 						  FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self),
 					   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* ensure vendor set the FPF configuration fuse */
 	if (!fu_mei_csme18_hfsts6_get_fpf_soc_configuration_lock(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
 fu_intel_me_device_add_attrs_mei_version(FuIntelMeDevice *self, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MEI_VERSION);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* format version as string */
-	fwupd_security_attr_add_metadata(attr, "version", fu_device_get_version(FU_DEVICE(self)));
-	fwupd_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
+	fu_security_attr_add_metadata(attr, "version", fu_device_get_version(FU_DEVICE(self)));
+	fu_security_attr_add_metadata(attr, "kind", fu_intel_me_family_to_string(self->family));
 
 	/* disabled, perhaps HAP? */
 	if (self->working_state == FU_ME_HFS_CWS_DISABLED) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 
 	/* flash descriptor security override strap */
 	if (self->issue == FU_INTEL_ME_ISSUE_VULNERABLE) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -683,12 +684,12 @@ fu_intel_me_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		fu_intel_me_device_add_attrs_csme18_bootguard_acm(self, hfsts5, attrs);
 		fu_intel_me_device_add_attrs_csme18_bootguard_otp(self, hfsts6, attrs);
 	} else {
-		g_autoptr(FwupdSecurityAttr) attr = NULL;
+		g_autoptr(FuSecurityAttr) attr = NULL;
 
 		/* not supported */
 		attr = fu_device_security_attr_new(FU_DEVICE(self),
 						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		fu_security_attrs_append(attrs, attr);
 		return;
 	}
