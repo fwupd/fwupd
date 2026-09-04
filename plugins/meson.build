@@ -118,6 +118,7 @@ plugins = {
   'qsi-dock': false,
   'raydium-tp': false,
   'realtek-mst': false,
+  'realtek-billboard': false,
   'redfish': false,
   'rp-pico': false,
   'rts54hub': false,
