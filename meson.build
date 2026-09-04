@@ -183,6 +183,7 @@ add_test_setup(
     'LSAN_OPTIONS': 'suppressions=@0@'.format(
       meson.current_source_dir() / 'data' / 'tests' / 'lsan-suppressions.txt'
     ),
+    'PYTHONWARNINGS': 'ignore::DeprecationWarning:gi.events',
   },
   is_default: true,
 )
