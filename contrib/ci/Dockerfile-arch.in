@@ -1,5 +1,5 @@
 # -*- mode: dockerfile -*-
-FROM archlinux:%%%VERSION%%%
+FROM archlinux:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
@@ -10,6 +10,6 @@ RUN sed "s,#en_US.UTF-8,en_US.UTF-8," /etc/locale.gen -i && \
     locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
-%%%DEPENDENCIES%%% && \
+{{DEPENDENCIES}} && \
     pacman -Sc --noconfirm
 WORKDIR /github/workspace

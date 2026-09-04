@@ -7,12 +7,58 @@
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 from fwupd_setup_helpers import ARCH_TO_DEPS_MAP, parse_dependencies
+
+
+def replace(content: str, template_vars: dict[str, str]) -> str:
+    """
+    Replace content using a simple templating system:
+       - {{FOO:bar}}: vars[FOO] if set, otherwise "bar"
+       - {?FOO-}some{-FOO-}other{-FOO?}: "some" if vars[FOO] is
+         set, otherwise "other". The {-FOO-} and other result is optional.
+         This instruction works across multiple lines.
+         The match can be made more specific using a comparison value:
+         {?FOO=="abcd"-}some{-FOO?}
+         {?FOO!="abcd"-}some{-FOO?}
+    """
+
+    expr_var = r"\{\{(?P<key>\w+)(?::(?P<default>[^}]*))?\}\}"
+    expr_block = r'\{\?(?P<key>\w+)(?:(?P<op>==|!=)"(?P<cmpval>[^"]*)")?-\}\n?(?P<if_set>.*?)(?:\{-(?P=key)-\}\n?(?P<if_unset>.*?))?\{-(?P=key)\?\}\n?'
+
+    def replace_var(m: re.Match) -> str:
+        key = m.group("key")
+        default = m.group("default") if m.group("default") is not None else ""
+        return template_vars.get(key, default)
+
+    def replace_block(m: re.Match) -> str:
+        key = m.group("key")
+        op = m.group("op")
+        cmpval = m.group("cmpval")
+
+        match op:
+            case None:
+                result = key in template_vars
+            case "==":
+                result = template_vars.get(key) == cmpval
+            case "!=":
+                result = template_vars.get(key) != cmpval
+            case _:
+                raise NotImplementedError(f"Invalid op '{op}'")
+
+        if result:
+            return m.group("if_set")
+        return m.group("if_unset") if m.group("if_unset") is not None else ""
+
+    content = re.sub(expr_block, replace_block, content, flags=re.DOTALL)
+    content = re.sub(expr_var, replace_var, content)
+
+    return content
 
 
 def get_container_cmd():
@@ -46,23 +92,22 @@ def generate_dockerfile(
     with open(template_file) as file:
         content = file.read()
 
-    content = content.replace("%%%VERSION%%%", version)
+    data = {
+        "VERSION": version,
+        "DISTRO": distro,
+    }
+    if variant:
+        data["VARIANT"] = variant
 
     # special cases
     match (distro, variant):
         case ("debian", "i386"):
-            content = content.replace(
-                f"FROM debian:{version}", f"FROM i386/debian:{version}"
-            )
+            data["PLATFORM"] = "linux/i386"
+        case _:
+            pass
 
-    # insert commands to prepare cross compile
     if cross:
-        cross_setup = f"""\
-    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
-    dpkg --add-architecture {cross};"""
-    else:
-        cross_setup = "    "
-    content = content.replace("%%%SETUP%%%", cross_setup)
+        data["CROSSARCH"] = cross
 
     # insert dependencies to install
     if cross:
@@ -81,14 +126,9 @@ def generate_dockerfile(
     deps = sorted(set(deps))
     deps = [f"    {i}" for i in deps]
     deps = " \\\n".join(deps)
-    content = content.replace("%%%DEPENDENCIES%%%", deps)
+    data["DEPENDENCIES"] = deps
 
-    # install android rust target
-    rustup: list[str] = []
-    if variant == "android":
-        rustup.append("COPY contrib/ci/android.sh .")
-        rustup.append("RUN sh android.sh")
-    content = content.replace("%%%RUSTUP%%%", "\n".join(rustup))
+    content = replace(content, data)
 
     return content
 

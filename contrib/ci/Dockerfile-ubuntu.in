@@ -1,5 +1,5 @@
 # -*- mode: dockerfile -*-
-FROM ubuntu:%%%VERSION%%%
+FROM {?PLATFORM-}--platform={{PLATFORM}} {-PLATFORM?}{{DISTRO}}:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
@@ -8,6 +8,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/{{DISTRO}}.sources; \
+{?CROSSARCH-}
+    dpkg --add-architecture {{CROSSARCH}}; \
+{-CROSSARCH?}
     apt-get update -qq; \
     apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \
@@ -16,7 +20,10 @@ RUN set -euxo pipefail; \
     meson \
     python3-apt \
     sudo \
-%%%DEPENDENCIES%%%; \
+{{DEPENDENCIES}}; \
     apt-get clean
+{?VARIANT=="android"-}
+RUN --mount=type=bind,source=contrib/ci/android.sh,target=android.sh \
+    sh android.sh
+{-VARIANT?}
 WORKDIR /github/workspace
-%%%RUSTUP%%%

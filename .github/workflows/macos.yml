@@ -15,6 +15,6 @@ jobs:
         with:
           persist-credentials: false
       - name: configure
-        run: ./contrib/ci/build_macos.sh
+        run: ./contrib/ci/macos-build.sh
       - name: build
         run: ninja -C build-macos

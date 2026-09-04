@@ -17,7 +17,7 @@ jobs:
         with:
           persist-credentials: false
       - name: configure
-        run: ./contrib/ci/build_windows.sh
+        run: ./contrib/ci/windows-build.sh
       - name: upload-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
