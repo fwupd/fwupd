@@ -462,5 +462,8 @@ G_BEGIN_DECLS
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
+void
+fwupd_security_attr_incorporate(FwupdSecurityAttr *self, FwupdSecurityAttr *donor)
+    G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS
