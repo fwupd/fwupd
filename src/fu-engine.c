@@ -8570,6 +8570,10 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		fu_device_set_update_error(dev_history, fu_device_get_update_error(dev));
 	}
 
+	/* propagate the error to the live device so get-devices shows it */
+	fu_device_set_update_state(dev, fu_device_get_update_state(dev_history));
+	fu_device_set_update_error(dev, fu_device_get_update_error(dev_history));
+
 	/* update the state in the database */
 	return fu_history_modify_device_release(self->history, dev_history, rel_history, error);
 }
