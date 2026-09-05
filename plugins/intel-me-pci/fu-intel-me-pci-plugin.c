@@ -114,7 +114,7 @@ static void
 fu_intel_me_pci_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_autoptr(FwupdSecurityAttr) attr_cpu = NULL;
+	g_autoptr(FuSecurityAttr) attr_cpu = NULL;
 
 	/* only Intel */
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
@@ -125,7 +125,7 @@ fu_intel_me_pci_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 							 FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU,
 							 NULL);
 	if (attr_cpu != NULL)
-		fwupd_security_attr_add_flag(attr_cpu, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fu_security_attr_add_flag(attr_cpu, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

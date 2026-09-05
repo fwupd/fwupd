@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_uefi_mok_attr_fw_new(FuPlugin *plugin, GBytes *blob);
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_uefi_mok_attr_nx_new(FuPlugin *plugin, GBytes *blob);

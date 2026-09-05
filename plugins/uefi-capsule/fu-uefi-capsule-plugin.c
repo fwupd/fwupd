@@ -216,43 +216,43 @@ fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurit
 {
 	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
 	gboolean secureboot_enabled = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
 	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error))
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 	if (!secureboot_enabled) {
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+			fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 			return;
 		}
 		fu_security_attr_add_bios_target_value(attr, "SecureBoot", "enable");
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
 fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	const gchar *guids[] = {FU_EFIVARS_GUID_SECURITY_DATABASE, FU_EFIVARS_GUID_EFI_GLOBAL};
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 	for (guint j = 0; j < G_N_ELEMENTS(guids); j++) {
 		g_autoptr(GPtrArray) names = fu_efivars_get_names(efivars, guids[j], NULL);
@@ -288,21 +288,20 @@ fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecur
 					guids[j],
 					(guint)data_sz,
 					flags);
-				fwupd_security_attr_add_metadata(attr, "guid", guids[j]);
-				fwupd_security_attr_add_metadata(attr, "name", name);
-				fwupd_security_attr_add_flag(
+				fu_security_attr_add_metadata(attr, "guid", guids[j]);
+				fu_security_attr_add_metadata(attr, "name", name);
+				fu_security_attr_add_flag(
 				    attr,
 				    FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-				fwupd_security_attr_set_result(
-				    attr,
-				    FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+				fu_security_attr_set_result(attr,
+							    FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 				return;
 			}
 		}
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

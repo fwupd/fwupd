@@ -1698,6 +1698,89 @@ fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface)
 }
 
 /**
+ * fwupd_security_attr_incorporate:
+ * @self: a #FwupdSecurityAttr
+ * @donor: Another #FwupdSecurityAttr
+ *
+ * Copy all properties from the donor object if they have not already been set.
+ *
+ * Since: 2.1.8
+ **/
+void
+fwupd_security_attr_incorporate(FwupdSecurityAttr *self, FwupdSecurityAttr *donor)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	FwupdSecurityAttrPrivate *priv_donor = GET_PRIVATE(donor);
+
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(donor));
+
+	if (priv->appstream_id == NULL)
+		fwupd_security_attr_set_appstream_id(self, priv_donor->appstream_id);
+	if (priv->name == NULL)
+		fwupd_security_attr_set_name(self, priv_donor->name);
+	if (priv->title == NULL)
+		fwupd_security_attr_set_title(self, priv_donor->title);
+	if (priv->description == NULL)
+		fwupd_security_attr_set_description(self, priv_donor->description);
+	if (priv->plugin == NULL)
+		fwupd_security_attr_set_plugin(self, priv_donor->plugin);
+	if (priv->fwupd_version == NULL)
+		fwupd_security_attr_set_fwupd_version(self, priv_donor->fwupd_version);
+	if (priv->url == NULL)
+		fwupd_security_attr_set_url(self, priv_donor->url);
+	if (priv->level == 0)
+		fwupd_security_attr_set_level(self, priv_donor->level);
+	if (priv->flags == 0)
+		fwupd_security_attr_set_flags(self, priv_donor->flags);
+	if (priv->result == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		fwupd_security_attr_set_result(self, priv_donor->result);
+	if (priv->result_fallback == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		fwupd_security_attr_set_result_fallback(self, priv_donor->result_fallback);
+	if (priv->result_success == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		fwupd_security_attr_set_result_success(self, priv_donor->result_success);
+	if (priv->created == 0)
+		fwupd_security_attr_set_created(self, priv_donor->created);
+	if (priv->bios_setting_id == NULL)
+		fwupd_security_attr_set_bios_setting_id(self, priv_donor->bios_setting_id);
+	if (priv->bios_setting_target_value == NULL) {
+		fwupd_security_attr_set_bios_setting_target_value(
+		    self,
+		    priv_donor->bios_setting_target_value);
+	}
+	if (priv->bios_setting_current_value == NULL) {
+		fwupd_security_attr_set_bios_setting_current_value(
+		    self,
+		    priv_donor->bios_setting_current_value);
+	}
+	if (priv->kernel_current_value == NULL) {
+		fwupd_security_attr_set_kernel_current_value(self,
+							     priv_donor->kernel_current_value);
+	}
+	if (priv->kernel_target_value == NULL)
+		fwupd_security_attr_set_kernel_target_value(self, priv_donor->kernel_target_value);
+	for (guint i = 0; i < priv_donor->guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(priv_donor->guids, i);
+		fwupd_security_attr_add_guid(self, guid);
+	}
+	for (guint i = 0; i < priv_donor->obsoletes->len; i++) {
+		const gchar *obsolete = g_ptr_array_index(priv_donor->obsoletes, i);
+		fwupd_security_attr_add_obsolete(self, obsolete);
+	}
+	if (priv_donor->metadata != NULL) {
+		GHashTableIter iter;
+		gpointer key;
+		gpointer value;
+		g_hash_table_iter_init(&iter, priv_donor->metadata);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			fwupd_security_attr_add_metadata(self,
+							 (const gchar *)key,
+							 (const gchar *)value);
+		}
+	}
+}
+
+/**
  * fwupd_security_attr_copy:
  * @self: (nullable): a #FwupdSecurityAttr
  *
@@ -1711,48 +1794,8 @@ FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self)
 {
 	g_autoptr(FwupdSecurityAttr) new = g_object_new(FWUPD_TYPE_SECURITY_ATTR, NULL);
-	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-
-	fwupd_security_attr_set_appstream_id(new, priv->appstream_id);
-	fwupd_security_attr_set_name(new, priv->name);
-	fwupd_security_attr_set_title(new, priv->title);
-	fwupd_security_attr_set_description(new, priv->description);
-	fwupd_security_attr_set_plugin(new, priv->plugin);
-	fwupd_security_attr_set_fwupd_version(new, priv->fwupd_version);
-	fwupd_security_attr_set_url(new, priv->url);
-	fwupd_security_attr_set_level(new, priv->level);
-	fwupd_security_attr_set_flags(new, priv->flags);
-	fwupd_security_attr_set_result(new, priv->result);
-	fwupd_security_attr_set_result_fallback(new, priv->result_fallback);
-	fwupd_security_attr_set_result_success(new, priv->result_success);
-	fwupd_security_attr_set_created(new, priv->created);
-	fwupd_security_attr_set_bios_setting_id(new, priv->bios_setting_id);
-	fwupd_security_attr_set_bios_setting_target_value(new, priv->bios_setting_target_value);
-	fwupd_security_attr_set_bios_setting_current_value(new, priv->bios_setting_current_value);
-	fwupd_security_attr_set_kernel_current_value(new, priv->kernel_current_value);
-	fwupd_security_attr_set_kernel_target_value(new, priv->kernel_target_value);
-
-	for (guint i = 0; i < priv->guids->len; i++) {
-		const gchar *guid = g_ptr_array_index(priv->guids, i);
-		fwupd_security_attr_add_guid(new, guid);
-	}
-	for (guint i = 0; i < priv->obsoletes->len; i++) {
-		const gchar *obsolete = g_ptr_array_index(priv->obsoletes, i);
-		fwupd_security_attr_add_obsolete(new, obsolete);
-	}
-	if (priv->metadata != NULL) {
-		GHashTableIter iter;
-		gpointer key;
-		gpointer value;
-		g_hash_table_iter_init(&iter, priv->metadata);
-		while (g_hash_table_iter_next(&iter, &key, &value)) {
-			fwupd_security_attr_add_metadata(new,
-							 (const gchar *)key,
-							 (const gchar *)value);
-		}
-	}
+	fwupd_security_attr_incorporate(new, self);
 	return g_steal_pointer(&new);
 }
 

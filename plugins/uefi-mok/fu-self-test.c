@@ -18,7 +18,7 @@ fu_uefi_mok_nx_disabled_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *txt = "shim-has-nx-compat-set: 0\n"
@@ -34,12 +34,12 @@ fu_uefi_mok_nx_disabled_func(void)
 	attr = fu_uefi_mok_attr_nx_new(plugin, blob);
 	g_assert_nonnull(attr);
 
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 
-	fwupd_security_attr_set_created(attr, 0);
+	fu_security_attr_set_created(attr, 0);
 	str = fwupd_codec_to_string(FWUPD_CODEC(attr));
 	ret = fu_test_compare_lines(str,
 				    "FuSecurityAttr:\n"
@@ -60,7 +60,7 @@ fu_uefi_mok_nx_invalid_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *txt = "# this is a comment\n"
@@ -79,12 +79,12 @@ fu_uefi_mok_nx_invalid_func(void)
 	attr = fu_uefi_mok_attr_fw_new(plugin, blob);
 	g_assert_nonnull(attr);
 
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 
-	fwupd_security_attr_set_created(attr, 0);
+	fu_security_attr_set_created(attr, 0);
 	str = fwupd_codec_to_string(FWUPD_CODEC(attr));
 	ret = fu_test_compare_lines(str,
 				    "FuSecurityAttr:\n"
@@ -105,7 +105,7 @@ fu_uefi_mok_nx_valid_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *txt = "shim-has-nx-compat-set: 1\n"
@@ -121,12 +121,10 @@ fu_uefi_mok_nx_valid_func(void)
 	attr = fu_uefi_mok_attr_fw_new(plugin, blob);
 	g_assert_nonnull(attr);
 
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 
-	fwupd_security_attr_set_created(attr, 0);
+	fu_security_attr_set_created(attr, 0);
 	str = fwupd_codec_to_string(FWUPD_CODEC(attr));
 	ret = fu_test_compare_lines(str,
 				    "FuSecurityAttr:\n"

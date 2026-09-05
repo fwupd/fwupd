@@ -235,7 +235,7 @@ fu_test_mtd_ifd_device_security_attrs_locked_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
 	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
 	g_autoptr(FuMtdIfdDevice) device = NULL;
@@ -257,7 +257,7 @@ fu_test_mtd_ifd_device_security_attrs_locked_func(gconstpointer user_data)
 						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -265,7 +265,7 @@ fu_test_mtd_ifd_device_security_attrs_writable_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
 	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
 	g_autoptr(FuMtdIfdDevice) device = NULL;
@@ -287,8 +287,8 @@ fu_test_mtd_ifd_device_security_attrs_writable_func(gconstpointer user_data)
 						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 }
@@ -298,7 +298,7 @@ fu_test_mtd_ifd_device_security_attrs_non_desc_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
 	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
 	g_autoptr(FuMtdIfdDevice) device = NULL;
@@ -325,7 +325,7 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 	g_test_skip("no mtd-user.h support");
 #else
 	FuTest *self = (FuTest *)user_data;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
@@ -335,8 +335,8 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
 	g_assert_nonnull(attr);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
-	g_assert_cmpint(fwupd_security_attr_get_result_success(attr),
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result_success(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 #endif
@@ -349,7 +349,7 @@ fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
 	g_test_skip("no mtd-user.h support");
 #else
 	FuTest *self = (FuTest *)user_data;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
@@ -359,12 +359,11 @@ fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
 	g_assert_nonnull(attr);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_true(
-	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
 #endif
 }
 
@@ -375,7 +374,7 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 	g_test_skip("no mtd-user.h support");
 #else
 	FuTest *self = (FuTest *)user_data;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
@@ -385,11 +384,11 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
 	g_assert_nonnull(attr);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
 #endif
 }
 

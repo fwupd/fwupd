@@ -61,7 +61,7 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
 							      "tests",
 							      "firmware-attributes",
@@ -79,10 +79,8 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_HP_SURESTART, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -92,7 +90,7 @@ fu_plugin_hp_bioscfg_surestart_enabled_legacy(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
 							      "tests",
 							      "firmware-attributes",
@@ -110,10 +108,8 @@ fu_plugin_hp_bioscfg_surestart_enabled_legacy(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_HP_SURESTART, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -123,7 +119,7 @@ fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
 							      "tests",
 							      "firmware-attributes",
@@ -142,12 +138,11 @@ fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_HP_SURESTART, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_true(
-	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -157,7 +152,7 @@ fu_plugin_hp_bioscfg_surestart_not_available(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
 							      "tests",
 							      "firmware-attributes",
@@ -175,10 +170,10 @@ fu_plugin_hp_bioscfg_surestart_not_available(gconstpointer user_data)
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_HP_SURESTART, NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void

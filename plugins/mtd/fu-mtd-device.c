@@ -16,12 +16,14 @@
 
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
+#include "fu-mtd-struct.h"
 
 typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
 	gchar *mtd_type;
+	FuMtdIntelSpiFlags intel_spi_flags;
 
 	/* FMAP specific */
 	GPtrArray *fmap_regions;
@@ -34,15 +36,19 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
+#define FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI "has-intel-spi"
+
 static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *intel_spi_flags = fu_mtd_intel_spi_flags_to_string(priv->intel_spi_flags);
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", priv->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", priv->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", priv->metadata_size);
 	fwupd_codec_string_append(str, idt, "MtdType", priv->mtd_type);
+	fwupd_codec_string_append(str, idt, "IntelSpiFlags", intel_spi_flags);
 	fwupd_codec_string_append_hex(str, idt, "FmapOffset", priv->fmap_offset);
 	if (priv->fmap_regions->len > 0) {
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
@@ -402,59 +408,19 @@ fu_mtd_device_ensure_version_smbios_fallback(FuMtdDevice *self, GError **error)
 	return FALSE;
 }
 
-static gboolean
-fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
+static void
+fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self)
 {
-	g_autoptr(FuDevice) parent_device = NULL;
-	struct {
-		const gchar *attr;
-		const gchar *logical_id;
-	} lockouts[] = {
-	    {"intel_spi_protected", NULL},
-	    {"intel_spi_bios_locked", "bios"},
-	};
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* look for PCI parent */
-	parent_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", NULL);
-	if (parent_device == NULL)
-		return TRUE;
-	if (!fu_device_probe(parent_device, error))
-		return FALSE;
-	for (guint i = 0; i < G_N_ELEMENTS(lockouts); i++) {
-		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *value = NULL;
-
-		value = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(parent_device),
-						  lockouts[i].attr,
-						  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-						  &error_local);
-		if (value == NULL) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-				g_debug("ignoring: %s", error_local->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-		if (g_strcmp0(value, "1") != 0)
-			continue;
-		if (lockouts[i].logical_id != NULL) {
-			g_autoptr(FuDevice) child_device = NULL;
-			child_device = fu_device_get_child_by_logical_id(FU_DEVICE(self),
-									 lockouts[i].logical_id,
-									 error);
-			if (child_device == NULL)
-				return FALSE;
+	if (priv->intel_spi_flags & FU_MTD_INTEL_SPI_FLAG_PROTECTED)
+		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+	if (priv->intel_spi_flags & FU_MTD_INTEL_SPI_FLAG_BIOS_LOCKED) {
+		g_autoptr(FuDevice) child_device =
+		    fu_device_get_child_by_logical_id(FU_DEVICE(self), "bios", NULL);
+		if (child_device != NULL)
 			fu_device_add_problem(child_device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
-		} else {
-			fu_device_add_problem(FU_DEVICE(self),
-					      FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
-			break;
-		}
 	}
-
-	/* success */
-	return TRUE;
 }
 
 static gboolean
@@ -510,15 +476,108 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 }
 
 static void
-fu_mtd_device_security_attr_set_locked(FwupdSecurityAttr *attr, gboolean locked)
+fu_mtd_device_security_attr_set_locked(FuSecurityAttr *attr, gboolean locked)
 {
 	if (!locked) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs_bioswe(FuMtdDevice *self, FuSecurityAttrs *attrs)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	fu_security_attr_add_obsolete(attr, "pci_bcr");
+	fu_security_attrs_append(attrs, attr);
+
+	/* write not disabled */
+	if ((priv->intel_spi_flags & FU_MTD_INTEL_SPI_FLAG_PROTECTED) == 0) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	/* success */
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs_ble(FuMtdDevice *self, FuSecurityAttrs *attrs)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SPI_BLE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_add_obsolete(attr, "pci_bcr");
+	fu_security_attrs_append(attrs, attr);
+
+	/* not locked */
+	if ((priv->intel_spi_flags & FU_MTD_INTEL_SPI_FLAG_BIOS_LOCKED) == 0) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	/* success */
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs_smm_bwp(FuMtdDevice *self, FuSecurityAttrs *attrs)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attr_add_obsolete(attr, "pci_bcr");
+	fu_security_attrs_append(attrs, attr);
+
+	/* not locked */
+	if ((priv->intel_spi_flags & FU_MTD_INTEL_SPI_FLAG_SMM_BWP) == 0) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		return;
+	}
+
+	/* success */
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs_mlock(FuMtdDevice *self, FuSecurityAttrs *attrs)
+{
+	gboolean locked = FALSE;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_OPEN)) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to get MTD lock status: %s", error_local->message);
+		return;
+	}
+
+	fu_mtd_device_security_attr_set_locked(attr, locked);
 }
 
 static void
@@ -526,34 +585,69 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
-	gboolean locked = FALSE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* MEMISLOCKED is only meaningful for this HSI attribute on NOR flash. */
-	if (g_strcmp0(priv->mtd_type, "nor") != 0)
-		return;
-
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	fu_security_attrs_append(attrs, attr);
-
 	locker = fu_device_locker_new(device, &error_local);
 	if (locker == NULL) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-		g_debug("failed to open MTD device for lock status: %s", error_local->message);
-		return;
-	}
-	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-		g_debug("failed to get MTD lock status: %s", error_local->message);
+		g_debug("failed to open MTD device: %s", error_local->message);
 		return;
 	}
 
-	fu_mtd_device_security_attr_set_locked(attr, locked);
+	/* MEMISLOCKED is only meaningful on NOR flash */
+	if (g_strcmp0(priv->mtd_type, "nor") == 0)
+		fu_mtd_device_add_security_attrs_mlock(self, attrs);
+
+	/* only for intel hardware */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI)) {
+		fu_mtd_device_add_security_attrs_bioswe(self, attrs);
+		fu_mtd_device_add_security_attrs_ble(self, attrs);
+		fu_mtd_device_add_security_attrs_smm_bwp(self, attrs);
+	}
+}
+
+static gboolean
+fu_mtd_device_ensure_intel_spi(FuMtdDevice *self, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuDevice) pci_parent = NULL;
+	struct {
+		const gchar *basename;
+		FuMtdIntelSpiFlags intel_spi_flag;
+	} map[] = {
+	    {"intel_spi_locked", FU_MTD_INTEL_SPI_FLAG_PROTECTED},
+	    {"intel_spi_bios_locked", FU_MTD_INTEL_SPI_FLAG_BIOS_LOCKED},
+	    {"intel_spi_protected", FU_MTD_INTEL_SPI_FLAG_SMM_BWP},
+	};
+
+	pci_parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	if (pci_parent == NULL)
+		return FALSE;
+	if (fu_device_get_vid(pci_parent) != FU_PCI_VENDOR_ID_INTEL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not Intel mtd, got %s",
+			    fu_device_get_vendor(pci_parent));
+		return FALSE;
+	}
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		g_autofree gchar *value = NULL;
+		value = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(pci_parent),
+						  map[i].basename,
+						  100,
+						  error);
+		if (value == NULL)
+			return FALSE;
+		g_debug("%s=%s", map[i].basename, value);
+		if (g_strcmp0(value, "1") == 0)
+			priv->intel_spi_flags |= map[i].intel_spi_flag;
+	}
+
+	/* success */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI);
+	fu_mtd_device_ensure_lockout_inhibit(self);
+	return TRUE;
 }
 
 static gboolean
@@ -563,6 +657,7 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_intel = NULL;
 
 	/* sanity check */
 	if (priv->metadata_offset > firmware_size_max) {
@@ -595,8 +690,8 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* prevented by policy */
-	if (!fu_mtd_device_ensure_lockout_inhibit(self, error))
-		return FALSE;
+	if (!fu_mtd_device_ensure_intel_spi(self, &error_intel))
+		g_debug("failed to get BCR flags: %s", error_intel->message);
 
 	/* success */
 	return TRUE;
@@ -1307,5 +1402,6 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 	fu_device_register_private_flag(device_class, FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
+	fu_device_register_private_flag(device_class, FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI);
 	device_class->add_security_attrs = fu_mtd_device_add_security_attrs;
 }

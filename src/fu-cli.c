@@ -4929,7 +4929,7 @@ fu_cli_sync(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
+fu_cli_security_fix_attr(FuCli *self, FuSecurityAttr *attr, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GString) body = g_string_new(NULL);
@@ -4939,13 +4939,13 @@ fu_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
 			       "%s: %s",
 			       /* TRANSLATORS: title prefix for the BIOS settings dialog */
 			       _("Configuration Change Suggested"),
-			       fwupd_security_attr_get_title(attr));
+			       fu_security_attr_get_title(attr));
 
-	g_string_append(body, fwupd_security_attr_get_description(attr));
+	g_string_append(body, fu_security_attr_get_description(attr));
 
-	if (fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
-	    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
-	    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
+	if (fu_security_attr_get_bios_setting_id(attr) != NULL &&
+	    fu_security_attr_get_bios_setting_current_value(attr) != NULL &&
+	    fu_security_attr_get_bios_setting_target_value(attr) != NULL) {
 		g_string_append(body, "\n\n");
 		g_string_append_printf(body,
 				       /* TRANSLATORS: the %1 is a BIOS setting name.
@@ -4953,9 +4953,9 @@ fu_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
 				       _("This tool can change the BIOS setting '%s' from '%s' "
 					 "to '%s' automatically, but it will only be active after "
 					 "restarting the computer."),
-				       fwupd_security_attr_get_bios_setting_id(attr),
-				       fwupd_security_attr_get_bios_setting_current_value(attr),
-				       fwupd_security_attr_get_bios_setting_target_value(attr));
+				       fu_security_attr_get_bios_setting_id(attr),
+				       fu_security_attr_get_bios_setting_current_value(attr),
+				       fu_security_attr_get_bios_setting_target_value(attr));
 		g_string_append(body, "\n\n");
 		g_string_append(body,
 				/* TRANSLATORS: the user has to manually recover; we can't do it */
@@ -4963,23 +4963,23 @@ fu_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
 				  "from the system firmware setup, as this change may cause the "
 				  "system to not boot into Linux or cause other system "
 				  "instability."));
-	} else if (fwupd_security_attr_get_kernel_target_value(attr) != NULL) {
+	} else if (fu_security_attr_get_kernel_target_value(attr) != NULL) {
 		g_string_append(body, "\n\n");
-		if (fwupd_security_attr_get_kernel_current_value(attr) != NULL) {
+		if (fu_security_attr_get_kernel_current_value(attr) != NULL) {
 			g_string_append_printf(
 			    body,
 			    /* TRANSLATORS: the %1 is a kernel command line key=value */
 			    _("This tool can change the kernel argument from '%s' to '%s', but "
 			      "it will only be active after restarting the computer."),
-			    fwupd_security_attr_get_kernel_current_value(attr),
-			    fwupd_security_attr_get_kernel_target_value(attr));
+			    fu_security_attr_get_kernel_current_value(attr),
+			    fu_security_attr_get_kernel_target_value(attr));
 		} else {
 			g_string_append_printf(
 			    body,
 			    /* TRANSLATORS: the %1 is a kernel command line key=value */
 			    _("This tool can add a kernel argument of '%s', but it will "
 			      "only be active after restarting the computer."),
-			    fwupd_security_attr_get_kernel_target_value(attr));
+			    fu_security_attr_get_kernel_target_value(attr));
 		}
 		g_string_append(body, "\n\n");
 		g_string_append(body,
@@ -4996,7 +4996,7 @@ fu_cli_security_fix_attr(FuCli *self, FwupdSecurityAttr *attr, GError **error)
 	if (!fu_console_input_bool(priv->console, FALSE, "%s", _("Perform operation?")))
 		return TRUE;
 	if (!fwupd_client_fix_host_security_attr(priv->client,
-						 fwupd_security_attr_get_appstream_id(attr),
+						 fu_security_attr_get_appstream_id(attr),
 						 priv->cancellable,
 						 error))
 		return FALSE;
@@ -5090,8 +5090,8 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 
 	/* host emulation */
 	for (guint j = 0; j < attrs->len; j++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr),
+		FuSecurityAttr *attr = g_ptr_array_index(attrs, j);
+		if (g_strcmp0(fu_security_attr_get_appstream_id(attr),
 			      FWUPD_SECURITY_ATTR_ID_HOST_EMULATION) == 0) {
 			fu_cli_add_arg_flag(self, FU_CLI_ARG_FLAG_NO_UNREPORTED_CHECK);
 			break;
@@ -5101,9 +5101,9 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	/* any things we can fix? */
 	if (!fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_NO_SECURITY_FIX)) {
 		for (guint j = 0; j < attrs->len; j++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-			if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX) &&
-			    !fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+			FuSecurityAttr *attr = g_ptr_array_index(attrs, j);
+			if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX) &&
+			    !fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 				if (!fu_cli_security_fix_attr(self, attr, error))
 					return FALSE;
 			}

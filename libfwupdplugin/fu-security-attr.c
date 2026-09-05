@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#define G_LOG_DOMAIN "FwupdSecurityAttr"
+#define G_LOG_DOMAIN "FuSecurityAttr"
 
 #include "config.h"
+
+#include "fwupd-security-attr-private.h"
 
 #include "fu-security-attr.h"
 #include "fu-version-common.h"
@@ -21,7 +23,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY
 
 /**
  * fu_security_attr_check_fwupd_version:
- * @attr: a #FwupdSecurityAttr
+ * @self: a #FuSecurityAttr
  * @fwupd_version: a fwupd version, e.g. `2.0.7`
  *
  * Checks if this attribute was available in a given fwupd release.
@@ -33,21 +35,21 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY
  * Since: 2.0.7
  **/
 gboolean
-fu_security_attr_check_fwupd_version(FwupdSecurityAttr *attr, const gchar *fwupd_version)
+fu_security_attr_check_fwupd_version(FuSecurityAttr *self, const gchar *fwupd_version)
 {
-	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(attr), FALSE);
+	g_return_val_if_fail(FU_IS_SECURITY_ATTR(self), FALSE);
 	if (fwupd_version == NULL)
 		return TRUE;
-	if (fwupd_security_attr_get_fwupd_version(attr) == NULL)
+	if (fu_security_attr_get_fwupd_version(self) == NULL)
 		return TRUE;
 	return fu_version_compare(fwupd_version,
-				  fwupd_security_attr_get_fwupd_version(attr),
+				  fu_security_attr_get_fwupd_version(self),
 				  FWUPD_VERSION_FORMAT_UNKNOWN) >= 0;
 }
 
 /**
  * fu_security_attr_add_bios_target_value:
- * @attr: a #FwupdSecurityAttr
+ * @self: a #FuSecurityAttr
  * @id: a #FwupdBiosSetting ID or name
  * @needle: The substring of a target value
  *
@@ -57,11 +59,8 @@ fu_security_attr_check_fwupd_version(FwupdSecurityAttr *attr, const gchar *fwupd
  * Since: 1.8.4
  **/
 void
-fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
-				       const gchar *id,
-				       const gchar *needle)
+fu_security_attr_add_bios_target_value(FuSecurityAttr *self, const gchar *id, const gchar *needle)
 {
-	FuSecurityAttr *self = FU_SECURITY_ATTR(attr);
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	FwupdBiosSetting *bios_setting;
 	GPtrArray *values;
@@ -71,8 +70,8 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 	if (bios_setting == NULL)
 		return;
 	current = fwupd_bios_setting_get_current_value(bios_setting);
-	fwupd_security_attr_set_bios_setting_id(attr, fwupd_bios_setting_get_id(bios_setting));
-	fwupd_security_attr_set_bios_setting_current_value(attr, current);
+	fu_security_attr_set_bios_setting_id(self, fwupd_bios_setting_get_id(bios_setting));
+	fu_security_attr_set_bios_setting_current_value(self, current);
 	if (fwupd_bios_setting_get_kind(bios_setting) != FWUPD_BIOS_SETTING_KIND_ENUMERATION)
 		return;
 	if (fwupd_bios_setting_get_read_only(bios_setting))
@@ -82,17 +81,33 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 		const gchar *possible = g_ptr_array_index(values, i);
 		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
 		if (g_strrstr(lower, needle)) {
-			fwupd_security_attr_set_bios_setting_target_value(attr, possible);
+			fu_security_attr_set_bios_setting_target_value(self, possible);
 			/* this is built-in to the engine */
 			if (g_strcmp0(possible, current) != 0) {
-				fwupd_security_attr_add_flag(attr,
-							     FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
-				fwupd_security_attr_add_flag(attr,
-							     FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+				fu_security_attr_add_flag(self, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+				fu_security_attr_add_flag(self, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
 			}
 			return;
 		}
 	}
+}
+
+/**
+ * fu_security_attr_copy:
+ * @self: a #FuSecurityAttr
+ *
+ * Makes a full (deep) copy of a security attribute.
+ *
+ * Returns: (transfer full): a #FuSecurityAttr
+ *
+ * Since: 2.1.8
+ **/
+FuSecurityAttr *
+fu_security_attr_copy(FuSecurityAttr *self)
+{
+	g_autoptr(FuSecurityAttr) new = g_object_new(FU_TYPE_SECURITY_ATTR, NULL);
+	fwupd_security_attr_incorporate(FWUPD_SECURITY_ATTR(new), FWUPD_SECURITY_ATTR(self));
+	return g_steal_pointer(&new);
 }
 
 static void
@@ -121,20 +136,20 @@ fu_security_attr_class_init(FuSecurityAttrClass *klass)
  * @ctx: a #FuContext
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
- * Creates a new #FwupdSecurityAttr with context set.
+ * Creates a new #FuSecurityAttr with context set.
  *
- * Returns: (transfer full): a #FwupdSecurityAttr
+ * Returns: (transfer full): a #FuSecurityAttr
  *
  * Since: 1.8.4
  **/
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_security_attr_new(FuContext *ctx, const gchar *appstream_id)
 {
 	g_autoptr(FuSecurityAttr) self = g_object_new(FU_TYPE_SECURITY_ATTR, NULL);
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 	if (appstream_id != NULL)
-		fwupd_security_attr_set_appstream_id(FWUPD_SECURITY_ATTR(self), appstream_id);
+		fu_security_attr_set_appstream_id(FWUPD_SECURITY_ATTR(self), appstream_id);
 	priv->ctx = g_object_ref(ctx);
-	return FWUPD_SECURITY_ATTR(g_steal_pointer(&self));
+	return g_steal_pointer(&self);
 }

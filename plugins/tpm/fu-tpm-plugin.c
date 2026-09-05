@@ -108,27 +108,27 @@ static void
 fu_tpm_plugin_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check exists, and in v2.0 mode */
 	if (self->tpm_device == NULL) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 	if (g_strcmp0(fu_tpm_device_get_family(self->tpm_device), "2.0") != 0) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self->tpm_device)));
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self->tpm_device)));
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
@@ -136,7 +136,7 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	gboolean reconstructed = TRUE;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s_calc = NULL;
 	g_autoptr(GPtrArray) pcr0s_real = NULL;
@@ -147,13 +147,13 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
 	if (self->eventlog == NULL) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 
@@ -161,8 +161,8 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	pcr0s_calc = fu_tpm_eventlog_calc_checksums(self->eventlog, 0, &error);
 	if (pcr0s_calc == NULL) {
 		g_warning("failed to get eventlog reconstruction: %s", error->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
@@ -187,20 +187,20 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 			break;
 	}
 	if (!reconstructed) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
 fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* no TPM device */
 	if (self->tpm_device == NULL)
@@ -208,8 +208,8 @@ fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* add attributes */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check PCRs 0 through 7 for empty checksums */
@@ -227,16 +227,15 @@ fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 				}
 			}
 			if (empty) {
-				fwupd_security_attr_set_result(
-				    attr,
-				    FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+				fu_security_attr_set_result(attr,
+							    FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 				return;
 			}
 		}
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static gboolean
@@ -283,27 +282,27 @@ static void
 fu_tpm_plugin_add_security_attr_coreboot_vboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	if (!fu_tpm_plugin_is_coreboot(self))
 		return;
 
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (self->eventlog == NULL) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 	if (!fu_tpm_plugin_eventlog_has_data_prefix(self, "VBOOT:")) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
-	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

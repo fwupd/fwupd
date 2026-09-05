@@ -83,30 +83,30 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	guint64 value = 0;
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* startup failed */
 	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED)) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
 
 	/* load file */
 	if (self->file == NULL) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
 	if (!g_file_load_contents(self->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
 		g_warning("could not open %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
@@ -114,7 +114,7 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	str = g_strndup(buf, bufsz);
 	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("could not parse %s: %s", str, error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
@@ -127,13 +127,13 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	    (value & KERNEL_TAINT_FLAG_UNSIGNED_MODULE_LOADED) > 0 ||
 	    (value & KERNEL_TAINT_FLAG_ACPI_OVERRIDDEN) > 0 ||
 	    (value & KERNEL_TAINT_FLAG_AUXILIARY_TAINT) > 0) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void

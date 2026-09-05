@@ -147,12 +147,12 @@ fu_plugin_runner_get_results(FuPlugin *self,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_plugin_runner_fix_host_security_attr(FuPlugin *self,
-					FwupdSecurityAttr *attr,
+					FuSecurityAttr *attr,
 					GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_plugin_runner_undo_host_security_attr(FuPlugin *self,
-					 FwupdSecurityAttr *attr,
+					 FuSecurityAttr *attr,
 					 GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 gboolean

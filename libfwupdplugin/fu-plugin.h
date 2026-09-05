@@ -393,27 +393,25 @@ struct _FuPluginClass {
 	/**
 	 * fix_host_security_attr:
 	 * @self: a #FuPlugin
-	 * @attr: a #FwupdSecurityAttr
+	 * @attr: a #FuSecurityAttr
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Fix a host security issue.
 	 *
 	 * Since: 1.9.6
 	 **/
-	gboolean (*fix_host_security_attr)(FuPlugin *self, FwupdSecurityAttr *attr, GError **error);
+	gboolean (*fix_host_security_attr)(FuPlugin *self, FuSecurityAttr *attr, GError **error);
 	/**
 	 * undo_host_security_attr:
 	 * @self: a #FuPlugin
-	 * @attr: a #FwupdSecurityAttr
+	 * @attr: a #FuSecurityAttr
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Undo the fix for a host security issue.
 	 *
 	 * Since: 1.9.6
 	 **/
-	gboolean (*undo_host_security_attr)(FuPlugin *self,
-					    FwupdSecurityAttr *attr,
-					    GError **error);
+	gboolean (*undo_host_security_attr)(FuPlugin *self, FuSecurityAttr *attr, GError **error);
 	/**
 	 * reboot_cleanup:
 	 * @self: a #FuPlugin
@@ -549,7 +547,7 @@ fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key) G_GNUC_NON_
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
     G_GNUC_NON_NULL(1, 2);
-FwupdSecurityAttr *
+FuSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

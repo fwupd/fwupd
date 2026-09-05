@@ -47,7 +47,7 @@ fu_msr_plugin_intel_dci_not_supported_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
 	plugin = fu_plugin_new_from_gtype(fu_msr_plugin_get_type(), ctx);
@@ -57,10 +57,10 @@ fu_msr_plugin_intel_dci_not_supported_func(void)
 						     FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -73,7 +73,7 @@ fu_msr_plugin_intel_dci_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -93,10 +93,8 @@ fu_msr_plugin_intel_dci_enabled_func(void)
 						     FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -109,7 +107,7 @@ fu_msr_plugin_intel_dci_not_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -128,10 +126,10 @@ fu_msr_plugin_intel_dci_not_enabled_func(void)
 						     FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -144,7 +142,7 @@ fu_msr_plugin_intel_dci_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -164,10 +162,8 @@ fu_msr_plugin_intel_dci_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -180,7 +176,7 @@ fu_msr_plugin_intel_dci_not_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -199,10 +195,10 @@ fu_msr_plugin_intel_dci_not_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -211,7 +207,7 @@ fu_msr_plugin_intel_tme_not_supported_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
 	plugin = fu_plugin_new_from_gtype(fu_msr_plugin_get_type(), ctx);
@@ -221,7 +217,7 @@ fu_msr_plugin_intel_tme_not_supported_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 }
@@ -236,7 +232,7 @@ fu_msr_plugin_intel_tme_not_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -255,7 +251,7 @@ fu_msr_plugin_intel_tme_not_enabled_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
@@ -270,7 +266,7 @@ fu_msr_plugin_intel_tme_bypass_enabled_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -290,10 +286,10 @@ fu_msr_plugin_intel_tme_bypass_enabled_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -306,7 +302,7 @@ fu_msr_plugin_intel_tme_not_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
@@ -326,7 +322,7 @@ fu_msr_plugin_intel_tme_not_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 }
@@ -337,8 +333,8 @@ fu_msr_plugin_amd_no_intel_attrs_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr_dci_en = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_dci_lk = NULL;
+	g_autoptr(FuSecurityAttr) attr_dci_en = NULL;
+	g_autoptr(FuSecurityAttr) attr_dci_lk = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
 	plugin = fu_plugin_new_from_gtype(fu_msr_plugin_get_type(), ctx);
@@ -363,7 +359,7 @@ fu_msr_plugin_amd_sme_not_supported_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
 	plugin = fu_plugin_new_from_gtype(fu_msr_plugin_get_type(), ctx);
@@ -373,7 +369,7 @@ fu_msr_plugin_amd_sme_not_supported_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 }
@@ -388,7 +384,7 @@ fu_msr_plugin_amd_sme_not_encrypted_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
@@ -407,10 +403,10 @@ fu_msr_plugin_amd_sme_not_encrypted_func(void)
 						     FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -419,7 +415,7 @@ fu_msr_plugin_amd_hwcr_not_supported_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
 	plugin = fu_plugin_new_from_gtype(fu_msr_plugin_get_type(), ctx);
@@ -441,7 +437,7 @@ fu_msr_plugin_amd_hwcr_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
@@ -461,10 +457,8 @@ fu_msr_plugin_amd_hwcr_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -477,7 +471,7 @@ fu_msr_plugin_amd_hwcr_not_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
@@ -497,10 +491,10 @@ fu_msr_plugin_amd_hwcr_not_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void
@@ -513,7 +507,7 @@ fu_msr_plugin_amd_hwcr_base_not_locked_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_AMD);
@@ -533,10 +527,10 @@ fu_msr_plugin_amd_hwcr_base_not_locked_func(void)
 						     FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED,
 						     NULL);
 	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	g_assert_cmpint(fu_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
-	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 int
