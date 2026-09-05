@@ -81,7 +81,7 @@ fu_compressor_stream_get_stream_impl(FuInputStream *stream)
 
 static FuInputStream *
 fu_compressor_stream_new(FuInputStream *source,
-			 FuCompressorFormat format,
+			 FwupdCompressorFormat format,
 			 gboolean compress,
 			 GError **error)
 {
@@ -119,7 +119,7 @@ fu_compressor_stream_new(FuInputStream *source,
 /**
  * fu_compressor_stream_new_decompress:
  * @source: a #FuInputStream with compressed data
- * @format: a #FuCompressorFormat, e.g. %FU_COMPRESSOR_FORMAT_GZIP
+ * @format: (type guint): a #FwupdCompressorFormat, e.g. %FWUPD_COMPRESSOR_FORMAT_GZIP
  * @error: (nullable): optional return location for an error
  *
  * Creates a new stream that decompresses data from @source on the fly.
@@ -130,7 +130,7 @@ fu_compressor_stream_new(FuInputStream *source,
  **/
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,
-				    FuCompressorFormat format,
+				    FwupdCompressorFormat format,
 				    GError **error)
 {
 	return fu_compressor_stream_new(source, format, FALSE, error);
@@ -139,7 +139,7 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
 /**
  * fu_compressor_stream_new_compress:
  * @source: a #FuInputStream with uncompressed data
- * @format: a #FuCompressorFormat, e.g. %FU_COMPRESSOR_FORMAT_ZLIB
+ * @format: (type guint): a #FwupdCompressorFormat, e.g. %FWUPD_COMPRESSOR_FORMAT_ZLIB
  * @error: (nullable): optional return location for an error
  *
  * Creates a new stream that compresses data from @source on the fly.
@@ -149,7 +149,9 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
  * Since: 2.0.7
  **/
 FuInputStream *
-fu_compressor_stream_new_compress(FuInputStream *source, FuCompressorFormat format, GError **error)
+fu_compressor_stream_new_compress(FuInputStream *source,
+				  FwupdCompressorFormat format,
+				  GError **error)
 {
 	return fu_compressor_stream_new(source, format, TRUE, error);
 }

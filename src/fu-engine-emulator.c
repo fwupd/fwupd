@@ -101,7 +101,9 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 }
 
 static gboolean
-fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GError **error)
+fu_engine_emulator_load_json_from_stream(FuEngineEmulator *self,
+					 FuInputStream *stream,
+					 GError **error)
 {
 	GPtrArray *backends = fu_context_get_backends(fu_engine_get_context(self->engine));
 	g_autoptr(FwupdJsonNode) json_node = NULL;
@@ -114,11 +116,11 @@ fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GEr
 	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 
 	/* parse */
-	json_node = fwupd_json_parser_load_from_bytes(json_parser,
-						      json_blob,
-						      FWUPD_JSON_LOAD_FLAG_TRUSTED |
-							  FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
-						      error);
+	json_node = fwupd_json_parser_load_from_stream_impl(json_parser,
+							    fu_input_stream_get_stream_impl(stream),
+							    FWUPD_JSON_LOAD_FLAG_TRUSTED |
+								FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
+							    error);
 	if (json_node == NULL)
 		return FALSE;
 	json_obj = fwupd_json_node_get_object(json_node, error);
@@ -143,6 +145,7 @@ fu_engine_emulator_load_phase(FuEngineEmulator *self,
 			      guint write_cnt,
 			      GError **error)
 {
+	g_autoptr(FuInputStream) mstream = NULL;
 	GBytes *json_blob;
 	g_autofree gchar *fn = NULL;
 
@@ -152,8 +155,10 @@ fu_engine_emulator_load_phase(FuEngineEmulator *self,
 		g_debug("emulator not loading %s, as not found", fn);
 		return TRUE;
 	}
+
+	mstream = fu_memory_input_stream_new_from_bytes(json_blob);
 	g_debug("emulator loading %s", fn);
-	return fu_engine_emulator_load_json_blob(self, json_blob, error);
+	return fu_engine_emulator_load_json_from_stream(self, mstream, error);
 }
 
 static void
@@ -260,7 +265,9 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 		       write_cnt);
 		if (composite_cnt == 0 && write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT &&
 		    phase == FU_ENGINE_EMULATOR_PHASE_SETUP) {
-			if (!fu_engine_emulator_load_json_blob(self, blob, error))
+			g_autoptr(FuInputStream) mstream = NULL;
+			mstream = fu_memory_input_stream_new_from_bytes(blob);
+			if (!fu_engine_emulator_load_json_from_stream(self, mstream, error))
 				return FALSE;
 		} else {
 			g_hash_table_insert(self->phase_blobs,
@@ -279,7 +286,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
-	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
+	g_autoptr(FuInputStream) mstream = NULL;
 	g_autoptr(GError) error_archive = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
@@ -287,7 +294,8 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* unload any existing devices */
-	if (!fu_engine_emulator_load_json_blob(self, json_blob, error))
+	mstream = fu_memory_input_stream_new_from_data(json_empty, strlen(json_empty), NULL);
+	if (!fu_engine_emulator_load_json_from_stream(self, mstream, error))
 		return FALSE;
 	g_hash_table_remove_all(self->phase_blobs);
 
@@ -297,12 +305,8 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error_archive)) {
-		g_autoptr(GBytes) blob = NULL;
 		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);
-		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
-		if (blob == NULL)
-			return FALSE;
-		return fu_engine_emulator_load_json_blob(self, blob, error);
+		return fu_engine_emulator_load_json_from_stream(self, stream, error);
 	}
 
 	/* load JSON files from archive */
