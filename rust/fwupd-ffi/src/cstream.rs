@@ -244,7 +244,7 @@ pub(crate) mod test_helpers {
     use std::sync::{Arc, Mutex};
 
     pub(crate) struct TestStream {
-        pub(crate) inner: MemoryInputStream,
+        pub(crate) inner: MemoryInputStream<Vec<u8>>,
     }
 
     unsafe extern "C" fn test_read(

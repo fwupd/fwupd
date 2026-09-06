@@ -8,7 +8,6 @@
 //!
 //! This module provides Rust implementations of the fwupd input stream types:
 //! - [`MemoryInputStream`]: reads from an in-memory byte buffer
-//! - [`BorrowedMemoryInputStream`]: reads from an in-memory byte buffer where
 //!   the data is owned by the caller
 //! - [`FileInputStream`]: reads from a file on disk
 //! - [`PartialInputStream`]: a slice/view over another stream
@@ -19,15 +18,12 @@
 //! All stream types implement [`std::io::Read`] and [`std::io::Seek`] for
 //! interoperability with the Rust standard library.
 
-mod borrowed_memory_input_stream;
 mod composite_input_stream;
 mod compressor_stream;
 mod file_input_stream;
 mod memory_input_stream;
 mod partial_input_stream;
 
-#[doc(inline)]
-pub use borrowed_memory_input_stream::*;
 #[doc(inline)]
 pub use composite_input_stream::*;
 #[doc(inline)]
