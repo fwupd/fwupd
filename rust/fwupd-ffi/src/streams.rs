@@ -31,8 +31,8 @@ use crate::glib::{
     GBoolean, GError, GOffset, GSeekType, GFALSE, GTRUE, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET,
 };
 use fwupd::streams::{
-    BorrowedMemoryInputStream, CompositeInputStream, CompressorStream, DecompressorStream,
-    FileInputStream, IsSeekable, MemoryInputStream, PartialInputStream, ReadSeek,
+    CompositeInputStream, CompressorStream, DecompressorStream, FileInputStream, IsSeekable,
+    MemoryInputStream, PartialInputStream, ReadSeek,
 };
 
 /// The type of our underlying Rust stream implementation, wrapped
@@ -251,7 +251,7 @@ macro_rules! ffi_stream_impl_stream_impl {
     };
 }
 
-/// Create a [`BorrowedMemoryInputStream`] from the given
+/// Create a [`MemoryInputStream`] from the given
 /// data.
 ///
 /// The caller is responsible for keeping data alive for the lifetime of the
@@ -264,7 +264,7 @@ macro_rules! ffi_stream_impl_stream_impl {
 pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_new_from_data(
     data: *const u8,
     len: usize,
-) -> *mut Arc<Mutex<BorrowedMemoryInputStream<'static>>> {
+) -> *mut Arc<Mutex<MemoryInputStream<&'static [u8]>>> {
     if data.is_null() && len != 0 {
         return ptr::null_mut();
     }
@@ -274,32 +274,32 @@ pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_new_from_data(
         unsafe { std::slice::from_raw_parts(data, len) }
     };
     Box::into_raw(Box::new(Arc::new(Mutex::new(
-        BorrowedMemoryInputStream::from_data(data),
+        MemoryInputStream::from_data(data),
     ))))
 }
 
 ffi_stream_impl_free!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_free
 );
 ffi_stream_impl_read!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_read
 );
 ffi_stream_impl_seek!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_seek
 );
 ffi_stream_impl_can_seek!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_can_seek
 );
 ffi_stream_impl_tell!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_tell
 );
 ffi_stream_impl_size!(
-    BorrowedMemoryInputStream,
+    MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_size
 );
 
@@ -314,7 +314,7 @@ ffi_stream_impl_size!(
 /// by [`fu_rs_borrowed_memory_input_stream_new_from_data`].
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_stream_impl(
-    stream: *const Arc<Mutex<BorrowedMemoryInputStream<'static>>>,
+    stream: *const Arc<Mutex<MemoryInputStream<&'static [u8]>>>,
 ) -> *mut StreamImpl {
     if stream.is_null() {
         return ptr::null_mut();
@@ -334,7 +334,7 @@ pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_stream_impl(
 pub unsafe extern "C" fn fu_rs_memory_input_stream_new_from_data(
     data: *const u8,
     len: usize,
-) -> *mut Arc<Mutex<MemoryInputStream>> {
+) -> *mut Arc<Mutex<MemoryInputStream<Vec<u8>>>> {
     let vec = if data.is_null() || len == 0 {
         Vec::new()
     } else {
@@ -345,13 +345,19 @@ pub unsafe extern "C" fn fu_rs_memory_input_stream_new_from_data(
     ))))
 }
 
-ffi_stream_impl_free!(MemoryInputStream, fu_rs_memory_input_stream_free);
-ffi_stream_impl_read!(MemoryInputStream, fu_rs_memory_input_stream_read);
-ffi_stream_impl_seek!(MemoryInputStream, fu_rs_memory_input_stream_seek);
-ffi_stream_impl_can_seek!(MemoryInputStream, fu_rs_memory_input_stream_can_seek);
-ffi_stream_impl_tell!(MemoryInputStream, fu_rs_memory_input_stream_tell);
-ffi_stream_impl_size!(MemoryInputStream, fu_rs_memory_input_stream_size);
-ffi_stream_impl_stream_impl!(MemoryInputStream, fu_rs_memory_input_stream_get_stream_impl);
+ffi_stream_impl_free!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_free);
+ffi_stream_impl_read!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_read);
+ffi_stream_impl_seek!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_seek);
+ffi_stream_impl_can_seek!(
+    MemoryInputStream<Vec<u8>>,
+    fu_rs_memory_input_stream_can_seek
+);
+ffi_stream_impl_tell!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_tell);
+ffi_stream_impl_size!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_size);
+ffi_stream_impl_stream_impl!(
+    MemoryInputStream<Vec<u8>>,
+    fu_rs_memory_input_stream_get_stream_impl
+);
 
 /// Create a [`FileInputStream`] from
 /// the given file path. Returns NULL on error.
