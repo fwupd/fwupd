@@ -92,12 +92,37 @@ fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
 			return FALSE;
 
 		/* save this for analysis */
-		if (alg_type == FU_TPM_ALG_SHA1)
+		if (alg_type == FU_TPM_ALG_SHA1) {
+			if (checksum_sha1 != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already have SHA1 value for TPM digest 0x%x",
+					    i);
+				return FALSE;
+			}
 			checksum_sha1 = g_bytes_ref(checksum);
-		else if (alg_type == FU_TPM_ALG_SHA256)
+		} else if (alg_type == FU_TPM_ALG_SHA256) {
+			if (checksum_sha256 != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already have SHA256 value for TPM digest 0x%x",
+					    i);
+				return FALSE;
+			}
 			checksum_sha256 = g_bytes_ref(checksum);
-		else if (alg_type == FU_TPM_ALG_SHA384)
+		} else if (alg_type == FU_TPM_ALG_SHA384) {
+			if (checksum_sha384 != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already have SHA384 value for TPM digest 0x%x",
+					    i);
+				return FALSE;
+			}
 			checksum_sha384 = g_bytes_ref(checksum);
+		}
 
 		/* next block */
 		*idx += alg_size;
