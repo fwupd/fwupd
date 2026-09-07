@@ -6456,13 +6456,15 @@ fwupd_client_download_item_add(FwupdClient *self, const gchar *uri, GError **err
 	}
 	item = fwupd_client_download_item_find_by_uri(self, uri);
 	if (item != NULL) {
+		const gchar *prgname = g_get_prgname();
 		gint64 delta = (now - item->time) / 1000;
 		if (delta < FWUPD_CLIENT_DOWNLOAD_URI_DELTA) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_REACHABLE,
-				    "attempted previous download of %s from just %ums ago",
+				    "attempted previous download of %s from %s just %ums ago",
 				    uri,
+				    prgname != NULL ? prgname : "process",
 				    (guint)delta);
 			return FALSE;
 		}
