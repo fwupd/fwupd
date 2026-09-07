@@ -8,6 +8,7 @@
 
 mod bitflags;
 pub mod compressor;
+pub mod random;
 pub mod streams;
 pub mod units;
 

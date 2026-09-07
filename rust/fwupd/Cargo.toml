@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fastrand = "2.5.0"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
