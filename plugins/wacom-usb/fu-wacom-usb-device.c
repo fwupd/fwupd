@@ -645,6 +645,15 @@ fu_wacom_usb_device_write_firmware(FuDevice *device,
 			continue;
 
 		/* check checksum matches */
+		if (i >= self->checksums->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "checksum index %u out of range, got %u",
+				    i,
+				    self->checksums->len);
+			return FALSE;
+		}
 		csum_rom = g_array_index(self->checksums, guint32, i);
 		if (csum_rom != csum_local[i]) {
 			g_set_error(error,
