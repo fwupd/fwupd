@@ -164,6 +164,11 @@ fu_wacom_usb_device_ensure_flash_descriptors(FuWacomUsbDevice *self, GError **er
 	gsize sz = 0;
 	g_autofree guint8 *buf = NULL;
 
+	/* the device changed the block count, so invalidate the cache */
+	if (self->flash_descriptors->len > 0 &&
+	    self->flash_descriptors->len != self->nr_flash_blocks)
+		g_ptr_array_set_size(self->flash_descriptors, 0);
+
 	/* already done */
 	if (self->flash_descriptors->len > 0)
 		return TRUE;
