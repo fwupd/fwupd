@@ -133,22 +133,28 @@ fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 	if (close_fd)
 		autoclose_fd = fd;
 
-	/* check for a regular file */
+	/* check for a regular file -- which doesn't work for apps using a flatpak portal as
+	 * FUSE rejects any syscall against inodes coming from a different UID -- including root */
 	if (fstat(fd, &st) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to stat fd: %s",
-			    fwupd_strerror(errno));
-		return NULL;
-	}
-	if (!S_ISREG(st.st_mode)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "fd must be a regular file, got mode 0%o",
-			    st.st_mode);
-		return NULL;
+		if (errno == EACCES) {
+			g_debug("ignoring EACCES for fstat");
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to stat fd: %s",
+				    fwupd_strerror(errno));
+			return NULL;
+		}
+	} else {
+		if (!S_ISREG(st.st_mode)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "fd must be a regular file, got mode 0%o",
+				    st.st_mode);
+			return NULL;
+		}
 	}
 
 	if (close_fd) {
