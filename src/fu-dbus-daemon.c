@@ -2641,7 +2641,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_string(PACKAGE_VERSION);
 
 	if (g_strcmp0(property_name, "HostBkc") == 0) {
-		g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
+		g_autofree gchar *host_bkc = fu_context_get_host_bkcs_as_str(ctx);
 		if (host_bkc == NULL)
 			return g_variant_new_string("");
 		return g_variant_new_string(host_bkc);

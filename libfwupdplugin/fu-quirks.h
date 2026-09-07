@@ -62,6 +62,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_FLAGS "Flags"
 /**
+ * FU_QUIRKS_HOST_BKC:
+ *
+ * The quirk key for the Host Best Known Configuration aka "BKC".
+ *
+ * Since: 2.1.8
+ **/
+#define FU_QUIRKS_HOST_BKC "HostBkc"
+/**
  * FU_QUIRKS_SUMMARY:
  *
  * The quirk key for the summary, e.g. `An open source display colorimeter`.

@@ -31,7 +31,11 @@ let us know by [opening an issue](https://gitlab.com/fwupd/lvfs-website/-/issues
 ## Client
 
 When provisioning the client machine, we can set the BKC by setting `HostBkc=vendor-2021q1` in
-`/etc/fwupd/fwupd.conf`.
+`/etc/fwupd/fwupd.conf` or by writing a file in `/usr/share/fwupd/quirks.d/bkc.quirk` that matches
+a HwId GUID in `fwupdmgr hwids`, for example:
+
+    [c4e7b7b9-2520-5397-8040-8ac279f540d8]
+    HostBkc = uefi-secure-boot
 
 Any invocation of `fwupdmgr sync` will install or downgrade firmware on all compatible devices
 (e.g. UEFI, RAID, network adapter, & SAS HBA) to make the system match a compatible set.
@@ -125,3 +129,10 @@ If the tag is specific to the firmware build, then it can be included directly i
 
 **NOTE:** the `namespace="lvfs"` is required for fwupd as the `<tag>` section is also used by other
 software for different purposes. Forgetting the namespace will cause fwupd to ignore the tag!
+
+## Well Known BKCs
+
+Many BKCs are vendor and customer-specific, but some are "well known" and may be useful for
+generic deployments that auto-deploy firmware to workstations using `fwupdmgr sync`.
+
+* `uefi-secure-boot`: A UEFI system with all the latest db certificates and dbx revocations.

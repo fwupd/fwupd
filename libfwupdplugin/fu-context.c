@@ -26,6 +26,7 @@
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
+#include "fu-string.h"
 #include "fu-volume-locker.h"
 #include "fu-volume-private.h"
 
@@ -47,6 +48,7 @@ typedef struct {
 	FuQuirks *quirks;
 	FuEfivars *efivars;
 	GPtrArray *backends;
+	GPtrArray *host_bkcs; /* utf8 */
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	GHashTable *udev_subsystems; /* utf8:GPtrArray */
@@ -87,6 +89,8 @@ static guint signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_PRIVATE(FuContext, fu_context, G_TYPE_OBJECT)
 
 #define GET_PRIVATE(o) (fu_context_get_instance_private(o))
+
+#define FU_CONTEXT_HOST_BKCS_MAX 100
 
 static gboolean
 fu_context_ensure_smbios_uefi_enabled(FuContext *self, GError **error)
@@ -1552,6 +1556,143 @@ fu_context_load_boot_entries(FuContext *self, GError **error)
 }
 
 /**
+ * fu_context_get_host_bkcs:
+ * @self: a #FuContext
+ *
+ * Gets the list of host BKCs.
+ *
+ * Returns: (transfer none) (element-type utf8): a #GPtrArray
+ *
+ * Since: 2.1.8
+ **/
+GPtrArray *
+fu_context_get_host_bkcs(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->host_bkcs;
+}
+
+/**
+ * fu_context_get_host_bkcs_as_str:
+ * @self: a #FuContext
+ *
+ * Gets the list of host BKCs.
+ *
+ * Returns: a string representing the host BKCs.
+ *
+ * Since: 2.1.8
+ **/
+gchar *
+fu_context_get_host_bkcs_as_str(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_autoptr(GString) str = NULL;
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+
+	if (priv->host_bkcs->len == 0)
+		return NULL;
+	return fu_strjoin(",", priv->host_bkcs);
+}
+
+/**
+ * fu_context_add_host_bkc:
+ * @self: a #FuContext
+ * @host_bkc: a host BKC, e.g. `uefi-secure-boot`
+ *
+ * Adds a host BKC if it does not already exist.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_context_add_host_bkc(FuContext *self, const gchar *host_bkc)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(host_bkc != NULL);
+
+	if (g_strcmp0(host_bkc, "") == 0)
+		return;
+	if (g_ptr_array_find_with_equal_func(priv->host_bkcs, host_bkc, g_str_equal, NULL))
+		return;
+	g_ptr_array_add(priv->host_bkcs, g_strdup(host_bkc));
+}
+
+static gboolean
+fu_context_add_host_bkc_safe(FuContext *self, const gchar *host_bkc, GError **error)
+{
+	g_auto(GStrv) host_bkcs = NULL;
+
+	host_bkcs = g_strsplit(host_bkc, ",", FU_CONTEXT_HOST_BKCS_MAX);
+	if (g_strv_length(host_bkcs) == FU_CONTEXT_HOST_BKCS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "host has unreasonable BKC count: %u",
+			    (guint)FU_CONTEXT_HOST_BKCS_MAX);
+		return FALSE;
+	}
+	for (guint i = 0; host_bkcs[i] != NULL; i++)
+		fu_context_add_host_bkc(self, host_bkcs[i]);
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_context_host_bkc_quirk_cb(FuContext *self,
+			     const gchar *key,
+			     const gchar *value,
+			     FuContextQuirkSource source,
+			     gpointer user_data)
+{
+	g_auto(GStrv) host_bkcs = NULL;
+
+	if (value == NULL)
+		return;
+	host_bkcs = g_strsplit(value, ",", -1);
+	for (guint i = 0; host_bkcs[i] != NULL; i++)
+		fu_context_add_host_bkc(self, host_bkcs[i]);
+}
+
+static gboolean
+fu_context_load_host_bkcs(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *guids = fu_context_get_hwid_guids(self);
+	g_autofree gchar *host_bkc = NULL;
+
+	/* unload all previous entries */
+	g_ptr_array_set_size(priv->host_bkcs, 0);
+
+	/* add from config then quirk files */
+	host_bkc = fu_context_get_config_str(self, "HostBkc");
+	if (host_bkc != NULL) {
+		if (!fu_context_add_host_bkc_safe(self, host_bkc, error))
+			return FALSE;
+	}
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(guids, i);
+		fu_context_lookup_quirk_by_id_iter(self,
+						   guid,
+						   FU_QUIRKS_HOST_BKC,
+						   fu_context_host_bkc_quirk_cb,
+						   NULL);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_context_config_changed_cb(FuConfig *config, FuContext *self)
+{
+	fu_context_load_host_bkcs(self, NULL);
+}
+
+/**
  * fu_context_load:
  * @self: a #FuContext
  * @progress: a #FuProgress
@@ -1621,6 +1762,7 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
 	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
+	g_signal_connect(priv->config, "changed", G_CALLBACK(fu_context_config_changed_cb), self);
 
 	/* run all the HWID setup funcs */
 	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
@@ -1644,6 +1786,10 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	/* does the system support UEFI mode? */
 	if (!fu_context_ensure_smbios_uefi_enabled(self, &error_smbios))
 		g_debug("%s", error_smbios->message);
+
+	/* load per-host BKC from config */
+	if (!fu_context_load_host_bkcs(self, error))
+		return FALSE;
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);
@@ -2951,6 +3097,7 @@ fu_context_finalize(GObject *object)
 	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
 	g_ptr_array_unref(priv->backends);
+	g_ptr_array_unref(priv->host_bkcs);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
 }
@@ -3161,6 +3308,7 @@ fu_context_init(FuContext *self)
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->host_bkcs = g_ptr_array_new_with_free_func(g_free);
 }
 
 /* private */
