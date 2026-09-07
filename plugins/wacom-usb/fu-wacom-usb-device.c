@@ -273,7 +273,7 @@ fu_wacom_usb_device_ensure_checksums(FuWacomUsbDevice *self, GError **error)
 		g_debug("checksum block %02u: 0x%08x", i, (guint)csum);
 		g_array_append_val(self->checksums, csum);
 	}
-	g_debug("added %u checksums", self->flash_descriptors->len);
+	g_debug("added %u checksums", self->checksums->len);
 
 	return TRUE;
 }
