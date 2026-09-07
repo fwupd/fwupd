@@ -10,6 +10,8 @@ RUN sed "s,#en_US.UTF-8,en_US.UTF-8," /etc/locale.gen -i && \
     locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
-{{DEPENDENCIES}} && \
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{" &&" if loop.last}} \
+{% endfor %}
     pacman -Sc --noconfirm
 WORKDIR /github/workspace

@@ -79,10 +79,7 @@ def generate_dockerfile(
             distro, ARCH_TO_DEPS_MAP[arch], False
         )
         deps = deps_parsed + build_indep
-    deps = sorted(set(deps))
-    deps = [f"    {i}" for i in deps]
-    deps = " \\\n".join(deps)
-    data["DEPENDENCIES"] = deps
+    data["DEPENDENCIES"] = sorted(set(deps))
 
     loader = jinja2.FileSystemLoader(template_file.parent)
     jinja_env = jinja2.Environment(

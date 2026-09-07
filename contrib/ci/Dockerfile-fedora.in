@@ -7,6 +7,8 @@ ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN dnf --enablerepo=updates-testing -y install \
-{{DEPENDENCIES}} && \
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{" &&" if loop.last}} \
+{% endfor %}
     dnf clean all
 WORKDIR /github/workspace

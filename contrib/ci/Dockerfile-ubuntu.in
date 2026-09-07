@@ -20,7 +20,9 @@ RUN set -euxo pipefail; \
     meson \
     python3-apt \
     sudo \
-{{DEPENDENCIES}}; \
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{";" if loop.last}} \
+{% endfor %}
     apt-get clean
 RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
 {% if VARIANT=="android" %}
