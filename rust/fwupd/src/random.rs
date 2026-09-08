@@ -30,9 +30,84 @@
 //! buffer.random_fill();
 //! ```
 //!
+use std::io::ErrorKind;
 use std::ops::{Bound, RangeBounds};
 
-use fastrand;
+use getrandom;
+
+/// Handle a RNG error
+///
+/// # Panics
+///
+/// This function panics, the [getrandom documentation](https://docs.rs/getrandom/latest/getrandom/#error-handling)
+/// says:
+/// > Generally, on supported platforms, failure is highly unlikely, though not impossible. If an
+/// > error does occur, it is likely that it will occur on every call to getrandom. Therefore,
+/// > after the first successful call, one can be reasonably confident that no errors will occur.
+///
+/// but it [also says](https://docs.rs/getrandom/latest/getrandom/fn.fill.html)
+/// > This function returns an error on any failure, including partial reads. We make no
+/// > guarantees regarding the contents of dest on error.
+///
+/// So ... we retry (indefinitely) for partial reads and interruptions and fail hard for
+/// anything else, hard. This is unlikely to happen for us anyway.
+fn handle_rng_error(e: getrandom::Error) {
+    match e {
+        getrandom::Error::UNSUPPORTED | getrandom::Error::UNEXPECTED => {
+            panic!("RNG failed with {e}, unable to continue");
+        }
+        _ => {
+            let ioerr = std::io::Error::from(e);
+            match ioerr.kind() {
+                ErrorKind::UnexpectedEof | ErrorKind::Interrupted | ErrorKind::WouldBlock => {}
+                _ => panic!("RNG failed with {e}, unable to continue"),
+            }
+        }
+    }
+}
+
+/// Return a random u64 number
+///
+/// # Panics
+///
+/// This function may panic, se [`handle_rng_error`] for details
+fn random() -> u64 {
+    loop {
+        match getrandom::u64() {
+            Ok(v) => return v,
+            Err(e) => handle_rng_error(e),
+        }
+    }
+}
+
+/// Return a random alphanumeric character (`[A-Za-z0-9]`).
+///
+/// # Panics
+///
+/// This function may panic, se [`handle_rng_error`] for details
+fn random_alphanumeric() -> u8 {
+    loop {
+        let byte = u8::try_from(random() & 0xff).expect("Cannot happen");
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' => return byte,
+            _ => {}
+        }
+    }
+}
+
+/// Fill the given `dest` with random data
+///
+/// # Panics
+///
+/// This function may panic, se [`handle_rng_error`] for details
+fn random_fill(dest: &mut [u8]) {
+    loop {
+        match getrandom::fill(dest) {
+            Ok(()) => return,
+            Err(e) => handle_rng_error(e),
+        }
+    }
+}
 
 /// Generate of a random sequence of alphanumeric
 /// characters (`[A-Za-z0-9]`).
@@ -54,7 +129,9 @@ impl RandomAlphaNumeric<String> for String {
     /// Generate a String of length `length` filled with alphanumeric
     //  characters (`[A-Za-z0-9]`).
     fn random_alphanumeric(length: usize) -> String {
-        (0..length).map(|_| fastrand::alphanumeric()).collect()
+        (0..length)
+            .map(|_| char::from(random_alphanumeric()))
+            .collect()
     }
 }
 
@@ -62,10 +139,7 @@ impl RandomAlphaNumeric<Vec<u8>> for Vec<u8> {
     /// Generate a `Vec<u8>` of size `length` filled with alphanumeric
     //  characters (`[A-Za-z0-9]`).
     fn random_alphanumeric(length: usize) -> Vec<u8> {
-        (0..length)
-            .map(|_| fastrand::alphanumeric())
-            .map(|c| u8::try_from(c).unwrap_or(b'?'))
-            .collect()
+        (0..length).map(|_| random_alphanumeric()).collect()
     }
 }
 
@@ -112,12 +186,48 @@ macro_rules! impl_random_value {
     ($type:ty, $func:ident) => {
         impl RandomValue for $type {
             fn random() -> Self {
-                fastrand::$func(..)
+                let r = random() & u64::from(Self::MAX);
+                Self::try_from(r).unwrap_or(0)
             }
         }
         impl RandomValueRanged for $type {
             fn random_in_range(range: impl RangeBounds<Self>) -> Self {
-                fastrand::$func(range)
+                let start = match range.start_bound() {
+                    Bound::Included(&n) => n,
+                    Bound::Excluded(&n) => n.saturating_add(1),
+                    Bound::Unbounded => 0,
+                };
+
+                let end = match range.end_bound() {
+                    Bound::Included(&n) => n,
+                    Bound::Excluded(&n) => n.saturating_sub(1),
+                    Bound::Unbounded => Self::MAX,
+                };
+
+                if start >= end {
+                    return start;
+                }
+
+                // Special case: full range [0, MAX] has no bias, accept any value
+                if start == 0 && end == Self::MAX {
+                    return Self::random();
+                }
+
+                let range_size = end - start + 1;
+                // Bias zone: when the max value doesn't divide evenly by range_size,
+                // using modulo causes bias. e.g. for u8 (0-255) with range 0..9 (size=10):
+                // 256 % 10 = 6, so we have 6 extra mappings (250→0, 251→1, ... 255→5)
+                // making 0-5 more likely than 6-9. We avoid this by simply ignoring
+                // any value within that bias zone.
+                let bias_zone = Self::MAX % range_size;
+                let ignore_threshold = Self::MAX - bias_zone;
+                loop {
+                    let r = Self::random();
+                    if r >= ignore_threshold {
+                        continue;
+                    }
+                    return start + (r % range_size);
+                }
             }
         }
     };
@@ -127,28 +237,36 @@ impl_random_value!(u64, u64);
 impl_random_value!(u32, u32);
 impl_random_value!(u8, u8);
 
-impl RandomValue01 for f64 {
-    fn random01_inclusive() -> Self {
-        fastrand::f64_inclusive()
-    }
-    fn random01_exclusive() -> Self {
-        fastrand::f64()
-    }
+macro_rules! impl_random_value01 {
+    ($type:ty, $func:ident) => {
+        impl RandomValue01 for $type {
+            #[allow(clippy::cast_precision_loss)]
+            fn random01_inclusive() -> Self {
+                // random() gives us a u64, we want mantissa digits (md) bits of randomness,
+                // then divide by 2^(md) - 1
+                const SCALE: u64 = (1u64 << <$type>::MANTISSA_DIGITS) - 1u64;
+                const SHIFT: usize = 64 - <$type>::MANTISSA_DIGITS as usize;
+                ((random() >> SHIFT) as $type) / SCALE as $type
+            }
+            #[allow(clippy::cast_precision_loss)]
+            fn random01_exclusive() -> Self {
+                // random() gives us a u64, we want mantissa digits (md) bits of randomness,
+                // then multiply by 2^-(md)
+                const SCALE: $type = 1.0 / ((1u64 << <$type>::MANTISSA_DIGITS) as $type);
+                const SHIFT: usize = 64 - <$type>::MANTISSA_DIGITS as usize;
+                ((random() >> SHIFT) as $type) * SCALE
+            }
+        }
+    };
 }
 
-impl RandomValue01 for f32 {
-    fn random01_inclusive() -> Self {
-        fastrand::f32_inclusive()
-    }
-    fn random01_exclusive() -> Self {
-        fastrand::f32()
-    }
-}
+impl_random_value01!(f64, f64);
+impl_random_value01!(f32, f32);
 
 impl RandomValue for bool {
     /// Returns a random `true` or `false`.
     fn random() -> Self {
-        fastrand::bool()
+        random() & 0x1 == 0x1
     }
 }
 
@@ -157,33 +275,11 @@ impl RandomValue for bool {
 pub trait RandomFill {
     /// Fill the entire type with random values.
     fn random_fill(&mut self);
-
-    /// Fill a range within the type with random values.
-    fn random_fill_range(&mut self, range: impl RangeBounds<usize>);
 }
 
 impl<T: AsMut<[u8]>> RandomFill for T {
     fn random_fill(&mut self) {
-        fastrand::fill(self.as_mut());
-    }
-
-    fn random_fill_range(&mut self, range: impl RangeBounds<usize>) {
-        let slice = self.as_mut();
-        let len = slice.len();
-
-        let start = match range.start_bound() {
-            Bound::Included(&n) => n,
-            Bound::Excluded(&n) => n + 1,
-            Bound::Unbounded => 0,
-        };
-
-        let end = match range.end_bound() {
-            Bound::Included(&n) => n + 1,
-            Bound::Excluded(&n) => n,
-            Bound::Unbounded => len,
-        };
-
-        fastrand::fill(&mut slice[start..end]);
+        random_fill(self.as_mut());
     }
 }
 
@@ -257,18 +353,13 @@ mod tests {
         vec.random_fill();
         assert!(vec.iter().any(|&b| b != 0));
 
+        // Test with subslice
         let mut data = [0u8; 20];
-        data.random_fill_range(5..15);
+        data[5..15].as_mut().random_fill();
         assert_eq!(&data[0..5], &[0, 0, 0, 0, 0]);
         assert_eq!(&data[15..20], &[0, 0, 0, 0, 0]);
         // You'd expect at least one of them to be not 0,
         // even with Dilbert's RNG
         assert!(data[5..15].iter().any(|&b| b != 0));
-
-        let mut data = [0u8; 10];
-        data.random_fill_range(2..=7);
-        assert_eq!(&data[0..2], &[0, 0]);
-        assert_eq!(&data[8..10], &[0, 0]);
-        assert!(data[2..=7].iter().any(|&b| b != 0));
     }
 }
