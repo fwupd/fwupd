@@ -75,7 +75,7 @@ fu_release_get_firmware_basename(FuRelease *self) G_GNUC_NON_NULL(1);
 void
 fu_release_set_request(FuRelease *self, FuEngineRequest *request) G_GNUC_NON_NULL(1);
 void
-fu_release_set_device(FuRelease *self, FuDevice *device) G_GNUC_NON_NULL(1);
+fu_release_set_device(FuRelease *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
 fu_release_set_remote(FuRelease *self, FwupdRemote *remote) G_GNUC_NON_NULL(1);
 void
