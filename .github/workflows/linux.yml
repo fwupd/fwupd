@@ -156,6 +156,8 @@ jobs:
         run: |
           sudo apt install -qq --yes meson
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+      - name: Vendor Rust dependencies
+        run: cargo vendor
       - name: Build
         run: |
           meson setup build \
