@@ -12,6 +12,44 @@ permissions:
   contents: read
 
 jobs:
+  library:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Refresh dependencies
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11
+          sudo apt update -qq
+      - name: Install dependencies
+        run: |
+          sudo apt install -qq --yes meson
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+      - name: Build
+        run: |
+          meson setup build \
+                      -Dbuild=library \
+                      -Ddocs=disabled \
+                      -Dman=false \
+                      -Dauto_features=disabled \
+                      -Dtests=false
+          ninja -C build dist
+      - name: Save version
+        id: version
+        run: |
+          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >>"$GITHUB_OUTPUT"
+      - name: Save tarball
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tarball
+          path: ${{ github.workspace }}/build/meson-dist/*xz
+
   build:
     runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     needs: library
@@ -136,44 +174,6 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  library:
-    runs-on: ubuntu-latest
-    env:
-      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Refresh dependencies
-        run: |
-          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11
-          sudo apt update -qq
-      - name: Install dependencies
-        run: |
-          sudo apt install -qq --yes meson
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-      - name: Build
-        run: |
-          meson setup build \
-                      -Dbuild=library \
-                      -Ddocs=disabled \
-                      -Dman=false \
-                      -Dauto_features=disabled \
-                      -Dtests=false
-          ninja -C build dist
-      - name: Save version
-        id: version
-        run: |
-          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >>"$GITHUB_OUTPUT"
-      - name: Save tarball
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: tarball
-          path: ${{ github.workspace }}/build/meson-dist/*xz
 
   publish-docs:
     if: ${{ inputs.publish }}
