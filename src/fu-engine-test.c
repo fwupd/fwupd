@@ -992,6 +992,54 @@ fu_engine_get_details_missing_func(void)
 }
 
 static void
+fu_engine_get_details_refcount_func(void)
+{
+	FuDevice *device_tmp;
+	FwupdRelease *release_tmp;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get details */
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
+	stream = fu_input_stream_from_path(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	devices = fu_engine_get_details(engine, request, stream, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+	release_tmp = fu_device_get_release_default(device_tmp);
+	g_assert_nonnull(release_tmp);
+
+	/* the release only has a weak reference on the device, so unreferencing
+	 * the device also destroys the release -- and the stream it holds, which
+	 * was built from the client file descriptor */
+	g_object_add_weak_pointer(G_OBJECT(device_tmp), (gpointer *)&device_tmp);
+	g_object_add_weak_pointer(G_OBJECT(release_tmp), (gpointer *)&release_tmp);
+	g_ptr_array_unref(devices);
+	g_assert_null(device_tmp);
+	g_assert_null(release_tmp);
+}
+
+static void
 fu_engine_version_highest_func(void)
 {
 	FwupdRelease *rel;
@@ -3565,6 +3613,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);
+	g_test_add_func("/fwupd/engine/get-details-refcount", fu_engine_get_details_refcount_func);
 	g_test_add_func("/fwupd/engine/device-unlock", fu_engine_device_unlock_func);
 	g_test_add_func("/fwupd/engine/device-equivalent", fu_engine_device_equivalent_func);
 	g_test_add_func("/fwupd/engine/device-md-set-flags", fu_engine_device_md_set_flags_func);
