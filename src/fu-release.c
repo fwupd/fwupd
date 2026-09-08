@@ -24,7 +24,7 @@
 struct _FuRelease {
 	FwupdRelease parent_instance;
 	FuEngineRequest *request;
-	FuDevice *device;
+	FuDevice *device; /* no ref */
 	FwupdRemote *remote;
 	FuConfig *config;
 	FuInputStream *stream;
@@ -148,20 +148,30 @@ fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_o
 /**
  * fu_release_set_device:
  * @self: a #FuRelease
- * @device: (nullable): a #FuDevice
+ * @device: (not nullable): a #FuDevice
  *
  * Sets the device this release should use when checking requirements.
+ *
+ * NOTE: No reference is taken on @device, as the device typically owns the release.
  **/
 void
 fu_release_set_device(FuRelease *self, FuDevice *device)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
+	g_return_if_fail(FU_IS_DEVICE(device));
+
+	if (self->device == device)
+		return;
 
 	/* make tests easier */
 	fu_device_convert_instance_ids(device);
-
-	g_set_object(&self->device, device);
 	fu_release_set_device_version_old(self, fu_device_get_version(device));
+
+	/* there is no ref on device to prevent a loop */
+	if (self->device != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(self->device), (gpointer *)&self->device);
+	g_object_add_weak_pointer(G_OBJECT(device), (gpointer *)&self->device);
+	self->device = device;
 }
 
 /**
@@ -169,6 +179,8 @@ fu_release_set_device(FuRelease *self, FuDevice *device)
  * @self: a #FuRelease
  *
  * Gets the device this release was loaded for.
+ *
+ * NOTE: This is a weak reference, and may be %NULL if the device has been destroyed.
  *
  * Returns: (transfer none) (nullable): device
  **/
@@ -1429,7 +1441,7 @@ fu_release_finalize(GObject *obj)
 	if (self->request != NULL)
 		g_object_unref(self->request);
 	if (self->device != NULL)
-		g_object_unref(self->device);
+		g_object_remove_weak_pointer(G_OBJECT(self->device), (gpointer *)&self->device);
 	if (self->remote != NULL)
 		g_object_unref(self->remote);
 	if (self->config != NULL)
