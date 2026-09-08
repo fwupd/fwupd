@@ -164,7 +164,7 @@ jobs:
                       -Dman=false \
                       -Dauto_features=disabled \
                       -Dtests=false
-          ninja -C build dist
+          meson dist -C build --include-subprojects
       - name: Save version
         id: version
         run: |
