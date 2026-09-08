@@ -10,9 +10,11 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 
 mod gerror;
+mod grefstring;
 mod gstring;
 
 pub use gerror::*;
+pub use grefstring::*;
 pub use gstring::*;
 
 /// Typedef for a `gboolean`.
