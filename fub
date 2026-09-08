@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
+# Wrapper script for fub.
+
+# Resolve symlinks so SCRIPT_DIR is always the repo root,
+# even when invoked via venv/bin/fub -> ../../fub
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+
+# A marker file placed by fub init so we know it's our directory
+MARKER_FILE="fwupd.venv"
+
+# This is a bit annoying but it is supposed to work without the
+# venv activate script...
+#
+# Check for -C <directory> in the arguments so we can use the right python.
+# The -C flag is consumed by the python side, we just peek at it here.
+C_DIR=""
+for i in $(seq 1 $#); do
+    arg="${!i}"
+    if [[ "$arg" = "-C" ]]; then
+        next=$((i + 1))
+        C_DIR="${!next}"
+        break
+    fi
+done
+
+# VIRTUAL_ENV is set by <venv>/bin/activate, use that or otherwise
+# search for the directory most recently created by our init.
+# A -C flag takes precedence over both.
+if [[ -n "${C_DIR}" ]]; then
+    VENV="${C_DIR}"
+    if [[ -n "${VIRTUAL_ENV}" ]] && [[ "$(realpath "${VIRTUAL_ENV}")" != "$(realpath "${C_DIR}")" ]]; then
+        echo "${C_DIR} must match current virtualenv, run 'deactivate' to drop the virtualenv"
+        exit 1
+    fi
+elif [[ -n "${VIRTUAL_ENV}" ]]; then
+    VENV="${VIRTUAL_ENV}"
+else
+    # Find the most recent stamped venv
+    VENV="$(find ./ -type f -name "${MARKER_FILE}" -exec ls -dt {} + | head -n 1 | xargs dirname 2>/dev/null)"
+fi
+
+if [[ -n "${VENV}" ]] && [[ -f "${VENV}/bin/python3" ]]; then
+    PYTHON="${VENV}/bin/python3"
+else
+    PYTHON=python3
+fi
+
+exec "${PYTHON}" "${SCRIPT_DIR}/contrib/fub/__main__.py" "$@"
