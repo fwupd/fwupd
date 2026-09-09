@@ -14,5 +14,7 @@ G_BEGIN_DECLS
 
 const GType *
 fu_firmware_get_image_gtypes(FuFirmware *self, guint *n_gtypes) G_GNUC_NON_NULL(1);
+GByteArray *
+fu_firmware_write_internal(FuFirmware *self, GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

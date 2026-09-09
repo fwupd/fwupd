@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-x509-signature-private.h"
+#include "fu-firmware-private.h"
 #include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
@@ -219,6 +220,16 @@ fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
 	return self->subject_vendor;
 }
 
+static GByteArray *
+fu_efi_x509_signature_write(FuFirmware *firmware, GError **error)
+{
+	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
+	g_autoptr(FuX509Certificate) cert = fu_x509_certificate_new();
+	fu_x509_certificate_set_issuer(cert, fu_efi_x509_signature_get_issuer(self));
+	fu_x509_certificate_set_subject(cert, fu_efi_x509_signature_get_subject(self));
+	return fu_firmware_write_internal(FU_FIRMWARE(cert), error);
+}
+
 static gboolean
 fu_efi_x509_signature_parse(FuFirmware *firmware,
 			    FuInputStream *stream,
@@ -299,6 +310,7 @@ fu_efi_x509_signature_class_init(FuEfiX509SignatureClass *klass)
 	object_class->finalize = fu_efi_x509_signature_finalize;
 	firmware_class->export = fu_efi_x509_signature_export;
 	firmware_class->parse = fu_efi_x509_signature_parse;
+	firmware_class->write = fu_efi_x509_signature_write;
 	firmware_class->convert_version = fu_efi_x509_signature_convert_version;
 }
 
