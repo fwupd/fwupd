@@ -4,7 +4,7 @@
 
   <!ELEMENT dependency (distro*)>
   <!ATTLIST dependency id   CDATA #REQUIRED
-                       type CDATA #IMPLIED>
+                       type (build) #IMPLIED>
 
   <!ELEMENT distro (control | build-target | package)*>
   <!ATTLIST distro id CDATA #REQUIRED>
