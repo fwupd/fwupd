@@ -10,7 +10,7 @@
   <!ATTLIST distro id CDATA #REQUIRED>
 
   <!ELEMENT package (#PCDATA)>
-  <!ATTLIST package variant CDATA #IMPLIED>
+  <!ATTLIST package variant (android | aarch64 | i386 | mingw64 | s390x | x86_64 ) #IMPLIED>
 
   <!ELEMENT control (version?, inclusive*, exclusive*)>
 
