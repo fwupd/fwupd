@@ -15,7 +15,9 @@
 //! `fwupd` crate, producing a static library that can be linked into other
 //! components of fwupd.
 
+#[macro_use]
+#[allow(unused)]
+pub(crate) mod glib;
 pub mod compressor;
 pub mod cstream;
-pub mod glib;
 pub mod streams;
