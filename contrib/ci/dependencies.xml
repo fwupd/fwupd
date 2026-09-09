@@ -15,8 +15,11 @@
   <!ELEMENT control (version?, inclusive*, exclusive*)>
 
   <!ELEMENT version (#PCDATA)>
-  <!ELEMENT inclusive (#PCDATA)>
-  <!ELEMENT exclusive (#PCDATA)>
+  <!ELEMENT inclusive EMPTY>
+  <!ATTLIST inclusive arch (amd64 | arm64 | armhf | i386 | ia64 ) #REQUIRED>
+
+  <!ELEMENT exclusive EMPTY>
+  <!ATTLIST exclusive arch (amd64 | arm64 | armhf | i386 | ia64 ) #REQUIRED>
 
   <!ELEMENT native EMPTY>
   <!ELEMENT multi-arch EMPTY>
@@ -101,10 +104,10 @@
   <dependency id="fwupd-unsigned-dev">
     <distro id="debian">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
       <package variant="aarch64" />
       <package variant="i386" />
@@ -464,13 +467,13 @@
   <dependency id="libjaylink-dev">
     <distro id="debian">
       <control>
-        <exclusive>ia64</exclusive>
+        <exclusive arch="ia64"/>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <exclusive>ia64</exclusive>
+        <exclusive arch="ia64"/>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -517,10 +520,10 @@
     </distro>
     <distro id="debian">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
       <multi-arch />
       <package variant="aarch64">gnu-efi</package>
@@ -529,10 +532,10 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
       <package variant="x86_64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
@@ -997,18 +1000,18 @@
     </distro>
     <distro id="debian">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
     </distro>
     <distro id="ubuntu">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
       <package variant="x86_64" />
     </distro>
@@ -1695,10 +1698,10 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
+        <inclusive arch="amd64"/>
+        <inclusive arch="arm64"/>
+        <inclusive arch="armhf"/>
+        <inclusive arch="i386"/>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
