@@ -1772,7 +1772,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="build-essential" type="build">
+  <dependency type="build" id="build-essential">
     <distro id="debian" />
     <distro id="ubuntu" />
   </dependency>
