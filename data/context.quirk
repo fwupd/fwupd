@@ -19,3 +19,7 @@ Flags = ignore-efivars-free-space
 # Manufacturer="VMware, Inc.", ProductName="VMware20,1"
 [4a8a248d-9e6b-5216-b83e-6cdf9bde8d0d]
 Flags = ignore-efivars-free-space
+
+# Manufacturer="QEMU"
+[3486fece-d7a3-58e0-a818-dd3796662b51]
+Flags = ignore-efivars-free-space
