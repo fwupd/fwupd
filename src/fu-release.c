@@ -1356,7 +1356,7 @@ const gchar *
 fu_release_get_action_id(FuRelease *self)
 {
 	/* relax authentication checks for removable devices */
-	if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+	if (self->device != NULL && !fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 		if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD))
 				return "org.freedesktop.fwupd.downgrade-hotplug-trusted";
