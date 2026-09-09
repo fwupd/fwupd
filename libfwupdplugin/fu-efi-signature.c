@@ -84,7 +84,8 @@ fu_efi_signature_get_kind(FuEfiSignature *self)
 	return priv->kind;
 }
 
-static void
+/* private */
+void
 fu_efi_signature_set_owner(FuEfiSignature *self, const gchar *owner)
 {
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);

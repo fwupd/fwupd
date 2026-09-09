@@ -14,5 +14,7 @@ FuEfiSignature *
 fu_efi_signature_new(FuEfiSignatureKind kind);
 void
 fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind);
+void
+fu_efi_signature_set_owner(FuEfiSignature *self, const gchar *owner) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

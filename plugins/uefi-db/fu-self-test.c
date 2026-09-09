@@ -140,12 +140,12 @@ fu_uefi_db_external_locked_device_added_func(void)
 }
 
 static GBytes *
-fu_uefi_db_self_test_build_siglist(GBytes *der, GError **error)
+fu_uefi_db_self_test_build_siglist(const gchar *subject, GError **error)
 {
 	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 
-	fu_firmware_set_bytes(FU_FIRMWARE(sig), der);
+	fu_efi_x509_signature_set_subject(sig, subject);
 	if (!fu_firmware_add_image(siglist, FU_FIRMWARE(sig), error))
 		return NULL;
 	return fu_firmware_write(siglist, error);
@@ -162,12 +162,8 @@ fu_uefi_db_default_ids_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FuX509Certificate) crt_db = fu_x509_certificate_new();
-	g_autoptr(FuX509Certificate) crt_default = fu_x509_certificate_new();
 	g_autoptr(GBytes) blob_db = NULL;
 	g_autoptr(GBytes) blob_default = NULL;
-	g_autoptr(GBytes) der_db = NULL;
-	g_autoptr(GBytes) der_default = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_GNUTLS
@@ -196,21 +192,11 @@ fu_uefi_db_default_ids_func(void)
 	g_assert_true(ret);
 	g_assert_true(fu_context_has_hwid_flag(ctx, "use-db-default-ids"));
 
-	/* generate test certificates at runtime */
-	fu_x509_certificate_set_subject(crt_db, "O=Test,CN=Test UEFI CA 2011");
-	der_db = fu_firmware_write(FU_FIRMWARE(crt_db), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(der_db);
-	fu_x509_certificate_set_subject(crt_default, "O=Test,CN=Test UEFI CA 2023");
-	der_default = fu_firmware_write(FU_FIRMWARE(crt_default), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(der_default);
-
 	/* build signature lists */
-	blob_db = fu_uefi_db_self_test_build_siglist(der_db, &error);
+	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_db);
-	blob_default = fu_uefi_db_self_test_build_siglist(der_default, &error);
+	blob_default = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2023", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_default);
 
@@ -274,7 +260,6 @@ fu_uefi_db_no_default_ids_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuX509Certificate) crt_db = fu_x509_certificate_new();
 	g_autoptr(GBytes) blob_db = NULL;
-	g_autoptr(GBytes) der_db = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_GNUTLS
@@ -291,11 +276,7 @@ fu_uefi_db_no_default_ids_func(void)
 	g_assert_false(fu_context_has_hwid_flag(ctx, "use-db-default-ids"));
 
 	/* generate test certificate for db */
-	fu_x509_certificate_set_subject(crt_db, "O=Test,CN=Test UEFI CA 2011");
-	der_db = fu_firmware_write(FU_FIRMWARE(crt_db), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(der_db);
-	blob_db = fu_uefi_db_self_test_build_siglist(der_db, &error);
+	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_db);
 
