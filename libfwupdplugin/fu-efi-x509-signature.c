@@ -219,6 +219,24 @@ fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
 	return self->subject_vendor;
 }
 
+static GByteArray *
+fu_efi_x509_signature_write(FuFirmware *firmware, GError **error)
+{
+	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
+	g_autoptr(FuX509Certificate) cert = fu_x509_certificate_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	fu_x509_certificate_set_issuer(cert, fu_efi_x509_signature_get_issuer(self));
+	fu_x509_certificate_set_subject(cert, fu_efi_x509_signature_get_subject(self));
+	blob = fu_firmware_write(FU_FIRMWARE(cert), error);
+	if (blob == NULL)
+		return NULL;
+	fu_firmware_set_bytes(firmware, blob);
+
+	/* set bytes */
+	return FU_FIRMWARE_CLASS(fu_efi_x509_signature_parent_class)->write(firmware, error);
+}
+
 static gboolean
 fu_efi_x509_signature_parse(FuFirmware *firmware,
 			    FuInputStream *stream,
@@ -299,6 +317,7 @@ fu_efi_x509_signature_class_init(FuEfiX509SignatureClass *klass)
 	object_class->finalize = fu_efi_x509_signature_finalize;
 	firmware_class->export = fu_efi_x509_signature_export;
 	firmware_class->parse = fu_efi_x509_signature_parse;
+	firmware_class->write = fu_efi_x509_signature_write;
 	firmware_class->convert_version = fu_efi_x509_signature_convert_version;
 }
 

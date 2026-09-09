@@ -55,6 +55,12 @@ if get_option('tests')
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
   )
+  install_data(
+    [
+      'uefi-dbx.quirk',
+    ],
+    install_dir: installed_test_datadir,
+  )
 endif
 
 dbxtool = executable(

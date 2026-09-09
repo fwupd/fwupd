@@ -10,8 +10,98 @@
 
 #include "fu-context-private.h"
 #include "fu-efi-signature-private.h"
+#include "fu-efi-x509-signature-private.h"
 #include "fu-uefi-dbx-device.h"
 #include "fu-uefi-device-private.h"
+
+static void
+fu_uefi_dbx_version_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuEfiSignature) sig_dbx1 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+	g_autoptr(FuEfiSignature) sig_dbx2 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+	g_autoptr(FuEfiX509Signature) sig_kek = fu_efi_x509_signature_new();
+	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) siglist_kek = fu_efi_signature_list_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_dbx = NULL;
+	g_autoptr(GBytes) blob_kek = NULL;
+	g_autoptr(GBytes) csum1 = NULL;
+	g_autoptr(GBytes) csum2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_GNUTLS
+	/* nt possible to generate a certificate */
+	g_test_skip("this test requires GnuTLS");
+	return;
+#endif
+
+	/* do not save silo */
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create a plausible KEK */
+	fu_efi_x509_signature_set_issuer(sig_kek, "C=UK,O=fwupd,CN=fwupd root CA 2012");
+	fu_efi_x509_signature_set_subject(sig_kek,
+					  "C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
+	fu_firmware_add_image(siglist_kek, FU_FIRMWARE(sig_kek), NULL);
+	blob_kek = fu_firmware_write(siglist_kek, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_kek);
+	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
+	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
+	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
+					      FU_EFIVARS_GUID_EFI_GLOBAL,
+					      "KEK",
+					      blob_kek,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create a plausible dbx */
+	csum1 =
+	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
+				 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum1);
+	fu_efi_signature_set_owner(sig_dbx1, FU_EFI_SIGNATURE_GUID_MICROSOFT);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx1), csum1);
+	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx1), NULL);
+
+	csum2 =
+	    fu_bytes_from_string("96275DFD6282A522B011177EE049296952AC794832091F937FBBF92869028629",
+				 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum2);
+	fu_efi_signature_set_owner(sig_dbx2, FU_EFI_SIGNATURE_GUID_MICROSOFT);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx2), csum2);
+	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx2), NULL);
+
+	blob_dbx = fu_firmware_write(siglist_dbx, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_dbx);
+	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
+					      FU_EFIVARS_GUID_SECURITY_DATABASE,
+					      "dbx",
+					      blob_dbx,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* detect version number */
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "20260402");
+}
 
 static void
 fu_uefi_dbx_zero_func(void)
@@ -174,6 +264,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
+	g_test_add_func("/uefi-dbx/version", fu_uefi_dbx_version_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
 	return g_test_run();
 }
