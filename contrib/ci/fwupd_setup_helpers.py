@@ -202,9 +202,13 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     continue
                 for control_parent in distro.findall("control"):
                     for obj in control_parent.findall("inclusive"):
-                        inclusive.append(obj.text)
+                        if "arch" not in obj.attrib:
+                            continue
+                        inclusive.append(obj.attrib["arch"])
                     for obj in control_parent.findall("exclusive"):
-                        exclusive.append(obj.text)
+                        if "arch" not in obj.attrib:
+                            continue
+                        exclusive.append(obj.attrib["arch"])
                     for obj in control_parent.findall("version"):
                         if obj.text:
                             version = f" {obj.text}"
