@@ -6,7 +6,7 @@
   <!ATTLIST dependency id   CDATA #REQUIRED
                        type CDATA #IMPLIED>
 
-  <!ELEMENT distro (control | native | multi-arch | build-indep | package)*>
+  <!ELEMENT distro (control | build-target | package)*>
   <!ATTLIST distro id CDATA #REQUIRED>
 
   <!ELEMENT package (#PCDATA)>
@@ -21,9 +21,8 @@
   <!ELEMENT exclusive EMPTY>
   <!ATTLIST exclusive arch (amd64 | arm64 | armhf | i386 | ia64 ) #REQUIRED>
 
-  <!ELEMENT native EMPTY>
-  <!ELEMENT multi-arch EMPTY>
-  <!ELEMENT build-indep EMPTY>
+  <!ELEMENT build-target EMPTY >
+  <!ATTLIST build-target mode (native | multi-arch | build-indep) #REQUIRED>
 ]>
 <dependencies>
   <dependency id="hwdata">
@@ -53,7 +52,7 @@
   <dependency id="7zip">
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -112,7 +111,7 @@
       <package variant="aarch64" />
       <package variant="i386" />
       <package variant="x86_64" />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
@@ -202,7 +201,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -220,7 +219,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -241,7 +240,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -262,7 +261,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -285,7 +284,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -415,7 +414,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -434,7 +433,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -469,7 +468,7 @@
       <control>
         <exclusive arch="ia64"/>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -525,7 +524,7 @@
         <inclusive arch="armhf"/>
         <inclusive arch="i386"/>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
       <package variant="aarch64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
       <package variant="x86_64">gnu-efi</package>
@@ -579,7 +578,7 @@
       <control>
         <version>(>= 2.68.0)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -620,7 +619,7 @@
       <control>
         <version>(>= 1.80)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -659,7 +658,7 @@
       <control>
         <version>(>= 3.6.0)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
       <package variant="aarch64">libgnutls28-dev</package>
       <package variant="i386">libgnutls28-dev</package>
       <package variant="s390x">libgnutls28-dev</package>
@@ -732,7 +731,7 @@
       <control>
         <version>(>= 0.3.19)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -763,7 +762,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -781,7 +780,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -795,7 +794,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency id="libgirepository1.0-dev">
@@ -822,7 +821,7 @@
       <control>
         <version>(>= 1.0.27)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -834,12 +833,12 @@
   </dependency>
   <dependency id="libicu-dev">
     <distro id="debian">
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency id="libidn2-0-dev">
     <distro id="debian">
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency id="libcurl4-gnutls-dev">
@@ -861,7 +860,7 @@
       <control>
         <version>(>= 7.62.0)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -884,7 +883,7 @@
   <dependency id="libumockdev-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -913,7 +912,7 @@
   <dependency id="locales">
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -959,7 +958,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="debian">
-      <native />
+      <build-target mode="native" />
       <package />
     </distro>
     <distro id="fedora">
@@ -982,7 +981,7 @@
   </dependency>
   <dependency id="libstd-rust-dev">
     <distro id="debian">
-      <multi-arch />
+      <build-target mode="multi-arch" />
       <package />
     </distro>
   </dependency>
@@ -1019,7 +1018,7 @@
   <dependency id="gir1.2-gio-2.0-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1028,7 +1027,7 @@
   <dependency id="gir1.2-glib-2.0-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1039,7 +1038,7 @@
   <dependency id="gir1.2-gobject-2.0-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1055,7 +1054,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1125,7 +1124,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1146,7 +1145,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1164,7 +1163,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1182,7 +1181,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1193,7 +1192,7 @@
   <dependency id="libqrtr-glib-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency id="libpolkit-gobject-1-dev">
@@ -1211,7 +1210,7 @@
       <control>
         <version>(>= 0.103)</version>
       </control>
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -1252,7 +1251,7 @@
   <dependency id="python3-dbus">
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="arch">
       <package variant="x86_64">python-dbus</package>
@@ -1294,7 +1293,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1305,7 +1304,7 @@
   <dependency id="python3-gi">
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="arch">
       <package variant="x86_64">python-gobject</package>
@@ -1339,7 +1338,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1410,7 +1409,7 @@
       <package variant="android" />
     </distro>
     <distro id="debian">
-      <build-indep />
+      <build-target mode="build-indep" />
     </distro>
     <distro id="freebsd">
       <package>py312-gi-docgen</package>
@@ -1505,7 +1504,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1564,7 +1563,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1620,7 +1619,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <native />
+      <build-target mode="native" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1694,7 +1693,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <multi-arch />
+      <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
       <control>

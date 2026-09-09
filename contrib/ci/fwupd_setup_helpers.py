@@ -194,7 +194,14 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                 continue
             control = ""
             version = ""
-            is_build_indep = bool(distro.findall("build-indep"))
+            build_target = distro.find("build-target")
+            if build_target is not None:
+                if "mode" not in build_target.attrib:
+                    continue
+                build_target = build_target.attrib.get("mode")
+            else:
+                build_target = None
+            is_build_indep = build_target == "build-indep"
             if add_control:
                 inclusive = []
                 exclusive = []
@@ -219,12 +226,12 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                         exclusive = f"!{exclusive}"
                     control = f" [{inclusive}{exclusive}]"
 
-            if cross and distro.findall("multi-arch"):
+            if cross and build_target == "multi-arch":
                 deb_arch = {v: k for k, v in ARCH_TO_DEPS_MAP.items()}.get(
                     variant, variant
                 )
                 arch_suffix = f":{deb_arch}"
-            elif distro.findall("native"):
+            elif build_target == "native":
                 arch_suffix = ":native"
             else:
                 arch_suffix = ""
