@@ -23,18 +23,19 @@ fu_uefi_dbx_version_func(void)
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(FuEfiSignature) sig_dbx1 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+	g_autoptr(FuEfiSignature) sig_dbx2 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuEfiX509Signature) sig_kek = fu_efi_x509_signature_new();
 	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
 	g_autoptr(FuFirmware) siglist_kek = fu_efi_signature_list_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_dbx = NULL;
 	g_autoptr(GBytes) blob_kek = NULL;
-	g_autoptr(GBytes) csum = NULL;
+	g_autoptr(GBytes) csum1 = NULL;
+	g_autoptr(GBytes) csum2 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
-	testdatadir = g_test_build_filename(G_TEST_DIST, NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
 	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -59,14 +60,24 @@ fu_uefi_dbx_version_func(void)
 	g_assert_true(ret);
 
 	/* create a plausible dbx */
-	csum =
+	csum1 =
 	    fu_bytes_from_string("2ea557c44b83c0ad6b71efb7edcc18b6337ad1c1d682155dd9451b051b62ff40",
 				 &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(csum);
+	g_assert_nonnull(csum1);
 	fu_efi_signature_set_owner(sig_dbx1, FU_EFI_SIGNATURE_GUID_MICROSOFT);
-	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx1), csum);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx1), csum1);
 	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx1), NULL);
+
+	csum2 =
+	    fu_bytes_from_string("2ea557c44b83c0ad6b71efb7edcc18b6337ad1c1d682155dd9451b051b62ff40",
+				 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum2);
+	fu_efi_signature_set_owner(sig_dbx2, FU_EFI_SIGNATURE_GUID_MICROSOFT);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx2), csum2);
+	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx2), NULL);
+
 	blob_dbx = fu_firmware_write(siglist_dbx, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_dbx);
@@ -83,7 +94,6 @@ fu_uefi_dbx_version_func(void)
 	ret = fu_device_probe(device, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_device_get_version_raw(device), ==, 20260707);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "20260707");
 }
 

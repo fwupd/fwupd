@@ -1650,35 +1650,6 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
 }
 
 /**
- * fu_firmware_write_internal:
- * @self: a #FuFirmware
- * @error: (nullable): optional return location for an error
- *
- * Writes a firmware, typically packing the images into a binary blob.
- *
- * Returns: (transfer full): a #GByteArray
- *
- * Since: 2.1.8
- **/
-GByteArray *
-fu_firmware_write_internal(FuFirmware *self, GError **error)
-{
-	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
-
-	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	if (klass->write == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no support for ->write");
-		return NULL;
-	}
-	return klass->write(self, error);
-}
-
-/**
  * fu_firmware_write:
  * @self: a #FuFirmware
  * @error: (nullable): optional return location for an error

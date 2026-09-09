@@ -225,9 +225,15 @@ fu_efi_x509_signature_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
 	g_autoptr(FuX509Certificate) cert = fu_x509_certificate_new();
+	g_autoptr(GBytes) blob = NULL;
+
 	fu_x509_certificate_set_issuer(cert, fu_efi_x509_signature_get_issuer(self));
 	fu_x509_certificate_set_subject(cert, fu_efi_x509_signature_get_subject(self));
-	return fu_firmware_write_internal(FU_FIRMWARE(cert), error);
+	blob = fu_firmware_write(FU_FIRMWARE(cert), error);
+	fu_firmware_set_bytes(firmware, blob);
+
+	/* set bytes */
+	return FU_FIRMWARE_CLASS(fu_efi_x509_signature_parent_class)->write(firmware, error);
 }
 
 static gboolean
