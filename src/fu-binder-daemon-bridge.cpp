@@ -47,7 +47,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 	const gchar *host_vendor = fu_engine_get_host_vendor(engine);
 	const gchar *host_product = fu_engine_get_host_product(engine);
 	const gchar *host_machine_id = fu_engine_get_host_machine_id(engine);
-	g_autofree gchar *host_security_id = fu_engine_get_host_security_id(engine, NULL);
+	g_autofree gchar *host_security_id = NULL;
 	g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
 	p.daemonVersion = PACKAGE_VERSION;
 	if (host_bkc != NULL)
@@ -58,6 +58,9 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 		p.hostProduct = host_product;
 	if (host_machine_id != NULL)
 		p.hostMachineId = host_machine_id;
+#ifdef HAVE_HSI
+	host_security_id = fu_engine_get_host_security_id(engine, NULL);
+#endif
 	if (host_security_id != NULL)
 		p.hostSecurityId = host_security_id;
 	p.tainted = FALSE;
