@@ -27,10 +27,10 @@ env:
   # The Arch container is force-rebuilt on schedule so we always run against the
   # latest one.
   ARCH_CONTAINER_TAG: "latest"
-  CENTOS_CONTAINER_TAG: "2026-09-10.0"
-  DEBIAN_CONTAINER_TAG: "2026-09-10.0"
-  UBUNTU_CONTAINER_TAG: "2026-09-10.0"
-  FEDORA_CONTAINER_TAG: "2026-09-10.0"
+  CENTOS_CONTAINER_TAG: "2026-09-10.2"
+  DEBIAN_CONTAINER_TAG: "2026-09-10.2"
+  UBUNTU_CONTAINER_TAG: "2026-09-10.2"
+  FEDORA_CONTAINER_TAG: "2026-09-10.2"
 
 jobs:
   find_or_create_container:

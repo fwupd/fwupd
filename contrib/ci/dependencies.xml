@@ -1226,7 +1226,7 @@
       <package>py312-pip</package>
     </distro>
     <distro id="ubuntu">
-      <package variant="android">python3-pip</package>
+      <package>python3-pip</package>
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">
