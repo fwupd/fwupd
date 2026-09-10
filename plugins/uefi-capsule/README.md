@@ -113,6 +113,13 @@ indicated by the current *BootOrder*.
 Note that this will be always needed if your firmware doesn't support
 *SetVariable* at runtime (even if *BootNext* functionality is added).
 
+Another plugin can register a virtual UEFI capsule device with
+`UefiCapsuleOnDisk=true`. This selects Capsule-on-Disk for that proxy without
+changing the method used by native ESRT devices. A bootloader which consumes
+the file without EFI runtime services can additionally set
+`UefiCapsuleNoRtSetVariable=true`. The plugin remains available for proxy
+devices when native UEFI discovery is unavailable.
+
 ### Runtime capsule updates
 
 The firmware is deployed when the OS is running, but it is only written when the

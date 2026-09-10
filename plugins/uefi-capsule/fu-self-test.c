@@ -482,6 +482,111 @@ fu_uefi_capsule_no_cod_func(void)
 	g_assert_cmpint(device_gtype, ==, FU_TYPE_UEFI_NVRAM_DEVICE);
 }
 
+static gboolean
+fu_uefi_capsule_esp_file_exists(FuVolume *esp, const gchar *filename);
+
+static void
+fu_uefi_capsule_proxy_cod_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) source = fu_device_new(ctx);
+	g_autoptr(FuDevice) source_disabled = fu_device_new(ctx);
+	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
+	g_autoptr(GError) error = NULL;
+	FuDevice *device;
+	GPtrArray *devices;
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	tmpdir = fu_temporary_directory_new("uefi-capsule-proxy-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
+	fu_context_add_esp_volume(ctx, esp);
+
+	plugin =
+	    g_object_new(FU_TYPE_UEFI_CAPSULE_PLUGIN, "context", ctx, "name", "uefi_capsule", NULL);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_device_set_id(source, "proxy-source");
+	fwupd_device_add_guid(FWUPD_DEVICE(source), "cc4cbfa9-bf9d-540b-b92b-172ce31013c1");
+	fu_device_set_metadata(source, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
+	fu_device_set_metadata_boolean(source, FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK, TRUE);
+	fu_device_set_metadata_boolean(source,
+				       FU_DEVICE_METADATA_UEFI_CAPSULE_NO_RT_SET_VARIABLE,
+				       TRUE);
+	fu_plugin_runner_device_register(plugin, source);
+
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpuint(devices->len, ==, 1);
+	device = g_ptr_array_index(devices, 0);
+	g_assert_true(FU_IS_UEFI_COD_DEVICE(device));
+	g_assert_true(
+	    fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE));
+
+	/* stage the capsule without touching EFI runtime variables */
+	fu_device_add_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
+	ret = fu_plugin_runner_write_firmware(plugin,
+					      device,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
+	    esp,
+	    "EFI/UpdateCapsule/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
+	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
+					 FU_EFIVARS_GUID_EFI_GLOBAL,
+					 "OsIndications"));
+
+	/* heads reports completion through the installed version, not EFI variables */
+	ret = fu_device_get_results(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_reboot_cleanup(plugin, device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
+	    esp,
+	    "EFI/UpdateCapsule/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
+
+	/* the global Capsule-on-Disk switch also applies to proxy devices */
+	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_TEST_ONLY);
+	ret = fu_plugin_set_config_value(plugin, "DisableCapsuleUpdateOnDisk", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_device_set_id(source_disabled, "proxy-source-disabled");
+	fwupd_device_add_guid(FWUPD_DEVICE(source_disabled),
+			      "0d063fe8-e15d-5a25-b09e-1445568ee097");
+	fu_device_set_metadata(source_disabled,
+			       FU_DEVICE_METADATA_UEFI_DEVICE_KIND,
+			       "system-firmware");
+	fu_device_set_metadata_boolean(source_disabled,
+				       FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK,
+				       TRUE);
+	fu_plugin_runner_device_register(plugin, source_disabled);
+	g_assert_cmpuint(devices->len, ==, 1);
+}
+
 static void
 fu_uefi_capsule_no_flashes_func(void)
 {
@@ -1064,6 +1169,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-capsule/nvram", fu_uefi_capsule_nvram_func);
 	g_test_add_func("/uefi-capsule/cod", fu_uefi_capsule_cod_func);
 	g_test_add_func("/uefi-capsule/no-cod", fu_uefi_capsule_no_cod_func);
+	g_test_add_func("/uefi-capsule/proxy-cod", fu_uefi_capsule_proxy_cod_func);
 	g_test_add_func("/uefi-capsule/grub", fu_uefi_capsule_grub_func);
 	return g_test_run();
 }
