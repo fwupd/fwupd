@@ -3,8 +3,7 @@
   <!ELEMENT dependencies (dependency*)>
 
   <!ELEMENT dependency (distro*)>
-  <!ATTLIST dependency id   CDATA #REQUIRED
-                       type (build) #IMPLIED>
+  <!ATTLIST dependency id CDATA #REQUIRED>
 
   <!ELEMENT distro (control | build-target | package)*>
   <!ATTLIST distro id CDATA #REQUIRED>
@@ -114,7 +113,7 @@
       <build-target mode="multi-arch" />
     </distro>
   </dependency>
-  <dependency type="build" id="noto-fonts-cjk">
+  <dependency id="noto-fonts-cjk">
     <distro id="arch">
       <package variant="x86_64" />
     </distro>
@@ -318,12 +317,12 @@
       <package>noto-sans</package>
     </distro>
   </dependency>
-  <dependency type="build" id="dh-sequence-cruft">
+  <dependency id="dh-sequence-cruft">
     <distro id="debian">
       <control />
     </distro>
   </dependency>
-  <dependency type="build" id="dh-sequence-gir">
+  <dependency id="dh-sequence-gir">
     <distro id="debian">
       <control />
     </distro>
@@ -1772,7 +1771,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="build-essential">
+  <dependency id="build-essential">
     <distro id="debian" />
     <distro id="ubuntu" />
   </dependency>
