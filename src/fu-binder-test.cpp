@@ -293,6 +293,29 @@ fu_binder_request_func(void)
 	g_assert_true(fwupd_request_has_flag(request2, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE));
 }
 
+static void
+fu_binder_plugin_func(void)
+{
+	aidl_fwupd::FwupdPlugin p;
+	g_autoptr(FwupdPlugin) plugin = fwupd_plugin_new();
+	g_autoptr(FwupdPlugin) plugin2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fwupd_plugin_set_name(plugin, "test");
+	fwupd_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+	fwupd_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+
+	p = fu_binder_plugin_to_aidl(plugin);
+	plugin2 = fu_binder_plugin_from_aidl(p, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin2);
+
+	g_assert_cmpstr(fwupd_plugin_get_name(plugin2), ==, "test");
+	g_assert_true(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_USER_WARNING));
+	g_assert_true(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE));
+	g_assert_false(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_NO_HARDWARE));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -301,5 +324,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/binder/release", fu_binder_release_func);
 	g_test_add_func("/fwupd/binder/device", fu_binder_device_func);
 	g_test_add_func("/fwupd/binder/request", fu_binder_request_func);
+	g_test_add_func("/fwupd/binder/plugin", fu_binder_plugin_func);
 	return g_test_run();
 }

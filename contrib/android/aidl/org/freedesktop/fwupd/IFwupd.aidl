@@ -8,6 +8,7 @@ import org.freedesktop.fwupd.IFwupdEventListener;
 import org.freedesktop.fwupd.FwupdProperties;
 import org.freedesktop.fwupd.FwupdRemote;
 import org.freedesktop.fwupd.FwupdHwid;
+import org.freedesktop.fwupd.FwupdPlugin;
 
 @VintfStability
 interface IFwupd {
@@ -19,4 +20,5 @@ interface IFwupd {
         FwupdRemote[] getRemotes();
         void updateMetadata(in FwupdMetadata metadata);
         FwupdHwid[] getHwids();
+        FwupdPlugin[] getPlugins();
 }

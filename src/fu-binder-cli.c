@@ -147,8 +147,8 @@ fu_binder_cli_sync_impl_get_plugins(FwupdClient *client,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	/* FIXME implement fu_binder_cli_bridge_get_plugins */
-	return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_get_plugins(self->fwupd_binder, error);
 }
 
 static FwupdRemote *

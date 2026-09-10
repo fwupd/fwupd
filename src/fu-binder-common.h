@@ -7,6 +7,7 @@
 #pragma once
 
 #include <aidl/org/freedesktop/fwupd/FwupdDevice.h>
+#include <aidl/org/freedesktop/fwupd/FwupdPlugin.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRelease.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRemote.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRequest.h>
@@ -34,3 +35,8 @@ aidl_fwupd::FwupdRequest
 fu_binder_request_to_aidl(FwupdRequest *request);
 FwupdRequest *
 fu_binder_request_from_aidl(const aidl_fwupd::FwupdRequest &r, GError **error);
+
+aidl_fwupd::FwupdPlugin
+fu_binder_plugin_to_aidl(FwupdPlugin *plugin);
+FwupdPlugin *
+fu_binder_plugin_from_aidl(const aidl_fwupd::FwupdPlugin &p, GError **error);
