@@ -221,6 +221,51 @@ fu_binder_cli_bridge_get_upgrades(AIBinder *binder, const char *device_id, GErro
 }
 
 GPtrArray *
+fu_binder_cli_bridge_get_releases(AIBinder *binder, const char *device_id, GError **error)
+{
+	AIBinder_incStrong(binder);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder);
+	auto service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd interface");
+		return NULL;
+	}
+
+	std::vector<aidl_fwupd::FwupdRelease> aidl_rels;
+	auto status = service->getReleases(std::string(device_id), &aidl_rels);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Binder transaction failed: %s",
+			    status.getDescription().c_str());
+		return NULL;
+	}
+
+	g_autoptr(GPtrArray) rels = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (const auto &rel : aidl_rels) {
+		FwupdRelease *release = fu_binder_release_from_aidl(rel, error);
+		if (release == NULL)
+			return NULL;
+		g_ptr_array_add(rels, release);
+	}
+	return g_steal_pointer(&rels);
+}
+
+GPtrArray *
 fu_binder_cli_bridge_get_remotes(AIBinder *binder, GError **error)
 {
 	AIBinder_incStrong(binder);

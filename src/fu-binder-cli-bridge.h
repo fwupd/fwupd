@@ -23,6 +23,8 @@ fu_binder_cli_bridge_get_devices(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_upgrades(AIBinder *binder, const char *device_id, GError **error);
 GPtrArray *
+fu_binder_cli_bridge_get_releases(AIBinder *binder, const char *device_id, GError **error);
+GPtrArray *
 fu_binder_cli_bridge_get_remotes(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error);

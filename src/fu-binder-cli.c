@@ -137,8 +137,8 @@ fu_binder_cli_sync_impl_get_releases(FwupdClient *client,
 				     GCancellable *cancellable,
 				     GError **error)
 {
-	/* FIXME implement fu_binder_cli_bridge_get_releases */
-	return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_get_releases(self->fwupd_binder, device_id, error);
 }
 
 static GPtrArray *
