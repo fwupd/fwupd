@@ -119,8 +119,12 @@ therefore enough to re-authenticate, with no need to restart `fwupd`.
 ## NVIDIA DGX Station GB300
 
 The BMC is detected by probing `/redfish/v1/Chassis/Chassis_0` for
-`Manufacturer=NVIDIA` and a `Model` containing both `GB300` and `Station`. A
-matching BMC gets GB300-specific update semantics, which diverge from DMTF
+`Manufacturer=NVIDIA` and a `Model` containing both `GB300` and `Station`. Each
+entry in the BMC's `FirmwareInventory` -- for example
+`/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0` -- is then exposed as its
+own device.
+
+A matching BMC gets GB300-specific update semantics, which diverge from DMTF
 DSP0266 in several places:
 
 * `Targets` must be an empty array, as the BMC resolves the components to update
@@ -132,6 +136,8 @@ DSP0266 in several places:
   polling `/Tasks/<id>/Monitor` always reports 0%.
 * Once a task completes the BMC returns HTTP 200 with an empty body for the task
   monitor rather than the HTTP 404 that normally signals it has been reaped.
+* When both the task monitor and `/Tasks/<id>` have been reaped, the
+  resource-gone condition is treated as a completed update.
 
 This device requires a session token, so see **Session Token Authentication**
 above before installing firmware:

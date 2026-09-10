@@ -5,54 +5,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-/*
- * FuRedfishNvidiaDevice — NVIDIA DGX Station GB300 OOB firmware update via Redfish.
- *
- * Represents a single component in the BMC's FirmwareInventory (e.g.
- * /redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0) and implements the
- * GB300-specific upload and task-monitoring flow:
- *
- *   1. Multipart POST to UpdateService/MultipartHttpPushUri:
- *        UpdateParameters: { "Targets":[], "ForceUpdate":true,
- *                            "@Redfish.OperationApplyTime":"Immediate" }
- *        UpdateFile: raw firmware blob
- *
- *   2. Poll /redfish/v1/TaskService/Tasks/<id> (the persistent task resource,
- *      not the /Monitor sub-resource) for PercentComplete and TaskState.
- *      GB300-specific divergences from DMTF DSP0266:
- *        - Targets must be an empty array, as the BMC resolves components from
- *          the PLDM bundle manifest; passing the logical_id causes a 400 error.
- *        - ForceUpdate=true is required; the BMC rejects same-version installs.
- *        - OperationApplyTime "OnReset" is not in the BMC's acceptable-values
- *          list; "Immediate" must be used.
- *        - PercentComplete is only updated on /Tasks/<id>, not on
- *          /Tasks/<id>/Monitor; polling the Monitor always returns 0%.
- *        - After task completion the BMC returns HTTP 200 and an empty body for
- *          the TaskMonitor instead of the canonical 404 that signals reap; both
- *          are handled here. When both the Monitor and /Tasks/<id> are gone the
- *          resource-gone condition is treated as Completed.
- *
- *   3. A completed write sets NEEDS_ACTIVATION, as the firmware is staged and
- *      only becomes active after an aux-rail power cycle. activate() drives
- *      that cycle by POSTing ResetType=AuxPowerCycleForce to the OEM
- *      NvidiaChassis.AuxPowerReset action advertised by Chassis/BMC_0. The
- *      Force variant does not wait for the host to shut down, so it drops the
- *      rail powering fwupd itself.
- *
- * Instance IDs registered per device, in addition to those from the base class:
- *   NVIDIA_OOB\URI_<@odata.id>   — always; unique per FirmwareInventory entry
- *   NVIDIA_OOB\SWID_<SoftwareId> — when present; lets a unified-image CAB target
- *                                  multiple components by SoftwareId
- *
- * Backend detection: fu_redfish_backend_coldplug() sets device_gtype to
- * FU_TYPE_REDFISH_NVIDIA_DEVICE when /redfish/v1/Chassis/Chassis_0 reports
- * Manufacturer="NVIDIA" and a Model containing both "GB300" and "Station".
- *
- * This device requires a Redfish X-Auth-Token provisioned out of band; see
- * README.md for how to set FWUPD_SESSION_TOKEN_FILE. Without a token the
- * plugin falls back to Basic Auth.
- */
-
 #include "config.h"
 
 #include <curl/curl.h>
@@ -545,11 +497,17 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
  * the device is probed means a pending activation survives a daemon restart,
  * a host reboot, and a same-version reinstall -- none of which the engine's
  * own history can express.
+ *
+ * FirmwareState alone is not enough: the BMC also reports PendingActivation for
+ * a slot that holds no image at all, which happens when an update erased the
+ * slot and then failed to authenticate the replacement. Acting on that would
+ * mark the device as needing an aux-rail power cycle to activate nothing.
  */
 static gboolean
 fu_redfish_nvidia_device_slot_is_pending(FwupdJsonObject *json_member)
 {
 	const gchar *state;
+	const gchar *version;
 	g_autoptr(FwupdJsonObject) json_nvidia = NULL;
 	g_autoptr(FwupdJsonObject) json_oem = NULL;
 	g_autoptr(FwupdJsonObject) json_slot = NULL;
@@ -564,7 +522,12 @@ fu_redfish_nvidia_device_slot_is_pending(FwupdJsonObject *json_member)
 	if (json_slot == NULL)
 		return FALSE;
 	state = fwupd_json_object_get_string(json_slot, "FirmwareState", NULL);
-	return g_strcmp0(state, "PendingActivation") == 0;
+	if (g_strcmp0(state, "PendingActivation") != 0)
+		return FALSE;
+
+	/* an empty version means the slot was erased, so nothing is staged */
+	version = fwupd_json_object_get_string(json_slot, "Version", NULL);
+	return version != NULL && version[0] != '\0';
 }
 
 static gboolean
@@ -639,9 +602,11 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 /*
  * The PLDM bundle is an opaque blob of about 117MB, which is larger than the
  * FuFirmware base-class parse ceiling of FU_FIRMWARE_SIZE_MAX_DEFAULT, so read
- * it straight into a FuFirmware rather than parsing it. The real limit is the
- * device firmware size max set in probe(), which fu_device_prepare_firmware()
- * applies to the result.
+ * it straight into a FuFirmware rather than parsing it.
+ *
+ * fu_device_prepare_firmware() applies the device firmware size max set in
+ * probe(), but only once the whole stream has already been read into memory, so
+ * check the size here as well to bound the allocation.
  */
 static FuFirmware *
 fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
@@ -650,9 +615,23 @@ fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
+	gsize streamsz = 0;
+	guint64 size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GBytes) blob = NULL;
 
-	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, progress, error);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return NULL;
+	if (size_max > 0 && streamsz > size_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware is 0x%x bytes larger than the allowed maximum size of "
+			    "0x%x bytes",
+			    (guint)(streamsz - size_max),
+			    (guint)size_max);
+		return NULL;
+	}
+	blob = fu_input_stream_read_bytes(stream, 0, streamsz, progress, error);
 	if (blob == NULL)
 		return NULL;
 	return fu_firmware_new_from_bytes(blob);
