@@ -418,6 +418,26 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	getHistory(std::vector<aidl_fwupd::FwupdDevice> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GPtrArray) devices = NULL;
+
+		devices = fu_engine_get_history(engine, &error);
+		if (devices == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		for (size_t i = 0; i < devices->len; i++) {
+			FwupdDevice *device = FWUPD_DEVICE(g_ptr_array_index(devices, i));
+			_aidl_return->push_back(fu_binder_device_to_aidl(device));
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	getProperties(aidl_fwupd::FwupdProperties *_aidl_return) override
 	{
 		*_aidl_return = FwupdProperties_to_AIDL(m_daemon);
