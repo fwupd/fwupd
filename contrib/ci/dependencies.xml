@@ -5,7 +5,7 @@
   <!ELEMENT dependency (distro*)>
   <!ATTLIST dependency id CDATA #REQUIRED>
 
-  <!ELEMENT distro (control | build-target | package)*>
+  <!ELEMENT distro (control?, build-target?, package*)>
   <!ATTLIST distro id CDATA #REQUIRED>
 
   <!ELEMENT package (#PCDATA)>
@@ -107,10 +107,10 @@
         <inclusive arch="armhf"/>
         <inclusive arch="i386"/>
       </control>
+      <build-target mode="multi-arch" />
       <package variant="aarch64" />
       <package variant="i386" />
       <package variant="x86_64" />
-      <build-target mode="multi-arch" />
     </distro>
   </dependency>
   <dependency id="noto-fonts-cjk">
