@@ -916,6 +916,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="android" />
     </distro>
   </dependency>
   <dependency id="meson">
