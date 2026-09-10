@@ -33,7 +33,7 @@ env:
   FEDORA_CONTAINER_TAG: "2026-09-10.0"
 
 jobs:
-  push_to_registry:
+  find_or_create_container:
     permissions:
       contents: read
       packages: write # for docker/build-push-action
@@ -114,7 +114,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Container ${TAG} does not exist."
           fi
-      - name: Let the user know
+      - name: Let the user know container is not ready yet
         if: steps.should_we.outputs.run == 'true' && steps.check_container.outputs.exists != 'true' && github.event_name == 'pull_request'
         run: |
           TAG="${{steps.tag.outputs.tag}}"
@@ -142,7 +142,7 @@ jobs:
           tags: ${{ steps.tag.outputs.tag }}
 
   container_mapping:
-    needs: push_to_registry
+    needs: find_or_create_container
     runs-on: ubuntu-latest
     outputs:
       container_lut: ${{ steps.merge.outputs.container_lut }}
