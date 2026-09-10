@@ -47,6 +47,9 @@ if get_option('tests')
     rust_args: rust_panic_unwind_flags,
     timeout: 120,
     suite: 'rust',
+    env: {
+      'G_DEBUG': '', # disable fatal-criticals
+    },
   )
 
   if build_docs
