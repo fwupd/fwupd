@@ -85,30 +85,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Find container image
         id: find_container
-        env:
-          DISTRO: ${{ matrix.env.DISTRO }}
-          ARCH: ${{ matrix.env.ARCH }}
-          VARIANT: ${{ matrix.env.VARIANT }}
-          CONTAINER: ${{ matrix.env.CONTAINER }}
-          CONTAINER_LUT: ${{ inputs.container_lut }}
-        run: |
-          if [ -z "${CONTAINER}" ]; then
-            IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
-          else
-            IDENTIFIER="${CONTAINER}"
-          fi
-          CONTAINER_URI=$(echo "$CONTAINER_LUT" | jq -r --arg key "$IDENTIFIER" '.[$key]')
-          if [ "${CONTAINER_URI}" = "null" ]; then
-            echo "$CONTAINER_LUT" | jq
-            echo "::error::Unable to find key '${IDENTIFIER}' in above container LUT"
-            exit 1
-          fi
-          echo "Using container ${CONTAINER_URI}"
-          if ! docker manifest inspect "${CONTAINER_URI}"; then
-            echo "::error::The requested image ${CONTAINER_URI} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
-            exit 1
-          fi
-          echo "container_uri=${CONTAINER_URI}" >> "$GITHUB_OUTPUT"
+        uses: ./.github/actions/find-container
+        with:
+          distro: ${{ matrix.env.DISTRO }}
+          arch: ${{ matrix.env.ARCH }}
+          variant: ${{ matrix.env.VARIANT }}
+          container: ${{ matrix.env.CONTAINER }}
+          container_lut: ${{ inputs.container_lut }}
       - name: Download tarball
         if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

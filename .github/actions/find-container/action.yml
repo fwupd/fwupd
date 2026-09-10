@@ -1,0 +1,57 @@
+name: 'Find Container Image'
+description: 'Finds the container image URI from the container LUT and verifies it exists. See create_containers.yml for the LUT Creation.'
+
+inputs:
+  distro:
+    description: 'The distribution name (e.g., debian, fedora, ubuntu)'
+    required: true
+  arch:
+    description: 'The architecture (e.g., amd64, arm64)'
+    required: true
+  variant:
+    description: 'Optional variant suffix'
+    required: false
+    default: ''
+  container:
+    description: 'Optional container override (if set, uses this instead of distro-arch-variant)'
+    required: false
+    default: ''
+  container_lut:
+    description: 'JSON lookup table mapping identifiers to container URIs'
+    required: true
+
+outputs:
+  container_uri:
+    description: 'The resolved container URI'
+    value: ${{ steps.find_container.outputs.container_uri }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Find container image
+      id: find_container
+      shell: bash
+      env:
+        DISTRO: ${{ inputs.distro }}
+        ARCH: ${{ inputs.arch }}
+        VARIANT: ${{ inputs.variant }}
+        CONTAINER: ${{ inputs.container }}
+        CONTAINER_LUT: ${{ inputs.container_lut }}
+      run: |
+        if [ -z "${CONTAINER}" ]; then
+          IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
+        else
+          IDENTIFIER="${CONTAINER}"
+        fi
+        CONTAINER_URI=$(echo "$CONTAINER_LUT" | jq -r --arg key "$IDENTIFIER" '.[$key]')
+        if [ "${CONTAINER_URI}" = "null" ]; then
+          echo "$CONTAINER_LUT" | jq
+          echo "::error::Unable to find key '${IDENTIFIER}' in above container LUT"
+          exit 1
+        fi
+        echo "Using container ${CONTAINER_URI}"
+        if ! docker manifest inspect "${CONTAINER_URI}"; then
+          echo "::error::The requested image ${CONTAINER_URI} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
+          exit 1
+        fi
+        echo "container_uri=${CONTAINER_URI}" >> "$GITHUB_OUTPUT"
