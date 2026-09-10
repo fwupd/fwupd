@@ -31,6 +31,10 @@ fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_history(AIBinder *binder, GError **error);
 gboolean
+fu_binder_cli_bridge_set_feature_flags(AIBinder *binder,
+				       FwupdFeatureFlags feature_flags,
+				       GError **error);
+gboolean
 fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *id,
 			     int fd,

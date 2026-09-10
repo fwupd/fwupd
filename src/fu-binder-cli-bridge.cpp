@@ -480,6 +480,46 @@ fu_binder_cli_bridge_setup_listener(AIBinder *binder_handle, FwupdClient *client
 }
 
 gboolean
+fu_binder_cli_bridge_set_feature_flags(AIBinder *binder,
+				       FwupdFeatureFlags feature_flags,
+				       GError **error)
+{
+	AIBinder_incStrong(binder);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder);
+	std::shared_ptr<aidl_fwupd::IFwupd> service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd interface");
+		return FALSE;
+	}
+
+	auto status = service->setFeatureFlags((int64_t)feature_flags);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Binder transaction failed: %s",
+			    status.getDescription().c_str());
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
 fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *id,
 			     int fd,

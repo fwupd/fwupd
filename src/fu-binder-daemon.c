@@ -20,6 +20,7 @@
 
 #include "fu-binder-daemon-bridge.h"
 #include "fu-binder-daemon.h"
+#include "fu-client-list.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
@@ -30,6 +31,7 @@
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
 	gint binder_fd;
+	FuClientList *client_list;
 };
 
 G_DEFINE_TYPE(FuBinderDaemon, fu_binder_daemon, FU_TYPE_DAEMON)
@@ -109,17 +111,41 @@ fu_binder_daemon_progress_percentage_changed_cb(FuProgress *progress,
 	fu_daemon_set_percentage(FU_DAEMON(self), percentage);
 }
 
-FuEngineRequest *
-fu_binder_daemon_create_request(FuBinderDaemon *self)
+static gchar *
+fu_binder_daemon_dup_sender(void)
 {
 	uid_t uid = AIBinder_getCallingUid();
 	pid_t pid = AIBinder_getCallingPid();
-	g_autofree gchar *sender = g_strdup_printf("%u:%u", (guint)uid, (guint)pid);
+	return g_strdup_printf("%u:%u", (guint)uid, (guint)pid);
+}
+
+FuEngineRequest *
+fu_binder_daemon_create_request(FuBinderDaemon *self)
+{
+	g_autofree gchar *sender = fu_binder_daemon_dup_sender();
+	g_autoptr(FuClient) client = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(sender);
 
 	fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
 
+	/* did the client set the list of supported features or any hints */
+	client = fu_client_list_get_by_sender(self->client_list, sender);
+	if (client != NULL) {
+		const gchar *locale = fu_client_lookup_hint(client, "locale");
+		if (locale != NULL)
+			fu_engine_request_set_locale(request, locale);
+		fu_engine_request_set_feature_flags(request, fu_client_get_feature_flags(client));
+	}
+
 	return g_steal_pointer(&request);
+}
+
+void
+fu_binder_daemon_set_feature_flags(FuBinderDaemon *self, FwupdFeatureFlags feature_flags)
+{
+	g_autofree gchar *sender = fu_binder_daemon_dup_sender();
+	FuClient *client = fu_client_list_register(self->client_list, sender);
+	fu_client_set_feature_flags(client, feature_flags);
 }
 
 static void
@@ -286,6 +312,7 @@ fu_binder_daemon_percentage_notify_cb(FuDaemon *daemon, GParamSpec *pspec, gpoin
 static void
 fu_binder_daemon_init(FuBinderDaemon *self)
 {
+	self->client_list = fu_client_list_new(NULL);
 	g_signal_connect(FU_DAEMON(self),
 			 "notify::status",
 			 G_CALLBACK(fu_binder_daemon_status_notify_cb),
@@ -371,6 +398,8 @@ fu_binder_daemon_dispose(GObject *obj)
 static void
 fu_binder_daemon_finalize(GObject *obj)
 {
+	FuBinderDaemon *self = FU_BINDER_DAEMON(obj);
+	g_object_unref(self->client_list);
 	G_OBJECT_CLASS(fu_binder_daemon_parent_class)->finalize(obj);
 }
 
