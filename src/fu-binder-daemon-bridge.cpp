@@ -379,6 +379,28 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	getReleases(const std::string &in_deviceId,
+		    std::vector<aidl_fwupd::FwupdRelease> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(FuEngineRequest) request = fu_binder_daemon_create_request(m_daemon);
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GPtrArray) releases = NULL;
+
+		releases = fu_engine_get_releases(engine, request, in_deviceId.c_str(), &error);
+		if (releases == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		for (guint i = 0; i < releases->len; i++) {
+			FwupdRelease *release = FWUPD_RELEASE(g_ptr_array_index(releases, i));
+			_aidl_return->push_back(fu_binder_release_to_aidl(release));
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	getRemotes(std::vector<aidl_fwupd::FwupdRemote> *_aidl_return) override
 	{
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));

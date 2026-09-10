@@ -16,6 +16,7 @@ interface IFwupd {
         void install(in FwupdInstallRequest request);
         void addEventListener(IFwupdEventListener listener);
         FwupdRelease[] getUpdates(in String id);
+        FwupdRelease[] getReleases(in String id);
         FwupdProperties getProperties();
         FwupdRemote[] getRemotes();
         void updateMetadata(in FwupdMetadata metadata);
