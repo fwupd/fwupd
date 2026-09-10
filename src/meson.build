@@ -353,6 +353,7 @@ if build_daemon == 'binder'
     'FwupdHwid',
     'FwupdInstallRequest',
     'FwupdMetadata',
+    'FwupdPlugin',
     'FwupdProperties',
     'FwupdRelease',
     'FwupdRemote',

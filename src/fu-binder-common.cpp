@@ -664,3 +664,23 @@ fu_binder_request_from_aidl(const aidl_fwupd::FwupdRequest &r, GError **error)
 	fwupd_request_set_flags(request, (FwupdRequestFlags)r.flags);
 	return g_steal_pointer(&request);
 }
+
+aidl_fwupd::FwupdPlugin
+fu_binder_plugin_to_aidl(FwupdPlugin *plugin)
+{
+	aidl_fwupd::FwupdPlugin p;
+	if (fwupd_plugin_get_name(plugin) != NULL)
+		p.name = fwupd_plugin_get_name(plugin);
+	p.flags = fwupd_plugin_get_flags(plugin);
+	return p;
+}
+
+FwupdPlugin *
+fu_binder_plugin_from_aidl(const aidl_fwupd::FwupdPlugin &p, GError **)
+{
+	g_autoptr(FwupdPlugin) plugin = fwupd_plugin_new();
+	if (p.name.has_value())
+		fwupd_plugin_set_name(plugin, p.name.value().c_str());
+	fwupd_plugin_set_flags(plugin, (guint64)p.flags);
+	return g_steal_pointer(&plugin);
+}

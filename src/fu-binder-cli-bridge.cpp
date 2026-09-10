@@ -266,6 +266,52 @@ fu_binder_cli_bridge_get_remotes(AIBinder *binder, GError **error)
 	return g_steal_pointer(&remotes);
 }
 
+GPtrArray *
+fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error)
+{
+	AIBinder_incStrong(binder);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder);
+	auto service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd interface");
+		return NULL;
+	}
+
+	std::vector<aidl_fwupd::FwupdPlugin> aidl_plugins;
+	auto status = service->getPlugins(&aidl_plugins);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Binder transaction failed: %s",
+			    status.getDescription().c_str());
+		return NULL;
+	}
+
+	g_autoptr(GPtrArray) plugins =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (const auto &p : aidl_plugins) {
+		FwupdPlugin *plugin = fu_binder_plugin_from_aidl(p, error);
+		if (plugin == NULL)
+			return NULL;
+		g_ptr_array_add(plugins, plugin);
+	}
+	return g_steal_pointer(&plugins);
+}
+
 gboolean
 fu_binder_cli_bridge_connect_client(AIBinder *binder, FwupdClient *client, GError **error)
 {
