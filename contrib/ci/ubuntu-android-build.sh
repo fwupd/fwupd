@@ -2,11 +2,6 @@
 set -e
 set -x
 
-# check for and install missing dependencies
-if [ -e "/usr/bin/apt-get" ]; then
-    ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes --os ubuntu --variant android
-fi
-
 # check for NDK, SDK and Bionic runtime
 ./contrib/ci/android.sh
 

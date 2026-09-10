@@ -1,9 +1,6 @@
 #!/bin/sh
 set -eux
 
-# check for and install missing dependencies
-./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
-
 # make sure gnutls is not available
 dnf remove -y gnutls-devel
 

@@ -2,21 +2,6 @@
 set -e
 set -x
 
-#check for and install missing dependencies
-./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
-
-#check we have pip
-./contrib/ci/fwupd_setup_helpers.py install-pip --yes -o ubuntu
-
-#check meson is new enough
-./contrib/ci/fwupd_setup_helpers.py test-meson
-
-#check markdown is new enough
-./contrib/ci/fwupd_setup_helpers.py test-markdown
-
-#check jinja2 is installed
-./contrib/ci/fwupd_setup_helpers.py test-jinja2
-
 #clone test firmware if necessary
 . ./contrib/ci/get_test_firmware.sh
 

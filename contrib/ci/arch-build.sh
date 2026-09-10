@@ -3,12 +3,6 @@ set -e
 set -x
 shopt -s extglob
 
-#refresh package cache and update image
-pacman -Syu --noconfirm
-
-#install anything missing from the container
-./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
-
 # check that we got the bare minimum
 if [ ! -f /usr/bin/git ]; then
     echo "git not found, pacman possibly failed?"
