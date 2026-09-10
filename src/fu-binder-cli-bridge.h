@@ -26,6 +26,8 @@ GPtrArray *
 fu_binder_cli_bridge_get_remotes(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error);
+GPtrArray *
+fu_binder_cli_bridge_get_history(AIBinder *binder, GError **error);
 gboolean
 fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *id,

@@ -312,6 +312,52 @@ fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error)
 	return g_steal_pointer(&plugins);
 }
 
+GPtrArray *
+fu_binder_cli_bridge_get_history(AIBinder *binder, GError **error)
+{
+	AIBinder_incStrong(binder);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder);
+	auto service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd interface");
+		return NULL;
+	}
+
+	std::vector<aidl_fwupd::FwupdDevice> aidl_devs;
+	auto status = service->getHistory(&aidl_devs);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "binder transaction failed: %s",
+			    status.getDescription().c_str());
+		return NULL;
+	}
+
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (const auto &dev : aidl_devs) {
+		FwupdDevice *device = fu_binder_device_from_aidl(dev, error);
+		if (device == NULL)
+			return NULL;
+		g_ptr_array_add(devices, device);
+	}
+	return g_steal_pointer(&devices);
+}
+
 gboolean
 fu_binder_cli_bridge_connect_client(AIBinder *binder, FwupdClient *client, GError **error)
 {

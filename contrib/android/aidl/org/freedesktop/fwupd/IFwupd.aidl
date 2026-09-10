@@ -21,4 +21,5 @@ interface IFwupd {
         void updateMetadata(in FwupdMetadata metadata);
         FwupdHwid[] getHwids();
         FwupdPlugin[] getPlugins();
+        FwupdDevice[] getHistory();
 }
