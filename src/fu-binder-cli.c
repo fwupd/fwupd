@@ -67,6 +67,50 @@ fu_binder_cli_sync_impl_get_devices(FwupdClient *client,
 	return fu_binder_cli_bridge_get_devices(self->fwupd_binder, error);
 }
 
+static FwupdDevice *
+fu_binder_cli_sync_impl_get_device_by_id(FwupdClient *client,
+					 const gchar *device_id,
+					 gpointer user_data,
+					 GCancellable *cancellable,
+					 GError **error)
+{
+	g_autoptr(GPtrArray) devices =
+	    fu_binder_cli_sync_impl_get_devices(client, user_data, cancellable, error);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		if (g_strcmp0(fwupd_device_get_id(dev), device_id) == 0)
+			return g_object_ref(dev);
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "device %s not found",
+		    device_id);
+	return NULL;
+}
+
+static GPtrArray *
+fu_binder_cli_sync_impl_get_devices_by_guid(FwupdClient *client,
+					    const gchar *guid,
+					    gpointer user_data,
+					    GCancellable *cancellable,
+					    GError **error)
+{
+	g_autoptr(GPtrArray) devices =
+	    fu_binder_cli_sync_impl_get_devices(client, user_data, cancellable, error);
+	g_autoptr(GPtrArray) results = g_ptr_array_new_with_free_func(g_object_unref);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		if (fwupd_device_has_guid(dev, guid))
+			g_ptr_array_add(results, g_object_ref(dev));
+	}
+	return g_steal_pointer(&results);
+}
+
 static gboolean
 fu_binder_cli_sync_impl_connect(FwupdClient *client,
 				gpointer user_data,
@@ -75,6 +119,16 @@ fu_binder_cli_sync_impl_connect(FwupdClient *client,
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
 	return fu_binder_cli_bridge_connect_client(self->fwupd_binder, client, error);
+}
+
+static gboolean
+fu_binder_cli_sync_impl_set_feature_flags(FwupdClient *client,
+					  FwupdFeatureFlags feature_flags,
+					  gpointer user_data,
+					  GCancellable *cancellable,
+					  GError **error)
+{
+	return TRUE;
 }
 
 static gboolean
@@ -101,15 +155,64 @@ fu_binder_cli_sync_impl_install(FwupdClient *client,
 					    error);
 }
 
+static GPtrArray *
+fu_binder_cli_sync_impl_get_history(FwupdClient *client,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+	return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
+static GPtrArray *
+fu_binder_cli_sync_impl_get_plugins(FwupdClient *client,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+	return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
+static FwupdRemote *
+fu_binder_cli_sync_impl_get_remote_by_id(FwupdClient *client,
+					 const gchar *remote_id,
+					 gpointer user_data,
+					 GCancellable *cancellable,
+					 GError **error)
+{
+	g_autoptr(GPtrArray) remotes =
+	    fu_binder_cli_sync_impl_get_remotes(client, user_data, cancellable, error);
+	if (remotes == NULL)
+		return NULL;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		if (g_strcmp0(fwupd_remote_get_id(remote), remote_id) == 0)
+			return g_object_ref(remote);
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "remote %s not found",
+		    remote_id);
+	return NULL;
+}
+
 static void
 fu_binder_cli_init(FuBinderCli *self)
 {
 	static FwupdClientSyncImpl impl = {
 	    .get_remotes = fu_binder_cli_sync_impl_get_remotes,
+	    .get_remote_by_id = fu_binder_cli_sync_impl_get_remote_by_id,
 	    .get_upgrades = fu_binder_cli_sync_impl_get_upgrades,
+	    .get_releases = fu_binder_cli_sync_impl_get_upgrades,
 	    .get_devices = fu_binder_cli_sync_impl_get_devices,
+	    .get_devices_by_guid = fu_binder_cli_sync_impl_get_devices_by_guid,
+	    .get_device_by_id = fu_binder_cli_sync_impl_get_device_by_id,
+	    .get_history = fu_binder_cli_sync_impl_get_history,
+	    .get_plugins = fu_binder_cli_sync_impl_get_plugins,
 	    .connect = fu_binder_cli_sync_impl_connect,
 	    .install = fu_binder_cli_sync_impl_install,
+	    .set_feature_flags = fu_binder_cli_sync_impl_set_feature_flags,
 	};
 	fwupd_client_set_daemon_version(fu_cli_get_client(FU_CLI(self)), PACKAGE_VERSION);
 	fwupd_client_set_sync_impl(fu_cli_get_client(FU_CLI(self)), &impl, self, NULL);

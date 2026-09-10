@@ -43,3 +43,4 @@ fwupdtool.txt
 /.direnv
 /.envrc
 /target
+_android_dist

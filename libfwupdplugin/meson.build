@@ -445,7 +445,7 @@ fwupdplugin = library(
   dependencies: [library_deps],
   link_with: [fwupd],
   install_dir: libdir_pkg,
-  install: true,
+  install: host_machine.system() != 'android',
 )
 
 # see https://mesonbuild.com/FAQ.html#how-do-i-tell-meson-that-my-sources-use-generated-headers

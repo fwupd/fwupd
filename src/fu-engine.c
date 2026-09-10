@@ -7452,6 +7452,14 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 		}
 	}
 }
+#else
+/* private */
+gchar *
+fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	return g_strdup("HSI:UNSUPPORTED");
+}
 #endif
 
 /**

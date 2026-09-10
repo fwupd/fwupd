@@ -99,6 +99,9 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	{
 		fwupd_client_set_status(m_client, (FwupdStatus)properties.status);
 		fwupd_client_set_percentage(m_client, properties.percentage);
+		if (properties.percentage > 0) {
+			g_print("install progress is %d%%\n", properties.percentage);
+		}
 		return ::ndk::ScopedAStatus::ok();
 	}
 };
