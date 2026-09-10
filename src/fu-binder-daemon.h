@@ -20,6 +20,9 @@ fu_binder_daemon_setup_aidl_service(FuBinderDaemon *self, GError **error);
 FuEngineRequest *
 fu_binder_daemon_create_request(FuBinderDaemon *self);
 
+void
+fu_binder_daemon_set_feature_flags(FuBinderDaemon *self, FwupdFeatureFlags feature_flags);
+
 gboolean
 fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					const gchar *device_id,

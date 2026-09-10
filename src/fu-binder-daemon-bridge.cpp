@@ -440,6 +440,13 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	setFeatureFlags(int64_t in_flags) override
+	{
+		fu_binder_daemon_set_feature_flags(m_daemon, (FwupdFeatureFlags)in_flags);
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	getHistory(std::vector<aidl_fwupd::FwupdDevice> *_aidl_return) override
 	{
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));

@@ -23,4 +23,5 @@ interface IFwupd {
         FwupdHwid[] getHwids();
         FwupdPlugin[] getPlugins();
         FwupdDevice[] getHistory();
+        void setFeatureFlags(long flags);
 }

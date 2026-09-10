@@ -116,8 +116,8 @@ fu_binder_cli_sync_impl_set_feature_flags(FwupdClient *client,
 					  GCancellable *cancellable,
 					  GError **error)
 {
-	/* FIXME implement fu_binder_cli_bridge_set_feature_flags */
-	return TRUE;
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_set_feature_flags(self->fwupd_binder, feature_flags, error);
 }
 
 static GPtrArray *
