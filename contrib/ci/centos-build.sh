@@ -2,9 +2,6 @@
 set -e
 set -x
 
-# get any missing deps from the container
-./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o centos
-
 # disable the safe directory feature
 git config --global safe.directory "*"
 
