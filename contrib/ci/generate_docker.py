@@ -51,16 +51,10 @@ def generate_dockerfile(
     data = {
         "VERSION": version,
         "DISTRO": distro,
+        "ARCH": arch,
     }
     if variant:
         data["VARIANT"] = variant
-
-    # special cases
-    match (distro, variant):
-        case ("debian", "i386"):
-            data["PLATFORM"] = "linux/i386"
-        case _:
-            pass
 
     if cross:
         data["CROSSARCH"] = cross

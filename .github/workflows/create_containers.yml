@@ -27,10 +27,10 @@ env:
   # The Arch container is force-rebuilt on schedule so we always run against the
   # latest one.
   ARCH_CONTAINER_TAG: "latest"
-  CENTOS_CONTAINER_TAG: "2026-09-10.3"
-  DEBIAN_CONTAINER_TAG: "2026-09-10.3"
-  UBUNTU_CONTAINER_TAG: "2026-09-10.3"
-  FEDORA_CONTAINER_TAG: "2026-09-10.3"
+  CENTOS_CONTAINER_TAG: "2026-09-10.4"
+  DEBIAN_CONTAINER_TAG: "2026-09-10.4"
+  UBUNTU_CONTAINER_TAG: "2026-09-10.4"
+  FEDORA_CONTAINER_TAG: "2026-09-10.4"
 
 jobs:
   find_or_create_container:
@@ -45,7 +45,7 @@ jobs:
           - { DISTRO: arch, VERSION: latest, ARCH: amd64 }
           - { DISTRO: centos, VERSION: stream9, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
-          - { DISTRO: debian, VERSION: testing, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, VERSION: testing, ARCH: i386 }
           # - { DISTRO: debian, VERSION: unstable, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, VERSION: testing, ARCH: arm64 }
           - { DISTRO: debian, VERSION: testing, ARCH: arm64, VARIANT: cross-s390x }
