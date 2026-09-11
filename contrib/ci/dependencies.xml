@@ -1227,7 +1227,7 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="python34-pip">
+  <dependency id="python3-pip">
     <distro id="arch">
       <package variant="x86_64">python-pip</package>
     </distro>
@@ -1235,7 +1235,7 @@
       <package>py312-pip</package>
     </distro>
     <distro id="ubuntu">
-      <package>python3-pip</package>
+      <package />
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">
