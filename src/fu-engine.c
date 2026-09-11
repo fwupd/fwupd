@@ -2254,7 +2254,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #endif
 
 	/* find out what BKC is being targeted to understand "odd" upgrade paths */
-	host_bkc = fu_context_get_config_str(self->ctx, "HostBkc");
+	host_bkc = fu_context_get_host_bkcs_as_str(self->ctx);
 	if (host_bkc != NULL)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_steal_pointer(&host_bkc));
 

@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-volume-private.h"
 
@@ -363,12 +364,41 @@ fu_context_quirks_func(void)
 	g_assert_cmpstr(tmp, ==, "clever");
 }
 
+static void
+fu_context_host_bkc_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *host_bkc = NULL;
+	g_autofree gchar *testdatadir_quirks = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir_quirks);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_config_set_basename(fu_context_get_config(ctx), "bkc-fwupd.conf");
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* ensure we matched the BKC */
+	host_bkc = fu_context_get_host_bkcs_as_str(ctx);
+	g_assert_cmpstr(host_bkc, ==, "one,two,uefi-secure-boot,three");
+}
+
 int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/context/quirks", fu_context_quirks_func);
+	g_test_add_func("/fwupd/context/host-bkc", fu_context_host_bkc_func);
 	g_test_add_func("/fwupd/context/flags", fu_context_flags_func);
 	g_test_add_func("/fwupd/context/backends", fu_context_backends_func);
 	g_test_add_func("/fwupd/context/esp-write", fu_context_esp_write_func);

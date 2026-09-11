@@ -48,7 +48,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 	const gchar *host_product = fu_engine_get_host_product(engine);
 	const gchar *host_machine_id = fu_engine_get_host_machine_id(engine);
 	g_autofree gchar *host_security_id = NULL;
-	g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
+	g_autofree gchar *host_bkc = fu_context_get_host_bkcs_as_str(ctx);
 	p.daemonVersion = PACKAGE_VERSION;
 	if (host_bkc != NULL)
 		p.hostBkc = host_bkc;

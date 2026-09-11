@@ -20,7 +20,6 @@
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
 
-#define FU_ENGINE_BKC_MAX_TAGS	   100
 #define FU_ENGINE_BKC_MAX_RELEASES 1000
 
 void
@@ -35,11 +34,10 @@ static FwupdRelease *
 fu_engine_get_release_with_tag(FuEngine *self,
 			       FuEngineRequest *request,
 			       FwupdDevice *dev,
-			       const gchar *host_bkc,
+			       GPtrArray *host_bkcs,
 			       GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
-	g_auto(GStrv) host_bkcs = NULL;
 
 	/* find the newest release that matches */
 	rels = fu_engine_get_releases(self, request, fwupd_device_get_id(dev), error);
@@ -56,20 +54,11 @@ fu_engine_get_release_with_tag(FuEngine *self,
 			    (guint)FU_ENGINE_BKC_MAX_RELEASES);
 		return NULL;
 	}
-
-	host_bkcs = g_strsplit(host_bkc, ",", FU_ENGINE_BKC_MAX_TAGS);
-	if (g_strv_length(host_bkcs) == FU_ENGINE_BKC_MAX_TAGS) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "host has unreasonable BKC count: %u",
-			    (guint)FU_ENGINE_BKC_MAX_TAGS);
-		return NULL;
-	}
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index(rels, i);
-		for (guint j = 0; host_bkcs[j] != NULL; j++) {
-			if (fwupd_release_has_tag(rel, host_bkcs[j]))
+		for (guint j = 0; j < host_bkcs->len; j++) {
+			const gchar *host_bkc = g_ptr_array_index(host_bkcs, j);
+			if (fwupd_release_has_tag(rel, host_bkc))
 				return g_object_ref(rel);
 		}
 	}
@@ -86,13 +75,13 @@ gboolean
 fu_engine_update_motd(FuEngine *self, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
+	GPtrArray *host_bkcs = fu_context_get_host_bkcs(ctx);
 	guint upgrade_count = 0;
 	guint sync_count = 0;
 	guint reboot_count = 0;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
-	g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
 	g_autofree gchar *target = NULL;
 
 	/* a subset of what fwupdmgr can do */
@@ -130,7 +119,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 				continue;
 			upgrade_count++;
 		}
-		if (host_bkc != NULL) {
+		if (host_bkcs->len > 0) {
 			for (guint i = 0; i < devices->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices, i);
 				g_autoptr(FwupdRelease) rel = NULL;
@@ -148,7 +137,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 				rel = fu_engine_get_release_with_tag(self,
 								     request,
 								     dev,
-								     host_bkc,
+								     host_bkcs,
 								     NULL);
 				if (rel == NULL)
 					continue;
