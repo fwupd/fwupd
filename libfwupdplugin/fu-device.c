@@ -6098,7 +6098,10 @@ fu_device_open_internal(FuDevice *self, GError **error)
 
 	/* probe */
 	if (!fu_device_probe(self, error)) {
-		g_prefix_error_literal(error, "failed to probe: ");
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_prefix_error(error,
+			       "failed to probe %s: ",
+			       id_display != NULL ? id_display : "device");
 		return FALSE;
 	}
 
