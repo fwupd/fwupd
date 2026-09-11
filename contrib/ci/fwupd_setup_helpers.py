@@ -34,12 +34,12 @@ logger = logging.getLogger(__name__)
 # Minimum version of markdown required
 MINIMUM_MARKDOWN = (3, 2, 0)
 
-# translate debian architecture names (similar to docker/golang names) to the naming in
-# the dependencies file, which is closer to gcc/fedora naming.
+# translate uname machine ids/fedora/gcc naming to debian architecture names (similar to
+# docker/golang names) which we use in the dependencies file.
 ARCH_TO_DEPS_MAP = {
-    "amd64": "x86_64",
-    "arm": "armhf",
-    "arm64": "aarch64",
+    "x86_64": "amd64",
+    "armhf": "armhf",
+    "aarch64": "arm64",
     "i386": "i386",
     "s390x": "s390x",
 }
@@ -231,10 +231,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     control = f" [{inclusive}{exclusive}]"
 
             if cross and build_target == "multi-arch":
-                deb_arch = {v: k for k, v in ARCH_TO_DEPS_MAP.items()}.get(
-                    variant, variant
-                )
-                arch_suffix = f":{deb_arch}"
+                arch_suffix = f":{variant}"
             elif build_target == "native":
                 arch_suffix = ":native"
             else:
