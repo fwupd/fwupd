@@ -97,8 +97,10 @@ fu_redfish_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 
 	/* get the list of devices */
 	if (!fu_backend_coldplug(FU_BACKEND(self->backend), progress, &error_local)) {
-		/* did the user password expire? */
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED)) {
+		/* did the user password expire? we cannot refresh a password that we do
+		 * not authenticate with */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED) &&
+		    !fu_redfish_backend_has_bearer_token(self->backend)) {
 			if (!fu_redfish_plugin_change_expired(plugin, error))
 				return FALSE;
 			if (!fu_backend_coldplug(FU_BACKEND(self->backend), progress, error)) {
@@ -422,23 +424,81 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 
 	return TRUE;
 }
+
+/**
+ * fu_redfish_plugin_ensure_ipmi_user:
+ * @plugin: a #FuPlugin
+ * @username: (nullable): username from the config file
+ * @password: (nullable): password from the config file
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks that the BMC user account we authenticate with is usable, creating one
+ * using IPMI KCS if the vendor quirk allows it and no working credentials are
+ * known.
+ *
+ * Returns: %TRUE for success
+ **/
+static gboolean
+fu_redfish_plugin_ensure_ipmi_user(FuPlugin *plugin,
+				   const gchar *username,
+				   const gchar *password,
+				   GError **error)
+{
+	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
+	gboolean credentials_invalid = FALSE;
+	g_autofree gchar *user_uri = NULL;
+
+	/* test if the existing credentials work */
+	user_uri = fu_plugin_get_config_value(plugin, "UserUri");
+	if (username != NULL && password != NULL && user_uri != NULL) {
+		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_redfish_request_perform(request,
+						user_uri,
+						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+						&error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED)) {
+				credentials_invalid = TRUE;
+			} else {
+				g_propagate_prefixed_error(
+				    error,
+				    g_steal_pointer(&error_local),
+				    "existing username and password did not work: ");
+				return FALSE;
+			}
+		}
+	}
+
+	/* we got neither a type 42 entry or config value, lets try IPMI */
+	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
+		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no username and password specified, "
+					    "and no vendor quirk for 'ipmi-create-user'");
+			return FALSE;
+		}
+		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
+			g_info("attempting to [re-]create user using IPMI");
+			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
+				return FALSE;
+		}
+	}
+
+	return TRUE;
+}
 #endif
 
 static gboolean
 fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-#ifdef HAVE_LINUX_IPMI_H
-	gboolean credentials_invalid = FALSE;
-#endif
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *session_key_file = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
-#ifdef HAVE_LINUX_IPMI_H
-	g_autofree gchar *user_uri = NULL;
-#endif
 	g_autoptr(GError) error_uefi = NULL;
 
 	/* optional */
@@ -520,42 +580,11 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
-	/* test if the existing credentials work */
-	user_uri = fu_plugin_get_config_value(plugin, "UserUri");
-	if (username != NULL && password != NULL && user_uri != NULL) {
-		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_redfish_request_perform(request,
-						user_uri,
-						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-						&error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED)) {
-				credentials_invalid = TRUE;
-			} else {
-				g_propagate_prefixed_error(
-				    error,
-				    g_steal_pointer(&error_local),
-				    "existing username and password did not work: ");
-				return FALSE;
-			}
-		}
-	}
-
-	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
-		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no username and password specified, "
-					    "and no vendor quirk for 'ipmi-create-user'");
+	/* a bearer token replaces the BMC user account entirely, so there is
+	 * nothing to verify or create over IPMI */
+	if (!fu_redfish_backend_has_bearer_token(self->backend)) {
+		if (!fu_redfish_plugin_ensure_ipmi_user(plugin, username, password, error))
 			return FALSE;
-		}
-		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
-			g_info("attempting to [re-]create user using IPMI");
-			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
-				return FALSE;
-		}
 	}
 #endif
 
