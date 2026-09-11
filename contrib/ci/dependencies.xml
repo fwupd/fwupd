@@ -485,8 +485,7 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
-      <package variant="mingw64">gettext</package>
-      <package variant="mingw64">mingw64-gettext</package>
+      <package variant="mingw64" />
     </distro>
     <distro id="debian">
       <control>
@@ -503,6 +502,11 @@
     </distro>
     <distro id="freebsd">
       <package>gettext</package>
+    </distro>
+  </dependency>
+  <dependency id="mingw64-gettext">
+    <distro id="fedora">
+      <package variant="mingw64">mingw64-gettext</package>
     </distro>
   </dependency>
   <dependency id="gnu-efi-devel">
@@ -568,7 +572,6 @@
       <package variant="aarch64">glib2-devel</package>
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
       <package variant="mingw64">glib2-devel</package>
-      <package variant="mingw64">mingw64-glib2</package>
     </distro>
     <distro id="arch">
       <package variant="x86_64">gsettings-desktop-schemas</package>
@@ -589,6 +592,11 @@
     </distro>
     <distro id="freebsd">
       <package>glib</package>
+    </distro>
+  </dependency>
+  <dependency id="mingw64-glib2">
+    <distro id="fedora">
+      <package variant="mingw64">mingw64-glib2</package>
     </distro>
   </dependency>
   <dependency id="glibc-langpack-en">
