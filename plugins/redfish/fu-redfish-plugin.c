@@ -704,6 +704,7 @@ fu_redfish_plugin_modify_config(FuPlugin *plugin,
 			       "IpmiDisableCreateUser",
 			       "ManagerResetTimeout",
 			       "Password",
+			       "SessionKeyFile",
 			       "Uri",
 			       "Username",
 			       "UserUri",
@@ -747,6 +748,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "IpmiDisableCreateUser", "false");
 	fu_plugin_set_config_default(plugin, "ManagerResetTimeout", "1800"); /* seconds */
 	fu_plugin_set_config_default(plugin, "Password", NULL);
+	fu_plugin_set_config_default(plugin, "SessionKeyFile", NULL);
 	fu_plugin_set_config_default(plugin, "Uri", NULL);
 	fu_plugin_set_config_default(plugin, "Username", NULL);
 	fu_plugin_set_config_default(plugin, "UserUri", NULL);
