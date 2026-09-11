@@ -10,6 +10,7 @@
   ],
   "failure-results": {
     "not-found": "support has not been detected",
+    "not-valid": "support has been detected, but SetupMode is enabled",
     "not-enabled": "detected, but has been turned off"
   },
   "success-results": {

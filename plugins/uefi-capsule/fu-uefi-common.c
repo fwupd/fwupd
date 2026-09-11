@@ -98,7 +98,7 @@ fu_uefi_get_built_app_path(FuPathStore *pstore,
 	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *source_path_signed = NULL;
 	g_autofree gchar *basename_signed = g_strdup_printf("%s.signed", basename);
-	gboolean secureboot_enabled = FALSE;
+	FuEfiSecureBootState secureboot_state = FU_EFI_SECURE_BOOT_STATE_DISABLED;
 	gboolean source_path_exists = FALSE;
 	gboolean source_path_signed_exists = FALSE;
 	g_autoptr(GError) error_local = NULL;
@@ -112,9 +112,9 @@ fu_uefi_get_built_app_path(FuPathStore *pstore,
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_state, &error_local))
 		g_debug("ignoring: %s", error_local->message);
-	if (secureboot_enabled) {
+	if ((secureboot_state & FU_EFI_SECURE_BOOT_STATE_ENABLED) > 0) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
 				    FWUPD_ERROR,

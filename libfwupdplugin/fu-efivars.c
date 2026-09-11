@@ -458,7 +458,7 @@ fu_efivars_set_data_bytes(FuEfivars *self,
 /**
  * fu_efivars_get_secure_boot:
  * @self: a #FuEfivars
- * @enabled: (out): SecureBoot value
+ * @state: (out) (nullable): the SecureBoot state
  * @error: (nullable): optional return location for an error
  *
  * Determines if secure boot was enabled
@@ -468,19 +468,23 @@ fu_efivars_set_data_bytes(FuEfivars *self,
  * Since: 2.0.0
  **/
 gboolean
-fu_efivars_get_secure_boot(FuEfivars *self, gboolean *enabled, GError **error)
+fu_efivars_get_secure_boot(FuEfivars *self, FuEfiSecureBootState *state, GError **error)
 {
-	gsize data_size = 0;
-	g_autofree guint8 *data = NULL;
+	gsize secure_boot_size = 0;
+	gsize setup_mode_size = 0;
+	FuEfiSecureBootState state_tmp = FU_EFI_SECURE_BOOT_STATE_DISABLED;
+	g_autofree guint8 *secure_boot = NULL;
+	g_autofree guint8 *setup_mode = NULL;
 
 	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* available, but not enabled */
 	if (!fu_efivars_get_data(self,
 				 FU_EFIVARS_GUID_EFI_GLOBAL,
 				 "SecureBoot",
-				 &data,
-				 &data_size,
+				 &secure_boot,
+				 &secure_boot_size,
 				 NULL,
 				 NULL)) {
 		g_set_error_literal(error,
@@ -489,19 +493,47 @@ fu_efivars_get_secure_boot(FuEfivars *self, gboolean *enabled, GError **error)
 				    "SecureBoot is not available");
 		return FALSE;
 	}
-	if (data_size == 0) {
+	if (secure_boot_size == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "SecureBoot variable was empty");
 		return FALSE;
 	}
+	if (secure_boot != NULL) {
+		if ((secure_boot[0] & 0x01) > 0)
+			state_tmp |= FU_EFI_SECURE_BOOT_STATE_ENABLED;
+	}
 
 	/* available, but not enabled */
-	if (enabled != NULL)
-		*enabled = (data[0] & 0x01) > 0;
+	if (!fu_efivars_get_data(self,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "SetupMode",
+				 &setup_mode,
+				 &setup_mode_size,
+				 NULL,
+				 NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SetupMode is not available");
+		return FALSE;
+	}
+	if (setup_mode_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SetupMode variable was empty");
+		return FALSE;
+	}
+	if (setup_mode != NULL) {
+		if ((setup_mode[0] & 0x01) > 0)
+			state_tmp |= FU_EFI_SECURE_BOOT_STATE_IN_SETUP;
+	}
 
 	/* success */
+	if (state != NULL)
+		*state = state_tmp;
 	return TRUE;
 }
 
