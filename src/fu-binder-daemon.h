@@ -30,4 +30,15 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					guint64 flags,
 					GError **error);
 
+gboolean
+fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, GError **error);
+
+gboolean
+fu_binder_daemon_verify_bridge(void *daemon_instance, const gchar *device_id, GError **error);
+
+gboolean
+fu_binder_daemon_verify_update_bridge(void *daemon_instance,
+				      const gchar *device_id,
+				      GError **error);
+
 G_END_DECLS

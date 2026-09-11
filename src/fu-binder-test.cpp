@@ -316,6 +316,111 @@ fu_binder_plugin_func(void)
 	g_assert_false(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_NO_HARDWARE));
 }
 
+static void
+fu_binder_bios_setting_func(void)
+{
+	aidl_fwupd::FwupdBiosSetting b;
+	g_autoptr(FwupdBiosSetting) setting = fwupd_bios_setting_new("name", "/path");
+	g_autoptr(FwupdBiosSetting) setting2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fwupd_bios_setting_set_id(setting, "com.fwupd.setting");
+	fwupd_bios_setting_set_description(setting, "description");
+	fwupd_bios_setting_set_current_value(setting, "enabled");
+	fwupd_bios_setting_add_possible_value(setting, "enabled");
+	fwupd_bios_setting_add_possible_value(setting, "disabled");
+	fwupd_bios_setting_set_kind(setting, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	fwupd_bios_setting_set_read_only(setting, TRUE);
+	fwupd_bios_setting_set_lower_bound(setting, 1);
+	fwupd_bios_setting_set_upper_bound(setting, 16);
+	fwupd_bios_setting_set_scalar_increment(setting, 2);
+
+	b = fu_binder_bios_setting_to_aidl(setting);
+	setting2 = fu_binder_bios_setting_from_aidl(b, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(setting2);
+
+	g_assert_cmpstr(fwupd_bios_setting_get_id(setting2), ==, "com.fwupd.setting");
+	g_assert_cmpstr(fwupd_bios_setting_get_name(setting2), ==, "name");
+	g_assert_cmpstr(fwupd_bios_setting_get_path(setting2), ==, "/path");
+	g_assert_cmpstr(fwupd_bios_setting_get_description(setting2), ==, "description");
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting2), ==, "enabled");
+	g_assert_cmpint(fwupd_bios_setting_get_possible_values(setting2)->len, ==, 2);
+	g_assert_cmpint(fwupd_bios_setting_get_kind(setting2),
+			==,
+			FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	g_assert_true(fwupd_bios_setting_get_read_only(setting2));
+	g_assert_cmpint(fwupd_bios_setting_get_lower_bound(setting2), ==, 1);
+	g_assert_cmpint(fwupd_bios_setting_get_upper_bound(setting2), ==, 16);
+	g_assert_cmpint(fwupd_bios_setting_get_scalar_increment(setting2), ==, 2);
+}
+
+static void
+fu_binder_security_attr_func(void)
+{
+	aidl_fwupd::FwupdSecurityAttr a;
+	g_autoptr(FwupdSecurityAttr) attr =
+	    fwupd_security_attr_new("org.fwupd.hsi.Uefi.SecureBoot");
+	g_autoptr(FwupdSecurityAttr) attr2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fwupd_security_attr_set_name(attr, "name");
+	fwupd_security_attr_set_title(attr, "UEFI Secure Boot");
+	fwupd_security_attr_set_description(attr, "description");
+	fwupd_security_attr_set_plugin(attr, "uefi");
+	fwupd_security_attr_set_url(attr, "https://fwupd.github.io/hsi.html");
+	fwupd_security_attr_set_fwupd_version(attr, "2.0.0");
+	fwupd_security_attr_set_bios_setting_id(attr, "com.fwupd.setting");
+	fwupd_security_attr_set_bios_setting_current_value(attr, "disabled");
+	fwupd_security_attr_set_bios_setting_target_value(attr, "enabled");
+	fwupd_security_attr_set_kernel_current_value(attr, "0");
+	fwupd_security_attr_set_kernel_target_value(attr, "1");
+	fwupd_security_attr_add_guid(attr, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
+	fwupd_security_attr_add_obsolete(attr, "org.fwupd.hsi.Old");
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_set_result_fallback(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_set_flags(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_created(attr, 0x1234);
+
+	a = fu_binder_security_attr_to_aidl(attr);
+	attr2 = fu_binder_security_attr_from_aidl(a, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr2);
+
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr2),
+			==,
+			"org.fwupd.hsi.Uefi.SecureBoot");
+	g_assert_cmpstr(fwupd_security_attr_get_name(attr2), ==, "name");
+	g_assert_cmpstr(fwupd_security_attr_get_title(attr2), ==, "UEFI Secure Boot");
+	g_assert_cmpstr(fwupd_security_attr_get_description(attr2), ==, "description");
+	g_assert_cmpstr(fwupd_security_attr_get_plugin(attr2), ==, "uefi");
+	g_assert_cmpstr(fwupd_security_attr_get_url(attr2), ==, "https://fwupd.github.io/hsi.html");
+	g_assert_cmpstr(fwupd_security_attr_get_fwupd_version(attr2), ==, "2.0.0");
+	g_assert_cmpstr(fwupd_security_attr_get_bios_setting_id(attr2), ==, "com.fwupd.setting");
+	g_assert_cmpstr(fwupd_security_attr_get_bios_setting_current_value(attr2), ==, "disabled");
+	g_assert_cmpstr(fwupd_security_attr_get_bios_setting_target_value(attr2), ==, "enabled");
+	g_assert_cmpstr(fwupd_security_attr_get_kernel_current_value(attr2), ==, "0");
+	g_assert_cmpstr(fwupd_security_attr_get_kernel_target_value(attr2), ==, "1");
+	g_assert_cmpint(fwupd_security_attr_get_guids(attr2)->len, ==, 1);
+	g_assert_cmpint(fwupd_security_attr_get_obsoletes(attr2)->len, ==, 1);
+	g_assert_cmpint(fwupd_security_attr_get_level(attr2),
+			==,
+			FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr2),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr2),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_cmpint(fwupd_security_attr_get_result_success(attr2),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fwupd_security_attr_has_flag(attr2, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_created(attr2), ==, 0x1234);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -325,5 +430,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/binder/device", fu_binder_device_func);
 	g_test_add_func("/fwupd/binder/request", fu_binder_request_func);
 	g_test_add_func("/fwupd/binder/plugin", fu_binder_plugin_func);
+	g_test_add_func("/fwupd/binder/bios-setting", fu_binder_bios_setting_func);
+	g_test_add_func("/fwupd/binder/security-attr", fu_binder_security_attr_func);
 	return g_test_run();
 }

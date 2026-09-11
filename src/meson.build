@@ -358,6 +358,9 @@ if build_daemon == 'binder'
     'FwupdRelease',
     'FwupdRemote',
     'FwupdRequest',
+    'FwupdKeyValue',
+    'FwupdBiosSetting',
+    'FwupdSecurityAttr',
   ]
 
   # the interface AIDL files generate C++ with global constructors that call

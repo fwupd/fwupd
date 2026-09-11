@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <aidl/org/freedesktop/fwupd/FwupdBiosSetting.h>
 #include <aidl/org/freedesktop/fwupd/FwupdDevice.h>
 #include <aidl/org/freedesktop/fwupd/FwupdPlugin.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRelease.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRemote.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRequest.h>
+#include <aidl/org/freedesktop/fwupd/FwupdSecurityAttr.h>
 
 #include <fwupd.h>
 
@@ -40,3 +42,13 @@ aidl_fwupd::FwupdPlugin
 fu_binder_plugin_to_aidl(FwupdPlugin *plugin);
 FwupdPlugin *
 fu_binder_plugin_from_aidl(const aidl_fwupd::FwupdPlugin &p, GError **error);
+
+aidl_fwupd::FwupdBiosSetting
+fu_binder_bios_setting_to_aidl(FwupdBiosSetting *setting);
+FwupdBiosSetting *
+fu_binder_bios_setting_from_aidl(const aidl_fwupd::FwupdBiosSetting &b, GError **error);
+
+aidl_fwupd::FwupdSecurityAttr
+fu_binder_security_attr_to_aidl(FwupdSecurityAttr *attr);
+FwupdSecurityAttr *
+fu_binder_security_attr_from_aidl(const aidl_fwupd::FwupdSecurityAttr &a, GError **error);
