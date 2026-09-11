@@ -28,7 +28,10 @@
 #include "fu-binder-common.h"
 #include "fu-binder-daemon-bridge.h"
 #include "fu-binder-daemon.h"
+#include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
+#include "fu-security-attrs-private.h"
+#include "fu-unix-seekable-input-stream.h"
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
 
@@ -494,6 +497,304 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			    err_msg.c_str());
 		}
 		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	activate(const std::string &in_id) override
+	{
+		g_autoptr(GError) error = NULL;
+		if (!fu_binder_daemon_activate_bridge(m_daemon, in_id.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	unlock(const std::string &in_id) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_unlock(engine, in_id.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	verify(const std::string &in_id) override
+	{
+		g_autoptr(GError) error = NULL;
+		if (!fu_binder_daemon_verify_bridge(m_daemon, in_id.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	verifyUpdate(const std::string &in_id) override
+	{
+		g_autoptr(GError) error = NULL;
+		if (!fu_binder_daemon_verify_update_bridge(m_daemon, in_id.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	modifyRemote(const std::string &in_remoteId,
+		     const std::string &in_key,
+		     const std::string &in_value) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_modify_remote(engine,
+					     in_remoteId.c_str(),
+					     in_key.c_str(),
+					     in_value.c_str(),
+					     &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	cleanRemote(const std::string &in_remoteId) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_clean_remote(engine, in_remoteId.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	modifyDevice(const std::string &in_deviceId,
+		     const std::string &in_key,
+		     const std::string &in_value) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_modify_device(engine,
+					     in_deviceId.c_str(),
+					     in_key.c_str(),
+					     in_value.c_str(),
+					     &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	modifyConfig(const std::string &in_section,
+		     const std::string &in_key,
+		     const std::string &in_value) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_modify_config(engine,
+					     in_section.c_str(),
+					     in_key.c_str(),
+					     in_value.c_str(),
+					     &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	resetConfig(const std::string &in_section) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_reset_config(engine, in_section.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	clearResults(const std::string &in_deviceId) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		if (!fu_engine_clear_results(engine, in_deviceId.c_str(), &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	getDetails(const ::ndk::ScopedFileDescriptor &in_fd,
+		   std::vector<aidl_fwupd::FwupdDevice> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(FuEngineRequest) request = fu_binder_daemon_create_request(m_daemon);
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(GPtrArray) details = NULL;
+
+		int fd = in_fd.get();
+		if (fd < 0) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid file descriptor received");
+		}
+
+		/* the daemon takes ownership of a dup so the caller's fd is untouched */
+		stream = fu_unix_seekable_input_stream_new(dup(fd), TRUE, &error);
+		if (stream == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		details = fu_engine_get_details(engine, request, stream, &error);
+		if (details == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		for (guint i = 0; i < details->len; i++) {
+			FwupdDevice *device = FWUPD_DEVICE(g_ptr_array_index(details, i));
+			_aidl_return->push_back(fu_binder_device_to_aidl(device));
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	getReportMetadata(std::vector<aidl_fwupd::FwupdKeyValue> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GHashTable) metadata = NULL; /* str:str */
+		GHashTableIter iter;
+		gpointer key, value;
+
+		metadata = fu_engine_get_report_metadata(engine, &error);
+		if (metadata == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		g_hash_table_iter_init(&iter, metadata);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			aidl_fwupd::FwupdKeyValue kv;
+			kv.key = std::string((const gchar *)key);
+			kv.value = std::string((const gchar *)value);
+			_aidl_return->push_back(kv);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	getBiosSettings(std::vector<aidl_fwupd::FwupdBiosSetting> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		FuContext *ctx = fu_engine_get_context(engine);
+		g_autoptr(FuBiosSettings) attrs = fu_context_get_bios_settings(ctx);
+		GPtrArray *items = fu_bios_settings_get_all(attrs);
+
+		for (guint i = 0; i < items->len; i++) {
+			FwupdBiosSetting *setting = FWUPD_BIOS_SETTING(g_ptr_array_index(items, i));
+			_aidl_return->push_back(fu_binder_bios_setting_to_aidl(setting));
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	setBiosSettings(const std::vector<aidl_fwupd::FwupdKeyValue> &in_settings) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GHashTable) settings =
+		    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+		for (const auto &kv : in_settings) {
+			if (!kv.key.has_value())
+				continue;
+			g_hash_table_insert(
+			    settings,
+			    g_strdup(kv.key.value().c_str()),
+			    g_strdup(kv.value.has_value() ? kv.value.value().c_str() : ""));
+		}
+		if (!fu_engine_modify_bios_settings(engine, settings, FALSE, &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	getHostSecurityAttrs(std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
+	{
+#ifdef HAVE_HSI
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(FuSecurityAttrs) attrs = fu_engine_get_host_security_attrs(engine);
+		g_autoptr(GPtrArray) items = fu_security_attrs_get_all(attrs, NULL);
+
+		for (guint i = 0; i < items->len; i++) {
+			FwupdSecurityAttr *attr = FWUPD_SECURITY_ATTR(g_ptr_array_index(items, i));
+			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
+		}
+		return ::ndk::ScopedAStatus::ok();
+#else
+		(void)_aidl_return;
+		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "HSI support not enabled");
+#endif
+	}
+
+	::ndk::ScopedAStatus
+	getHostSecurityEvents(int32_t in_limit,
+			      std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
+	{
+#ifdef HAVE_HSI
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuSecurityAttrs) attrs = NULL;
+		g_autoptr(GPtrArray) items = NULL;
+
+		attrs = fu_engine_get_host_security_events(engine, (guint)in_limit, &error);
+		if (attrs == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		items = fu_security_attrs_get_all(attrs, NULL);
+		for (guint i = 0; i < items->len; i++) {
+			FwupdSecurityAttr *attr = FWUPD_SECURITY_ATTR(g_ptr_array_index(items, i));
+			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
+		}
+		return ::ndk::ScopedAStatus::ok();
+#else
+		(void)in_limit;
+		(void)_aidl_return;
+		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "HSI support not enabled");
+#endif
 	}
 };
 

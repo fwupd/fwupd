@@ -684,3 +684,204 @@ fu_binder_plugin_from_aidl(const aidl_fwupd::FwupdPlugin &p, GError **)
 	fwupd_plugin_set_flags(plugin, (guint64)p.flags);
 	return g_steal_pointer(&plugin);
 }
+
+aidl_fwupd::FwupdBiosSetting
+fu_binder_bios_setting_to_aidl(FwupdBiosSetting *setting)
+{
+	aidl_fwupd::FwupdBiosSetting b;
+	GPtrArray *possible_values = fwupd_bios_setting_get_possible_values(setting);
+
+	if (fwupd_bios_setting_get_id(setting) != NULL)
+		b.id = fwupd_bios_setting_get_id(setting);
+	if (fwupd_bios_setting_get_name(setting) != NULL)
+		b.name = fwupd_bios_setting_get_name(setting);
+	if (fwupd_bios_setting_get_description(setting) != NULL)
+		b.description = fwupd_bios_setting_get_description(setting);
+	if (fwupd_bios_setting_get_path(setting) != NULL)
+		b.path = fwupd_bios_setting_get_path(setting);
+	if (fwupd_bios_setting_get_current_value(setting) != NULL)
+		b.currentValue = fwupd_bios_setting_get_current_value(setting);
+	if (possible_values != NULL) {
+		std::vector<std::optional<std::string>> values;
+		for (guint i = 0; i < possible_values->len; i++) {
+			const gchar *value = (const gchar *)g_ptr_array_index(possible_values, i);
+			values.push_back(std::string(value));
+		}
+		b.possibleValues = values;
+	}
+	b.kind = (int32_t)fwupd_bios_setting_get_kind(setting);
+	b.readOnly = fwupd_bios_setting_get_read_only(setting);
+	b.lowerBound = (int64_t)fwupd_bios_setting_get_lower_bound(setting);
+	b.upperBound = (int64_t)fwupd_bios_setting_get_upper_bound(setting);
+	b.scalarIncrement = (int64_t)fwupd_bios_setting_get_scalar_increment(setting);
+	return b;
+}
+
+FwupdBiosSetting *
+fu_binder_bios_setting_from_aidl(const aidl_fwupd::FwupdBiosSetting &b, GError **error)
+{
+	g_autoptr(FwupdBiosSetting) setting = fwupd_bios_setting_new(NULL, NULL);
+
+	/* these are unsigned in fwupd, so a negative AIDL value would wrap to a huge number */
+	if (b.lowerBound < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BIOS setting lower bound cannot be negative: %" G_GINT64_FORMAT,
+			    (gint64)b.lowerBound);
+		return NULL;
+	}
+	if (b.upperBound < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BIOS setting upper bound cannot be negative: %" G_GINT64_FORMAT,
+			    (gint64)b.upperBound);
+		return NULL;
+	}
+	if (b.scalarIncrement < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BIOS setting scalar increment cannot be negative: %" G_GINT64_FORMAT,
+			    (gint64)b.scalarIncrement);
+		return NULL;
+	}
+
+	if (b.id.has_value())
+		fwupd_bios_setting_set_id(setting, b.id.value().c_str());
+	if (b.name.has_value())
+		fwupd_bios_setting_set_name(setting, b.name.value().c_str());
+	if (b.description.has_value())
+		fwupd_bios_setting_set_description(setting, b.description.value().c_str());
+	if (b.path.has_value())
+		fwupd_bios_setting_set_path(setting, b.path.value().c_str());
+	if (b.currentValue.has_value())
+		fwupd_bios_setting_set_current_value(setting, b.currentValue.value().c_str());
+	if (!b.possibleValues.has_value()) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "BIOS setting has no possible values");
+		return NULL;
+	}
+	for (const auto &value : b.possibleValues.value()) {
+		if (value.has_value())
+			fwupd_bios_setting_add_possible_value(setting, value.value().c_str());
+	}
+	fwupd_bios_setting_set_kind(setting, (FwupdBiosSettingKind)b.kind);
+	fwupd_bios_setting_set_read_only(setting, b.readOnly);
+	fwupd_bios_setting_set_lower_bound(setting, (guint64)b.lowerBound);
+	fwupd_bios_setting_set_upper_bound(setting, (guint64)b.upperBound);
+	fwupd_bios_setting_set_scalar_increment(setting, (guint64)b.scalarIncrement);
+	return g_steal_pointer(&setting);
+}
+
+aidl_fwupd::FwupdSecurityAttr
+fu_binder_security_attr_to_aidl(FwupdSecurityAttr *attr)
+{
+	aidl_fwupd::FwupdSecurityAttr a;
+	GPtrArray *guids = fwupd_security_attr_get_guids(attr);
+	GPtrArray *obsoletes = fwupd_security_attr_get_obsoletes(attr);
+
+	if (fwupd_security_attr_get_appstream_id(attr) != NULL)
+		a.appstreamId = fwupd_security_attr_get_appstream_id(attr);
+	if (fwupd_security_attr_get_name(attr) != NULL)
+		a.name = fwupd_security_attr_get_name(attr);
+	if (fwupd_security_attr_get_title(attr) != NULL)
+		a.title = fwupd_security_attr_get_title(attr);
+	if (fwupd_security_attr_get_description(attr) != NULL)
+		a.description = fwupd_security_attr_get_description(attr);
+	if (fwupd_security_attr_get_plugin(attr) != NULL)
+		a.plugin = fwupd_security_attr_get_plugin(attr);
+	if (fwupd_security_attr_get_url(attr) != NULL)
+		a.url = fwupd_security_attr_get_url(attr);
+	if (fwupd_security_attr_get_fwupd_version(attr) != NULL)
+		a.fwupdVersion = fwupd_security_attr_get_fwupd_version(attr);
+	if (fwupd_security_attr_get_bios_setting_id(attr) != NULL)
+		a.biosSettingId = fwupd_security_attr_get_bios_setting_id(attr);
+	if (fwupd_security_attr_get_bios_setting_current_value(attr) != NULL)
+		a.biosSettingCurrentValue =
+		    fwupd_security_attr_get_bios_setting_current_value(attr);
+	if (fwupd_security_attr_get_bios_setting_target_value(attr) != NULL)
+		a.biosSettingTargetValue = fwupd_security_attr_get_bios_setting_target_value(attr);
+	if (fwupd_security_attr_get_kernel_current_value(attr) != NULL)
+		a.kernelCurrentValue = fwupd_security_attr_get_kernel_current_value(attr);
+	if (fwupd_security_attr_get_kernel_target_value(attr) != NULL)
+		a.kernelTargetValue = fwupd_security_attr_get_kernel_target_value(attr);
+	if (guids != NULL) {
+		std::vector<std::optional<std::string>> values;
+		for (guint i = 0; i < guids->len; i++)
+			values.push_back(std::string((const gchar *)g_ptr_array_index(guids, i)));
+		a.guids = values;
+	}
+	if (obsoletes != NULL) {
+		std::vector<std::optional<std::string>> values;
+		for (guint i = 0; i < obsoletes->len; i++)
+			values.push_back(
+			    std::string((const gchar *)g_ptr_array_index(obsoletes, i)));
+		a.obsoletes = values;
+	}
+	a.level = (int32_t)fwupd_security_attr_get_level(attr);
+	a.result = (int32_t)fwupd_security_attr_get_result(attr);
+	a.resultFallback = (int32_t)fwupd_security_attr_get_result_fallback(attr);
+	a.resultSuccess = (int32_t)fwupd_security_attr_get_result_success(attr);
+	a.flags = (int64_t)fwupd_security_attr_get_flags(attr);
+	a.created = (int64_t)fwupd_security_attr_get_created(attr);
+	return a;
+}
+
+FwupdSecurityAttr *
+fu_binder_security_attr_from_aidl(const aidl_fwupd::FwupdSecurityAttr &a, GError **)
+{
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
+	if (a.appstreamId.has_value())
+		fwupd_security_attr_set_appstream_id(attr, a.appstreamId.value().c_str());
+	if (a.name.has_value())
+		fwupd_security_attr_set_name(attr, a.name.value().c_str());
+	if (a.title.has_value())
+		fwupd_security_attr_set_title(attr, a.title.value().c_str());
+	if (a.description.has_value())
+		fwupd_security_attr_set_description(attr, a.description.value().c_str());
+	if (a.plugin.has_value())
+		fwupd_security_attr_set_plugin(attr, a.plugin.value().c_str());
+	if (a.url.has_value())
+		fwupd_security_attr_set_url(attr, a.url.value().c_str());
+	if (a.fwupdVersion.has_value())
+		fwupd_security_attr_set_fwupd_version(attr, a.fwupdVersion.value().c_str());
+	if (a.biosSettingId.has_value())
+		fwupd_security_attr_set_bios_setting_id(attr, a.biosSettingId.value().c_str());
+	if (a.biosSettingCurrentValue.has_value())
+		fwupd_security_attr_set_bios_setting_current_value(
+		    attr,
+		    a.biosSettingCurrentValue.value().c_str());
+	if (a.biosSettingTargetValue.has_value())
+		fwupd_security_attr_set_bios_setting_target_value(
+		    attr,
+		    a.biosSettingTargetValue.value().c_str());
+	if (a.kernelCurrentValue.has_value())
+		fwupd_security_attr_set_kernel_current_value(attr,
+							     a.kernelCurrentValue.value().c_str());
+	if (a.kernelTargetValue.has_value())
+		fwupd_security_attr_set_kernel_target_value(attr,
+							    a.kernelTargetValue.value().c_str());
+	if (a.guids.has_value()) {
+		for (const auto &guid : a.guids.value()) {
+			if (guid.has_value())
+				fwupd_security_attr_add_guid(attr, guid.value().c_str());
+		}
+	}
+	if (a.obsoletes.has_value()) {
+		for (const auto &obsolete : a.obsoletes.value()) {
+			if (obsolete.has_value())
+				fwupd_security_attr_add_obsolete(attr, obsolete.value().c_str());
+		}
+	}
+	fwupd_security_attr_set_level(attr, (FwupdSecurityAttrLevel)a.level);
+	fwupd_security_attr_set_result(attr, (FwupdSecurityAttrResult)a.result);
+	fwupd_security_attr_set_result_fallback(attr, (FwupdSecurityAttrResult)a.resultFallback);
+	fwupd_security_attr_set_result_success(attr, (FwupdSecurityAttrResult)a.resultSuccess);
+	fwupd_security_attr_set_flags(attr, (FwupdSecurityAttrFlags)a.flags);
+	fwupd_security_attr_set_created(attr, (guint64)a.created);
+	return g_steal_pointer(&attr);
+}

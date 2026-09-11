@@ -240,6 +240,50 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 	return TRUE;
 }
 
+/* create a progress object wired up to report status and percentage to clients */
+static FuProgress *
+fu_binder_daemon_progress_new(FuBinderDaemon *self)
+{
+	FuProgress *progress = fu_progress_new(G_STRLOC);
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(FU_PROGRESS(progress),
+			 "percentage-changed",
+			 G_CALLBACK(fu_binder_daemon_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_binder_daemon_progress_status_changed_cb),
+			 self);
+	return progress;
+}
+
+gboolean
+fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
+	return fu_engine_activate(engine, device_id, progress, error);
+}
+
+gboolean
+fu_binder_daemon_verify_bridge(void *daemon_instance, const gchar *device_id, GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
+	return fu_engine_verify(engine, device_id, progress, error);
+}
+
+gboolean
+fu_binder_daemon_verify_update_bridge(void *daemon_instance, const gchar *device_id, GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
+	return fu_engine_verify_update(engine, device_id, progress, error);
+}
+
 static void
 fu_binder_daemon_engine_changed_cb(FuEngine *engine, FuBinderDaemon *self)
 {
