@@ -187,6 +187,10 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
     for child in root:
         if "id" not in child.attrib:
             continue
+        if len(child) == 0:
+            # <dependency id="foo" />
+            deps.append(f"{child.attrib['id']}")
+            continue
         for distro in child:
             if "id" not in distro.attrib:
                 continue
