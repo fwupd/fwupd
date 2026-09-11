@@ -228,7 +228,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     exclusive = " !".join(exclusive).strip()
                     if exclusive:
                         exclusive = f"!{exclusive}"
-                    control = f" [{inclusive}{exclusive}]"
+                    control = f" [{inclusive}{' ' if inclusive and exclusive else ''}{exclusive}]"
 
             if cross and build_target == "multi-arch":
                 arch_suffix = f":{variant}"
@@ -247,10 +247,8 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                 if variant and "only-if" in package.attrib:
                     if package.attrib["only-if"] != variant:
                         continue
-                if package.text:
-                    dep = package.text
-                else:
-                    dep = child.attrib["id"]
+
+                dep = package.attrib.get("name") or child.attrib["id"]
                 if dep:
                     if is_build_indep:
                         build_indep.append(f"{dep}{arch_suffix}{version}{control}")
