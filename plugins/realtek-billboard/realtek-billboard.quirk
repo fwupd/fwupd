@@ -1,0 +1,5 @@
+# Realtek Billboard controller
+[USB\VID_32AC&PID_0029]
+Plugin = realtek_billboard
+Summary = Realtek USB Billboard controller
+InstallDuration = 10
