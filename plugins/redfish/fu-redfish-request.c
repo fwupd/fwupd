@@ -12,6 +12,7 @@ struct _FuRedfishRequest {
 	GObject parent_instance;
 	CURL *curl;
 	CURLU *uri;
+	struct curl_slist *headers; /* nullable */
 	gchar *path_prefix;
 	GByteArray *buf;
 	glong status_code;
@@ -204,6 +205,15 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 typedef struct curl_slist _curl_slist;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 
+void
+fu_redfish_request_add_header(FuRedfishRequest *self, const gchar *header)
+{
+	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
+	g_return_if_fail(header != NULL);
+	self->headers = curl_slist_append(self->headers, header);
+	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, self->headers);
+}
+
 static void
 fu_redfish_request_reset(FuRedfishRequest *self)
 {
@@ -260,6 +270,10 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	hs = curl_slist_append(hs, "Content-Type: application/json");
 	if (etag_header != NULL)
 		hs = curl_slist_append(hs, etag_header);
+	/* CURLOPT_HTTPHEADER replaces the list set by add_header(), so re-append to preserve auth
+	 */
+	for (struct curl_slist *h = self->headers; h != NULL; h = h->next)
+		hs = curl_slist_append(hs, h->data);
 	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 	return fu_redfish_request_perform(self, path, flags, error);
 }
@@ -319,6 +333,8 @@ fu_redfish_request_finalize(GObject *object)
 	FuRedfishRequest *self = FU_REDFISH_REQUEST(object);
 	if (self->cache != NULL)
 		g_hash_table_unref(self->cache);
+	if (self->headers != NULL)
+		curl_slist_free_all(self->headers);
 	g_object_unref(self->json_parser);
 	g_byte_array_unref(self->buf);
 	g_free(self->path_prefix);
