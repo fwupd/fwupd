@@ -60,6 +60,8 @@ typedef struct {
 	guint battery_level;
 	guint battery_threshold;
 	GPtrArray *bios_settings;
+	gboolean pending_reboot;
+	gboolean pending_reboot_is_set;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
 	FuCpuVendor cpu_vendor;
@@ -717,20 +719,32 @@ gboolean
 fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	FuBiosSetting *setting = NULL;
-	guint64 val = 0;
+	gboolean found;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(result != NULL, FALSE);
 
+	found = priv->pending_reboot_is_set;
+	*result = priv->pending_reboot;
 	for (guint i = 0; i < priv->bios_settings->len; i++) {
-		FuBiosSetting *attr_tmp = g_ptr_array_index(priv->bios_settings, i);
-		const gchar *tmp = fu_bios_setting_get_name(attr_tmp);
-		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
-			setting = attr_tmp;
-			break;
-		}
+		FuBiosSetting *setting = g_ptr_array_index(priv->bios_settings, i);
+		guint64 val = 0;
+		if (g_strcmp0(fu_bios_setting_get_name(setting),
+			      FWUPD_BIOS_SETTING_PENDING_REBOOT) != 0)
+			continue;
+		found = TRUE;
+		if (!fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), error))
+			return FALSE;
+		if (!fu_strtoull(fu_bios_setting_get_current_value(setting),
+				 &val,
+				 0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
+		*result |= val == 1;
 	}
-	if (setting == NULL) {
+	if (!found) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
@@ -738,20 +752,25 @@ fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error)
 		return FALSE;
 	}
 
-	/* refresh/re-read */
-	if (!fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), error))
-		return FALSE;
-	if (!fu_strtoull(fu_bios_setting_get_current_value(setting),
-			 &val,
-			 0,
-			 G_MAXUINT32,
-			 FU_INTEGER_BASE_AUTO,
-			 error))
-		return FALSE;
-	*result = (val == 1);
-
-	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_context_set_pending_reboot:
+ * @self: a #FuContext
+ * @pending_reboot: whether applying BIOS settings requires a reboot
+ *
+ * Sets pending reboot state for a native BIOS settings provider.
+ *
+ * Since: 2.1.8
+ **/
+void
+fu_context_set_pending_reboot(FuContext *self, gboolean pending_reboot)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	priv->pending_reboot = pending_reboot;
+	priv->pending_reboot_is_set = TRUE;
 }
 
 /**
