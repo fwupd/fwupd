@@ -13,7 +13,7 @@ def parse_control_dependencies():
     QUBES = os.getenv("QUBES")
     variant = os.getenv("CROSS")
     if not variant:
-        variant = "x86_64"
+        variant = "amd64"
     return parse_dependencies("debian", variant, True), QUBES
 
 

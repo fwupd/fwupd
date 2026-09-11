@@ -62,7 +62,7 @@ def generate_dockerfile(
     # insert dependencies to install
     if cross:
         deps_parsed, build_indep = parse_dependencies(
-            distro, ARCH_TO_DEPS_MAP[cross], False, cross=True
+            distro, ARCH_TO_DEPS_MAP.get(cross, cross), False, cross=True
         )
         deps = deps_parsed + build_indep + [f"crossbuild-essential-{cross}"]
     elif variant in ["i386", "android"]:
@@ -70,7 +70,7 @@ def generate_dockerfile(
         deps = deps_parsed + build_indep
     else:
         deps_parsed, build_indep = parse_dependencies(
-            distro, ARCH_TO_DEPS_MAP[arch], False
+            distro, ARCH_TO_DEPS_MAP.get(arch, arch), False
         )
         deps = deps_parsed + build_indep
     data["DEPENDENCIES"] = sorted(set(deps))
