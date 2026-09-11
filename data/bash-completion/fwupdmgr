@@ -151,6 +151,7 @@ redfish_modify_config_opts=(
 	'IpmiDisableCreateUser'
 	'ManagerResetTimeout'
 	'Password'
+	'SessionKeyFile'
 	'Uri'
 	'Username'
 	'UserUri'
