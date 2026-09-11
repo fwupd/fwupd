@@ -529,6 +529,7 @@ def _build(bld: Builder) -> None:
     # plugins
     for fzr in [
         Fuzzer("acpi-phat", pattern="acpi-phat"),
+        Fuzzer("amd-afc", pattern="amd-afc-state"),
         Fuzzer("bcm57xx"),
         Fuzzer("ccgx"),
         Fuzzer("ccgx-dmc"),
