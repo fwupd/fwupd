@@ -119,11 +119,13 @@
     </distro>
     <distro id="debian">
       <control />
+      <package variant="i386">fonts-noto-cjk</package>
       <package variant="x86_64">fonts-noto-cjk</package>
       <package variant="aarch64">fonts-noto-cjk</package>
     </distro>
     <distro id="ubuntu">
       <control />
+      <package variant="i386">fonts-noto-cjk</package>
       <package variant="x86_64">fonts-noto-cjk</package>
       <package variant="aarch64">fonts-noto-cjk</package>
     </distro>
