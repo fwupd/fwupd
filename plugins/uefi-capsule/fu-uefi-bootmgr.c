@@ -349,7 +349,7 @@ fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuVolume *esp = fu_uefi_capsule_device_get_esp(capsule_device);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
-	gboolean secureboot_enabled = FALSE;
+	FuEfiSecureBootState secureboot_state = FU_EFI_SECURE_BOOT_STATE_DISABLED;
 	g_autofree gchar *shim_dst = NULL;
 	g_autofree gchar *app_src = NULL;
 	g_autofree gchar *app_basename = NULL;
@@ -373,11 +373,11 @@ fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 	}
 
 	/* SecureBoot has to use shim */
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_state, &error_local))
 		g_debug("ignoring: %s", error_local->message);
 	if (fu_device_has_private_flag(FU_DEVICE(capsule_device),
 				       FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB) &&
-	    secureboot_enabled) {
+	    (secureboot_state & FU_EFI_SECURE_BOOT_STATE_ENABLED) > 0) {
 		g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 		g_autofree gchar *shim_basename = NULL;
 		g_autofree gchar *shim_src = NULL;

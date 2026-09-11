@@ -452,3 +452,10 @@ enum FuEfiCapsuleHeaderFlags {
     PopulateSystemTable = 1 << 17,
     InitiateReset       = 1 << 18,
 }
+
+#[derive(ToString, Bitfield)]
+enum FuEfiSecureBootState {
+    Disabled = 0,
+    Enabled = 1 << 0,
+    InSetup = 1 << 1,
+}
