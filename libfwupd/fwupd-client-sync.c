@@ -16,6 +16,8 @@
 #include "fwupd-common-private.h"
 #include "fwupd-error.h"
 
+#define FWUPD_CLIENT_HOST_SECURITY_EVENTS_MAX 10000
+
 typedef struct {
 	gboolean ret;
 	gchar *str;
@@ -1783,6 +1785,17 @@ fwupd_client_get_host_security_events(FwupdClient *self,
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (limit > FWUPD_CLIENT_HOST_SECURITY_EVENTS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "limit of %u is too large, maximum is %u",
+			    limit,
+			    (guint)FWUPD_CLIENT_HOST_SECURITY_EVENTS_MAX);
+		return NULL;
+	}
 
 	/* connect */
 	if (!fwupd_client_connect(self, cancellable, error))
