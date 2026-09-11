@@ -269,6 +269,39 @@ fu_bios_settings_no_quirks_func(void)
 	g_assert_null(tmp);
 }
 
+static void
+fu_bios_settings_pending_reboot_func(void)
+{
+	gboolean pending_reboot = FALSE;
+	g_autoptr(FuBiosSettings) settings = fu_bios_settings_new(NULL);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_false(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_clear_error(&error);
+	fu_bios_settings_set_pending_reboot(settings, FALSE);
+	g_assert_true(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_false(pending_reboot);
+	fu_bios_settings_set_pending_reboot(settings, TRUE);
+	g_assert_true(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_true(pending_reboot);
+}
+
+static void
+fu_bios_settings_sysfs_attributes_func(void)
+{
+	g_autoptr(FuBiosSettings) settings = fu_bios_settings_new(NULL);
+	g_autoptr(FwupdBiosSetting) native = fwupd_bios_setting_new("native", NULL);
+	g_autoptr(FwupdBiosSetting) sysfs = fwupd_bios_setting_new("sysfs", "/sys/firmware");
+
+	fu_bios_settings_add_attribute(settings, native);
+	g_assert_false(fu_bios_settings_has_sysfs_attributes(settings));
+	fu_bios_settings_add_attribute(settings, sysfs);
+	g_assert_true(fu_bios_settings_has_sysfs_attributes(settings));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -276,5 +309,9 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/bios-settings/load", fu_bios_settings_load_func);
 	g_test_add_func("/fwupd/bios-settings/no-quirks", fu_bios_settings_no_quirks_func);
+	g_test_add_func("/fwupd/bios-settings/pending-reboot",
+			fu_bios_settings_pending_reboot_func);
+	g_test_add_func("/fwupd/bios-settings/sysfs-attributes",
+			fu_bios_settings_sysfs_attributes_func);
 	return g_test_run();
 }

@@ -1215,6 +1215,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       GError **error)
 {
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
+	g_autoptr(GError) error_pending_reboot = NULL;
 	gboolean changed = FALSE;
 	GHashTableIter iter;
 	gpointer key;
@@ -1266,9 +1267,12 @@ fu_engine_modify_bios_settings(FuEngine *self,
 				    "no BIOS settings needed to be changed");
 		return FALSE;
 	}
-	if (fu_bios_settings_get_attr(bios_settings, FWUPD_BIOS_SETTING_PENDING_REBOOT) != NULL) {
-		if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, error))
+	if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, &error_pending_reboot)) {
+		if (!g_error_matches(error_pending_reboot, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_pending_reboot));
 			return FALSE;
+		}
+	} else {
 		g_info("pending_reboot is now %d", changed);
 	}
 	return TRUE;
@@ -8148,9 +8152,8 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device, gboolean a
 		if (added) {
 			g_autoptr(FuBiosSettings) settings =
 			    fu_context_get_bios_settings(self->ctx);
-			g_autoptr(GPtrArray) items = fu_bios_settings_get_all(settings);
 
-			if (items->len > 0) {
+			if (fu_bios_settings_has_sysfs_attributes(settings)) {
 				g_debug("ignoring add event for already loaded settings");
 				return;
 			}

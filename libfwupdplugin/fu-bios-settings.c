@@ -29,6 +29,8 @@ struct _FuBiosSettings {
 	GHashTable *descriptions;
 	GHashTable *read_only;
 	GPtrArray *attrs;
+	gboolean pending_reboot;
+	gboolean pending_reboot_is_set;
 };
 
 static void
@@ -286,6 +288,18 @@ fu_bios_settings_add_attribute(FuBiosSettings *self, FwupdBiosSetting *attr)
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 }
 
+gboolean
+fu_bios_settings_has_sysfs_attributes(FuBiosSettings *self)
+{
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i);
+		if (fwupd_bios_setting_get_path(attr) != NULL)
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static gboolean
 fu_bios_settings_populate_attribute(FuBiosSettings *self,
 				    const gchar *driver,
@@ -449,7 +463,12 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 
 	if (self->attrs->len > 0) {
 		g_debug("re-initializing attributes");
-		g_ptr_array_set_size(self->attrs, 0);
+		/* keep settings supplied directly by plugins rather than sysfs */
+		for (guint i = self->attrs->len; i > 0; i--) {
+			FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i - 1);
+			if (fwupd_bios_setting_get_path(attr) != NULL)
+				g_ptr_array_remove_index(self->attrs, i - 1);
+		}
 	}
 	if (g_hash_table_size(self->descriptions) == 0)
 		fu_bios_settings_populate_descriptions(self);
@@ -582,22 +601,37 @@ fu_bios_settings_get_all(FuBiosSettings *self)
 gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
 {
-	FwupdBiosSetting *attr = NULL;
-	g_autofree gchar *data = NULL;
-	guint64 val = 0;
+	gboolean found;
 
 	g_return_val_if_fail(result != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
+	found = self->pending_reboot_is_set;
+	*result = self->pending_reboot;
 	for (guint i = 0; i < self->attrs->len; i++) {
-		FwupdBiosSetting *attr_tmp = g_ptr_array_index(self->attrs, i);
-		const gchar *tmp = fwupd_bios_setting_get_name(attr_tmp);
-		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
-			attr = attr_tmp;
-			break;
+		FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i);
+		g_autofree gchar *data = NULL;
+		guint64 val = 0;
+		if (g_strcmp0(fwupd_bios_setting_get_name(attr),
+			      FWUPD_BIOS_SETTING_PENDING_REBOOT) != 0)
+			continue;
+		found = TRUE;
+
+		/* refresh/re-read */
+		if (fwupd_bios_setting_get_path(attr) == NULL) {
+			if (!fwupd_bios_setting_setup(attr, error))
+				return FALSE;
+			data = g_strdup(fwupd_bios_setting_get_current_value(attr));
+		} else {
+			if (!fu_bios_setting_get_key(attr, NULL, &data, error))
+				return FALSE;
+			fwupd_bios_setting_set_current_value(attr, data);
 		}
+		if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		*result |= val == 1;
 	}
-	if (attr == NULL) {
+	if (!found) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
@@ -605,16 +639,24 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 		return FALSE;
 	}
 
-	/* refresh/re-read */
-	if (!fu_bios_setting_get_key(attr, NULL, &data, error))
-		return FALSE;
-	fwupd_bios_setting_set_current_value(attr, data);
-	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-		return FALSE;
-
-	*result = (val == 1);
-
 	return TRUE;
+}
+
+/**
+ * fu_bios_settings_set_pending_reboot:
+ * @self: a #FuBiosSettings
+ * @pending_reboot: whether applying BIOS settings requires a reboot
+ *
+ * Sets pending reboot state for a native BIOS settings provider.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_bios_settings_set_pending_reboot(FuBiosSettings *self, gboolean pending_reboot)
+{
+	g_return_if_fail(FU_IS_BIOS_SETTINGS(self));
+	self->pending_reboot = pending_reboot;
+	self->pending_reboot_is_set = TRUE;
 }
 
 static GVariant *
