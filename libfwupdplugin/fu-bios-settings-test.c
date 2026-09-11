@@ -269,6 +269,55 @@ fu_bios_settings_no_quirks_func(void)
 	g_assert_null(tmp);
 }
 
+static void
+fu_bios_settings_pending_reboot_func(void)
+{
+	gboolean pending_reboot = FALSE;
+	g_autoptr(FuBiosSettings) settings = fu_bios_settings_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdBiosSetting) native =
+	    fwupd_bios_setting_new(FWUPD_BIOS_SETTING_PENDING_REBOOT, NULL);
+
+	g_assert_false(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_clear_error(&error);
+	fu_bios_settings_set_pending_reboot(settings, FALSE);
+	g_assert_true(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_false(pending_reboot);
+	fwupd_bios_setting_set_current_value(native, "1");
+	fu_bios_settings_add_attribute(settings, native);
+	g_assert_true(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_true(pending_reboot);
+	fwupd_bios_setting_set_current_value(native, "0");
+	fu_bios_settings_set_pending_reboot(settings, TRUE);
+	g_assert_true(fu_bios_settings_get_pending_reboot(settings, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_true(pending_reboot);
+}
+
+static void
+fu_bios_settings_sysfs_provider_func(void)
+{
+	g_autoptr(FuBiosSettings) settings = fu_bios_settings_new(NULL);
+	g_autoptr(FwupdBiosSetting) native = fwupd_bios_setting_new("native", NULL);
+	g_autoptr(FwupdBiosSetting) sysfs1 =
+	    fwupd_bios_setting_new("sysfs1",
+				   "/sys/class/firmware-attributes/provider1/attributes/setting1");
+	g_autoptr(FwupdBiosSetting) sysfs2 =
+	    fwupd_bios_setting_new("sysfs2",
+				   "/sys/class/firmware-attributes/provider2/attributes/setting2");
+
+	fu_bios_settings_add_attribute(settings, native);
+	g_assert_false(fu_bios_settings_has_sysfs_provider(settings, "provider1"));
+	fu_bios_settings_add_attribute(settings, sysfs1);
+	g_assert_true(fu_bios_settings_has_sysfs_provider(settings, "provider1"));
+	g_assert_false(fu_bios_settings_has_sysfs_provider(settings, "provider2"));
+	fu_bios_settings_add_attribute(settings, sysfs2);
+	g_assert_true(fu_bios_settings_has_sysfs_provider(settings, "provider2"));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -276,5 +325,9 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/bios-settings/load", fu_bios_settings_load_func);
 	g_test_add_func("/fwupd/bios-settings/no-quirks", fu_bios_settings_no_quirks_func);
+	g_test_add_func("/fwupd/bios-settings/pending-reboot",
+			fu_bios_settings_pending_reboot_func);
+	g_test_add_func("/fwupd/bios-settings/sysfs-provider",
+			fu_bios_settings_sysfs_provider_func);
 	return g_test_run();
 }
