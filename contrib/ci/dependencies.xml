@@ -9,7 +9,7 @@
   <!ATTLIST distro id (arch | centos | darwin | debian | fedora | freebsd | ubuntu) #REQUIRED>
 
   <!ELEMENT package (#PCDATA)>
-  <!ATTLIST package variant (android | arm64 | i386 | mingw64 | s390x | amd64 ) #IMPLIED>
+  <!ATTLIST package only-if (android | arm64 | i386 | mingw64 | s390x | amd64 ) #IMPLIED>
 
   <!ELEMENT control (version?, inclusive*, exclusive*)>
 
@@ -26,26 +26,26 @@
 <dependencies>
   <dependency id="hwdata">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="7zip">
@@ -55,46 +55,46 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="pesign">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="abigail-tools">
     <distro id="ubuntu">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="bash-completion">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="centos">
-      <package variant="amd64">bash-completion</package>
+      <package only-if="amd64">bash-completion</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">bash-completion-devel</package>
-      <package variant="arm64">bash-completion-devel</package>
+      <package only-if="amd64">bash-completion-devel</package>
+      <package only-if="arm64">bash-completion-devel</package>
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="base-devel">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="fwupd-unsigned-dev">
@@ -106,97 +106,97 @@
         <inclusive arch="i386"/>
       </control>
       <build-target mode="multi-arch" />
-      <package variant="arm64" />
-      <package variant="i386" />
-      <package variant="amd64" />
+      <package only-if="arm64" />
+      <package only-if="i386" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="noto-fonts-cjk">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian">
       <control />
-      <package variant="i386">fonts-noto-cjk</package>
-      <package variant="amd64">fonts-noto-cjk</package>
-      <package variant="arm64">fonts-noto-cjk</package>
+      <package only-if="i386">fonts-noto-cjk</package>
+      <package only-if="amd64">fonts-noto-cjk</package>
+      <package only-if="arm64">fonts-noto-cjk</package>
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="i386">fonts-noto-cjk</package>
-      <package variant="amd64">fonts-noto-cjk</package>
-      <package variant="arm64">fonts-noto-cjk</package>
+      <package only-if="i386">fonts-noto-cjk</package>
+      <package only-if="amd64">fonts-noto-cjk</package>
+      <package only-if="arm64">fonts-noto-cjk</package>
     </distro>
   </dependency>
   <dependency id="ca-certificates">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="mingw64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="mingw64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="clang">
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="clang-tools">
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="clang-format">
     <distro id="fedora">
-      <package variant="amd64">clang-tools-extra</package>
+      <package only-if="amd64">clang-tools-extra</package>
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="gcc">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="mingw64">mingw64-gcc</package>
+      <package only-if="mingw64">mingw64-gcc</package>
     </distro>
   </dependency>
   <dependency id="gdb">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="gcovr">
     <distro id="debian">
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="android" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64">gcovr</package>
+      <package only-if="amd64">gcovr</package>
     </distro>
   </dependency>
   <dependency id="libcairo-dev">
     <distro id="centos">
-      <package variant="amd64">cairo-devel</package>
+      <package only-if="amd64">cairo-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">cairo-devel</package>
-      <package variant="arm64">cairo-devel</package>
+      <package only-if="amd64">cairo-devel</package>
+      <package only-if="arm64">cairo-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -204,17 +204,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libcairo-gobject2">
     <distro id="centos">
-      <package variant="amd64">cairo-gobject-devel</package>
+      <package only-if="amd64">cairo-gobject-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">cairo-gobject-devel</package>
-      <package variant="arm64">cairo-gobject-devel</package>
+      <package only-if="amd64">cairo-gobject-devel</package>
+      <package only-if="arm64">cairo-gobject-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -222,20 +222,20 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libdrm-dev">
     <distro id="arch">
-      <package variant="amd64">libdrm</package>
+      <package only-if="amd64">libdrm</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libdrm-devel</package>
+      <package only-if="amd64">libdrm-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libdrm-devel</package>
-      <package variant="arm64">libdrm-devel</package>
+      <package only-if="amd64">libdrm-devel</package>
+      <package only-if="arm64">libdrm-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -243,8 +243,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>libdrm</package>
@@ -252,34 +252,34 @@
   </dependency>
   <dependency id="libftdi1-dev">
     <distro id="arch">
-      <package variant="amd64">libftdi</package>
+      <package only-if="amd64">libftdi</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libftdi-devel</package>
-      <package variant="arm64">libftdi-devel</package>
+      <package only-if="amd64">libftdi-devel</package>
+      <package only-if="arm64">libftdi-devel</package>
     </distro>
     <distro id="debian">
       <control />
       <build-target mode="multi-arch" />
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libftdi1</package>
+      <package only-if="amd64">libftdi1</package>
     </distro>
   </dependency>
   <dependency id="libpci-dev">
     <distro id="arch">
-      <package variant="amd64">pciutils</package>
+      <package only-if="amd64">pciutils</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">pciutils-devel</package>
+      <package only-if="amd64">pciutils-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">pciutils-devel</package>
-      <package variant="arm64">pciutils-devel</package>
+      <package only-if="amd64">pciutils-devel</package>
+      <package only-if="arm64">pciutils-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -287,31 +287,31 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">libpci</package>
+      <package only-if="amd64">libpci</package>
     </distro>
   </dependency>
   <dependency id="fonts-noto">
     <distro id="arch">
-      <package variant="amd64">noto-fonts</package>
+      <package only-if="amd64">noto-fonts</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">google-noto-sans-cjk-ttc-fonts</package>
+      <package only-if="amd64">google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">google-noto-sans-cjk-ttc-fonts</package>
-      <package variant="arm64">google-noto-sans-cjk-ttc-fonts</package>
+      <package only-if="amd64">google-noto-sans-cjk-ttc-fonts</package>
+      <package only-if="arm64">google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>noto-sans</package>
@@ -330,8 +330,8 @@
   <dependency id="devscripts">
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="debhelper">
@@ -344,36 +344,36 @@
       <control>
         <version>(>= 12)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="dbus-x11">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="openssl-dev">
     <distro id="fedora">
-      <package variant="amd64">openssl-devel</package>
+      <package only-if="amd64">openssl-devel</package>
     </distro>
   </dependency>
   <dependency id="dconf">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="dh-python">
@@ -382,8 +382,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="dh-strip-nondeterminism">
@@ -392,24 +392,24 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="fakeroot">
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libfreetype-dev">
     <distro id="centos">
-      <package variant="amd64">freetype</package>
+      <package only-if="amd64">freetype</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">freetype</package>
-      <package variant="arm64">freetype</package>
+      <package only-if="amd64">freetype</package>
+      <package only-if="arm64">freetype</package>
     </distro>
     <distro id="debian">
       <control />
@@ -417,18 +417,18 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libreadline-dev">
     <distro id="centos">
-      <package variant="amd64">readline-devel</package>
+      <package only-if="amd64">readline-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">readline-devel</package>
-      <package variant="arm64">readline-devel</package>
-      <package variant="mingw64">mingw64-readline</package>
+      <package only-if="amd64">readline-devel</package>
+      <package only-if="arm64">readline-devel</package>
+      <package only-if="mingw64">mingw64-readline</package>
     </distro>
     <distro id="debian">
       <control />
@@ -436,30 +436,30 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="fontconfig">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="fwupd-efi">
     <distro id="arch">
-      <package variant="amd64">fwupd-efi</package>
+      <package only-if="amd64">fwupd-efi</package>
     </distro>
   </dependency>
   <dependency id="libjaylink-dev">
@@ -473,19 +473,19 @@
       <control>
         <exclusive arch="ia64"/>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="gettext">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
-      <package variant="mingw64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian">
       <control>
@@ -496,9 +496,9 @@
       <control>
         <version>(>= 0.19.8.1)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
     <distro id="freebsd">
       <package>gettext</package>
@@ -506,19 +506,19 @@
   </dependency>
   <dependency id="mingw64-gettext">
     <distro id="fedora">
-      <package variant="mingw64">mingw64-gettext</package>
+      <package only-if="mingw64">mingw64-gettext</package>
     </distro>
   </dependency>
   <dependency id="gnu-efi-devel">
     <distro id="arch">
-      <package variant="amd64">gnu-efi-libs</package>
+      <package only-if="amd64">gnu-efi-libs</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian">
       <control>
@@ -528,9 +528,9 @@
         <inclusive arch="i386"/>
       </control>
       <build-target mode="multi-arch" />
-      <package variant="arm64">gnu-efi</package>
-      <package variant="i386">gnu-efi</package>
-      <package variant="amd64">gnu-efi</package>
+      <package only-if="arm64">gnu-efi</package>
+      <package only-if="i386">gnu-efi</package>
+      <package only-if="amd64">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
       <control>
@@ -539,42 +539,42 @@
         <inclusive arch="armhf"/>
         <inclusive arch="i386"/>
       </control>
-      <package variant="amd64">gnu-efi</package>
-      <package variant="i386">gnu-efi</package>
-      <package variant="arm64">gnu-efi</package>
+      <package only-if="amd64">gnu-efi</package>
+      <package only-if="i386">gnu-efi</package>
+      <package only-if="arm64">gnu-efi</package>
     </distro>
   </dependency>
   <dependency id="git">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="libglib2.0-dev">
     <distro id="centos">
-      <package variant="amd64">glib2-devel</package>
+      <package only-if="amd64">glib2-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">glib2-devel</package>
-      <package variant="arm64">glib2-devel</package>
+      <package only-if="amd64">glib2-devel</package>
+      <package only-if="arm64">glib2-devel</package>
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
-      <package variant="mingw64">glib2-devel</package>
+      <package only-if="mingw64">glib2-devel</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64">gsettings-desktop-schemas</package>
+      <package only-if="amd64">gsettings-desktop-schemas</package>
     </distro>
     <distro id="debian">
       <control>
@@ -586,9 +586,9 @@
       <control>
         <version>(>= 2.68.0)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
     <distro id="freebsd">
       <package>glib</package>
@@ -596,31 +596,31 @@
   </dependency>
   <dependency id="mingw64-glib2">
     <distro id="fedora">
-      <package variant="mingw64">mingw64-glib2</package>
+      <package only-if="mingw64">mingw64-glib2</package>
     </distro>
   </dependency>
   <dependency id="glibc-langpack-en">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64">glibc-langpack-en</package>
-      <package variant="arm64">glibc-langpack-en</package>
+      <package only-if="amd64">glibc-langpack-en</package>
+      <package only-if="arm64">glibc-langpack-en</package>
     </distro>
   </dependency>
   <dependency id="gobject-introspection">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64">gobject-introspection-devel</package>
+      <package only-if="amd64">gobject-introspection-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">gobject-introspection-devel</package>
-      <package variant="arm64">gobject-introspection-devel</package>
+      <package only-if="amd64">gobject-introspection-devel</package>
+      <package only-if="arm64">gobject-introspection-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian">
       <control>
@@ -632,31 +632,31 @@
       <control>
         <version>(>= 1.80)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="gnome-desktop-testing">
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="gnutls-dev">
     <distro id="centos">
-      <package variant="amd64">gnutls-devel</package>
+      <package only-if="amd64">gnutls-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">gnutls-devel</package>
-      <package variant="arm64">gnutls-devel</package>
-      <package variant="mingw64">mingw64-gnutls</package>
+      <package only-if="amd64">gnutls-devel</package>
+      <package only-if="arm64">gnutls-devel</package>
+      <package only-if="mingw64">mingw64-gnutls</package>
     </distro>
     <distro id="darwin">
       <package>gnutls</package>
@@ -666,17 +666,17 @@
         <version>(>= 3.6.0)</version>
       </control>
       <build-target mode="multi-arch" />
-      <package variant="arm64">libgnutls28-dev</package>
-      <package variant="i386">libgnutls28-dev</package>
-      <package variant="s390x">libgnutls28-dev</package>
-      <package variant="amd64">libgnutls28-dev</package>
+      <package only-if="arm64">libgnutls28-dev</package>
+      <package only-if="i386">libgnutls28-dev</package>
+      <package only-if="s390x">libgnutls28-dev</package>
+      <package only-if="amd64">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
       <control>
         <version>(>= 3.6.0)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>gnutls</package>
@@ -684,55 +684,55 @@
   </dependency>
   <dependency id="gnutls-bin">
     <distro id="centos">
-      <package variant="amd64">gnutls-utils</package>
+      <package only-if="amd64">gnutls-utils</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">gnutls-utils</package>
-      <package variant="arm64">gnutls-utils</package>
+      <package only-if="amd64">gnutls-utils</package>
+      <package only-if="arm64">gnutls-utils</package>
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="jq">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="libxmlb-dev">
     <distro id="arch">
-      <package variant="amd64">libxmlb</package>
+      <package only-if="amd64">libxmlb</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libxmlb-devel</package>
+      <package only-if="amd64">libxmlb-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libxmlb-devel</package>
-      <package variant="arm64">libxmlb-devel</package>
-      <package variant="mingw64">mingw64-libxmlb</package>
+      <package only-if="amd64">libxmlb-devel</package>
+      <package only-if="arm64">libxmlb-devel</package>
+      <package only-if="mingw64">mingw64-libxmlb</package>
     </distro>
     <distro id="debian">
       <control>
@@ -744,8 +744,8 @@
       <control>
         <version>(>= 0.3.19)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>libxmlb</package>
@@ -753,19 +753,19 @@
   </dependency>
   <dependency id="libjcat-dev">
     <distro id="centos">
-      <package variant="amd64">libjcat-devel</package>
+      <package only-if="amd64">libjcat-devel</package>
     </distro>
   </dependency>
   <dependency id="libblkid-dev">
     <distro id="arch">
-      <package variant="amd64">util-linux-libs</package>
+      <package only-if="amd64">util-linux-libs</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libblkid-devel</package>
+      <package only-if="amd64">libblkid-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libblkid-devel</package>
-      <package variant="arm64">libblkid-devel</package>
+      <package only-if="amd64">libblkid-devel</package>
+      <package only-if="arm64">libblkid-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -773,17 +773,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="liblzma-dev">
     <distro id="centos">
-      <package variant="amd64">xz-devel</package>
+      <package only-if="amd64">xz-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">xz-devel</package>
-      <package variant="arm64">xz-devel</package>
+      <package only-if="amd64">xz-devel</package>
+      <package only-if="arm64">xz-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -791,13 +791,13 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libzstd-dev">
     <distro id="fedora">
-      <package variant="mingw64">mingw64-zstd</package>
+      <package only-if="mingw64">mingw64-zstd</package>
     </distro>
     <distro id="debian">
       <control />
@@ -811,15 +811,15 @@
   </dependency>
   <dependency id="libusb-1.0-0-dev">
     <distro id="arch">
-      <package variant="amd64">libusb</package>
+      <package only-if="amd64">libusb</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libusb1-devel</package>
+      <package only-if="amd64">libusb1-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libusb1-devel</package>
-      <package variant="arm64">libusb1-devel</package>
-      <package variant="mingw64">mingw64-libusbx</package>
+      <package only-if="amd64">libusb1-devel</package>
+      <package only-if="arm64">libusb1-devel</package>
+      <package only-if="mingw64">mingw64-libusbx</package>
     </distro>
     <distro id="darwin">
       <package>libusb</package>
@@ -834,8 +834,8 @@
       <control>
         <version>(>= 1.0.27)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libicu-dev">
@@ -850,15 +850,15 @@
   </dependency>
   <dependency id="libcurl4-gnutls-dev">
     <distro id="arch">
-      <package variant="amd64">curl</package>
+      <package only-if="amd64">curl</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libcurl-devel</package>
+      <package only-if="amd64">libcurl-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libcurl-devel</package>
-      <package variant="arm64">libcurl-devel</package>
-      <package variant="mingw64">mingw64-curl</package>
+      <package only-if="amd64">libcurl-devel</package>
+      <package only-if="arm64">libcurl-devel</package>
+      <package only-if="mingw64">mingw64-curl</package>
     </distro>
     <distro id="darwin">
       <package>curl</package>
@@ -873,18 +873,18 @@
       <control>
         <version>(>= 7.62.0)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <!-- for passim -->
   <dependency id="libpassim-dev">
     <distro id="fedora">
-      <package variant="amd64">passim-devel</package>
-      <package variant="arm64">passim-devel</package>
+      <package only-if="amd64">passim-devel</package>
+      <package only-if="arm64">passim-devel</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64">passim</package>
+      <package only-if="amd64">passim</package>
     </distro>
   </dependency>
   <dependency id="libumockdev-dev">
@@ -894,26 +894,26 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="linux-headers">
     <distro id="centos">
-      <package variant="amd64">kernel-headers</package>
+      <package only-if="amd64">kernel-headers</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">kernel-headers</package>
+      <package only-if="amd64">kernel-headers</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="lintian">
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="locales">
@@ -923,22 +923,22 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="meson">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian">
       <control>
@@ -949,41 +949,41 @@
       <control>
         <version>(>= 0.63.0)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="rustc">
     <distro id="arch">
-      <package variant="amd64">rust</package>
+      <package only-if="amd64">rust</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian">
       <build-target mode="native" />
       <package />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="freebsd">
-      <package variant="amd64">rust</package>
+      <package only-if="amd64">rust</package>
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="rustup">
     <distro id="ubuntu">
-      <package variant="android" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="libstd-rust-dev">
@@ -994,15 +994,15 @@
   </dependency>
   <dependency id="rust-std-static-x86_64-pc-windows-gnu">
     <distro id="fedora">
-      <package variant="mingw64" />
+      <package only-if="mingw64" />
     </distro>
   </dependency>
   <dependency id="mingw-w64-tools">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian">
       <control>
@@ -1019,7 +1019,7 @@
         <inclusive arch="armhf"/>
         <inclusive arch="i386"/>
       </control>
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="gir1.2-gio-2.0-dev">
@@ -1038,8 +1038,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="gir1.2-gobject-2.0-dev">
@@ -1053,11 +1053,11 @@
   </dependency>
   <dependency id="gir1.2-pango-1.0">
     <distro id="centos">
-      <package variant="amd64">pango-devel</package>
+      <package only-if="amd64">pango-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">pango-devel</package>
-      <package variant="arm64">pango-devel</package>
+      <package only-if="amd64">pango-devel</package>
+      <package only-if="arm64">pango-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1065,8 +1065,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>pango</package>
@@ -1074,7 +1074,7 @@
   </dependency>
   <dependency id="pkg-config">
     <distro id="arch">
-      <package variant="amd64">pkgconf</package>
+      <package only-if="amd64">pkgconf</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1082,17 +1082,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64">pkgconf</package>
-      <package variant="arm64">pkgconf</package>
-      <package variant="android">pkgconf</package>
+      <package only-if="amd64">pkgconf</package>
+      <package only-if="arm64">pkgconf</package>
+      <package only-if="android">pkgconf</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">pkgconf-pkg-config</package>
+      <package only-if="amd64">pkgconf-pkg-config</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">pkgconf-pkg-config</package>
-      <package variant="arm64">pkgconf-pkg-config</package>
-      <package variant="mingw64">mingw64-pkg-config</package>
+      <package only-if="amd64">pkgconf-pkg-config</package>
+      <package only-if="arm64">pkgconf-pkg-config</package>
+      <package only-if="mingw64">mingw64-pkg-config</package>
     </distro>
     <distro id="freebsd">
       <package>pkgconf</package>
@@ -1100,19 +1100,19 @@
   </dependency>
   <dependency id="polkitd">
     <distro id="arch">
-      <package variant="amd64">polkit</package>
+      <package only-if="amd64">polkit</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">polkit</package>
+      <package only-if="amd64">polkit</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">polkit</package>
-      <package variant="arm64">polkit</package>
+      <package only-if="amd64">polkit</package>
+      <package only-if="arm64">polkit</package>
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>polkit</package>
@@ -1120,14 +1120,14 @@
   </dependency>
   <dependency id="libmm-glib-dev">
     <distro id="centos">
-      <package variant="amd64">ModemManager-glib-devel</package>
+      <package only-if="amd64">ModemManager-glib-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">ModemManager-glib-devel</package>
-      <package variant="arm64">ModemManager-glib-devel</package>
+      <package only-if="amd64">ModemManager-glib-devel</package>
+      <package only-if="arm64">ModemManager-glib-devel</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64">modemmanager</package>
+      <package only-if="amd64">modemmanager</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1135,20 +1135,20 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libmnl-dev">
     <distro id="arch">
-      <package variant="amd64">libmnl</package>
+      <package only-if="amd64">libmnl</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">libmnl-devel</package>
+      <package only-if="amd64">libmnl-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">libmnl-devel</package>
-      <package variant="arm64">libmnl-devel</package>
+      <package only-if="amd64">libmnl-devel</package>
+      <package only-if="arm64">libmnl-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1156,17 +1156,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libqmi-glib-dev">
     <distro id="fedora">
-      <package variant="amd64">libqmi-devel</package>
-      <package variant="arm64">libqmi-devel</package>
+      <package only-if="amd64">libqmi-devel</package>
+      <package only-if="arm64">libqmi-devel</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64">libqmi</package>
+      <package only-if="amd64">libqmi</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1174,17 +1174,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libmbim-glib-dev">
     <distro id="fedora">
-      <package variant="amd64">libmbim-devel</package>
-      <package variant="arm64">libmbim-devel</package>
+      <package only-if="amd64">libmbim-devel</package>
+      <package only-if="arm64">libmbim-devel</package>
     </distro>
     <distro id="arch">
-      <package variant="amd64">libmbim</package>
+      <package only-if="amd64">libmbim</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1192,8 +1192,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libqrtr-glib-dev">
@@ -1204,14 +1204,14 @@
   </dependency>
   <dependency id="libpolkit-gobject-1-dev">
     <distro id="arch">
-      <package variant="amd64">polkit</package>
+      <package only-if="amd64">polkit</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">polkit-devel</package>
+      <package only-if="amd64">polkit-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">polkit-devel</package>
-      <package variant="arm64">polkit-devel</package>
+      <package only-if="amd64">polkit-devel</package>
+      <package only-if="arm64">polkit-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -1223,13 +1223,13 @@
       <control>
         <version>(>= 0.103)</version>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-pip">
     <distro id="arch">
-      <package variant="amd64">python-pip</package>
+      <package only-if="amd64">python-pip</package>
     </distro>
     <distro id="freebsd">
       <package>py312-pip</package>
@@ -1241,12 +1241,12 @@
   <dependency id="python3-virtualenv">
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="darwin">
       <package>virtualenv</package>
@@ -1261,42 +1261,42 @@
       <build-target mode="native" />
     </distro>
     <distro id="arch">
-      <package variant="amd64">python-dbus</package>
+      <package only-if="amd64">python-dbus</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-dbusmock">
     <distro id="debian" />
     <distro id="arch">
-      <package variant="amd64">python-dbusmock</package>
+      <package only-if="amd64">python-dbusmock</package>
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="python3">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian">
       <control />
@@ -1304,8 +1304,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-gi">
@@ -1314,19 +1314,19 @@
       <build-target mode="native" />
     </distro>
     <distro id="arch">
-      <package variant="amd64">python-gobject</package>
+      <package only-if="amd64">python-gobject</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">python3-gobject</package>
+      <package only-if="amd64">python3-gobject</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">python3-gobject</package>
-      <package variant="arm64">python3-gobject</package>
+      <package only-if="amd64">python3-gobject</package>
+      <package only-if="arm64">python3-gobject</package>
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="freebsd">
       <package>py312-pygobject</package>
@@ -1334,14 +1334,14 @@
   </dependency>
   <dependency id="python3-gi-cairo">
     <distro id="arch">
-      <package variant="amd64">python-cairo</package>
+      <package only-if="amd64">python-cairo</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">python3-cairo</package>
+      <package only-if="amd64">python3-cairo</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">python3-cairo</package>
-      <package variant="arm64">python3-cairo</package>
+      <package only-if="amd64">python3-cairo</package>
+      <package only-if="arm64">python3-cairo</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1349,71 +1349,71 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-pefile">
     <distro id="arch">
-      <package variant="amd64">python-pefile</package>
+      <package only-if="amd64">python-pefile</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64"></package>
+      <package only-if="amd64"></package>
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-uswid">
     <distro id="fedora">
-      <package variant="amd64"></package>
+      <package only-if="amd64"></package>
     </distro>
   </dependency>
   <dependency id="python3-jinja2">
     <distro id="arch">
-      <package variant="amd64">python-jinja</package>
+      <package only-if="amd64">python-jinja</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="mingw64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="mingw64" />
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
-      <package variant="android" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="gi-docgen">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="darwin">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="ubuntu">
-      <package variant="android" />
+      <package only-if="android" />
     </distro>
     <distro id="debian">
       <build-target mode="build-indep" />
@@ -1426,8 +1426,8 @@
   <dependency id="python3-pygments">
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-typogrify">
@@ -1435,76 +1435,76 @@
       <control />
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-markdown">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="python3-flask">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="arch">
-      <package variant="amd64">python-flask</package>
+      <package only-if="amd64">python-flask</package>
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="rpm-build">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="redhat-rpm-config">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libsqlite3-dev">
     <distro id="centos">
-      <package variant="amd64">sqlite-devel</package>
+      <package only-if="amd64">sqlite-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">sqlite-devel</package>
-      <package variant="arm64">sqlite-devel</package>
-      <package variant="mingw64">mingw64-sqlite</package>
+      <package only-if="amd64">sqlite-devel</package>
+      <package only-if="arm64">sqlite-devel</package>
+      <package only-if="mingw64">mingw64-sqlite</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1512,8 +1512,8 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="darwin">
       <package>sqlite</package>
@@ -1534,36 +1534,36 @@
   </dependency>
   <dependency id="systemd">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian">
       <control>
         <version>(>= 249)</version>
       </control>
-      <package variant="arm64">systemd-dev</package>
-      <package variant="i386">systemd-dev</package>
-      <package variant="s390x">systemd-dev</package>
-      <package variant="amd64">systemd-dev</package>
+      <package only-if="arm64">systemd-dev</package>
+      <package only-if="i386">systemd-dev</package>
+      <package only-if="s390x">systemd-dev</package>
+      <package only-if="amd64">systemd-dev</package>
     </distro>
     <distro id="ubuntu">
       <control>
         <version>(>= 249)</version>
       </control>
-      <package variant="amd64">systemd-dev</package>
-      <package variant="arm64">systemd-dev</package>
+      <package only-if="amd64">systemd-dev</package>
+      <package only-if="arm64">systemd-dev</package>
     </distro>
   </dependency>
   <dependency id="libsystemd-dev">
     <distro id="centos">
-      <package variant="amd64">systemd-devel</package>
+      <package only-if="amd64">systemd-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">systemd-devel</package>
-      <package variant="arm64">systemd-devel</package>
+      <package only-if="amd64">systemd-devel</package>
+      <package only-if="arm64">systemd-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1571,36 +1571,36 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="shared-mime-info">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="debian">
       <control />
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="texlive-fonts-recommended">
     <distro id="debian">
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="udev">
@@ -1609,17 +1609,17 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="umockdev">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64">umockdev-devel</package>
-      <package variant="arm64">umockdev-devel</package>
+      <package only-if="amd64">umockdev-devel</package>
+      <package only-if="arm64">umockdev-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1627,31 +1627,31 @@
     </distro>
     <distro id="ubuntu">
       <control />
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="valgrind">
     <distro id="arch">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="centos">
-      <package variant="amd64">valgrind-devel</package>
+      <package only-if="amd64">valgrind-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">valgrind-devel</package>
-      <package variant="arm64">valgrind-devel</package>
+      <package only-if="amd64">valgrind-devel</package>
+      <package only-if="arm64">valgrind-devel</package>
     </distro>
     <distro id="debian">
-      <package variant="arm64">valgrind-if-available</package>
-      <package variant="i386">valgrind-if-available</package>
-      <package variant="s390x">valgrind-if-available</package>
-      <package variant="amd64">valgrind-if-available</package>
+      <package only-if="arm64">valgrind-if-available</package>
+      <package only-if="i386">valgrind-if-available</package>
+      <package only-if="s390x">valgrind-if-available</package>
+      <package only-if="amd64">valgrind-if-available</package>
     </distro>
     <distro id="ubuntu">
-      <package variant="amd64">valgrind-if-available</package>
-      <package variant="i386">valgrind-if-available</package>
-      <package variant="arm64">valgrind-if-available</package>
+      <package only-if="amd64">valgrind-if-available</package>
+      <package only-if="i386">valgrind-if-available</package>
+      <package only-if="arm64">valgrind-if-available</package>
     </distro>
     <distro id="freebsd">
       <package>valgrind</package>
@@ -1659,41 +1659,41 @@
   </dependency>
   <dependency id="wget">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="ubuntu">
-      <package variant="android" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="unzip">
     <distro id="ubuntu">
-      <package variant="android" />
+      <package only-if="android" />
     </distro>
   </dependency>
   <dependency id="openjdk">
     <distro id="ubuntu">
-      <package variant="android">openjdk-17-jdk-headless</package>
+      <package only-if="android">openjdk-17-jdk-headless</package>
     </distro>
   </dependency>
   <dependency id="xz">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libtss2-dev">
     <distro id="arch">
-      <package variant="amd64">tpm2-tss</package>
+      <package only-if="amd64">tpm2-tss</package>
     </distro>
     <distro id="centos">
-      <package variant="amd64">tpm2-tss-devel</package>
+      <package only-if="amd64">tpm2-tss-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="amd64">tpm2-tss-devel</package>
-      <package variant="arm64">tpm2-tss-devel</package>
+      <package only-if="amd64">tpm2-tss-devel</package>
+      <package only-if="arm64">tpm2-tss-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1706,74 +1706,74 @@
         <inclusive arch="armhf"/>
         <inclusive arch="i386"/>
       </control>
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="libgcrypt-devel">
     <distro id="centos">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
   </dependency>
   <dependency id="shellcheck">
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="fedora">
-      <package variant="amd64">ShellCheck</package>
+      <package only-if="amd64">ShellCheck</package>
     </distro>
   </dependency>
   <dependency id="shfmt">
     <distro id="fedora">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
     <distro id="debian" />
     <distro id="ubuntu">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="python3-venv">
     <distro id="debian"/>
     <distro id="ubuntu">
-      <package variant="amd64" />
-      <package variant="arm64" />
+      <package only-if="amd64" />
+      <package only-if="arm64" />
     </distro>
     <distro id="arch">
-      <package variant="amd64">python-virtualenv</package>
+      <package only-if="amd64">python-virtualenv</package>
     </distro>
   </dependency>
   <dependency id="libasan">
     <distro id="fedora">
       <!-- for running with -Db_sanitize=address -->
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="libubsan">
     <distro id="fedora">
       <!-- for running with -Db_sanitize=undefined -->
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="wine">
     <distro id="fedora">
       <!-- for running the self tests -->
-      <package variant="mingw64">wine</package>
+      <package only-if="mingw64">wine</package>
     </distro>
   </dependency>
   <dependency id="msitools">
     <distro id="fedora">
       <!-- for building the MSI package -->
-      <package variant="mingw64">msitools</package>
+      <package only-if="mingw64">msitools</package>
     </distro>
   </dependency>
   <dependency id="libinotify">
     <distro id="freebsd">
-      <package variant="amd64" />
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="build-essential">
