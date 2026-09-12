@@ -7,17 +7,20 @@ plugins += {
   meson.current_source_dir().split('/')[-1]: true,
 }
 
+amd_afc_struct = rustgen.process('fu-amd-afc.rs')
+amd_afc_sources = files(
+  'fu-amd-afc-acpi-table.c',
+  'fu-amd-afc-bios-setting.c',
+  'fu-amd-afc.c',
+  'fu-amd-afc-hii.c',
+  'fu-amd-afc-hii-strings.c',
+)
+
 plugin_builtin_amd_afc = static_library(
   'fu_plugin_amd_afc',
-  rustgen.process('fu-amd-afc.rs'),
-  sources: [
-    'fu-amd-afc-acpi-table.c',
-    'fu-amd-afc-bios-setting.c',
-    'fu-amd-afc.c',
-    'fu-amd-afc-hii.c',
-    'fu-amd-afc-hii-strings.c',
-    'fu-amd-afc-plugin.c',
-  ],
+  amd_afc_struct,
+  amd_afc_sources,
+  sources: ['fu-amd-afc-plugin.c'],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
@@ -44,4 +47,46 @@ if get_option('tests')
     c_args: cargs,
   )
   test('amd-afc-self-test', e)
+
+  fuzzer_test = '''
+    #include <stddef.h>
+    #include <stdint.h>
+    int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+      (void)data;
+      (void)size;
+      return 0;
+    }
+  '''
+  fuzzer_m_dep = cc.find_library(
+    'm',
+    required: true,
+  )
+  if cc.links(
+    fuzzer_test,
+    args: ['-fsanitize=fuzzer'],
+    dependencies: fuzzer_m_dep,
+    name: 'libFuzzer runtime',
+  )
+    amd_afc_fuzzer_lib = static_library(
+      'fu_plugin_amd_afc_fuzzer',
+      amd_afc_struct,
+      amd_afc_sources,
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps,
+      c_args: cargs + ['-fsanitize=fuzzer-no-link'],
+    )
+    executable(
+      'amd-afc-fuzzer',
+      sources: ['fu-fuzzer.c'],
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps + [fuzzer_m_dep],
+      link_with: [
+        fwupd,
+        fwupdplugin,
+        amd_afc_fuzzer_lib,
+      ],
+      c_args: cargs + ['-fsanitize=fuzzer'],
+      link_args: ['-fsanitize=fuzzer'],
+    )
+  endif
 endif
