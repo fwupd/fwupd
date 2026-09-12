@@ -23,6 +23,7 @@ plugins = {
   'amd-kria': false,
   'amd-pmc': false,
   'amd-gpu': false,
+  'amd-afc': false,
   'analogix': false,
   'android-boot': false,
   'asus-hid': false,
