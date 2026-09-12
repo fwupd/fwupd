@@ -127,6 +127,8 @@ fwupd_bios_settings_func(void)
 	g_assert_cmpstr(fwupd_bios_setting_get_name(attr1), ==, "foo");
 	fwupd_bios_setting_set_name(attr1, "UEFISecureBoot");
 	g_assert_cmpstr(fwupd_bios_setting_get_name(attr1), ==, "UEFISecureBoot");
+	fwupd_bios_setting_set_parent(attr1, "Security");
+	g_assert_cmpstr(fwupd_bios_setting_get_parent(attr1), ==, "Security");
 
 	fwupd_bios_setting_set_kind(attr1, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
 	g_assert_cmpint(fwupd_bios_setting_get_kind(attr1),
@@ -157,6 +159,7 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(str1,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  BiosSettingParent:    Security\n"
 				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
 				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
@@ -180,6 +183,7 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(str2,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  BiosSettingParent:    Security\n"
 				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
 				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
@@ -201,6 +205,7 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(json1,
 				    "{\n"
 				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"BiosSettingParent\": \"Security\",\n"
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
 				    "  \"AppstreamId\": \"org.fwupd.bios.secure-boot\",\n"
@@ -241,6 +246,7 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(str4,
 				    "FwupdBiosSetting:\n"
 				    "  Name:                 UEFISecureBoot\n"
+				    "  BiosSettingParent:    Security\n"
 				    "  AppstreamId:          org.fwupd.bios.secure-boot\n"
 				    "  BiosSettingIcon:      application-certificate\n"
 				    "  Description:          Controls Secure boot\n"
@@ -261,6 +267,7 @@ fwupd_bios_settings_func(void)
 	ret = fu_test_compare_lines(json2,
 				    "{\n"
 				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"BiosSettingParent\": \"Security\",\n"
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
 				    "  \"AppstreamId\": \"org.fwupd.bios.secure-boot\",\n"

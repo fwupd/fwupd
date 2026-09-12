@@ -60,6 +60,8 @@ fwupd_bios_setting_set_kind(FwupdBiosSetting *self, FwupdBiosSettingKind type) G
 void
 fwupd_bios_setting_set_name(FwupdBiosSetting *self, const gchar *name) G_GNUC_NON_NULL(1);
 void
+fwupd_bios_setting_set_parent(FwupdBiosSetting *self, const gchar *parent) G_GNUC_NON_NULL(1);
+void
 fwupd_bios_setting_set_path(FwupdBiosSetting *self, const gchar *path) G_GNUC_NON_NULL(1);
 void
 fwupd_bios_setting_set_description(FwupdBiosSetting *self, const gchar *description)
@@ -69,6 +71,8 @@ FwupdBiosSettingKind
 fwupd_bios_setting_get_kind(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fwupd_bios_setting_get_name(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+const gchar *
+fwupd_bios_setting_get_parent(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *
 fwupd_bios_setting_get_path(FwupdBiosSetting *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 const gchar *

@@ -29,6 +29,7 @@ typedef struct {
 	gchar *appstream_id;
 	gchar *icon;
 	gchar *name;
+	gchar *parent;
 	gchar *description;
 	gchar *path;
 	gchar *value_filename;
@@ -398,6 +399,23 @@ fwupd_bios_setting_set_name(FwupdBiosSetting *self, const gchar *name)
 }
 
 /**
+ * fwupd_bios_setting_set_parent:
+ * @self: a #FwupdBiosSetting
+ * @parent: (nullable): the parent group
+ *
+ * Sets the parent group for this BIOS setting.
+ *
+ * Since: 2.2.1
+ **/
+void
+fwupd_bios_setting_set_parent(FwupdBiosSetting *self, const gchar *parent)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+	g_set_str(&priv->parent, parent);
+}
+
+/**
  * fwupd_bios_setting_set_path:
  * @self: a #FwupdBiosSetting
  * @path: (nullable): the path the driver providing the attribute uses
@@ -670,6 +688,24 @@ fwupd_bios_setting_get_name(FwupdBiosSetting *self)
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
 	return priv->name;
+}
+
+/**
+ * fwupd_bios_setting_get_parent:
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the parent group for this BIOS setting.
+ *
+ * Returns: (nullable): the parent group, or %NULL if unset
+ *
+ * Since: 2.2.1
+ **/
+const gchar *
+fwupd_bios_setting_get_parent(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
+	return priv->parent;
 }
 
 /**
@@ -1025,6 +1061,12 @@ fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwup
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
+	if (priv->parent != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_SETTING_PARENT,
+				      g_variant_new_string(priv->parent));
+	}
 	if (priv->path != NULL) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -1108,6 +1150,10 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 		fwupd_bios_setting_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_PARENT) == 0) {
+		fwupd_bios_setting_set_parent(self, fwupd_variant_get_string(value));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
 		fwupd_bios_setting_set_path(self, fwupd_variant_get_string(value));
 		return;
@@ -1176,6 +1222,9 @@ fwupd_bios_setting_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErro
 	fwupd_bios_setting_set_name(
 	    self,
 	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL));
+	fwupd_bios_setting_set_parent(
+	    self,
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_PARENT, NULL));
 	fwupd_bios_setting_set_description(
 	    self,
 	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
@@ -1240,6 +1289,10 @@ fwupd_bios_setting_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 
 	if (priv->name != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->parent != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_PARENT,
+					     priv->parent);
 	if (priv->description != NULL)
 		fwupd_json_object_add_string(json_obj,
 					     FWUPD_RESULT_KEY_DESCRIPTION,
@@ -1307,6 +1360,7 @@ fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_PARENT, priv->parent);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_ICON, priv->icon);
@@ -1394,6 +1448,7 @@ fwupd_bios_setting_finalize(GObject *object)
 	g_free(priv->appstream_id);
 	g_free(priv->icon);
 	g_free(priv->name);
+	g_free(priv->parent);
 	g_free(priv->description);
 	g_free(priv->path);
 	g_free(priv->value_filename);

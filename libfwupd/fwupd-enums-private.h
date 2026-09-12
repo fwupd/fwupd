@@ -572,6 +572,15 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 's' i.e. a string.
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_ID "BiosSettingId"
+
+/**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_PARENT: (skip)
+ *
+ * The BIOS setting parent group.
+ *
+ * Since: 2.2.1
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_PARENT "BiosSettingParent"
 /**
  * FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE: (skip)
  *

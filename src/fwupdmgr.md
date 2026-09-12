@@ -189,6 +189,8 @@ The following actions can be used to view or fix platform security issues:
 
 The following actions can be used to list or set firmware BIOS settings:
 
+**bios-settings**: View and modify BIOS firmware settings in a grouped terminal interface. Keyboard and mouse input are supported when fwupd is built with optional TUI support using ncursesw.
+
 **get-bios-settings**: Retrieve BIOS firmware settings and the allowable values.
 
 **set-bios-setting**: Sets one or more BIOS firmware settings.
