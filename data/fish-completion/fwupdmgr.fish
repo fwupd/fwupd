@@ -17,6 +17,7 @@ end
 function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
     printf '%s\t%s\n' \
         activate 'Activate devices' \
+        bios-settings 'View and modify BIOS settings in a terminal user interface' \
         check-reboot-needed 'Check if any devices are pending a reboot to complete update' \
         clear-results 'Clears the results from the last update' \
         device-emulate 'Emulate a device using a JSON manifest' \

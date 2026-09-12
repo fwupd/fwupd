@@ -18,6 +18,9 @@ if get_option('passim').allowed()
 endif
 
 client_dep = [glib, libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+if curses.found() and get_option('tui').allowed()
+  client_dep += curses
+endif
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
@@ -109,6 +112,7 @@ fwupdcli = library(
   'fwupdcli',
   fwupdcli_rs,
   sources: [
+    'fu-bios-settings-tui.c',
     'fu-console.c',
     'fu-cli-common.c',
     'fu-cli.c',

@@ -211,6 +211,11 @@ option(
   description: 'enable tests',
 )
 option(
+  'tui',
+  type: 'feature',
+  description: 'terminal user interface support',
+)
+option(
   'umockdev_tests',
   type: 'feature',
   description: 'umockdev tests',
