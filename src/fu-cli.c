@@ -14,6 +14,7 @@
 #endif
 
 #include "fu-bios-settings-private.h"
+#include "fu-bios-settings-tui.h"
 #include "fu-cli-common.h"
 #include "fu-cli.h"
 #include "fu-console.h"
@@ -6141,14 +6142,9 @@ fu_cli_bios_settings_parse_argv(gchar **input, GError **error)
 }
 
 static gboolean
-fu_cli_set_bios_setting(FuCli *self, gchar **values, GError **error)
+fu_cli_modify_bios_settings(FuCli *self, GHashTable *settings, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GHashTable) settings = NULL;
-
-	settings = fu_cli_bios_settings_parse_argv(values, error);
-	if (settings == NULL)
-		return FALSE;
 	if (!fwupd_client_modify_bios_setting(priv->client, settings, priv->cancellable, error)) {
 		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
@@ -6177,6 +6173,15 @@ fu_cli_set_bios_setting(FuCli *self, gchar **values, GError **error)
 	}
 
 	return fu_cli_prompt_complete(self, TRUE, error);
+}
+
+static gboolean
+fu_cli_set_bios_setting(FuCli *self, gchar **values, GError **error)
+{
+	g_autoptr(GHashTable) settings = fu_cli_bios_settings_parse_argv(values, error);
+	if (settings == NULL)
+		return FALSE;
+	return fu_cli_modify_bios_settings(self, settings, error);
 }
 
 static void
@@ -6273,6 +6278,42 @@ fu_cli_get_bios_setting(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_cli_bios_settings_tui(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GHashTable) settings = NULL;
+
+	if (g_strv_length(values) != 0 || fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return FALSE;
+	}
+	attrs = fwupd_client_get_bios_settings(priv->client, priv->cancellable, error);
+	if (attrs == NULL)
+		return FALSE;
+	if (attrs->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message */
+				    _("This system doesn't support firmware settings"));
+		return FALSE;
+	}
+	for (guint i = 0; i < attrs->len; i++)
+		fu_cli_bios_setting_update_description(g_ptr_array_index(attrs, i));
+	settings = fu_bios_settings_tui_run(attrs, error);
+	if (settings == NULL)
+		return FALSE;
+	if (g_hash_table_size(settings) == 0)
+		return TRUE;
+	return fu_cli_modify_bios_settings(self, settings, error);
 }
 
 static gboolean
@@ -7169,6 +7210,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: command description */
 			     _("Asks the daemon to quit"),
 			     fu_cli_quit);
+	fu_cli_cmd_array_add(self,
+			     "bios-settings",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("View and modify BIOS settings in a terminal user interface"),
+			     fu_cli_bios_settings_tui);
 	fu_cli_cmd_array_add(
 	    self,
 	    "get-bios-settings,get-bios-setting",
