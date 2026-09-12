@@ -290,6 +290,45 @@ fu_redfish_backend_session_key_empty_func(void)
 }
 
 static void
+fu_redfish_bearer_token_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness, using an empty sysfs directory so that the bearer token is the
+	 * only credential the plugin can find */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-bearer-fwupd.conf");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the bearer token replaces the BMC user account, so this should not fail trying to
+	 * verify or create one using IPMI */
+	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_redfish_common_func(void)
 {
 	const guint8 buf[16] = {0x00,
@@ -763,6 +802,7 @@ main(int argc, char **argv)
 			fu_redfish_backend_session_key_valid_func);
 	g_test_add_func("/redfish/backend/session-key/empty",
 			fu_redfish_backend_session_key_empty_func);
+	g_test_add_func("/redfish/bearer-token", fu_redfish_bearer_token_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);

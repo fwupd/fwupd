@@ -327,6 +327,9 @@ The `[redfish]` section can contain the following parameters:
 
   The bearer token to use for authenticating to the Redfish service.
 
+  When set, it is used instead of `Username=` and `Password=` for HTTP authentication, and the
+  plugin will not create or modify a BMC user account using IPMI.
+
 **SessionKeyFile={{redfish_SessionKeyFile}}**
 
   Instead of storing a password as `Password=`, the plugin can reuse a Redfish `X-Auth-Token`
