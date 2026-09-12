@@ -26,11 +26,11 @@ fu_uefi_sbat_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **err
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	gboolean secureboot_enabled = FALSE;
+	FuEfiSecureBootState secureboot_state = FU_EFI_SECURE_BOOT_STATE_DISABLED;
 
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_state, error))
 		return FALSE;
-	if (!secureboot_enabled) {
+	if ((secureboot_state & FU_EFI_SECURE_BOOT_STATE_ENABLED) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,

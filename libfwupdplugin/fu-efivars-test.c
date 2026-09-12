@@ -131,6 +131,52 @@ fu_efivars_func(void)
 }
 
 static void
+fu_efivars_secure_boot_func(void)
+{
+	struct {
+		guint8 secure_boot;
+		guint8 setup_mode;
+		FuEfiSecureBootState state;
+	} tests[] = {
+	    {0, 0, FU_EFI_SECURE_BOOT_STATE_DISABLED},
+	    {1, 0, FU_EFI_SECURE_BOOT_STATE_ENABLED},
+	    {0, 1, FU_EFI_SECURE_BOOT_STATE_IN_SETUP},
+	    {1, 1, FU_EFI_SECURE_BOOT_STATE_ENABLED | FU_EFI_SECURE_BOOT_STATE_IN_SETUP},
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+		gboolean ret;
+		FuEfiSecureBootState state = FU_EFI_SECURE_BOOT_STATE_DISABLED;
+		g_autoptr(FuEfivars) efivars = fu_dummy_efivars_new();
+		g_autoptr(GError) error = NULL;
+
+		ret = fu_efivars_set_data(efivars,
+					  FU_EFIVARS_GUID_EFI_GLOBAL,
+					  "SecureBoot",
+					  &tests[i].secure_boot,
+					  sizeof(tests[i].secure_boot),
+					  0,
+					  &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		ret = fu_efivars_set_data(efivars,
+					  FU_EFIVARS_GUID_EFI_GLOBAL,
+					  "SetupMode",
+					  &tests[i].setup_mode,
+					  sizeof(tests[i].setup_mode),
+					  0,
+					  &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		ret = fu_efivars_get_secure_boot(efivars, &state, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_assert_cmpint(state, ==, tests[i].state);
+	}
+}
+
+static void
 fu_efivars_boot_func(void)
 {
 	FuFirmware *firmware_tmp;
@@ -233,6 +279,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/efivars", fu_efivars_func);
+	g_test_add_func("/fwupd/efivars/secure-boot", fu_efivars_secure_boot_func);
 	g_test_add_func("/fwupd/efivars/bootxxxx", fu_efivars_boot_func);
 	return g_test_run();
 }
