@@ -18,6 +18,8 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error) G_GNUC_NON_NULL(1);
 
 GPtrArray *
 fu_bios_settings_get_all(FuBiosSettings *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_bios_settings_has_sysfs_attributes(FuBiosSettings *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 GHashTable *
 fu_bios_settings_to_hash_kv(FuBiosSettings *self) G_GNUC_NON_NULL(1);
