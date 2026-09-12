@@ -7,15 +7,18 @@ plugins += {
   meson.current_source_dir().split('/')[-1]: true,
 }
 
+amd_afc_struct = rustgen.process('fu-amd-afc.rs')
+amd_afc_sources = files(
+  'fu-amd-afc.c',
+  'fu-amd-afc-hii.c',
+  'fu-amd-afc-hii-strings.c',
+)
+
 plugin_builtin_amd_afc = static_library(
   'fu_plugin_amd_afc',
-  rustgen.process('fu-amd-afc.rs'),
-  sources: [
-    'fu-amd-afc.c',
-    'fu-amd-afc-hii.c',
-    'fu-amd-afc-hii-strings.c',
-    'fu-amd-afc-plugin.c',
-  ],
+  amd_afc_struct,
+  amd_afc_sources,
+  sources: ['fu-amd-afc-plugin.c'],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
@@ -42,4 +45,33 @@ if get_option('tests')
     c_args: cargs,
   )
   test('amd-afc-self-test', e)
+
+  if cc.has_argument('-fsanitize=fuzzer')
+    amd_afc_fuzzer_lib = static_library(
+      'fu_plugin_amd_afc_fuzzer',
+      amd_afc_struct,
+      amd_afc_sources,
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps,
+      c_args: cargs + ['-fsanitize=fuzzer-no-link'],
+    )
+    executable(
+      'amd-afc-fuzzer',
+      sources: ['fu-fuzzer.c'],
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps + [
+        cc.find_library(
+          'm',
+          required: true,
+        ),
+      ],
+      link_with: [
+        fwupd,
+        fwupdplugin,
+        amd_afc_fuzzer_lib,
+      ],
+      c_args: cargs + ['-fsanitize=fuzzer'],
+      link_args: ['-fsanitize=fuzzer'],
+    )
+  endif
 endif
