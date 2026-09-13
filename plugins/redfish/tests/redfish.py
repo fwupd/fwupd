@@ -32,7 +32,7 @@ app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
 app._nvidia_auxpowerreset: int = 0
 app._nvidia_upload: int = 0
-app._poll900: int = 0
+app._poll_nvidia_oob: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -75,7 +75,7 @@ def index():
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
     app._nvidia_upload = 0
-    app._poll900 = 0
+    app._poll_nvidia_oob = 0
 
     # check password from the config file
     try:
@@ -284,7 +284,7 @@ def fwupdate_nvidia():
     # the plugin has to derive the persistent /Tasks/<id> resource from all of
     # them, or reject the response outright
     app._nvidia_upload += 1
-    app._poll900 = 0
+    app._poll_nvidia_oob = 0
 
     # 1: the Location header, which is what the shipping BMC firmware sends
     if app._nvidia_upload == 1:
@@ -292,14 +292,14 @@ def fwupdate_nvidia():
             json.dumps({"Accepted": {"code": "Base.v1_4_0.Accepted"}}),
             status=202,
             mimetype="application/json",
-            headers={"Location": "/redfish/v1/TaskService/Tasks/900/Monitor"},
+            headers={"Location": "/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor"},
         )
 
     # 2: no Location header at all, so the monitor URI has to be taken from
     # @odata.id in the response body instead
     if app._nvidia_upload == 2:
         return Response(
-            json.dumps({"@odata.id": "/redfish/v1/TaskService/Tasks/900/Monitor"}),
+            json.dumps({"@odata.id": "/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor"}),
             status=202,
             mimetype="application/json",
         )
@@ -315,19 +315,19 @@ def fwupdate_nvidia():
     )
 
 
-@app.route("/redfish/v1/TaskService/Tasks/900")
-def task_status_900():
-    app._poll900 += 1
+@app.route("/redfish/v1/TaskService/Tasks/nvidia-oob-update")
+def task_status_nvidia_oob():
+    app._poll_nvidia_oob += 1
 
     # the first poll has to return a live task: the plugin only treats a reaped
     # pair as success once it has seen the persistent task at least once, which
     # is what stops a monitor-only response being read as completion
-    if app._poll900 == 1:
+    if app._poll_nvidia_oob == 1:
         res = {
-            "@odata.id": "/redfish/v1/TaskService/Tasks/900",
+            "@odata.id": "/redfish/v1/TaskService/Tasks/nvidia-oob-update",
             "@odata.type": "#Task.v1_4_3.Task",
-            "Id": "900",
-            "Name": "Task 900",
+            "Id": "nvidia-oob-update",
+            "Name": "NVIDIA OOB update",
             "PercentComplete": 50,
             "TaskState": "Running",
             "TaskStatus": "OK",
@@ -336,11 +336,11 @@ def task_status_900():
 
     # afterwards the BMC reaps the persistent task, so the plugin falls back to
     # the monitor, which answers with the GB300 empty-200 quirk below
-    return _not_found("/redfish/v1/TaskService/Tasks/900")
+    return _not_found("/redfish/v1/TaskService/Tasks/nvidia-oob-update")
 
 
-@app.route("/redfish/v1/TaskService/Tasks/900/Monitor")
-def task_monitor_900():
+@app.route("/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor")
+def task_monitor_nvidia_oob():
     # the GB300 quirk: once the task is done the monitor answers 200 with an
     # empty body rather than the canonical 404
     return Response(status=200)
