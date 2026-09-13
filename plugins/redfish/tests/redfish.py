@@ -15,12 +15,14 @@ HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
 HARDCODED_DELL_USERNAME = "dell_username"
+HARDCODED_NVIDIA_USERNAME = "nvidia_username"
 HARDCODED_USERNAMES = {
     "username2",
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
     HARDCODED_DELL_USERNAME,
+    HARDCODED_NVIDIA_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
 
@@ -28,6 +30,8 @@ app._percentage545: int = 0
 app._percentage546: int = 0
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
+app._nvidia_auxpowerreset: int = 0
+app._nvidia_upload: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -39,6 +43,29 @@ def _failure(msg: str, status=400):
     )
 
 
+def _username() -> str:
+    try:
+        return request.authorization["username"]
+    except (KeyError, TypeError):
+        return ""
+
+
+def _is_nvidia() -> bool:
+    return _username() == HARDCODED_NVIDIA_USERNAME
+
+
+def _not_found(uri: str):
+    # a real Redfish service always sets error.code; _failure() omits it, and an
+    # absent code makes the plugin's error mapping dereference NULL
+    res = {
+        "error": {
+            "code": "Base.1.8.ResourceMissingAtURI",
+            "message": f"The resource at {uri} was not found.",
+        }
+    }
+    return Response(response=json.dumps(res), status=404, mimetype="application/json")
+
+
 @app.route("/redfish/v1/")
 def index():
     # reset counter
@@ -46,6 +73,7 @@ def index():
     app._percentage546 = 0
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
+    app._nvidia_upload = 0
 
     # check password from the config file
     try:
@@ -149,14 +177,174 @@ def update_service():
         if app._hpeupdateresult is not None:
             res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
         res["HttpPushUri"] = "/FWUpdate-hpe"
+    elif _is_nvidia():
+        res["MultipartHttpPushUri"] = "/FWUpdate-nvidia"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
 
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
+# ── NVIDIA DGX Station GB300 ──────────────────────────────────────────────────
+# The plugin recognises a GB300 by probing Chassis_0 for Manufacturer=NVIDIA and
+# a Model containing both "GB300" and "Station"; every other persona must fail
+# that check so it keeps the generic multipart device.
+@app.route("/redfish/v1/Chassis/Chassis_0")
+def chassis_chassis_0():
+    if not _is_nvidia():
+        return _not_found("/redfish/v1/Chassis/Chassis_0")
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/Chassis_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "Chassis_0",
+        "Manufacturer": "NVIDIA",
+        "Model": "DGX Station GB300",
+        "Name": "Chassis",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+# The aux-rail reset is advertised by BMC_0, deliberately not by the chassis used
+# for detection above -- the plugin has to read the action target from here.
+@app.route("/redfish/v1/Chassis/BMC_0")
+def chassis_bmc_0():
+    if not _is_nvidia():
+        return _not_found("/redfish/v1/Chassis/BMC_0")
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/BMC_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "BMC_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "BMC",
+        "Actions": {
+            "Oem": {
+                "#NvidiaChassis.AuxPowerReset": {
+                    "@Redfish.ActionInfo": "/redfish/v1/Chassis/BMC_0/Oem/Nvidia/AuxPowerResetActionInfo",
+                    "target": "/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset",
+                }
+            }
+        },
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route(
+    "/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset",
+    methods=["POST"],
+)
+def chassis_bmc_0_auxpowerreset():
+    if not _is_nvidia():
+        return _not_found("/redfish/v1/Chassis/BMC_0")
+    try:
+        reset_type = request.get_json(force=True)["ResetType"]
+    except (TypeError, KeyError):
+        return _failure("no ResetType")
+    if reset_type != "AuxPowerCycleForce":
+        return _failure(f"unsupported ResetType {reset_type}")
+    # a real BMC drops the rail here and the connection dies; the mock has to
+    # answer so the test can assert the request was well formed
+    app._nvidia_auxpowerreset += 1
+    return Response(status=204)
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0")
+def firmware_inventory_nvidia_bmc():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0",
+        "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
+        "Id": "FW_BMC_0",
+        "Manufacturer": "NVIDIA",
+        # every GB300 inventory entry is named this, which is why the device
+        # renames itself after the URI basename
+        "Name": "Software Inventory",
+        "SoftwareId": "0xFF00",
+        "Updateable": True,
+        "Version": "GB300-1.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/FWUpdate-nvidia", methods=["POST"])
+def fwupdate_nvidia():
+    data = json.loads(request.form["UpdateParameters"])
+    # the GB300 BMC rejects a populated Targets array, needs ForceUpdate, and
+    # accepts only Immediate -- assert the plugin honours all three
+    if data.get("Targets") != []:
+        return _failure("Targets must be empty")
+    if data.get("ForceUpdate") is not True:
+        return _failure("ForceUpdate must be true")
+    if data.get("@Redfish.OperationApplyTime") != "Immediate":
+        return _failure("apply time invalid")
+    fileitem = request.files["UpdateFile"]
+    if fileitem.read().decode() != "hello":
+        return _failure("payload invalid")
+    # successive uploads exercise the three ways the task monitor can come back;
+    # the plugin has to derive the persistent /Tasks/<id> resource from all of
+    # them, or reject the response outright
+    app._nvidia_upload += 1
+
+    # 1: the Location header, which is what the shipping BMC firmware sends
+    if app._nvidia_upload == 1:
+        return Response(
+            json.dumps({"Accepted": {"code": "Base.v1_4_0.Accepted"}}),
+            status=202,
+            mimetype="application/json",
+            headers={"Location": "/redfish/v1/TaskService/Tasks/900/Monitor"},
+        )
+
+    # 2: no Location header at all, so the monitor URI has to be taken from
+    # @odata.id in the response body instead
+    if app._nvidia_upload == 2:
+        return Response(
+            json.dumps({"@odata.id": "/redfish/v1/TaskService/Tasks/900/Monitor"}),
+            status=202,
+            mimetype="application/json",
+        )
+
+    # 3: no Location header, and @odata.id is a number rather than a string.
+    # Testing the node's presence rather than its parsed value accepts this and
+    # leaves the location NULL, so the plugin has to reject the response rather
+    # than poll a NULL task
+    return Response(
+        json.dumps({"@odata.id": 12345}),
+        status=202,
+        mimetype="application/json",
+    )
+
+
+@app.route("/redfish/v1/TaskService/Tasks/900")
+def task_status_900():
+    res = {
+        "@odata.id": "/redfish/v1/TaskService/Tasks/900",
+        "@odata.type": "#Task.v1_4_3.Task",
+        "Id": "900",
+        "Name": "Task 900",
+        "PercentComplete": 100,
+        "TaskState": "Completed",
+        "TaskStatus": "OK",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/900/Monitor")
+def task_monitor_900():
+    # the GB300 quirk: once the task is done the monitor answers 200 with an
+    # empty body rather than the canonical 404
+    return Response(status=200)
+
+
 @app.route("/redfish/v1/UpdateService/FirmwareInventory")
 def firmware_inventory():
+    if _is_nvidia():
+        res = {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
+            "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
+            "Members": [
+                {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"},
+            ],
+            "Members@odata.count": 1,
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
         "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",

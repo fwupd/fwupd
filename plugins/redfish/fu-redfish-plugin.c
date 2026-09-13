@@ -434,6 +434,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *session_key_file = NULL;
+	g_autofree gchar *session_key = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
 #ifdef HAVE_LINUX_IPMI_H
@@ -541,8 +542,13 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		}
 	}
 
-	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
+	/* we got neither a type 42 entry or config value, lets try IPMI; a session
+	 * key authenticates without a username or password, so skip IPMI when one
+	 * is configured.  The error is not interesting here -- a missing key is the
+	 * normal case and simply means we fall through to the checks below. */
+	session_key = fu_redfish_backend_get_session_key(self->backend, NULL);
+	if ((fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) &&
+	    session_key == NULL) {
 		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

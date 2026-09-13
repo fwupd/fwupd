@@ -13,6 +13,7 @@
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -45,9 +46,6 @@ struct _FuRedfishBackend {
 
 G_DEFINE_TYPE(FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
 
-typedef struct curl_slist _curl_slist;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
-
 const gchar *
 fu_redfish_backend_get_vendor(FuRedfishBackend *self)
 {
@@ -78,6 +76,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *session_key = fu_redfish_backend_get_session_key(self, NULL);
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -100,15 +99,20 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
-		/* Some custom implementation require special authentication through bearer token.
-		 * Let's use that if configured to do so. */
+	if (session_key != NULL) {
+		/* X-Auth-Token session authentication per Redfish DSP0266 §12.3, used
+		 * when a session was created out of band so that no password needs to
+		 * be stored on disk.  fu_redfish_backend_get_session_key() re-reads the
+		 * key file on each call, so a session replaced out of band is picked up
+		 * without restarting the daemon. */
+		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
+		fu_redfish_request_add_header(request, auth_header);
+	} else if (self->bearer_token != NULL) {
+		/* Some custom implementations require OAuth2 bearer token auth. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
 		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
 	} else {
-		/* Here is the common auth scenario, when no specific bearer token is configured.
-		 * since DSP0266 makes Basic Authorization a requirement,
-		 * it is safe to use Basic Auth for all implementations */
+		/* Common scenario: Basic Auth per DSP0266 §12.1. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
 		(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
 		(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
@@ -351,10 +355,7 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 {
-	g_autofree gchar *auth_header = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(_curl_slist) hs = NULL;
-	CURL *curl;
 
 	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
 
@@ -371,12 +372,11 @@ fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 		return FALSE;
 	}
 
+	/* request_new() already stamps the X-Auth-Token header for the session */
 	request = fu_redfish_backend_request_new(self);
-	curl = fu_redfish_request_get_curl(request);
-	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	auth_header = g_strconcat("X-Auth-Token: ", self->session_key, NULL);
-	hs = curl_slist_append(hs, auth_header);
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+	(void)curl_easy_setopt(fu_redfish_request_get_curl(request),
+			       CURLOPT_CUSTOMREQUEST,
+			       "DELETE");
 	if (!fu_redfish_request_perform(request, self->session_uri, 0, error)) {
 		g_prefix_error_literal(error, "failed to delete session: ");
 		return FALSE;
@@ -400,6 +400,46 @@ void
 fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix)
 {
 	g_set_str(&self->path_prefix, path_prefix);
+}
+
+/*
+ * Detect an NVIDIA DGX Station GB300 BMC by probing Chassis_0.
+ *
+ * Vendor="NVIDIA" at the Redfish root is necessary but not sufficient —
+ * other NVIDIA Redfish implementations (non-GB300 systems) must not receive
+ * GB300-specific update semantics (empty Targets, ForceUpdate, GB300 task
+ * lifecycle).  Always verify the chassis model.
+ */
+static gboolean
+fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
+{
+	const gchar *manufacturer;
+	const gchar *model;
+	g_autofree gchar *model_lower = NULL;
+	g_autoptr(FuRedfishRequest) req = NULL;
+	g_autoptr(FwupdJsonObject) json_chassis = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	req = fu_redfish_backend_request_new(self);
+	if (!fu_redfish_request_perform(req,
+					"/redfish/v1/Chassis/Chassis_0",
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					&error_local)) {
+		g_debug("Chassis_0 probe failed: %s", error_local->message);
+		return FALSE;
+	}
+	/* a BMC without this chassis may answer with no JSON body at all */
+	json_chassis = fu_redfish_request_get_json_object(req);
+	if (json_chassis == NULL)
+		return FALSE;
+	manufacturer = fwupd_json_object_get_string(json_chassis, "Manufacturer", NULL);
+	model = fwupd_json_object_get_string(json_chassis, "Model", NULL);
+	if (g_strcmp0(manufacturer, "NVIDIA") != 0 || model == NULL)
+		return FALSE;
+	/* match "GB300" and "Station" anywhere in the model string, in any order and
+	 * case, covering "GB300 Station", "DGX Station GB300" and similar */
+	model_lower = g_ascii_strdown(model, -1);
+	return strstr(model_lower, "gb300") != NULL && strstr(model_lower, "station") != NULL;
 }
 
 static gboolean
@@ -464,8 +504,10 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 		const gchar *tmp =
 		    fwupd_json_object_get_string(json_obj, "MultipartHttpPushUri", NULL);
 		if (tmp != NULL) {
-			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
-			    fu_redfish_backend_has_smc_update_path(json_obj)) {
+			if (fu_redfish_backend_is_nvidia_bmc(self)) {
+				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
+			} else if (g_strcmp0(self->vendor, "SMCI") == 0 &&
+				   fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
@@ -775,6 +817,7 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
 	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
+	/* only ever the path: the key itself is a bearer-equivalent token */
 	fwupd_codec_string_append(str, idt, "SessionKeyFile", self->session_key_file);
 	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
@@ -805,6 +848,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->bearer_token);
 	g_free(self->session_key_file);
 	g_free(self->session_key);
+	g_free(self->session_key_file);
 	g_free(self->session_uri);
 	g_free(self->vendor);
 	g_free(self->version);
