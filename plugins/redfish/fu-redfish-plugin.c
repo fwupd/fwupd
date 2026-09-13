@@ -501,7 +501,6 @@ static gboolean
 fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	const gchar *session_token_file;
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *session_key_file = NULL;
