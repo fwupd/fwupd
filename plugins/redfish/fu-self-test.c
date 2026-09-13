@@ -393,6 +393,7 @@ fu_redfish_session_key_file_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
+	g_autofree gchar *session_key = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
 	g_autoptr(FuRedfishRequest) request = NULL;
@@ -405,7 +406,9 @@ fu_redfish_session_key_file_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_redfish_backend_set_session_key_file(backend, fn);
-	g_assert_cmpstr(fu_redfish_backend_get_session_key(backend), ==, "tok1");
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok1");
 
 	/* replacing the file re-authenticates without restarting the daemon */
 	ret = g_file_set_contents(fn, "  tok2  \n", -1, &error);
@@ -413,7 +416,10 @@ fu_redfish_session_key_file_func(void)
 	g_assert_true(ret);
 	request = fu_redfish_backend_request_new(backend);
 	g_assert_nonnull(request);
-	g_assert_cmpstr(fu_redfish_backend_get_session_key(backend), ==, "tok2");
+	g_free(session_key);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok2");
 
 	/* a partially written file must not clear the key */
 	ret = g_file_set_contents(fn, "\n", -1, &error);
@@ -422,90 +428,12 @@ fu_redfish_session_key_file_func(void)
 	g_clear_object(&request);
 	request = fu_redfish_backend_request_new(backend);
 	g_assert_nonnull(request);
-	g_assert_cmpstr(fu_redfish_backend_get_session_key(backend), ==, "tok2");
+	g_free(session_key);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok2");
 
 	g_unlink(fn);
-}
-
-static void
-fu_redfish_nvidia_task_response_func(void)
-{
-	/* a task-shaped body must never override the HTTP status */
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(503, TRUE, TRUE, FALSE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_TRANSIENT);
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(403, TRUE, TRUE, FALSE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_FATAL);
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(404, TRUE, TRUE, FALSE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_REAPED);
-
-	/* empty HTTP 200 is a reap signal only for the TaskMonitor URI */
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200, TRUE, FALSE, FALSE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_TRANSIENT);
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200, TRUE, FALSE, TRUE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_REAPED);
-	g_assert_cmpint(fu_redfish_nvidia_device_classify_task_response(200, TRUE, TRUE, FALSE),
-			==,
-			FU_REDFISH_NVIDIA_TASK_RESPONSE_TASK);
-}
-
-static void
-fu_redfish_nvidia_task_parse_func(void)
-{
-	gboolean ret;
-	guint percentage = 0;
-	FuRedfishNvidiaTaskState task_state;
-	g_autoptr(FwupdJsonObject) json_task = fwupd_json_object_new();
-	g_autoptr(GError) error = NULL;
-
-	fwupd_json_object_add_string(json_task, "TaskState", "Running");
-	fwupd_json_object_add_integer(json_task, "PercentComplete", 42);
-	ret = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
-						  json_task,
-						  &task_state,
-						  &percentage,
-						  &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(task_state, ==, FU_REDFISH_NVIDIA_TASK_RUNNING);
-	g_assert_cmpuint(percentage, ==, 42);
-
-	/* the GB300 100% quirk applies only to a recognized running state */
-	fwupd_json_object_clear(json_task);
-	fwupd_json_object_add_string(json_task, "TaskState", "Starting");
-	fwupd_json_object_add_integer(json_task, "PercentComplete", 100);
-	ret = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
-						  json_task,
-						  &task_state,
-						  &percentage,
-						  &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(task_state, ==, FU_REDFISH_NVIDIA_TASK_COMPLETED);
-
-	fwupd_json_object_clear(json_task);
-	ret = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
-						  json_task,
-						  &task_state,
-						  &percentage,
-						  &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	fwupd_json_object_add_string(json_task, "TaskState", "VendorDefinedSuccess");
-	fwupd_json_object_add_integer(json_task, "PercentComplete", 100);
-	ret = fu_redfish_nvidia_device_parse_task("/redfish/v1/TaskService/Tasks/1",
-						  json_task,
-						  &task_state,
-						  &percentage,
-						  &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_false(ret);
 }
 
 static void
@@ -979,6 +907,8 @@ fu_self_free(FuTest *self)
 		g_object_unref(self->unlicensed_plugin);
 	if (self->hpe_plugin != NULL)
 		g_object_unref(self->hpe_plugin);
+	if (self->nvidia_plugin != NULL)
+		g_object_unref(self->nvidia_plugin);
 	if (self->dell_plugin != NULL)
 		g_object_unref(self->dell_plugin);
 	g_free(self);
@@ -1016,8 +946,6 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
 	g_test_add_func("/redfish/session-key-file", fu_redfish_session_key_file_func);
-	g_test_add_func("/redfish/nvidia/task-response", fu_redfish_nvidia_task_response_func);
-	g_test_add_func("/redfish/nvidia/task-parse", fu_redfish_nvidia_task_parse_func);
 	g_test_add_func("/redfish/network/mac_addr", fu_redfish_network_mac_addr_func);
 	g_test_add_func("/redfish/network/vid_pid", fu_redfish_network_vid_pid_func);
 	g_test_add_data_func("/redfish/unlicensed-plugin/devices",

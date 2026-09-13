@@ -39,6 +39,21 @@ struct _FuRedfishNvidiaDevice {
 
 G_DEFINE_TYPE(FuRedfishNvidiaDevice, fu_redfish_nvidia_device, FU_TYPE_REDFISH_DEVICE)
 
+/* these are private to the task-polling flow; the behaviour they encode is
+ * covered end to end by the GB300 persona in tests/redfish.py rather than by
+ * exporting them for unit tests */
+typedef enum {
+	FU_REDFISH_NVIDIA_TASK_RUNNING,
+	FU_REDFISH_NVIDIA_TASK_COMPLETED,
+} FuRedfishNvidiaTaskState;
+
+typedef enum {
+	FU_REDFISH_NVIDIA_TASK_RESPONSE_TASK,
+	FU_REDFISH_NVIDIA_TASK_RESPONSE_REAPED,
+	FU_REDFISH_NVIDIA_TASK_RESPONSE_TRANSIENT,
+	FU_REDFISH_NVIDIA_TASK_RESPONSE_FATAL,
+} FuRedfishNvidiaTaskResponse;
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 typedef struct {
@@ -75,7 +90,7 @@ fu_redfish_nvidia_device_derive_task_uri(const gchar *monitor_uri)
 	return g_strndup(monitor_uri, strlen(monitor_uri) - strlen(suffix));
 }
 
-FuRedfishNvidiaTaskResponse
+static FuRedfishNvidiaTaskResponse
 fu_redfish_nvidia_device_classify_task_response(glong status_code,
 						gboolean request_succeeded,
 						gboolean has_json,
@@ -120,7 +135,7 @@ fu_redfish_nvidia_device_task_state_is_running(const gchar *state)
 
 /* parse TaskState and PercentComplete from a task JSON object, returning %FALSE
  * with @error set when the task has failed or cannot be understood */
-gboolean
+static gboolean
 fu_redfish_nvidia_device_parse_task(const gchar *task_uri,
 				    FwupdJsonObject *json_task,
 				    FuRedfishNvidiaTaskState *task_state,
@@ -604,9 +619,13 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
  * FuFirmware base-class parse ceiling of FU_FIRMWARE_SIZE_MAX_DEFAULT, so read
  * it straight into a FuFirmware rather than parsing it.
  *
- * fu_device_prepare_firmware() applies the device firmware size max set in
- * probe(), but only once the whole stream has already been read into memory, so
- * check the size here as well to bound the allocation.
+ * The size is checked here rather than relying only on the limit set with
+ * fu_device_set_firmware_size_max() in probe(): fu_device_prepare_firmware()
+ * runs this vfunc first and only compares against size_max afterwards, once
+ * fu_firmware_get_size() can be called.  By then the whole stream has already
+ * been read into memory, so the engine's check validates the image but cannot
+ * bound the allocation.  Checking the stream size up front is what keeps a
+ * malformed or hostile CAB from being read in full before it is rejected.
  */
 static FuFirmware *
 fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,

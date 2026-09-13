@@ -26,6 +26,7 @@ struct _FuRedfishBackend {
 	gchar *bearer_token;
 	gchar *session_key_file;
 	gchar *session_key;
+	gchar *session_key_last; /* last good value read from session_key_file */
 	gchar *session_uri;
 	guint port;
 	gchar *vendor;
@@ -76,7 +77,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
-	g_autofree gchar *session_key = fu_redfish_backend_get_session_key(self, NULL);
+	g_autofree gchar *session_key =
+	    self->session_key_file != NULL ? fu_redfish_backend_get_session_key(self, NULL) : NULL;
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -101,10 +103,13 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 
 	if (session_key != NULL) {
 		/* X-Auth-Token session authentication per Redfish DSP0266 §12.3, used
-		 * when a session was created out of band so that no password needs to
-		 * be stored on disk.  fu_redfish_backend_get_session_key() re-reads the
-		 * key file on each call, so a session replaced out of band is picked up
-		 * without restarting the daemon. */
+		 * only when SessionKeyFile named a session created out of band, so that
+		 * no password needs to be stored on disk.  A key obtained from
+		 * fu_redfish_backend_create_session() deliberately does not land here:
+		 * those callers authenticate normally and use the key themselves.
+		 * fu_redfish_backend_get_session_key() re-reads the key file on each
+		 * call, so a session replaced out of band is picked up without
+		 * restarting the daemon. */
 		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
 		fu_redfish_request_add_header(request, auth_header);
 	} else if (self->bearer_token != NULL) {
@@ -789,11 +794,29 @@ fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error)
 	if (self->session_key != NULL) {
 		session_key = g_strdup(self->session_key);
 	} else if (self->session_key_file != NULL) {
-		if (!g_file_get_contents(self->session_key_file, &session_key, NULL, error)) {
+		g_autoptr(GError) error_local = NULL;
+		if (g_file_get_contents(self->session_key_file, &session_key, NULL, &error_local)) {
+			g_strstrip(session_key);
+		} else {
+			g_clear_pointer(&session_key, g_free);
+		}
+		if (session_key != NULL && session_key[0] != '\0') {
+			g_set_str(&self->session_key_last, session_key);
+		} else if (self->session_key_last != NULL) {
+			/* whoever provisions the file replaces it in place, so there is
+			 * a window where it is absent, empty or half written.  Keep
+			 * serving the last good key across that window rather than
+			 * reporting no key, which would silently drop the caller back
+			 * to Basic auth mid-update. */
+			g_debug("%s is unreadable or empty, reusing the last good key",
+				self->session_key_file);
+			g_set_str(&session_key, self->session_key_last);
+		} else if (error_local != NULL) {
+			/* nothing cached to fall back on, so report why it failed */
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			fwupd_error_convert(error);
 			return NULL;
 		}
-		g_strstrip(session_key);
 	}
 
 	/* sanity check */
@@ -848,7 +871,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->bearer_token);
 	g_free(self->session_key_file);
 	g_free(self->session_key);
-	g_free(self->session_key_file);
+	g_free(self->session_key_last);
 	g_free(self->session_uri);
 	g_free(self->vendor);
 	g_free(self->version);
