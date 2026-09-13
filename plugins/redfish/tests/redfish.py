@@ -32,6 +32,7 @@ app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
 app._nvidia_auxpowerreset: int = 0
 app._nvidia_upload: int = 0
+app._poll900: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -74,6 +75,7 @@ def index():
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
     app._nvidia_upload = 0
+    app._poll900 = 0
 
     # check password from the config file
     try:
@@ -282,6 +284,7 @@ def fwupdate_nvidia():
     # the plugin has to derive the persistent /Tasks/<id> resource from all of
     # them, or reject the response outright
     app._nvidia_upload += 1
+    app._poll900 = 0
 
     # 1: the Location header, which is what the shipping BMC firmware sends
     if app._nvidia_upload == 1:
@@ -314,16 +317,26 @@ def fwupdate_nvidia():
 
 @app.route("/redfish/v1/TaskService/Tasks/900")
 def task_status_900():
-    res = {
-        "@odata.id": "/redfish/v1/TaskService/Tasks/900",
-        "@odata.type": "#Task.v1_4_3.Task",
-        "Id": "900",
-        "Name": "Task 900",
-        "PercentComplete": 100,
-        "TaskState": "Completed",
-        "TaskStatus": "OK",
-    }
-    return Response(json.dumps(res), status=200, mimetype="application/json")
+    app._poll900 += 1
+
+    # the first poll has to return a live task: the plugin only treats a reaped
+    # pair as success once it has seen the persistent task at least once, which
+    # is what stops a monitor-only response being read as completion
+    if app._poll900 == 1:
+        res = {
+            "@odata.id": "/redfish/v1/TaskService/Tasks/900",
+            "@odata.type": "#Task.v1_4_3.Task",
+            "Id": "900",
+            "Name": "Task 900",
+            "PercentComplete": 50,
+            "TaskState": "Running",
+            "TaskStatus": "OK",
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
+
+    # afterwards the BMC reaps the persistent task, so the plugin falls back to
+    # the monitor, which answers with the GB300 empty-200 quirk below
+    return _not_found("/redfish/v1/TaskService/Tasks/900")
 
 
 @app.route("/redfish/v1/TaskService/Tasks/900/Monitor")

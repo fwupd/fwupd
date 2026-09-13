@@ -630,9 +630,11 @@ fu_redfish_dell_devices_func(gconstpointer user_data)
  * report the task monitor -- a Location header, the @odata.id fallback when the
  * header is absent, and a non-string @odata.id that has to be rejected.
  *
- * The empty-200 monitor quirk is deliberately not claimed here: /Tasks/900
- * reports Completed on the first poll, so the monitor URI is never requested.
- * That path is covered by fu_redfish_nvidia_task_response_func() instead. */
+ * The empty-200 monitor quirk is exercised too: /Tasks/900 reports Running on
+ * the first poll, which is what sets the plugin's saw_persistent_task guard,
+ * and is reaped afterwards so the plugin has to fall back to the monitor. The
+ * monitor then answers 200 with an empty body rather than the canonical 404,
+ * which is the GB300 behaviour the reap handling exists for. */
 static void
 fu_redfish_nvidia_update_func(gconstpointer user_data)
 {
