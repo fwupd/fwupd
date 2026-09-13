@@ -26,7 +26,6 @@ struct _FuRedfishBackend {
 	gchar *bearer_token;
 	gchar *session_key_file;
 	gchar *session_key;
-	gchar *session_key_file;
 	gchar *session_uri;
 	guint port;
 	gchar *vendor;
@@ -65,47 +64,6 @@ fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 	return self->uuid;
 }
 
-/*
- * Re-read the session key from the file it was provisioned in.
- *
- * The X-Auth-Token names a BMC session created out of band, and that session
- * expires independently of this daemon, so the value read when the plugin
- * started may already be dead. Nothing re-runs ->startup(), and no vfunc runs
- * before ->activate(), which can be minutes or hours after ->write_firmware().
- */
-static void
-fu_redfish_backend_reload_session_key(FuRedfishBackend *self)
-{
-	g_autofree gchar *session_key = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	if (self->session_key_file == NULL)
-		return;
-	if (!g_file_get_contents(self->session_key_file, &session_key, NULL, &error_local)) {
-		/* keep the existing key, as the provisioner removes the file while it
-		 * re-authenticates */
-		g_debug("failed to read %s: %s", self->session_key_file, error_local->message);
-		return;
-	}
-	/* strip before testing for content, so that a partially written file does not
-	 * set an empty session key and suppress the password fallback */
-	g_strstrip(session_key);
-	if (session_key[0] == '\0' || g_strcmp0(session_key, self->session_key) == 0)
-		return;
-	g_debug("session key changed, using the newly provisioned one");
-	fu_redfish_backend_set_session_key(self, session_key);
-	g_hash_table_remove_all(self->request_cache);
-}
-
-void
-fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file)
-{
-	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
-	g_free(self->session_key_file);
-	self->session_key_file = g_strdup(session_key_file);
-	fu_redfish_backend_reload_session_key(self);
-}
-
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
@@ -118,9 +76,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
-
-	/* the provisioned session may have been replaced since the last request */
-	fu_redfish_backend_reload_session_key(self);
+	g_autofree gchar *session_key = fu_redfish_backend_get_session_key(self, NULL);
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -143,12 +99,13 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->session_key != NULL) {
+	if (session_key != NULL) {
 		/* X-Auth-Token session authentication per Redfish DSP0266 §12.3, used
 		 * when a session was created out of band so that no password needs to
-		 * be stored on disk */
-		g_autofree gchar *auth_header =
-		    g_strdup_printf("X-Auth-Token: %s", self->session_key);
+		 * be stored on disk.  fu_redfish_backend_get_session_key() re-reads the
+		 * key file on each call, so a session replaced out of band is picked up
+		 * without restarting the daemon. */
+		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
 		fu_redfish_request_add_header(request, auth_header);
 	} else if (self->bearer_token != NULL) {
 		/* Some custom implementations require OAuth2 bearer token auth. */
@@ -301,7 +258,7 @@ fu_redfish_backend_check_wildcard_targets(FuRedfishBackend *self)
 	}
 }
 
-void
+static void
 fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_key)
 {
 	g_set_str(&self->session_key, session_key);

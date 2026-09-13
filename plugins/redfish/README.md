@@ -99,22 +99,22 @@ Reset the manager (typically the BMC) after updating this device.
 
 ## Session Token Authentication
 
-Instead of storing a password in `/etc/fwupd/redfish.conf` the plugin can reuse a
-Redfish `X-Auth-Token` created out of band. Set `FWUPD_SESSION_TOKEN_FILE` to the
-path of a file containing the token, for example with a systemd drop-in:
+Instead of storing a password, the plugin can reuse a Redfish `X-Auth-Token`
+created out of band by setting `SessionKeyFile` in `/etc/fwupd/redfish.conf` to
+the path of a file containing the token:
 
 ```ini
-[Service]
-Environment=FWUPD_SESSION_TOKEN_FILE=/run/example-bmc-auth/session
+[redfish]
+SessionKeyFile=/run/example-bmc-auth/session
 ```
 
 The file should live on tmpfs and be readable only by root so that no secret is
-written to persistent storage. When the variable is unset, or the file does not
+written to persistent storage. When the key is unset, or the file does not
 exist, the plugin falls back to the configured username and password.
 
-The file is re-read before each request rather than cached at startup, as the
-session it names expires independently of the daemon. Replacing the file is
-therefore enough to re-authenticate, with no need to restart `fwupd`.
+The file is read on each use rather than cached at startup, as the session it
+names expires independently of the daemon. Replacing the file is therefore
+enough to re-authenticate, with no need to restart `fwupd`.
 
 ## NVIDIA DGX Station GB300
 

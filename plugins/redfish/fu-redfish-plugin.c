@@ -431,7 +431,6 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 #ifdef HAVE_LINUX_IPMI_H
 	gboolean credentials_invalid = FALSE;
 #endif
-	const gchar *session_token_file;
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *session_key_file = NULL;
