@@ -656,6 +656,69 @@ fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
 	return fu_firmware_new_from_bytes(blob);
 }
 
+/*
+ * Flag whichever components the BMC has actually left staged.
+ *
+ * The bundle is uploaded with an empty Targets[] and the BMC resolves the
+ * components to flash from the PLDM manifest, so the device a CAB happened to
+ * address is usually not the one left pending: a bundle whose metainfo targets
+ * FW_BMC_0 routinely stages FW_CPU_0 instead.  Flagging the addressed device
+ * would therefore point the operator, and `fwupdmgr activate`, at the wrong
+ * component.  Ask the BMC which slots report PendingActivation and flag those.
+ */
+static gboolean
+fu_redfish_nvidia_device_refresh_pending(FuRedfishNvidiaDevice *self, GError **error)
+{
+	FuRedfishBackend *backend;
+	GPtrArray *devices;
+	gboolean any_pending = FALSE;
+
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	devices = fu_backend_get_devices(FU_BACKEND(backend));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		const gchar *inventory_uri;
+		g_autoptr(FuRedfishRequest) request = NULL;
+		g_autoptr(FwupdJsonObject) json_member = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!FU_IS_REDFISH_NVIDIA_DEVICE(device_tmp))
+			continue;
+		inventory_uri = fu_device_get_logical_id(device_tmp);
+		if (inventory_uri == NULL)
+			continue;
+		request = fu_redfish_backend_request_new(backend);
+		if (!fu_redfish_request_perform(request,
+						inventory_uri,
+						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+						&error_local)) {
+			g_debug("failed to re-read %s: %s", inventory_uri, error_local->message);
+			continue;
+		}
+		json_member = fu_redfish_request_get_json_object(request);
+		if (json_member == NULL)
+			continue;
+		if (fu_redfish_nvidia_device_slot_is_pending(json_member)) {
+			g_debug("%s is pending activation", fu_device_get_name(device_tmp));
+			fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			any_pending = TRUE;
+		}
+	}
+
+	/* the BMC reported nothing staged, so fall back to the device that was
+	 * written: something has to carry the flag for `fwupdmgr activate` to have
+	 * a device to act on, and the aux-rail cycle is chassis-wide anyway */
+	if (!any_pending) {
+		g_debug("no slot reported PendingActivation, flagging the written device");
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 					FuFirmware *firmware,
@@ -782,7 +845,8 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	 * Deliberately not NEEDS_SHUTDOWN either: that makes the client offer a soft
 	 * poweroff, which leaves the aux rail energised and so activates nothing,
 	 * while steering the user away from the activation that does work. */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	if (!fu_redfish_nvidia_device_refresh_pending(FU_REDFISH_NVIDIA_DEVICE(device), error))
+		return FALSE;
 	fwupd_request_set_kind(request_activate, FWUPD_REQUEST_KIND_POST);
 	fwupd_request_set_id(request_activate, FWUPD_REQUEST_ID_REPLUG_POWER);
 	fwupd_request_add_flag(request_activate, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
@@ -928,6 +992,13 @@ fu_redfish_nvidia_device_init(FuRedfishNvidiaDevice *self)
 	/* NEEDS_ACTIVATION is runtime-only, so without this any daemon restart
 	 * between staging and activating would strand the staged firmware */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
+
+	/* nothing here can report a new version at the end of an install: the image
+	 * is only staged, and the running version does not change until the aux rail
+	 * is cycled.  The engine's post-install version check would therefore always
+	 * fail, and it is not the thing that catches a bad update anyway -- a failed
+	 * write is reported by the BMC task state, which is far more specific. */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 }
 
 static void
