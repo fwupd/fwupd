@@ -1503,9 +1503,6 @@
     <distro id="centos">
       <package variant="x86_64">sqlite-devel</package>
     </distro>
-    <distro id="centos">
-      <package variant="x86_64">sqlite-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">sqlite-devel</package>
       <package variant="aarch64">sqlite-devel</package>
