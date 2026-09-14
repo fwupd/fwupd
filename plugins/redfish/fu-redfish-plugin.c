@@ -13,6 +13,7 @@
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"
+#include "fu-redfish-firmware.h"
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
@@ -730,6 +731,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
 	self->backend = fu_redfish_backend_new(ctx);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_REDFISH_SMBIOS);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_REDFISH_FIRMWARE);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_HPE_DEVICE);	      /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_LEGACY_DEVICE);    /* coverage */
