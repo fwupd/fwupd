@@ -11,7 +11,7 @@
 #include <fwupd.h>
 #include <libfwupdplugin/fu-acpi-table.h>
 #include <libfwupdplugin/fu-backend.h>
-#include <libfwupdplugin/fu-bios-settings.h>
+#include <libfwupdplugin/fu-bios-setting.h>
 #include <libfwupdplugin/fu-block-device.h>
 #include <libfwupdplugin/fu-block-partition.h>
 #include <libfwupdplugin/fu-bluez-device.h>

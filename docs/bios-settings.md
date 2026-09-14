@@ -23,7 +23,7 @@ To fetch available BIOS settings for a machine:
 This will provide a listing of all available settings.  If you would like to just see a subset of attributes, you can list them space delimited on the command line.  For example:
 
 ```shell
-$ fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate MmioAbove4GLimit 
+$ fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate MmioAbove4GLimit
 Authenticating…          [ -                                     ]
 WindowsUEFIFirmwareUpdate:
   Setting type:         Enumeration
@@ -53,8 +53,8 @@ When using BASH as your shell, bash-completion can be used to discover BIOS sett
 
 ```shell
 $ sudo fwupdmgr get-bios-setting W
-WakeonLAN                  WakeUponAlarm              WindowsUEFIFirmwareUpdate  
-130 $ sudo fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate 
+WakeonLAN                  WakeUponAlarm              WindowsUEFIFirmwareUpdate
+130 $ sudo fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate
 Display all 131 possibilities? (y or n)
 AbsolutePersistenceModule     CStateSupport                 M2Slot2Port                   PCIeSlot3Bifurcation          PXEIPV6NetworkStack           SetStrongPassword
 AccessSecuritySettings        DASHSupport                   MaxPasswordAttempts           PCIeSlot3DLFSupport           QuadM2PCIeCardFanControl      SmartUSBProtection
@@ -77,8 +77,8 @@ ConfigurationChangeDetection  M2Slot1DLFSupport             PCIeSlot1Port       
 ConfigureSATAas               M2Slot1LinkSpeed              PCIeSlot2Bifurcation          POPChangeablebyUser           SecurityChip                  WakeUponAlarm
 CoverTamperDetected           M2Slot1Port                   PCIeSlot2DLFSupport           PostPackageRepair             SelectActiveVideo             WindowsUEFIFirmwareUpdate
 CPBMode                       M2Slot2DLFSupport             PCIeSlot2LinkSpeed            PrimaryBootSequence           SerialPort1Address            XHCIHandoff
-CPUC6Report                   M2Slot2LinkSpeed              PCIeSlot2Port                 PXEIPV4NetworkStack           SetMinimumLength              
-130 $ fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate MmioAbove4GLimit 
+CPUC6Report                   M2Slot2LinkSpeed              PCIeSlot2Port                 PXEIPV4NetworkStack           SetMinimumLength
+130 $ fwupdmgr get-bios-setting WindowsUEFIFirmwareUpdate MmioAbove4GLimit
 ```
 
 ### Setting BIOS settings
@@ -94,20 +94,20 @@ For example to enable an enumeration attribute:
 
 ```shell
 $ sudo fwupdmgr set-bios-setting W
-WakeonLAN                  WakeUponAlarm              WindowsUEFIFirmwareUpdate  
-130 $ sudo fwupdmgr set-bios-setting WindowsUEFIFirmwareUpdate 
-Disable  Enable   
+WakeonLAN                  WakeUponAlarm              WindowsUEFIFirmwareUpdate
+130 $ sudo fwupdmgr set-bios-setting WindowsUEFIFirmwareUpdate
+Disable  Enable
 130 $ sudo fwupdmgr set-bios-setting WindowsUEFIFirmwareUpdate Enable
 ```
 
 After setting an attribute you may be prompted to reboot as most settings will require a reboot to take effect.
 
 ```shell
-$ fwupdmgr set-bios-setting WakeonLAN Primary 
+$ fwupdmgr set-bios-setting WakeonLAN Primary
 Authenticating…          [   -                                   ]
 Set BIOS setting 'WakeonLAN' using 'Primary'.
 
-An update requires a reboot to complete. Restart now? [y|N]: 
+An update requires a reboot to complete. Restart now? [y|N]:
 ```
 
 If you would like to program multiple attributes, list them in pairs of the name of the attribute followed by the desired value.
@@ -196,7 +196,7 @@ AppstreamId = org.fwupd.bios.secure-boot
 AppstreamId = org.fwupd.bios.secure-boot
 ```
 
-The human-readable name and icon for each AppStream ID are defined in `fu-bios-settings.c`, where the name is marked for translation and localized at runtime by the client.  The description is available untranslated from `fwupd_bios_setting_get_description()`; clients translate it with `dgettext("fwupd", ...)`.
+The human-readable name and icon for each AppStream ID are defined in `fu-bios-setting.c`, where the name is marked for translation and localized at runtime by the client.  The description is available untranslated from `fwupd_bios_setting_get_description()`; clients translate it with `dgettext("fwupd", ...)`.
 
 Settings that are created by a plugin rather than parsed from the kernel firmware-attributes class (such as the AMD `Dedicated Video Memory` setting) set this metadata directly on the object.
 

@@ -2,7 +2,7 @@
 #
 # The hardware group key is the BIOS setting ID as constructed by fwupd, i.e.
 # `com.<driver>.<Name>`, and points at an abstract `org.fwupd.bios.*` ID. The
-# name and icon for each abstract ID are defined in fu-bios-settings.c so the
+# name and icon for each abstract ID are defined in fu-bios-setting.c so the
 # name can be marked for translation.
 #
 # The group key is automatically converted to a GUID on load.

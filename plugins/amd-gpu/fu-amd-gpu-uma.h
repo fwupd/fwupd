@@ -18,10 +18,10 @@ G_DECLARE_FINAL_TYPE(FuAmdGpuUmaSetting,
 		     fu_amd_gpu_uma_setting,
 		     FU,
 		     AMD_GPU_UMA_SETTING,
-		     FwupdBiosSetting)
+		     FuBiosSetting)
 
 gboolean
 fu_amd_gpu_uma_check_support(const gchar *device_sysfs_path, GError **error);
 
-FwupdBiosSetting *
-fu_amd_gpu_uma_get_setting(const gchar *device_sysfs_path, GError **error);
+FuBiosSetting *
+fu_amd_gpu_uma_get_setting(FuContext *ctx, const gchar *device_sysfs_path, GError **error);

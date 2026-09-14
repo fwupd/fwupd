@@ -60,7 +60,7 @@ def test_files() -> int:
         includes = __get_includes(fn)
         if (
             fn.startswith("plugins")
-            and not fn.endswith("self-test.c")
+            and not fn.endswith("-test.c")
             and not fn.endswith("tool.c")
         ):
             for include in includes:

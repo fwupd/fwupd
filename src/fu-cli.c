@@ -13,7 +13,6 @@
 #include <glib-unix.h>
 #endif
 
-#include "fu-bios-settings-private.h"
 #include "fu-cli-common.h"
 #include "fu-cli.h"
 #include "fu-console.h"
@@ -6109,6 +6108,50 @@ fu_cli_client_show_plugin_warnings(FwupdClient *client, gpointer user_data, GErr
 }
 
 static GHashTable *
+fu_cli_bios_settings_parse_json(const gchar *json, GError **error)
+{
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+	g_autoptr(GHashTable) map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(json_parser, 1000);
+	json_node = fwupd_json_parser_load_from_data(json_parser, json, -1, error);
+	if (json_node == NULL) {
+		g_prefix_error(error, "failed to load '%s': ", json);
+		return NULL;
+	}
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
+		return NULL;
+
+	/* this has to exist */
+	json_arr = fwupd_json_object_get_array(json_obj, "BiosSettings", error);
+	if (json_arr == NULL)
+		return NULL;
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		g_autoptr(FwupdBiosSetting) bios_setting = fwupd_bios_setting_new(NULL, NULL);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return NULL;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(bios_setting), json_obj_tmp, error))
+			return NULL;
+		g_hash_table_insert(map,
+				    g_strdup(fwupd_bios_setting_get_id(bios_setting)),
+				    g_strdup(fwupd_bios_setting_get_current_value(bios_setting)));
+	}
+
+	/* success */
+	return g_steal_pointer(&map);
+}
+
+static GHashTable *
 fu_cli_bios_settings_parse_argv(gchar **input, GError **error)
 {
 	GHashTable *bios_settings;
@@ -6116,12 +6159,11 @@ fu_cli_bios_settings_parse_argv(gchar **input, GError **error)
 	/* json input */
 	if (g_strv_length(input) == 1) {
 		g_autofree gchar *data = NULL;
-		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(NULL);
+		g_autoptr(GPtrArray) new_bios_settings = NULL;
+
 		if (!g_file_get_contents(input[0], &data, NULL, error))
 			return NULL;
-		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))
-			return NULL;
-		return fu_bios_settings_to_hash_kv(new_bios_settings);
+		return fu_cli_bios_settings_parse_json(data, error);
 	}
 
 	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {

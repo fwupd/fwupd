@@ -29,7 +29,7 @@ expect_rc() {
 }
 
 run() {
-    cmd="fwupdtool -v --plugins test $*"
+    cmd="fwupdtool -v --plugins test --plugins linux-fwattr $*"
     echo " ● cmd: $cmd" >fwupdtool.txt
     $cmd 1>>fwupdtool.txt 2>&1
 }

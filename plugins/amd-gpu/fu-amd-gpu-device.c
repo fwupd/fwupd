@@ -269,8 +269,7 @@ fu_amd_gpu_device_setup_bios_settings(FuAmdGpuDevice *self)
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	const gchar *base = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuBiosSettings) bios_settings = NULL;
-	g_autoptr(FwupdBiosSetting) attr_setting = NULL;
+	g_autoptr(FuBiosSetting) attr_setting = NULL;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	if (!fu_amd_gpu_uma_check_support(base, &error_local)) {
@@ -279,16 +278,12 @@ fu_amd_gpu_device_setup_bios_settings(FuAmdGpuDevice *self)
 			error_local->message);
 		return;
 	}
-	bios_settings = fu_context_get_bios_settings(ctx);
-	if (bios_settings == NULL)
-		return;
-
-	attr_setting = fu_amd_gpu_uma_get_setting(base, &error_local);
+	attr_setting = fu_amd_gpu_uma_get_setting(ctx, base, &error_local);
 	if (attr_setting == NULL) {
 		g_debug("failed to get UMA carveout setting: %s", error_local->message);
 		return;
 	}
-	if (!fu_bios_settings_register_attr(bios_settings, attr_setting, &error_local))
+	if (!fu_context_add_bios_setting(ctx, attr_setting, &error_local))
 		g_debug("failed to register UMA carveout setting: %s", error_local->message);
 }
 

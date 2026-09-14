@@ -199,7 +199,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static void
 fu_dell_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FwupdBiosSetting *bios_attr;
+	FuBiosSetting *bios_attr;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
@@ -214,7 +214,7 @@ fu_dell_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(bios_attr), "Enabled") == 0) {
+	if (g_strcmp0(fu_bios_setting_get_current_value(bios_attr), "Enabled") == 0) {
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;

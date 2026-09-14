@@ -8,7 +8,7 @@
 
 #include <gio/gio.h>
 
-#include "fu-bios-settings.h"
+#include "fu-bios-setting.h"
 #include "fu-common-struct.h"
 #include "fu-common.h"
 #include "fu-context-struct.h"
@@ -129,12 +129,15 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold) G_GNU
 FuCpuVendor
 fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
-FuBiosSettings *
+GPtrArray *
 fu_context_get_bios_settings(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_get_bios_setting_pending_reboot(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
-FwupdBiosSetting *
+fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error) G_GNUC_NON_NULL(1);
+FuBiosSetting *
 fu_context_get_bios_setting(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
+gboolean
+fu_context_add_bios_setting(FuContext *self, FuBiosSetting *attr, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 
 GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT

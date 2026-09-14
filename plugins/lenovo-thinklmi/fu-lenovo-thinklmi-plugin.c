@@ -41,11 +41,10 @@ fu_lenovo_thinklmi_plugin_cpu_registered(FuContext *ctx, FuDevice *device)
 	if (fu_device_has_instance_id(device,
 				      "CPUID\\PRO_0&FAM_19&MOD_44",
 				      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
-		FwupdBiosSetting *attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SLEEP_MODE);
-
+		FuBiosSetting *attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SLEEP_MODE);
 		if (attr != NULL) {
-			g_debug("setting %s to read-only", fwupd_bios_setting_get_name(attr));
-			fwupd_bios_setting_set_read_only(attr, TRUE);
+			g_debug("setting %s to read-only", fu_bios_setting_get_name(attr));
+			fu_bios_setting_set_read_only(attr, TRUE);
 		}
 	}
 }
@@ -53,7 +52,8 @@ fu_lenovo_thinklmi_plugin_cpu_registered(FuContext *ctx, FuDevice *device)
 static void
 fu_lenovo_thinklmi_plugin_uefi_capsule_registered(FuContext *ctx, FuDevice *device)
 {
-	FwupdBiosSetting *attr;
+	FuBiosSetting *attr;
+	gboolean pending_reboot = FALSE;
 
 	/* check if boot order lock is turned on */
 	attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_BOOT_ORDER_LOCK);
@@ -61,14 +61,15 @@ fu_lenovo_thinklmi_plugin_uefi_capsule_registered(FuContext *ctx, FuDevice *devi
 		g_debug("failed to find %s in cache", BIOS_SETTING_BOOT_ORDER_LOCK);
 		return;
 	}
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), "Enable") == 0) {
+	if (g_strcmp0(fu_bios_setting_get_current_value(attr), "Enable") == 0) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-bootorder",
 				  "BootOrder is locked in firmware setup");
 	}
 
 	/* check if we're pending for a reboot */
-	if (fu_context_get_bios_setting_pending_reboot(ctx)) {
+	fu_context_get_pending_reboot(ctx, &pending_reboot, NULL);
+	if (pending_reboot) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-pending-reboot",
 				  "UEFI BIOS settings update pending reboot");
@@ -89,7 +90,7 @@ fu_lenovo_thinklmi_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static void
 fu_lenovo_thinklmi_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FwupdBiosSetting *bios_attr;
+	FuBiosSetting *bios_attr;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
@@ -104,7 +105,7 @@ fu_lenovo_thinklmi_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(bios_attr), "Disable") == 0) {
+	if (g_strcmp0(fu_bios_setting_get_current_value(bios_attr), "Disable") == 0) {
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;

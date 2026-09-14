@@ -19,7 +19,7 @@
 #include "fu-amd-gpu-uma.h"
 
 typedef struct _FuAmdGpuUmaSetting {
-	FwupdBiosSetting parent_instance;
+	FuBiosSetting parent_instance;
 	gchar *uma_path;
 } FuAmdGpuUmaSetting;
 
@@ -27,7 +27,7 @@ typedef struct _FuAmdGpuUmaSetting {
 #define UMA_CARVEOUT_FILE	  "carveout"
 #define UMA_DIR			  "uma"
 
-G_DEFINE_TYPE(FuAmdGpuUmaSetting, fu_amd_gpu_uma_setting, FWUPD_TYPE_BIOS_SETTING)
+G_DEFINE_TYPE(FuAmdGpuUmaSetting, fu_amd_gpu_uma_setting, FU_TYPE_BIOS_SETTING)
 
 static gchar *
 fu_amd_gpu_uma_read_file(const gchar *path, GError **error)
@@ -158,8 +158,8 @@ fu_amd_gpu_uma_check_support(const gchar *device_sysfs_path, GError **error)
  *
  * Returns: (transfer full): FwupdBiosSetting object or NULL on error
  **/
-FwupdBiosSetting *
-fu_amd_gpu_uma_get_setting(const gchar *device_sysfs_path, GError **error)
+FuBiosSetting *
+fu_amd_gpu_uma_get_setting(FuContext *ctx, const gchar *device_sysfs_path, GError **error)
 {
 	FuAmdGpuUmaSetting *setting = NULL;
 	g_autofree gchar *uma_dir = NULL;
@@ -176,7 +176,7 @@ fu_amd_gpu_uma_get_setting(const gchar *device_sysfs_path, GError **error)
 
 	uma_dir = g_build_filename(device_sysfs_path, UMA_DIR, NULL);
 
-	attr = g_object_new(FU_TYPE_AMD_GPU_UMA_SETTING, NULL);
+	attr = g_object_new(FU_TYPE_AMD_GPU_UMA_SETTING, "context", ctx, NULL);
 	setting = FU_AMD_GPU_UMA_SETTING(attr);
 	setting->uma_path = g_strdup(uma_dir);
 
@@ -214,5 +214,5 @@ fu_amd_gpu_uma_get_setting(const gchar *device_sysfs_path, GError **error)
 	}
 	if (!fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(attr), error))
 		return NULL;
-	return FWUPD_BIOS_SETTING(g_steal_pointer(&attr));
+	return FU_BIOS_SETTING(g_steal_pointer(&attr));
 }
