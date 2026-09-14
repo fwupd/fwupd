@@ -175,11 +175,11 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
-	g_autoptr(FuFirmware) firmware = fu_firmware_new();
-	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) firmware = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
 
-	/* parse dbx */
-	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error)) {
+	/* parse dbx, preserving the concrete GType so that other
+	 * plugins can introspect the payload */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error)) {
 		g_prefix_error_literal(error, "cannot parse DBX update: ");
 		return NULL;
 	}
@@ -188,7 +188,7 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(ctx,
-							 FU_EFI_SIGNATURE_LIST(siglist),
+							 FU_EFI_SIGNATURE_LIST(firmware),
 							 flags,
 							 error)) {
 			g_prefix_error_literal(error,
@@ -198,9 +198,6 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 		}
 	}
 
-	/* default blob */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	return g_steal_pointer(&firmware);
 }
 
