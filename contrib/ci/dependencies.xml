@@ -24,6 +24,45 @@
   <!ELEMENT build-target EMPTY >
   <!ATTLIST build-target mode (native | multi-arch | build-indep) #REQUIRED>
 ]>
+<!--
+  Dependencies are specified as follows:
+
+  <dependency id="foo" />
+  A dependency named "foo" required on all distributions.
+
+  <dependency id="foo" >
+    <distro id="arch">
+      <package name="libfoo2" />
+    </distro>
+  </dependency>
+  A dependency named "foo", its name on arch is "libfoo2".
+  No other distribution requires this package.
+
+  <dependency id="foo" >
+    <distro id="arch">
+      <package if-filter="boink" />
+    </distro>
+  </dependency>
+  A dependency named "foo", its name on arch is "foo".
+  only to be installed if the filter is "boink". No
+  other distribution requires this package.
+
+  <dependency id="foo" >
+    <distro id="arch">
+      <package name="libfoo2" if-filter="boink" />
+      <package name="libfoo2" if-filter="banana" />
+    </distro>
+    <distro id="ubuntu">
+      <package />
+    </distro>
+  </dependency>
+  A dependency named "foo", its name on arch is "libfoo2",
+  only to be installed if the passed filter is "boink"
+  or "banana". The package is named "foo" on ubuntu
+  and always required regardless of filters.
+  Only arch and ubuntu require this package.
+
+-->
 <dependencies>
   <dependency id="hwdata">
     <distro id="arch">
