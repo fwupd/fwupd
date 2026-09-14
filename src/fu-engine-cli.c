@@ -25,7 +25,6 @@
 #include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 
-#include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-cli-common.h"
 #include "fu-console.h"
@@ -3865,8 +3864,7 @@ fu_engine_cli_sync_impl_get_bios_settings(FwupdClient *client,
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	FuContext *ctx = fu_engine_get_context(self->engine);
-	g_autoptr(FuBiosSettings) attrs = fu_context_get_bios_settings(ctx);
-	return fu_bios_settings_get_all(attrs);
+	return fu_context_get_bios_settings(ctx);
 }
 
 static GPtrArray *

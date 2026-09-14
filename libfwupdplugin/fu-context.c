@@ -12,7 +12,6 @@
 #include <cpuid.h>
 #endif
 
-#include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-helper.h"
@@ -60,7 +59,7 @@ typedef struct {
 	FuDisplayState display_state;
 	guint battery_level;
 	guint battery_threshold;
-	FuBiosSettings *host_bios_settings;
+	GPtrArray *bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
 	FuCpuVendor cpu_vendor;
@@ -616,38 +615,21 @@ fu_context_get_smbios_integer(FuContext *self,
 }
 
 /**
- * fu_context_reload_bios_settings:
- * @self: a #FuContext
- * @error: (nullable): optional return location for an error
- *
- * Refreshes the list of firmware attributes on the system.
- *
- * Since: 1.8.4
- **/
-gboolean
-fu_context_reload_bios_settings(FuContext *self, GError **error)
-{
-	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	return fu_bios_settings_setup(priv->host_bios_settings, error);
-}
-
-/**
  * fu_context_get_bios_settings:
  * @self: a #FuContext
  *
  * Returns all the firmware attributes defined in the system.
  *
- * Returns: (transfer full): A #FuBiosSettings
+ * Returns: (transfer full) (element-type FuBiosSetting): an array
  *
- * Since: 1.8.4
+ * Since: 2.1.8
  **/
-FuBiosSettings *
+GPtrArray *
 fu_context_get_bios_settings(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	return g_object_ref(priv->host_bios_settings);
+	return g_ptr_array_ref(priv->bios_settings);
 }
 
 /**
@@ -657,37 +639,119 @@ fu_context_get_bios_settings(FuContext *self)
  *
  * Finds out if a system supports a given BIOS setting.
  *
- * Returns: (transfer none): #FwupdBiosSetting if the attr exists.
+ * Returns: (transfer none): #FuBiosSetting if the attr exists.
  *
  * Since: 1.8.4
  **/
-FwupdBiosSetting *
+FuBiosSetting *
 fu_context_get_bios_setting(FuContext *self, const gchar *name)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(name != NULL, NULL);
-	return fu_bios_settings_get_attr(priv->host_bios_settings, name);
+
+	for (guint i = 0; i < priv->bios_settings->len; i++) {
+		FuBiosSetting *attr = g_ptr_array_index(priv->bios_settings, i);
+		if (g_strcmp0(name, fu_bios_setting_get_id(attr)) == 0 ||
+		    g_strcmp0(name, fu_bios_setting_get_name(attr)) == 0 ||
+		    g_strcmp0(name, fu_bios_setting_get_appstream_id(attr)) == 0)
+			return attr;
+	}
+	return NULL;
 }
 
 /**
- * fu_context_get_bios_setting_pending_reboot:
+ * fu_context_add_bios_setting:
  * @self: a #FuContext
+ * @attr: a #FuBiosSetting
+ * @error: (nullable): optional return location for an error
  *
- * Determine if updates to BIOS settings are pending until next boot.
+ * Registers a BIOS setting that was created by a plugin.
+ * This is a public API for plugins to register custom BIOS settings.
  *
- * Returns: %TRUE if updates are pending.
+ * Returns: TRUE if the setting was registered successfully
+ *
+ * Since: 2.1.8
+ **/
+gboolean
+fu_context_add_bios_setting(FuContext *self, FuBiosSetting *attr, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(FU_IS_BIOS_SETTING(attr), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (fu_bios_setting_get_id(attr) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "BIOS setting missing required id property");
+		return FALSE;
+	}
+
+	if (fu_context_get_bios_setting(self, fu_bios_setting_get_id(attr)) != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BIOS setting with id %s already exists",
+			    fu_bios_setting_get_id(attr));
+		return FALSE;
+	}
+
+	g_ptr_array_add(priv->bios_settings, g_object_ref(attr));
+	return TRUE;
+}
+
+/**
+ * fu_context_get_pending_reboot:
+ * @self: a #GPtrArray
+ * @result: (out): Whether a reboot is pending
+ * @error: (nullable): optional return location for an error
+ *
+ * Determines if the system will apply changes to attributes upon reboot
  *
  * Since: 1.8.4
  **/
 gboolean
-fu_context_get_bios_setting_pending_reboot(FuContext *self)
+fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	gboolean ret;
+	FuBiosSetting *setting = NULL;
+	guint64 val = 0;
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	fu_bios_settings_get_pending_reboot(priv->host_bios_settings, &ret, NULL);
-	return ret;
+
+	for (guint i = 0; i < priv->bios_settings->len; i++) {
+		FuBiosSetting *attr_tmp = g_ptr_array_index(priv->bios_settings, i);
+		const gchar *tmp = fu_bios_setting_get_name(attr_tmp);
+		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
+			setting = attr_tmp;
+			break;
+		}
+	}
+	if (setting == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to find pending reboot attribute");
+		return FALSE;
+	}
+
+	/* refresh/re-read */
+	if (!fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), error))
+		return FALSE;
+	if (!fu_strtoull(fu_bios_setting_get_current_value(setting),
+			 &val,
+			 0,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 error))
+		return FALSE;
+	*result = (val == 1);
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -1740,7 +1804,6 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-fde");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor-container");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
 	/* load paths */
 	if (flags & FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS)
@@ -1827,11 +1890,6 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 		fu_context_detect_container(self);
 	}
 	fu_context_detect_cpu_vendor(self);
-	fu_progress_step_done(progress);
-
-	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
-	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
-		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
 
 	/* is this dual booted with Windows */
@@ -3092,7 +3150,7 @@ fu_context_finalize(GObject *object)
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
-	g_object_unref(priv->host_bios_settings);
+	g_ptr_array_unref(priv->bios_settings);
 	g_hash_table_unref(priv->firmware_gtypes);
 	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
@@ -3303,7 +3361,7 @@ fu_context_init(FuContext *self)
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new(self);
+	priv->bios_settings = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

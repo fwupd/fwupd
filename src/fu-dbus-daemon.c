@@ -350,7 +350,7 @@ fu_dbus_daemon_authorize_get_bios_settings_cb(GObject *source,
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuBiosSettings) attrs = NULL;
+	g_autoptr(GPtrArray) bios_settings = NULL;
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 	FuContext *ctx = fu_engine_get_context(engine);
 	GVariant *val = NULL;
@@ -362,8 +362,8 @@ fu_dbus_daemon_authorize_get_bios_settings_cb(GObject *source,
 	}
 
 	/* authenticated */
-	attrs = fu_context_get_bios_settings(ctx);
-	val = fwupd_codec_to_variant(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_TRUSTED);
+	bios_settings = fu_context_get_bios_settings(ctx);
+	val = fwupd_codec_array_to_variant(bios_settings, FWUPD_CODEC_FLAG_TRUSTED);
 	g_dbus_method_invocation_return_value(helper->invocation, val);
 }
 
@@ -2377,12 +2377,12 @@ fu_dbus_daemon_method_get_bios_settings(FuDbusDaemon *self,
 		/* if we cannot authenticate and the peer is not
 		 * inherently trusted, only return a non-sensitive
 		 * subset of the settings */
-		g_autoptr(FuBiosSettings) attrs =
+		g_autoptr(GPtrArray) bios_settings =
 		    fu_context_get_bios_settings(fu_engine_get_context(engine));
 		g_dbus_method_invocation_return_value(
 		    invocation,
-		    fwupd_codec_to_variant(FWUPD_CODEC(attrs),
-					   fu_engine_request_get_converter_flags(request)));
+		    fwupd_codec_array_to_variant(bios_settings,
+						 fu_engine_request_get_converter_flags(request)));
 	} else {
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 

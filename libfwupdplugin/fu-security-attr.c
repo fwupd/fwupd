@@ -62,21 +62,21 @@ void
 fu_security_attr_add_bios_target_value(FuSecurityAttr *self, const gchar *id, const gchar *needle)
 {
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	FwupdBiosSetting *bios_setting;
+	FuBiosSetting *bios_setting;
 	GPtrArray *values;
 	const gchar *current;
 
 	bios_setting = fu_context_get_bios_setting(priv->ctx, id);
 	if (bios_setting == NULL)
 		return;
-	current = fwupd_bios_setting_get_current_value(bios_setting);
-	fu_security_attr_set_bios_setting_id(self, fwupd_bios_setting_get_id(bios_setting));
+	current = fu_bios_setting_get_current_value(bios_setting);
+	fu_security_attr_set_bios_setting_id(self, fu_bios_setting_get_id(bios_setting));
 	fu_security_attr_set_bios_setting_current_value(self, current);
-	if (fwupd_bios_setting_get_kind(bios_setting) != FWUPD_BIOS_SETTING_KIND_ENUMERATION)
+	if (fu_bios_setting_get_kind(bios_setting) != FWUPD_BIOS_SETTING_KIND_ENUMERATION)
 		return;
-	if (fwupd_bios_setting_get_read_only(bios_setting))
+	if (fu_bios_setting_get_read_only(bios_setting))
 		return;
-	values = fwupd_bios_setting_get_possible_values(bios_setting);
+	values = fu_bios_setting_get_possible_values(bios_setting);
 	for (guint i = 0; i < values->len; i++) {
 		const gchar *possible = g_ptr_array_index(values, i);
 		g_autofree gchar *lower = g_utf8_strdown(possible, -1);

@@ -28,7 +28,6 @@
 #include "fu-binder-common.h"
 #include "fu-binder-daemon-bridge.h"
 #include "fu-binder-daemon.h"
-#include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-unix-seekable-input-stream.h"
@@ -755,8 +754,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		FuContext *ctx = fu_engine_get_context(engine);
 		g_autoptr(GError) error = NULL;
-		g_autoptr(FuBiosSettings) attrs = NULL;
-		GPtrArray *items;
+		g_autoptr(GPtrArray) items = NULL;
 
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-bios-settings",
 						&error)) {
@@ -764,8 +762,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			    error->code,
 			    error->message);
 		}
-		attrs = fu_context_get_bios_settings(ctx);
-		items = fu_bios_settings_get_all(attrs);
+		items = fu_context_get_bios_settings(ctx);
 		for (guint i = 0; i < items->len; i++) {
 			FwupdBiosSetting *setting = FWUPD_BIOS_SETTING(g_ptr_array_index(items, i));
 			_aidl_return->push_back(fu_binder_bios_setting_to_aidl(setting));

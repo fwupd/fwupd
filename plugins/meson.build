@@ -12,6 +12,8 @@ plugin_deps = [
 ]
 
 plugins = {
+  # these first two plugins are used in the self tests of other plugins; build them first
+  'linux-fwattr': false,
   'uefi-capsule': false,
   'acpi-dmar': false,
   'acpi-facp': false,

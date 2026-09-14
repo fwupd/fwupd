@@ -1,0 +1,6 @@
+# BIOS setting AppStream mappings
+[com.dell-wmi-sysman.SecureBoot]
+AppstreamId = org.fwupd.bios.secure-boot
+
+[com.dell-wmi-sysman.Camera]
+AppstreamId = org.fwupd.bios.camera.enabled

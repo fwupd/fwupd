@@ -38,8 +38,6 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-bios-setting.h"
-#include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
@@ -1182,7 +1180,7 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 				     gboolean force_ro,
 				     GError **error)
 {
-	FwupdBiosSetting *attr = fu_context_get_bios_setting(self->ctx, key);
+	FuBiosSetting *attr = fu_context_get_bios_setting(self->ctx, key);
 	if (attr == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1190,10 +1188,10 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 				    "attribute not found");
 		return FALSE;
 	}
-	if (!fwupd_bios_setting_write_value(attr, value, error))
+	if (!fu_bios_setting_write_value(attr, value, error))
 		return FALSE;
 	if (force_ro)
-		fwupd_bios_setting_set_read_only(attr, TRUE);
+		fu_bios_setting_set_read_only(attr, TRUE);
 	return TRUE;
 }
 
@@ -1214,7 +1212,6 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       gboolean force_ro,
 			       GError **error)
 {
-	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 	gboolean changed = FALSE;
 	GHashTableIter iter;
 	gpointer key;
@@ -1236,10 +1233,12 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			return FALSE;
 		}
 		if (g_strcmp0(key, FWUPD_BIOS_SETTING_SELF_TEST) == 0) {
-			if (fu_bios_settings_get_attr(bios_settings, key) == NULL) {
-				g_autoptr(FwupdBiosSetting) attr = fu_bios_setting_new();
-				fwupd_bios_setting_set_name(attr, key);
-				fu_bios_settings_add_attribute(bios_settings, attr);
+			if (fu_context_get_bios_setting(self->ctx, key) == NULL) {
+				g_autoptr(FuBiosSetting) attr = fu_bios_setting_new(self->ctx);
+				fu_bios_setting_set_id(attr, "org.fwupd.test");
+				fu_bios_setting_set_name(attr, key);
+				if (!fu_context_add_bios_setting(self->ctx, attr, error))
+					return FALSE;
 			}
 			changed = TRUE;
 			continue;
@@ -1265,11 +1264,6 @@ fu_engine_modify_bios_settings(FuEngine *self,
 				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "no BIOS settings needed to be changed");
 		return FALSE;
-	}
-	if (fu_bios_settings_get_attr(bios_settings, FWUPD_BIOS_SETTING_PENDING_REBOOT) != NULL) {
-		if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, error))
-			return FALSE;
-		g_info("pending_reboot is now %d", changed);
 	}
 	return TRUE;
 }
@@ -7519,7 +7513,7 @@ gboolean
 fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
 {
 	FuPlugin *plugin;
-	FwupdBiosSetting *bios_attr;
+	FuBiosSetting *bios_attr;
 	g_autoptr(FuSecurityAttr) hsi_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -7573,10 +7567,9 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 			    fu_security_attr_get_bios_setting_id(hsi_attr));
 		return FALSE;
 	}
-	return fwupd_bios_setting_write_value(
-	    bios_attr,
-	    fu_security_attr_get_bios_setting_target_value(hsi_attr),
-	    error);
+	return fu_bios_setting_write_value(bios_attr,
+					   fu_security_attr_get_bios_setting_target_value(hsi_attr),
+					   error);
 }
 
 /**
@@ -7593,7 +7586,7 @@ gboolean
 fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
 {
 	FuPlugin *plugin;
-	FwupdBiosSetting *bios_attr;
+	FuBiosSetting *bios_attr;
 	g_autoptr(FuSecurityAttr) hsi_attr = NULL;
 	g_autoptr(FuSecurityAttr) hsi_attr_old = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -7658,7 +7651,7 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 	    error);
 	if (hsi_attr_old == NULL)
 		return FALSE;
-	return fwupd_bios_setting_write_value(
+	return fu_bios_setting_write_value(
 	    bios_attr,
 	    fu_security_attr_get_bios_setting_current_value(hsi_attr_old),
 	    error);
@@ -7672,6 +7665,32 @@ fu_engine_security_attrs_from_json(FuEngine *self, FwupdJsonObject *json_obj, GE
 		return TRUE;
 	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_obj, error))
 		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_bios_settings_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
+{
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
+	/* not supplied */
+	json_arr = fwupd_json_object_get_array(json_obj, "BiosSettings", NULL);
+	if (json_arr == NULL)
+		return TRUE;
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		g_autoptr(FuBiosSetting) bios_setting = fu_bios_setting_new(self->ctx);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(bios_setting), json_obj_tmp, error))
+			return FALSE;
+		if (!fu_context_add_bios_setting(self->ctx, bios_setting, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -7716,7 +7735,6 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(FuInputStream) istream_json = NULL;
 	g_autoptr(FuInputStream) istream_raw = NULL;
 	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 
 	/* set appropriate limits */
 	fwupd_json_parser_set_max_depth(json_parser, 50);
@@ -7757,7 +7775,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_obj, error))
 		return FALSE;
-	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_obj, error))
+	if (!fu_engine_bios_settings_from_json(self, json_obj, error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -8096,12 +8114,58 @@ fu_engine_cleanup_state(GError **error)
 }
 
 static gboolean
+fu_engine_bios_setting_load_map_from_json(FuEngine *self,
+					  GHashTable *map,
+					  const gchar *json,
+					  GError **error)
+{
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(json_parser, 1000);
+	json_node = fwupd_json_parser_load_from_data(json_parser, json, -1, error);
+	if (json_node == NULL) {
+		g_prefix_error(error, "failed to load '%s': ", json);
+		return FALSE;
+	}
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
+		return FALSE;
+
+	/* this has to exist */
+	json_arr = fwupd_json_object_get_array(json_obj, "BiosSettings", error);
+	if (json_arr == NULL)
+		return FALSE;
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		g_autoptr(FwupdBiosSetting) bios_setting = fwupd_bios_setting_new(NULL, NULL);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(bios_setting), json_obj_tmp, error))
+			return FALSE;
+		g_hash_table_insert(map,
+				    g_strdup(fwupd_bios_setting_get_id(bios_setting)),
+				    g_strdup(fwupd_bios_setting_get_current_value(bios_setting)));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 {
 	const gchar *tmp;
 	g_autofree gchar *dirname = NULL;
-	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(self->ctx);
-	g_autoptr(GHashTable) hashtable = NULL;
+	g_autoptr(GPtrArray) new_bios_settings = NULL;
+	g_autoptr(GHashTable) map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	g_autoptr(GDir) dir = NULL;
 
 	dirname = fu_context_build_filename(self->ctx,
@@ -8126,57 +8190,16 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 		g_info("loading default BIOS settings policy from %s", fn);
 		if (!g_file_get_contents(fn, &data, NULL, error))
 			return FALSE;
-		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))
+		if (!fu_engine_bios_setting_load_map_from_json(self, map, data, error))
 			return FALSE;
 	}
-	hashtable = fu_bios_settings_to_hash_kv(new_bios_settings);
-	return fu_engine_modify_bios_settings(self, hashtable, TRUE, error);
-}
-
-static void
-fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device, gboolean added)
-{
-	const gchar *subsystem;
-
-	if (!FU_IS_UDEV_DEVICE(device))
-		return;
-	if (self->host_emulation)
-		return;
-	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
-	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
-		g_autoptr(GError) error = NULL;
-		if (added) {
-			g_autoptr(FuBiosSettings) settings =
-			    fu_context_get_bios_settings(self->ctx);
-			g_autoptr(GPtrArray) items = fu_bios_settings_get_all(settings);
-
-			if (items->len > 0) {
-				g_debug("ignoring add event for already loaded settings");
-				return;
-			}
-		}
-		if (!fu_context_reload_bios_settings(self->ctx, &error)) {
-			g_debug("%s", error->message);
-			return;
-		}
-		if (!fu_engine_apply_default_bios_settings_policy(self, &error)) {
-			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-				g_debug("%s", error->message);
-			else
-				g_warning("failed to apply BIOS settings policy: %s",
-					  error->message);
-			return;
-		}
-	}
+	return fu_engine_modify_bios_settings(self, map, TRUE, error);
 }
 
 static void
 fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = NULL;
-
-	/* if this is for firmware attributes, reload that part of the daemon */
-	fu_engine_check_firmware_attributes(self, device, FALSE);
 
 	/* debug */
 	g_debug("%s removed %s", fu_backend_get_name(backend), fu_device_get_backend_id(device));
@@ -8338,9 +8361,6 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
 		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
-
-	/* if this is for firmware attributes, reload that part of the daemon */
-	fu_engine_check_firmware_attributes(self, device, TRUE);
 
 	/* can be specified using a quirk */
 	fu_engine_backend_device_added_run_plugins(self, device, fu_progress_get_child(progress));
@@ -8896,6 +8916,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autofree gchar *pkidir_md = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_bios_policy = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -9209,6 +9230,17 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* update the devices JSON file */
 	if (!fu_engine_update_devices_file(self, &error_json_devices))
 		g_info("failed to update list of devices: %s", error_json_devices->message);
+
+	/* set BIOS setting policy */
+	if (!fu_engine_apply_default_bios_settings_policy(self, &error_bios_policy)) {
+		if (g_error_matches(error_bios_policy, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO) ||
+		    g_error_matches(error_bios_policy, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("%s", error_bios_policy->message);
+		} else {
+			g_warning("failed to apply BIOS settings policy: %s",
+				  error_bios_policy->message);
+		}
+	}
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->phase = FU_ENGINE_PHASE_DONE;

@@ -38,10 +38,10 @@ fu_hp_bioscfg_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 static void
 fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FwupdBiosSetting *bios_attr;
+	FuBiosSetting *bios_attr;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autoptr(FuBiosSettings) bios_settings = NULL;
+	g_autoptr(GPtrArray) bios_settings = NULL;
 
 	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
 		return;
@@ -53,7 +53,7 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* no settings supported, hp-bioscfg is missing, we don't know if we have SureStart */
 	bios_settings = fu_context_get_bios_settings(ctx);
-	if (!fu_bios_settings_is_supported(bios_settings)) {
+	if (bios_settings->len == 0) {
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
 		return;
@@ -69,7 +69,7 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	}
 
 	/* attribute found; show it's status */
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(bios_attr), "Disable") == 0) {
+	if (g_strcmp0(fu_bios_setting_get_current_value(bios_attr), "Disable") == 0) {
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;

@@ -9,7 +9,6 @@
 #include "fwupd-remote-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
-#include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -3386,41 +3385,46 @@ fu_engine_modify_bios_settings_func(void)
 {
 	gboolean ret;
 	const gchar *current;
-	FwupdBiosSetting *attr1;
-	FwupdBiosSetting *attr2;
-	FwupdBiosSetting *attr3;
-	FwupdBiosSetting *attr4;
+	FuBiosSetting *attr1;
+	FuBiosSetting *attr2;
+	FuBiosSetting *attr3;
+	FuBiosSetting *attr4;
+	FuPlugin *plugin;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuBiosSettings) attrs = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GHashTable) bios_settings =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
-#ifdef _WIN32
-	g_test_skip("BIOS settings not supported on Windows");
-	return;
-#endif
-
 	/* load contrived attributes */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
-
-	ret = fu_context_reload_bios_settings(ctx, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE |
+				 FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_COLDPLUG,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	attrs = fu_context_get_bios_settings(ctx);
-	items = fu_bios_settings_get_all(attrs);
+	/* not available without UEFI */
+	plugin = fu_engine_get_plugin_by_name(engine, "linux-fwattr", NULL);
+	if (plugin == NULL) {
+		g_test_skip("BIOS settings not supported without linux-fwattr");
+		return;
+	}
+
+	items = fu_context_get_bios_settings(ctx);
 	g_assert_cmpint(items->len, ==, 4);
 
 	/* enumeration */
 	attr1 = fu_context_get_bios_setting(ctx, "com.fwupd-internal.Absolute");
 	g_assert_nonnull(attr1);
 
-	current = fwupd_bios_setting_get_current_value(attr1);
+	current = fu_bios_setting_get_current_value(attr1);
 	g_assert_nonnull(current);
 
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("Disabled"));
@@ -3467,7 +3471,7 @@ fu_engine_modify_bios_settings_func(void)
 	attr2 = fu_context_get_bios_setting(ctx, "com.fwupd-internal.Asset");
 	g_assert_nonnull(attr2);
 
-	current = fwupd_bios_setting_get_current_value(attr2);
+	current = fu_bios_setting_get_current_value(attr2);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);
@@ -3496,7 +3500,7 @@ fu_engine_modify_bios_settings_func(void)
 	attr3 = fu_context_get_bios_setting(ctx, "com.fwupd-internal.CustomChargeStop");
 	g_assert_nonnull(attr3);
 
-	current = fwupd_bios_setting_get_current_value(attr3);
+	current = fu_bios_setting_get_current_value(attr3);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);
@@ -3529,7 +3533,7 @@ fu_engine_modify_bios_settings_func(void)
 	attr4 = fu_context_get_bios_setting(ctx, "com.fwupd-internal.pending_reboot");
 	g_assert_nonnull(attr4);
 
-	current = fwupd_bios_setting_get_current_value(attr4);
+	current = fu_bios_setting_get_current_value(attr4);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);

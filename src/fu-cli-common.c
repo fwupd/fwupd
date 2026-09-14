@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <xmlb.h>
 
-#include "fu-bios-settings-private.h"
 #include "fu-cli-common.h"
 #include "fu-console.h"
 

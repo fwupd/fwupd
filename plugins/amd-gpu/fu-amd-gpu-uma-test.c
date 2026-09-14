@@ -14,6 +14,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-amd-gpu-uma.h"
+#include "fu-context-private.h"
 
 static void
 fu_amd_gpu_uma_check_support_no_support_func(void)
@@ -71,12 +72,13 @@ static void
 fu_amd_gpu_uma_get_setting_valid_func(void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autofree gchar *uma_dir = NULL;
 	g_autofree gchar *carveout_file = NULL;
 	g_autofree gchar *options_file = NULL;
-	g_autoptr(FwupdBiosSetting) setting = NULL;
+	g_autoptr(FuBiosSetting) setting = NULL;
 	GPtrArray *possible_values = NULL;
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
@@ -104,34 +106,33 @@ fu_amd_gpu_uma_get_setting_valid_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	setting = fu_amd_gpu_uma_get_setting(fu_temporary_directory_get_path(tmpdir), &error);
+	setting = fu_amd_gpu_uma_get_setting(ctx, fu_temporary_directory_get_path(tmpdir), &error);
 	g_assert_nonnull(setting);
 	g_assert_no_error(error);
 
-	g_assert_cmpstr(fwupd_bios_setting_get_id(setting), ==, "com.amd-gpu.uma_carveout");
-	g_assert_cmpstr(fwupd_bios_setting_get_name(setting), ==, "Dedicated Video Memory");
-	g_assert_cmpint(fwupd_bios_setting_get_kind(setting),
-			==,
-			FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	g_assert_cmpstr(fu_bios_setting_get_id(setting), ==, "com.amd-gpu.uma_carveout");
+	g_assert_cmpstr(fu_bios_setting_get_name(setting), ==, "Dedicated Video Memory");
+	g_assert_cmpint(fu_bios_setting_get_kind(setting), ==, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
 
-	possible_values = fwupd_bios_setting_get_possible_values(setting);
+	possible_values = fu_bios_setting_get_possible_values(setting);
 	g_assert_cmpint(possible_values->len, ==, 3);
 
-	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting), ==, "Minimum (512 MB)");
+	g_assert_cmpstr(fu_bios_setting_get_current_value(setting), ==, "Minimum (512 MB)");
 
 	/* setting with a vendor-neutral AppStream ID and icon */
-	g_assert_cmpstr(fwupd_bios_setting_get_appstream_id(setting),
+	g_assert_cmpstr(fu_bios_setting_get_appstream_id(setting),
 			==,
 			"org.fwupd.bios.video-memory");
-	g_assert_cmpstr(fwupd_bios_setting_get_icon(setting), ==, "video-display");
+	g_assert_cmpstr(fu_bios_setting_get_icon(setting), ==, "video-display");
 }
 
 static void
 fu_amd_gpu_uma_get_setting_invalid_func(void)
 {
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(FwupdBiosSetting) setting = NULL;
+	g_autoptr(FuBiosSetting) setting = NULL;
 	g_autofree gchar *fn = NULL;
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
@@ -141,7 +142,7 @@ fu_amd_gpu_uma_get_setting_invalid_func(void)
 	fn = fu_temporary_directory_build(tmpdir, "uma", NULL);
 	g_assert_nonnull(fn);
 
-	setting = fu_amd_gpu_uma_get_setting(fn, &error);
+	setting = fu_amd_gpu_uma_get_setting(ctx, fn, &error);
 	g_assert_null(setting);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
@@ -150,13 +151,14 @@ static void
 fu_amd_gpu_uma_write_value_func(void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autofree gchar *uma_dir = NULL;
 	g_autofree gchar *carveout_file = NULL;
 	g_autofree gchar *options_file = NULL;
 	g_autofree gchar *carveout_contents = NULL;
-	g_autoptr(FwupdBiosSetting) setting = NULL;
+	g_autoptr(FuBiosSetting) setting = NULL;
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
@@ -183,18 +185,18 @@ fu_amd_gpu_uma_write_value_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	setting = fu_amd_gpu_uma_get_setting(fu_temporary_directory_get_path(tmpdir), &error);
+	setting = fu_amd_gpu_uma_get_setting(ctx, fu_temporary_directory_get_path(tmpdir), &error);
 	g_assert_nonnull(setting);
 	g_assert_no_error(error);
 
-	g_assert_true(fwupd_bios_setting_write_value(setting, "(1 GB)", &error));
+	g_assert_true(fu_bios_setting_write_value(setting, "(1 GB)", &error));
 	g_assert_no_error(error);
 
 	g_assert_true(g_file_get_contents(carveout_file, &carveout_contents, NULL, &error));
 	g_assert_no_error(error);
 	g_assert_cmpstr(g_strstrip(carveout_contents), ==, "1");
 
-	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting), ==, "(1 GB)");
+	g_assert_cmpstr(fu_bios_setting_get_current_value(setting), ==, "(1 GB)");
 }
 
 int
