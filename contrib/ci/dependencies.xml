@@ -73,8 +73,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="bash">
-  </dependency>
   <dependency id="bash-completion">
     <distro id="arch">
       <package variant="x86_64" />
