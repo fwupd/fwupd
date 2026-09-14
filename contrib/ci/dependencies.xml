@@ -1502,9 +1502,6 @@
     <distro id="centos">
       <package name="sqlite-devel" if-filter="amd64" />
     </distro>
-    <distro id="centos">
-      <package name="sqlite-devel" if-filter="amd64" />
-    </distro>
     <distro id="fedora">
       <package name="sqlite-devel" if-filter="amd64" />
       <package name="sqlite-devel" if-filter="arm64" />
