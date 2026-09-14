@@ -202,7 +202,6 @@ impl From<GIOError> for std::io::ErrorKind {
             | GIOError::NotSymbolicLink
             | GIOError::NotMountableFile => Self::Unsupported,
             GIOError::Closed | GIOError::BrokenPipe => Self::BrokenPipe,
-            GIOError::Cancelled => Self::Interrupted,
             GIOError::TimedOut => Self::TimedOut,
             GIOError::Busy | GIOError::WouldBlock | GIOError::Pending => Self::WouldBlock,
             GIOError::PartialInput => Self::UnexpectedEof,
@@ -214,7 +213,8 @@ impl From<GIOError> for std::io::ErrorKind {
             | GIOError::ProxyNeedAuth => Self::ConnectionRefused,
             GIOError::NotConnected => Self::NotConnected,
             GIOError::AddressInUse => Self::AddrInUse,
-            GIOError::NoSpace // no StorageFull on 1.75
+            GIOError::Cancelled
+            | GIOError::NoSpace // no StorageFull on 1.75
             | GIOError::NotEmpty
             | GIOError::TooManyLinks
             | GIOError::FilenameTooLong
