@@ -314,9 +314,12 @@ fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 
 	if (!fu_lxs_touch_device_ensure_mode(self, error))
 		return FALSE;
+	/* the version register is readable regardless of protocol mode, but fwupd
+	 * requires every device to report a version before an install can proceed --
+	 * so this must not be skipped while the device is in DFUP/bootloader mode */
+	if (!fu_lxs_touch_device_ensure_version(self, error))
+		return FALSE;
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_lxs_touch_device_ensure_version(self, error))
-			return FALSE;
 		if (!fu_lxs_touch_device_ensure_panel_info(self, error))
 			return FALSE;
 	}
