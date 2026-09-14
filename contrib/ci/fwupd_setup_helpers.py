@@ -34,12 +34,12 @@ logger = logging.getLogger(__name__)
 # Minimum version of markdown required
 MINIMUM_MARKDOWN = (3, 2, 0)
 
-# translate debian architecture names (similar to docker/golang names) to the naming in
-# the dependencies file, which is closer to gcc/fedora naming.
+# translate uname machine ids/fedora/gcc naming to debian architecture names (similar to
+# docker/golang names) which we use in the dependencies file.
 ARCH_TO_DEPS_MAP = {
-    "amd64": "x86_64",
-    "arm": "armhf",
-    "arm64": "aarch64",
+    "x86_64": "amd64",
+    "armhf": "armhf",
+    "aarch64": "arm64",
     "i386": "i386",
     "s390x": "s390x",
 }
@@ -187,6 +187,10 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
     for child in root:
         if "id" not in child.attrib:
             continue
+        if len(child) == 0:
+            # <dependency id="foo" />
+            deps.append(f"{child.attrib['id']}")
+            continue
         for distro in child:
             if "id" not in distro.attrib:
                 continue
@@ -224,13 +228,10 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     exclusive = " !".join(exclusive).strip()
                     if exclusive:
                         exclusive = f"!{exclusive}"
-                    control = f" [{inclusive}{exclusive}]"
+                    control = f" [{inclusive}{' ' if inclusive and exclusive else ''}{exclusive}]"
 
             if cross and build_target == "multi-arch":
-                deb_arch = {v: k for k, v in ARCH_TO_DEPS_MAP.items()}.get(
-                    variant, variant
-                )
-                arch_suffix = f":{deb_arch}"
+                arch_suffix = f":{variant}"
             elif build_target == "native":
                 arch_suffix = ":native"
             else:
@@ -243,13 +244,11 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     else:
                         deps.append(f"{dep}{arch_suffix}{version}{control}")
             for package in distro.findall("package"):
-                if variant and "variant" in package.attrib:
-                    if package.attrib["variant"] != variant:
+                if variant and "if-filter" in package.attrib:
+                    if package.attrib["if-filter"] != variant:
                         continue
-                if package.text:
-                    dep = package.text
-                else:
-                    dep = child.attrib["id"]
+
+                dep = package.attrib.get("name") or child.attrib["id"]
                 if dep:
                     if is_build_indep:
                         build_indep.append(f"{dep}{arch_suffix}{version}{control}")
