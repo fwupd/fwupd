@@ -80,7 +80,6 @@ fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
   'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
-  'fu-bios-settings.c', # fuzzing
   'fu-block-device.c',
   'fu-block-partition.c',
   'fu-bluez-device.c',
@@ -256,8 +255,7 @@ endif
 fwupdplugin_headers = [
   'fu-acpi-table.h',
   'fu-backend.h',
-  'fu-bios-settings.h',
-  'fu-bios-settings-private.h',
+  'fu-bios-setting.h',
   'fu-block-device.h',
   'fu-block-partition.h',
   'fu-bluez-device.h',
@@ -516,7 +514,6 @@ if get_option('tests')
 
   foreach test_name : [
     'backend',
-    'bios-settings',
     'byte-array',
     'bytes',
     'cab-firmware',

@@ -1,4 +1,5 @@
 allow_uefi or subdir_done()
+host_machine.system() == 'linux' or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 plugins += {
@@ -31,6 +32,7 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
       plugin_builtin_lenovo_thinklmi,
+      plugin_builtin_linux_fwattr,
       plugin_builtin_uefi_capsule,
     ],
     c_args: [

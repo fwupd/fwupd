@@ -8,72 +8,67 @@
 
 #include <glib/gstdio.h>
 
+#include "../linux-fwattr/fu-linux-fwattr-plugin.h"
 #include "fu-context-private.h"
 #include "fu-hp-bioscfg-plugin.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 
-typedef struct {
-	FuContext *ctx;
-	FuPlugin *plugin_hp_bioscfg;
-} FuTest;
-
-static void
-fu_test_self_init(FuTest *self)
+static FuContext *
+fu_hp_bioscfg_context_new(void)
 {
-	gboolean ret;
 	g_autofree gchar *confdir = NULL;
-	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GError) error = NULL;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_NO_CACHE);
 
 	confdir = g_test_build_filename(G_TEST_DIST, "tests", "etc", "fwupd", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, confdir);
-	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	return g_steal_pointer(&ctx);
+}
+
+static FuPlugin *
+fu_hp_bioscfg_plugin_new(FuContext *ctx)
+{
+	return fu_plugin_new_from_gtype(fu_hp_bioscfg_plugin_get_type(), ctx);
+}
+
+static FuPlugin *
+fu_lenovo_thinklmi_linux_fwattr_plugin_new(FuContext *ctx)
+{
+	return fu_plugin_new_from_gtype(fu_linux_fwattr_plugin_get_type(), ctx);
+}
+
+static void
+fu_plugin_surestart_enabled(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_hp_bioscfg_context_new();
+	g_autoptr(FuPlugin) plugin = fu_hp_bioscfg_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin_linux_fwattr = fu_lenovo_thinklmi_linux_fwattr_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GError) error = NULL;
+
+	testdatadir = g_test_build_filename(G_TEST_DIST,
+					    "tests",
+					    "firmware-attributes",
+					    "surestart-enabled",
+					    NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* starting bioscfg dir to make startup pass */
-	testdatadir = g_test_build_filename(G_TEST_DIST,
-					    "tests",
-					    "firmware-attributes",
-					    "surestart-not-available",
-					    NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
-
-	ret = fu_context_reload_bios_settings(ctx, &error);
+	ret = fu_plugin_runner_startup(plugin_linux_fwattr, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	self->plugin_hp_bioscfg = fu_plugin_new_from_gtype(fu_hp_bioscfg_plugin_get_type(), ctx);
-	ret = fu_plugin_runner_startup(self->plugin_hp_bioscfg, progress, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	self->ctx = fu_plugin_get_context(self->plugin_hp_bioscfg);
-}
-
-static void
-fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
-{
-	FuTest *self = (FuTest *)user_data;
-	gboolean ret;
-	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
-							      "tests",
-							      "firmware-attributes",
-							      "surestart-enabled",
-							      NULL);
-
-	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
-	ret = fu_context_reload_bios_settings(self->ctx, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	fu_plugin_runner_add_security_attrs(self->plugin_hp_bioscfg, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	/* check that SureStart attribute is present and has success status */
 	attr =
@@ -84,25 +79,36 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 }
 
 static void
-fu_plugin_hp_bioscfg_surestart_enabled_legacy(gconstpointer user_data)
+fu_plugin_surestart_enabled_legacy(void)
 {
-	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_hp_bioscfg_context_new();
+	g_autoptr(FuPlugin) plugin = fu_hp_bioscfg_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin_linux_fwattr = fu_lenovo_thinklmi_linux_fwattr_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
-							      "tests",
-							      "firmware-attributes",
-							      "surestart-enabled-legacy",
-							      NULL);
 
-	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
-	ret = fu_context_reload_bios_settings(self->ctx, &error);
+	testdatadir = g_test_build_filename(G_TEST_DIST,
+					    "tests",
+					    "firmware-attributes",
+					    "surestart-enabled-legacy",
+					    NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	fu_plugin_runner_add_security_attrs(self->plugin_hp_bioscfg, attrs);
+	ret = fu_plugin_runner_startup(plugin_linux_fwattr, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	/* check that SureStart attribute is present and has success status via legacy attribute */
 	attr =
@@ -113,26 +119,37 @@ fu_plugin_hp_bioscfg_surestart_enabled_legacy(gconstpointer user_data)
 }
 
 static void
-fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
+fu_plugin_surestart_disabled(void)
 {
-	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_hp_bioscfg_context_new();
+	g_autoptr(FuPlugin) plugin = fu_hp_bioscfg_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin_linux_fwattr = fu_lenovo_thinklmi_linux_fwattr_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
-							      "tests",
-							      "firmware-attributes",
-							      "surestart-disabled",
-							      NULL);
 
-	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
+	testdatadir = g_test_build_filename(G_TEST_DIST,
+					    "tests",
+					    "firmware-attributes",
+					    "surestart-disabled",
+					    NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 
-	ret = fu_context_reload_bios_settings(self->ctx, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	fu_plugin_runner_add_security_attrs(self->plugin_hp_bioscfg, attrs);
+	ret = fu_plugin_runner_startup(plugin_linux_fwattr, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	/* check that SureStart attribute is present and has failure status */
 	attr =
@@ -146,26 +163,37 @@ fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
 }
 
 static void
-fu_plugin_hp_bioscfg_surestart_not_available(gconstpointer user_data)
+fu_plugin_surestart_not_available(void)
 {
-	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_hp_bioscfg_context_new();
+	g_autoptr(FuPlugin) plugin = fu_hp_bioscfg_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin_linux_fwattr = fu_lenovo_thinklmi_linux_fwattr_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
-							      "tests",
-							      "firmware-attributes",
-							      "surestart-not-available",
-							      NULL);
 
-	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
+	testdatadir = g_test_build_filename(G_TEST_DIST,
+					    "tests",
+					    "firmware-attributes",
+					    "surestart-not-available",
+					    NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 
-	ret = fu_context_reload_bios_settings(self->ctx, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	fu_plugin_runner_add_security_attrs(self->plugin_hp_bioscfg, attrs);
+	ret = fu_plugin_runner_startup(plugin_linux_fwattr, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_HP_SURESTART, NULL);
@@ -176,38 +204,17 @@ fu_plugin_hp_bioscfg_surestart_not_available(gconstpointer user_data)
 	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
-static void
-fu_test_self_free(FuTest *self)
-{
-	if (self->plugin_hp_bioscfg != NULL)
-		g_object_unref(self->plugin_hp_bioscfg);
-	g_free(self);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_self_free)
-#pragma clang diagnostic pop
-
 int
 main(int argc, char **argv)
 {
-	g_autoptr(FuTest) self = g_new0(FuTest, 1);
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	fu_test_self_init(self);
-	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-enabled",
-			     self,
-			     fu_plugin_hp_bioscfg_surestart_enabled);
-	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-enabled-legacy",
-			     self,
-			     fu_plugin_hp_bioscfg_surestart_enabled_legacy);
-	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-disabled",
-			     self,
-			     fu_plugin_hp_bioscfg_surestart_disabled);
-	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-not-available",
-			     self,
-			     fu_plugin_hp_bioscfg_surestart_not_available);
+	g_test_add_func("/fwupd/plugin/hp-bioscfg/surestart-enabled", fu_plugin_surestart_enabled);
+	g_test_add_func("/fwupd/plugin/hp-bioscfg/surestart-enabled-legacy",
+			fu_plugin_surestart_enabled_legacy);
+	g_test_add_func("/fwupd/plugin/hp-bioscfg/surestart-disabled",
+			fu_plugin_surestart_disabled);
+	g_test_add_func("/fwupd/plugin/hp-bioscfg/surestart-not-available",
+			fu_plugin_surestart_not_available);
 	return g_test_run();
 }

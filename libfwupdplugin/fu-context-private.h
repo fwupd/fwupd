@@ -30,8 +30,6 @@ fu_context_set_main_context(FuContext *self, GMainContext *main_ctx) G_GNUC_NON_
 void
 fu_context_housekeeping(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_reload_bios_settings(FuContext *self, GError **error);
-gboolean
 fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);
 GHashTable *
