@@ -167,6 +167,64 @@ fu_uefi_dbx_not_present_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fu_uefi_dbx_prepare_firmware_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+	g_autoptr(FuFirmware) auth2 = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_out = NULL;
+	g_autoptr(GBytes) csum = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* do not save silo */
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* build a plausible signed dbx update */
+	csum =
+	    fu_bytes_from_string("418ad44c79e3fddd6a0574b24fcf0fb8fee4b3ff2be635d21a5c0852bdea635c",
+				 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
+	fu_firmware_add_image(auth2, FU_FIRMWARE(sig), NULL);
+	blob = fu_firmware_write(auth2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+
+	/* parse it back through the device */
+	stream = fu_memory_input_stream_new_from_bytes(blob);
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+
+	/* the concrete type has to survive, so that other plugins can introspect the
+	 * payload -- see fu_snapd_uefi_plugin_composite_peek_firmware() */
+	g_assert_true(FU_IS_EFI_VARIABLE_AUTHENTICATION2(firmware));
+	g_assert_cmpint(fu_firmware_get_images(firmware)->len, ==, 1);
+
+	/* ...and the payload has to be byte-identical, as it is written verbatim into the
+	 * efivar by fu_uefi_dbx_device_write_firmware() */
+	blob_out = fu_firmware_get_bytes(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_out);
+	g_assert_true(g_bytes_equal(blob, blob_out));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -175,5 +233,6 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
+	g_test_add_func("/uefi-dbx/prepare-firmware", fu_uefi_dbx_prepare_firmware_func);
 	return g_test_run();
 }
