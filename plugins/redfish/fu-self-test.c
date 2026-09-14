@@ -15,6 +15,7 @@
 #include "fu-plugin-private.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-device.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
@@ -27,6 +28,19 @@ typedef struct {
 	FuPlugin *hpe_plugin;
 	FuPlugin *dell_plugin;
 } FuTest;
+
+static void
+fu_redfish_firmware_func(void)
+{
+	GType firmware_gtype;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_REDFISH_DEVICE, NULL);
+	g_autoptr(FuFirmware) firmware = NULL;
+
+	firmware_gtype = fu_device_get_firmware_gtype(device);
+	g_assert_cmpint(firmware_gtype, !=, G_TYPE_INVALID);
+	firmware = g_object_new(firmware_gtype, NULL);
+	g_assert_cmpuint(fu_firmware_get_size_max(firmware), ==, 512 * FU_MB);
+}
 
 static void
 fu_self_init(FuTest *self)
@@ -764,6 +778,7 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/backend/session-key/empty",
 			fu_redfish_backend_session_key_empty_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
+	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
 	g_test_add_func("/redfish/network/mac_addr", fu_redfish_network_mac_addr_func);
