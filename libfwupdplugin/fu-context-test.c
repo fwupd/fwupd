@@ -177,6 +177,26 @@ fu_context_state_func(void)
 }
 
 static void
+fu_context_pending_reboot_func(void)
+{
+	gboolean pending_reboot = FALSE;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+
+	g_assert_false(fu_context_get_pending_reboot(ctx, &pending_reboot, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_clear_error(&error);
+	fu_context_set_pending_reboot(ctx, FALSE);
+	g_assert_true(fu_context_get_pending_reboot(ctx, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_false(pending_reboot);
+	fu_context_set_pending_reboot(ctx, TRUE);
+	g_assert_true(fu_context_get_pending_reboot(ctx, &pending_reboot, &error));
+	g_assert_no_error(error);
+	g_assert_true(pending_reboot);
+}
+
+static void
 fu_context_firmware_gtypes_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -408,6 +428,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context/hwids-fdt", fu_context_hwids_fdt_func);
 	g_test_add_func("/fwupd/context/firmware-gtypes", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context/state", fu_context_state_func);
+	g_test_add_func("/fwupd/context/pending-reboot", fu_context_pending_reboot_func);
 	g_test_add_func("/fwupd/context/udev-subsystems", fu_context_udev_subsystems_func);
 	return g_test_run();
 }
