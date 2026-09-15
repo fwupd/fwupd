@@ -11,18 +11,20 @@ from flask import Flask, Response, request
 
 app = Flask(__name__)
 
+HARDCODED_USERNAME = "username2"
 HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
 HARDCODED_DELL_USERNAME = "dell_username"
 HARDCODED_USERNAMES = {
-    "username2",
+    HARDCODED_USERNAME,
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
     HARDCODED_DELL_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
+HARDCODED_BEARER_TOKEN = "token2"
 
 app._percentage545: int = 0
 app._percentage546: int = 0
@@ -47,15 +49,23 @@ def index():
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
 
-    # check password from the config file
-    try:
-        if (
-            request.authorization["username"] not in HARDCODED_USERNAMES
-            or request.authorization["password"] != HARDCODED_PASSWORD
-        ):
+    # a bearer token is used instead of a username and password, e.g. when talking
+    # to a proxy that injects the real BMC credentials
+    if request.authorization is not None and request.authorization.type == "bearer":
+        if request.authorization.token != HARDCODED_BEARER_TOKEN:
             return _failure("unauthorised", status=401)
-    except (KeyError, TypeError):
-        return _failure("invalid")
+        username = HARDCODED_USERNAME
+    else:
+        # check password from the config file
+        try:
+            if (
+                request.authorization["username"] not in HARDCODED_USERNAMES
+                or request.authorization["password"] != HARDCODED_PASSWORD
+            ):
+                return _failure("unauthorised", status=401)
+        except (KeyError, TypeError):
+            return _failure("invalid")
+        username = request.authorization["username"]
 
     res = {
         "@odata.id": "/redfish/v1/",
@@ -65,13 +75,13 @@ def index():
         "UpdateService": {"@odata.id": "/redfish/v1/UpdateService"},
     }
 
-    if request.authorization["username"] == HARDCODED_HPE_USERNAME:
+    if username == HARDCODED_HPE_USERNAME:
         res["Vendor"] = "HPE"
 
-    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+    if username == HARDCODED_DELL_USERNAME:
         res["Vendor"] = "Dell"
 
-    if request.authorization["username"] in (
+    if username in (
         HARDCODED_SMC_USERNAME,
         HARDCODED_UNL_USERNAME,
     ):

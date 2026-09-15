@@ -724,6 +724,22 @@ fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_
 	g_set_str(&self->bearer_token, bearer_token);
 }
 
+/**
+ * fu_redfish_backend_has_bearer_token:
+ * @self: a #FuRedfishBackend
+ *
+ * Gets if a bearer token is configured, in which case it is used for
+ * authentication instead of the username and password.
+ *
+ * Returns: %TRUE if a bearer token is set
+ **/
+gboolean
+fu_redfish_backend_has_bearer_token(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
+	return self->bearer_token != NULL;
+}
+
 void
 fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file)
 {
