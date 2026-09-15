@@ -1231,3 +1231,10 @@ LIBFWUPD_2.1.8 {
     fwupd_security_attr_incorporate;
   local: *;
 } LIBFWUPD_2.1.7;
+
+LIBFWUPD_2.2.1 {
+  global:
+    fwupd_bios_setting_get_parent;
+    fwupd_bios_setting_set_parent;
+  local: *;
+} LIBFWUPD_2.1.8;

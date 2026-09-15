@@ -310,6 +310,7 @@ endif
 if get_option('udev_hotplug')
   conf.set('HAVE_UDEV_HOTPLUG', '1')
 endif
+curses = disabler()
 if build_standalone
   bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
   if bluez.allowed()
@@ -384,6 +385,13 @@ if build_standalone
   )
   if readline.found() and get_option('readline').allowed()
     conf.set('HAVE_READLINE', '1')
+  endif
+  curses = dependency(
+    'ncursesw',
+    required: get_option('tui').disable_auto_if(host_machine.system() != 'linux'),
+  )
+  if curses.found() and get_option('tui').allowed()
+    conf.set('HAVE_TUI', '1')
   endif
   sqlite = dependency('sqlite3')
   if sqlite.found()
@@ -1018,6 +1026,7 @@ summary(
     'libblkid': libblkid,
     'libdrm': libdrm,
     'logind': logind,
+    'tui': curses,
     'valgrind': valgrind,
     'polkit': polkit,
     'python3': python3,

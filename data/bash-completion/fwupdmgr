@@ -1,5 +1,6 @@
 _fwupdmgr_cmd_list=(
 	'activate'
+	'bios-settings'
 	'check-reboot-needed'
 	'clean-remote'
 	'clear-results'
@@ -210,6 +211,13 @@ _show_modifiers()
 	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
 }
 
+_show_bios_tui_modifiers()
+{
+	local modifiers="${_fwupdmgr_opts[*]}"
+	modifiers="${modifiers/--json/}"
+	COMPREPLY+=( $(compgen -W "${modifiers}" -- "$cur") )
+}
+
 _show_bios_settings()
 {
 	if ! command -v jq &> /dev/null; then
@@ -318,6 +326,10 @@ _fwupdmgr()
 	esac
 
 	case $arg in
+	bios-settings)
+		_show_bios_tui_modifiers
+		return 0
+		;;
 	activate|check-reboot-needed|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade|report-export)
 		#device ID
 		if [[ "$args" = "2" ]]; then

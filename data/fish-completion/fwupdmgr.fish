@@ -17,6 +17,7 @@ end
 function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
     printf '%s\t%s\n' \
         activate 'Activate devices' \
+        bios-settings 'View and modify BIOS settings in a terminal user interface' \
         check-reboot-needed 'Check if any devices are pending a reboot to complete update' \
         clear-results 'Clears the results from the last update' \
         device-emulate 'Emulate a device using a JSON manifest' \
@@ -96,7 +97,7 @@ complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when dow
 complete -c fwupdmgr -l p2p -d 'Only use peer-to-peer networking when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
 complete -c fwupdmgr -l filter-release -d 'Filter with a set of release flags'
-complete -c fwupdmgr -l json -d 'Output in JSON format'
+complete -c fwupdmgr -n 'not __fish_seen_subcommand_from bios-settings' -l json -d 'Output in JSON format'
 complete -c fwupdmgr -l no-security-fix -d 'Do not prompt to fix security issues'
 complete -c fwupdmgr -l no-authenticate -d 'Don\'t prompt for authentication'
 
