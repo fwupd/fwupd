@@ -121,8 +121,6 @@ warning_flags = [
   '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
-  '-Wno-analyzer-use-of-uninitialized-value', # incompatible with g_autoptr()
-  '-Wno-analyzer-fd-double-close',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',
@@ -143,7 +141,7 @@ warning_flags = [
 ]
 static_analysis = get_option('static_analysis') and host_machine.system() != 'windows'
 if static_analysis
-  warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
+  warning_flags += ['-fanalyzer']
 endif
 cc = meson.get_compiler('c')
 add_project_arguments(
