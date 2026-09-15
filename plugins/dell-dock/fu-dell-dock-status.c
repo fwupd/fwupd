@@ -106,6 +106,17 @@ fu_dell_dock_status_write(FuDevice *device,
 }
 
 static gboolean
+fu_dell_dock_status_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	return fu_device_emit_request(device, request, progress, error);
+}
+
+static gboolean
 fu_dell_dock_status_probe(FuDevice *device, GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
@@ -194,6 +205,7 @@ fu_dell_dock_status_init(FuDellDockStatus *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK_EC);
 }
 
@@ -208,6 +220,7 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 	device_class->close = fu_dell_dock_status_close;
 	device_class->set_quirk_kv = fu_dell_dock_status_set_quirk_kv;
 	device_class->set_progress = fu_dell_dock_status_set_progress;
+	device_class->attach = fu_dell_dock_status_attach;
 }
 
 FuDellDockStatus *
