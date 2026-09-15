@@ -52,7 +52,7 @@ impl From<Error> for crate::Error {
     }
 }
 
-/// Compression format, mirrors `FuCompressorFormat` from the C enum.
+/// Compression format, mirrors `FwupdCompressorFormat` from the C enum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompressorFormat {
     /// Raw deflate (no headers).

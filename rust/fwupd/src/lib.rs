@@ -8,6 +8,7 @@
 
 mod bitflags;
 pub mod compressor;
+pub mod json;
 pub mod streams;
 pub mod units;
 
@@ -172,11 +173,17 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(error: std::io::Error) -> Self {
+impl From<&std::io::Error> for Error {
+    fn from(error: &std::io::Error) -> Self {
         Self {
             kind: error.kind().into(),
             message: format!("{error}"),
         }
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(error: std::io::Error) -> Self {
+        Error::from(&error)
     }
 }
