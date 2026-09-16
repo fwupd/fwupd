@@ -1333,6 +1333,38 @@
       <package name="py312-pygobject" />
     </distro>
   </dependency>
+  <dependency id="python3-textual">
+    <distro id="debian">
+      <control />
+      <build-target mode="native" />
+    </distro>
+    <distro id="arch">
+      <package name="python-textual" />
+    </distro>
+    <distro id="fedora">
+      <package name="python3-textual" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package />
+    </distro>
+  </dependency>
+  <dependency id="python3-pytest">
+    <distro id="debian">
+      <control />
+      <build-target mode="native" />
+    </distro>
+    <distro id="arch">
+      <package name="python-pytest" />
+    </distro>
+    <distro id="fedora">
+      <package name="python3-pytest" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package />
+    </distro>
+  </dependency>
   <dependency id="python3-gi-cairo">
     <distro id="arch">
       <package name="python-cairo" only-if="amd64" />

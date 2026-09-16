@@ -40,6 +40,7 @@
 
 %if 0%{?fedora}
 %global have_passim 1
+%global have_tui 1
 %endif
 
 Summary:   Firmware update daemon
@@ -66,6 +67,11 @@ BuildRequires: libjcat-devel
 %endif
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: python3-jinja2
+%if 0%{?have_tui}
+BuildRequires: python3-gobject
+BuildRequires: python3-pytest
+BuildRequires: python3-textual
+%endif
 BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
@@ -115,6 +121,10 @@ Requires(postun): systemd
 Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libxmlb%{?_isa} >= %{libxmlb_version}
 Requires: shared-mime-info
+%if 0%{?have_tui}
+Requires: python3-gobject
+Requires: python3-textual
+%endif
 
 # deliberately has no _isa as libusbx in RHEL-9 does not include it
 Requires: libusb1 >= %{libusb_version}
@@ -277,6 +287,11 @@ cd -
 %else
     -Dpassim=disabled \
 %endif
+%if 0%{?have_tui}
+    -Dtui=enabled \
+%else
+    -Dtui=disabled \
+%endif
 %if 0%{?qubes_packages}
     -Dqubes=true \
 %endif
@@ -342,6 +357,9 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %endif
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
+%if 0%{?have_tui}
+%{_bindir}/fwupdtui
+%endif
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/bios-settings.d
 %{_sysconfdir}/fwupd/bios-settings.d/README.md
@@ -360,6 +378,10 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/fish/vendor_completions.d/fwupdmgr.fish
+%if 0%{?have_tui}
+%{_datadir}/bash-completion/completions/fwupdtui
+%{_datadir}/fish/vendor_completions.d/fwupdtui.fish
+%endif
 %dir %{_datadir}/fwupd
 %dir %{_datadir}/fwupd/metainfo
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
@@ -372,6 +394,9 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_mandir}/man1/fwupdtool.1*
+%if 0%{?have_tui}
+%{_mandir}/man1/fwupdtui.1*
+%endif
 %if 0%{?have_uefi}
 %{_mandir}/man1/dbxtool.*
 %endif
