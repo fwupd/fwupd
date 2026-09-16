@@ -1682,7 +1682,7 @@ fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer
 /**
  * fwupd_client_modify_bios_setting_async:
  * @self: a #FwupdClient
- * @settings: (transfer container): BIOS settings
+ * @settings: (element-type utf8 utf8) (transfer none): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
