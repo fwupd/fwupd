@@ -1557,7 +1557,7 @@ fwupd_client_sync_impl_modify_bios_setting(FwupdClient *self,
 /**
  * fwupd_client_modify_bios_setting
  * @self: a #FwupdClient
- * @settings: (transfer container): BIOS settings
+ * @settings: (element-type utf8 utf8) (transfer none): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
