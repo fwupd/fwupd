@@ -28,11 +28,11 @@ env:
   # latest one. It also gets rebuilt on every git push with a change to this file
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
-  ARCH_CONTAINER_TAG: "latest"  # 0001
-  CENTOS_CONTAINER_TAG: "2026-09-18.1"
-  DEBIAN_CONTAINER_TAG: "2026-09-18.1"
-  UBUNTU_CONTAINER_TAG: "2026-09-18.1"
-  FEDORA_CONTAINER_TAG: "2026-09-18.1"
+  ARCH_CONTAINER_TAG: "latest"  # 0002
+  CENTOS_CONTAINER_TAG: "2026-09-18.2"
+  DEBIAN_CONTAINER_TAG: "2026-09-18.2"
+  UBUNTU_CONTAINER_TAG: "2026-09-18.2"
+  FEDORA_CONTAINER_TAG: "2026-09-18.2"
 
 jobs:
   find_or_create_container:
