@@ -861,6 +861,21 @@ introspection = get_option('introspection').disable_auto_if(host_machine.system(
   not gobject_introspection_dep.found()
 )
 
+textual_version = run_command(
+  [python3, '-c', 'import importlib.metadata; print(importlib.metadata.version("textual"))'],
+  check: false,
+).stdout().strip()
+tui = get_option('tui').require(
+  build_daemon == 'dbus',
+  error_message: 'TUI support requires the D-Bus daemon',
+).require(
+  introspection.allowed(),
+  error_message: 'TUI support requires GObject Introspection',
+).require(
+  textual_version != '' and textual_version.version_compare('>=0.50'),
+  error_message: 'TUI support requires the Python Textual module >= 0.50',
+)
+
 gidocgen_dep = dependency(
   'gi-docgen',
   version: '>= 2021.1',
@@ -1018,6 +1033,7 @@ summary(
     'libblkid': libblkid,
     'libdrm': libdrm,
     'logind': logind,
+    'tui': tui.allowed() ? f'Textual @textual_version@' : false,
     'valgrind': valgrind,
     'polkit': polkit,
     'python3': python3,
