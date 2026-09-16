@@ -6,7 +6,7 @@ title: fwupd terminal user interface
 
 ## NAME
 
-**fwupdtui** — view and modify firmware settings
+**fwupdtui** — manage firmware and platform security
 
 ## SYNOPSIS
 
@@ -14,12 +14,24 @@ title: fwupd terminal user interface
 
 ## DESCRIPTION
 
-**fwupdtui** is an interactive terminal interface for firmware settings exposed by fwupd.
-It uses libfwupd through GObject Introspection and requires the fwupd daemon to be running.
+**fwupdtui** is an interactive terminal interface for fwupd. It uses libfwupd through GObject
+Introspection and requires the fwupd daemon to be running. The home screen provides three views:
 
-Settings are shown in a searchable hierarchy. Select a writable setting and press **e** or
-**Enter** to change it. Changes are collected locally until **Ctrl+S** or the **Apply** button is
-used. Press **q** or use the **Quit** button to discard unapplied changes.
+**Manage BIOS Settings**
+: Browse, search, and modify firmware settings. Changes are collected locally until **Ctrl+S** or
+  the **Apply** button is used.
+
+**Manage Devices**
+: Inspect firmware devices and available releases; install upgrades, downgrades, reinstalls, or a
+  local cabinet archive; refresh metadata; enable LVFS; unlock and activate devices; and verify or
+  update firmware checksums.
+
+**View Security Measurement**
+: Inspect the Host Security ID, its grouped security attributes and runtime suffix, recent security
+  events, and known device security issues.
+
+Press **Esc** to return to the home screen and **q** to quit. BIOS settings and devices have
+searchable hierarchies. Select a writable BIOS setting and press **e** or **Enter** to change it.
 
 Keyboard and mouse input are supported by the Textual interface.
 
@@ -33,7 +45,7 @@ Keyboard and mouse input are supported by the Textual interface.
 
 ## EXIT STATUS
 
-Successful operation returns "0". A failure to load or modify firmware settings returns "1".
+Successful operation returns "0". A failure to connect to fwupd returns "1".
 
 ## BUGS
 
