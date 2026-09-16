@@ -1,0 +1,7 @@
+_fwupdtui()
+{
+	local cur
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	COMPREPLY=( $(compgen -W '--help --version' -- "$cur") )
+}
+complete -F _fwupdtui fwupdtui

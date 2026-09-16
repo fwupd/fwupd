@@ -27,6 +27,8 @@ depends=(
   libxmlb
   passim
   polkit
+  python-gobject
+  python-textual
   shared-mime-info
   sqlite
   systemd-libs
@@ -45,10 +47,12 @@ makedepends=(
   noto-fonts-cjk
   python-cairo
   python-dbus
-  python-gobject
   valgrind
 )
-checkdepends=(umockdev)
+checkdepends=(
+  python-pytest
+  umockdev
+)
 
 pkgver() {
     cd ${pkgname}

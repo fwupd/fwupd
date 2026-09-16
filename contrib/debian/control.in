@@ -32,8 +32,11 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         gir1.2-fwupd-2.0 (= ${binary:Version}),
          libfwupd3 (= ${binary:Version}),
          ${python3:Depends},
+         python3-gi,
+         python3-textual,
          shared-mime-info,
          systemd-sysusers
 Recommends: bolt,
@@ -43,10 +46,7 @@ Recommends: bolt,
 	    fwupd-signed,
 	    jq
 Suggests: 7zip,
-	  gir1.2-fwupd-2.0,
-	  gir1.2-glib-2.0,
 	  python3-dbus,
-	  python3-gi,
 	  python3-jinja2
 Provides: fwupdate
 Conflicts: fwupdate-amd64-signed,

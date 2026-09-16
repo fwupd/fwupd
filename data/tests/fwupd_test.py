@@ -292,6 +292,7 @@ class VeryBasicTest(FwupdTest):
         self.assertEqual(self.get_dbus_property("Interactive"), False)
         self.assertEqual(self.get_dbus_property("OnlyTrusted"), True)
         self.assertEqual(self.get_dbus_property("Tainted"), False)
+        self.assertEqual(self.get_dbus_property("PendingReboot"), False)
         self.assertEqual(self.get_dbus_property("HostBkc"), "")
         self.assertEqual(self.get_dbus_property("HostProduct"), "Unknown Product")
         self.assertEqual(self.get_dbus_property("HostVendor"), "Unknown Vendor")
