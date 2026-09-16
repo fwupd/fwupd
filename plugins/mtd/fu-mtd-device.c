@@ -29,12 +29,14 @@ typedef struct {
 	GPtrArray *fmap_regions;
 	FuFirmware *fmap_firmware;
 	guint64 fmap_offset;
+	guint64 fmap_size;
 } FuMtdDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_MTD_DEVICE_FMAP_REGION_WP_RO "WP_RO"
 
 #define FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI "has-intel-spi"
 
@@ -50,6 +52,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "MtdType", priv->mtd_type);
 	fwupd_codec_string_append(str, idt, "IntelSpiFlags", intel_spi_flags);
 	fwupd_codec_string_append_hex(str, idt, "FmapOffset", priv->fmap_offset);
+	fwupd_codec_string_append_hex(str, idt, "FmapSize", priv->fmap_size);
 	if (priv->fmap_regions->len > 0) {
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
 		fwupd_codec_string_append(str, idt, "FmapRegions", fmap_regions);
@@ -215,26 +218,61 @@ fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, FuInputStream *stream, GErr
 }
 
 static gboolean
+fu_mtd_device_metadata_parse_fmap(FuMtdDevice *self, FuInputStream *stream, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	gsize fmap_end;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuInputStream) stream_fmap = NULL;
+
+	g_clear_object(&priv->fmap_firmware);
+	if (priv->fmap_offset > G_MAXSIZE || priv->fmap_size > G_MAXSIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP search range is too large");
+		return FALSE;
+	}
+	if (priv->fmap_size > 0) {
+		fmap_end = fu_size_checked_add((gsize)priv->fmap_offset, (gsize)priv->fmap_size);
+		if (fmap_end == G_MAXSIZE) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "FMAP search range overflow");
+			return FALSE;
+		}
+		stream_fmap = fu_partial_input_stream_new(stream, 0x0, fmap_end, error);
+		if (stream_fmap == NULL)
+			return FALSE;
+	} else {
+		stream_fmap = g_object_ref(stream);
+	}
+	if (!fu_firmware_parse_stream(firmware,
+				      stream_fmap,
+				      priv->fmap_offset,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse FMAP: ");
+		return FALSE;
+	}
+	g_set_object(&priv->fmap_firmware, firmware);
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 	g_autoptr(FuFirmware) firmware_sbom = fu_uswid_firmware_new();
 	g_autoptr(FuFirmware) img0 = NULL;
 	g_autoptr(FuInputStream) stream_sbom = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	/* parse as firmware image */
-	if (!fu_firmware_parse_stream(firmware,
-				      stream,
-				      priv->fmap_offset,
-				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
-					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
-				      error)) {
-		g_prefix_error_literal(error, "failed to parse image: ");
+	if (!fu_mtd_device_metadata_parse_fmap(self, stream, error))
 		return FALSE;
-	}
-	stream_sbom = fu_firmware_get_image_by_id_stream(firmware, "SBOM", error);
+	stream_sbom = fu_firmware_get_image_by_id_stream(priv->fmap_firmware, "SBOM", error);
 	if (stream_sbom == NULL) {
 		g_prefix_error_literal(error, "no SBOM image: ");
 		return FALSE;
@@ -279,12 +317,18 @@ fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, FuInputStream *stream, GError
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
+	g_autoptr(GError) error_fmap = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
+	priv->fmap_offset = 0;
+	priv->fmap_size = 0;
+
+	/* the descriptor is at the start; searching may cross unreadable regions */
 	if (!fu_firmware_parse_stream(firmware,
 				      stream,
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
 					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
 				      error)) {
 		g_prefix_error_literal(error, "failed to parse image: ");
@@ -294,6 +338,12 @@ fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, FuInputStream *stream, GError
 	for (guint i = 0; i < imgs->len; i++) {
 		FuIfdImage *img = g_ptr_array_index(imgs, i);
 		g_autoptr(FuMtdIfdDevice) child = fu_mtd_ifd_device_new(FU_DEVICE(self), img);
+
+		/* start FMAP discovery at the IFD BIOS region */
+		if (fu_firmware_get_idx(FU_FIRMWARE(img)) == FU_IFD_REGION_BIOS) {
+			priv->fmap_offset = fu_firmware_get_addr(FU_FIRMWARE(img));
+			priv->fmap_size = fu_firmware_get_size(FU_FIRMWARE(img));
+		}
 
 		/* if any region is not readable by the BIOS master, fwupd cannot do
 		 * verification on the parent MTD device as a whole */
@@ -310,6 +360,10 @@ fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, FuInputStream *stream, GError
 		if (!fu_mtd_device_metadata_load_uswid(self, stream, error))
 			return FALSE;
 	}
+
+	/* coreboot images use an FMAP inside the IFD BIOS region */
+	if (priv->fmap_size > 0 && !fu_mtd_device_metadata_parse_fmap(self, stream, &error_fmap))
+		g_debug("no FMAP found: %s", error_fmap->message);
 
 	/* success */
 	return TRUE;
@@ -424,11 +478,96 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self)
 }
 
 static gboolean
+fu_mtd_device_get_wp_ro(FuMtdDevice *self,
+			guint32 *region_start,
+			guint32 *region_length,
+			GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	guint64 fmap_offset;
+	guint64 wp_ro_size;
+	guint64 wp_ro_start;
+	gsize fmap_table_size;
+	FuFirmware *img_wp_ro = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	if (priv->fmap_firmware == NULL) {
+		if (fu_device_get_firmware_gtype(FU_DEVICE(self)) == FU_TYPE_IFD_FIRMWARE &&
+		    priv->fmap_size == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no IFD BIOS region found");
+			return FALSE;
+		}
+		stream = fu_mtd_device_read_stream(self, NULL, error);
+		if (stream == NULL)
+			return FALSE;
+		if (!fu_mtd_device_metadata_parse_fmap(self, stream, error))
+			return FALSE;
+	}
+
+	imgs = fu_firmware_get_images(priv->fmap_firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+
+		if (g_strcmp0(fu_firmware_get_id(img), FU_MTD_DEVICE_FMAP_REGION_WP_RO) != 0)
+			continue;
+		if (img_wp_ro != NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "multiple FMAP WP_RO regions found");
+			return FALSE;
+		}
+		img_wp_ro = img;
+	}
+	if (img_wp_ro == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FMAP WP_RO region found");
+		return FALSE;
+	}
+
+	wp_ro_start = fu_firmware_get_addr(img_wp_ro);
+	wp_ro_size = fu_firmware_get_size(img_wp_ro);
+	if (wp_ro_size == 0 || wp_ro_start > G_MAXUINT32 || wp_ro_size > G_MAXUINT32 ||
+	    wp_ro_start > firmware_size_max || wp_ro_size > firmware_size_max - wp_ro_start) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP WP_RO region is invalid");
+		return FALSE;
+	}
+
+	/* the table defining WP_RO must itself be protected by WP_RO */
+	fmap_offset = fu_firmware_get_offset(priv->fmap_firmware);
+	fmap_table_size = fu_fmap_firmware_get_table_size(FU_FMAP_FIRMWARE(priv->fmap_firmware));
+	if (fmap_offset < wp_ro_start || fmap_table_size > wp_ro_size ||
+	    fmap_offset - wp_ro_start > wp_ro_size - fmap_table_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "FMAP table is outside WP_RO");
+		return FALSE;
+	}
+
+	*region_start = wp_ro_start;
+	*region_length = wp_ro_size;
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
 	gint rc = 0;
 	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	guint32 region_start = 0;
+	guint32 region_length = 0;
 	struct erase_info_user erase = {0x0};
 	g_autoptr(FuIoctl) ioctl = NULL;
 
@@ -449,8 +588,10 @@ fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
 		return FALSE;
 	}
 
-	erase.start = 0x0;
-	erase.length = firmware_size_max;
+	if (!fu_mtd_device_get_wp_ro(self, &region_start, &region_length, error))
+		return FALSE;
+	erase.start = region_start;
+	erase.length = region_length;
 	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	if (!fu_ioctl_execute(ioctl,
 			      MEMISLOCKED,
@@ -555,7 +696,7 @@ fu_mtd_device_add_security_attrs_smm_bwp(FuMtdDevice *self, FuSecurityAttrs *att
 }
 
 static void
-fu_mtd_device_add_security_attrs_mlock(FuMtdDevice *self, FuSecurityAttrs *attrs)
+fu_mtd_device_add_security_attrs_wp_ro(FuMtdDevice *self, FuSecurityAttrs *attrs)
 {
 	gboolean locked = FALSE;
 	g_autoptr(FuSecurityAttr) attr = NULL;
@@ -596,7 +737,7 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	/* MEMISLOCKED is only meaningful on NOR flash */
 	if (g_strcmp0(priv->mtd_type, "nor") == 0)
-		fu_mtd_device_add_security_attrs_mlock(self, attrs);
+		fu_mtd_device_add_security_attrs_wp_ro(self, attrs);
 
 	/* only for intel hardware */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI)) {
@@ -717,6 +858,20 @@ fu_mtd_device_open(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_mtd_device_invalidate(FuDevice *device)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+
+	FU_DEVICE_CLASS(fu_mtd_device_parent_class)->invalidate(device);
+	g_clear_object(&priv->fmap_firmware);
+	if (fu_device_get_firmware_gtype(device) == FU_TYPE_IFD_FIRMWARE) {
+		priv->fmap_offset = 0;
+		priv->fmap_size = 0;
+	}
 }
 
 static void
@@ -1392,6 +1547,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_mtd_device_finalize;
 	device_class->open = fu_mtd_device_open;
+	device_class->invalidate = fu_mtd_device_invalidate;
 	device_class->probe = fu_mtd_device_probe;
 	device_class->setup = fu_mtd_device_setup;
 	device_class->to_string = fu_mtd_device_to_string;

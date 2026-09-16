@@ -19,6 +19,7 @@
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-fmap-struct.h"
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 #include "fu-security-attrs-private.h"
@@ -29,6 +30,8 @@ typedef struct {
 } FuTest;
 
 #define FU_TEST_MTD_DEVICE_SIZE 0x100000
+#define FU_TEST_MTD_FMAP_OFFSET 0x80000
+#define FU_TEST_MTD_WP_RO_SIZE	0x20000
 
 static void
 fu_test_free(FuTest *self)
@@ -73,15 +76,15 @@ fu_test_mtd_find_mtdram(FuContext *ctx, GError **error)
 
 #ifdef HAVE_MTD_USER_H
 static void
-fu_test_mtd_device_add_memislocked_event(FuMtdDevice *device, gboolean locked)
+fu_test_mtd_device_add_memislocked_event(FuMtdDevice *device, guint32 start, gboolean locked)
 {
 	struct erase_info_user erase = {0x0};
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(FuDeviceEvent) event = NULL;
 
-	erase.start = 0x0;
-	erase.length = FU_TEST_MTD_DEVICE_SIZE;
+	erase.start = start;
+	erase.length = FU_TEST_MTD_WP_RO_SIZE;
 	data = fu_base64_encode((const guint8 *)&erase, sizeof(erase));
 	event_id = g_strdup_printf("Ioctl:Request=0x%04x,Data=%s,Length=0x%x",
 				   (guint)MEMISLOCKED,
@@ -90,6 +93,60 @@ fu_test_mtd_device_add_memislocked_event(FuMtdDevice *device, gboolean locked)
 	event = fu_device_event_new(event_id);
 	fu_device_event_set_data(event, "DataOut", (const guint8 *)&erase, sizeof(erase));
 	fu_device_event_set_i64(event, "Rc", locked ? 1 : 0);
+	fu_device_add_event(FU_DEVICE(device), event);
+}
+
+static void
+fu_test_mtd_fmap_write(guint8 *buf, gsize bufsz, gsize fmap_offset)
+{
+	g_autoptr(GByteArray) table = g_byte_array_new();
+	g_autoptr(FuStructFmap) st_hdr = fu_struct_fmap_new();
+	g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_struct_fmap_set_size(st_hdr, bufsz);
+	fu_struct_fmap_set_nareas(st_hdr, 2);
+	g_assert_true(fu_struct_fmap_set_name(st_hdr, "FLASH", &error));
+	g_assert_no_error(error);
+	fu_byte_array_append_array(table, st_hdr->buf);
+
+	fu_struct_fmap_area_set_offset(st_area, fmap_offset);
+	fu_struct_fmap_area_set_size(st_area, 0x1000);
+	g_assert_true(fu_struct_fmap_area_set_name(st_area, "FMAP", &error));
+	g_assert_no_error(error);
+	fu_byte_array_append_array(table, st_area->buf);
+
+	fu_struct_fmap_area_set_size(st_area, FU_TEST_MTD_WP_RO_SIZE);
+	g_assert_true(fu_struct_fmap_area_set_name(st_area, "WP_RO", &error));
+	g_assert_no_error(error);
+	fu_byte_array_append_array(table, st_area->buf);
+
+	g_assert_true(fu_memcpy_safe(buf,
+				     bufsz,
+				     fmap_offset,
+				     table->data,
+				     table->len,
+				     0x0,
+				     table->len,
+				     &error));
+	g_assert_no_error(error);
+}
+
+static GBytes *
+fu_test_mtd_fmap_new(gsize fmap_offset)
+{
+	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
+
+	fu_test_mtd_fmap_write(buf, FU_TEST_MTD_DEVICE_SIZE, fmap_offset);
+	return g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
+}
+
+static void
+fu_test_mtd_device_add_firmware_event(FuMtdDevice *device, GBytes *blob)
+{
+	g_autoptr(FuDeviceEvent) event = fu_device_event_new("MtdReadFirmware");
+
+	fu_device_event_set_bytes(event, "Data", blob);
 	fu_device_add_event(FU_DEVICE(device), event);
 }
 
@@ -104,7 +161,7 @@ fu_test_mtd_device_write_sysfs_attr(const gchar *sysfs_path, const gchar *attr, 
 }
 
 static FuMtdDevice *
-fu_test_mtd_device_new_for_security_attrs(FuTest *self, gboolean add_event, gboolean locked)
+fu_test_mtd_device_new_emulated(FuTest *self, GType firmware_gtype, GBytes *blob)
 {
 	gboolean ret;
 	g_autofree gchar *sysfs_path = NULL;
@@ -134,9 +191,62 @@ fu_test_mtd_device_new_for_security_attrs(FuTest *self, gboolean add_event, gboo
 	g_assert_true(ret);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
-	if (add_event)
-		fu_test_mtd_device_add_memislocked_event(FU_MTD_DEVICE(device), locked);
+	fu_device_set_firmware_gtype(device, firmware_gtype);
+	fu_test_mtd_device_add_firmware_event(FU_MTD_DEVICE(device), blob);
+	ret = fu_device_setup(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	return FU_MTD_DEVICE(g_steal_pointer(&device));
+}
+
+static FuMtdDevice *
+fu_test_mtd_device_new_for_security_attrs(FuTest *self,
+					  GType firmware_gtype,
+					  gboolean add_event,
+					  gboolean locked)
+{
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(GBytes) blob = fu_test_mtd_fmap_new(FU_TEST_MTD_FMAP_OFFSET);
+
+	device = fu_test_mtd_device_new_emulated(self, firmware_gtype, blob);
+	if (add_event) {
+		fu_test_mtd_device_add_memislocked_event(device, FU_TEST_MTD_FMAP_OFFSET, locked);
+	}
+	return g_steal_pointer(&device);
+}
+
+static GBytes *
+fu_test_mtd_ifd_with_fmap_decoy_new(void)
+{
+	gsize blob_size = 0;
+	const guint8 *blob_data;
+	g_autofree gchar *filename = NULL;
+	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "mtd-ifd.builder.xml", NULL);
+	firmware = fu_firmware_new_from_filename(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	blob = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	blob_data = g_bytes_get_data(blob, &blob_size);
+	g_assert_true(fu_memcpy_safe(buf,
+				     FU_TEST_MTD_DEVICE_SIZE,
+				     0x0,
+				     blob_data,
+				     blob_size,
+				     0x0,
+				     blob_size,
+				     &error));
+	g_assert_no_error(error);
+
+	/* the BIOS region ends at 0x2000; put a valid decoy in the ME region */
+	fu_test_mtd_fmap_write(buf, FU_TEST_MTD_DEVICE_SIZE, 0x2000);
+	return g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
 }
 #endif
 
@@ -319,7 +429,7 @@ fu_test_mtd_ifd_device_security_attrs_non_desc_func(gconstpointer user_data)
 }
 
 static void
-fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
+fu_test_mtd_device_security_attrs_wp_ro_locked_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
 	g_test_skip("no mtd-user.h support");
@@ -329,7 +439,7 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
-	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, TRUE);
+	device = fu_test_mtd_device_new_for_security_attrs(self, G_TYPE_INVALID, TRUE, TRUE);
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -343,7 +453,7 @@ fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
 }
 
 static void
-fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
+fu_test_mtd_device_security_attrs_wp_ro_unlocked_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
 	g_test_skip("no mtd-user.h support");
@@ -353,7 +463,8 @@ fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
-	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, FALSE);
+	device =
+	    fu_test_mtd_device_new_for_security_attrs(self, FU_TYPE_FMAP_FIRMWARE, TRUE, FALSE);
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -368,7 +479,7 @@ fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
 }
 
 static void
-fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
+fu_test_mtd_device_security_attrs_wp_ro_missing_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
 	g_test_skip("no mtd-user.h support");
@@ -378,7 +489,8 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
-	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	device =
+	    fu_test_mtd_device_new_for_security_attrs(self, FU_TYPE_FMAP_FIRMWARE, FALSE, FALSE);
 	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
 
 	attr =
@@ -389,6 +501,68 @@ fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GBytes) blob = fu_test_mtd_ifd_with_fmap_decoy_new();
+
+	device = fu_test_mtd_device_new_emulated(self, FU_TYPE_IFD_FIRMWARE, blob);
+	fu_test_mtd_device_add_memislocked_event(device, 0x2000, TRUE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_wp_ro_stale_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GBytes) blob = fu_test_mtd_fmap_new(FU_TEST_MTD_FMAP_OFFSET);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob_invalid =
+	    g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
+
+	device = fu_test_mtd_device_new_emulated(self, FU_TYPE_FMAP_FIRMWARE, blob);
+	ret = fu_device_open(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_device_clear_events(FU_DEVICE(device));
+	fu_test_mtd_device_add_firmware_event(device, blob_invalid);
+	fu_test_mtd_device_add_memislocked_event(device, FU_TEST_MTD_FMAP_OFFSET, TRUE);
+	fu_device_probe_invalidate(FU_DEVICE(device));
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 #endif
 }
 
@@ -753,15 +927,21 @@ main(int argc, char **argv)
 	g_test_add_data_func("/mtd/ifd-device/security-attrs/non-desc",
 			     self,
 			     fu_test_mtd_ifd_device_security_attrs_non_desc_func);
-	g_test_add_data_func("/mtd/device/security-attrs/locked",
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-locked",
 			     self,
-			     fu_test_mtd_device_security_attrs_locked_func);
-	g_test_add_data_func("/mtd/device/security-attrs/unlocked",
+			     fu_test_mtd_device_security_attrs_wp_ro_locked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-unlocked",
 			     self,
-			     fu_test_mtd_device_security_attrs_unlocked_func);
-	g_test_add_data_func("/mtd/device/security-attrs/missing",
+			     fu_test_mtd_device_security_attrs_wp_ro_unlocked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-missing",
 			     self,
-			     fu_test_mtd_device_security_attrs_missing_func);
+			     fu_test_mtd_device_security_attrs_wp_ro_missing_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-ifd-bound",
+			     self,
+			     fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-stale",
+			     self,
+			     fu_test_mtd_device_security_attrs_wp_ro_stale_func);
 	g_test_add_data_func("/mtd/device/quirk/metadata-offset",
 			     self,
 			     fu_test_mtd_device_quirk_metadata_offset_func);
