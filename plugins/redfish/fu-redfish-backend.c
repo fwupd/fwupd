@@ -33,6 +33,7 @@ struct _FuRedfishBackend {
 	gchar *version;
 	gchar *uuid;
 	gchar *update_uri_path;
+	gchar *uploaded_checksum;
 	gchar *push_uri_path;
 	gchar *path_prefix;
 	gboolean use_https;
@@ -63,6 +64,29 @@ const gchar *
 fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 {
 	return self->uuid;
+}
+
+/* A GB300 PLDM bundle is one payload that the BMC fans out across every
+ * component in its manifest, so an archive declaring several components must
+ * still upload it once. Keyed on the payload checksum rather than on a
+ * transaction, so it is also correct across separate invocations: re-installing
+ * the same archive before activating does not re-send it, and a different
+ * archive always does. */
+const gchar *
+fu_redfish_backend_get_uploaded_checksum(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->uploaded_checksum;
+}
+
+void
+fu_redfish_backend_set_uploaded_checksum(FuRedfishBackend *self, const gchar *checksum)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	if (g_strcmp0(self->uploaded_checksum, checksum) == 0)
+		return;
+	g_free(self->uploaded_checksum);
+	self->uploaded_checksum = g_strdup(checksum);
 }
 
 FuRedfishRequest *
@@ -863,6 +887,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_hash_table_unref(self->request_cache);
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
+	g_free(self->uploaded_checksum);
 	g_free(self->push_uri_path);
 	g_free(self->path_prefix);
 	g_free(self->hostname);

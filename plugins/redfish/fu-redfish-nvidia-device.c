@@ -39,7 +39,7 @@ struct _FuRedfishNvidiaDevice {
 
 G_DEFINE_TYPE(FuRedfishNvidiaDevice, fu_redfish_nvidia_device, FU_TYPE_REDFISH_DEVICE)
 
-/* these are private to the task-polling flow; the behaviour they encode is
+/* these are private to the task-polling flow; the behavior they encode is
  * covered end to end by the GB300 persona in tests/redfish.py rather than by
  * exporting them for unit tests */
 typedef enum {
@@ -729,6 +729,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	FuRedfishBackend *backend;
 	CURL *curl;
 	curl_mimepart *part;
+	g_autofree gchar *csum = NULL;
 	g_autofree gchar *location = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) json_targets = fwupd_json_array_new();
@@ -749,6 +750,39 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
+	if (backend == NULL)
+		return FALSE;
+
+	/* the BMC applies every component in the PLDM manifest from a single
+	 * upload, so an archive naming several components must not send the
+	 * payload once per component */
+	csum = fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA256, error);
+	if (csum == NULL)
+		return FALSE;
+	if (g_strcmp0(fu_redfish_backend_get_uploaded_checksum(backend), csum) == 0) {
+		const gchar *inventory_uri = fu_device_get_logical_id(device);
+		g_autoptr(FuRedfishRequest) request_slot = NULL;
+		g_autoptr(GError) error_slot = NULL;
+
+		request_slot = fu_redfish_backend_request_new(backend);
+		if (inventory_uri != NULL &&
+		    fu_redfish_request_perform(request_slot,
+					       inventory_uri,
+					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					       &error_slot)) {
+			g_autoptr(FwupdJsonObject) json_member =
+			    fu_redfish_request_get_json_object(request_slot);
+			if (json_member != NULL &&
+			    fu_redfish_nvidia_device_slot_is_pending(json_member))
+				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		}
+		g_debug("bundle already uploaded, not resending for %s",
+			fu_device_get_name(device));
+		fu_progress_finished(progress);
+		return TRUE;
+	}
+
 	/* Targets is empty as the BMC resolves components from the PLDM bundle
 	 * manifest, ForceUpdate bypasses the same-version check, and Immediate is
 	 * the only OperationApplyTime the BMC accepts */
@@ -758,9 +792,6 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	params = fwupd_json_object_to_string(json_params, FWUPD_JSON_EXPORT_FLAG_INDENT);
 
 	/* build the multipart POST */
-	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
-	if (backend == NULL)
-		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);
@@ -845,6 +876,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	 * Deliberately not NEEDS_SHUTDOWN either: that makes the client offer a soft
 	 * poweroff, which leaves the aux rail energised and so activates nothing,
 	 * while steering the user away from the activation that does work. */
+	fu_redfish_backend_set_uploaded_checksum(backend, csum);
 	if (!fu_redfish_nvidia_device_refresh_pending(FU_REDFISH_NVIDIA_DEVICE(device), error))
 		return FALSE;
 	fwupd_request_set_kind(request_activate, FWUPD_REQUEST_KIND_POST);

@@ -54,3 +54,7 @@ gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self);
+const gchar *
+fu_redfish_backend_get_uploaded_checksum(FuRedfishBackend *self);
+void
+fu_redfish_backend_set_uploaded_checksum(FuRedfishBackend *self, const gchar *checksum);
