@@ -695,20 +695,36 @@ fu_mtd_device_add_security_attrs_smm_bwp(FuMtdDevice *self, FuSecurityAttrs *att
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
-static void
+void
 fu_mtd_device_add_security_attrs_wp_ro(FuMtdDevice *self, FuSecurityAttrs *attrs)
 {
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean locked = FALSE;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttr) attr_vboot = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* MEMISLOCKED is only meaningful on NOR flash */
+	if (g_strcmp0(priv->mtd_type, "nor") != 0)
+		return;
+
+	attr_vboot = fu_security_attrs_get_by_appstream_id(attrs,
+							   FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+							   NULL);
+	if (attr_vboot == NULL ||
+	    !fu_security_attr_has_flag(attr_vboot, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+		return;
 
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_OPEN)) {
+	locker = fu_device_locker_new(FU_DEVICE(self), &error_local);
+	if (locker == NULL) {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to open MTD device: %s", error_local->message);
 		return;
 	}
 	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
@@ -725,7 +741,6 @@ static void
 fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -734,10 +749,6 @@ fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		g_debug("failed to open MTD device: %s", error_local->message);
 		return;
 	}
-
-	/* MEMISLOCKED is only meaningful on NOR flash */
-	if (g_strcmp0(priv->mtd_type, "nor") == 0)
-		fu_mtd_device_add_security_attrs_wp_ro(self, attrs);
 
 	/* only for intel hardware */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI)) {

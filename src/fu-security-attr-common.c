@@ -33,8 +33,8 @@ fu_security_attr_get_name_translated(FuSecurityAttr *attr)
 		return g_strdup(_("SPI BIOS Descriptor"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED) == 0) {
-		/* TRANSLATORS: Title: MTD is the acronym for Memory Technology Device */
-		return g_strdup(_("Locked MTD"));
+		/* TRANSLATORS: Title: VBOOT refers to verified boot */
+		return g_strdup(_("VBOOT RO WP"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
 		/* TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group' */
@@ -286,8 +286,8 @@ fu_security_attr_get_title_translated(FuSecurityAttr *attr)
 		return _("Firmware BIOS Descriptor");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED) == 0) {
-		/* TRANSLATORS: Title: MTD is the acronym for Memory Technology Device */
-		return _("Locked MTD");
+		/* TRANSLATORS: Title: VBOOT refers to verified boot */
+		return _("VBOOT RO WP");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
 		/* TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group' */
@@ -509,8 +509,8 @@ fu_security_attr_get_description_translated(FuSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("Locked MTD prevents device firmware from being changed after the "
-			 "device has started.");
+		return _("VBOOT RO WP prevents the firmware root of trust from being changed "
+			 "after the device has started.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
 		/* TRANSLATORS: longer description */

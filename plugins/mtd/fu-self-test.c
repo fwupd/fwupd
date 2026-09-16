@@ -22,6 +22,8 @@
 #include "fu-fmap-struct.h"
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
+#include "fu-mtd-plugin.h"
+#include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
 
@@ -255,6 +257,28 @@ fu_test_mtd_ifd_with_fmap_decoy_new(void)
 	fu_test_mtd_fmap_write(buf, FU_TEST_MTD_DEVICE_SIZE, 0x2000, 0x2000, FALSE);
 	return g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
 }
+
+static FuPlugin *
+fu_test_mtd_plugin_new(FuTest *self, FuMtdDevice *device)
+{
+	FuPlugin *plugin = fu_plugin_new_from_gtype(fu_mtd_plugin_get_type(), self->ctx);
+
+	fu_plugin_runner_init(plugin);
+	fu_plugin_add_device(plugin, FU_DEVICE(device));
+	return plugin;
+}
+
+static void
+fu_test_mtd_security_attrs_add_vboot(FuTest *self, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FuSecurityAttr) attr =
+	    fu_security_attr_new(self->ctx, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT);
+
+	fu_security_attr_set_plugin(attr, "tpm");
+	fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr);
+}
 #endif
 
 static FuFirmware *
@@ -442,12 +466,18 @@ fu_test_mtd_device_security_attrs_wp_ro_locked_func(gconstpointer user_data)
 	g_test_skip("no mtd-user.h support");
 #else
 	FuTest *self = (FuTest *)user_data;
+	GPtrArray *rules;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device = fu_test_mtd_device_new_for_security_attrs(self, G_TYPE_INVALID, TRUE, TRUE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_RUN_AFTER);
+	g_assert_true(g_ptr_array_find_with_equal_func(rules, "tpm", g_str_equal, NULL));
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
@@ -468,11 +498,14 @@ fu_test_mtd_device_security_attrs_wp_ro_unlocked_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device =
 	    fu_test_mtd_device_new_for_security_attrs(self, FU_TYPE_FMAP_FIRMWARE, TRUE, FALSE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
@@ -494,11 +527,14 @@ fu_test_mtd_device_security_attrs_wp_ro_missing_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
 	device =
 	    fu_test_mtd_device_new_for_security_attrs(self, FU_TYPE_FMAP_FIRMWARE, FALSE, FALSE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
@@ -512,6 +548,29 @@ fu_test_mtd_device_security_attrs_wp_ro_missing_func(gconstpointer user_data)
 }
 
 static void
+fu_test_mtd_device_security_attrs_wp_ro_no_vboot_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	device =
+	    fu_test_mtd_device_new_for_security_attrs(self, FU_TYPE_FMAP_FIRMWARE, FALSE, FALSE);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_null(attr);
+
+#endif
+}
+
+static void
 fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
@@ -520,12 +579,15 @@ fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GBytes) blob = fu_test_mtd_ifd_with_fmap_decoy_new();
 
 	device = fu_test_mtd_device_new_emulated(self, FU_TYPE_IFD_FIRMWARE, blob);
 	fu_test_mtd_device_add_memislocked_event(device, 0x2000, TRUE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
@@ -547,6 +609,7 @@ fu_test_mtd_device_security_attrs_wp_ro_stale_func(gconstpointer user_data)
 	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GBytes) blob = fu_test_mtd_fmap_new(FU_TEST_MTD_FMAP_OFFSET);
 	g_autoptr(GError) error = NULL;
@@ -562,7 +625,9 @@ fu_test_mtd_device_security_attrs_wp_ro_stale_func(gconstpointer user_data)
 	fu_test_mtd_device_add_memislocked_event(device, FU_TEST_MTD_FMAP_OFFSET, TRUE);
 	fu_device_probe_invalidate(FU_DEVICE(device));
 
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
@@ -581,6 +646,7 @@ fu_test_mtd_device_prepare_full_image_func(gconstpointer user_data)
 #else
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuSecurityAttr) attr = NULL;
@@ -593,7 +659,9 @@ fu_test_mtd_device_prepare_full_image_func(gconstpointer user_data)
 
 	device = fu_test_mtd_device_new_emulated(self, G_TYPE_INVALID, blob);
 	fu_test_mtd_device_add_memislocked_event(device, FU_TEST_MTD_FMAP_OFFSET, TRUE);
-	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
 	attr =
 	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
 	g_assert_nonnull(attr);
@@ -640,6 +708,7 @@ fu_test_mtd_device_security_attrs_wp_ro_boundary_func(gconstpointer user_data)
 		g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(FuMtdDevice) device = NULL;
+		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(FuSecurityAttr) attr = NULL;
 		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 
@@ -651,7 +720,9 @@ fu_test_mtd_device_security_attrs_wp_ro_boundary_func(gconstpointer user_data)
 		blob = g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
 		device = fu_test_mtd_device_new_emulated(self, G_TYPE_INVALID, blob);
 		fu_test_mtd_device_add_memislocked_event(device, cases[i].wp_ro_offset, TRUE);
-		fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+		plugin = fu_test_mtd_plugin_new(self, device);
+		fu_test_mtd_security_attrs_add_vboot(self, attrs);
+		fu_plugin_runner_add_security_attrs(plugin, attrs);
 		attr = fu_security_attrs_get_by_appstream_id(attrs,
 							     FWUPD_SECURITY_ATTR_ID_MTD_LOCKED,
 							     NULL);
@@ -1038,6 +1109,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-missing",
 			     self,
 			     fu_test_mtd_device_security_attrs_wp_ro_missing_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-no-vboot",
+			     self,
+			     fu_test_mtd_device_security_attrs_wp_ro_no_vboot_func);
 	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-ifd-bound",
 			     self,
 			     fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func);
