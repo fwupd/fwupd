@@ -161,6 +161,36 @@ which is not the chassis used to detect the GB300. The `Force` variant does not
 wait for the host to shut down, so the system loses power as soon as the BMC
 accepts the request -- save your work before activating.
 
+### Platform archives
+
+A PLDM bundle is a single payload that the BMC fans out across every component
+in its manifest, so an archive declares **one component per firmware image**,
+each targeting that component's own device at its own version, all sharing one
+`firmware.bin`. Two shipping GB300 bundles carry an identical BMC image and
+differ only in the SBIOS, so naming an archive after any one component would
+make the other invisible.
+
+Declaring components separately is also what lets an archive carry any subset of
+what a board has -- a bundle may ship images for hardware the board does not
+have, and a board may have components the bundle does not touch -- and lets
+components move in different directions within one release. A single version
+could express neither.
+
+The plugin uploads the payload once per archive. `fu_engine_install_releases()`
+is a plain loop with no dedupe, so without this the same ~117MB bundle would be
+POSTed once per matching component. The checksum of the last uploaded payload is
+remembered, and a component presenting the same bytes skips the POST once the
+BMC confirms its slot is staged. Keying on the payload rather than on a
+transaction is also correct across invocations: re-installing the same archive
+before activating does not resend it, and a stale `PendingActivation` from an
+unrelated bundle cannot suppress a genuine install, because its checksum
+differs.
+
+Because the components move together as a qualified set rather than as
+independent upgrades, `fwupdmgr sync` against a Best Known Configuration tag is
+the natural way to apply one: it installs anything not already at the tagged
+version, in either direction.
+
 ## Setting Service IP Manually
 
 The service IP may not be automatically discoverable due to the absence of
