@@ -13,6 +13,7 @@ DBUSPOLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
 PKPOLICY="/usr/share/polkit-1/actions/org.freedesktop.fwupd.policy"
 export FWUPD_LOCALSTATEDIR="${DIST}"
 export FWUPD_SYSCONFDIR="${DIST}/etc"
+export GI_TYPELIB_PATH="${DIST}/lib/${cc}/girepository-1.0:${DIST}/lib64/girepository-1.0:${DIST}/lib/girepository-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
 export LD_LIBRARY_PATH="${DIST}/lib/${cc}:${DIST}/lib64:${DIST}/lib"
 if [ -n "${DEBUG}" ]; then
     if ! command -v gdbserver 1>/dev/null 2>&1; then
@@ -36,10 +37,15 @@ if [ -z "${G_DEBUG}" ]; then
     G_DEBUG="fatal-criticals"
 fi
 if [ -z "${GLIBC_TUNABLES}" ]; then
-    GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
+    if [ "${BIN}" = "fwupdtui" ]; then
+        GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK
+    else
+        GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
+    fi
 fi
 ENV="FWUPD_POLKIT_NOCHECK=1 \
      G_DEBUG=${G_DEBUG} \
+     GI_TYPELIB_PATH=${GI_TYPELIB_PATH} \
      GLIBC_TUNABLES=${GLIBC_TUNABLES} \
      LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
      FWUPD_UEFI_VERBOSE=${FWUPD_UEFI_VERBOSE} \

@@ -28,6 +28,13 @@ if bashcomp.found()
       install_tag: 'runtime',
       install_dir: completions_dir,
     )
+    if tui.allowed()
+      install_data(
+        'fwupdtui',
+        install_tag: 'runtime',
+        install_dir: completions_dir,
+      )
+    endif
   endif  # build_daemon
 
 endif # bashcomp.found()

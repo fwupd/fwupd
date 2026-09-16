@@ -151,6 +151,42 @@ if build_daemon == 'dbus'
   )
 endif
 
+if tui.allowed()
+  fwupdtui_conf = configuration_data()
+  fwupdtui_conf.set('FWUPD_VERSION', fwupd_version)
+  fwupdtui_conf.set('libdir', libdir)
+  fwupdtui_conf.set('localedir', localedir)
+  fwupdtui = configure_file(
+    input: 'fwupdtui/fwupdtui.py',
+    output: 'fwupdtui',
+    configuration: fwupdtui_conf,
+    install: true,
+    install_dir: bindir,
+    install_mode: 'rwxr-xr-x',
+    install_tag: 'runtime',
+  )
+  if get_option('tests')
+    fwupdtui_test_env = environment()
+    fwupdtui_test_env.set('G_DEBUG', 'fatal-criticals')
+    fwupdtui_test_env.prepend('PYTHONPATH', meson.current_source_dir() / 'fwupdtui')
+    fwupdtui_test_env.prepend(
+      'GI_TYPELIB_PATH',
+      join_paths(meson.project_build_root(), 'libfwupd'),
+    )
+    fwupdtui_test_env.prepend(
+      'LD_LIBRARY_PATH',
+      join_paths(meson.project_build_root(), 'libfwupd'),
+    )
+    test(
+      'fwupdtui-test',
+      python3,
+      args: ['-m', 'pytest', files('fwupdtui/test_fwupdtui.py')],
+      depends: fwupd_gir[1],
+      env: fwupdtui_test_env,
+    )
+  endif
+endif
+
 if build_daemon == 'dbus'
   resources_src = gnome.compile_resources(
     'fwupd-resources',
@@ -265,6 +301,25 @@ if build_daemon != 'none'
     )
     man_md += ['"fwupdmgr.md"']
   endif
+endif
+if tui.allowed() and get_option('man')
+  custom_target(
+    'fwupdtui.1',
+    input: 'fwupdtui.md',
+    output: 'fwupdtui.1',
+    command: [
+      generate_man,
+      '@INPUT@',
+      '-o',
+      '@OUTPUT@',
+      '--replace',
+      'PACKAGE_VERSION',
+      fwupd_version,
+    ],
+    install: true,
+    install_tag: 'man',
+    install_dir: join_paths(mandir, 'man1'),
+  )
 endif
 if build_standalone
   if get_option('man')

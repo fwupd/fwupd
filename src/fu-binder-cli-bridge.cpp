@@ -99,6 +99,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	{
 		fwupd_client_set_status(m_client, (FwupdStatus)properties.status);
 		fwupd_client_set_percentage(m_client, properties.percentage);
+		fwupd_client_set_pending_reboot(m_client, properties.pendingReboot);
 		return ::ndk::ScopedAStatus::ok();
 	}
 };
