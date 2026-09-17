@@ -26,6 +26,11 @@ HARDCODED_PASSWORD = "password2"
 
 app._percentage545: int = 0
 app._percentage546: int = 0
+app._percentage547: int = 0
+app._percentage548: int = 0
+app._reassign_bmc: bool = False
+app._bmc_reassigned: bool = False
+app._empty_bmc: bool = False
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
 
@@ -44,6 +49,11 @@ def index():
     # reset counter
     app._percentage545 = 0
     app._percentage546 = 0
+    app._percentage547 = 0
+    app._percentage548 = 0
+    app._reassign_bmc = False
+    app._bmc_reassigned = False
+    app._empty_bmc = False
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
 
@@ -172,6 +182,10 @@ def firmware_inventory():
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory/BMC")
 def firmware_inventory_bmc():
+    # emulate a completed task whose member readback returns an empty body
+    if app._bmc_reassigned and app._empty_bmc:
+        return Response(response="", status=200, mimetype="application/json")
+    software_id = "UEFI-NIC-9" if app._bmc_reassigned else "UEFI-AFE1-6"
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC",
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
@@ -189,7 +203,7 @@ def firmware_inventory_bmc():
             }
         },
         "RelatedItem": [{"@odata.id": "/redfish/v1/Managers/BMC"}],
-        "SoftwareId": "UEFI-AFE1-6",
+        "SoftwareId": software_id,
         "UefiDevicePaths": ["BMC(0x1,0x0ABCDEF)"],
         "Updateable": True,
         "Version": "11A-1.02",
@@ -411,6 +425,78 @@ def task_status_546():
     return Response(response=json.dumps(res), status=200, mimetype="application/json")
 
 
+@app.route("/redfish/v1/TaskService/Tasks/547")
+def task_status_547():
+    res = {
+        "@odata.id": "/redfish/v1/TaskService/Tasks/547",
+        "@odata.type": "#Task.v1_4_3.Task",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
+        "Id": "547",
+        "Name": "Task 547",
+        "PercentComplete": app._percentage547,
+    }
+    if app._percentage547 == 0:
+        res["TaskState"] = "Running"
+    elif app._percentage547 in [25, 50, 75]:
+        res["TaskState"] = "Running"
+        res["TaskStatus"] = "OK"
+        res["Messages"] = [
+            {
+                "Message": "Applying image",
+                "MessageId": "Update.1.1.TransferringToComponent",
+            }
+        ]
+    elif app._percentage547 == 100:
+        res["TaskState"] = "Completed"
+        res["TaskStatus"] = "OK"
+        res["Messages"] = [
+            {
+                "Message": "Task completed OK",
+                "MessageId": "TaskEvent.1.0.TaskCompletedOK",
+            }
+        ]
+        if app._reassign_bmc:
+            app._bmc_reassigned = True
+    else:
+        res["TaskState"] = "Exception"
+    app._percentage547 += 25
+    return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/548")
+def task_status_548():
+    # signals a required reset before reaching Completed, which short-circuits
+    # polling; the reassignment would only surface at true completion
+    res = {
+        "@odata.id": "/redfish/v1/TaskService/Tasks/548",
+        "@odata.type": "#Task.v1_4_3.Task",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
+        "Id": "548",
+        "Name": "Task 548",
+        "PercentComplete": app._percentage548,
+    }
+    if app._percentage548 == 0:
+        res["TaskState"] = "Running"
+    elif app._percentage548 in [25, 50, 75]:
+        res["TaskState"] = "Running"
+        res["TaskStatus"] = "OK"
+        res["Messages"] = [
+            {
+                "Message": "A reset is required",
+                "MessageId": "Base.1.10.ResetRequired",
+            }
+        ]
+    elif app._percentage548 == 100:
+        res["TaskState"] = "Completed"
+        res["TaskStatus"] = "OK"
+        if app._reassign_bmc:
+            app._bmc_reassigned = True
+    else:
+        res["TaskState"] = "Exception"
+    app._percentage548 += 25
+    return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
 @app.route("/FWUpdate-unlicensed", methods=["GET"])
 def fwupdate_unlicensed():
     res = {
@@ -537,11 +623,33 @@ def fwupdate():
     fileitem = request.files["UpdateFile"]
     if not fileitem.filename.endswith(".exe"):
         return _failure("filename invalid")
-    if fileitem.read().decode() != "hello":
+    contents = fileitem.read().decode()
+    app._reassign_bmc = False
+    app._bmc_reassigned = False
+    app._empty_bmc = False
+    if contents == "hello":
+        location = "/redfish/v1/TaskService/Tasks/545"
+    elif contents == "shift":
+        # reassign the member once the task reaches completion
+        app._reassign_bmc = True
+        app._percentage547 = 0
+        location = "/redfish/v1/TaskService/Tasks/547"
+    elif contents == "empty-shift":
+        # completes cleanly, but the member readback then has an empty body
+        app._reassign_bmc = True
+        app._empty_bmc = True
+        app._percentage547 = 0
+        location = "/redfish/v1/TaskService/Tasks/547"
+    elif contents == "reset-shift":
+        # same, but the task requires a reset before it completes
+        app._reassign_bmc = True
+        app._percentage548 = 0
+        location = "/redfish/v1/TaskService/Tasks/548"
+    else:
         return _failure("data invalid")
     res = {
         "Version": "P79 v1.45",
-        "@odata.id": "/redfish/v1/TaskService/Tasks/545",
+        "@odata.id": location,
         "@odata.etag": "653b835e9ee4af9ea7ea",
         "TaskMonitor": "/redfish/v1/TaskService/999",
     }
@@ -550,7 +658,7 @@ def fwupdate():
         json.dumps(res),
         status=202,
         mimetype="application/json",
-        headers={"Location": "/redfish/v1/TaskService/Tasks/545"},
+        headers={"Location": location},
     )
 
 
