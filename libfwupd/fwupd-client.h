@@ -464,6 +464,10 @@ fwupd_client_get_status(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fwupd_client_get_tainted(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
+fwupd_client_get_pending_reboot(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fwupd_client_set_pending_reboot(FwupdClient *self, gboolean pending_reboot) G_GNUC_NON_NULL(1);
+gboolean
 fwupd_client_get_only_trusted(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean
 fwupd_client_get_daemon_interactive(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;

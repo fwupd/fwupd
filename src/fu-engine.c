@@ -340,6 +340,8 @@ fu_engine_device_equivalent_id_notify_cb(FuDevice *device, GParamSpec *pspec, Fu
 static void
 fu_engine_history_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT);
 	if (self->write_history) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_history_modify_device(self->history, device, &error_local)) {
@@ -545,6 +547,8 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 			 "request",
 			 G_CALLBACK(fu_engine_device_request_cb),
 			 self);
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT);
 }
 
 static void
@@ -1195,6 +1199,15 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 	return TRUE;
 }
 
+static void
+fu_engine_update_needs_reboot(FuEngine *self)
+{
+	gboolean pending_reboot = FALSE;
+
+	if (fu_context_get_pending_reboot(self->ctx, &pending_reboot, NULL) && pending_reboot)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT);
+}
+
 /**
  * fu_engine_modify_bios_settings:
  * @self: a #FuEngine
@@ -1265,6 +1278,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 				    "no BIOS settings needed to be changed");
 		return FALSE;
 	}
+	fu_engine_update_needs_reboot(self);
 	return TRUE;
 }
 
@@ -9239,6 +9253,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 				  error_bios_policy->message);
 		}
 	}
+	fu_engine_update_needs_reboot(self);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->phase = FU_ENGINE_PHASE_DONE;

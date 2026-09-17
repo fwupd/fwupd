@@ -864,9 +864,11 @@ class FwupdTui(App):
         self.set_button_available(self.query_one("#apply", Button), False)
         self.settings_loaded = False
         self.load_bios_settings()
-        self.query_one("#status", Static).update(
-            _("BIOS settings changed successfully; a reboot may be required")
-        )
+        if self.client.get_pending_reboot():
+            message = _("BIOS settings changed successfully; reboot required")
+        else:
+            message = _("BIOS settings changed successfully")
+        self.query_one("#status", Static).update(message)
 
     # Devices ---------------------------------------------------------------
 

@@ -72,6 +72,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 	p.percentage = fu_daemon_get_percentage(FU_DAEMON(self));
 	p.batteryLevel = fu_context_get_battery_level(ctx);
 	p.batteryThreshold = fu_context_get_battery_threshold(ctx);
+	p.pendingReboot = fu_context_has_flag(ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT);
 	return p;
 }
 

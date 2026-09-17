@@ -721,6 +721,12 @@ fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error)
 	guint64 val = 0;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(result != NULL, FALSE);
+
+	if (fu_context_has_flag(self, FU_CONTEXT_FLAG_NEEDS_REBOOT)) {
+		*result = TRUE;
+		return TRUE;
+	}
 
 	for (guint i = 0; i < priv->bios_settings->len; i++) {
 		FuBiosSetting *attr_tmp = g_ptr_array_index(priv->bios_settings, i);

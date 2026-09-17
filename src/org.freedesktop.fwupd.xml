@@ -90,6 +90,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='PendingReboot' type='b' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If changes made by fwupd are pending a reboot.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='Interactive' type='b' access='read'>
       <doc:doc>
         <doc:description>

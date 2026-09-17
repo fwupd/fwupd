@@ -51,6 +51,9 @@ G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 #define FU_DBUS_DAEMON_SET_HINTS_MAX		     32
 
 static void
+fu_dbus_daemon_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, gpointer user_data);
+
+static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
 {
 	/* not yet connected */
@@ -2650,6 +2653,10 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "Tainted") == 0)
 		return g_variant_new_boolean(FALSE);
 
+	if (g_strcmp0(property_name, "PendingReboot") == 0)
+		return g_variant_new_boolean(
+		    fu_context_has_flag(ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT));
+
 	if (g_strcmp0(property_name, "Status") == 0)
 		return g_variant_new_uint32(fu_daemon_get_status(FU_DAEMON(self)));
 
@@ -2898,6 +2905,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 {
 	FuDbusDaemon *self = FU_DBUS_DAEMON(daemon);
 	FuEngine *engine = fu_daemon_get_engine(daemon);
+	FuContext *ctx = fu_engine_get_context(engine);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -2931,6 +2939,10 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 	g_signal_connect(FU_ENGINE(engine),
 			 "status-changed",
 			 G_CALLBACK(fu_dbus_daemon_engine_status_changed_cb),
+			 self);
+	g_signal_connect(ctx,
+			 "notify::flags",
+			 G_CALLBACK(fu_dbus_daemon_context_flags_notify_cb),
 			 self);
 	if (!fu_engine_load(engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
@@ -3026,6 +3038,16 @@ fu_dbus_daemon_percentage_notify_cb(FuDaemon *daemon, GParamSpec *pspec, gpointe
 	fu_dbus_daemon_emit_property_changed(self,
 					     "PercentageFull",
 					     g_variant_new_double(percentage));
+}
+
+static void
+fu_dbus_daemon_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, gpointer user_data)
+{
+	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
+	fu_dbus_daemon_emit_property_changed(
+	    self,
+	    "PendingReboot",
+	    g_variant_new_boolean(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_NEEDS_REBOOT)));
 }
 
 static void

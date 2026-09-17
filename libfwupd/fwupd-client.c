@@ -63,6 +63,7 @@ typedef struct {
 	GMainContext *main_ctx;
 	FwupdStatus status;
 	gboolean tainted;
+	gboolean pending_reboot;
 	gboolean interactive;
 	gdouble percentage;
 	guint32 battery_level;
@@ -132,6 +133,7 @@ enum {
 	PROP_PERCENTAGE_FULL,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
+	PROP_PENDING_REBOOT,
 	PROP_HOST_PRODUCT,
 	PROP_HOST_VENDOR,
 	PROP_HOST_MACHINE_ID,
@@ -585,6 +587,26 @@ fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
 	g_object_notify(G_OBJECT(self), "battery-level");
 }
 
+/**
+ * fwupd_client_set_pending_reboot:
+ * @self: a #FwupdClient
+ * @pending_reboot: if changes made by fwupd are pending a reboot
+ *
+ * Sets if changes made by fwupd are pending a reboot.
+ *
+ * Since: 2.2.1
+ **/
+void
+fwupd_client_set_pending_reboot(FwupdClient *self, gboolean pending_reboot)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	if (priv->pending_reboot == pending_reboot)
+		return;
+	priv->pending_reboot = pending_reboot;
+	fwupd_client_object_notify(self, "pending-reboot");
+}
+
 static void
 fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
 {
@@ -619,6 +641,12 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 			priv->tainted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "tainted");
 		}
+	}
+	if (g_variant_dict_contains(dict, "PendingReboot")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "PendingReboot");
+		if (val != NULL)
+			fwupd_client_set_pending_reboot(self, fwupd_variant_get_boolean(val));
 	}
 	if (g_variant_dict_contains(dict, "Interactive")) {
 		g_autoptr(GVariant) val = NULL;
@@ -1167,6 +1195,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GVariant) val9 = NULL;
 	g_autoptr(GVariant) val10 = NULL;
+	g_autoptr(GVariant) val11 = NULL;
 	g_autoptr(GVariant) val_hwids = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
@@ -1204,6 +1233,9 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val2 = g_dbus_proxy_get_cached_property(priv->proxy, "Tainted");
 	if (val2 != NULL)
 		priv->tainted = fwupd_variant_get_boolean(val2);
+	val11 = g_dbus_proxy_get_cached_property(priv->proxy, "PendingReboot");
+	if (val11 != NULL)
+		priv->pending_reboot = fwupd_variant_get_boolean(val11);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
 	if (val3 != NULL)
 		fwupd_client_set_status(self, fwupd_variant_get_uint32(val3));
@@ -4696,6 +4728,24 @@ fwupd_client_get_tainted(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_pending_reboot:
+ * @self: a #FwupdClient
+ *
+ * Gets if changes made by fwupd are pending a reboot.
+ *
+ * Returns: %TRUE if fwupd has changes pending a reboot
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fwupd_client_get_pending_reboot(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	return priv->pending_reboot;
+}
+
+/**
  * fwupd_client_get_only_trusted:
  * @self: a #FwupdClient
  *
@@ -8093,6 +8143,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_TAINTED:
 		g_value_set_boolean(value, priv->tainted);
 		break;
+	case PROP_PENDING_REBOOT:
+		g_value_set_boolean(value, priv->pending_reboot);
+		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint(value, priv->percentage);
 		break;
@@ -8344,6 +8397,20 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				     FALSE,
 				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_TAINTED, pspec);
+
+	/**
+	 * FwupdClient:pending-reboot:
+	 *
+	 * If changes made by fwupd are pending a reboot.
+	 *
+	 * Since: 2.2.1
+	 */
+	pspec = g_param_spec_boolean("pending-reboot",
+				     NULL,
+				     NULL,
+				     FALSE,
+				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PENDING_REBOOT, pspec);
 
 	/**
 	 * FwupdClient:interactive:
