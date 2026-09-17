@@ -67,6 +67,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Login to GitHub Container Registry
+        if: steps.should_we.outputs.run == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Assemble container tag
         if: steps.should_we.outputs.run == 'true'
         id: tag
@@ -80,16 +87,68 @@ jobs:
           UBUNTU_CONTAINER_TAG: ${{ env.UBUNTU_CONTAINER_TAG }}
           FEDORA_CONTAINER_TAG: ${{ env.FEDORA_CONTAINER_TAG }}
           USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+          REPO_IS_FORK: ${{ github.event.repository.fork }}
+          FORCE_REBUILD: ${{ github.event_name != 'pull_request' && matrix.distros.FORCE_REBUILD || '' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DISTRO_UPPERCASE="$(echo "${DISTRO}" | tr '[:lower:]' '[:upper:]')"
           TAG_VAR="${DISTRO_UPPERCASE}_CONTAINER_TAG"
           CONTAINER_TAG="${!TAG_VAR}"
-
-          REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
           IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
-          TAG="ghcr.io/${REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+
+          THIS_REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
+          # for pull requests, use the base repository from the event
+          if [[ -n "$BASE_REPO" ]]; then
+            PARENT_REPO="$BASE_REPO"
+          # for pushes query the parent of the current repository
+          elif [[ "$REPO_IS_FORK" == "true" ]]; then
+            PARENT_REPO=$(gh api repos/${{ github.repository }} --jq '.parent.full_name')
+          else
+            PARENT_REPO="$THIS_REPO"
+          fi
+
           # github username may be uppercase but docker tags must be all lowercase
-          TAG="${TAG,,}"
+          THIS_REPO="${THIS_REPO,,}"
+          PARENT_REPO="${PARENT_REPO,,}"
+          THIS_REPO_TAG="ghcr.io/${THIS_REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+          PARENT_REPO_TAG="ghcr.io/${PARENT_REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+
+          TAG=""
+
+          # if we re rebuild, it'll be in this repo here
+          if [[ -n "${FORCE_REBUILD:-}" ]]; then
+            echo "Force-rebuilding ${THIS_REPO_TAG}."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            TAG="${THIS_REPO_TAG}"
+          fi
+
+          # check parent first so forks don't unnecessarily rebuild
+          if [[ -z "$TAG" ]] && [[ "${THIS_REPO}" != "${PARENT_REPO}" ]]; then
+            echo "Checking for ${PARENT_REPO_TAG}"
+            if docker manifest inspect "${PARENT_REPO_TAG}" > /dev/null 2>&1; then
+              echo "Container ${PARENT_REPO_TAG} already exists."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              TAG="${PARENT_REPO_TAG}"
+            fi
+          fi
+
+          # check this repo
+          if [[ -z "$TAG" ]]; then
+            echo "Checking for ${THIS_REPO_TAG}"
+            if docker manifest inspect "${THIS_REPO_TAG}" > /dev/null 2>&1; then
+              echo "Container ${THIS_REPO_TAG} already exists."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              TAG="${THIS_REPO_TAG}"
+            fi
+          fi
+
+          if [[ -z "$TAG" ]]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Container ${TAG} does not exist."
+            TAG="$THIS_REPO_TAG"
+          fi
+
           echo "Using container tag ${TAG}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "{\"$IDENTIFIER\": \"$TAG\"}" > "image_${IDENTIFIER}.json"
@@ -99,41 +158,15 @@ jobs:
         with:
           name: image-map-${{ strategy.job-index }}
           path: image_*.json
-      - name: Login to GitHub Container Registry
-        if: steps.should_we.outputs.run == 'true'
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check if the image already exists
-        if: steps.should_we.outputs.run == 'true'
-        id: check_container
-        env:
-          FORCE_REBUILD: ${{ github.event_name != 'pull_request' && matrix.distros.FORCE_REBUILD || '' }}
-        run: |
-          TAG="${{steps.tag.outputs.tag}}"
-          if docker manifest inspect "${TAG}" > /dev/null 2>&1; then
-            echo "Container ${TAG} already exists."
-            if [[ -n "$FORCE_REBUILD" ]]; then
-              echo "Rebuilding anyway."
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Container ${TAG} does not exist."
-          fi
       - name: Let the user know container is not ready yet
-        if: steps.should_we.outputs.run == 'true' && steps.check_container.outputs.exists != 'true' && github.event_name == 'pull_request'
+        if: steps.should_we.outputs.run == 'true' && steps.tag.outputs.exists != 'true' && github.event_name == 'pull_request'
         run: |
           TAG="${{steps.tag.outputs.tag}}"
           echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
           exit 1
       # Steps below here are skipped for pull requests because we don't have permission anyway
       - name: Generate Dockerfile
-        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
         run: >-
           ./contrib/ci/generate_docker.py
           --distro "${{ matrix.distros.DISTRO }}"
@@ -142,10 +175,10 @@ jobs:
           ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }};
           cat Dockerfile
       - name: Set up Docker Buildx
-        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Push to GitHub Packages
-        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.check_container.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
