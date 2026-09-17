@@ -27,10 +27,10 @@ env:
   # The Arch container is force-rebuilt on schedule so we always run against the
   # latest one.
   ARCH_CONTAINER_TAG: "latest"
-  CENTOS_CONTAINER_TAG: "2026-09-15.0"
-  DEBIAN_CONTAINER_TAG: "2026-09-15.0"
-  UBUNTU_CONTAINER_TAG: "2026-09-15.0"
-  FEDORA_CONTAINER_TAG: "2026-09-15.0"
+  CENTOS_CONTAINER_TAG: "2026-09-17.1"
+  DEBIAN_CONTAINER_TAG: "2026-09-17.1"
+  UBUNTU_CONTAINER_TAG: "2026-09-17.1"
+  FEDORA_CONTAINER_TAG: "2026-09-17.1"
 
 jobs:
   find_or_create_container:
@@ -86,6 +86,8 @@ jobs:
           REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
           IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
           TAG="ghcr.io/${REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+          # github username may be uppercase but docker tags must be all lowercase
+          TAG="${TAG,,}"
           echo "Using container tag ${TAG}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "{\"$IDENTIFIER\": \"$TAG\"}" > "image_${IDENTIFIER}.json"
