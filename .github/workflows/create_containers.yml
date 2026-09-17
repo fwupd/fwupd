@@ -25,8 +25,10 @@ env:
   # Our containers are currently per-distro. This can be changed if needed.
   #
   # The Arch container is force-rebuilt on schedule so we always run against the
-  # latest one.
-  ARCH_CONTAINER_TAG: "latest"
+  # latest one. It also gets rebuilt on every git push with a change to this file
+  # here so to force a rebuild, change the number in the comment (or change
+  # anything else in this file).
+  ARCH_CONTAINER_TAG: "latest"  # 0001
   CENTOS_CONTAINER_TAG: "2026-09-17.1"
   DEBIAN_CONTAINER_TAG: "2026-09-17.1"
   UBUNTU_CONTAINER_TAG: "2026-09-17.1"
@@ -42,7 +44,7 @@ jobs:
       fail-fast: false
       matrix:
         distros:
-          - { DISTRO: arch, VERSION: latest, ARCH: amd64 }
+          - { DISTRO: arch, VERSION: latest, ARCH: amd64 , FORCE_REBUILD: true }
           - { DISTRO: centos, VERSION: stream9, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
           - { DISTRO: debian, VERSION: testing, ARCH: i386 }
@@ -107,11 +109,18 @@ jobs:
       - name: Check if the image already exists
         if: steps.should_we.outputs.run == 'true'
         id: check_container
+        env:
+          FORCE_REBUILD: ${{ github.event_name != 'pull_request' && matrix.distros.FORCE_REBUILD || '' }}
         run: |
           TAG="${{steps.tag.outputs.tag}}"
           if docker manifest inspect "${TAG}" > /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Container ${TAG} already exists."
+            if [[ -n "$FORCE_REBUILD" ]]; then
+              echo "Rebuilding anyway."
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+            fi
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Container ${TAG} does not exist."
