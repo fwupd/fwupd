@@ -29,10 +29,10 @@ env:
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
   ARCH_CONTAINER_TAG: "latest"  # 0001
-  CENTOS_CONTAINER_TAG: "2026-09-17.1"
-  DEBIAN_CONTAINER_TAG: "2026-09-17.1"
-  UBUNTU_CONTAINER_TAG: "2026-09-17.1"
-  FEDORA_CONTAINER_TAG: "2026-09-17.1"
+  CENTOS_CONTAINER_TAG: "2026-09-18.1"
+  DEBIAN_CONTAINER_TAG: "2026-09-18.1"
+  UBUNTU_CONTAINER_TAG: "2026-09-18.1"
+  FEDORA_CONTAINER_TAG: "2026-09-18.1"
 
 jobs:
   find_or_create_container:
@@ -160,9 +160,12 @@ jobs:
           path: image_*.json
       - name: Let the user know container is not ready yet
         if: steps.should_we.outputs.run == 'true' && steps.tag.outputs.exists != 'true' && github.event_name == 'pull_request'
+        env:
+          USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           TAG="${{steps.tag.outputs.tag}}"
           echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
+          echo "The push pipelines should be listed here: https://github.com/${USER_REPO}/actions"
           exit 1
       # Steps below here are skipped for pull requests because we don't have permission anyway
       - name: Generate Dockerfile
