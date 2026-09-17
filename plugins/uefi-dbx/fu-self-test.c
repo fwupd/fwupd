@@ -179,6 +179,7 @@ fu_uefi_dbx_prepare_firmware_func(void)
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) imgs = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_out = NULL;
 	g_autoptr(GBytes) csum = NULL;
@@ -215,7 +216,8 @@ fu_uefi_dbx_prepare_firmware_func(void)
 	/* the concrete type has to survive, so that other plugins can introspect the
 	 * payload -- see fu_snapd_uefi_plugin_composite_peek_firmware() */
 	g_assert_true(FU_IS_EFI_VARIABLE_AUTHENTICATION2(firmware));
-	g_assert_cmpint(fu_firmware_get_images(firmware)->len, ==, 1);
+	imgs = fu_firmware_get_images(firmware);
+	g_assert_cmpint(imgs->len, ==, 1);
 
 	/* ...and the payload has to be byte-identical, as it is written verbatim into the
 	 * efivar by fu_uefi_dbx_device_write_firmware() */
