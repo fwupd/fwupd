@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-redfish-ami-device.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-hpe-device.h"
@@ -78,6 +79,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *session_key =
+	    self->session_key_file != NULL ? fu_redfish_backend_get_session_key(self, NULL) : NULL;
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -100,9 +103,15 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
-		/* Some custom implementation require special authentication through bearer token.
-		 * Let's use that if configured to do so. */
+	if (session_key != NULL) {
+		/* X-Auth-Token session authentication per Redfish DSP0266 §13.3.4.
+		 * Reload the session key from the configured file for every request, as the
+		 * BMC may rotate it periodically without requiring a fwupd service restart. */
+		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
+		fu_redfish_request_add_header(request, auth_header);
+	} else if (self->bearer_token != NULL) {
+		/* Some custom implementations require special authentication through a bearer
+		 * token. Let's use that if configured to do so. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
 		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
 	} else {
@@ -422,6 +431,33 @@ fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 	       0;
 }
 
+/* check for a supported GB300 Station platform using SMBIOS Type 1 data. */
+static gboolean
+fu_redfish_backend_is_gb300_station(FuRedfishBackend *self)
+{
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	const gchar *manufacturer;
+	const gchar *product_name;
+	g_autofree gchar *product_name_lower = NULL;
+
+	manufacturer = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
+	product_name = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
+
+	if (product_name == NULL)
+		return FALSE;
+
+	product_name_lower = g_ascii_strdown(product_name, -1);
+	/*
+	 * Match "GB300" and "Station" anywhere in the product name, in any order
+	 * and case, covering "GB300 Station"
+	 */
+	if (g_strstr_len(product_name_lower, -1, "gb300") == NULL ||
+	    g_strstr_len(product_name_lower, -1, "station") == NULL)
+		return FALSE;
+
+	return g_strcmp0(manufacturer, "HP") == 0 || g_strcmp0(manufacturer, "Dell Inc.") == 0;
+}
+
 static gboolean
 fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
@@ -467,6 +503,9 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
 			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
+			} else if (g_strcmp0(self->vendor, "AMI") == 0 &&
+				   fu_redfish_backend_is_gb300_station(self)) {
+				self->device_gtype = FU_TYPE_REDFISH_AMI_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
 			}
