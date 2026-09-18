@@ -17,7 +17,8 @@ struct _FuRedfishRequest {
 	glong status_code;
 	FwupdJsonParser *json_parser;
 	FwupdJsonObject *json_obj;
-	GHashTable *cache; /* nullable */
+	GHashTable *cache;	    /* nullable */
+	struct curl_slist *headers; /* nullable */
 };
 
 G_DEFINE_TYPE(FuRedfishRequest, fu_redfish_request, G_TYPE_OBJECT)
@@ -29,7 +30,7 @@ FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self)
 {
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), NULL);
-	return fwupd_json_object_ref(self->json_obj);
+	return self->json_obj != NULL ? fwupd_json_object_ref(self->json_obj) : NULL;
 }
 
 CURL *
@@ -260,6 +261,10 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	hs = curl_slist_append(hs, "Content-Type: application/json");
 	if (etag_header != NULL)
 		hs = curl_slist_append(hs, etag_header);
+	/* CURLOPT_HTTPHEADER replaces whatever fu_redfish_request_add_header() set, so
+	 * re-append those to avoid sending an unauthenticated POST or PATCH */
+	for (struct curl_slist *h = self->headers; h != NULL; h = h->next)
+		hs = curl_slist_append(hs, h->data);
 	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 	return fu_redfish_request_perform(self, path, flags, error);
 }
@@ -278,6 +283,15 @@ fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_pre
 {
 	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
 	g_set_str(&self->path_prefix, path_prefix);
+}
+
+void
+fu_redfish_request_add_header(FuRedfishRequest *self, const gchar *header)
+{
+	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
+	g_return_if_fail(header != NULL);
+	self->headers = curl_slist_append(self->headers, header);
+	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, self->headers);
 }
 
 void
@@ -323,6 +337,7 @@ fu_redfish_request_finalize(GObject *object)
 	g_byte_array_unref(self->buf);
 	g_free(self->path_prefix);
 	curl_easy_cleanup(self->curl);
+	curl_slist_free_all(self->headers);
 	curl_url_cleanup(self->uri);
 	G_OBJECT_CLASS(fu_redfish_request_parent_class)->finalize(object);
 }
