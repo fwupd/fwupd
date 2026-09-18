@@ -18,3 +18,7 @@ Plugin = ilitek_its
 # ASUS CX9406 (FWID: 0x00AE)
 [HIDRAW\VEN_222A&DEV_55A3]
 Plugin = ilitek_its
+
+# ASUS GX5407 (FWID: 0x00E9)
+[HIDRAW\VEN_222A&DEV_55F2]
+Plugin = ilitek_its
