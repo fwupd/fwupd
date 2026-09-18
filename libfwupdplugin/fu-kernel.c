@@ -248,8 +248,9 @@ fu_kernel_get_config(FuPathStore *pstore, GError **error)
 		istream1 = fu_input_stream_from_path(config_fngz, error);
 		if (istream1 == NULL)
 			return NULL;
-		istream2 =
-		    fu_compressor_stream_new_decompress(istream1, FU_COMPRESSOR_FORMAT_GZIP, error);
+		istream2 = fu_compressor_stream_new_decompress(istream1,
+							       FWUPD_COMPRESSOR_FORMAT_GZIP,
+							       error);
 		if (istream2 == NULL)
 			return NULL;
 		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);

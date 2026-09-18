@@ -126,4 +126,13 @@ fwupd_percentage_is_valid(gdouble value) G_GNUC_CONST;
 gboolean
 fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new) G_GNUC_CONST;
 
+/**
+ * FwupdStreamImpl:
+ *
+ * An opaque pointer to an underlying stream implementation.
+ *
+ * Since: 2.1.8
+ */
+typedef gpointer FwupdStreamImpl;
+
 G_END_DECLS
