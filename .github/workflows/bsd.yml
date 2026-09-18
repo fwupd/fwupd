@@ -23,5 +23,6 @@ jobs:
             pkg install -y bash python3 git ninja cmake gcc
           run: |
             ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
+            ./contrib/ci/fwupd_setup_helpers.py test-meson
             ./contrib/setup
             bash -c "source ./venv/bin/activate && build-fwupd"
