@@ -131,8 +131,6 @@ fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 GPtrArray *
 fu_context_get_bios_settings(FuContext *self) G_GNUC_NON_NULL(1);
-gboolean
-fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error) G_GNUC_NON_NULL(1);
 FuBiosSetting *
 fu_context_get_bios_setting(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gboolean

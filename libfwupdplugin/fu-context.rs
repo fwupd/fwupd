@@ -24,6 +24,7 @@ enum FuContextFlags {
     NoCache                 = 1 << 17, // do not save to a persistent cache
     DualBootWindows         = 1 << 18,
     FdeSystemdPcrlock       = 1 << 19, // full disk encryption
+    PendingReboot           = 1 << 20, // system changes are pending a reboot
 }
 
 enum FuContextLoadFlags {

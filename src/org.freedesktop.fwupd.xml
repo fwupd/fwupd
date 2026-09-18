@@ -167,6 +167,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='PendingReboot' type='b' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If system changes are pending a reboot.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='Hwids' type='a(ss)' access='read'>
       <doc:doc>
         <doc:description>

@@ -1238,5 +1238,7 @@ LIBFWUPD_2.2.1 {
   global:
     fwupd_bios_setting_get_parent;
     fwupd_bios_setting_set_parent;
+    fwupd_client_get_pending_reboot;
+    fwupd_client_set_pending_reboot;
   local: *;
 } LIBFWUPD_2.1.8;

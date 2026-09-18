@@ -15,4 +15,5 @@ parcelable FwupdProperties {
     int percentage;
     int batteryLevel;
     int batteryThreshold;
+    boolean pendingReboot = false;
 }

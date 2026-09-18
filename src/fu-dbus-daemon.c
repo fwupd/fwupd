@@ -2715,6 +2715,10 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
 		return g_variant_new_boolean(fu_context_get_config_bool(ctx, "OnlyTrusted"));
 	}
+	if (g_strcmp0(property_name, "PendingReboot") == 0) {
+		return g_variant_new_boolean(
+		    fu_context_has_flag(ctx, FU_CONTEXT_FLAG_PENDING_REBOOT));
+	}
 	if (g_strcmp0(property_name, "Hwids") == 0)
 		return fu_dbus_daemon_get_property_hwids(self);
 

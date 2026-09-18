@@ -12,9 +12,47 @@
 
 struct _FuLinuxFwattrPlugin {
 	FuPlugin parent_instance;
+	GPtrArray *monitors; /* element-type GFileMonitor */
 };
 
 G_DEFINE_TYPE(FuLinuxFwattrPlugin, fu_linux_fwattr_plugin, FU_TYPE_PLUGIN)
+
+static gboolean
+fu_linux_fwattr_plugin_ensure_pending_reboot(FuLinuxFwattrPlugin *self,
+					     const gchar *fn,
+					     GError **error)
+{
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	guint64 val = 0;
+	g_autofree gchar *tmp = NULL;
+
+	/* refresh/re-read */
+	if (!g_file_get_contents(fn, &tmp, NULL, error)) {
+		g_prefix_error_literal(error, "failed to load pending_reboot: ");
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	if (!fu_strtoull(tmp, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+	if (val == 1)
+		fu_context_add_flag(ctx, FU_CONTEXT_FLAG_PENDING_REBOOT);
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_linux_fwattr_plugin_monitor_changed_cb(GFileMonitor *monitor,
+					  GFile *file,
+					  GFile *other_file,
+					  GFileMonitorEvent event_type,
+					  FuLinuxFwattrPlugin *self)
+{
+	g_autofree gchar *fn = g_file_get_path(file);
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_linux_fwattr_plugin_ensure_pending_reboot(self, fn, &error_local))
+		g_warning("failed to rescan %s when changed: %s", fn, error_local->message);
+}
 
 static gboolean
 fu_linux_fwattr_plugin_startup_driver(FuLinuxFwattrPlugin *self,
@@ -23,6 +61,7 @@ fu_linux_fwattr_plugin_startup_driver(FuLinuxFwattrPlugin *self,
 				      GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	g_autofree gchar *pending_fn = NULL;
 	g_autoptr(GDir) dir = NULL;
 
 	dir = g_dir_open(path, 0, error);
@@ -38,6 +77,11 @@ fu_linux_fwattr_plugin_startup_driver(FuLinuxFwattrPlugin *self,
 
 		if (name == NULL)
 			break;
+
+		/* this is handled as a context flag */
+		if (g_strcmp0(name, "pending_reboot") == 0)
+			continue;
+
 		full_path = g_build_filename(path, name, NULL);
 		setting = fu_linux_fwattr_setting_new(ctx, driver, full_path, name, &error_local);
 		if (setting == NULL) {
@@ -46,6 +90,25 @@ fu_linux_fwattr_plugin_startup_driver(FuLinuxFwattrPlugin *self,
 		}
 		if (!fu_context_add_bios_setting(ctx, FU_BIOS_SETTING(setting), error))
 			return FALSE;
+	}
+
+	/* watch in case fwupd (or anything else) sets a BIOS setting */
+	pending_fn = g_build_filename(path, "pending_reboot", NULL);
+	if (g_file_test(pending_fn, G_FILE_TEST_EXISTS)) {
+		g_autoptr(GFile) pending_file = g_file_new_for_path(pending_fn);
+		g_autoptr(GFileMonitor) monitor = NULL;
+
+		/* need reboot already? */
+		if (!fu_linux_fwattr_plugin_ensure_pending_reboot(self, pending_fn, error))
+			return FALSE;
+		monitor = g_file_monitor(pending_file, G_FILE_MONITOR_NONE, NULL, error);
+		if (monitor == NULL)
+			return FALSE;
+		g_signal_connect(monitor,
+				 "changed",
+				 G_CALLBACK(fu_linux_fwattr_plugin_monitor_changed_cb),
+				 self);
+		g_ptr_array_add(self->monitors, g_steal_pointer(&monitor));
 	}
 
 	/* success */
@@ -113,11 +176,22 @@ fu_linux_fwattr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 static void
 fu_linux_fwattr_plugin_init(FuLinuxFwattrPlugin *self)
 {
+	self->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
+static void
+fu_linux_fwattr_plugin_finalize(GObject *obj)
+{
+	FuLinuxFwattrPlugin *self = FU_LINUX_FWATTR_PLUGIN(obj);
+	g_ptr_array_unref(self->monitors);
+	G_OBJECT_CLASS(fu_linux_fwattr_plugin_parent_class)->finalize(obj);
 }
 
 static void
 fu_linux_fwattr_plugin_class_init(FuLinuxFwattrPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_linux_fwattr_plugin_finalize;
 	plugin_class->startup = fu_linux_fwattr_plugin_startup;
 }

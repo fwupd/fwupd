@@ -63,7 +63,6 @@ fu_linux_fwattr_load_lenovo_p620_func(void)
 	GPtrArray *values;
 	const gchar *tmp;
 	gboolean ret;
-	gboolean pending_reboot = FALSE;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuContext) ctx = fu_linux_fwattr_context_new();
 	g_autoptr(FuPlugin) plugin = fu_lenovo_thinklmi_linux_fwattr_plugin_new(ctx);
@@ -88,17 +87,14 @@ fu_linux_fwattr_load_lenovo_p620_func(void)
 	g_assert_true(ret);
 
 	p620_6_3_items = fu_context_get_bios_settings(ctx);
-	g_assert_cmpint(p620_6_3_items->len, ==, 5);
+	g_assert_cmpint(p620_6_3_items->len, ==, 4);
 	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.WindowsUEFIFirmwareUpdate");
 	g_assert_nonnull(setting);
 	tmp = fu_bios_setting_get_description(setting);
 	g_assert_cmpstr(tmp, ==, "BIOS updates delivered via LVFS or Windows Update");
 
 	/* make sure nothing pending */
-	ret = fu_context_get_pending_reboot(ctx, &pending_reboot, &error);
-	g_assert_true(ret);
-	g_assert_no_error(error);
-	g_assert_false(pending_reboot);
+	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_PENDING_REBOOT));
 
 	/* check a BIOS setting reads from kernel 6.3 as expected by fwupd */
 	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.AMDMemoryGuard");
@@ -144,7 +140,7 @@ fu_linux_fwattr_load_lenovo_p620_func(void)
 		tmp = fu_bios_setting_get_current_value(setting);
 		name = fu_bios_setting_get_name(setting);
 		g_debug("%s: %s", name, tmp);
-		if ((g_strcmp0(name, "pending_reboot") == 0) || (g_strrstr(tmp, "[Status") != NULL))
+		if (g_strrstr(tmp, "[Status") != NULL)
 			g_assert_true(ro);
 		else
 			g_assert_false(ro);
