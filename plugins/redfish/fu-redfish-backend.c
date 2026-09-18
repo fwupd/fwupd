@@ -79,6 +79,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *session_key =
+	    self->session_key_file != NULL ? fu_redfish_backend_get_session_key(self, NULL) : NULL;
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -101,11 +103,17 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
-		/* X-Auth-Token session authentication per Redfish DSP0266 §13.3.4 */
-		g_autofree gchar *auth_header =
-		    g_strdup_printf("X-Auth-Token: %s", self->bearer_token);
+	if (session_key != NULL) {
+		/* X-Auth-Token session authentication per Redfish DSP0266 §13.3.4.
+		 * Reload the session key from the configured file for every request, as the
+		 * BMC may rotate it periodically without requiring a fwupd service restart. */
+		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
 		fu_redfish_request_add_header(request, auth_header);
+	} else if (self->bearer_token != NULL) {
+		/* Some custom implementations require special authentication through a bearer
+		 * token. Let's use that if configured to do so. */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
+		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
 	} else {
 		/* Here is the common auth scenario, when no specific bearer token is configured.
 		 * since DSP0266 makes Basic Authorization a requirement,

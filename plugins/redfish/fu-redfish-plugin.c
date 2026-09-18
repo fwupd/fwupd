@@ -543,7 +543,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 
 	/* we got neither a type 42 entry or config value, lets try IPMI */
 	if ((fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) &&
-	    bearer_token == NULL) {
+	    session_key_file == NULL) {
 		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

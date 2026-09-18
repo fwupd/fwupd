@@ -322,23 +322,15 @@ fu_redfish_ami_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_redfish_ami_device_activate(FuDevice *device, FuProgress *progress, GError **error)
+static gchar *
+fu_redfish_ami_device_get_aux_power_reset_target(FuRedfishBackend *backend, GError **error)
 {
-	FuRedfishBackend *backend;
 	const gchar *action_target;
-	glong status_code;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_bmc = NULL;
 	g_autoptr(FwupdJsonObject) json_actions = NULL;
 	g_autoptr(FwupdJsonObject) json_oem = NULL;
 	g_autoptr(FwupdJsonObject) json_action = NULL;
-	g_autoptr(FwupdJsonObject) json_body = fwupd_json_object_new();
-	g_autoptr(GError) error_local = NULL;
-
-	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
-	if (backend == NULL)
-		return FALSE;
 
 	/* discover the OEM aux-power-reset action target from BMC_0 */
 	request = fu_redfish_backend_request_new(backend);
@@ -347,33 +339,52 @@ fu_redfish_ami_device_activate(FuDevice *device, FuProgress *progress, GError **
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error)) {
 		g_prefix_error_literal(error, "failed to query BMC_0 chassis: ");
-		return FALSE;
+		return NULL;
 	}
 	json_bmc = fu_redfish_request_get_json_object(request);
 	json_actions = fwupd_json_object_get_object(json_bmc, "Actions", error);
 	if (json_actions == NULL) {
 		g_prefix_error_literal(error, "no Actions in BMC_0: ");
-		return FALSE;
+		return NULL;
 	}
 	json_oem = fwupd_json_object_get_object(json_actions, "Oem", error);
 	if (json_oem == NULL) {
 		g_prefix_error_literal(error, "no Actions/Oem in BMC_0: ");
-		return FALSE;
+		return NULL;
 	}
 	json_action = fwupd_json_object_get_object(json_oem, "#NvidiaChassis.AuxPowerReset", error);
 	if (json_action == NULL) {
 		g_prefix_error_literal(error, "no AuxPowerReset action in BMC_0: ");
-		return FALSE;
+		return NULL;
 	}
 	action_target = fwupd_json_object_get_string(json_action, "target", error);
 	if (action_target == NULL) {
 		g_prefix_error_literal(error, "no target in AuxPowerReset action: ");
-		return FALSE;
+		return NULL;
 	}
+	return g_strdup(action_target);
+}
+
+static gboolean
+fu_redfish_ami_device_activate(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuRedfishBackend *backend;
+	glong status_code;
+	g_autofree gchar *action_target = NULL;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_body = fwupd_json_object_new();
+	g_autoptr(GError) error_local = NULL;
+
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
+	if (backend == NULL)
+		return FALSE;
+
+	action_target = fu_redfish_ami_device_get_aux_power_reset_target(backend, error);
+	if (action_target == NULL)
+		return FALSE;
 
 	/* POST AuxPowerCycleForce; the BMC may drop the aux rail immediately */
 	fwupd_json_object_add_string(json_body, "ResetType", "AuxPowerCycleForce");
-	g_clear_object(&request);
 	request = fu_redfish_backend_request_new(backend);
 	if (!fu_redfish_request_perform_full(request,
 					     action_target,
