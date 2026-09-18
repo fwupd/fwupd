@@ -704,57 +704,6 @@ fu_context_add_bios_setting(FuContext *self, FuBiosSetting *attr, GError **error
 }
 
 /**
- * fu_context_get_pending_reboot:
- * @self: a #GPtrArray
- * @result: (out): Whether a reboot is pending
- * @error: (nullable): optional return location for an error
- *
- * Determines if the system will apply changes to attributes upon reboot
- *
- * Since: 1.8.4
- **/
-gboolean
-fu_context_get_pending_reboot(FuContext *self, gboolean *result, GError **error)
-{
-	FuContextPrivate *priv = GET_PRIVATE(self);
-	FuBiosSetting *setting = NULL;
-	guint64 val = 0;
-
-	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-
-	for (guint i = 0; i < priv->bios_settings->len; i++) {
-		FuBiosSetting *attr_tmp = g_ptr_array_index(priv->bios_settings, i);
-		const gchar *tmp = fu_bios_setting_get_name(attr_tmp);
-		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
-			setting = attr_tmp;
-			break;
-		}
-	}
-	if (setting == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "failed to find pending reboot attribute");
-		return FALSE;
-	}
-
-	/* refresh/re-read */
-	if (!fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), error))
-		return FALSE;
-	if (!fu_strtoull(fu_bios_setting_get_current_value(setting),
-			 &val,
-			 0,
-			 G_MAXUINT32,
-			 FU_INTEGER_BASE_AUTO,
-			 error))
-		return FALSE;
-	*result = (val == 1);
-
-	/* success */
-	return TRUE;
-}
-
-/**
  * fu_context_get_chassis_kind:
  * @self: a #FuContext
  *

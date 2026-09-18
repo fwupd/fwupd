@@ -200,6 +200,14 @@ fu_cli_client_check_daemon_version(FwupdClient *client, gpointer userdata, GErro
 }
 
 static void
+fu_cli_client_pending_reboot_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	if (fwupd_client_get_pending_reboot(priv->client))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+}
+
+static void
 fu_cli_client_notify_cb(GObject *object, GParamSpec *pspec, FuCli *self)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
@@ -1166,17 +1174,8 @@ fu_cli_check_reboot_needed(FuCli *self, gchar **values, GError **error)
 
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
-		g_autoptr(GPtrArray) devices =
-		    fwupd_client_get_devices(priv->client, priv->cancellable, error);
-		if (devices == NULL)
-			return FALSE;
-		for (guint i = 0; i < devices->len; i++) {
-			FwupdDevice *device = g_ptr_array_index(devices, i);
-
-			if (fwupd_device_get_update_state(device) ==
-			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
-				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-		}
+		if (fwupd_client_get_pending_reboot(priv->client))
+			priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 	} else {
 		for (guint i = 0; values[i] != NULL; i++) {
 			g_autoptr(FwupdDevice) device = NULL;
@@ -7459,6 +7458,10 @@ fu_cli_init(FuCli *self)
 	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::status",
 			 G_CALLBACK(fu_cli_client_notify_cb),
+			 self);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "notify::pending-reboot",
+			 G_CALLBACK(fu_cli_client_pending_reboot_notify_cb),
 			 self);
 	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",

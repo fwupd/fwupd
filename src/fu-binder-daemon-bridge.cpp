@@ -68,6 +68,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 	p.tainted = FALSE;
 	p.interactive = FALSE;
 	p.onlyTrusted = fu_context_get_config_bool(ctx, "OnlyTrusted");
+	p.pendingReboot = fu_context_has_flag(ctx, FU_CONTEXT_FLAG_PENDING_REBOOT);
 	p.status = fu_daemon_get_status(FU_DAEMON(self));
 	p.percentage = fu_daemon_get_percentage(FU_DAEMON(self));
 	p.batteryLevel = fu_context_get_battery_level(ctx);

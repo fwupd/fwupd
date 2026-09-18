@@ -203,7 +203,13 @@ static void
 fwupd_client_api_ro_props(void)
 {
 #if GLIB_CHECK_VERSION(2, 74, 0)
-	const gchar *props[] = {"daemon-version", "tainted", "interactive", "only-trusted", NULL};
+	const gchar *props[] = {
+	    "daemon-version",
+	    "tainted",
+	    "pending-reboot",
+	    "interactive",
+	    "only-trusted",
+	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(props); i++) {
 		if (g_test_subprocess()) {
@@ -248,6 +254,10 @@ fwupd_client_api(void)
 	g_assert_false(ret);
 	ret = fwupd_client_get_tainted(client);
 	g_assert_false(ret);
+	ret = fwupd_client_get_pending_reboot(client);
+	g_assert_false(ret);
+	fwupd_client_set_pending_reboot(client, TRUE);
+	g_assert_true(fwupd_client_get_pending_reboot(client));
 
 	/* set the version multiple times */
 	fwupd_client_set_daemon_version(client, "1.2.3");

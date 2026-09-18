@@ -331,6 +331,13 @@ fu_engine_ensure_device_problem_priority(FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_device_update_state_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_PENDING_REBOOT);
+}
+
+static void
 fu_engine_device_equivalent_id_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	/* make sure the lower priority equivalent device has the problem */
@@ -540,6 +547,10 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 	g_signal_connect(FU_DEVICE(device),
 			 "notify::equivalent-id",
 			 G_CALLBACK(fu_engine_device_equivalent_id_notify_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::update-state",
+			 G_CALLBACK(fu_engine_device_update_state_notify_cb),
 			 self);
 	g_signal_connect(FU_DEVICE(device),
 			 "request",
@@ -7091,6 +7102,10 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* fix order */
 	fu_device_list_depsolve_order(self->device_list, device);
 
+	/* already tagged as needing a reboot -- however unlikely */
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_PENDING_REBOOT);
+
 	/* save to emulated phase, but avoid overwriting reload */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    self->emulator_phase == FU_ENGINE_EMULATOR_PHASE_SETUP &&
@@ -9478,6 +9493,12 @@ fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *
 }
 
 static void
+fu_engine_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+{
+	fu_engine_emit_changed(self);
+}
+
+static void
 fu_engine_idle_timeout_cb(FuIdle *idle, FuEngine *self)
 {
 	fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
@@ -9577,6 +9598,10 @@ fu_engine_constructed(GObject *obj)
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::flags",
 			 G_CALLBACK(fu_engine_context_power_changed_cb),
+			 self);
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::flags",
+			 G_CALLBACK(fu_engine_context_flags_notify_cb),
 			 self);
 	g_signal_connect(fu_context_get_config(self->ctx),
 			 "loaded",

@@ -53,7 +53,6 @@ static void
 fu_lenovo_thinklmi_plugin_uefi_capsule_registered(FuContext *ctx, FuDevice *device)
 {
 	FuBiosSetting *attr;
-	gboolean pending_reboot = FALSE;
 
 	/* check if boot order lock is turned on */
 	attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_BOOT_ORDER_LOCK);
@@ -68,8 +67,7 @@ fu_lenovo_thinklmi_plugin_uefi_capsule_registered(FuContext *ctx, FuDevice *devi
 	}
 
 	/* check if we're pending for a reboot */
-	fu_context_get_pending_reboot(ctx, &pending_reboot, NULL);
-	if (pending_reboot) {
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_PENDING_REBOOT)) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-pending-reboot",
 				  "UEFI BIOS settings update pending reboot");

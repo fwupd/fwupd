@@ -78,6 +78,7 @@ typedef struct {
 	gchar *host_machine_id;
 	gchar *host_security_id;
 	gboolean only_trusted;
+	gboolean pending_reboot;
 	GMutex proxy_mutex; /* for @proxy */
 	GDBusProxy *proxy;
 	gchar *proxy_name_owner;
@@ -139,6 +140,7 @@ enum {
 	PROP_HOST_BKC,
 	PROP_INTERACTIVE,
 	PROP_ONLY_TRUSTED,
+	PROP_PENDING_REBOOT,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
 	PROP_LAST
@@ -694,6 +696,12 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 			fwupd_client_object_notify(self, "only-trusted");
 		}
 	}
+	if (g_variant_dict_contains(dict, "PendingReboot")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "PendingReboot");
+		if (val != NULL)
+			fwupd_client_set_pending_reboot(self, fwupd_variant_get_boolean(val));
+	}
 }
 
 static void
@@ -1167,6 +1175,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GVariant) val9 = NULL;
 	g_autoptr(GVariant) val10 = NULL;
+	g_autoptr(GVariant) val11 = NULL;
 	g_autoptr(GVariant) val_hwids = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
@@ -1228,6 +1237,9 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
 		priv->only_trusted = fwupd_variant_get_boolean(val9);
+	val11 = g_dbus_proxy_get_cached_property(priv->proxy, "PendingReboot");
+	if (val11 != NULL)
+		priv->pending_reboot = fwupd_variant_get_boolean(val11);
 
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
 	if (val_hwids != NULL) {
@@ -4714,6 +4726,44 @@ fwupd_client_get_only_trusted(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_pending_reboot:
+ * @self: a #FwupdClient
+ *
+ * Gets if system changes are pending a reboot.
+ *
+ * Returns: %TRUE if the daemon is checking signatures
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fwupd_client_get_pending_reboot(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	return priv->pending_reboot;
+}
+
+/**
+ * fwupd_client_set_pending_reboot:
+ * @self: a #FwupdClient
+ * @pending_reboot: if system changes are pending a reboot
+ *
+ * Sets if system changes are pending a reboot.
+ *
+ * Since: 2.2.1
+ **/
+void
+fwupd_client_set_pending_reboot(FwupdClient *self, gboolean pending_reboot)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	if (priv->pending_reboot == pending_reboot)
+		return;
+	priv->pending_reboot = pending_reboot;
+	fwupd_client_object_notify(self, "pending-reboot");
+}
+
+/**
  * fwupd_client_get_daemon_interactive:
  * @self: a #FwupdClient
  *
@@ -8120,6 +8170,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_ONLY_TRUSTED:
 		g_value_set_boolean(value, priv->only_trusted);
 		break;
+	case PROP_PENDING_REBOOT:
+		g_value_set_boolean(value, priv->pending_reboot);
+		break;
 	case PROP_INTERACTIVE:
 		g_value_set_boolean(value, priv->interactive);
 		break;
@@ -8488,6 +8541,20 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				     TRUE,
 				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_ONLY_TRUSTED, pspec);
+
+	/**
+	 * FwupdClient:pending-reboot:
+	 *
+	 * If the daemon is waiting for a reboot to apply changes.
+	 *
+	 * Since: 2.2.1
+	 */
+	pspec = g_param_spec_boolean("pending-reboot",
+				     NULL,
+				     NULL,
+				     FALSE,
+				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PENDING_REBOOT, pspec);
 
 	/**
 	 * FwupdClient:battery-level:
