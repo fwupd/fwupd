@@ -14,6 +14,10 @@
 enum { EP_OUT, EP_IN, EP_LAST };
 #define HUDDLY_USB_RECEIVE_BUFFER_SIZE 1024
 
+/* allow for eMMC stalls before the camera drains the bulk endpoint */
+#define HUDDLY_USB_BULK_WRITE_TIMEOUT 30000 /* ms */
+#define HUDDLY_USB_BULK_READ_TIMEOUT  20000 /* ms */
+
 #if !GLIB_CHECK_VERSION(2, 74, 0)
 #define G_REGEX_DEFAULT	      0
 #define G_REGEX_MATCH_DEFAULT 0
@@ -94,7 +98,7 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 src->data + offset,
 						 chunk_size,
 						 &transmitted,
-						 5000,
+						 HUDDLY_USB_BULK_WRITE_TIMEOUT,
 						 error)) {
 			return FALSE;
 		}
@@ -117,7 +121,7 @@ fu_huddly_usb_device_bulk_read(FuHuddlyUsbDevice *self,
 					   buf->data,
 					   buf->len,
 					   received_length,
-					   20000,
+					   HUDDLY_USB_BULK_READ_TIMEOUT,
 					   error);
 }
 
