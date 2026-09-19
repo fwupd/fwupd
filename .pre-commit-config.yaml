@@ -102,7 +102,7 @@ repos:
       - id: run-tests
         name: run tests before pushing
         language: system
-        entry: "test-fwupd"
+        entry: ./fub test
         pass_filenames: false
         stages: [pre-push]
       - id: clang-format
