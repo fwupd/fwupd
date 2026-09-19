@@ -74,6 +74,11 @@ jobs:
         run: |
           sudo TMPDIR="$SNAP_TEST_TMPDIR" \
               /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool-efiboot.sh
+      - name: Test fwupdtui can start
+        run: |
+          # Check that fwupdtui starts without import errors
+          # --help is non-interactive and should exit 0
+          sudo snap run fwupd.fwupdtui --help 2>&1
 
   deploy-store:
     needs: [build-snap, test-snap]

@@ -4,11 +4,12 @@ export XDG_CACHE_HOME=$SNAP_USER_COMMON/.cache
 mkdir -p $XDG_CACHE_HOME
 export GIO_MODULE_DIR=$XDG_CACHE_HOME/gio-modules
 export XDG_DATA_DIRS="$SNAP/usr/share"
+export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
 export FWUPD_LOCKDIR=/run/lock/snap.fwupd
 export FWUPD_POLKIT_NOCHECK=1
 export FWUPD_HOSTFS_ROOT=/var/lib/snapd/hostfs
 
-#determine architecture
+# determine architecture
 if [ "$SNAP_ARCH" = "amd64" ]; then
     ARCH="x86_64-linux-gnu"
 elif [ "$SNAP_ARCH" = "armhf" ]; then
@@ -18,6 +19,8 @@ elif [ "$SNAP_ARCH" = "arm64" ]; then
 else
     ARCH="$SNAP_ARCH-linux-gnu"
 fi
+
+export GI_TYPELIB_PATH="$SNAP/lib/$ARCH/girepository-1.0:$SNAP/usr/lib/$ARCH/girepository-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
 
 # re-generate gio modules in local cache
 needs_update=true
