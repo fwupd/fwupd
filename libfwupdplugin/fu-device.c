@@ -2420,6 +2420,22 @@ fu_device_set_quirk_kv(FuDevice *self,
 			fu_device_add_protocol(self, sections[i]);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_PROBLEM) == 0) {
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			FwupdDeviceProblem problem = fwupd_device_problem_from_string(sections[i]);
+			if (problem == FWUPD_DEVICE_PROBLEM_UNKNOWN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "unknown problem %s",
+					    sections[i]);
+				return FALSE;
+			}
+			fu_device_add_problem(self, problem);
+		}
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_ISSUE) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++)
