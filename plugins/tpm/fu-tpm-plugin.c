@@ -136,6 +136,7 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	gboolean reconstructed = TRUE;
+	gboolean os_separator_applied = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s_calc = NULL;
@@ -186,6 +187,75 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 		if (!reconstructed)
 			break;
 	}
+
+	/*
+	 * Fallback: systemd-pcrosseparator.service (since v261) may extend
+	 * PCR0 with SHA256(current_pcr || SHA256("os-separator")) in the
+	 * initrd after the firmware event log ends. Try this as a fallback
+	 * if the direct comparison failed.
+	 */
+	if (!reconstructed) {
+		g_autofree gchar *os_sep_extended_hash = NULL;
+		g_autoptr(GError) fallback_error = NULL;
+
+		if (pcr0s_calc->len > 0) {
+			const gchar *checksum = g_ptr_array_index(pcr0s_calc, 0);
+			g_autoptr(GBytes) eventlog_digest = NULL;
+
+			/* parse eventlog-reconstructed SHA256 digest to raw bytes */
+			eventlog_digest = fu_bytes_from_string(checksum, &fallback_error);
+
+			if (eventlog_digest != NULL) {
+				g_autofree gchar *os_sep_hex = NULL;
+				g_autoptr(GBytes) os_sep_bytes = NULL;
+				g_autoptr(GChecksum) extended_csum = NULL;
+				const guint8 *digest_bytes;
+				gsize digest_len;
+				const guint8 *os_sep_byte_data;
+				gsize os_sep_byte_len;
+
+				/* compute SHA256("os-separator") */
+				g_autoptr(GChecksum) os_sep_csum =
+				    g_checksum_new(G_CHECKSUM_SHA256);
+				g_checksum_update(os_sep_csum,
+						  (const guint8 *)"os-separator",
+						  12);
+				os_sep_hex = g_checksum_get_string(os_sep_csum);
+
+				/* compute SHA256(eventlog_digest || sha256("os-separator")) */
+				os_sep_bytes = fu_bytes_from_string(os_sep_hex, &fallback_error);
+				if (os_sep_bytes != NULL) {
+					extended_csum = g_checksum_new(G_CHECKSUM_SHA256);
+
+					digest_bytes =
+					    g_bytes_get_data(eventlog_digest, &digest_len);
+					os_sep_byte_data =
+					    g_bytes_get_data(os_sep_bytes, &os_sep_byte_len);
+
+					g_checksum_update(extended_csum, digest_bytes, digest_len);
+					g_checksum_update(extended_csum,
+							  os_sep_byte_data,
+							  os_sep_byte_len);
+					os_sep_extended_hash = g_checksum_get_string(extended_csum);
+				}
+			}
+		}
+
+		if (os_sep_extended_hash != NULL) {
+			for (guint j = 0; j < pcr0s_real->len; j++) {
+				const gchar *real_checksum = g_ptr_array_index(pcr0s_real, j);
+				/* all checksums are bare lowercase hex from both sides */
+				if (g_strcmp0(real_checksum, os_sep_extended_hash) == 0) {
+					g_debug(
+					    "PCR0 matches os-separator extended reconstruction");
+					reconstructed = TRUE;
+					os_separator_applied = TRUE;
+					break;
+				}
+			}
+		}
+	}
+
 	if (!reconstructed) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -194,6 +264,10 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	if (os_separator_applied) {
+		/* systemd-pcrosseparator.service extended PCR0 after firmware log */
+		fwupd_security_attr_set_metadata(attr, "os-separator", "present");
+	}
 }
 
 static void
