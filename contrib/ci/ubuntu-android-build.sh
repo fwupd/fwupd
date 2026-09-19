@@ -15,6 +15,7 @@ rm -rf "${BUILD}"
 meson setup "${BUILD}" \
     -Db_coverage=true \
     --cross-file contrib/android/android_x86_64-cross-file.ini \
+    --cross-file contrib/ci/android-ci.ini \
     --prefix="${root}/target"
 
 ninja -C "${BUILD}" -v

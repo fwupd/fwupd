@@ -9,7 +9,7 @@ rust_panic_unwind_flags = ['-Cpanic=unwind']
 
 # The pure Rust library
 fwupd_rust_lib = fwupd_pkg.library(
-  install: false
+  install: host_machine.system() == 'android'
 )
 fwupd_pkg.override_dependency(
   declare_dependency(
@@ -22,7 +22,7 @@ fwupd_pkg.override_dependency(
 fwupd_ffi_lib = fwupd_ffi_pkg.library(
   rust_args: rust_panic_abort_flags,
   rust_abi: 'c',
-  install: false,
+  install: host_machine.system() == 'android',
 )
 
 fwupd_rust_ffi_incdir = include_directories('fwupd-ffi')
