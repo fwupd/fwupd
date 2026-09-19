@@ -73,6 +73,10 @@ apps:
     command: fwupdmgr.wrapper
     plugs: [fwupdmgr, home, network, polkit, shutdown]
     completer: share/bash-completion/completions/fwupdmgr
+  fwupdtui:
+    command: fwupdtui.wrapper
+    plugs: [fwupdmgr, home, network, polkit, shutdown]
+    completer: share/bash-completion/completions/fwupdtui
   refresh:
     command: fwupdmgr.wrapper refresh
     daemon: oneshot
@@ -109,18 +113,25 @@ parts:
         -Defi_binary=false,
         -Ddocs=disabled,
         -Dbuild=dbus,
-        -Dintrospection=disabled,
+        -Dintrospection=enabled,
         -Dman=false,
         -Dpython=/usr/bin/python3,
         -Defi_os_dir=fwupd,
         "-Dlibxmlb:gtkdoc=false",
-        "-Dlibxmlb:introspection=false",
       ]
     source: .
     source-type: git
+    override-pull: |
+      craftctl default
+      pip install textual rich --break-system-packages
+      craftctl set version=$(git describe HEAD --always)
     override-build: |
       ${CRAFT_PART_SRC}/contrib/ci/fwupd_setup_helpers.py test-meson
       craftctl default
+      # Install Python dependencies into the fwupd part's install directory
+      PYTHONPATH= pip install --no-compile --break-system-packages \
+        --target=${CRAFT_PART_INSTALL}/usr/lib/python3/dist-packages \
+        textual rich
       for name in ${CRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
         mv ${name} `dirname ${name}`/.. ;\
       done
@@ -145,9 +156,6 @@ parts:
       cp /usr/lib/shim/shimx64.efi.signed ${CRAFT_PART_INSTALL}/libexec/fwupd/efi/
       sed -i 's,^MetadataURI=.*$,MetadataURI=file:///var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware,' "${CRAFT_PART_INSTALL}/etc/fwupd/remotes.d/vendor-directory.conf"
       rm -rf ${CRAFT_PART_INSTALL}/share/installed-tests/fwupd/tests/bios-attrs
-    override-pull: |
-      craftctl default
-      craftctl set version=$(git describe HEAD --always)
     build-packages:
       - bash-completion
       - curl
@@ -155,7 +163,9 @@ parts:
       - fwupd-unsigned
       - git
       - gettext
+      - gobject-introspection
       - gnu-efi
+      - python3-gi
       - fwupd-unsigned-dev
       - hwdata
       - libcurl4-openssl-dev
@@ -194,7 +204,9 @@ parts:
       - libcurl4
       - libassuan0
       - libffi8
+      - libgirepository-1.0-1
       - liblzma5
+      - python3-gi
       - libusb-1.0-0
       - libpolkit-gobject-1-0
       - libreadline8t64
@@ -223,6 +235,7 @@ parts:
       - -share/fwupd/*.py
       - -share/fish
       - -root
+      - -tmp
       - -usr/bin
       - -usr/sbin
       - -usr/libexec
@@ -252,7 +265,6 @@ parts:
       - -usr/share/polkit-1
       - -usr/share/doc
       - -usr/share/info
-      - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/libicu*
       - -usr/lib/*/pkgconfig
@@ -296,6 +308,7 @@ parts:
       - fwupdtool.wrapper
       - fwupd.wrapper
       - fwupdmgr.wrapper
+      - fwupdtui.wrapper
 
   policy:
     plugin: nil
