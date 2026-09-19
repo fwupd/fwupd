@@ -278,6 +278,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_PROTOCOL "Protocol"
 /**
+ * FU_QUIRKS_PROBLEM:
+ *
+ * The quirk key for the problem, e.g. `insecure-platform`.
+ *
+ * Since: 2.1.8
+ **/
+#define FU_QUIRKS_PROBLEM "Problem"
+/**
  * FU_QUIRKS_UPDATE_MESSAGE:
  *
  * The quirk key for the update message shown after the transaction has completed.
