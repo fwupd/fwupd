@@ -15,3 +15,7 @@ Name = SW Key CA
 # HP
 [93f84748-c854-5d6b-b78a-13c2361e0758]
 Flags = use-db-default-ids
+
+# default name in MakeCert.exe
+[UEFI\NAME_Joe's-Software-Emporium]
+Problem = insecure-platform

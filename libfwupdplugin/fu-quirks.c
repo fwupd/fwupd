@@ -1132,6 +1132,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PLUGIN);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PRIORITY);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PROTOCOL);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_PROBLEM);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PROXY_GUID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_APPSTREAM_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_BATTERY_THRESHOLD);
