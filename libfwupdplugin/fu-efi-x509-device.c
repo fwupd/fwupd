@@ -50,6 +50,12 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "VENDOR", subject_vendor);
 	fu_device_add_instance_strsafe(device, "NAME", subject_name);
 	fu_device_build_instance_id(device, NULL, "UEFI", "VENDOR", "NAME", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "UEFI",
+					 "NAME",
+					 NULL);
 	fu_device_set_name(device, subject_name != NULL ? subject_name : "Unknown");
 	if (subject_vendor != NULL) {
 		/* build this here as well as from notify::vendor to ensure
