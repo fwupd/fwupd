@@ -27,10 +27,18 @@ typedef struct {
 	gboolean no_timestamp;
 	gboolean no_domain;
 	gchar **daemon_verbose;
+	gchar *logfile_fn;
+	GMutex logfile_mutex;
 #ifdef _WIN32
 	HANDLE event_source;
 #endif
 } FuDebug;
+
+/* log files over this size are rotated */
+#define FU_DEBUG_LOGFILE_SIZE_MAX (32 * FU_MB)
+
+/* maximum number of previous log file rotations */
+#define FU_DEBUG_LOGFILE_ROTATE_MAX (3)
 
 static const gchar *
 fu_debug_log_level_to_string(GLogLevelFlags log_level)
@@ -56,6 +64,8 @@ fu_debug_free(FuDebug *self)
 	g_option_group_set_parse_hooks(self->group, NULL, NULL);
 	g_option_group_unref(self->group);
 	g_strfreev(self->daemon_verbose);
+	g_mutex_clear(&self->logfile_mutex);
+	g_free(self->logfile_fn);
 #ifdef _WIN32
 	DeregisterEventSource(self->event_source);
 #endif
@@ -118,6 +128,92 @@ fu_debug_handler_win32(FuDebug *self, GLogLevelFlags log_level, const gchar *msg
 }
 #endif
 
+static gchar *
+fu_debug_logfile_get_filename(FuDebug *self, guint idx)
+{
+	if (idx == 0)
+		return g_strdup(self->logfile_fn);
+	return g_strdup_printf("%s.%u", self->logfile_fn, idx);
+}
+
+static gboolean
+fu_debug_logfile_rotate(FuDebug *self, GError **error)
+{
+	for (guint i = 0; i < FU_DEBUG_LOGFILE_ROTATE_MAX; i++) {
+		g_autofree gchar *fn_dst =
+		    fu_debug_logfile_get_filename(self, FU_DEBUG_LOGFILE_ROTATE_MAX - i);
+		g_autofree gchar *fn_src =
+		    fu_debug_logfile_get_filename(self, (FU_DEBUG_LOGFILE_ROTATE_MAX - 1) - i);
+		g_autoptr(GFile) file_src = g_file_new_for_path(fn_src);
+		g_autoptr(GFile) file_dst = g_file_new_for_path(fn_dst);
+
+		if (g_file_query_exists(file_src, NULL)) {
+			if (!g_file_move(file_src,
+					 file_dst,
+					 G_FILE_COPY_OVERWRITE,
+					 NULL,
+					 NULL,
+					 NULL,
+					 error)) {
+				g_prefix_error(error,
+					       "failed to rename %s to %s: ",
+					       fn_src,
+					       fn_dst);
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_debug_logfile_write(FuDebug *self, GString *msg, GError **error)
+{
+	goffset file_sz = 0;
+	g_autoptr(GDateTime) dt = g_date_time_new_now_local();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file = g_file_new_for_path(self->logfile_fn);
+	g_autoptr(GOutputStream) ostream = NULL;
+	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&self->logfile_mutex);
+
+	g_return_val_if_fail(locker != NULL, FALSE);
+
+	/* rotate if > 5MB */
+	if (g_file_query_exists(file, NULL)) {
+		g_autoptr(GFileInfo) file_info = NULL;
+		file_info = g_file_query_info(file,
+					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
+					      G_FILE_QUERY_INFO_NONE,
+					      NULL,
+					      error);
+		if (file_info == NULL)
+			return FALSE;
+		file_sz = g_file_info_get_size(file_info);
+	}
+	if (file_sz > (goffset)FU_DEBUG_LOGFILE_SIZE_MAX) {
+		if (!fu_debug_logfile_rotate(self, error)) {
+			g_prefix_error_literal(error, "failed to rotate log file: ");
+			return FALSE;
+		}
+	}
+	ostream = G_OUTPUT_STREAM(g_file_append_to(file, G_FILE_CREATE_NONE, NULL, error));
+	if (ostream == NULL) {
+		g_prefix_error_literal(error, "failed to get stream: ");
+		return FALSE;
+	}
+	if (!g_output_stream_write_all(ostream, msg->str, msg->len, NULL, NULL, error)) {
+		g_prefix_error_literal(error, "failed to write stream: ");
+		return FALSE;
+	}
+	if (!g_output_stream_close(ostream, NULL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_debug_handler_cb(const gchar *log_domain,
 		    GLogLevelFlags log_level,
@@ -159,6 +255,24 @@ fu_debug_handler_cb(const gchar *log_domain,
 		domain = g_string_new(log_domain);
 		for (gsize i = domain->len; i < 20; i++)
 			g_string_append(domain, " ");
+	}
+
+	/* to logfile */
+	if (self->logfile_fn != NULL) {
+		g_autofree gchar *ascii_message = g_str_to_ascii(message_safe, NULL);
+		g_autoptr(GError) error_logfile = NULL;
+		g_autoptr(GString) msg = g_string_new(NULL);
+
+		if (timestamp != NULL)
+			g_string_append_printf(msg, "%s ", timestamp);
+		if (domain != NULL)
+			g_string_append_printf(msg, "%s ", domain->str);
+		g_string_append_printf(msg, "%s\n", ascii_message);
+		if (!fu_debug_logfile_write(self, msg, &error_logfile)) {
+			g_printerr("failed to log to %s: %s",
+				   self->logfile_fn,
+				   error_logfile->message);
+		}
 	}
 
 	/* to file */
@@ -231,6 +345,7 @@ static gboolean
 fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer data, GError **error)
 {
 	FuDebug *self = (FuDebug *)data;
+	g_autofree gchar *logfile_path = NULL;
 	const GOptionEntry entries[] = {
 	    {"verbose",
 	     'v',
@@ -269,6 +384,11 @@ fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer d
 	/* set from FuConfig */
 	if (g_strcmp0(g_getenv("FWUPD_LOG_DOMAINS"), "*") == 0)
 		self->log_level = G_LOG_LEVEL_DEBUG;
+
+	/* does the logdir already exist */
+	logfile_path = g_build_filename(FWUPD_LOCALSTATEDIR, "log", "fwupd", NULL);
+	if (g_file_test(logfile_path, G_FILE_TEST_EXISTS))
+		self->logfile_fn = g_build_filename(logfile_path, "fwupd.log", NULL);
 
 	g_option_group_add_entries(group, entries);
 	return TRUE;
@@ -352,6 +472,7 @@ fu_debug_get_option_group(void)
 					 _("Show debugging options"),
 					 self,
 					 (GDestroyNotify)fu_debug_free);
+	g_mutex_init(&self->logfile_mutex);
 	g_option_group_set_parse_hooks(self->group,
 				       fu_debug_pre_parse_hook,
 				       fu_debug_post_parse_hook);
