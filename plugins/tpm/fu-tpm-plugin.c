@@ -131,11 +131,59 @@ fu_tpm_plugin_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+/*
+ * Calculates the PCR value produced by extending the reconstructed SHA-256 PCR0
+ * with the SHA-256 digest of "os-separator".
+ */
+static gchar *
+fu_tpm_plugin_get_os_separator_checksum(GPtrArray *checksums, GError **error)
+{
+	const gchar *checksum = fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA256);
+	const guint8 *eventlog_data;
+	const guint8 *os_separator_data;
+	gsize eventlog_size = 0;
+	gsize os_separator_size = 0;
+	g_autofree gchar *os_separator_checksum = NULL;
+	g_autoptr(GBytes) eventlog_digest = NULL;
+	g_autoptr(GBytes) os_separator_digest = NULL;
+	g_autoptr(GChecksum) extended_checksum = NULL;
+
+	if (checksum == NULL)
+		return NULL;
+	eventlog_digest = fu_bytes_from_string(checksum, error);
+	if (eventlog_digest == NULL)
+		return NULL;
+	os_separator_checksum =
+	    g_compute_checksum_for_string(G_CHECKSUM_SHA256, "os-separator", -1);
+	os_separator_digest = fu_bytes_from_string(os_separator_checksum, error);
+	if (os_separator_digest == NULL)
+		return NULL;
+
+	eventlog_data = g_bytes_get_data(eventlog_digest, &eventlog_size);
+	os_separator_data = g_bytes_get_data(os_separator_digest, &os_separator_size);
+	extended_checksum = g_checksum_new(G_CHECKSUM_SHA256);
+	g_checksum_update(extended_checksum, eventlog_data, eventlog_size);
+	g_checksum_update(extended_checksum, os_separator_data, os_separator_size);
+	return g_strdup(g_checksum_get_string(extended_checksum));
+}
+
+static gboolean
+fu_tpm_plugin_checksums_match(GPtrArray *checksums, const gchar *checksum)
+{
+	for (guint j = 0; j < checksums->len; j++) {
+		const gchar *real_checksum = g_ptr_array_index(checksums, j);
+		if (g_strcmp0(real_checksum, checksum) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static void
 fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	gboolean reconstructed = TRUE;
+	gboolean os_separator_applied = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s_calc = NULL;
@@ -170,22 +218,52 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	pcr0s_real = fu_tpm_device_get_checksums(self->tpm_device, 0);
 	for (guint i = 0; i < pcr0s_calc->len; i++) {
 		const gchar *checksum = g_ptr_array_index(pcr0s_calc, i);
-		reconstructed = FALSE;
-		for (guint j = 0; j < pcr0s_real->len; j++) {
-			const gchar *checksum_tmp = g_ptr_array_index(pcr0s_real, j);
-			/* skip unless same algorithm */
-			if (strlen(checksum) != strlen(checksum_tmp))
-				continue;
-			g_debug("comparing TPM %s and EVT %s", checksum, checksum_tmp);
-			if (g_strcmp0(checksum, checksum_tmp) == 0) {
-				reconstructed = TRUE;
+		g_debug("comparing TPM PCR0 and EVT %s", checksum);
+		if (!fu_tpm_plugin_checksums_match(pcr0s_real, checksum)) {
+			reconstructed = FALSE;
+			break;
+		}
+	}
+
+	/*
+	 * Fallback: systemd-pcrosseparator.service (since v261) may extend
+	 * PCR0 with SHA256(current_pcr || SHA256("os-separator")) in the
+	 * initrd after the firmware event log ends. Try this as a fallback
+	 * if the direct comparison failed. Only apply the fallback when ALL
+	 * banks match: use os-separator extended SHA-256 and direct values
+	 * for all other algorithms.
+	 */
+	if (!reconstructed) {
+		gboolean all_banks_matched = TRUE;
+		g_autofree gchar *os_separator_checksum = NULL;
+		g_autoptr(GError) fallback_error = NULL;
+
+		os_separator_checksum =
+		    fu_tpm_plugin_get_os_separator_checksum(pcr0s_calc, &fallback_error);
+		if (os_separator_checksum == NULL && fallback_error != NULL)
+			g_debug("failed to calculate os-separator PCR0: %s",
+				fallback_error->message);
+
+		for (guint i = 0; i < pcr0s_calc->len; i++) {
+			const gchar *calc_checksum = g_ptr_array_index(pcr0s_calc, i);
+			const gchar *compare_checksum = calc_checksum;
+
+			/* use os-separator extended SHA-256 for the SHA-256 bank */
+			if (strlen(calc_checksum) == 64 && os_separator_checksum != NULL)
+				compare_checksum = os_separator_checksum;
+
+			if (!fu_tpm_plugin_checksums_match(pcr0s_real, compare_checksum)) {
+				all_banks_matched = FALSE;
 				break;
 			}
 		}
-		/* all algorithms must match */
-		if (!reconstructed)
-			break;
+
+		if (all_banks_matched && os_separator_checksum != NULL) {
+			reconstructed = TRUE;
+			os_separator_applied = TRUE;
+		}
 	}
+
 	if (!reconstructed) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -194,6 +272,8 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	if (os_separator_applied)
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
 }
 
 static void

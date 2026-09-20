@@ -489,6 +489,198 @@ fu_tpm_coreboot_vboot_not_enabled_func(void)
 					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
+static void
+fu_tpm_os_separator_fallback_func(void)
+{
+	const gchar *pcrs =
+	    "PCR-00: B8 0D E5 D1 38 75 85 41 C5 F0 52 65 AD 14 4A B9 FA 86 D1 DB\n"
+	    "PCR-00: 33 B2 D5 2A BC EE 98 ED 70 F4 7F D9 C6 59 50 DE 92 69 5F BB 10 97 1D C5 "
+	    "AC 1B 9A C4 54 D3 FA 95\n";
+	gboolean ret;
+	guint8 digest_sha1[20] = {0};
+	guint8 digest_sha256[32] = {0};
+	g_autofree gchar *eventlog_dir = NULL;
+	g_autofree gchar *eventlog_fn = NULL;
+	g_autofree gchar *pcrs_fn = NULL;
+	g_autofree gchar *tpm0_dir = NULL;
+	g_autofree gchar *tpm_dir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTpmEventlog) eventlog = fu_tpm_eventlog_v2_new();
+	g_autoptr(FuTpmEventlogItem) item = fu_tpm_eventlog_item_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static("test", 4);
+	g_autoptr(GBytes) checksum_sha1 = g_bytes_new(digest_sha1, sizeof(digest_sha1));
+	g_autoptr(GBytes) checksum_sha256 = g_bytes_new(digest_sha256, sizeof(digest_sha256));
+	g_autoptr(GBytes) eventlog_blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_test_skip("Skipping os-separator tests when simulator running");
+		return;
+	}
+
+	/* build an event log with both SHA-1 and SHA-256 banks */
+	fu_tpm_eventlog_item_set_kind(item, FU_TPM_EVENTLOG_ITEM_KIND_POST_CODE);
+	fu_tpm_eventlog_item_set_pcr(item, 0);
+	fu_tpm_eventlog_item_add_checksum(item, FU_TPM_ALG_SHA1, checksum_sha1);
+	fu_tpm_eventlog_item_add_checksum(item, FU_TPM_ALG_SHA256, checksum_sha256);
+	fu_firmware_set_bytes(FU_FIRMWARE(item), blob);
+	ret = fu_firmware_add_image(FU_FIRMWARE(eventlog), FU_FIRMWARE(item), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	eventlog_blob = fu_firmware_write(FU_FIRMWARE(eventlog), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(eventlog_blob);
+
+	/* create a matching synthetic TPM sysfs tree */
+	tmpdir = fu_temporary_directory_new("tpm-os-separator", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	tpm_dir = fu_temporary_directory_build(tmpdir, "class", "tpm", NULL);
+	tpm0_dir = g_build_filename(tpm_dir, "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(tpm0_dir, 0700), ==, 0);
+	pcrs_fn = g_build_filename(tpm0_dir, "pcrs", NULL);
+	ret = g_file_set_contents(pcrs_fn, pcrs, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	eventlog_dir = fu_temporary_directory_build(tmpdir, "kernel", "security", "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(eventlog_dir, 0700), ==, 0);
+	eventlog_fn = g_build_filename(eventlog_dir, "binary_bios_measurements", NULL);
+	ret = fu_bytes_set_contents(eventlog_fn, eventlog_blob, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, fu_temporary_directory_get_path(tmpdir));
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, tpm_dir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_TAINTED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_tpm_os_separator_sha1_mismatch_func(void)
+{
+	/*
+	 * Regression test: if SHA-1 doesn't match but SHA-256 matches the
+	 * os-separator fallback, the result should still be NOT_VALID.
+	 * This ensures we don't accept a partial match from a single bank.
+	 */
+	const gchar *pcrs =
+	    "PCR-00: AA BB CC DD EE FF 00 11 22 33 44 55 66 77 88 99 AA BB CC DD\n"
+	    "PCR-00: 33 B2 D5 2A BC EE 98 ED 70 F4 7F D9 C6 59 50 DE 92 69 5F BB 10 97 1D C5 "
+	    "AC 1B 9A C4 54 D3 FA 95\n";
+	gboolean ret;
+	guint8 digest_sha1[20] = {0};
+	guint8 digest_sha256[32] = {0};
+	g_autofree gchar *eventlog_dir = NULL;
+	g_autofree gchar *eventlog_fn = NULL;
+	g_autofree gchar *pcrs_fn = NULL;
+	g_autofree gchar *tpm0_dir = NULL;
+	g_autofree gchar *tpm_dir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTpmEventlog) eventlog = fu_tpm_eventlog_v2_new();
+	g_autoptr(FuTpmEventlogItem) item = fu_tpm_eventlog_item_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static("test", 4);
+	g_autoptr(GBytes) checksum_sha1 = g_bytes_new(digest_sha1, sizeof(digest_sha1));
+	g_autoptr(GBytes) checksum_sha256 = g_bytes_new(digest_sha256, sizeof(digest_sha256));
+	g_autoptr(GBytes) eventlog_blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_test_skip("Skipping os-separator tests when simulator running");
+		return;
+	}
+
+	/* build an event log with both SHA-1 and SHA-256 banks (zero digests) */
+	fu_tpm_eventlog_item_set_kind(item, FU_TPM_EVENTLOG_ITEM_KIND_POST_CODE);
+	fu_tpm_eventlog_item_set_pcr(item, 0);
+	fu_tpm_eventlog_item_add_checksum(item, FU_TPM_ALG_SHA1, checksum_sha1);
+	fu_tpm_eventlog_item_add_checksum(item, FU_TPM_ALG_SHA256, checksum_sha256);
+	fu_firmware_set_bytes(FU_FIRMWARE(item), blob);
+	ret = fu_firmware_add_image(FU_FIRMWARE(eventlog), FU_FIRMWARE(item), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	eventlog_blob = fu_firmware_write(FU_FIRMWARE(eventlog), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(eventlog_blob);
+
+	/* create a synthetic TPM sysfs tree with mismatched SHA-1 PCR */
+	tmpdir = fu_temporary_directory_new("tpm-os-separator-mismatch", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	tpm_dir = fu_temporary_directory_build(tmpdir, "class", "tpm", NULL);
+	tpm0_dir = g_build_filename(tpm_dir, "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(tpm0_dir, 0700), ==, 0);
+	pcrs_fn = g_build_filename(tpm0_dir, "pcrs", NULL);
+	ret = g_file_set_contents(pcrs_fn, pcrs, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	eventlog_dir = fu_temporary_directory_build(tmpdir, "kernel", "security", "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(eventlog_dir, 0700), ==, 0);
+	eventlog_fn = g_build_filename(eventlog_dir, "binary_bios_measurements", NULL);
+	ret = fu_bytes_set_contents(eventlog_fn, eventlog_blob, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, fu_temporary_directory_get_path(tmpdir));
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, tpm_dir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr);
+	/* SHA-1 doesn't match, so result should be NOT_VALID even though
+	 * SHA-256 matches the os-separator fallback */
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -502,5 +694,7 @@ main(int argc, char **argv)
 	g_test_add_func("/tpm/coreboot-vboot-not-found", fu_tpm_coreboot_vboot_not_found_func);
 	g_test_add_func("/tpm/coreboot-vboot-enabled", fu_tpm_coreboot_vboot_enabled_func);
 	g_test_add_func("/tpm/coreboot-vboot-not-enabled", fu_tpm_coreboot_vboot_not_enabled_func);
+	g_test_add_func("/tpm/os-separator-fallback", fu_tpm_os_separator_fallback_func);
+	g_test_add_func("/tpm/os-separator-sha1-mismatch", fu_tpm_os_separator_sha1_mismatch_func);
 	return g_test_run();
 }
