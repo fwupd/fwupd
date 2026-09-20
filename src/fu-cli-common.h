@@ -27,8 +27,8 @@ gchar *
 fu_cli_get_user_cache_path(const gchar *fn) G_GNUC_NON_NULL(1);
 const gchar *
 fu_cli_branch_for_display(const gchar *branch);
-const gchar *
-fu_cli_request_get_message(FwupdRequest *req) G_GNUC_NON_NULL(1);
+gchar *
+fu_cli_request_get_message(FwupdRequest *req, const gchar *device_name) G_GNUC_NON_NULL(1);
 gchar *
 fu_cli_get_release_description_with_fallback(FwupdRelease *rel) G_GNUC_NON_NULL(1);
 

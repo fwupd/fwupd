@@ -284,17 +284,18 @@ fwupd_request_get_message(FwupdRequest *self)
 	/* untranslated canned messages */
 	if (fwupd_request_has_flag(self, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REMOVE_REPLUG) == 0)
-			return "Please unplug and then re-insert the device USB cable.";
+			return "Please unplug the device, then plug it back in.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_INSERT_USB_CABLE) == 0)
-			return "Please re-insert the device USB cable.";
+			return "Please plug the device USB cable back in.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REMOVE_USB_CABLE) == 0)
 			return "Please unplug the device USB cable.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REPLUG_POWER) == 0)
-			return "Please unplug and then re-insert the device power cable.";
+			return "Please unplug the device power cable, then plug it back in.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_PRESS_UNLOCK) == 0)
 			return "Press unlock on the device.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_DO_NOT_POWER_OFF) == 0)
-			return "Do not turn off your computer or remove the AC adaptor.";
+			return "Do not turn off your computer or remove the AC adaptor while the "
+			       "update is in progress.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_RESTART_DAEMON) == 0)
 			return "Please restart the fwupd service.";
 	}
