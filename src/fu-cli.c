@@ -1301,7 +1301,10 @@ fu_cli_display_current_message(FuCli *self)
 	/* print all POST requests */
 	for (guint i = 0; i < priv->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
-		fu_console_print_literal(priv->console, fu_cli_request_get_message(request));
+		const gchar *device_name =
+		    priv->current_device != NULL ? fu_device_get_name(priv->current_device) : NULL;
+		g_autofree gchar *message = fu_cli_request_get_message(request, device_name);
+		fu_console_print_literal(priv->console, message);
 	}
 }
 
