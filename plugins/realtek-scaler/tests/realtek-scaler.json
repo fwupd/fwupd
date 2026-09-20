@@ -1,0 +1,18 @@
+{
+  "name": "Realtek Scaler",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "4b46c3a7882321627fb243e74866f35dbce735a54d615658233c8ec5099bd38c-realtek-scaler-153.10.cab",
+      "emulation-url": "ba4fcb5c287a696e8a62970fcaabb3c01f41d24cfa0fe60dda549a0628c0cfbd-realtek-scaler-153.10-emulation-patch0006.zip",
+      "components": [
+        {
+          "version": "153.10",
+          "guids": [
+            "f4e24e2d-5e5e-586d-b89f-90f4005ce80e"
+          ]
+        }
+      ]
+    }
+  ]
+}
