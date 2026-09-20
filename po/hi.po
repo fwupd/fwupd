@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 10:26+0100\n"
+"POT-Creation-Date: 2026-09-20 13:09+0100\n"
 "PO-Revision-Date: 2025-10-24 10:10+0000\n"
 "Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Hindi <https://hosted.weblate.org/projects/fwupd/fwupd/hi/>\n"
@@ -37,22 +37,6 @@ msgstr "Linux विक्रेता फर्मवेयर सेवा (�
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "इस रिमोट में फर्मवेयर है जिस पर प्रतिबंध नहीं है, लेकिन हार्डवेयर विक्रेता द्वारा अभी भी इसका परीक्षण किया जा रहा है। आपको यह सुनिश्चित करना चाहिए कि फर्मवेयर अद्यतन विफल होने पर आपके पास फर्मवेयर को हस्तचालित रूप से पदावनत करने का एक तरीका है।"
 
-#. TRANSLATORS: description of a BIOS setting
-msgid "Settings will apply after system reboots"
-msgstr "सिस्टम रीबूट के बाद सेटिंग्स लागू होंगी"
-
-#. TRANSLATORS: description of a BIOS setting
-msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr "BIOS अद्यतन LVFS या Windows अद्यतन के माध्यम से वितरित किए जाते हैं"
-
-msgid "Enable"
-msgstr "सक्षम करें"
-
-#. TRANSLATORS: if the remote is enabled
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Enabled"
-msgstr "सक्षम"
-
 msgid "Secure Boot"
 msgstr ""
 
@@ -68,7 +52,7 @@ msgstr ""
 msgid "Memory Encryption"
 msgstr ""
 
-msgid "Video Memory"
+msgid "Dedicated Video Memory"
 msgstr ""
 
 msgid "Camera"
@@ -97,6 +81,14 @@ msgstr ""
 
 msgid "Keyboard Backlight"
 msgstr ""
+
+#. TRANSLATORS: description of a BIOS firmware update setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "BIOS अद्यतन LVFS या Windows अद्यतन के माध्यम से वितरित किए जाते हैं"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "सिस्टम रीबूट के बाद सेटिंग्स लागू होंगी"
 
 msgid "Stop the fwupd service"
 msgstr ""
@@ -415,6 +407,606 @@ msgstr "संपन्न!"
 msgid "No action specified!"
 msgstr "कोई कार्रवाई निर्दिष्ट नहीं!"
 
+msgid "Unnamed setting"
+msgstr ""
+
+msgid "Choose one of the available values"
+msgstr ""
+
+msgid "Enter a valid integer"
+msgstr ""
+
+#, python-brace-format
+msgid "Value must be between {lower} and {upper}"
+msgstr ""
+
+#, python-brace-format
+msgid "Value must use an increment of {increment}"
+msgstr ""
+
+#, python-brace-format
+msgid "Text length must be between {lower} and {upper}"
+msgstr ""
+
+msgid "This setting type cannot be changed"
+msgstr ""
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "रद्द करें"
+
+msgid "Save"
+msgstr ""
+
+msgid "Install Local Firmware"
+msgstr ""
+
+msgid "Path to a .cab firmware archive"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "File not found"
+msgstr ""
+
+msgid "bytes"
+msgstr ""
+
+msgid "KB"
+msgstr ""
+
+msgid "MB"
+msgstr ""
+
+msgid "GB"
+msgstr ""
+
+#, python-brace-format
+msgid "{seconds} seconds"
+msgstr ""
+
+#, python-brace-format
+msgid "{minutes} minutes"
+msgstr ""
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "मान्य"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "अमान्य"
+
+#. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Enabled"
+msgstr "सक्षम"
+
+#. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Disabled"
+msgstr "अक्षम"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "बंद"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Unlocked"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "कूटलेखित"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "अकूटलेखित"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "दूषित"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Untainted"
+msgstr "अदूषित"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "मिला"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "नहीं मिला"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "समर्थित"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "समर्थित नहीं"
+
+msgid "HSI-1 Critical"
+msgstr ""
+
+msgid "HSI-2 Important"
+msgstr ""
+
+msgid "HSI-3 Theoretical"
+msgstr ""
+
+msgid "HSI-4 System Protection"
+msgstr ""
+
+msgid "HSI-5 System Attestation"
+msgstr ""
+
+msgid "fwupd"
+msgstr ""
+
+msgid "Firmware management"
+msgstr ""
+
+msgid "Quit"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Firmware Management"
+msgstr ""
+
+msgid "Choose what you would like to inspect or change."
+msgstr ""
+
+msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
+msgstr ""
+
+msgid "Manage BIOS Settings"
+msgstr ""
+
+msgid "Manage Devices"
+msgstr ""
+
+msgid "View Security Measurement"
+msgstr ""
+
+msgid "Search BIOS settings"
+msgstr ""
+
+msgid "BIOS Settings"
+msgstr ""
+
+msgid "Select a setting to view its details."
+msgstr ""
+
+msgid "Search devices"
+msgstr ""
+
+msgid "Devices"
+msgstr ""
+
+msgid "Refresh Metadata"
+msgstr ""
+
+msgid "Enable LVFS"
+msgstr ""
+
+msgid "Install Local File"
+msgstr ""
+
+msgid "Select a device to view its details."
+msgstr ""
+
+msgid "Available Releases"
+msgstr ""
+
+msgid "Unlock"
+msgstr ""
+
+msgid "Verify"
+msgstr ""
+
+msgid "Store"
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "Install"
+msgstr ""
+
+msgid "Security Attributes"
+msgstr ""
+
+msgid "Select a security attribute to view its details."
+msgstr ""
+
+msgid "fwupd is not connected"
+msgstr ""
+
+#, python-brace-format
+msgid "Failed to load BIOS settings: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} settings"
+msgstr ""
+
+msgid "This system does not expose BIOS settings"
+msgstr ""
+
+msgid "Current value"
+msgstr ""
+
+msgid "Pending value"
+msgstr ""
+
+msgid "Available values"
+msgstr ""
+
+#, python-brace-format
+msgid "Range: {lower}–{upper}, increment {increment}"
+msgstr ""
+
+#, python-brace-format
+msgid "Length: {lower}–{upper} characters"
+msgstr ""
+
+msgid "This setting is read-only."
+msgstr ""
+
+#, python-brace-format
+msgid "Failed to modify BIOS settings: {error}"
+msgstr ""
+
+msgid "BIOS settings changed successfully; reboot required"
+msgstr ""
+
+msgid "BIOS settings changed successfully"
+msgstr ""
+
+#, python-brace-format
+msgid "Failed to load devices: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} devices"
+msgstr ""
+
+msgid "No supported devices were found"
+msgstr ""
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "आंतरिक उपकरण"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "अद्यतन-योग्य"
+
+msgid "Requires AC power"
+msgstr ""
+
+msgid "Supported by a remote"
+msgstr ""
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "रीबूट आवश्यक"
+
+msgid "Needs shutdown"
+msgstr ""
+
+msgid "Needs activation"
+msgstr ""
+
+msgid "Stages updates"
+msgstr ""
+
+msgid "Supports self-recovery"
+msgstr ""
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "जीवन के अन्त पर"
+
+msgid "Signed payload"
+msgstr ""
+
+msgid "Unsigned payload"
+msgstr ""
+
+msgid "Emulated device"
+msgstr ""
+
+msgid "Unnamed device"
+msgstr ""
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "न्यूनतम संस्करण"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "बूटलोडर संस्करण"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "विक्रेता"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Branch"
+msgstr "शाखा"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "क्रमांक"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "स्थापना अवधि"
+
+msgid "Flashes Left"
+msgstr ""
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "अद्यतन त्रुटि"
+
+msgid "Checksums"
+msgstr ""
+
+msgid "GUIDs"
+msgstr ""
+
+msgid "Instance IDs"
+msgstr ""
+
+msgid "Security Issues"
+msgstr ""
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "फ़्लैग"
+
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: current daemon status is unknown
+msgid "Unknown"
+msgstr "अज्ञात"
+
+#, python-brace-format
+msgid "Available Releases ({count})"
+msgstr ""
+
+msgid "Update"
+msgstr ""
+
+msgid "Downgrade"
+msgstr ""
+
+msgid "Reinstall"
+msgstr ""
+
+msgid "Firmware"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "सारांश"
+
+msgid "Remote"
+msgstr ""
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "आकार"
+
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "अद्यतन संदेश"
+
+msgid "Issues"
+msgstr ""
+
+msgid "Suspend full-disk encryption protection before continuing."
+msgstr ""
+
+msgid "This release switches to an alternate firmware branch."
+msgstr ""
+
+msgid "This firmware was built by the community."
+msgstr ""
+
+#, python-brace-format
+msgid "{action} {device} to version {version}?"
+msgstr ""
+
+msgid "Installing firmware"
+msgstr ""
+
+msgid "Firmware installation completed"
+msgstr ""
+
+#, python-brace-format
+msgid "{prefix}: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "{operation}…"
+msgstr ""
+
+msgid "Failed to inspect firmware file"
+msgstr ""
+
+msgid "The firmware archive contains no installable releases"
+msgstr ""
+
+msgid "unknown"
+msgstr ""
+
+msgid "firmware"
+msgstr ""
+
+#, python-brace-format
+msgid "Install {name} version {version} from {path}?"
+msgstr ""
+
+msgid "Local firmware installation completed"
+msgstr ""
+
+msgid "Install Firmware"
+msgstr ""
+
+msgid "Refreshing metadata"
+msgstr ""
+
+msgid "Firmware metadata refreshed"
+msgstr ""
+
+msgid "Enabling LVFS"
+msgstr ""
+
+msgid "LVFS was enabled and its metadata refreshed"
+msgstr ""
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "ठीक है"
+
+#, python-brace-format
+msgid "Failed to load security attributes: {error}"
+msgstr ""
+
+#. TRANSLATORS:  this is the HSI suffix
+msgid "Runtime Suffix"
+msgstr "रनटाइम प्रत्यय"
+
+msgid "Unknown attribute"
+msgstr ""
+
+msgid "Unavailable"
+msgstr ""
+
+msgid "Host Security ID"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} security attributes"
+msgstr ""
+
+msgid "Recent Security Events"
+msgstr ""
+
+msgid "Security attribute"
+msgstr ""
+
+#, python-brace-format
+msgid "{time} {name}: {old} → {new}"
+msgstr ""
+
+#, python-brace-format
+msgid "{device}: {issue}"
+msgstr ""
+
+msgid "Unknown device"
+msgstr ""
+
+msgid "Device Security Issues"
+msgstr ""
+
+msgid "No recent security events"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Level"
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Firmware Setting"
+msgstr ""
+
+msgid "Current Firmware Value"
+msgstr ""
+
+msgid "Target Firmware Value"
+msgstr ""
+
+msgid "Current Kernel Value"
+msgstr ""
+
+msgid "Target Kernel Value"
+msgstr ""
+
+msgid "More Information"
+msgstr ""
+
+msgid "Change the firmware configuration"
+msgstr ""
+
+msgid "Change the operating system configuration"
+msgstr ""
+
+msgid "Contact the hardware vendor"
+msgstr ""
+
+msgid "Suggested Actions"
+msgstr ""
+
+msgid "Unlocking device"
+msgstr ""
+
+msgid "Device unlocked"
+msgstr ""
+
+msgid "Verifying firmware"
+msgstr ""
+
+msgid "Firmware verification succeeded"
+msgstr ""
+
+msgid "Updating verification data"
+msgstr ""
+
+msgid "Verification data updated"
+msgstr ""
+
+msgid "Activating firmware"
+msgstr ""
+
+msgid "Device firmware activated"
+msgstr ""
+
+msgid "Manage firmware and platform security in a terminal interface"
+msgstr ""
+
+#, python-brace-format
+msgid "Failed to initialize fwupd: {error}"
+msgstr ""
+
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
 msgstr "यह फर्मवेयर LVFS समुदाय के सदस्यों द्वारा प्रदान किया जाता है और मूल हार्डवेयर विक्रेता द्वारा प्रदान (या समर्थित) नहीं किया जाता है।"
@@ -426,72 +1018,6 @@ msgstr "इस अद्यतन को स्थापित करने स�
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "विक्रेता ने कोई रिलीज़ नोट उपलब्ध नहीं कराया।"
-
-#. TRANSLATORS: message letting the user know an downgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Downgrade %s from %s to %s?"
-msgstr "%1$s को %2$s से %3$s तक पदावनत करें?"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade %s from %s to %s?"
-msgstr "%1$s को %2$s से %3$s तक उन्नयन करें?"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 is a version string
-#, c-format
-msgid "Reinstall %s to %s?"
-msgstr "%1$s को %2$s पर पुनः स्थापित करें?"
-
-#. TRANSLATORS: warn the user before updating, %1 is a device name
-#, c-format
-msgid "%s and all connected devices may not be usable while updating."
-msgstr "अद्यतन करते समय %s और सभी जुड़े हुए उपकरण उपयोगी नहीं होंगें।"
-
-#. TRANSLATORS: warn the user before
-#. * updating, %1 is a device name
-#.
-#, c-format
-msgid "%s must remain connected for the duration of the update to avoid damage."
-msgstr "क्षति से बचने के लिए %s को अद्यतन की अवधि तक जुड़े रहना चाहिए।"
-
-#. TRANSLATORS: warn the user before updating, %1 is a machine
-#. * name
-#.
-#, c-format
-msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
-msgstr "क्षति से बचने के लिए अद्यतन की अवधि के दौरान %s को ऊर्जा स्रोत से जुड़ा रहना चाहिए।"
-
-#. TRANSLATORS: prompt to apply the update
-msgid "Perform operation?"
-msgstr "अभियान निष्पादित करें?"
-
-#. TRANSLATORS: explain why
-msgid "An update requires the system to shutdown to complete."
-msgstr "अद्यतन को पूरा करने के लिए सिस्टम को शटडाउन करना आवश्यक है।"
-
-#. TRANSLATORS: shutdown to apply the update
-msgid "Shutdown now?"
-msgstr "अभी बंद करें?"
-
-#. TRANSLATORS: explain why we want to reboot
-msgid "An update requires a reboot to complete."
-msgstr "अद्यतन को पूरा करने के लिए रीबूट की आवश्यकता है।"
-
-#. TRANSLATORS: reboot to apply the update
-msgid "Restart now?"
-msgstr "अभी पुनः प्रारंभ करें?"
-
-#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#, c-format
-msgid "Alias to %s"
-msgstr "%s का उपनाम"
-
-#. TRANSLATORS: error message
-msgid "Command not found"
-msgstr "कमांड नहीं मिला"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"
@@ -765,10 +1291,6 @@ msgstr "अधिकतम लंबाई"
 msgid "Possible Values"
 msgstr "संभावित मान"
 
-#. TRANSLATORS: error message
-msgid "Invalid arguments"
-msgstr "अमान्य तर्क"
-
 #. TRANSLATORS: duration in seconds
 #, c-format
 msgid "%u second"
@@ -796,14 +1318,6 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u दिन"
 msgstr[1] "%u दिन"
-
-#. TRANSLATORS: Device cannot be removed easily
-msgid "Internal device"
-msgstr "आंतरिक उपकरण"
-
-#. TRANSLATORS: Device is updatable in this or any other mode
-msgid "Updatable"
-msgstr "अद्यतन-योग्य"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
@@ -904,10 +1418,6 @@ msgstr "उपकरण पहुंच-योग्य नहीं है"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "अद्यतन करते समय पूर्ण डिस्क कूटलेखन रहस्य अमान्य हो सकते हैं"
 
-#. TRANSLATORS: the vendor is no longer supporting the device
-msgid "End of life"
-msgstr "जीवन के अन्त पर"
-
 #. TRANSLATORS: firmware is verified on-device the payload using strong crypto
 msgid "Signed Payload"
 msgstr "हस्ताक्षरित नीतभार"
@@ -964,10 +1474,6 @@ msgstr "असफल"
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "क्षणिक विफलता"
-
-#. TRANSLATORS: the update state of the specific device
-msgid "Needs reboot"
-msgstr "रीबूट आवश्यक"
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low"
@@ -1047,10 +1553,6 @@ msgstr "अज्ञात उपकरण"
 msgid "Device ID"
 msgstr "उपकरण ID"
 
-#. TRANSLATORS: one line summary of device
-msgid "Summary"
-msgstr "सारांश"
-
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "पिछला संस्करण"
@@ -1059,21 +1561,9 @@ msgstr "पिछला संस्करण"
 msgid "Current version"
 msgstr "वर्तमान संस्करण"
 
-#. TRANSLATORS: smallest version number installable on device
-msgid "Minimum Version"
-msgstr "न्यूनतम संस्करण"
-
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
 msgstr ""
-
-#. TRANSLATORS: firmware version of bootloader
-msgid "Bootloader Version"
-msgstr "बूटलोडर संस्करण"
-
-#. TRANSLATORS: manufacturer of hardware
-msgid "Vendor"
-msgstr "विक्रेता"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
@@ -1082,14 +1572,6 @@ msgstr ""
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "रिलीज शाखा"
-
-#. TRANSLATORS: length of time the update takes to apply
-msgid "Install Duration"
-msgstr "स्थापना अवधि"
-
-#. TRANSLATORS: serial number of hardware
-msgid "Serial Number"
-msgstr "क्रमांक"
 
 #. TRANSLATORS: hardware state, e.g. "pending"
 msgid "Update State"
@@ -1104,10 +1586,6 @@ msgstr "%u%% (सीमा %u%%)"
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
 msgstr "बैटरी"
-
-#. TRANSLATORS: error message from last update attempt
-msgid "Update Error"
-msgstr "अद्यतन त्रुटि"
 
 #. TRANSLATORS: reasons the device is not updatable
 msgid "Problems"
@@ -1144,11 +1622,6 @@ msgstr "यदि हार्डवेयर मेल खाता है त�
 #. TRANSLATORS: Plugin is active and in use
 msgid "Ready"
 msgstr ""
-
-#. TRANSLATORS: Plugin is inactive and not used
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Disabled"
-msgstr "अक्षम"
 
 #. TRANSLATORS: not required for this system
 msgid "Required hardware was not found"
@@ -1210,17 +1683,6 @@ msgstr ""
 #. TRANSLATORS: The plugin enumeration might change the device current mode
 msgid "Plugin enumeration may change device state"
 msgstr ""
-
-#. TRANSLATORS: description of plugin state, e.g. disabled
-msgid "Flags"
-msgstr "फ़्लैग"
-
-#. TRANSLATORS: we don't know the license of the update
-#. TRANSLATORS: unknown release urgency
-#. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: current daemon status is unknown
-msgid "Unknown"
-msgstr "अज्ञात"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -1312,10 +1774,6 @@ msgstr "रिमोट ID"
 msgid "Release ID"
 msgstr "रिलीज ID"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree
-msgid "Branch"
-msgstr "शाखा"
-
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "प्रकार"
@@ -1323,10 +1781,6 @@ msgstr "प्रकार"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "लाइसेंस"
-
-#. TRANSLATORS: file size of the download
-msgid "Size"
-msgstr "आकार"
 
 #. TRANSLATORS: when the update was built
 msgid "Created"
@@ -1351,10 +1805,6 @@ msgstr ""
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "अवधि"
-
-#. TRANSLATORS: helpful messages for the update
-msgid "Update Message"
-msgstr "अद्यतन संदेश"
 
 #. TRANSLATORS: helpful image for the update
 msgid "Update Image"
@@ -1470,58 +1920,6 @@ msgstr "अद्यतन प्रक्रिया जारी रखने
 #. TRANSLATORS: warning message
 msgid "The update will continue when the device power cable has been removed and re-inserted."
 msgstr "उपकरण पावर केबल को हटाकर दोबारा डालने पर अद्यतन जारी रहेगा।"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Valid"
-msgstr "मान्य"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Invalid"
-msgstr "अमान्य"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Locked"
-msgstr "बंद"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Unlocked"
-msgstr "Unlocked"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Encrypted"
-msgstr "कूटलेखित"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Unencrypted"
-msgstr "अकूटलेखित"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Tainted"
-msgstr "दूषित"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Untainted"
-msgstr "अदूषित"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Found"
-msgstr "मिला"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Not found"
-msgstr "नहीं मिला"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Supported"
-msgstr "समर्थित"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Not supported"
-msgstr "समर्थित नहीं"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "OK"
-msgstr "ठीक है"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -1641,10 +2039,6 @@ msgstr "होस्ट की सुरक्षा घटनाएं"
 msgid "There are devices with issues:"
 msgstr "ऐसे उपकरण हैं जिनमें समस्याएं हैं:"
 
-#. TRANSLATORS:  this is the HSI suffix
-msgid "Runtime Suffix"
-msgstr "रनटाइम प्रत्यय"
-
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
 msgstr "इस प्रणाली में निम्न HSI सुरक्षा स्तर है।"
@@ -1657,129 +2051,22 @@ msgstr "इस सिस्टम में HSI रनटाइम समस्�
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 पुनर्निर्माण से भिन्न है।"
 
-#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "यह उपकरण एक प्रशासक को fwupd डेमॉन को क्वेरी करने और नियंत्रित करने की अनुमति देता है, जिससे उन्हें फर्मवेयर स्थापित करने या पदावनत करने जैसी कार्रवाइयां करने की अनुमति मिलती है।"
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "फर्मवेयर उपयोगिता"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "सेवा से जुड़ने में असमर्थ"
+
+#. TRANSLATORS: error message
 #, c-format
-msgid "The firmware from %s is not supplied by %s, the hardware vendor."
-msgstr "%1$s के फर्मवेयर की आपूर्ति हार्डवेयर विक्रेता %2$s द्वारा नहीं की जाती है।"
-
-#. TRANSLATORS: %1 is the device vendor name
-#, c-format
-msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
-msgstr "इस फर्मवेयर का उपयोग करने से आपका हार्डवेयर क्षतिग्रस्त हो सकता है, और इस विज्ञप्ति को स्थापित करने से %s के साथ कोई भी वारंटी समाप्त हो सकती है।"
-
-#. TRANSLATORS: show and ask user to confirm --
-#. * %1 is the old branch name, %2 is the new branch name
-#, c-format
-msgid "Switch branch from %s to %s?"
-msgstr "शाखा को %1$s से %2$s में बदलें?"
-
-#. TRANSLATORS: should the branch be changed
-msgid "Do you understand the consequences of changing the firmware branch?"
-msgstr "क्या आप फर्मवेयर शाखा बदलने के परिणामों को समझते हैं?"
-
-#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
-msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "इस फर्मवेयर को अद्यतन करते समय कुछ प्लेटफ़ॉर्म रहस्य अमान्य हो सकते हैं।"
-
-#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
-#. metal thing
-msgid "Please ensure you have the volume recovery key before continuing."
-msgstr "कृपया जारी रखने से पहले सुनिश्चित करें कि आपके पास वॉल्यूम पुनर्प्राप्ति कुंजी है।"
-
-#. TRANSLATORS: the %1 is a URL to a wiki page
-#, c-format
-msgid "See %s for more details."
-msgstr "अधिक विवरण के लिए %s देखें।"
-
-#. TRANSLATORS: title text, shown as a warning
-msgid "Full Disk Encryption Detected"
-msgstr "पूर्ण डिस्क कूटलेखन का पता चला"
-
-#. TRANSLATORS: unsupported build of the package
-msgid "This package has not been validated, it may not work properly."
-msgstr "यह पैकेज सत्यापित नहीं किया गया है, यह ठीक से काम नहीं कर सकता है।"
-
-#. TRANSLATORS: a remote here is like a 'repo' or software source
-msgid "Enable new remote?"
-msgstr "नया रिमोट सक्षम करें?"
-
-#. TRANSLATORS: should the remote still be enabled
-msgid "Agree and enable the remote?"
-msgstr "सहमति दें और रिमोट सक्षम करें?"
-
-#. TRANSLATORS: the user isn't reading the question
-#, c-format
-msgid "Please enter a number from 0 to %u:"
-msgstr ""
-
-#. TRANSLATORS: the user isn't reading the question
-#. -- %1 is 'Y' and %2 is 'N'
-#, c-format
-msgid "Please enter either %s or %s:"
-msgstr ""
-
-#. TRANSLATORS: daemon is inactive
-msgid "Idle…"
-msgstr "निष्क्रिय…"
-
-#. TRANSLATORS: decompressing the firmware file
-msgid "Decompressing…"
-msgstr "विसंपीड़न…"
-
-#. TRANSLATORS: parsing the firmware information
-msgid "Loading…"
-msgstr "लोड हो रहा है…"
-
-#. TRANSLATORS: restarting the device to pick up new F/W
-msgid "Restarting device…"
-msgstr "उपकरण पुनः प्रारंभ हो रहा है…"
-
-#. TRANSLATORS: reading from the flash chips
-msgid "Reading…"
-msgstr "पढ़ा जा रहा है…"
-
-#. TRANSLATORS: writing to the flash chips
-msgid "Writing…"
-msgstr "लिखा जा रहा है…"
-
-#. TRANSLATORS: erasing contents of the flash chips
-msgid "Erasing…"
-msgstr "मिटाया जा रहा है…"
-
-#. TRANSLATORS: verifying we wrote the firmware correctly
-msgid "Verifying…"
-msgstr "सत्यापन किया जा रहा है…"
-
-#. TRANSLATORS: scheduling an update to be done on the next boot
-msgid "Scheduling…"
-msgstr "समय-निर्धारण…"
-
-#. TRANSLATORS: downloading from a remote server
-msgid "Downloading…"
-msgstr "डाउनलोड किया जा रहा है…"
-
-#. TRANSLATORS: waiting for user to authenticate
-msgid "Authenticating…"
-msgstr "प्रमाणीकरण किया जा रहा है…"
-
-#. TRANSLATORS: waiting for device to do something
-msgid "Waiting…"
-msgstr "प्रतीक्षा की जा रही है…"
-
-#. TRANSLATORS: time remaining for completing firmware flash
-msgid "Less than one minute remaining"
-msgstr "एक मिनट से भी कम समय शेष"
-
-#. TRANSLATORS: more than a minute
-#, c-format
-msgid "%.0f minute remaining"
-msgid_plural "%.0f minutes remaining"
-msgstr[0] "%.0f मिनट शेष"
-msgstr[1] "%.0f मिनट शेष"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING"
-msgstr "चेतावनी"
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "असमर्थित डेमॉन संस्करण %s, क्लाइंट संस्करण %s है"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -1804,13 +2091,117 @@ msgstr "%s पर स्थापित हो रहा है…"
 msgid "Selected device"
 msgstr "चयनित उपकरण"
 
-#. TRANSLATORS: this is to abort the interactive prompt
-msgid "Cancel"
-msgstr "रद्द करें"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose device"
 msgstr "उपकरण चुनें"
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "आपका सिस्टम %s के BKC पर निर्धारित है।"
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "%2$s कमांड निष्पादित होने पर यह उपकरण वापस %1$s पर वापस आ जाएगा।"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know works
+#. * well together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "सर्वोत्तम ज्ञात विन्यास से विचलन?"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "अभियान निष्पादित करें?"
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "%1$s को %2$s से %3$s तक पदावनत करें?"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade %s from %s to %s?"
+msgstr "%1$s को %2$s से %3$s तक उन्नयन करें?"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "%1$s को %2$s पर पुनः स्थापित करें?"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "अद्यतन करते समय %s और सभी जुड़े हुए उपकरण उपयोगी नहीं होंगें।"
+
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
+#.
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "क्षति से बचने के लिए %s को अद्यतन की अवधि तक जुड़े रहना चाहिए।"
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
+#.
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "क्षति से बचने के लिए अद्यतन की अवधि के दौरान %s को ऊर्जा स्रोत से जुड़ा रहना चाहिए।"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "इस फर्मवेयर को अद्यतन करते समय कुछ प्लेटफ़ॉर्म रहस्य अमान्य हो सकते हैं।"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "कृपया जारी रखने से पहले सुनिश्चित करें कि आपके पास वॉल्यूम पुनर्प्राप्ति कुंजी है।"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "अधिक विवरण के लिए %s देखें।"
+
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "पूर्ण डिस्क कूटलेखन का पता चला"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "%1$s के फर्मवेयर की आपूर्ति हार्डवेयर विक्रेता %2$s द्वारा नहीं की जाती है।"
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "इस फर्मवेयर का उपयोग करने से आपका हार्डवेयर क्षतिग्रस्त हो सकता है, और इस विज्ञप्ति को स्थापित करने से %s के साथ कोई भी वारंटी समाप्त हो सकती है।"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "शाखा को %1$s से %2$s में बदलें?"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "क्या आप फर्मवेयर शाखा बदलने के परिणामों को समझते हैं?"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "नया रिमोट सक्षम करें?"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "सहमति दें और रिमोट सक्षम करें?"
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "यह पैकेज सत्यापित नहीं किया गया है, यह ठीक से काम नहीं कर सकता है।"
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
@@ -1840,6 +2231,22 @@ msgstr "क्या आप भविष्य के अद्यतन के 
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "क्या आप भविष्य के अद्यतन के लिए स्वचालित रूप से रिपोर्ट अपलोड करना चाहते हैं?"
 
+#. TRANSLATORS: explain why
+msgid "An update requires the system to shutdown to complete."
+msgstr "अद्यतन को पूरा करने के लिए सिस्टम को शटडाउन करना आवश्यक है।"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "अभी बंद करें?"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "अद्यतन को पूरा करने के लिए रीबूट की आवश्यकता है।"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "अभी पुनः प्रारंभ करें?"
+
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
 msgstr ""
@@ -1847,10 +2254,6 @@ msgstr ""
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "फर्मवेयर अद्यतन क्षमता वाला कोई हार्डवेयर नहीं मिला"
-
-#. TRANSLATORS: success message
-msgid "Successfully installed firmware"
-msgstr "फर्मवेयर सफलतापूर्वक स्थापित किया गया"
 
 #. TRANSLATORS: this is for the device tests
 msgid "Did not find any devices with matching GUIDs"
@@ -1894,6 +2297,10 @@ msgid_plural "%u tests were skipped"
 msgstr[0] ""
 msgstr[1] ""
 
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "फर्मवेयर सफलतापूर्वक स्थापित किया गया"
+
 #. show the user the entire data blob
 msgid "Target"
 msgstr "लक्ष्य"
@@ -1927,6 +2334,10 @@ msgstr "सहेजी गई रिपोर्ट"
 #. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
 #, c-format
 msgid "%s is pending activation; use %s to complete the update."
+msgstr ""
+
+#. TRANSLATORS: where the user has uploaded success and/or failure report to the server
+msgid "Successfully uploaded report"
 msgstr ""
 
 #. TRANSLATORS: success message when user refreshes device checksums
@@ -2014,16 +2425,9 @@ msgstr "अभी अद्यतन करें?"
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device
-#. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no
-#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
 msgstr ""
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device
-#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available
@@ -2042,25 +2446,7 @@ msgstr "कोई अद्यतन उपलब्ध नहीं"
 msgid "No remotes available"
 msgstr "कोई रिमोट उपलब्ध नहीं"
 
-#. TRANSLATORS: BKC is the industry name for the best known configuration and is a set
-#. * of firmware that works together
-#, c-format
-msgid "Your system is set up to the BKC of %s."
-msgstr "आपका सिस्टम %s के BKC पर निर्धारित है।"
-
-#. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync`
-#, c-format
-msgid "This device will be reverted back to %s when the %s command is performed."
-msgstr "%2$s कमांड निष्पादित होने पर यह उपकरण वापस %1$s पर वापस आ जाएगा।"
-
-#. TRANSLATORS: the best known configuration is a set of software that we know works
-#. * well together. In the OEM and ODM industries it is often called a BKC
-msgid "Deviate from the best known configuration?"
-msgstr "सर्वोत्तम ज्ञात विन्यास से विचलन?"
-
 #. TRANSLATORS: there are reasons the device can't update
-#. TRANSLATORS: there is a reason the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
 msgstr ""
@@ -2196,19 +2582,146 @@ msgstr "होस्ट सुरक्षा ID (HSI) समर्थित न
 msgid "Host Security ID:"
 msgstr "होस्ट सुरक्षा ID:"
 
-#. TRANSLATORS: error message
-msgid "Unable to connect to service"
-msgstr "सेवा से जुड़ने में असमर्थ"
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "क्लाइंट और डेमॉन संस्करण दिखाएं"
+
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "फाइल डाउनलोड करते समय केवल पियर-टू-पियर नेटवर्किंग का उपयोग करें"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "प्रमाणीकरण के लिए संकेत न दें (कम विवरण दिखाया जा सकता है)"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "मौजूदा फर्मवेयर संस्करणों को पुनः स्थापित करने की अनुमति दें"
+
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr "फर्मवेयर संस्करणों को अपग्रेड करने की अनुमति दें"
+
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "फर्मवेयर शाखा बदलने की अनुमति दें"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "कुछ रनटाइम जांचों में ढील देकर कार्रवाई को बाध्य करें"
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "सभी प्रश्नों का उत्तर हां में दें"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "क्लाइंट प्रमाणपत्र के साथ अपलोड किए गए डेटा पर हस्ताक्षर करें"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "असूचित इतिहास की जांच न करें"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "पुराने मेटाडेटा की जांच न करें"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "यह जांच न करें कि क्या डाउनलोड रिमोट सक्षम होना चाहिए"
+
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "अद्यतन के बाद रीबूट के लिए जांच या संकेत न करें"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "उपकरण सुरक्षा जांच न करें"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "उपकरणों के लिए संकेत न दें"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "सभी परिणाम दिखाएं"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "वे उपकरण दिखाएं जो अद्यतन करने योग्य नहीं हैं"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "फाइलें डाउनलोड करते समय SSL की सख्त जांच पर ध्यान न दें"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr "सुरक्षा समस्याओं को ठीक करने के लिए संकेत न दें"
+
+#. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "इतिहास डेटाबेस में न लिखें"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "बहिष्कृत करने के लिए ~ उपसर्ग का उपयोग करके उपकरण फ्लैग के समूह के साथ फिल्टर करें, उदाहरण के लिए 'internal,~needs-reboot'"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "बाहर करने के लिए ~ उपसर्ग का उपयोग करके रिलीज़ फ्लैग के समूह के साथ फिल्टर करें, उदाहरण के लिए 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr ""
+
+#. TRANSLATORS: for the --verbose arg
+msgid "CLI Options"
+msgstr ""
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show CLI options"
+msgstr ""
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "%s का उपनाम"
 
 #. TRANSLATORS: error message
-#, c-format
-msgid "Unsupported daemon version %s, client version is %s"
-msgstr "असमर्थित डेमॉन संस्करण %s, क्लाइंट संस्करण %s है"
+msgid "Command not found"
+msgstr "कमांड नहीं मिला"
+
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "डेमॉन ने तृतीय पक्ष कोड लोड कर दिया है और अब यह अपस्ट्रीम डेवलपर्स द्वारा समर्थित नहीं है!"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
 msgstr "अधिक जानकारी के लिए %s देखें।"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "अमान्य तर्क"
 
 #. TRANSLATORS: Configured a BIOS setting to a value
 #, c-format
@@ -2271,7 +2784,6 @@ msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
 #. TRANSLATORS: this is from ctrl+c
-#. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
 msgstr "रद्द"
 
@@ -2291,109 +2803,9 @@ msgstr "उपकरण बदला गया:"
 msgid "Changed"
 msgstr "बदल गया"
 
-#. TRANSLATORS: command line option
-msgid "Show client and daemon versions"
-msgstr "क्लाइंट और डेमॉन संस्करण दिखाएं"
-
-#. TRANSLATORS: command line option
-msgid "Set the download retries for transient errors"
-msgstr ""
-
-#. TRANSLATORS: command line option
-msgid "Allow reinstalling existing firmware versions"
-msgstr "मौजूदा फर्मवेयर संस्करणों को पुनः स्थापित करने की अनुमति दें"
-
-#. TRANSLATORS: command line option
-msgid "Allow downgrading firmware versions"
-msgstr "फर्मवेयर संस्करणों को अपग्रेड करने की अनुमति दें"
-
-#. TRANSLATORS: command line option
-msgid "Allow switching firmware branch"
-msgstr "फर्मवेयर शाखा बदलने की अनुमति दें"
-
-#. TRANSLATORS: command line option
-msgid "Only install onto emulated devices"
-msgstr ""
-
-#. TRANSLATORS: command line option
-msgid "Force the action by relaxing some runtime checks"
-msgstr "कुछ रनटाइम जांचों में ढील देकर कार्रवाई को बाध्य करें"
-
-#. TRANSLATORS: command line option
-msgid "Answer yes to all questions"
-msgstr "सभी प्रश्नों का उत्तर हां में दें"
-
-#. TRANSLATORS: command line option
-msgid "Sign the uploaded data with the client certificate"
-msgstr "क्लाइंट प्रमाणपत्र के साथ अपलोड किए गए डेटा पर हस्ताक्षर करें"
-
-#. TRANSLATORS: command line option
-msgid "Do not check for unreported history"
-msgstr "असूचित इतिहास की जांच न करें"
-
-#. TRANSLATORS: command line option
-msgid "Do not check for old metadata"
-msgstr "पुराने मेटाडेटा की जांच न करें"
-
-#. TRANSLATORS: command line option
-msgid "Do not check if download remotes should be enabled"
-msgstr "यह जांच न करें कि क्या डाउनलोड रिमोट सक्षम होना चाहिए"
-
-#. TRANSLATORS: command line option
-msgid "Do not check or prompt for reboot after update"
-msgstr "अद्यतन के बाद रीबूट के लिए जांच या संकेत न करें"
-
-#. TRANSLATORS: command line option
-msgid "Do not perform device safety checks"
-msgstr "उपकरण सुरक्षा जांच न करें"
-
-#. TRANSLATORS: command line option
-msgid "Do not prompt for devices"
-msgstr "उपकरणों के लिए संकेत न दें"
-
-#. TRANSLATORS: command line option
-msgid "Do not write to the history database"
-msgstr "इतिहास डेटाबेस में न लिखें"
-
-#. TRANSLATORS: command line option
-msgid "Show all results"
-msgstr "सभी परिणाम दिखाएं"
-
-#. TRANSLATORS: command line option
-msgid "Show devices that are not updatable"
-msgstr "वे उपकरण दिखाएं जो अद्यतन करने योग्य नहीं हैं"
-
-#. TRANSLATORS: command line option
-msgid "Ignore SSL strict checks when downloading files"
-msgstr "फाइलें डाउनलोड करते समय SSL की सख्त जांच पर ध्यान न दें"
-
-#. TRANSLATORS: command line option
-msgid "Only use peer-to-peer networking when downloading files"
-msgstr "फाइल डाउनलोड करते समय केवल पियर-टू-पियर नेटवर्किंग का उपयोग करें"
-
-#. TRANSLATORS: command line option
-msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "बहिष्कृत करने के लिए ~ उपसर्ग का उपयोग करके उपकरण फ्लैग के समूह के साथ फिल्टर करें, उदाहरण के लिए 'internal,~needs-reboot'"
-
-#. TRANSLATORS: command line option
-msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
-msgstr "बाहर करने के लिए ~ उपसर्ग का उपयोग करके रिलीज़ फ्लैग के समूह के साथ फिल्टर करें, उदाहरण के लिए 'trusted-release,~trusted-metadata'"
-
-#. TRANSLATORS: command line option
-msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format (disables all interactive prompts)"
-msgstr ""
-
-#. TRANSLATORS: command line option
-msgid "Do not prompt to fix security issues"
-msgstr "सुरक्षा समस्याओं को ठीक करने के लिए संकेत न दें"
-
-#. TRANSLATORS: command line option
-msgid "Don't prompt for authentication (less details may be shown)"
-msgstr "प्रमाणीकरण के लिए संकेत न दें (कम विवरण दिखाया जा सकता है)"
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "सिस्टम के साथ पंजीकृत सभी सक्षम प्लगइन्स प्राप्त करें"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
@@ -2583,10 +2995,6 @@ msgstr "होस्ट सुरक्षा विशेषताएं प्
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "फर्मवेयर संस्करणों को चुने हुए विन्यास में समन्वयित करें"
 
-#. TRANSLATORS: command description
-msgid "Get all enabled plugins registered with the system"
-msgstr "सिस्टम के साथ पंजीकृत सभी सक्षम प्लगइन्स प्राप्त करें"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
 msgstr "स्थान"
@@ -2683,14 +3091,6 @@ msgstr "मशीन के लिए सभी हार्डवेयर ID �
 msgid "Monitor the daemon for events"
 msgstr "घटनाओं के लिए डेमॉन पर नजर रखें"
 
-#. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
-msgstr "यह उपकरण एक प्रशासक को fwupd डेमॉन को क्वेरी करने और नियंत्रित करने की अनुमति देता है, जिससे उन्हें फर्मवेयर स्थापित करने या पदावनत करने जैसी कार्रवाइयां करने की अनुमति मिलती है।"
-
-#. TRANSLATORS: program name
-msgid "Firmware Utility"
-msgstr "फर्मवेयर उपयोगिता"
-
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "भविष्य में स्वचालित रूप से ऐसा करने के लिए SSL सख्त जांचों को नजरअंदाज करते हुए अपने परिवेश में DISABLE_SSL_STRICT निर्यात करें"
@@ -2699,41 +3099,93 @@ msgstr "भविष्य में स्वचालित रूप से �
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "सिस्टम घड़ी सही ढंग से निर्धारित नहीं की गई है और फाइलें डाउनलोड करना विफल हो सकता है।"
 
-#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
-#. TRANSLATORS: the user didn't read the man page,
-#. * %1 is '--filter-release'
-#. TRANSLATORS: the user didn't read the man page, %1 is
-#. '--filter-protocol'
-#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
-#. TRANSLATORS: the user didn't read the man page,
-#. * %1 is '--filter-release'
+#. TRANSLATORS: explain how to get help,
+#. * where $1 is something like 'fwupdmgr --help'
 #, c-format
-msgid "Failed to parse flags for %s"
+msgid "Use %s for help"
+msgstr "सहायता के लिए %s का उपयोग करें"
+
+#. TRANSLATORS: the user just typed in fwupdmgr with no command
+msgid "No command specified"
 msgstr ""
-
-#. TRANSLATORS: error message for Windows
-msgid "Failed to connect to Windows service, please ensure it's running."
-msgstr "Windows सेवा से जुड़ने में विफल, कृपया सुनिश्चित करें कि यह चल रही है।"
-
-#. TRANSLATORS: could not contact the fwupd service over D-Bus
-msgid "Failed to connect to daemon"
-msgstr "डेमॉन से जुड़ने में विफल"
-
-#. TRANSLATORS: the user is SOL for support...
-msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
-msgstr "डेमॉन ने तृतीय पक्ष कोड लोड कर दिया है और अब यह अपस्ट्रीम डेवलपर्स द्वारा समर्थित नहीं है!"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
 msgstr "फ्रंट-एंड सुविधाएं निर्धारित करने में विफल"
 
-#. TRANSLATORS: explain how to get help,
-#. * where $1 is something like 'fwupdmgr --help'
-#. TRANSLATORS: explain how to get help, %1 is
-#. * 'fwupdtool --help'
+#. TRANSLATORS: the user isn't reading the question
 #, c-format
-msgid "Use %s for help"
-msgstr "सहायता के लिए %s का उपयोग करें"
+msgid "Please enter a number from 0 to %u:"
+msgstr ""
+
+#. TRANSLATORS: the user isn't reading the question
+#. -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s:"
+msgstr ""
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "निष्क्रिय…"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "विसंपीड़न…"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "उपकरण पुनः प्रारंभ हो रहा है…"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "पढ़ा जा रहा है…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "लिखा जा रहा है…"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "मिटाया जा रहा है…"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "सत्यापन किया जा रहा है…"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "समय-निर्धारण…"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "डाउनलोड किया जा रहा है…"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "प्रमाणीकरण किया जा रहा है…"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "प्रतीक्षा की जा रही है…"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "एक मिनट से भी कम समय शेष"
+
+#. TRANSLATORS: more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f मिनट शेष"
+msgstr[1] "%.0f मिनट शेष"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "चेतावनी"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
@@ -2763,18 +3215,6 @@ msgstr "डिबगिंग विकल्प दिखाएं"
 msgid "Failed to lock"
 msgstr "लॉक करने में विफल"
 
-msgid "No updates available for remaining devices"
-msgstr "शेष उपकरणों के लिए कोई अद्यतन उपलब्ध नहीं है"
-
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Reading from %s…"
-msgstr "%s से पढ़ा जा रहा है…"
-
-#. TRANSLATORS: success message -- a per-system setting value
-msgid "Successfully reset configuration section"
-msgstr ""
-
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr ""
@@ -2782,10 +3222,6 @@ msgstr ""
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
 msgstr ""
-
-#. TRANSLATORS: shown when shutting down to switch to the new version
-msgid "Activating firmware update"
-msgstr "फर्मवेयर अद्यतन सक्रिय किया जा रहा है"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -2802,10 +3238,6 @@ msgstr "फर्मवेयर चुनें"
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
 msgstr "फाइल लेखन:"
-
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-msgid "Metadata is already up to date"
-msgstr ""
 
 #. TRANSLATORS: Volume has been chosen by the user
 msgid "Selected volume"
@@ -2899,10 +3331,6 @@ msgstr "किसी फाइल से SMBIOS डेटा डंप करे
 msgid "Get all device flags supported by fwupd"
 msgstr "fwupd द्वारा समर्थित सभी उपकरण फ्लैग प्राप्त करें"
 
-#. TRANSLATORS: command description
-msgid "Watch for hardware changes"
-msgstr "हार्डवेयर परिवर्तनों पर नजर रखें"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID [VERSION]"
 msgstr ""
@@ -2910,14 +3338,6 @@ msgstr ""
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
 msgstr "किसी उपकरण पर रॉ फर्मवेयर ब्लॉब स्थापित करें"
-
-#. TRANSLATORS: command description
-msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
-msgstr "किसी उपकरण पर एक विशिष्ट फर्मवेयर स्थापित करें, CAB मैच होने पर सभी संभावित उपकरण भी स्थापित कर दिए जाएंगे"
-
-#. TRANSLATORS: command description
-msgid "Reinstall firmware on a device"
-msgstr "उपकरण पर फर्मवेयर पुनः स्थापित करें"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -2943,14 +3363,6 @@ msgstr "उपप्रणाली ड्राइवर [उपकरण-ID|GU
 msgid "Bind new kernel driver"
 msgstr "नये कर्नेल ड्राइवर को बाइंड करें"
 
-#. TRANSLATORS: command description
-msgid "Activate pending devices"
-msgstr "लंबित उपकरणों को सक्रिय करें"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SMBIOS-FILE|HWIDS-FILE]"
-msgstr "[SMBIOS-फाइल|HWIDS-फाइल]"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "HWIDS-FILE"
 msgstr "HWIDS-फाइल"
@@ -2967,10 +3379,6 @@ msgstr "पाठ"
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "क्लाइंट प्रमाणपत्र का उपयोग कर डेटा पर हस्ताक्षर करें"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current contents"
-msgstr "संग्रहीत मेटाडेटा को वर्तमान सामग्री के साथ अद्यतन करें"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME CERTIFICATE PRIVATE-KEY"
@@ -3040,14 +3448,6 @@ msgstr "उपलब्ध फर्मवेयर प्रकारों क
 msgid "List the available firmware GTypes"
 msgstr "उपलब्ध फर्मवेयर GTypes की सूची बनाएं"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FWUPD-VERSION]"
-msgstr ""
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "EMULATION-FILE [ARCHIVE-FILE]"
-msgstr ""
-
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
 msgstr "ESP माउंट करता है"
@@ -3060,25 +3460,9 @@ msgstr "ESP को अनमाउंट करता है"
 msgid "Lists files on the ESP"
 msgstr "ESP पर फाइलें सूचीबद्ध करता है"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "DEVICE-ID"
-msgstr ""
-
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "सभी फर्मवेयर अद्यतन इतिहास मिटाएं"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [SETTING2]…"
-msgstr ""
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "SETTING VALUE"
-msgstr "सेटिंग मान"
-
-#. TRANSLATORS: command description
-msgid "Set a BIOS setting"
-msgstr "BIOS सेटिंग निर्धारित करें"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
@@ -3911,6 +4295,49 @@ msgstr ""
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
+
+#~ msgid "Enable"
+#~ msgstr "सक्षम करें"
+
+#~ msgid "Failed to connect to Windows service, please ensure it's running."
+#~ msgstr "Windows सेवा से जुड़ने में विफल, कृपया सुनिश्चित करें कि यह चल रही है।"
+
+#~ msgid "Failed to connect to daemon"
+#~ msgstr "डेमॉन से जुड़ने में विफल"
+
+#~ msgid "No updates available for remaining devices"
+#~ msgstr "शेष उपकरणों के लिए कोई अद्यतन उपलब्ध नहीं है"
+
+#, c-format
+#~ msgid "Reading from %s…"
+#~ msgstr "%s से पढ़ा जा रहा है…"
+
+#~ msgid "Activating firmware update"
+#~ msgstr "फर्मवेयर अद्यतन सक्रिय किया जा रहा है"
+
+#~ msgid "Watch for hardware changes"
+#~ msgstr "हार्डवेयर परिवर्तनों पर नजर रखें"
+
+#~ msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+#~ msgstr "किसी उपकरण पर एक विशिष्ट फर्मवेयर स्थापित करें, CAB मैच होने पर सभी संभावित उपकरण भी स्थापित कर दिए जाएंगे"
+
+#~ msgid "Reinstall firmware on a device"
+#~ msgstr "उपकरण पर फर्मवेयर पुनः स्थापित करें"
+
+#~ msgid "Activate pending devices"
+#~ msgstr "लंबित उपकरणों को सक्रिय करें"
+
+#~ msgid "[SMBIOS-FILE|HWIDS-FILE]"
+#~ msgstr "[SMBIOS-फाइल|HWIDS-फाइल]"
+
+#~ msgid "Update the stored metadata with current contents"
+#~ msgstr "संग्रहीत मेटाडेटा को वर्तमान सामग्री के साथ अद्यतन करें"
+
+#~ msgid "SETTING VALUE"
+#~ msgstr "सेटिंग मान"
+
+#~ msgid "Set a BIOS setting"
+#~ msgstr "BIOS सेटिंग निर्धारित करें"
 
 #~ msgid "Password"
 #~ msgstr "पासवर्ड"
