@@ -29,7 +29,7 @@ fu_uefi_cod_device_get_results_for_idx(FuUefiCodDevice *self, guint idx, GError 
 	g_autoptr(FuStructEfiCapsuleResultVariableHeader) st = NULL;
 
 	/* read out result */
-	name = g_strdup_printf("Capsule%04u", idx);
+	name = g_strdup_printf("Capsule%04X", idx);
 	blob = fu_efivars_get_data_bytes(efivars,
 					 FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
 					 name,
@@ -146,7 +146,7 @@ fu_uefi_cod_device_get_variable_idx(FuUefiCodDevice *self,
 			 &tmp,
 			 0,
 			 G_MAXUINT32,
-			 FU_INTEGER_BASE_AUTO,
+			 FU_INTEGER_BASE_16,
 			 error))
 		return FALSE;
 	if (value != NULL)
