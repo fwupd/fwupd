@@ -276,6 +276,63 @@ fu_uefi_cod_device_func(void)
 			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_AUTH_ERROR);
 }
 
+static void
+fu_uefi_cod_device_hex_idx_func(void)
+{
+	/* the firmware writes the capsule index in hexadecimal, so CapsuleLast
+	 * can be e.g. "Capsule000A" -- which is index 10 and not a parse error */
+	const gchar *idxs[] = {"Capsule0009", "Capsule000A", "Capsule000F", "Capsule0010", NULL};
+
+	for (guint i = 0; idxs[i] != NULL; i++) {
+		gboolean ret;
+		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+		g_autoptr(FuDevice) dev = NULL;
+		g_autoptr(GBytes) cap = NULL;
+		g_autoptr(GBytes) last = NULL;
+		g_autoptr(GError) error = NULL;
+		FuEfivars *efivars = fu_context_get_efivars(ctx);
+
+		last = fu_utf8_to_utf16_bytes(idxs[i],
+					      G_LITTLE_ENDIAN,
+					      FU_UTF_CONVERT_FLAG_NONE,
+					      &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(last);
+		ret = fu_efivars_set_data_bytes(efivars,
+						FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+						"CapsuleLast",
+						last,
+						0,
+						&error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		cap = fu_uefi_cod_device_build_efi_result("cc4cbfa9-bf9d-540b-b92b-172ce31013c1");
+		ret = fu_efivars_set_data_bytes(efivars,
+						FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+						idxs[i],
+						cap,
+						0,
+						&error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		/* the result is stored with a hexadecimal variable name */
+		dev = g_object_new(FU_TYPE_UEFI_COD_DEVICE,
+				   "context",
+				   ctx,
+				   "fw-class",
+				   "cc4cbfa9-bf9d-540b-b92b-172ce31013c1",
+				   NULL);
+		ret = fu_device_get_results(dev, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_assert_cmpint(fu_uefi_capsule_device_get_status(FU_UEFI_CAPSULE_DEVICE(dev)),
+				==,
+				FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_AUTH_ERROR);
+	}
+}
+
 #ifndef EFI_OS_DIR
 #define EFI_OS_DIR "systemd"
 #endif
@@ -1057,6 +1114,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-capsule/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func("/uefi-capsule/bitmap", fu_uefi_bitmap_func);
 	g_test_add_func("/uefi-capsule/cod-device", fu_uefi_cod_device_func);
+	g_test_add_func("/uefi-capsule/cod-device/hex-idx", fu_uefi_cod_device_hex_idx_func);
 	g_test_add_func("/uefi-capsule/update-info", fu_uefi_update_info_func);
 	g_test_add_func("/uefi-capsule/update-info/xml", fu_uefi_update_info_xml_func);
 	g_test_add_func("/uefi-capsule/no-coalesce", fu_uefi_capsule_no_coalesce_func);
