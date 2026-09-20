@@ -1,0 +1,12 @@
+# Realtek eDP Scaler (AIO integrated display, update via PCH SMBus i801)
+#
+# The device is identified by the EDID of the built-in panel, which fwupd
+# reads from the DRM device and turns into DRM\VEN_<PNP>&DEV_<product code>.
+# The update channel itself is a *separate* SMBus link on the PCH i801 adapter
+# (bus number varies between boots; the plugin finds it by name).
+[DRM\VEN_RTK&DEV_01BF]
+Plugin = realtek_edpscaler
+GType = FuRealtekEdpscalerDevice
+Name = Realtek eDP Scaler
+Summary = Realtek eDP Scaler (SMBus)
+Vendor = Realtek
