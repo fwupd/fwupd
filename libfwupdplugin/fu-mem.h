@@ -11,6 +11,10 @@
 #include "fu-endian.h"
 
 gboolean
+fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
 fu_memcmp_safe(const guint8 *buf1,
 	       gsize buf1_sz,
 	       gsize buf1_offset,

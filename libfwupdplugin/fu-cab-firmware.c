@@ -18,7 +18,7 @@
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-input-stream.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"

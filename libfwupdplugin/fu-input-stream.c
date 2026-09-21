@@ -12,7 +12,7 @@
 #include "fu-crc-private.h"
 #include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-sum.h"
 
 static void

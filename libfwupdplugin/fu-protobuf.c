@@ -11,7 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-fuzzer.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-protobuf-struct.h"
 #include "fu-protobuf.h"
 
