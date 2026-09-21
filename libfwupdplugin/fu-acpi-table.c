@@ -140,6 +140,92 @@ fu_acpi_table_get_payload(FuAcpiTable *self, GError **error)
 	return g_object_ref(priv->payload);
 }
 
+/**
+ * fu_acpi_table_set_revision:
+ * @self: a #FuAcpiTable
+ * @revision: an integer
+ *
+ * Sets the revision of the table.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_acpi_table_set_revision(FuAcpiTable *self, guint8 revision)
+{
+	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_ACPI_TABLE(self));
+	priv->revision = revision;
+}
+
+/**
+ * fu_acpi_table_set_oem_id:
+ * @self: a #FuAcpiTable
+ * @oem_id: a string
+ *
+ * Sets the OEM ID.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_acpi_table_set_oem_id(FuAcpiTable *self, const gchar *oem_id)
+{
+	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_ACPI_TABLE(self));
+	g_set_str(&priv->oem_id, oem_id);
+}
+
+/**
+ * fu_acpi_table_set_oem_table_id:
+ * @self: a #FuAcpiTable
+ * @oem_table_id: a string
+ *
+ * Sets the OEM table ID.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_acpi_table_set_oem_table_id(FuAcpiTable *self, const gchar *oem_table_id)
+{
+	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_ACPI_TABLE(self));
+	g_set_str(&priv->oem_table_id, oem_table_id);
+}
+
+/**
+ * fu_acpi_table_set_oem_revision:
+ * @self: a #FuAcpiTable
+ * @oem_revision: an integer
+ *
+ * Sets the OEM revision.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_acpi_table_set_oem_revision(FuAcpiTable *self, guint32 oem_revision)
+{
+	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_ACPI_TABLE(self));
+	priv->oem_revision = oem_revision;
+}
+
+/**
+ * fu_acpi_table_set_payload:
+ * @self: a #FuAcpiTable
+ * @payload: (nullable): a #FuInputStream
+ *
+ * Sets the payload after the ACPI header.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_acpi_table_set_payload(FuAcpiTable *self, FuInputStream *payload)
+{
+	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_ACPI_TABLE(self));
+	g_return_if_fail(payload == NULL || FU_IS_INPUT_STREAM(payload));
+	g_set_object(&priv->payload, payload);
+}
+
 static gboolean
 fu_acpi_table_parse(FuFirmware *firmware,
 		    FuInputStream *stream,

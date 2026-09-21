@@ -514,6 +514,7 @@ if get_option('tests')
   )
 
   foreach test_name : [
+    'acpi-table',
     'backend',
     'byte-array',
     'bytes',

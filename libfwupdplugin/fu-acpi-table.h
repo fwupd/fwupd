@@ -28,7 +28,19 @@ const gchar *
 fu_acpi_table_get_oem_table_id(FuAcpiTable *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 guint32
 fu_acpi_table_get_oem_revision(FuAcpiTable *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+
+void
+fu_acpi_table_set_revision(FuAcpiTable *self, guint8 revision) G_GNUC_NON_NULL(1);
+void
+fu_acpi_table_set_oem_id(FuAcpiTable *self, const gchar *oem_id) G_GNUC_NON_NULL(1);
+void
+fu_acpi_table_set_oem_table_id(FuAcpiTable *self, const gchar *oem_table_id) G_GNUC_NON_NULL(1);
+void
+fu_acpi_table_set_oem_revision(FuAcpiTable *self, guint32 oem_revision) G_GNUC_NON_NULL(1);
+
 FuInputStream *
 fu_acpi_table_get_payload(FuAcpiTable *self, GError **error) G_GNUC_NON_NULL(1);
+void
+fu_acpi_table_set_payload(FuAcpiTable *self, FuInputStream *payload) G_GNUC_NON_NULL(1);
 
 G_END_DECLS
