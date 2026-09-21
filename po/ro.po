@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-09-20 12:56+0000\n"
+"PO-Revision-Date: 2026-09-21 17:51+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
 "Language: ro\n"
@@ -52,7 +52,7 @@ msgid "Memory Encryption"
 msgstr "Criptarea memoriei"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Memorie video dedicată"
 
 msgid "Camera"
 msgstr "Aparat foto"
@@ -407,67 +407,67 @@ msgid "No action specified!"
 msgstr "Nicio acțiune specificată!"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "Opțiune fără nume"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "Alegeți una dintre valorile disponibile"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Introduceți un număr întreg valid"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "Valoarea trebuie să fie între {lower} și {upper}"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Valoarea trebuie să utilizeze un increment de {increment}"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "Lungimea textului trebuie să fie între {lower} și {upper}"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Acest tip de opțiune nu poate fi modificat"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Anulează"
 
 msgid "Save"
-msgstr ""
+msgstr "Salvează"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Instalează firmware local"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Ruta către o arhivă de firmware .cab"
 
 msgid "Continue"
-msgstr ""
+msgstr "Continuă"
 
 msgid "File not found"
-msgstr ""
+msgstr "Fișierul nu a fost găsit"
 
 msgid "bytes"
-msgstr ""
+msgstr "octeți"
 
 msgid "KB"
-msgstr ""
+msgstr "Ko"
 
 msgid "MB"
-msgstr ""
+msgstr "Mo"
 
 msgid "GB"
-msgstr ""
+msgstr "Go"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} secunde"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} minute"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -528,103 +528,103 @@ msgid "Not supported"
 msgstr "Necompatibil"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "Nivel HSI-1 «critic»"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "Nivel HSI-2 «important»"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "Nivel HSI-3 «teoretic»"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "Nivel HSI-4 «protecție sistem»"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "Nivel HSI-5 «atestare sistem»"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Gestionarea firmware-ului"
 
 msgid "Quit"
-msgstr ""
+msgstr "Ieșire"
 
 msgid "Home"
-msgstr ""
+msgstr "Ecranul inițal"
 
 msgid "Search"
-msgstr ""
+msgstr "Caută"
 
 msgid "Edit"
-msgstr ""
+msgstr "Editează"
 
 msgid "Apply"
-msgstr ""
+msgstr "Aplică"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Reîmprospătează"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Gestionarea firmware-ului"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Alegeți ce doriți să examinați sau să modificați."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Folosește ↑/↓ și «Enter» sau apasă 1, 2 sau 3."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Gestionare opțiuni BIOS"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Gestionare dispozitive"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Vizualizare măsurători de securitate"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "Căutare opțiuni BIOS"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Opțiuni BIOS"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Selectează o opțiune pentru a-i vizualiza detaliile."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Căutare dispozitive"
 
 msgid "Devices"
-msgstr ""
+msgstr "Dispozitive"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Reîmprospătează metadatele"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "Activează LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Instalează fișierul local"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Selectează un dispozitiv pentru a-i vizualiza detaliile."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Versiuni disponibile"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Deblocare"
 
 msgid "Verify"
-msgstr ""
+msgstr "Verifică"
 
 msgid "Store"
-msgstr ""
+msgstr "Stocare"
 
 msgid "Activate"
-msgstr ""
+msgstr "Activare"
 
 msgid "Install"
 msgstr ""
