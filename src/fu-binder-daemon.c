@@ -10,7 +10,10 @@
 
 #include "config.h"
 
+#include <fcntl.h>
 #include <fwupdplugin.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <android/binder_ibinder.h>
 #include <android/binder_process.h>
@@ -174,6 +177,9 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 	    "org.freedesktop.fwupd.get-bios-settings",
 	    "org.freedesktop.fwupd.get-host-security-attrs",
 	    "org.freedesktop.fwupd.get-host-security-events",
+	    "org.freedesktop.fwupd.update-hotplug-trusted",
+	    "org.freedesktop.fwupd.update-internal-trusted",
+	    "org.freedesktop.fwupd.refresh-remote",
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(public_action_ids); i++) {
 		if (g_strcmp0(action_id, public_action_ids[i]) == 0)
@@ -264,6 +270,7 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 	FuContext *ctx = fu_engine_get_context(engine);
 	g_autoptr(FuBinderDaemonAuthHelper) helper = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
+	struct stat st = {0};
 
 	g_debug("starting install via aidl bridge for device: %s", device_id);
 
@@ -275,6 +282,16 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 	helper->self = self;
 
 	fu_engine_installer_set_request(helper->engine_installer, helper->request);
+
+	if (fstat(fd, &st) == 0 && st.st_size == 0) {
+		g_autoptr(GPtrArray) rels = fu_engine_get_upgrades(engine, helper->request, device_id, error);
+		const gchar *uri = NULL;
+		close(fd);
+		if (rels == NULL)
+			return FALSE;
+		uri = g_ptr_array_index(fwupd_release_get_locations(g_ptr_array_index(rels, 0)), 0);
+		fd = open(uri + strlen("file://"), O_RDONLY | O_CLOEXEC);
+	}
 
 	/* get stream */
 	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
