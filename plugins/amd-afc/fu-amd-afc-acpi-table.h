@@ -15,7 +15,5 @@ G_DECLARE_FINAL_TYPE(FuAmdAfcAcpiTable, fu_amd_afc_acpi_table, FU, AMD_AFC_ACPI_
 
 FuAmdAfcAcpiTable *
 fu_amd_afc_acpi_table_new(void);
-GBytes *
-fu_amd_afc_acpi_table_get_payload(FuAmdAfcAcpiTable *self);
 
 G_END_DECLS

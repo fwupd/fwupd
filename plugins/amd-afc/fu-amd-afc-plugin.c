@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include "fu-amd-afc-plugin.h"
-#include "fu-amd-afc.h"
+#include "fu-amd-afc-state.h"
 
 struct _FuAmdAfcPlugin {
 	FuPlugin parent_instance;
@@ -21,9 +21,9 @@ fu_amd_afc_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 {
 	FuAmdAfcPlugin *self = FU_AMD_AFC_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_autoptr(GDir) dir = NULL;
-	g_autofree gchar *tables_dir = NULL;
 	guint parsed = 0;
+	g_autofree gchar *tables_dir = NULL;
+	g_autoptr(GDir) dir = NULL;
 
 	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD) {
 		g_set_error_literal(error,
@@ -93,11 +93,20 @@ fu_amd_afc_plugin_finalize(GObject *object)
 }
 
 static void
+fu_amd_afc_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_AFC_STATE); /* coverage */
+	G_OBJECT_CLASS(fu_amd_afc_plugin_parent_class)->constructed(obj);
+}
+
+static void
 fu_amd_afc_plugin_class_init(FuAmdAfcPluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	object_class->finalize = fu_amd_afc_plugin_finalize;
+	plugin_class->constructed = fu_amd_afc_plugin_constructed;
 	plugin_class->startup = fu_amd_afc_plugin_startup;
 }
 

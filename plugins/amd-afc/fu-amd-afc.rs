@@ -1,7 +1,7 @@
 // Copyright 2026 Advanced Micro Devices, Inc.
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, Parse, Getters, Setters, Default)]
+#[derive(New, ParseBytes, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructAmdAfcEieHeader {
     signature: u32le == 0x48434641,
@@ -19,7 +19,7 @@ struct FuStructAmdAfcEieHeader {
     reserved2: [u8; 10],
 }
 
-#[derive(New, Parse, Getters, Setters, Default)]
+#[derive(New, Parse, Default)]
 #[repr(C, packed)]
 struct FuStructAmdAfcConfigHeader {
     signature: u32le == 0x48434641,
@@ -31,13 +31,13 @@ struct FuStructAmdAfcConfigHeader {
     entry_count: u16le,
 }
 
-#[derive(New, Setters)]
+#[derive(New)]
 #[repr(C, packed)]
 struct FuStructAmdAfcConfigId {
     value: u16le,
 }
 
-#[derive(New, Parse, Getters, Setters, Default)]
+#[derive(New, ParseBytes, Default)]
 #[repr(C, packed)]
 struct FuStructAmdAfcVarstoreHeader {
     length: u32le,
@@ -47,11 +47,17 @@ struct FuStructAmdAfcVarstoreHeader {
     data_size: u32le,
 }
 
-#[derive(Parse, Getters)]
+#[repr(u8)]
+enum FuAmdAfcHiiPackageKind {
+    Forms = 0x02,
+    Strings = 0x04,
+}
+
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcHiiPackageHeader {
     length: u24le,
-    kind: u8,
+    kind: FuAmdAfcHiiPackageKind,
 }
 
 #[repr(u8)]
@@ -88,7 +94,13 @@ enum FuAmdAfcIfrOpcode {
     Guid = 0x5f,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ToString)]
+enum FuAmdAfcSettingKind {
+    Enumeration,
+    Integer,
+}
+
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrForm {
     opcode: u8,
@@ -97,7 +109,7 @@ struct FuStructAmdAfcIfrForm {
     title: u16le,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrQuestion {
     opcode: u8,
@@ -111,7 +123,7 @@ struct FuStructAmdAfcIfrQuestion {
     value_type: u8,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrFormSet {
     opcode: u8,
@@ -122,7 +134,13 @@ struct FuStructAmdAfcIfrFormSet {
     flags: u8,
 }
 
-#[derive(Parse, Getters)]
+#[repr(u8)]
+enum FuAmdAfcQuestionFlags {
+    None = 0x00,
+    Readonly = 0x01,
+}
+
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrRef {
     opcode: u8,
@@ -132,11 +150,11 @@ struct FuStructAmdAfcIfrRef {
     question_id: u16le,
     varstore_id: u16le,
     varstore_offset: u16le,
-    question_flags: u8,
+    question_flags: FuAmdAfcQuestionFlags,
     form_id: u16le,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrGuid {
     opcode: u8,
@@ -144,7 +162,7 @@ struct FuStructAmdAfcIfrGuid {
     guid: Guid,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrOption {
     opcode: u8,
@@ -154,7 +172,7 @@ struct FuStructAmdAfcIfrOption {
     value_type: u8,
 }
 
-#[derive(Parse, Getters)]
+#[derive(ParseBytes)]
 #[repr(C, packed)]
 struct FuStructAmdAfcIfrDefault {
     opcode: u8,

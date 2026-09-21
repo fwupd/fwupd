@@ -6,7 +6,9 @@
 
 #include "config.h"
 
+#include "fu-amd-afc-bios-setting.h"
 #include "fu-amd-afc-common.h"
+#include "fu-amd-afc-setting.h"
 
 struct _FuAmdAfcBiosSetting {
 	FuBiosSetting parent_instance;
@@ -23,14 +25,9 @@ fu_amd_afc_bios_setting_read_value(FwupdBiosSetting *bios_setting, GError **erro
 	FuAmdAfcSetting *setting;
 	const gchar *name;
 
-	if (self->index >= self->state->settings->len) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "invalid AFC setting index");
+	setting = fu_amd_afc_state_get_setting(self->state, self->index, error);
+	if (setting == NULL)
 		return NULL;
-	}
-	setting = g_ptr_array_index(self->state->settings, self->index);
 	if (!setting->has_current) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -38,9 +35,9 @@ fu_amd_afc_bios_setting_read_value(FwupdBiosSetting *bios_setting, GError **erro
 				    "AFC current value is unavailable");
 		return NULL;
 	}
-	if (setting->kind == AFC_SETTING_INTEGER)
+	if (setting->kind == FU_AMD_AFC_SETTING_KIND_INTEGER)
 		return g_strdup_printf("%" G_GUINT64_FORMAT, setting->current);
-	name = fu_amd_afc_option_name(setting, setting->current);
+	name = fu_amd_afc_setting_get_option_name(setting, setting->current);
 	if (name == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -63,8 +60,9 @@ fu_amd_afc_bios_setting_write_value(FwupdBiosSetting *bios_setting,
 FuAmdAfcBiosSetting *
 fu_amd_afc_bios_setting_new(FuAmdAfcState *state, guint index)
 {
+	FuContext *ctx = fu_amd_afc_state_get_context(state);
 	FuAmdAfcBiosSetting *self =
-	    g_object_new(FU_TYPE_AMD_AFC_BIOS_SETTING, "context", state->ctx, NULL);
+	    g_object_new(FU_TYPE_AMD_AFC_BIOS_SETTING, "context", ctx, NULL);
 	self->state = g_object_ref(state);
 	self->index = index;
 	return self;
