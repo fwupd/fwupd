@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-07-25 20:01+0000\n"
+"PO-Revision-Date: 2026-09-21 17:51+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 2026.8.dev0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -43,49 +43,49 @@ msgid "This remote contains firmware which is not embargoed, but is still being 
 msgstr "Tento vzdálený zdroj obsahuje firmware, který už sice je možné šířit, ale zatím je u výrobce stále ještě ve stádiu testování. Měli byste si zajistit, že znáte způsob, jak se ručně vrátit ke starší verzi firmwaru, kdyby při aktualizaci došlo k nezdaru."
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Secure Boot"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Opt-in pro aktualizaci firmwaru"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Probuzení po síti"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Šifrování paměti"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Vyhrazená videopaměť"
 
 msgid "Camera"
-msgstr ""
+msgstr "Kamera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Bezdrátová LAN"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Čtečka otisků prstů"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Dotyková obrazovka"
 
 msgid "Audio"
-msgstr ""
+msgstr "Zvuk"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Čtečka paměťových karet"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Podsvícení klávesnice"
 
 #. TRANSLATORS: description of a BIOS firmware update setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -413,67 +413,67 @@ msgid "No action specified!"
 msgstr "Není zadána žádné akce!"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "Nastavení bez názvu"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "Zvolte jednu z dostupných hodnot"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Zadejte platné celé číslo"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "Je třeba, aby hodnota byla z rozmezí {lower} až {upper}"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Je třeba, aby hodnota používala přírůstek {increment}"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "Je třeba, aby délka textu byla z rozmezí {lower} až {upper}"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Typ tohoto nastavení není možné měnit"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Storno"
 
 msgid "Save"
-msgstr ""
+msgstr "Uložit"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Nainstalovat lokální firmware"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Popis umístění .cab archivu s firmware"
 
 msgid "Continue"
-msgstr ""
+msgstr "Pokračovat"
 
 msgid "File not found"
-msgstr ""
+msgstr "Soubor nenalezen"
 
 msgid "bytes"
-msgstr ""
+msgstr "bajtů"
 
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} sekund"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} minut"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -534,167 +534,167 @@ msgid "Not supported"
 msgstr "Nepodporováno"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 kritické"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 důležité"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 teoretické"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 ochrana systému"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 atestace systému"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Správa firmware"
 
 msgid "Quit"
-msgstr ""
+msgstr "Ukončit"
 
 msgid "Home"
-msgstr ""
+msgstr "Domů"
 
 msgid "Search"
-msgstr ""
+msgstr "Hledat"
 
 msgid "Edit"
-msgstr ""
+msgstr "Upravit"
 
 msgid "Apply"
-msgstr ""
+msgstr "Použít"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Načíst znovu"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Správa firmware"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Zvolte u čeho chcete provést inspekci nebo změnu."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Použijte ↑/↓ a Enter, nebo stiskněte 1, 2, nebo 3."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Spravovat nastavení BIOS"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Spravovat zařízení"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Zobrazit opatření zabezpečení"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "Hledat nastavení BIOS"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Nastavení BIOS"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Pro zobrazení podrobností o něm dané nastavení vyberte."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Hledat zařízení"
 
 msgid "Devices"
-msgstr ""
+msgstr "Zařízení"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Znovunačíst metadata"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "Povolit LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Nainstalovat lokální soubor"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Pro zobrazení podrobností o něm vyberte zařízení."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Vydání k dispozici"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Odemknout"
 
 msgid "Verify"
-msgstr ""
+msgstr "Ověřit"
 
 msgid "Store"
-msgstr ""
+msgstr "Uložit"
 
 msgid "Activate"
-msgstr ""
+msgstr "Aktivovat"
 
 msgid "Install"
-msgstr ""
+msgstr "Nainstalovat"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Atributy zabezpečení"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Pro zobrazení podrobností o něm vyberte atribut zabezpečení."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd není připojen"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "Nepodařilo se načíst nastavení BIOS: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} nastavení"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Tento systém nezpřístupňuje nastavení BIOS"
 
 msgid "Current value"
-msgstr ""
+msgstr "Stávající hodnota"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Čekající hodnota"
 
 msgid "Available values"
-msgstr ""
+msgstr "Hodnoty k dispozici"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Rozsah: {lower}–{upper}, přírůstek {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Délka: {lower}–{upper} znaků"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Toto nastavení je pouze pro čtení."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "Nepodařilo se změnit nastavení BIOS: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "Nastavení BIOS úspěšně změněna – je zapotřebí restartovat"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "Nastavení BIOS úspěšně změněna"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Nepodařilo se načíst zařízení: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} zařízení"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Nenalezena žádná podporovaná zařízení"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -705,42 +705,42 @@ msgid "Updatable"
 msgstr "Možné aktualizovat"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "Vyžaduje externí napájení"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Podporováno vzdáleným"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Vyžaduje restart"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Potřebuje vypnutí"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Potřebuje aktivaci"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Aktualizace fází"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Podporuje samozotavení"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Podpora od výrobce skončila"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Podepsaný náklad"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Nepodepsaný náklad"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Emulované zařízení"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Zařízení bez názvu"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -767,23 +767,23 @@ msgid "Install Duration"
 msgstr "Délka instalace"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Zbývá zápisů do flash paměti"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Chyba při aktualizaci"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Kontrolní součty"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUID identifikátory"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "Identifikátory instance"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Problémy se zabezpečením"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -798,29 +798,29 @@ msgstr "Neznámo"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Vydání k dispozici {count}"
 
 msgid "Update"
-msgstr ""
+msgstr "Aktualizovat"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Vrátit na starší verzi"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Přeinstalovat"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
 msgid "Action"
-msgstr ""
+msgstr "Akce"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
 
 msgid "Remote"
-msgstr ""
+msgstr "Vzdálené"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -831,68 +831,68 @@ msgid "Update Message"
 msgstr "Zpráva z aktualizace"
 
 msgid "Issues"
-msgstr ""
+msgstr "Problémy"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Než budete pokračovat, pozastavte ochranu šifrování celého disku."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "Toto vydání přepne na alternativní větev firmwaru."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Tento firmware je sestaven komunitou."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} na verzi {version}?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Instaluje se firmware"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Instalace firmwaru dokončena"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Nepodařilo se provést inspekci souboru s firmwarem"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "Archiv s firmwarem obsahuje vydání, která není možné nainstalovat"
 
 msgid "unknown"
-msgstr ""
+msgstr "neznámé"
 
 msgid "firmware"
-msgstr ""
+msgstr "firmware"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "Nainstalovat {name} verze {version} z {path}?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Instalace lokálního firmware dokončena"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Nainstalovat firmware"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Znovunačítání metadat"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Metadata firmwaru znovunačtena"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "Povolování LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS bylo povoleno a jeho metadata znovunačtena"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -900,117 +900,117 @@ msgstr "V pořádku"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Nepodařilo se načíst atributy zabezpečení: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Přípona běhového prostředí"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Neznámý atribut"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Není k dispozici"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "Identifikátor zabezpečení hostitele"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} atributů zabezpečení"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Nedávné události zabezpečení"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Atribut zabezpečení"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Neznámé zařízení"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Problémy se zabezpečením zařízení"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Žádné nedávné události zabezpečení"
 
 msgid "Result"
-msgstr ""
+msgstr "Výsledek"
 
 msgid "Level"
-msgstr ""
+msgstr "Stupeň"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Zásuvný modul"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Nastavení firmwaru"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Stávající hodnota firmwaru"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Cílová hodnota firmwaru"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Stávající hodnota jádra systému"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Cílová hodnota jádra systému"
 
 msgid "More Information"
-msgstr ""
+msgstr "Další informace"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Změnit nastavení firmwaru"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Změnit nastavení operačního systému"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Obraťte se na výrobce hardwaru"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Doporučené akce"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Odemykání zařízení"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Zařízení odemčeno"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Ověřování firmwaru"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Ověřování firmwaru úspěšné"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Aktualizování dat ověřování"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Data ověřování zaktualizována"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Aktivování firmwaru"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Firmware zařízení aktivován"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Spravujte firmware a zabezpečení platformy v terminálovém rozhraní"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "Nepodařilo se inicializovat fwupd: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -1254,11 +1254,11 @@ msgstr "Popis"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "AppStream identif."
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Ikona"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -2361,7 +2361,7 @@ msgstr "%s čeká na aktivaci – dokončete aktualizaci spuštěním %s."
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Hlášení úspěšně odesláno"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2726,11 +2726,11 @@ msgstr "Nepodařilo se zpracovat příznak pro %s"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "Předvolby příkazového řádku"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "Zobrazit předvolby příkazového řádku"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3138,7 +3138,7 @@ msgstr "Nápovědu vyvoláte pomocí %s"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Nezadán žádný povel"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
@@ -3756,11 +3756,11 @@ msgstr "Popisovač v SPI pro BIOS"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "Uzamčené MTD"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Hardwarové šifrování disku"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -3999,7 +3999,7 @@ msgstr "Popisovač ve firmware pro BIOS"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Hardwarové šifrování disku"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -4182,11 +4182,11 @@ msgstr "Firmware BIOS Descriptor chrání paměť firmware zařízení proti úp
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "Uzamčené MTD brání změně firmware zařízení poté, co je zařízení spuštěno."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Hardwarové šifrování disku znamená, že útočník ani s fyzickým přístupem nemůže číst data z vymontovaných NVMe jednotek."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
