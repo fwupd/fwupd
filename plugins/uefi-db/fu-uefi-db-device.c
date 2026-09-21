@@ -126,15 +126,15 @@ fu_uefi_db_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+fu_uefi_db_device_add_security_attrs_ms_uefi(FuUefiDbDevice *self, FuSecurityAttrs *attrs)
 {
-	GPtrArray *children = fu_device_get_children(device);
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
 	gboolean seen_old = FALSE;
 	gboolean seen_new = FALSE;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_UEFI_DB);
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI);
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
@@ -164,6 +164,44 @@ fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	} else {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 	}
+}
+
+static void
+fu_uefi_db_device_add_security_attrs_production(FuUefiDbDevice *self, FuSecurityAttrs *attrs)
+{
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+	gboolean seen_insecure_platform = FALSE;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr =
+	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION);
+	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+	fu_security_attrs_append(attrs, attr);
+
+	/* a test certificate was enrolled */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		if (fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM)) {
+			seen_insecure_platform = TRUE;
+			break;
+		}
+	}
+	if (seen_insecure_platform) {
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuUefiDbDevice *self = FU_UEFI_DB_DEVICE(device);
+	fu_uefi_db_device_add_security_attrs_ms_uefi(self, attrs);
+	fu_uefi_db_device_add_security_attrs_production(self, attrs);
 }
 
 static void

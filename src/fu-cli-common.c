@@ -2064,11 +2064,22 @@ fu_cli_security_event_to_string(FuSecurityAttr *attr)
 		      /* TRANSLATORS: HSI event title */
 		      _("UEFI NX bootloader protection is now disabled")},
 		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB,
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("The UEFI certificate store is now up to date")},
+		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("The UEFI certificate store no longer contains a test key")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("The UEFI certificate store now contains a test key")},
 		     {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,

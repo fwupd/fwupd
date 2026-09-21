@@ -1,6 +1,6 @@
 {
-  "id": "org.fwupd.hsi.Uefi.Db",
-  "name": "UEFI db",
+  "id": "org.fwupd.hsi.Uefi.Db.MsUefi",
+  "name": "UEFI db (Microsoft UEFI)",
   "description": [
     "The UEFI db contains the list of valid certificates that is used to authorize what EFI binaries are allowed to run."
   ],

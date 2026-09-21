@@ -20,6 +20,10 @@ plugin_builtin_uefi_db = static_library(
 plugin_builtins += plugin_builtin_uefi_db
 
 if get_option('tests')
+  install_data(
+    ['tests/quirks.d/uefi-db.quirk'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'quirks.d'),
+  )
   e = executable(
     'uefi-db-self-test',
     sources: [
