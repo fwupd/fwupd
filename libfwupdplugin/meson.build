@@ -349,7 +349,6 @@ fwupdplugin_headers = [
   'fu-linear-firmware.h',
   'fu-mei-device.h',
   'fu-mem.h',
-  'fu-mem-private.h',
   'fu-msgpack-item.h',
   'fu-oprom-device.h',
   'fu-oprom-firmware.h',

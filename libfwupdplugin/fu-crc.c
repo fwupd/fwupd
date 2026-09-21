@@ -12,7 +12,7 @@
 
 #include "fu-common.h"
 #include "fu-crc-private.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 
 static const struct {
 	FuCrcKind kind;
