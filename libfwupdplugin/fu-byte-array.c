@@ -11,7 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-firmware-common.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 
 /**
  * fu_byte_array_to_string:

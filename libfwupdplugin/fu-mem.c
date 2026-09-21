@@ -11,7 +11,7 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 
 /**
