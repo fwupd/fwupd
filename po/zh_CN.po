@@ -19,7 +19,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-07-29 19:02+0000\n"
+"PO-Revision-Date: 2026-09-21 17:51+0000\n"
 "Last-Translator: Hosted Weblate user 54392 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.8.dev0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -61,7 +61,7 @@ msgid "Memory Encryption"
 msgstr "内存加密"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "专用的视频内存"
 
 msgid "Camera"
 msgstr "相机"
@@ -416,67 +416,67 @@ msgid "No action specified!"
 msgstr "未指定操作！"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "未命名的设置"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "选择可用值中的一个"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "输入有效整数"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "值必须在 {lower} 和 {upper} 之间"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "值必须使用 {increment} 的增幅"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "文本长度必须在 {lower} 和 {upper} 之间"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "无法更改此设置类型"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "取消"
 
 msgid "Save"
-msgstr ""
+msgstr "保存"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "安装本地固件"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr ".cab 固件压缩包路径"
 
 msgid "Continue"
-msgstr ""
+msgstr "继续"
 
 msgid "File not found"
-msgstr ""
+msgstr "未找到文件"
 
 msgid "bytes"
-msgstr ""
+msgstr "字节"
 
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} 秒"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} 分钟"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -537,167 +537,167 @@ msgid "Not supported"
 msgstr "未支持"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 严重"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 重要"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 理论性"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 系统保护"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 系统证明"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "固件管理"
 
 msgid "Quit"
-msgstr ""
+msgstr "退出"
 
 msgid "Home"
-msgstr ""
+msgstr "主页"
 
 msgid "Search"
-msgstr ""
+msgstr "搜索"
 
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
 msgid "Apply"
-msgstr ""
+msgstr "应用"
 
 msgid "Refresh"
-msgstr ""
+msgstr "刷新"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "固件管理"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "选择要检查或更改的内容。"
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "用 ↑/↓ 和 Enter 键，或按 1, 2 或 3。"
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "管理 BIOS 设置"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "管理设备"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "查看安全测量"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "搜索 BIOS 设置"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "BIOS 设置"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "选择一个设置来查看其详情。"
 
 msgid "Search devices"
-msgstr ""
+msgstr "搜索设备"
 
 msgid "Devices"
-msgstr ""
+msgstr "设备"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "刷新元数据"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "启用 LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "安装本地文件"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "选择一台设备来查看其详情。"
 
 msgid "Available Releases"
-msgstr ""
+msgstr "可用版本"
 
 msgid "Unlock"
-msgstr ""
+msgstr "解锁"
 
 msgid "Verify"
-msgstr ""
+msgstr "验证"
 
 msgid "Store"
-msgstr ""
+msgstr "存储"
 
 msgid "Activate"
-msgstr ""
+msgstr "激活"
 
 msgid "Install"
-msgstr ""
+msgstr "安装"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "安全属性"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "选择一项安全属性来查看其详情。"
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd 未连接"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "加载 BIOS 设置失败：{error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} 项设置"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "此系统不暴露 BIOS 设置"
 
 msgid "Current value"
-msgstr ""
+msgstr "当前值"
 
 msgid "Pending value"
-msgstr ""
+msgstr "待定值"
 
 msgid "Available values"
-msgstr ""
+msgstr "可用值"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "范围：{lower}~{upper}，增幅 {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "长度：{lower}~{upper} 个字符"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "此设置为只读。"
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "修改 BIOS 设置失败：{error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "BIOS 设置更改成功；需重启"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "BIOS 设置更改成功"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "加载设备失败：{error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} 台设备"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "未找到支持的设备"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -708,42 +708,42 @@ msgid "Updatable"
 msgstr "可更新"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "需要直流电源"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "受远端支持"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "需要重启"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "需要关闭"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "需要激活"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "安排更新"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "支持自恢复"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "支持终止"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "已签名的载荷"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "未签名的载荷"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "仿真设备"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "未命名设备"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -770,23 +770,23 @@ msgid "Install Duration"
 msgstr "安装时长"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "剩下的刷入"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "更新错误"
 
 msgid "Checksums"
-msgstr ""
+msgstr "校验和"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUIDs"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "实例 ID"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "安全问题"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -801,29 +801,29 @@ msgstr "未知"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "可用版本数（{count}）"
 
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "降级"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "重装"
 
 msgid "Firmware"
-msgstr ""
+msgstr "固件"
 
 msgid "Action"
-msgstr ""
+msgstr "操作"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "概览"
 
 msgid "Remote"
-msgstr ""
+msgstr "远程"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -834,68 +834,68 @@ msgid "Update Message"
 msgstr "更新消息"
 
 msgid "Issues"
-msgstr ""
+msgstr "问题"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "继续前暂停全盘加密保护。"
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "此版本切换到别的固件分支。"
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "此固件由社区构建。"
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} 到 {version} 版？"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "安装固件中"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "固件安装完成"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "检查固件文件失败"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "固件压缩包不含可安装版本"
 
 msgid "unknown"
-msgstr ""
+msgstr "未知"
 
 msgid "firmware"
-msgstr ""
+msgstr "固件"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "从 {path} 安装 {version} 版 {name}？"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "本地固件安装完成"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "安装固件"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "正在刷新元数据"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "刷新了固件元数据"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "正在启用 LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS 已启用，其元数据已刷新"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -903,117 +903,117 @@ msgstr "确定"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "未能加载安全属性：{error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "运行时后缀"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "未知属性"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "不可用"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "主机安全 ID"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} 个安全属性"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "近期安全事件"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "安全属性"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "未知设备"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "设备安全问题"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "无近期安全事件"
 
 msgid "Result"
-msgstr ""
+msgstr "结果"
 
 msgid "Level"
-msgstr ""
+msgstr "等级"
 
 msgid "Plugin"
-msgstr ""
+msgstr "插件"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "固件设置"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "当前固件值"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "目标固件值"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "当前内核值"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "目标内核值"
 
 msgid "More Information"
-msgstr ""
+msgstr "更多信息"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "更改固件配置"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "更改操作系统配置"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "联系硬件厂商"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "建议的操作"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "解锁设备"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "设备已解锁"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "正在验证设备"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "固件验证成功"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "正在更新验证数据"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "验证数据已更新"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "正在激活固件"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "设备固件已激活"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "在终端界面中管理固件和平台"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "初始化 fwupd 失败：{error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -2337,7 +2337,7 @@ msgstr "%s 待激活；用 %s 完成更新。"
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "成功上传了报告"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2690,11 +2690,11 @@ msgstr "解析 %s 标记失败"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "CLI 选项"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "显示 CLI 选项"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3102,7 +3102,7 @@ msgstr "使用 %s 获取帮助"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "未指定命令"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
@@ -3601,7 +3601,7 @@ msgstr "FILENAME DATA DETACHED_KEY"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "导入现有签名到 JCat 文件"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
