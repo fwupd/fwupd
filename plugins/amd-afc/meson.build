@@ -7,13 +7,13 @@ plugins += {
   meson.current_source_dir().split('/')[-1]: true,
 }
 
-amd_afc_struct = rustgen.process('fu-amd-afc.rs')
+amd_afc_struct = rustgen.process('fu-amd-afc.rs') # fuzzing
 amd_afc_sources = files(
-  'fu-amd-afc-acpi-table.c',
-  'fu-amd-afc-bios-setting.c',
-  'fu-amd-afc.c',
-  'fu-amd-afc-hii.c',
-  'fu-amd-afc-hii-strings.c',
+  'fu-amd-afc-acpi-table.c', # fuzzing
+  'fu-amd-afc-bios-setting.c', # fuzzing
+  'fu-amd-afc.c', # fuzzing
+  'fu-amd-afc-hii.c', # fuzzing
+  'fu-amd-afc-hii-strings.c', # fuzzing
 )
 
 plugin_builtin_amd_afc = static_library(
