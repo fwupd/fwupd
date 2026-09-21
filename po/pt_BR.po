@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-07-13 03:01+0000\n"
+"PO-Revision-Date: 2026-09-21 17:51+0000\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 2026.7.1.dev0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware estável)"
@@ -44,49 +44,49 @@ msgid "This remote contains firmware which is not embargoed, but is still being 
 msgstr "Este remoto contém firmware que não está embargado, mas ainda está sendo testado pelo fornecedor do hardware. Você deve garantir que você tenha uma maneira de desatualizar manualmente o firmware se a atualização do firmware falhar."
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Secure Boot"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Atualização de firmware opt-in"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Wake on LAN"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Criptografia de memória"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Memória de vídeo dedicada"
 
 msgid "Camera"
-msgstr ""
+msgstr "Câmera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Microfone"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "Wireless LAN"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Leitor de impressão digital"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Tela touch"
 
 msgid "Audio"
-msgstr ""
+msgstr "Áudio"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Leitor de cartão de mídia"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Luz de fundo do teclado"
 
 #. TRANSLATORS: description of a BIOS firmware update setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -414,67 +414,67 @@ msgid "No action specified!"
 msgstr "Nenhuma ação especificada!"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "Configuração sem nome"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "Escolha um dos valores disponíveis"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Insira um inteiro válido"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "O valor tem de estar entre {lower} e {upper}"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Valor tem de usar um incremento de {increment}"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "O comprimento do texto tem de estar entre {lower} e {upper}"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Este tipo de configuração não pode ser alterado"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancelar"
 
 msgid "Save"
-msgstr ""
+msgstr "Salvar"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Instalar firmware local"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Caminho para um arquivo de firmware .cab"
 
 msgid "Continue"
-msgstr ""
+msgstr "Continuar"
 
 msgid "File not found"
-msgstr ""
+msgstr "O arquivo não foi encontrado"
 
 msgid "bytes"
-msgstr ""
+msgstr "bytes"
 
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} segundos"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} minutos"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -535,167 +535,167 @@ msgid "Not supported"
 msgstr "Não suportado"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 crítico"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 importante"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 teórico"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 proteção de sistema"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 certificação de sistema"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Gerenciamento de firmware"
 
 msgid "Quit"
-msgstr ""
+msgstr "Sair"
 
 msgid "Home"
-msgstr ""
+msgstr "Início"
 
 msgid "Search"
-msgstr ""
+msgstr "Procura"
 
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 msgid "Apply"
-msgstr ""
+msgstr "Aplicar"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Atualizar"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Gerenciamento de firmware"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Escolha o que deseja inspecionar ou alterar."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Use ↑/↓ e Enter, ou pressione 1, 2, ou 3."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Gerenciar configurações da BIOS"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Gerenciar dispositivos"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Ver medidas de segurança"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "Pesquisar configurações da BIOS"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Configurações da BIOS"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Selecione uma configuração para ver os seus detahes."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Pesquisar dispositivos"
 
 msgid "Devices"
-msgstr ""
+msgstr "Dispositivos"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Atualizar metadados"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "Habilitar LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Instalar arquivo local"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Selecione um dispositivo para ver os seus detalhes."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Lançamentos disponíveis"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Desbloquear"
 
 msgid "Verify"
-msgstr ""
+msgstr "Verificar"
 
 msgid "Store"
-msgstr ""
+msgstr "Armazenar"
 
 msgid "Activate"
-msgstr ""
+msgstr "Ativar"
 
 msgid "Install"
-msgstr ""
+msgstr "Instalar"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Atributos de segurança"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Selecione um atributo de segurança para ver os seus detalhes."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd não está conectado"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "Falha ao carregar configurações da BIOS: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} configurações"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Este sistema não expõe as configurações da BIOS"
 
 msgid "Current value"
-msgstr ""
+msgstr "Valor atual"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Valor pendente"
 
 msgid "Available values"
-msgstr ""
+msgstr "Valores disponíveis"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Intervalo: {lower}–{upper}, incremento {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Comprimento: {lower}–{upper} caracteres"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Esta configuração é somente-leitura."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "Falha ao modificar configurações da BIOS: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "Configurações da BIOS alteradas com sucesso; é necessário reinicializar"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "Configurações da BIOS alteradas com sucesso"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Falha ao carregar dispositivos: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} dispositivos"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Nenhum dispositivo suportado foi encontrado"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -706,42 +706,42 @@ msgid "Updatable"
 msgstr "Atualizável"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "Requer energia AC"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Suportado por um remoto"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Precisa reiniciar"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Precisa de desligamento"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Precisa de ativação"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Atualizações de estágios"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Suporta autorrecuperação"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Fim de vida"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Carga assinada"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Carga não assinada"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Dispositivo emulado"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Dispositivo sem nome"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -768,23 +768,23 @@ msgid "Install Duration"
 msgstr "Duração de instalação"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Flash restantes"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Erro de atualização"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Somas de verificação"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUIDs"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "IDs de instâncias"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Problemas de segurança"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -799,29 +799,29 @@ msgstr "Desconhecido"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Lançamentos disponíveis ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Atualizar"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Desatualizar"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Reinstalar"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
 msgid "Action"
-msgstr ""
+msgstr "Ação"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Resumo"
 
 msgid "Remote"
-msgstr ""
+msgstr "Remoto"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -832,68 +832,68 @@ msgid "Update Message"
 msgstr "Mensagem de atualização"
 
 msgid "Issues"
-msgstr ""
+msgstr "Problemas"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Suspenda a proteção de criptografia de disco completo antes de continuar."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "Esta versão muda para uma ramificação de firmware alternativa."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Este firmware foi criado pela comunidade."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} para a versão {version}?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Instalando firmware"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Instalação do firmware concluída"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Falha ao inspecionar o arquivo de firmware"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "O arquivo de firmware não contém versões instaláveis"
 
 msgid "unknown"
-msgstr ""
+msgstr "desconhecido"
 
 msgid "firmware"
-msgstr ""
+msgstr "firmware"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "Instalar {name} versão {version} de {path}?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Instalação de firmware local concluída"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Instalar firmware"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Atualizando metadados"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Metadados de firmware atualizados"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "Habilitando LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS foi habilitado e seus metadados atualizados"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -901,117 +901,117 @@ msgstr "OK"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Falha ao carregar atributos de segurança: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufixo de tempo de execução"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Atributo desconhecido"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Indisponível"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "ID de segurança do host"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} atributos de segurança"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Eventos de segurança recentes"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Atributo de segurança"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Dispositivo desconhecido"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Problemas de segurança do dispositivo"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Nenhum evento de segurança recente"
 
 msgid "Result"
-msgstr ""
+msgstr "Resultado"
 
 msgid "Level"
-msgstr ""
+msgstr "Nível"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Plugin"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Configuração de firmware"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Valor atual do firmware"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Valor alvo do firmware"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Valor atual do kernel"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Valor atual do kernel"
 
 msgid "More Information"
-msgstr ""
+msgstr "Mais informações"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Altere a configuração do firmware"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Altere a configuração do sistema operacional"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Contate o fornecedor do hardware"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Ações sugeridas"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Desbloqueando dispositivo"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Dispositivo desbloqueado"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Verificando firmware"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Verificação do firmware bem-sucedida"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Atualizando dados de verificação"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Dados de verificação atualizados"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Ativando firmware"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Firmware de dispositivo ativado"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Gerencia a segurança do firmware e da plataforma em uma interface de terminal"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "Falha ao inicializar fwupd: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -1255,11 +1255,11 @@ msgstr "Descrição"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "ID AppStream"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Ícone"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -2353,7 +2353,7 @@ msgstr "%s está pendente ativação, use %s para concluir a atualização."
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Relatório enviado com sucesso"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2714,11 +2714,11 @@ msgstr "Falha ao analisar opções para %s"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "Opções de CLI"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "Mostra as opções de CLI"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3126,7 +3126,7 @@ msgstr "Use %s para ajuda"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Nenhum comando especificado"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
@@ -3740,11 +3740,11 @@ msgstr "Descritor de BIOS do SPI"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "MTD bloqueado"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Criptografia de disco por hardware"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -3983,7 +3983,7 @@ msgstr "Descritor da BIOS do firmware"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Criptografia de disco por hardware"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -4166,11 +4166,11 @@ msgstr "O descritor da BIOS do firmware protege a memória do firmware do dispos
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "MTD bloqueado impede que o firmware do dispositivo seja alterado após a inicialização do dispositivo."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Criptografia de disco por hardware significa que um invasor com acesso físico não consegue ler dados de unidades NVMe removidas."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
