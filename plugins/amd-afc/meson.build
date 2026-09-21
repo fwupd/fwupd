@@ -13,9 +13,14 @@ amd_afc_struct = rustgen.process(
 amd_afc_sources = files(
   'fu-amd-afc-acpi-table.c', # fuzzing
   'fu-amd-afc-bios-setting.c', # fuzzing
-  'fu-amd-afc.c', # fuzzing
-  'fu-amd-afc-hii.c', # fuzzing
-  'fu-amd-afc-hii-strings.c', # fuzzing
+  'fu-amd-afc-config-entry.c', # fuzzing
+  'fu-amd-afc-config.c', # fuzzing
+  'fu-amd-afc-form.c', # fuzzing
+  'fu-amd-afc-varstore.c', # fuzzing
+  'fu-amd-afc-option.c', # fuzzing
+  'fu-amd-afc-pending.c', # fuzzing
+  'fu-amd-afc-setting.c', # fuzzing
+  'fu-amd-afc-state.c', # fuzzing
 )
 
 plugin_builtin_amd_afc = static_library(
@@ -31,6 +36,10 @@ plugin_builtin_amd_afc = static_library(
 plugin_builtins += plugin_builtin_amd_afc
 
 if get_option('tests')
+  install_data(
+    ['tests/amd-afc.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+  )
   e = executable(
     'amd-afc-self-test',
     rustgen.process('fu-amd-afc.rs'),
