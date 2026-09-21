@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-xor.h"
 
 /**

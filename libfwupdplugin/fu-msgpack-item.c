@@ -13,7 +13,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
-#include "fu-mem-private.h"
+#include "fu-mem.h"
 #include "fu-msgpack-item-private.h"
 
 struct _FuMsgpackItem {
