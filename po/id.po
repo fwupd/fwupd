@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-06-26 16:01+0000\n"
+"PO-Revision-Date: 2026-09-22 19:51+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -39,49 +39,49 @@ msgid "This remote contains firmware which is not embargoed, but is still being 
 msgstr "Remote ini berisi firmware yang tidak diembargo, tetapi masih sedang diuji oleh vendor perangkat keras. Anda harus memastikan Anda memiliki cara untuk menurunkan versi firmware secara manual jika pembaruan firmware gagal."
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "Secure Boot"
 
 msgid "Firmware Update Opt-in"
-msgstr ""
+msgstr "Keikutsertaan Pembaruan Firmware"
 
 msgid "Wake on LAN"
-msgstr ""
+msgstr "Wake on LAN"
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Enkripsi Memori"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Memori Video Khusus"
 
 msgid "Camera"
-msgstr ""
+msgstr "Kamera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "Bluetooth"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "LAN Nirkabel"
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Pembaca Sidik Jari"
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "Layar Sentuh"
 
 msgid "Audio"
-msgstr ""
+msgstr "Audio"
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Pembaca Kartu Media"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Lampu Latar Keyboard"
 
 #. TRANSLATORS: description of a BIOS firmware update setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -409,67 +409,67 @@ msgid "No action specified!"
 msgstr "Tidak ada tindakan yang ditentukan!"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "Pengaturan tanpa nama"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "Pilih salah satu nilai yang tersedia"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Masukkan bilangan bulat yang valid"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "Nilai harus berada antara {lower} dan {upper}"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Nilai harus menggunakan kenaikan sebesar {increment}"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "Panjang teks harus berada antara {lower} dan {upper}"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Jenis pengaturan ini tidak dapat diubah"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Batal"
 
 msgid "Save"
-msgstr ""
+msgstr "Simpan"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Instal Firmware Lokal"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Jalur ke arsip firmware .cab"
 
 msgid "Continue"
-msgstr ""
+msgstr "Lanjutkan"
 
 msgid "File not found"
-msgstr ""
+msgstr "Berkas tidak ditemukan"
 
 msgid "bytes"
-msgstr ""
+msgstr "byte"
 
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} detik"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} menit"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -530,167 +530,167 @@ msgid "Not supported"
 msgstr "Tak didukung"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 Kritis"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 Penting"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 Teoretis"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 Perlindungan Sistem"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 Atestasi Sistem"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Manajemen firmware"
 
 msgid "Quit"
-msgstr ""
+msgstr "Keluar"
 
 msgid "Home"
-msgstr ""
+msgstr "Beranda"
 
 msgid "Search"
-msgstr ""
+msgstr "Cari"
 
 msgid "Edit"
-msgstr ""
+msgstr "Edit"
 
 msgid "Apply"
-msgstr ""
+msgstr "Terapkan"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Segarkan"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Manajemen Firmware"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Pilih yang ingin Anda periksa atau ubah."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Gunakan ↑/↓ dan Enter, atau tekan 1, 2, atau 3."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Kelola Pengaturan BIOS"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Kelola Perangkat"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Lihat Pengukuran Keamanan"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "Cari pengaturan BIOS"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Pengaturan BIOS"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Pilih pengaturan untuk melihat detailnya."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Cari perangkat"
 
 msgid "Devices"
-msgstr ""
+msgstr "Perangkat"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Segarkan Metadata"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "Aktifkan LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Instal Berkas Lokal"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Pilih perangkat untuk melihat detailnya."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Rilis yang Tersedia"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Buka Kunci"
 
 msgid "Verify"
-msgstr ""
+msgstr "Verifikasi"
 
 msgid "Store"
-msgstr ""
+msgstr "Simpan"
 
 msgid "Activate"
-msgstr ""
+msgstr "Aktifkan"
 
 msgid "Install"
-msgstr ""
+msgstr "Instal"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Atribut Keamanan"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Pilih atribut keamanan untuk melihat detailnya."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd tidak terhubung"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "Gagal memuat pengaturan BIOS: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} pengaturan"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Sistem ini tidak menyediakan pengaturan BIOS"
 
 msgid "Current value"
-msgstr ""
+msgstr "Nilai saat ini"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Nilai tertunda"
 
 msgid "Available values"
-msgstr ""
+msgstr "Nilai yang tersedia"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Rentang: {lower}–{upper}, kenaikan {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Panjang: {lower}–{upper} karakter"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Pengaturan ini bersifat hanya-baca."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "Gagal mengubah pengaturan BIOS: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "Pengaturan BIOS berhasil diubah; perlu memulai ulang"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "Pengaturan BIOS berhasil diubah"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Gagal memuat perangkat: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} perangkat"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Tidak ditemukan perangkat yang didukung"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -701,42 +701,42 @@ msgid "Updatable"
 msgstr "Dapat diperbarui"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "Memerlukan daya AC"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Didukung oleh remote"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Perlu reboot"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Memerlukan pematian sistem"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Memerlukan aktivasi"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Memperbarui secara bertahap"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Mendukung pemulihan mandiri"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Akhir hidup"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Payload bertanda tangan"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Payload tanpa tanda tangan"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Perangkat teremuasi"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Perangkat tanpa nama"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -763,23 +763,23 @@ msgid "Install Duration"
 msgstr "Durasi Instalasi"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Sisa Flash"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Kesalahan Pembaruan"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Checksum"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUID"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "ID Instans"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Masalah Keamanan"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -794,29 +794,29 @@ msgstr "Tidak diketahui"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Rilis yang Tersedia ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Perbarui"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Turunkan Versi"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Instal Ulang"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
 msgid "Action"
-msgstr ""
+msgstr "Tindakan"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Ringkasan"
 
 msgid "Remote"
-msgstr ""
+msgstr "Remote"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -827,68 +827,68 @@ msgid "Update Message"
 msgstr "Pesan Pembaruan"
 
 msgid "Issues"
-msgstr ""
+msgstr "Masalah"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Tangguhkan perlindungan enkripsi seluruh disk sebelum melanjutkan."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "Rilis ini beralih ke cabang firmware alternatif."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Firmware ini dibuat oleh komunitas."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} ke versi {version}?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Menginstal firmware"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Instalasi firmware selesai"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Gagal memeriksa berkas firmware"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "Arsip firmware tidak berisi rilis yang dapat diinstal"
 
 msgid "unknown"
-msgstr ""
+msgstr "tidak diketahui"
 
 msgid "firmware"
-msgstr ""
+msgstr "firmware"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "Instal {name} versi {version} dari {path}?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Instalasi firmware lokal selesai"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Instal Firmware"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Menyegarkan metadata"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Metadata firmware telah disegarkan"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "Mengaktifkan LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS telah diaktifkan dan metadatanya telah disegarkan"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -896,117 +896,117 @@ msgstr "OK"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Gagal memuat atribut keamanan: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Akhiran Runtime"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Atribut tidak diketahui"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Tidak tersedia"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "ID Keamanan Host"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} atribut keamanan"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Peristiwa Keamanan Terkini"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Atribut keamanan"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Perangkat tidak diketahui"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Masalah Keamanan Perangkat"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Tidak ada peristiwa keamanan terkini"
 
 msgid "Result"
-msgstr ""
+msgstr "Hasil"
 
 msgid "Level"
-msgstr ""
+msgstr "Tingkat"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Plugin"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Pengaturan Firmware"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Nilai Firmware Saat Ini"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Nilai Firmware Target"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Nilai Kernel Saat Ini"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Nilai Kernel Target"
 
 msgid "More Information"
-msgstr ""
+msgstr "Informasi Selengkapnya"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Ubah konfigurasi firmware"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Ubah konfigurasi sistem operasi"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Hubungi vendor perangkat keras"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Tindakan yang Disarankan"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Membuka kunci perangkat"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Perangkat berhasil dibuka kuncinya"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Memverifikasi firmware"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Verifikasi firmware berhasil"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Memperbarui data verifikasi"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Data verifikasi berhasil diperbarui"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Mengaktifkan firmware"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Firmware perangkat berhasil diaktifkan"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Kelola firmware dan keamanan platform melalui antarmuka terminal"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "Gagal menginisialisasi fwupd: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -1250,11 +1250,11 @@ msgstr "Deskripsi"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "ID AppStream"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
-msgstr ""
+msgstr "Ikon"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"
@@ -2330,7 +2330,7 @@ msgstr "%s sedang menunggu aktivasi; gunakan %s untuk menyelesaikan pembaruan."
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Laporan berhasil diunggah"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2683,11 +2683,11 @@ msgstr "Gagal mengurai flag untuk %s"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "Opsi CLI"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "Tampilkan opsi CLI"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3095,7 +3095,7 @@ msgstr "Gunakan %s untuk bantuan"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Tidak ada perintah yang ditentukan"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
@@ -3701,11 +3701,11 @@ msgstr "Deskriptor BIOS SPI"
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
 msgid "Locked MTD"
-msgstr ""
+msgstr "MTD Terkunci"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware disk encryption"
-msgstr ""
+msgstr "Enkripsi disk perangkat keras"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -3944,7 +3944,7 @@ msgstr "Deskriptor BIOS Firmware"
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
 msgid "Hardware Disk Encryption"
-msgstr ""
+msgstr "Enkripsi Disk Perangkat Keras"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -4127,11 +4127,11 @@ msgstr "Deskriptor BIOS Firmware melindungi memori firmware perangkat agar tidak
 
 #. TRANSLATORS: longer description
 msgid "Locked MTD prevents device firmware from being changed after the device has started."
-msgstr ""
+msgstr "MTD yang terkunci mencegah firmware perangkat diubah setelah perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
 msgid "Hardware disk encryption means that an attacker with physical access cannot read data from removed NVMe drives."
-msgstr ""
+msgstr "Enkripsi disk perangkat keras berarti bahwa penyerang dengan akses fisik tidak dapat membaca data dari drive NVMe yang dilepas."
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
