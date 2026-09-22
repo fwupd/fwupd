@@ -18,6 +18,12 @@ This plugin supports the following protocol ID:
 
 * `com.amd.pspvbflash`
 
+The plugin can also parse firmware update packages formatted as a PLDM firmware
+update package, as defined by [DMTF DSP0267](https://www.dmtf.org/sites/default/files/standards/documents/DSP0267_1.0.1.pdf).
+The package header is identified by the well-known UUID
+`F018878C-CB7D-4943-9800-A02F059ACA02`; each component image within the package
+is exposed as a child firmware image located at its `ComponentLocationOffset`.
+
 ## GUID Generation
 
 The plugin will use standard PCI GUIDs, but also generate an AMD GPU specific GUID

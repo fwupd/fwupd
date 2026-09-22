@@ -7,12 +7,14 @@ plugins += {
 }
 
 plugin_quirks += files('amd-gpu.quirk')
-plugin_builtins += static_library(
+plugin_rustgen_output = rustgen.process(
+  'fu-amd-gpu-atom.rs', # fuzzing
+  'fu-amd-gpu-psp.rs', # fuzzing
+  'fu-amd-gpu-pldm.rs', # fuzzing
+)
+plugin_builtin_amd_gpu = static_library(
   'fu_plugin_amd_gpu',
-  rustgen.process(
-    'fu-amd-gpu-atom.rs', # fuzzing
-    'fu-amd-gpu-psp.rs', # fuzzing
-  ),
+  plugin_rustgen_output,
   sources: [
     'fu-amd-gpu-plugin.c',
     'fu-amd-gpu-device.c',
@@ -20,6 +22,7 @@ plugin_builtins += static_library(
     'fu-amd-gpu-psp-ish-firmware.c',
     'fu-amd-gpu-psp-l2-firmware.c',
     'fu-amd-gpu-atom-firmware.c',
+    'fu-amd-gpu-pldm-firmware.c',
     'fu-amd-gpu-uma.c',
   ],
   include_directories: plugin_incdirs,
@@ -27,6 +30,7 @@ plugin_builtins += static_library(
   c_args: cargs,
   dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_amd_gpu
 enumeration_data += files(
   'tests/amd-apu-rembrandt-setup.json',
   'tests/amd-apu-strix-setup.json',
@@ -45,7 +49,7 @@ if get_option('tests')
     sources: 'fu-amd-gpu-uma-test.c',
     include_directories: plugin_incdirs,
     dependencies: plugin_deps,
-    link_with: [plugin_libs, plugin_builtins],
+    link_with: [plugin_libs, plugin_builtin_amd_gpu],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
@@ -57,6 +61,25 @@ if get_option('tests')
   test(
     'amd-gpu-uma-self-test',
     e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
+  test(
+    'amd-gpu-pldm-self-test',
+    executable(
+      'fu-amd-gpu-pldm-self-test',
+      plugin_rustgen_output,
+      sources: 'fu-amd-gpu-pldm-self-test.c',
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps,
+      link_with: [plugin_libs, plugin_builtin_amd_gpu],
+      install: true,
+      install_rpath: libdir_pkg,
+      install_dir: installed_test_bindir,
+      install_tag: 'tests',
+    ),
     env: {
       'G_TEST_BUILDDIR': meson.current_build_dir(),
       'G_TEST_SRCDIR': meson.current_source_dir(),

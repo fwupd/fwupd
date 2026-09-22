@@ -13,6 +13,7 @@
 
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-device.h"
+#include "fu-amd-gpu-pldm-firmware.h"
 #include "fu-amd-gpu-plugin.h"
 #include "fu-amd-gpu-psp-firmware.h"
 
@@ -37,6 +38,8 @@ fu_amd_gpu_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_GPU_PSP_FIRMWARE);
 	/* navi 2x and older have the ATOM firmware at start of image */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_GPU_ATOM_FIRMWARE);
+	/* PLDM firmware update package (DMTF DSP0267) */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_GPU_PLDM_FIRMWARE);
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_amd_gpu_plugin_parent_class)->constructed(obj);
