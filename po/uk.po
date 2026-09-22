@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-09-21 17:51+0000\n"
+"PO-Revision-Date: 2026-09-22 19:51+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/fwupd/fwupd/uk/>\n"
 "Language: uk\n"
@@ -438,36 +438,36 @@ msgid "Save"
 msgstr "Зберегти"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Встановити локальну мікропрограму"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Шлях до архіву .cab мікропрограми"
 
 msgid "Continue"
-msgstr ""
+msgstr "Продовжити"
 
 msgid "File not found"
-msgstr ""
+msgstr "Файл не знайдено"
 
 msgid "bytes"
-msgstr ""
+msgstr "байтів"
 
 msgid "KB"
-msgstr ""
+msgstr "кБ"
 
 msgid "MB"
-msgstr ""
+msgstr "МБ"
 
 msgid "GB"
-msgstr ""
+msgstr "ГБ"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} секунд"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} хвилин"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -528,160 +528,160 @@ msgid "Not supported"
 msgstr "Немає підтримки"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 критичне"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 важливе"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 теоретичне"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 захист системи"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 атестування системи"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Керування мікропрограмами"
 
 msgid "Quit"
-msgstr ""
+msgstr "Вийти"
 
 msgid "Home"
-msgstr ""
+msgstr "Домівка"
 
 msgid "Search"
-msgstr ""
+msgstr "Шукати"
 
 msgid "Edit"
-msgstr ""
+msgstr "Змінити"
 
 msgid "Apply"
-msgstr ""
+msgstr "Застосувати"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Освіжити"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Керування мікропрограмами"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Виберіть те, що хочете вивчити або змінити."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Скористайтеся ↑/↓ та Enter або натисніть 1, 2 чи 3."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Керування параметрами BIOS"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Керування пристроями"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Перегляд вимірів захисту"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "Шукати у параметрах BIOS"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Параметри BIOS"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Виберіть параметр, що переглянути подробиці щодо нього."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Пошук пристроїв"
 
 msgid "Devices"
-msgstr ""
+msgstr "Пристрої"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Освіжити метадані"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "Увімкнути LVFS"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Встановити локальний файл"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Виберіть пристрій, щоб переглянути подробиці щодо нього."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Доступні випуски"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Розблокувати"
 
 msgid "Verify"
-msgstr ""
+msgstr "Перевірити"
 
 msgid "Store"
-msgstr ""
+msgstr "Зберегти"
 
 msgid "Activate"
-msgstr ""
+msgstr "Активувати"
 
 msgid "Install"
-msgstr ""
+msgstr "Встановити"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Атрибути безпеки"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Виберіть атрибут безпеки, щоб переглянути подробиці щодо нього."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd не з'єднано"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "Не вдалося завантажити параметри BIOS: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} параметрів"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Ця система не надає доступу до параметрів BIOS"
 
 msgid "Current value"
-msgstr ""
+msgstr "Поточне значення"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Значення у черзі"
 
 msgid "Available values"
-msgstr ""
+msgstr "Доступні значення"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Діапазон: {lower}–{upper}, крок {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Довжина: {lower}–{upper} символів"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Цей параметр призначено лише для читання."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "Не вдалося змінити параметри BIOS: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "Параметри BIOS успішно змінено; потрібне перезавантаження"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "Параметри BIOS успішно змінено"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Не вдалося завантажити пристрої: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
