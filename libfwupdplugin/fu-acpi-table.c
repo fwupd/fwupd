@@ -225,10 +225,10 @@ fu_acpi_table_write(FuFirmware *firmware, GError **error)
 		g_autoptr(GByteArray) payload = g_byte_array_new();
 		for (guint i = 0; i < images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(images, i);
-			g_autoptr(GBytes) fw = fu_firmware_write(img, error);
+			g_autoptr(GByteArray) fw = fu_firmware_write_array(img, error);
 			if (fw == NULL)
 				return NULL;
-			fu_byte_array_append_bytes(payload, fw);
+			fu_byte_array_append_array(payload, fw);
 		}
 		payload_blob = g_byte_array_free_to_bytes(g_steal_pointer(&payload));
 	} else if (priv->payload != NULL) {

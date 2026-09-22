@@ -97,13 +97,13 @@ fu_protobuf_fuzzing_func(void)
 {
 	gboolean ret;
 	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = fu_fuzzer_build_example(FU_FUZZER(pbuf), NULL, &error);
+	buf = fu_fuzzer_build_example(FU_FUZZER(pbuf), NULL, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	ret = fu_fuzzer_test_input(FU_FUZZER(pbuf), blob, &error);
+	g_assert_nonnull(buf);
+	ret = fu_fuzzer_test_input(FU_FUZZER(pbuf), buf, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

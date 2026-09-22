@@ -13,11 +13,11 @@ G_DECLARE_INTERFACE(FuFuzzer, fu_fuzzer, FU, FUZZER, GObject)
 
 struct _FuFuzzerInterface {
 	GTypeInterface g_iface;
-	gboolean (*test_input)(FuFuzzer *self, GBytes *blob, GError **error);
-	GBytes *(*build_example)(FuFuzzer *self, GBytes *blob, GError **error);
+	gboolean (*test_input)(FuFuzzer *self, GByteArray *buf, GError **error);
+	GByteArray *(*build_example)(FuFuzzer *self, GBytes *blob, GError **error);
 };
 
 gboolean
-fu_fuzzer_test_input(FuFuzzer *self, GBytes *blob, GError **error);
-GBytes *
+fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error);
+GByteArray *
 fu_fuzzer_build_example(FuFuzzer *self, GBytes *blob, GError **error);

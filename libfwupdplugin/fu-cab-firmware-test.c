@@ -48,7 +48,6 @@ fu_cab_firmware_compressed_size_func(void)
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) blob_img = g_bytes_new_static("abc", 3);
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* build a cab file and then tweak the payload */
@@ -60,12 +59,9 @@ fu_cab_firmware_compressed_size_func(void)
 	g_assert_true(ret);
 
 	/* write to a mutable buffer */
-	blob = fu_firmware_write(FU_FIRMWARE(cab), &error);
+	buf = fu_firmware_write_array(FU_FIRMWARE(cab), &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	buf = g_bytes_unref_to_array(g_steal_pointer(&blob));
 	g_assert_nonnull(buf);
-	g_assert_nonnull(buf->data);
 
 	/* change FuStructCabData.uncomp to be too small */
 	g_assert_cmpint(buf->len, ==, 0x53);

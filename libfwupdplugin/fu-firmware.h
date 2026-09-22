@@ -216,6 +216,9 @@ fu_firmware_parse_bytes(FuFirmware *self,
 			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_firmware_write(FuFirmware *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+GByteArray *
+fu_firmware_write_array(FuFirmware *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 GBytes *
 fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

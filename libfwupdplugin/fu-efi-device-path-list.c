@@ -129,10 +129,10 @@ fu_efi_device_path_list_write(FuFirmware *firmware, GError **error)
 	/* add each image */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) dp_blob = fu_firmware_write(img, error);
-		if (dp_blob == NULL)
+		g_autoptr(GByteArray) dp_buf = fu_firmware_write_array(img, error);
+		if (dp_buf == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, dp_blob);
+		fu_byte_array_append_array(buf, dp_buf);
 	}
 
 	/* add end marker */
