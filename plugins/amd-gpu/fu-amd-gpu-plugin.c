@@ -13,6 +13,7 @@
 
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-device.h"
+#include "fu-amd-gpu-pldm-device.h"
 #include "fu-amd-gpu-pldm-firmware.h"
 #include "fu-amd-gpu-plugin.h"
 #include "fu-amd-gpu-psp-firmware.h"
@@ -29,11 +30,39 @@ fu_amd_gpu_plugin_init(FuAmdGpuPlugin *self)
 }
 
 static void
+fu_amd_gpu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+{
+	g_autoptr(FuDevice) pldm_device = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* only wrap amd-gpu devices that expose the remote-management interface */
+	if (!FU_IS_AMDGPU_DEVICE(device))
+		return;
+	if (!fu_device_has_private_flag(device, FU_AMD_GPU_DEVICE_FLAG_REMOTE_MGMT))
+		return;
+
+	/* already wrapped */
+	if (fu_device_get_parent(device, NULL) != NULL)
+		return;
+
+	/* create the remote-management device as the parent of the GPU */
+	pldm_device = fu_amd_gpu_pldm_device_new(device);
+	if (!fu_device_setup(pldm_device, &error_local)) {
+		g_warning("failed to set up PLDM remote-management device: %s",
+			  error_local->message);
+		return;
+	}
+	fu_device_add_child(pldm_device, device);
+	fu_plugin_add_device(plugin, pldm_device);
+}
+
+static void
 fu_amd_gpu_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AMDGPU_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_AMD_GPU_PLDM_DEVICE);
 	/* navi3x and later use PSP firmware container */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_GPU_PSP_FIRMWARE);
 	/* navi 2x and older have the ATOM firmware at start of image */
@@ -50,4 +79,5 @@ fu_amd_gpu_plugin_class_init(FuAmdGpuPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_amd_gpu_plugin_constructed;
+	plugin_class->device_registered = fu_amd_gpu_plugin_device_registered;
 }

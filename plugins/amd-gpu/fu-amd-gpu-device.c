@@ -124,9 +124,14 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	gboolean exists_rom = FALSE;
 	gboolean exists_vbflash = FALSE;
 	gboolean exists_vbflash_status = FALSE;
+	gboolean exists_remote_mgmt = FALSE;
+	gboolean exists_remote_mgmt_status = FALSE;
 	g_autofree gchar *rom = NULL;
 	g_autofree gchar *psp_vbflash = NULL;
 	g_autofree gchar *psp_vbflash_status = NULL;
+	g_autofree gchar *remote_mgmt_fw = NULL;
+	g_autofree gchar *remote_mgmt_fw_status = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (!fu_amd_gpu_device_set_device_file(self, base, error))
@@ -162,6 +167,29 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		fu_device_set_install_duration(device, 70);
 		fu_device_add_protocol(device, "com.amd.pspvbflash");
+	}
+
+	/* PLDM remote-management firmware flashing (DSP0267); the plugin adds a
+	 * separate parent device to drive this interface. Emulation data captured
+	 * before this feature existed will not have these sysfs files recorded, so
+	 * a missing event on an emulated device just means "not present". */
+	remote_mgmt_fw = g_build_filename(base, "remote_mgmt_fw", NULL);
+	remote_mgmt_fw_status = g_build_filename(base, "remote_mgmt_fw_status", NULL);
+	if (!fu_device_query_file_exists(device,
+					 remote_mgmt_fw,
+					 &exists_remote_mgmt,
+					 &error_local) ||
+	    !fu_device_query_file_exists(device,
+					 remote_mgmt_fw_status,
+					 &exists_remote_mgmt_status,
+					 &error_local)) {
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring remote-management probe: %s", error_local->message);
+	} else if (exists_remote_mgmt && exists_remote_mgmt_status) {
+		fu_device_add_private_flag(device, FU_AMD_GPU_DEVICE_FLAG_REMOTE_MGMT);
 	}
 
 	return TRUE;
@@ -507,6 +535,7 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_amd_gpu_device_finalize;
+	fu_device_register_private_flag(device_class, FU_AMD_GPU_DEVICE_FLAG_REMOTE_MGMT);
 	device_class->probe = fu_amd_gpu_device_probe;
 	device_class->setup = fu_amd_gpu_device_setup;
 	device_class->set_progress = fu_amd_gpu_device_set_progress;

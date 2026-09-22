@@ -14,15 +14,22 @@ This plugin requires ioctl access to `DRM_IOCTL_AMDGPU_INFO`.
 
 ## Firmware Format
 
-This plugin supports the following protocol ID:
+This plugin supports the following protocol IDs:
 
 * `com.amd.pspvbflash`
+* `com.amd.pldm`
 
 The plugin can also parse firmware update packages formatted as a PLDM firmware
 update package, as defined by [DMTF DSP0267](https://www.dmtf.org/sites/default/files/standards/documents/DSP0267_1.0.1.pdf).
 The package header is identified by the well-known UUID
 `F018878C-CB7D-4943-9800-A02F059ACA02`; each component image within the package
 is exposed as a child firmware image located at its `ComponentLocationOffset`.
+
+On accelerators and dGPUs that expose the `remote_mgmt_fw` sysfs interface, a
+separate remote-management device is created as the *parent* of the GPU device.
+Its current version is read from the `pldm_fw_version` sysfs file, and it is
+updated by writing a PLDM firmware bundle (protocol `com.amd.pldm`) to the
+`remote_mgmt_fw` sysfs file and polling `remote_mgmt_fw_status` for completion.
 
 ## GUID Generation
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Advanced Micro Devices Inc.
+ * Copyright 2026 Advanced Micro Devices Inc.
  * All rights reserved.
  *
  * This file is provided under a dual MIT/LGPLv2 license.  When using or
@@ -13,8 +13,12 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_AMDGPU_DEVICE (fu_amd_gpu_device_get_type())
-G_DECLARE_FINAL_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU, AMDGPU_DEVICE, FuOpromDevice)
+#define FU_TYPE_AMD_GPU_PLDM_DEVICE (fu_amd_gpu_pldm_device_get_type())
+G_DECLARE_FINAL_TYPE(FuAmdGpuPldmDevice,
+		     fu_amd_gpu_pldm_device,
+		     FU,
+		     AMD_GPU_PLDM_DEVICE,
+		     FuUdevDevice)
 
-/* set when the device exposes the PLDM remote-management flashing sysfs interface */
-#define FU_AMD_GPU_DEVICE_FLAG_REMOTE_MGMT "remote-mgmt"
+FuDevice *
+fu_amd_gpu_pldm_device_new(FuDevice *donor);

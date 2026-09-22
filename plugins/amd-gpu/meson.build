@@ -23,6 +23,7 @@ plugin_builtin_amd_gpu = static_library(
     'fu-amd-gpu-psp-l2-firmware.c',
     'fu-amd-gpu-atom-firmware.c',
     'fu-amd-gpu-pldm-firmware.c',
+    'fu-amd-gpu-pldm-device.c',
     'fu-amd-gpu-uma.c',
   ],
   include_directories: plugin_incdirs,
