@@ -97,6 +97,13 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onPropertiesChanged(const aidl_fwupd::FwupdProperties &properties) override
 	{
+		if (properties.status != 0) {
+			g_print("daemon status is %s\n",
+				fwupd_status_to_string((FwupdStatus)properties.status));
+		}
+		if (properties.percentage > 0) {
+			g_print("install progress is %d%%\n", properties.percentage);
+		}
 		fwupd_client_set_status(m_client, (FwupdStatus)properties.status);
 		fwupd_client_set_percentage(m_client, properties.percentage);
 		fwupd_client_set_pending_reboot(m_client, properties.pendingReboot);
