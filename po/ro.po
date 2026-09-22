@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-09-21 17:51+0000\n"
+"PO-Revision-Date: 2026-09-22 19:51+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
 "Language: ro\n"
@@ -627,68 +627,68 @@ msgid "Activate"
 msgstr "Activare"
 
 msgid "Install"
-msgstr ""
+msgstr "Instalează"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Atribute de securitate"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Selectați un atribut de securitate pentru a-i vizualiza detaliile."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd nu este conectat"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "Încărcarea opțiunilor BIOS a eșuat: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} opțiuni"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Acest sistem nu expune opțiunile BIOS."
 
 msgid "Current value"
-msgstr ""
+msgstr "Valoarea actuală"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Valoare în așteptare"
 
 msgid "Available values"
-msgstr ""
+msgstr "Valori disponibile"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Interval: {lower}–{upper}, pas {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Lungime: {lower}–{upper} caractere"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Această opțiune este doar-citire."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "Modificarea parametrilor BIOS a eșuat: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "Modificarea parametrilor BIOS s-a realizat cu succes; este necesară repornirea"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "Modificarea parametrilor BIOS s-a realizat cu succes"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Încărcarea dispozitivelor a eșuat: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} dispozitive"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Nu au fost găsite dispozitive compatibile"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -699,42 +699,42 @@ msgid "Updatable"
 msgstr "Actualizabil"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "Necesită alimentare de la rețea"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Deservit de un depozit de la distanță"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Necesită repornirea"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Necesită oprirea sistemului"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Necesită activarea"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Actualizări în etape"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Capacitate de autorecuperare"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Sfârșitul vieții utile"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Date de actualizare semnate digital"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Date de actualizare nesemnate digital"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Dispozitiv emulat"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Dispozitiv fără nume"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -761,23 +761,23 @@ msgid "Install Duration"
 msgstr "Durata instalării"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Rescrieri ale memoriei rămase disponibile"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Eroare la actualizare"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Sume de verificare"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUID-uri"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "Identificatori de instanță"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Probleme de securitate"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -792,29 +792,29 @@ msgstr "Necunoscut"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Versiuni disponibile ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Actualizare"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Retrogradare"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Reinstalare"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
 msgid "Action"
-msgstr ""
+msgstr "Acțiune"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Rezumat"
 
 msgid "Remote"
-msgstr ""
+msgstr "Depozit"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -825,68 +825,68 @@ msgid "Update Message"
 msgstr "Mesajul de actualizare"
 
 msgid "Issues"
-msgstr ""
+msgstr "Probleme"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Suspendați protecția prin criptare completă a discului înainte de a continua."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "Această versiune face trecerea la o ramură alternativă de firmware."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Acest firmware a fost creat de către comunitate."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} la versiunea {version}?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Se instalează firmware-ul"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Instalarea firmware-ului s-a finalizat cu succes"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Verificarea fișierului de firmware a eșuat."
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "Arhiva de firmware nu conține versiuni care pot fi instalate"
 
 msgid "unknown"
-msgstr ""
+msgstr "necunoscut"
 
 msgid "firmware"
-msgstr ""
+msgstr "firmware"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "Doriți să instalați {name} versiunea {version} din {path}?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Instalarea firmware-ului local s-a finalizat"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Instalează firmware-ul"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Se actualizează metadatele"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Metadatele firmware-ului au fost actualizate"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "Se activează LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS a fost activat, iar metadatele sale au fost actualizate"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -894,117 +894,117 @@ msgstr "Ok"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Nu s-au putut încărca atributele de securitate: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufixul de timp de execuție"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Atribut necunoscut"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Indisponibil"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "ID-ul de securitate al gazdei"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} atribute de securitate"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Evenimente de securitate recente"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Atribut de securitate"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Dispozitiv necunoscut"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Probleme de securitate ale dispozitivului"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Nu există evenimente de securitate recente"
 
 msgid "Result"
-msgstr ""
+msgstr "Rezultat"
 
 msgid "Level"
-msgstr ""
+msgstr "Nivel"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Modul"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Opțiune de firmware"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Valoarea curentă a firmware-ului"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Valoarea țintă a firmware-ului"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Valoarea curentă a nucleului"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Valoarea țintă a nucleului"
 
 msgid "More Information"
-msgstr ""
+msgstr "Mai multe informații"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Modifică configurația firmware-ului"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Modifică configurația sistemului de operare"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Contactați producătorul hardware-ului"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Acțiuni sugerate"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Se deblochează discpozitivul"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Dispozitiv deblocat"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Se verifică firmware-ul"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Verificarea firmware-ului s-a finalizat cu succes"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Se actualizează datele de verificare"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Datele de verificare au fost actualizate"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Se activează firmware-ul"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Firmware-ul dispozitivului a fost activat"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Gestionează securitatea firmware-ului și a platformei printr-o interfață de terminal"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "Nu s-a putut inițializa fwupd: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -2346,7 +2346,7 @@ msgstr "%s este în așteptarea activării; utilizați %s pentru a finaliza actu
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Raportul a fost încărcat cu succes"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2707,11 +2707,11 @@ msgstr "Analizarea opțiunilor pentru „%s” a eșuat"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "Opțiuni ale interfeței de linie de comandă"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "Afișează opțiunile interfeței de linie de comandă"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -2953,7 +2953,7 @@ msgstr "Dezactivează un depozit furnizat ca sursă de software"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr "[ID-DEPOZIT] [NUME-UTILIZATOR] [JETONN]"
+msgstr "[ID-DEPOZIT] [NUME-UTILIZATOR] [JETON]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
@@ -3119,7 +3119,7 @@ msgstr "Utilizați «%s» pentru ajutor"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Nu s-a specificat nicio comandă"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
