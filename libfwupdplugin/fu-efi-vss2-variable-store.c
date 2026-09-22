@@ -121,12 +121,12 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 	/* each attr */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) fw = NULL;
+		g_autoptr(GByteArray) buf_tmp = NULL;
 
-		fw = fu_firmware_write(img, error);
-		if (fw == NULL)
+		buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st->buf, fw);
+		fu_byte_array_append_array(st->buf, buf_tmp);
 		fu_byte_array_align_up(st->buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 	}
 

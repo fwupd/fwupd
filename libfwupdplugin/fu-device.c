@@ -5812,7 +5812,8 @@ fu_device_prepare_firmware(FuDevice *self,
  * serial numbers or user-configuration values and can be used to calculate the
  * device checksum.
  *
- * The return value can be converted to a blob of memory using fu_firmware_write().
+ * The return value can be converted to a blob of memory using fu_firmware_write() or
+ * fu_firmware_write_array().
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL for error
  *

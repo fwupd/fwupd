@@ -396,14 +396,14 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 		g_autoptr(GByteArray) buf_tmp = g_byte_array_new();
 		for (guint i = 0; i < images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(images, i);
-			g_autoptr(GBytes) img_blob_tmp = NULL;
+			g_autoptr(GByteArray) buf_img = NULL;
 
-			img_blob_tmp = fu_firmware_write(img, error);
-			if (img_blob_tmp == NULL) {
+			buf_img = fu_firmware_write_array(img, error);
+			if (buf_img == NULL) {
 				g_prefix_error_literal(error, "no EFI FV child payload: ");
 				return NULL;
 			}
-			fu_byte_array_append_bytes(buf_tmp, img_blob_tmp);
+			fu_byte_array_append_array(buf_tmp, buf_img);
 		}
 		img_blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf_tmp));
 	}

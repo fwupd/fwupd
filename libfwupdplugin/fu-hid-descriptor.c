@@ -163,7 +163,7 @@ fu_hid_descriptor_write_report_item(FuFirmware *report_item,
 				    GHashTable *globals,
 				    GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GByteArray) buf_tmp = NULL;
 
 	/* dedupe any globals */
 	if (fu_hid_report_item_get_kind(FU_HID_REPORT_ITEM(report_item)) ==
@@ -178,10 +178,10 @@ fu_hid_descriptor_write_report_item(FuFirmware *report_item,
 		}
 		g_hash_table_insert(globals, GUINT_TO_POINTER(tag), report_item);
 	}
-	fw = fu_firmware_write(report_item, error);
-	if (fw == NULL)
+	buf_tmp = fu_firmware_write_array(report_item, error);
+	if (buf_tmp == NULL)
 		return FALSE;
-	fu_byte_array_append_bytes(buf, fw);
+	fu_byte_array_append_array(buf, buf_tmp);
 
 	/* success */
 	return TRUE;
