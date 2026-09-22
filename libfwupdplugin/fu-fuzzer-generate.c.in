@@ -12,7 +12,7 @@
 int
 main(int argc, char **argv)
 {
-	g_autoptr(GBytes) blob_dst = NULL;
+	g_autoptr(GByteArray) buf_dst = NULL;
 	g_autoptr(GBytes) blob_src = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GObject) object = NULL;
@@ -36,14 +36,14 @@ main(int argc, char **argv)
 	/* build blob */
 	g_type_ensure(@GTYPE@);
 	object = g_object_new(@GTYPE@, NULL);
-	blob_dst = fu_fuzzer_build_example(FU_FUZZER(object), blob_src, &error);
-	if (blob_dst == NULL) {
+	buf_dst = fu_fuzzer_build_example(FU_FUZZER(object), blob_src, &error);
+	if (buf_dst == NULL) {
 		g_printerr("Failed to build %s: %s\n", argv[1], error->message);
 		return EXIT_FAILURE;
 	}
 
 	/* save blob */
-	if (!fu_bytes_set_contents(argv[2], blob_dst, &error)) {
+	if (!g_file_set_contents(argv[2], (const gchar *)buf_dst->data, buf_dst->len, &error)) {
 		g_printerr("Failed to save %s: %s\n", argv[3], error->message);
 		return EXIT_FAILURE;
 	}

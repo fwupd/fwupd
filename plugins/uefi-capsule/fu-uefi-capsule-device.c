@@ -456,14 +456,14 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_guid_t guid = {0x0};
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
-	g_autoptr(GBytes) dp_blob = NULL;
 	g_autoptr(FuStructEfiUpdateInfo) st_inf = fu_struct_efi_update_info_new();
+	g_autoptr(GByteArray) dp_blob = NULL;
 
 	/* convert to EFI device path */
 	dp_buf = fu_uefi_capsule_device_build_dp_buf(priv->esp, capsule_path, error);
 	if (dp_buf == NULL)
 		return FALSE;
-	dp_blob = fu_firmware_write(FU_FIRMWARE(dp_buf), error);
+	dp_blob = fu_firmware_write_array(FU_FIRMWARE(dp_buf), error);
 	if (dp_blob == NULL)
 		return FALSE;
 
@@ -474,7 +474,7 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	fu_struct_efi_update_info_set_hw_inst(st_inf, priv->fmp_hardware_instance);
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
-	fu_byte_array_append_bytes(st_inf->buf, dp_blob);
+	fu_byte_array_append_array(st_inf->buf, dp_blob);
 	if (!fu_efivars_set_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
 				 varname,

@@ -280,7 +280,7 @@ fu_efi_signature_list_write_external(FuEfiSignature *sig, GError **error)
 {
 	fwupd_guid_t guid = {0};
 	g_autoptr(FuStructEfiSignatureList) st = fu_struct_efi_signature_list_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* entry */
 	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_EXTERNAL,
@@ -291,13 +291,13 @@ fu_efi_signature_list_write_external(FuEfiSignature *sig, GError **error)
 	fu_struct_efi_signature_list_set_type(st, &guid);
 
 	/* only junk for compatibility reasons; one byte of zero */
-	blob = fu_firmware_write(FU_FIRMWARE(sig), error);
-	if (blob == NULL)
+	buf = fu_firmware_write_array(FU_FIRMWARE(sig), error);
+	if (buf == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(st->buf, blob);
+	fu_byte_array_append_array(st->buf, buf);
 
 	/* fix up header */
-	fu_struct_efi_signature_list_set_size(st, g_bytes_get_size(blob));
+	fu_struct_efi_signature_list_set_size(st, buf->len);
 	fu_struct_efi_signature_list_set_list_size(st, st->buf->len);
 
 	/* success */
@@ -309,7 +309,7 @@ fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 {
 	fwupd_guid_t guid = {0};
 	g_autoptr(FuStructEfiSignatureList) st = fu_struct_efi_signature_list_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* entry */
 	if (!fwupd_guid_from_string(FU_EFI_SIGNATURE_GUID_X509,
@@ -320,11 +320,11 @@ fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 	fu_struct_efi_signature_list_set_type(st, &guid);
 
 	/* SignatureOwner + SignatureData */
-	blob = fu_firmware_write(FU_FIRMWARE(sig), error);
-	if (blob == NULL)
+	buf = fu_firmware_write_array(FU_FIRMWARE(sig), error);
+	if (buf == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(st->buf, blob);
-	fu_struct_efi_signature_list_set_size(st, g_bytes_get_size(blob));
+	fu_byte_array_append_array(st->buf, buf);
+	fu_struct_efi_signature_list_set_size(st, buf->len);
 	fu_struct_efi_signature_list_set_list_size(st, st->buf->len);
 
 	/* success */
@@ -348,12 +348,12 @@ fu_efi_signature_list_write_sha256(GPtrArray *sigs, GError **error)
 	/* SignatureOwner + SignatureData */
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		g_autoptr(GBytes) img_blob = NULL;
+		g_autoptr(GByteArray) buf_tmp = NULL;
 
-		img_blob = fu_firmware_write(FU_FIRMWARE(sig), error);
-		if (img_blob == NULL)
+		buf_tmp = fu_firmware_write_array(FU_FIRMWARE(sig), error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st->buf, img_blob);
+		fu_byte_array_append_array(st->buf, buf_tmp);
 	}
 
 	/* fix up header */

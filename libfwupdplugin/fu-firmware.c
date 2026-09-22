@@ -1650,6 +1650,37 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
 }
 
 /**
+ * fu_firmware_write_array:
+ * @self: a #FuFirmware
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes a firmware, typically packing the images into a binary blob.
+ *
+ * Returns: (transfer full): a data blob
+ *
+ * Since: 2.1.8
+ **/
+GByteArray *
+fu_firmware_write_array(FuFirmware *self, GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* subclassed */
+	if (klass->write != NULL)
+		return klass->write(self, error);
+
+	/* just add default blob */
+	blob = fu_firmware_get_bytes_with_patches(self, error);
+	if (blob == NULL)
+		return NULL;
+	return g_bytes_unref_to_array(g_steal_pointer(&blob));
+}
+
+/**
  * fu_firmware_write:
  * @self: a #FuFirmware
  * @error: (nullable): optional return location for an error
@@ -3035,28 +3066,30 @@ fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
 }
 
 static gboolean
-fu_firmware_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+fu_firmware_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 {
 	FuFirmware *self = FU_FIRMWARE(fuzzer);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GByteArray) buf_out = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
-	if (!fu_firmware_parse_bytes(self,
-				     blob,
-				     0x0,
-				     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
-					 FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID |
-					 FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
-				     error))
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	if (!fu_firmware_parse_stream(
+		self,
+		stream,
+		0x0,
+		FU_FIRMWARE_PARSE_FLAG_NO_SEARCH | FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB |
+		    FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID | FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+		error))
 		return FALSE;
-	fw = fu_firmware_write(self, error);
-	if (fw == NULL)
+	buf_out = fu_firmware_write_array(self, error);
+	if (buf_out == NULL)
 		return FALSE;
 
 	/* success */
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_firmware_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 {
 	FuFirmware *self = FU_FIRMWARE(fuzzer);
@@ -3093,7 +3126,7 @@ fu_firmware_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 	}
 	if (!fu_firmware_build(self, n, error))
 		return NULL;
-	return fu_firmware_write(self, error);
+	return fu_firmware_write_array(self, error);
 }
 
 static void

@@ -256,10 +256,10 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	/* generate early so we know the size */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_write(img, error);
-		if (fw == NULL)
+		g_autoptr(GByteArray) buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(payload, fw);
+		fu_byte_array_append_array(payload, buf_tmp);
 	}
 
 	/* compression flag */

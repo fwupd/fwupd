@@ -3160,13 +3160,14 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_usb_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+fu_usb_device_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(fuzzer);
+	g_autoptr(GBytes) blob = g_bytes_new_static(buf->data, buf->len);
 	return fu_usb_device_parse_descriptor(self, blob, error);
 }
 
-static GBytes *
+static GByteArray *
 fu_usb_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 {
 	g_autoptr(FuFirmware) fw = NULL;
@@ -3174,7 +3175,7 @@ fu_usb_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **erro
 	fw = fu_firmware_new_from_xml(g_bytes_get_data(blob, NULL), error);
 	if (fw == NULL)
 		return NULL;
-	return fu_firmware_write(fw, error);
+	return fu_firmware_write_array(fw, error);
 }
 
 static void

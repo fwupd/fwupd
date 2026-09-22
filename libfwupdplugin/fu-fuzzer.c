@@ -18,17 +18,17 @@ fu_fuzzer_default_init(FuFuzzerInterface *iface)
 /**
  * fu_fuzzer_test_input:
  * @self: a #FuFuzzer
- * @blob: a #GBytes
+ * @buf: a #GByteArray
  * @error: (nullable): optional return location for an error
  *
  * Calls the implementation with the contents of a fuzzing buffer.
  *
  * Returns: %TRUE on success
  *
- * Since: 2.1.1
+ * Since: 2.1.8
  */
 gboolean
-fu_fuzzer_test_input(FuFuzzer *self, GBytes *blob, GError **error)
+fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error)
 {
 	FuFuzzerInterface *iface = FU_FUZZER_GET_IFACE(self);
 	if (iface->test_input == NULL) {
@@ -38,7 +38,7 @@ fu_fuzzer_test_input(FuFuzzer *self, GBytes *blob, GError **error)
 				    "FuFuzzer->test_input() not implemented");
 		return FALSE;
 	}
-	return iface->test_input(self, blob, error);
+	return iface->test_input(self, buf, error);
 }
 
 /**
@@ -51,9 +51,9 @@ fu_fuzzer_test_input(FuFuzzer *self, GBytes *blob, GError **error)
  *
  * Returns: (transfer full): a #GBytes on success
  *
- * Since: 2.1.1
+ * Since: 2.1.8
  */
-GBytes *
+GByteArray *
 fu_fuzzer_build_example(FuFuzzer *self, GBytes *blob, GError **error)
 {
 	FuFuzzerInterface *iface = FU_FUZZER_GET_IFACE(self);

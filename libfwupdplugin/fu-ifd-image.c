@@ -101,10 +101,10 @@ fu_ifd_image_write(FuFirmware *firmware, GError **error)
 	if (images->len > 0) {
 		for (guint i = 0; i < images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(images, i);
-			g_autoptr(GBytes) bytes = fu_firmware_write(img, error);
-			if (bytes == NULL)
+			g_autoptr(GByteArray) buf_tmp = fu_firmware_write_array(img, error);
+			if (buf_tmp == NULL)
 				return NULL;
-			fu_byte_array_append_bytes(buf, bytes);
+			fu_byte_array_append_array(buf, buf_tmp);
 		}
 	} else {
 		g_autoptr(GBytes) bytes = NULL;

@@ -65,10 +65,10 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 	/* write each element so we get the image size */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
-		if (blob == NULL)
+		g_autoptr(GByteArray) buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf2, blob);
+		fu_byte_array_append_array(buf2, buf_tmp);
 	}
 
 	/* data record */

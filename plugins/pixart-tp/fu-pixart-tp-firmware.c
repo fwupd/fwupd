@@ -186,13 +186,13 @@ fu_pixart_tp_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_pixart_tp_firmware_hdr_set_num_sections(st, imgs->len);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GByteArray) buf = NULL;
 
 		fu_firmware_set_offset(img, offset);
-		blob = fu_firmware_write(img, error);
-		if (blob == NULL)
+		buf = fu_firmware_write_array(img, error);
+		if (buf == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st->buf, blob);
+		fu_byte_array_append_array(st->buf, buf);
 		offset += fu_firmware_get_size(img);
 	}
 	fu_byte_array_set_size(st->buf, FU_STRUCT_PIXART_TP_FIRMWARE_HDR_DEFAULT_HEADER_LEN, 0x0);

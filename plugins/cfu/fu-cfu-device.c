@@ -133,19 +133,19 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 {
 	g_autoptr(GByteArray) buf_in = g_byte_array_new();
 	g_autoptr(GByteArray) buf_out = g_byte_array_new();
+	g_autoptr(GByteArray) buf_tmp = NULL;
 	g_autoptr(FuStructCfuOfferRsp) st = NULL;
-	g_autoptr(GBytes) blob = NULL;
 
 	/* generate a offer blob */
 	if (flags & FWUPD_INSTALL_FLAG_FORCE)
 		fu_cfu_offer_set_force_ignore_version(FU_CFU_OFFER(firmware), TRUE);
-	blob = fu_firmware_write(firmware, error);
-	if (blob == NULL)
+	buf_tmp = fu_firmware_write_array(firmware, error);
+	if (buf_tmp == NULL)
 		return FALSE;
 
 	/* SetReport */
 	fu_byte_array_append_uint8(buf_out, self->offer_set_report.id);
-	fu_byte_array_append_bytes(buf_out, blob);
+	fu_byte_array_append_array(buf_out, buf_tmp);
 	fu_byte_array_set_size(buf_out, self->offer_set_report.ct, 0x0);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      self->offer_set_report.id,
