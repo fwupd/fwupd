@@ -205,12 +205,12 @@ fu_efi_file_write_sections(FuEfiFile *self, GError **error)
 	/* add each section */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GByteArray) buf_tmp = NULL;
 		fu_firmware_set_offset(img, buf->len);
-		blob = fu_firmware_write(img, error);
-		if (blob == NULL)
+		buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_append_array(buf, buf_tmp);
 		fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 
 		/* sanity check */

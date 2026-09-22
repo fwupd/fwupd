@@ -567,15 +567,17 @@ fu_protobuf_get_embedded(FuProtobuf *self, guint8 fnum, GError **error)
 }
 
 static gboolean
-fu_protobuf_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+fu_protobuf_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 {
 	FuProtobuf *self = FU_PROTOBUF(fuzzer);
 	guint64 value = 0;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuProtobuf) pbuf = NULL;
 
-	g_byte_array_set_size(self->buf, 0);
-	fu_byte_array_append_bytes(self->buf, blob);
+	if (self->buf != buf) {
+		g_clear_pointer(&self->buf, g_byte_array_unref);
+		self->buf = g_byte_array_ref(buf);
+	}
 	pbuf = fu_protobuf_get_embedded(self, 4, error);
 	if (pbuf == NULL)
 		return FALSE;
@@ -585,7 +587,7 @@ fu_protobuf_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 	return fu_protobuf_get_uint64(pbuf, 3, &value, error);
 }
 
-static GBytes *
+static GByteArray *
 fu_protobuf_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 {
 	FuProtobuf *self = FU_PROTOBUF(fuzzer);
@@ -594,7 +596,7 @@ fu_protobuf_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 	fu_protobuf_add_string(pbuf, 2, "foo");
 	fu_protobuf_add_uint64(pbuf, 3, 1);
 	fu_protobuf_add_embedded(self, 4, pbuf);
-	return g_bytes_new(self->buf->data, self->buf->len);
+	return g_byte_array_ref(self->buf);
 }
 
 static void

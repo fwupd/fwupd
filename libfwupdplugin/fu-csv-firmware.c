@@ -209,10 +209,10 @@ fu_csv_firmware_write(FuFirmware *firmware, GError **error)
 	/* each entry */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) img_blob = fu_firmware_write(img, error);
-		if (img_blob == NULL)
+		g_autoptr(GByteArray) buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, img_blob);
+		fu_byte_array_append_array(buf, buf_tmp);
 	}
 
 	/* success */

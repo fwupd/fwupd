@@ -202,10 +202,10 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	/* data */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
-		if (blob == NULL)
+		g_autoptr(GByteArray) buf_tmp = fu_firmware_write_array(img, error);
+		if (buf_tmp == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_append_array(buf, buf_tmp);
 	}
 
 	/* success */

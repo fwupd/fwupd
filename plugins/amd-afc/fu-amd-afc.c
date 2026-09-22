@@ -611,29 +611,32 @@ fu_amd_afc_state_store(FuAmdAfcState *self, guint index, const gchar *value, GEr
 }
 
 static gboolean
-fu_amd_afc_state_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+fu_amd_afc_state_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 {
 	FuAmdAfcState *self = FU_AMD_AFC_STATE(fuzzer);
-	const guint8 *data = (const guint8 *)g_bytes_get_data(blob, NULL);
-	gsize size = g_bytes_get_size(blob);
+	g_autoptr(GBytes) blob = g_bytes_new_static(buf->data, buf->len);
 
-	if (size == 0)
+	if (buf->len == 0)
 		return TRUE;
 	g_ptr_array_set_size(self->strings, 0);
 	for (guint i = 0; i < 32; i++)
 		g_ptr_array_add(self->strings, g_strdup_printf("string-%u", i));
-	switch (data[0] % 5) {
+	switch (buf->data[0] % 5) {
 	case 0:
 		(void)fu_amd_afc_state_parse_table(self, blob, error);
 		break;
 	case 1:
-		(void)fu_amd_afc_hii_strings_parse_package(self, data + 1, size - 1, 0, error);
+		(void)fu_amd_afc_hii_strings_parse_package(self,
+							   buf->data + 1,
+							   buf->len - 1,
+							   0,
+							   error);
 		break;
 	case 2:
-		(void)fu_amd_afc_hii_parse_forms(self, data + 1, size - 1, 0, error);
+		(void)fu_amd_afc_hii_parse_forms(self, buf->data + 1, buf->len - 1, 0, error);
 		break;
 	case 3:
-		(void)fu_amd_afc_hii_parse_varstores(self, data + 1, size - 1, 0, error);
+		(void)fu_amd_afc_hii_parse_varstores(self, buf->data + 1, buf->len - 1, 0, error);
 		break;
 	case 4:
 		(void)fu_amd_afc_config_validate(blob, error);

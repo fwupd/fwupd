@@ -218,7 +218,7 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 }
 
 static gboolean
-fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 {
 	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(fuzzer);
 	g_autoptr(FuDeviceEvent) device_event = fu_device_event_new(NULL);
@@ -226,7 +226,7 @@ fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GEr
 	/* fuzzing USB */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
-	fu_device_event_set_bytes(device_event, "Data", blob);
+	fu_device_event_set_byte_array(device_event, "Data", buf);
 	fu_device_add_event(FU_DEVICE(self), device_event);
 	if (!fu_hughski_colorhug_device_recv(self,
 					     FU_HUGHSKI_COLORHUG_CMD_BOOT_FLASH,
@@ -245,11 +245,13 @@ fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GEr
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_hughski_colorhug_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 {
-	guint8 buf[CH_USB_HID_EP_SIZE] = {FU_HUGHSKI_COLORHUG_CMD_RESET};
-	return g_bytes_new(buf, sizeof(buf));
+	guint8 data[CH_USB_HID_EP_SIZE] = {FU_HUGHSKI_COLORHUG_CMD_RESET};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_byte_array_append(buf, data, sizeof(data));
+	return g_steal_pointer(&buf);
 }
 
 static void
