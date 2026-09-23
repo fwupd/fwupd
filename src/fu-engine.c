@@ -2593,6 +2593,13 @@ fu_engine_install_releases(FuEngine *self,
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
 		FuDevice *device = fu_release_get_device(release);
+		if (device == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "device was not found");
+			return FALSE;
+		}
 		g_hash_table_insert(self->device_changed_allowlist,
 				    g_strdup(fu_device_get_id(device)),
 				    GUINT_TO_POINTER(1));
