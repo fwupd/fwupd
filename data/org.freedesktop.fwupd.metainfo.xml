@@ -38,6 +38,53 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.8" date="2026-09-23">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new plugin to poke bootupd when the ESP changes</li>
+          <li>Add RSA-3072 signature verification support for Lenovo accessories</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a workaround for the systemd-pcrosseparator.service PCR0 extension</li>
+          <li>Add hashes for the latest DBX for offline machines</li>
+          <li>Add user aware message to complete the dell-dock update</li>
+          <li>Allow enumeration BIOS settings to take either string or integer</li>
+          <li>Allow redfish firmware blobs up to 512MiB</li>
+          <li>Always use base-16 when parsing the UEFI capsule index</li>
+          <li>Do not allow a DFU altname or STM32 sector size of zero</li>
+          <li>Fix a buffer overwrite when parsing Synaptics CAPE HID reports</li>
+          <li>Fix a dell-dock crash via malformed EC_CMD_GET_DOCK_INFO response</li>
+          <li>Fix a file descriptor leak when getting firmware details</li>
+          <li>Fix a memory leak when parsing an invalid TPM eventlog</li>
+          <li>Fix a NULL deref when enumerating a broken synaptics-rmi device</li>
+          <li>Fix a snapd error when installing the latest dbx</li>
+          <li>Fix an integer underflow in Focal FP HID CRC parser</li>
+          <li>Fix eMMC error recovery command when setting install mode fails</li>
+          <li>Fix firmware recovery of Logitech Unifying devices</li>
+          <li>Increase the Huddly USB bulk write timeout to 30s</li>
+          <li>Invalidate the Wacom descriptor cache when the block count changes</li>
+          <li>Limit decompressing LZMA streams to 2GiB</li>
+          <li>Update PCB version checking logic in usi-dock</li>
+          <li>Use the stricter PolicyKit action ID when the device has gone</li>
+          <li>Verify the jcat item IDs before using them as filenames</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>ASUS GX5407</li>
+          <li>Elan PID 0CB6</li>
+          <li>FocalTech MOC fingerprint sensors</li>
+          <li>Lenovo ThinkPad Thunderbolt 4 Dock Gen 2 7000</li>
+          <li>MaxLinear MxL862xx</li>
+          <li>MediaTek MT9700 FCTE and MT9701 KSMU</li>
+          <li>Pixart PID 4F01, 4F02, 4F0D and 4F0E</li>
+          <li>Rolling RW101</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.7" date="2026-07-27">
       <description>
         <p>
