@@ -15,11 +15,11 @@
   "failure-results": {
     "not-valid": "could not reconstitute the hash value",
     "not-found": "no TPM hardware could be found",
-    "tainted": "PCR0 matches after extending with os-separator from systemd-pcrphase; the firmware is valid but the reconstruction path differs"
+    "tainted": "PCR0 matches after extending with os-separator from systemd-pcrosseparator; the firmware is valid but the reconstruction path differs"
   },
   "success-results": {
     "valid": "all correct",
-    "tainted": "os-separator extended PCR0 matches (systemd-pcrphase present)"
+    "tainted": "os-separator extended PCR0 matches (systemd-pcrosseparator present)"
   },
   "hsi-level": 2,
   "resolution": "Contact your OEM, who may be able to issue a firmware update.",
