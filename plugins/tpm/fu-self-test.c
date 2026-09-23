@@ -485,7 +485,7 @@ static void
 fu_tpm_os_separator_fallback_func(void)
 {
 	const gchar *pcrs =
-	    "PCR-00: B8 0D E5 D1 38 75 85 41 C5 F0 52 65 AD 14 4A B9 FA 86 D1 DB\n"
+	    "PCR-00: 7C 57 00 A8 5D 43 24 EE 3B 15 83 BC 49 4B 24 9D E9 34 55 F5\n"
 	    "PCR-00: 33 B2 D5 2A BC EE 98 ED 70 F4 7F D9 C6 59 50 DE 92 69 5F BB 10 97 1D C5 "
 	    "AC 1B 9A C4 54 D3 FA 95\n";
 	gboolean ret;
