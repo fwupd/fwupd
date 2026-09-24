@@ -1113,15 +1113,23 @@ static gboolean
 fu_novatek_ts_device_sw_reset_and_idle(FuNovatekTsDevice *self, GError **error)
 {
 	guint8 buf[1] = {FU_NOVATEK_TS_CMD_SW_RESET};
+	guint sw_reset_cnt = 3;
 
-	for (guint i = 0; i < 3; i++) {
+	/* preserve compatibility with old emulations */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.4")) {
+		sw_reset_cnt = 1;
+	}
+
+	for (guint i = 0; i < sw_reset_cnt; i++) {
 		if (!fu_novatek_ts_device_hid_write(self,
 						    self->swrst_sif_addr,
 						    buf,
 						    sizeof(buf),
-						    error))
+						    error)) {
+			g_prefix_error(error, "failed reset #%u: ", i + 1);
 			return FALSE;
-
+		}
 		fu_device_sleep(FU_DEVICE(self), 50);
 	}
 	return TRUE;
@@ -1490,8 +1498,12 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 
 	g_return_val_if_fail(FU_IS_NOVATEK_TS_FIRMWARE(firmware), FALSE);
 
-	if (!fu_novatek_ts_device_check_start_ready(self, error))
-		return FALSE;
+	/* preserve compatibility with old emulations */
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.4")) {
+		if (!fu_novatek_ts_device_check_start_ready(self, error))
+			return FALSE;
+	}
 
 	/* always use FLASH_NORMAL start (0x2000) */
 	if (self->flash_start_addr < FLASH_SECTOR_SIZE) {
