@@ -1,0 +1,18 @@
+{
+  "name": "Realtek Billboard",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "e5e4894d305a63bb53dce15bd986a78d1c36e02647359d57b3e3e343669466ac-realtek-billboard-1.17.0.0.cab",
+      "emulation-url": "7820ce056634c18820f9f1bccc4f59ee9be67770d6a530c6c8f57ef85970904a-realtek-billboard-1.17.0.0.zip",
+      "components": [
+        {
+          "version": "1.17.0.0",
+          "guids": [
+            "8042f5c6-b029-52db-9bd5-ce538a83d26f"
+          ]
+        }
+      ]
+    }
+  ]
+}
