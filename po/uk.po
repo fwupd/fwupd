@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-09-22 19:51+0000\n"
+"PO-Revision-Date: 2026-09-23 19:45+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/fwupd/fwupd/uk/>\n"
 "Language: uk\n"
@@ -685,10 +685,10 @@ msgstr "Не вдалося завантажити пристрої: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} пристроїв"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Не знайдено підтримуваних пристроїв"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -699,42 +699,42 @@ msgid "Updatable"
 msgstr "Придатний до оновлення"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "Потребує змінного струму"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Передбачено підтримку на дистанційному керуванні"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Потребує перезавантаження"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Потребує вимикання"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Потребує активації"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Етапні оновлення"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Підтримує самовідновлення"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Кінець строку дії"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Підписаний вміст"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Непідписаний вміст"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Емульований пристрій"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Пристрій без назви"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -761,23 +761,23 @@ msgid "Install Duration"
 msgstr "Тривалість встановлення"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Лишилося перезаписів"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Помилка оновлення"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Контрольні суми"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUID"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "Ідентифікатори екземплярів"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Проблеми захисту"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -792,29 +792,29 @@ msgstr "Невідомий"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Доступні випуски ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Оновити"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Знизити версію"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Повторно встановити"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Мікропрограма"
 
 msgid "Action"
-msgstr ""
+msgstr "Дія"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Резюме"
 
 msgid "Remote"
-msgstr ""
+msgstr "Віддалене сховище"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -825,68 +825,68 @@ msgid "Update Message"
 msgstr "Повідомлення щодо оновлення"
 
 msgid "Issues"
-msgstr ""
+msgstr "Вади"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Призупиніть захист повним шифруванням диска, перш ніж продовжувати."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "У цьому випуску здійснено перехід до іншої гілки мікропрограми."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Цю мікропрограму зібрано спільнотою користувачів."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{action} {device} до версії {version}?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Встановлення мікропрограми"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Встановлення мікропрограми завершено"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Не вдалося вивчити файл мікропрограми"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "В архіві мікропрограми не міститься придатних до встановлення випусків"
 
 msgid "unknown"
-msgstr ""
+msgstr "невідома"
 
 msgid "firmware"
-msgstr ""
+msgstr "мікропрограму"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "Встановити {name} версії {version} з {path}?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Встановлення локальної мікропрограми завершено"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Встановити мікропрограму"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Освіження метаданих"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Метадані мікропрограми актуалізовано"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "Вмикання LVFS"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "Було увімкнено LVFS і освіжено метадані"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -894,117 +894,117 @@ msgstr "Гаразд"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Не вдалося завантажити атрибути захисту: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Динамічний суфікс"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Невідомий атрибут"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Недоступні"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "Ідентифікатор захисту основної системи"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} атрибутів захисту"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Нещодавні події безпеки"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Атрибут захисту"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Невідомий пристрій"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Вади захисту пристрою"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Немає нещодавніх подій безпеки"
 
 msgid "Result"
-msgstr ""
+msgstr "Результат"
 
 msgid "Level"
-msgstr ""
+msgstr "Рівень"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Додаток"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Параметр мікропрограми"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Поточне значення мікропрограми"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Цільове значення мікропрограми"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Поточне значення ядра"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Цільове значення ядра"
 
 msgid "More Information"
-msgstr ""
+msgstr "Докладніше"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Змінити конфігурацію мікропрограми"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Змінити конфігурацію операційної системи"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Зв'язатися із постачальником обладнання"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Пропоновані дії"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Розблокування пристрою"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Пристрій розблоковано"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Перевірка мікропрограми"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Мікропрограма успішно пройшла перевірку"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Оновлення даних перевірки"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Дані перевірки оновлено"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Активація мікропрограми"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Мікропрограму пристрою активовано"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Керування мікропрограмами та захистом платформи за допомогою інтерфейсу термінала"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "Не вдалося ініціалізувати fwupd: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -2355,7 +2355,7 @@ msgstr "%s очікує на активацію; скористайтеся %s �
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Звіт успішно вивантажено"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2720,11 +2720,11 @@ msgstr "Не вдалося обробити прапорці до %s"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "Параметри інтерфейсу командного рядка"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "Показати параметри інтерфейсу командного рядка"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3132,7 +3132,7 @@ msgstr "Скористайтеся командою %s, щоб дізнатис�
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Не вказано жодної команди"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
