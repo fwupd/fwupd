@@ -30,6 +30,7 @@ fu_amd_gpu_psp_ish_firmware_class_init(FuAmdGpuPspIshFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_AMD_GPU_PSP_L2_FIRMWARE);
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *
