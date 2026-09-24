@@ -575,8 +575,8 @@ fu_protobuf_fuzzer_test_input(FuFuzzer *fuzzer, GByteArray *buf, GError **error)
 	g_autoptr(FuProtobuf) pbuf = NULL;
 
 	if (self->buf != buf) {
-		g_clear_pointer(&self->buf, g_byte_array_unref);
-		self->buf = g_byte_array_ref(buf);
+		g_byte_array_set_size(self->buf, 0);
+		fu_byte_array_append_array(self->buf, buf);
 	}
 	pbuf = fu_protobuf_get_embedded(self, 4, error);
 	if (pbuf == NULL)
