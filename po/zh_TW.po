@@ -7,20 +7,22 @@
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # EESF-2 <eesf-2@users.noreply.hosted.weblate.org>, 2026.
 # UDP <udp@users.noreply.hosted.weblate.org>, 2026.
+# 為什麼不加空格 <c++23@users.noreply.hosted.weblate.org>, 2026.
+# TCP <tcp@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-04-29 09:09+0000\n"
-"Last-Translator: UDP <udp@users.noreply.hosted.weblate.org>\n"
+"PO-Revision-Date: 2026-09-24 10:39+0000\n"
+"Last-Translator: TCP <tcp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hant/>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 廠商韌體服務（穩定版韌體）"
@@ -39,7 +41,7 @@ msgid "This remote contains firmware which is not embargoed, but is still being 
 msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試階段的韌體。您應該確保自己在韌體更新失敗時有方法能夠手動降級韌體。"
 
 msgid "Secure Boot"
-msgstr ""
+msgstr "安全啟動"
 
 msgid "Firmware Update Opt-in"
 msgstr ""
@@ -51,37 +53,37 @@ msgid "Num Lock"
 msgstr ""
 
 msgid "Memory Encryption"
-msgstr ""
+msgstr "記憶體加密"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "獨立視訊記憶體"
 
 msgid "Camera"
-msgstr ""
+msgstr "相機"
 
 msgid "Microphone"
-msgstr ""
+msgstr "麥克風"
 
 msgid "Bluetooth"
-msgstr ""
+msgstr "藍芽"
 
 msgid "Wireless LAN"
-msgstr ""
+msgstr "無線 LAN"
 
 msgid "Fingerprint Reader"
 msgstr ""
 
 msgid "Touchscreen"
-msgstr ""
+msgstr "觸控螢幕"
 
 msgid "Audio"
-msgstr ""
+msgstr "音訊"
 
 msgid "Media Card Reader"
 msgstr ""
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "鍵盤背光"
 
 #. TRANSLATORS: description of a BIOS firmware update setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -175,7 +177,7 @@ msgid "Authentication is required to clear firmware update results"
 msgstr ""
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "驗證裝置韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
@@ -229,7 +231,7 @@ msgid "Authentication is required to set the list of approved firmware"
 msgstr "必須先通過身份驗證才能設定已批准韌體的清單"
 
 msgid "Sign data using the client certificate"
-msgstr "以用戶端憑證簽署資料"
+msgstr "使用用戶端憑證簽署資料"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
@@ -262,7 +264,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "載入裝置模擬資料"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
@@ -270,14 +272,14 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "儲存裝置模擬資料"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
 msgstr ""
 
 msgid "Enable emulation data collection"
-msgstr ""
+msgstr "啟用模擬資料收集"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
@@ -360,6 +362,7 @@ msgid "Version"
 msgstr "版本"
 
 #. TRANSLATORS: we're poking around as a power user
+#, fuzzy
 msgid "This program may only work correctly as root"
 msgstr "此程式僅有 root 身份才能正常運作"
 
@@ -415,11 +418,11 @@ msgid "Choose one of the available values"
 msgstr ""
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "請輸入有效整數"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "數值必須介於 {lower} 與 {upper}"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
@@ -437,7 +440,7 @@ msgid "Cancel"
 msgstr "取消"
 
 msgid "Save"
-msgstr ""
+msgstr "儲存"
 
 msgid "Install Local Firmware"
 msgstr ""
@@ -446,7 +449,7 @@ msgid "Path to a .cab firmware archive"
 msgstr ""
 
 msgid "Continue"
-msgstr ""
+msgstr "繼續"
 
 msgid "File not found"
 msgstr ""
@@ -465,11 +468,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} 秒"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} 分鐘"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -545,10 +548,10 @@ msgid "HSI-5 System Attestation"
 msgstr ""
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "韌體管理"
 
 msgid "Quit"
 msgstr ""
@@ -557,19 +560,19 @@ msgid "Home"
 msgstr ""
 
 msgid "Search"
-msgstr ""
+msgstr "搜尋"
 
 msgid "Edit"
-msgstr ""
+msgstr "編輯"
 
 msgid "Apply"
-msgstr ""
+msgstr "套用"
 
 msgid "Refresh"
 msgstr ""
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "韌體管理"
 
 msgid "Choose what you would like to inspect or change."
 msgstr ""
@@ -578,34 +581,34 @@ msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
 msgstr ""
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "管理 BIOS 設定"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "管理裝置"
 
 msgid "View Security Measurement"
 msgstr ""
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "搜尋 BIOS 設定"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "BIOS 設定"
 
 msgid "Select a setting to view its details."
 msgstr ""
 
 msgid "Search devices"
-msgstr ""
+msgstr "搜尋裝置"
 
 msgid "Devices"
-msgstr ""
+msgstr "裝置"
 
 msgid "Refresh Metadata"
 msgstr ""
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "啟用 LVFS"
 
 msgid "Install Local File"
 msgstr ""
@@ -617,22 +620,22 @@ msgid "Available Releases"
 msgstr ""
 
 msgid "Unlock"
-msgstr ""
+msgstr "解鎖"
 
 msgid "Verify"
-msgstr ""
+msgstr "驗證"
 
 msgid "Store"
-msgstr ""
+msgstr "儲存"
 
 msgid "Activate"
-msgstr ""
+msgstr "啟用"
 
 msgid "Install"
-msgstr ""
+msgstr "安裝"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "安全屬性"
 
 msgid "Select a security attribute to view its details."
 msgstr ""
@@ -646,7 +649,7 @@ msgstr ""
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} 個設定"
 
 msgid "This system does not expose BIOS settings"
 msgstr ""
@@ -687,7 +690,7 @@ msgstr ""
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} 個裝置"
 
 msgid "No supported devices were found"
 msgstr ""
@@ -740,7 +743,7 @@ msgstr ""
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
-msgstr "最小版本"
+msgstr "最低版本"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -797,16 +800,16 @@ msgid "Available Releases ({count})"
 msgstr ""
 
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "降級"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "重新安裝"
 
 msgid "Firmware"
-msgstr ""
+msgstr "韌體"
 
 msgid "Action"
 msgstr ""
@@ -863,10 +866,10 @@ msgid "The firmware archive contains no installable releases"
 msgstr ""
 
 msgid "unknown"
-msgstr ""
+msgstr "未知"
 
 msgid "firmware"
-msgstr ""
+msgstr "韌體"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
@@ -876,7 +879,7 @@ msgid "Local firmware installation completed"
 msgstr ""
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "安裝韌體"
 
 msgid "Refreshing metadata"
 msgstr ""
@@ -909,7 +912,7 @@ msgid "Unavailable"
 msgstr ""
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "主機安全 ID"
 
 #, python-brace-format
 msgid "{count} security attributes"
@@ -939,16 +942,16 @@ msgid "No recent security events"
 msgstr ""
 
 msgid "Result"
-msgstr ""
+msgstr "結果"
 
 msgid "Level"
-msgstr ""
+msgstr "等級"
 
 msgid "Plugin"
-msgstr ""
+msgstr "外掛"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "韌體設定"
 
 msgid "Current Firmware Value"
 msgstr ""
@@ -963,13 +966,13 @@ msgid "Target Kernel Value"
 msgstr ""
 
 msgid "More Information"
-msgstr ""
+msgstr "更多資訊"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "變更韌體配置"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "變更作業系統配置"
 
 msgid "Contact the hardware vendor"
 msgstr ""
@@ -1028,173 +1031,173 @@ msgstr "預設"
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
 #, c-format
 msgid "%s Device Update"
-msgstr "「%s」裝置更新"
+msgstr "%s 裝置更新"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
 #, c-format
 msgid "%s Configuration Update"
-msgstr "「%s」組態設定更新"
+msgstr "%s 配置更新"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s System Update"
-msgstr "「%s」系統更新"
+msgstr "%s 系統更新"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
-msgstr "「%s」內嵌控制器更新"
+msgstr "%s 嵌入式控制器更新"
 
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
-msgstr "「%s」ME 更新"
+msgstr "%s ME 更新"
 
 #. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
 #. * where the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Corporate ME Update"
-msgstr "「%s」企業級 ME 更新"
+msgstr "%s 企業級 ME 更新"
 
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Consumer ME Update"
-msgstr "「%s」消費者級 ME 更新"
+msgstr "%s 消費級 ME 更新"
 
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
-msgstr "「%s」控制器更新"
+msgstr "%s 控制器更新"
 
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
-msgstr "「%s」Thunderbolt 控制器更新"
+msgstr "%s Thunderbolt 控制器更新"
 
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system boot-up
 #, c-format
 msgid "%s CPU Microcode Update"
-msgstr "「%s」CPU 微碼更新"
+msgstr "%s CPU 微碼更新"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
-msgstr "「%s」電池更新"
+msgstr "%s 電池更新"
 
 #. TRANSLATORS: camera can refer to the laptop internal
 #. * camera in the bezel or external USB webcam
 #, c-format
 msgid "%s Camera Update"
-msgstr "「%s」相機更新"
+msgstr "%s 相機更新"
 
 #. TRANSLATORS: TPM refers to a Trusted Platform Module
 #, c-format
 msgid "%s TPM Update"
-msgstr "「%s」TPM 更新"
+msgstr "%s TPM 更新"
 
 #. TRANSLATORS: TouchPad refers to a flat input device
 #, c-format
 msgid "%s Touchpad Update"
-msgstr "「%s」觸控板更新"
+msgstr "%s 觸控板更新"
 
 #. TRANSLATORS: Mouse refers to a handheld input device
 #, c-format
 msgid "%s Mouse Update"
-msgstr "「%s」滑鼠更新"
+msgstr "%s 滑鼠更新"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
-msgstr "「%s」鍵盤更新"
+msgstr "%s 鍵盤更新"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
 msgid "%s Storage Controller Update"
-msgstr "「%s」儲存控制器更新"
+msgstr "%s 儲存控制器更新"
 
 #. TRANSLATORS: Network Interface refers to the physical
 #. * PCI card, not the logical wired connection
 #, c-format
 msgid "%s Network Interface Update"
-msgstr "「%s」網路介面更新"
+msgstr "%s 網路介面更新"
 
 #. TRANSLATORS: Video Display refers to the laptop internal display or
 #. * external monitor
 #, c-format
 msgid "%s Display Update"
-msgstr "「%s」顯示器更新"
+msgstr "%s 顯示器更新"
 
 #. TRANSLATORS: BMC refers to baseboard management controller which
 #. * is the device that updates all the other firmware on the system
 #, c-format
 msgid "%s BMC Update"
-msgstr "「%s」BMC 更新"
+msgstr "%s BMC 更新"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
 #, c-format
 msgid "%s USB Receiver Update"
-msgstr "「%s」USB 接收器更新"
+msgstr "%s USB 接收器更新"
 
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
-msgstr "「%s」裝置更新"
+msgstr "%s 硬碟更新"
 
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
-msgstr "「%s」快閃裝置更新"
+msgstr "%s 快閃記憶體更新"
 
 #. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
 #. * SATA or NVMe disk
 #, c-format
 msgid "%s SSD Update"
-msgstr "「%s」SSD 更新"
+msgstr "%s SSD 更新"
 
 #. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
 #. * the "video card"
 #, c-format
 msgid "%s GPU Update"
-msgstr "「%s」GPU 更新"
+msgstr "%s GPU 更新"
 
 #. TRANSLATORS: Dock refers to the port replicator hardware laptops are
 #. * cradled in, or lowered onto
 #, c-format
 msgid "%s Dock Update"
-msgstr "「%s」座臺更新"
+msgstr "%s 底座更新"
 
 #. TRANSLATORS: Dock refers to the port replicator device connected
 #. * by plugging in a USB cable -- which may or may not also provide power
 #, c-format
 msgid "%s USB Dock Update"
-msgstr "「%s」USB 座臺更新"
+msgstr "%s USB 底座更新"
 
 #. TRANSLATORS: a device that can read your fingerprint pattern
 #, c-format
 msgid "%s Fingerprint Reader Update"
-msgstr "「%s」指紋讀取器更新"
+msgstr ""
 
 #. TRANSLATORS: a large pressure-sensitive drawing area typically used
 #. * by artists and digital artists
 #, c-format
 msgid "%s Graphics Tablet Update"
-msgstr "「%s」繪圖板更新"
+msgstr ""
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
-msgstr ""
+msgstr "%s 輸入控制器更新"
 
 #. TRANSLATORS: two miniature speakers attached to your ears
 #, c-format
@@ -1216,7 +1219,7 @@ msgstr ""
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Update"
-msgstr "「%s」更新"
+msgstr "%s 更新"
 
 #. TRANSLATORS: The BIOS setting can only be changed to fixed values
 msgid "Enumeration"
@@ -1246,11 +1249,11 @@ msgstr "目前的值"
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
-msgstr "描述說明"
+msgstr "描述"
 
 #. TRANSLATORS: vendor-neutral AppStream identifier of a BIOS setting
 msgid "AppStream ID"
-msgstr ""
+msgstr "AppStream ID"
 
 #. TRANSLATORS: icon name for a BIOS setting
 msgid "Icon"
@@ -1318,7 +1321,7 @@ msgstr[0] "%u 天"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
-msgstr "系統要求接上外部電源"
+msgstr "系統需要外部電源"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -1366,7 +1369,7 @@ msgstr "裝置在更新完成後不會再次出現"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
-msgstr "密碼學雜湊驗證可以使用"
+msgstr "密碼學雜湊驗證可用"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -1450,11 +1453,11 @@ msgstr "影像"
 
 #. TRANSLATORS: ask the user a question, and it will not be translated
 msgid "Message (custom)"
-msgstr "訊息（自訂）"
+msgstr "訊息 (自訂)"
 
 #. TRANSLATORS: show the user a random image from the internet
 msgid "Image (custom)"
-msgstr "影像（自訂）"
+msgstr "影像 (自訂)"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
@@ -1492,7 +1495,7 @@ msgstr "裝置電池電量過低"
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 #, c-format
 msgid "Device battery power is too low (%u%%, requires %u%%)"
-msgstr "裝置電池電量過低（%u%%，要求為 %u%%）"
+msgstr "裝置電池電量過低 (%u%%，要求為 %u%%)"
 
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
@@ -1556,7 +1559,7 @@ msgstr "前一個版本"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
-msgstr "目前的版本"
+msgstr "當前版本"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
@@ -1578,7 +1581,7 @@ msgstr "更新狀態"
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
 msgid "%u%% (threshold %u%%)"
-msgstr ""
+msgstr "%u%% (閾值 %u%%)"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
@@ -1590,7 +1593,7 @@ msgstr "問題"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
-msgstr "上次修改日期"
+msgstr "上次修改"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -1612,7 +1615,7 @@ msgstr[0] "議題"
 
 #. TRANSLATORS: Plugin is active only if hardware is found
 msgid "Enabled if hardware matches"
-msgstr "硬體相符才啟用"
+msgstr "如果硬體符合才啟用"
 
 #. TRANSLATORS: Plugin is active and in use
 msgid "Ready"
@@ -1641,7 +1644,7 @@ msgstr "需要身份驗證資料"
 
 #. TRANSLATORS: no peeking
 msgid "Configuration is only readable by the system administrator"
-msgstr "組態設定只能由系統管理員讀取"
+msgstr "配置僅能由系統管理員讀取"
 
 #. TRANSLATORS: the plugin was created from a .so object, and was not built-in
 msgid "Loaded from an external module"
@@ -1657,11 +1660,11 @@ msgstr "沒有找到需要的 efivarfs 檔案系統"
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
-msgstr "未偵測到 UEFI ESP 分割區或是未設定"
+msgstr "UEFI ESP 分割區未偵測到或未配置"
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition may not be set up correctly"
-msgstr "UEFI ESP 分割區可能沒有正確設置"
+msgstr "UEFI ESP 分割區可能沒有正確設定"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -1700,6 +1703,7 @@ msgid "Critical"
 msgstr "重大"
 
 #. TRANSLATORS: We verified the payload against the server
+#, fuzzy
 msgid "Trusted payload"
 msgstr "受信任的實載階段"
 
@@ -1767,7 +1771,7 @@ msgstr "遠端 ID"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
-msgstr "發行版 ID"
+msgstr "發行 ID"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
@@ -1807,7 +1811,7 @@ msgstr "更新影像"
 
 #. TRANSLATORS: release attributes
 msgid "Release Flags"
-msgstr "發行版旗標"
+msgstr "發行旗標"
 
 #. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
 msgid "Tag"
@@ -1841,7 +1845,7 @@ msgstr "重新整理間隔"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
-msgstr "優先等級"
+msgstr "優先級"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
@@ -2163,7 +2167,7 @@ msgstr "更多資訊請見 %s。"
 
 #. TRANSLATORS: title text, shown as a warning
 msgid "Full Disk Encryption Detected"
-msgstr "已偵測到全磁碟加密"
+msgstr "偵測到全磁碟加密"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
@@ -2203,7 +2207,7 @@ msgstr "無法正確更新的裝置："
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
-msgstr "成功更新的裝置："
+msgstr "成功更新的裝置:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
