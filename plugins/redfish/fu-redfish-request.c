@@ -29,6 +29,9 @@ FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self)
 {
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), NULL);
+	/* an empty response body leaves nothing parsed */
+	if (self->json_obj == NULL)
+		return NULL;
 	return fwupd_json_object_ref(self->json_obj);
 }
 
