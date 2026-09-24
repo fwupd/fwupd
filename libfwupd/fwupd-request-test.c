@@ -26,7 +26,8 @@ fwupd_request_func(void)
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	g_assert_cmpstr(fwupd_request_get_message(request),
 			==,
-			"Do not turn off your computer or remove the AC adaptor.");
+			"Do not turn off your computer or remove the AC adaptor while the update "
+			"is in progress.");
 	fwupd_request_set_message(request, "foo");
 	fwupd_request_set_image(request, "bar");
 	fwupd_request_set_device_id(request, "950da62d4c753a26e64f7f7d687104ce38e32ca5");

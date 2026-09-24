@@ -31,7 +31,7 @@ struct _FwupdRequestClass {
  * FWUPD_REQUEST_ID_REMOVE_REPLUG:
  *
  * The user needs to remove and reinsert the device to complete the update, e.g.
- * "The update will continue when the device USB cable has been unplugged and then re-inserted."
+ * "The update will continue when the device has been unplugged and replugged."
  *
  * Since 1.6.2
  */
@@ -61,7 +61,7 @@ struct _FwupdRequestClass {
  * FWUPD_REQUEST_ID_INSERT_USB_CABLE:
  *
  * The user needs to insert the cable to complete the update, e.g.
- * "The update will continue when the device USB cable has been re-inserted."
+ * "The update will continue when the device USB cable has been plugged back in."
  *
  * Since 1.8.9
  */
@@ -71,8 +71,7 @@ struct _FwupdRequestClass {
  * FWUPD_REQUEST_ID_DO_NOT_POWER_OFF:
  *
  * Show the user a message not to unplug the machine from the AC power, e.g.
- * "Do not turn off your computer or remove the AC adaptor until you are sure the update has
- * completed."
+ * "Do not turn off your computer or remove the AC adaptor while the update is in progress."
  *
  * Since 1.8.6
  */
@@ -82,7 +81,7 @@ struct _FwupdRequestClass {
  * FWUPD_REQUEST_ID_REPLUG_INSTALL:
  *
  * Show the user a message to replug the device and then install the firmware, e.g.
- * "Unplug and replug the device, to continue the update process."
+ * "Unplug the device and replug it to continue the update process."
  *
  * Since 1.8.11
  */
@@ -92,7 +91,7 @@ struct _FwupdRequestClass {
  * FWUPD_REQUEST_ID_REPLUG_POWER:
  *
  * Show the user a message to replug the power connector, e.g.
- * "The update will continue when the device power cable has been unplugged and then re-inserted."
+ * "The update will continue when the device power cable has been removed and re-plugged in."
  *
  * Since 1.9.9
  */
