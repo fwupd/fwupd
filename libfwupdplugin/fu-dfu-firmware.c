@@ -282,13 +282,11 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			    (guint)bufsz);
 		return FALSE;
 	}
-
-	/* validate footer length matches the actual footer size */
-	if (priv->footer_len != FU_STRUCT_DFU_FTR_SIZE) {
+	if (priv->footer_len < FU_STRUCT_DFU_FTR_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "reported footer size 0x%02x does not match expected size 0x%02x",
+			    "reported footer size 0x%02x < expected size 0x%02x",
 			    (guint)priv->footer_len,
 			    (guint)FU_STRUCT_DFU_FTR_SIZE);
 		return FALSE;
