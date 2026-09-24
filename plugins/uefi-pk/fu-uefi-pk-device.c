@@ -64,6 +64,7 @@ fu_uefi_pk_device_set_key_id(FuUefiPkDevice *self, const gchar *key_id)
 static gboolean
 fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *sig, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	const gchar *subject_name = fu_efi_x509_signature_get_subject_name(sig);
 	const gchar *subject_vendor = fu_efi_x509_signature_get_subject_vendor(sig);
 
@@ -82,6 +83,10 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 				    FU_CONTEXT_FLAG_INSECURE_UEFI);
 		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
 	}
+
+	/* fall back to the *system* vendor */
+	if (subject_vendor == NULL)
+		subject_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 
 	/* the O= key may not exist */
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "VENDOR", subject_vendor);
