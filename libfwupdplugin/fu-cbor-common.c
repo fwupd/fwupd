@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-cbor-common.h"
 #include "fu-cbor-item-private.h"
 #include "fu-common.h"
@@ -22,10 +23,18 @@ typedef struct {
 } FuCborParseHelper;
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error);
+fu_cbor_parse_item(FuCborParseHelper *helper,
+		   guint current_depth,
+		   gboolean forbid_indefinite,
+		   gboolean *got_break,
+		   GError **error);
 
 static FuCborItem *
-fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
+fu_cbor_parse_map(FuCborParseHelper *helper,
+		  guint64 len,
+		  FuCborMode mode,
+		  guint current_depth,
+		  GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_map();
 
@@ -38,7 +47,7 @@ fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, G
 			    current_depth);
 		return NULL;
 	}
-	if (helper->max_items > 0 && len > helper->max_items) {
+	if (mode == FU_CBOR_MODE_DEFINITE && helper->max_items > 0 && len > helper->max_items) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -48,14 +57,37 @@ fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, G
 		return NULL;
 	}
 
-	g_debug("map has %u items", (guint)len);
-	for (guint64 i = 0; i < len; i++) {
+	g_debug("map has %s items", fu_cbor_mode_to_string(mode));
+	for (guint64 i = 0; mode == FU_CBOR_MODE_INDEFINITE || i < len; i++) {
+		gboolean got_break = FALSE;
 		g_autoptr(FuCborItem) item_key = NULL;
 		g_autoptr(FuCborItem) item_val = NULL;
-		item_key = fu_cbor_parse_item(helper, current_depth, error);
-		if (item_key == NULL)
+
+		item_key = fu_cbor_parse_item(helper,
+					      current_depth,
+					      FALSE,
+					      mode == FU_CBOR_MODE_INDEFINITE ? &got_break : NULL,
+					      error);
+		if (item_key == NULL) {
+			if (got_break)
+				break;
 			return NULL;
-		item_val = fu_cbor_parse_item(helper, current_depth, error);
+		}
+
+		/* the item count is unknown ahead of time, so limit incrementally; this is
+		 * checked after the terminating break so that exactly @max_items is allowed */
+		if (mode == FU_CBOR_MODE_INDEFINITE && helper->max_items > 0 &&
+		    i >= helper->max_items) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many items (maximum %u)",
+				    helper->max_items);
+			return NULL;
+		}
+
+		/* a break between a key and value is a truncated map */
+		item_val = fu_cbor_parse_item(helper, current_depth, FALSE, NULL, error);
 		if (item_val == NULL)
 			return NULL;
 		if (!fu_cbor_item_map_append(item, item_key, item_val, error))
@@ -67,7 +99,11 @@ fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, G
 }
 
 static FuCborItem *
-fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
+fu_cbor_parse_array(FuCborParseHelper *helper,
+		    guint64 len,
+		    FuCborMode mode,
+		    guint current_depth,
+		    GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_array();
 
@@ -80,7 +116,7 @@ fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth,
 			    current_depth);
 		return NULL;
 	}
-	if (helper->max_items > 0 && len > helper->max_items) {
+	if (mode == FU_CBOR_MODE_DEFINITE && helper->max_items > 0 && len > helper->max_items) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -90,12 +126,33 @@ fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth,
 		return NULL;
 	}
 
-	g_debug("array has %u items", (guint)len);
-	for (guint64 i = 0; i < len; i++) {
+	g_debug("array has %s items", fu_cbor_mode_to_string(mode));
+	for (guint64 i = 0; mode == FU_CBOR_MODE_INDEFINITE || i < len; i++) {
+		gboolean got_break = FALSE;
 		g_autoptr(FuCborItem) item_tmp = NULL;
-		item_tmp = fu_cbor_parse_item(helper, current_depth, error);
-		if (item_tmp == NULL)
+
+		item_tmp = fu_cbor_parse_item(helper,
+					      current_depth,
+					      FALSE,
+					      mode == FU_CBOR_MODE_INDEFINITE ? &got_break : NULL,
+					      error);
+		if (item_tmp == NULL) {
+			if (got_break)
+				break;
 			return NULL;
+		}
+
+		/* the item count is unknown ahead of time, so limit incrementally; this is
+		 * checked after the terminating break so that exactly @max_items is allowed */
+		if (mode == FU_CBOR_MODE_INDEFINITE && helper->max_items > 0 &&
+		    i >= helper->max_items) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many items (maximum %u)",
+				    helper->max_items);
+			return NULL;
+		}
 		if (!fu_cbor_item_array_append(item, item_tmp, error))
 			return NULL;
 	}
@@ -105,9 +162,104 @@ fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth,
 }
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error)
+fu_cbor_parse_string_indefinite(FuCborParseHelper *helper, guint current_depth, GError **error)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* concatenate definite-length string chunks until a break stop-code */
+	for (;;) {
+		gboolean got_break = FALSE;
+		g_autofree gchar *chunk = NULL;
+		g_autoptr(FuCborItem) item_tmp = NULL;
+
+		item_tmp = fu_cbor_parse_item(helper, current_depth, TRUE, &got_break, error);
+		if (item_tmp == NULL) {
+			if (got_break)
+				break;
+			return NULL;
+		}
+		if (fu_cbor_item_get_kind(item_tmp) != FU_CBOR_ITEM_KIND_STRING) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "indefinite-length string chunk must be a string, got %s",
+				    fu_cbor_item_kind_to_string(fu_cbor_item_get_kind(item_tmp)));
+			return NULL;
+		}
+		chunk = fu_cbor_item_get_string(item_tmp, error);
+		if (chunk == NULL)
+			return NULL;
+		g_string_append(str, chunk);
+		if (helper->max_length > 0 && str->len > helper->max_length) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "string too long (%u of maximum %u)",
+				    (guint)str->len,
+				    helper->max_length);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return fu_cbor_item_new_string_steal(g_string_free_and_steal(g_steal_pointer(&str)));
+}
+
+static FuCborItem *
+fu_cbor_parse_bytes_indefinite(FuCborParseHelper *helper, guint current_depth, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	/* concatenate definite-length byte-string chunks until a break stop-code */
+	for (;;) {
+		gboolean got_break = FALSE;
+		g_autoptr(FuCborItem) item_tmp = NULL;
+		g_autoptr(GBytes) chunk = NULL;
+
+		item_tmp = fu_cbor_parse_item(helper, current_depth, TRUE, &got_break, error);
+		if (item_tmp == NULL) {
+			if (got_break)
+				break;
+			return NULL;
+		}
+		if (fu_cbor_item_get_kind(item_tmp) != FU_CBOR_ITEM_KIND_BYTES) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "indefinite-length byte-string chunk must be bytes, got %s",
+				    fu_cbor_item_kind_to_string(fu_cbor_item_get_kind(item_tmp)));
+			return NULL;
+		}
+		chunk = fu_cbor_item_get_bytes(item_tmp, error);
+		if (chunk == NULL)
+			return NULL;
+		fu_byte_array_append_bytes(buf, chunk);
+		if (helper->max_length > 0 && buf->len > helper->max_length) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bytes too long (%u of maximum %u)",
+				    buf->len,
+				    helper->max_length);
+			return NULL;
+		}
+	}
+
+	/* success */
+	blob = g_bytes_new(buf->data, buf->len);
+	return fu_cbor_item_new_bytes(blob);
+}
+
+static FuCborItem *
+fu_cbor_parse_item(FuCborParseHelper *helper,
+		   guint current_depth,
+		   gboolean forbid_indefinite,
+		   gboolean *got_break,
+		   GError **error)
 {
 	FuCborTag tag;
+	FuCborMode mode = FU_CBOR_MODE_DEFINITE;
 	guint64 len = 0;
 	guint8 len_short;
 	guint8 value8 = 0;
@@ -187,11 +339,7 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 			return NULL;
 		}
 	} else if (len_short == FU_CBOR_LEN_INDEFINITE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "indefinite-length encoding is not supported");
-		return NULL;
+		mode = FU_CBOR_MODE_INDEFINITE;
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -200,8 +348,32 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 			    len_short);
 		return NULL;
 	}
-	if (len != len_short)
+	if (mode == FU_CBOR_MODE_DEFINITE && len != len_short)
 		g_debug("len: %" G_GUINT64_FORMAT, len);
+
+	/*
+	 * indefinite length is only valid for byte strings, text strings, arrays and maps -- for
+	 * the special major type it is the break stop-code, handled below
+	 */
+	if (mode == FU_CBOR_MODE_INDEFINITE && tag != FU_CBOR_TAG_STRING &&
+	    tag != FU_CBOR_TAG_BYTES && tag != FU_CBOR_TAG_ARRAY && tag != FU_CBOR_TAG_MAP &&
+	    tag != FU_CBOR_TAG_SPECIAL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "indefinite length is not valid for tag %s",
+			    fu_cbor_tag_to_string(tag));
+		return NULL;
+	}
+
+	/* chunks of an indefinite-length string must themselves be definite-length */
+	if (mode == FU_CBOR_MODE_INDEFINITE && forbid_indefinite && tag != FU_CBOR_TAG_SPECIAL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "nested indefinite-length encoding is not allowed");
+		return NULL;
+	}
 
 	/* process tags */
 	if (tag == FU_CBOR_TAG_POS_INT)
@@ -210,6 +382,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 		return fu_cbor_item_new_integer(-1 - (gint64)len);
 	if (tag == FU_CBOR_TAG_STRING) {
 		g_autofree gchar *str = NULL;
+		if (mode == FU_CBOR_MODE_INDEFINITE)
+			return fu_cbor_parse_string_indefinite(helper, current_depth, error);
 		if (helper->max_length > 0 && len > helper->max_length) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -228,6 +402,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 	}
 	if (tag == FU_CBOR_TAG_BYTES) {
 		g_autoptr(GBytes) blob = NULL;
+		if (mode == FU_CBOR_MODE_INDEFINITE)
+			return fu_cbor_parse_bytes_indefinite(helper, current_depth, error);
 		if (helper->max_length > 0 && len > helper->max_length) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -245,6 +421,18 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 		return fu_cbor_item_new_bytes(blob);
 	}
 	if (tag == FU_CBOR_TAG_SPECIAL) {
+		if (mode == FU_CBOR_MODE_INDEFINITE) {
+			/* this is the break stop-code that terminates indefinite lengths */
+			if (got_break != NULL) {
+				*got_break = TRUE;
+				return NULL;
+			}
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "unexpected break stop-code");
+			return NULL;
+		}
 		if (len == FU_CBOR_SPECIAL_VALUE_TRUE)
 			return fu_cbor_item_new_boolean(TRUE);
 		if (len == FU_CBOR_SPECIAL_VALUE_FALSE)
@@ -260,9 +448,9 @@ fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **erro
 		return NULL;
 	}
 	if (tag == FU_CBOR_TAG_MAP)
-		return fu_cbor_parse_map(helper, len, current_depth + 1, error);
+		return fu_cbor_parse_map(helper, len, mode, current_depth + 1, error);
 	if (tag == FU_CBOR_TAG_ARRAY)
-		return fu_cbor_parse_array(helper, len, current_depth + 1, error);
+		return fu_cbor_parse_array(helper, len, mode, current_depth + 1, error);
 
 	/* unknown */
 	g_set_error(error,
@@ -310,7 +498,7 @@ fu_cbor_parse(FuInputStream *stream,
 
 	if (offset != NULL)
 		helper.offset = *offset;
-	item = fu_cbor_parse_item(&helper, 0, error);
+	item = fu_cbor_parse_item(&helper, 0, FALSE, NULL, error);
 	if (item == NULL) {
 		g_prefix_error(error, "CBOR parsing failed @0x%x: ", (guint)helper.offset);
 		return NULL;

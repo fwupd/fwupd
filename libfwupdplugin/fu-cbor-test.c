@@ -210,6 +210,174 @@ fu_cbor_item_bytes_func(void)
 }
 
 static void
+fu_cbor_item_indefinite_array_func(void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuCborItem) item = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	const guint8 buf[] = {0x9f, 0x01, 0x02, 0x03, 0xff}; /* [_ 1, 2, 3] */
+
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	g_assert_nonnull(stream);
+	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item);
+	g_assert_cmpint(fu_cbor_item_array_length(item), ==, 3);
+	str = fu_cbor_item_to_string(item);
+	g_assert_cmpstr(str, ==, "[1, 2, 3]");
+}
+
+static void
+fu_cbor_item_indefinite_map_func(void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuCborItem) item = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	const guint8 buf[] = {0xbf, 0x01, 0x02, 0xff}; /* {_ 1: 2} */
+
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	g_assert_nonnull(stream);
+	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item);
+	g_assert_cmpint(fu_cbor_item_map_length(item), ==, 1);
+	str = fu_cbor_item_to_string(item);
+	g_assert_cmpstr(str, ==, "{1: 2}");
+}
+
+static void
+fu_cbor_item_indefinite_string_func(void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuCborItem) item = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	/* [_ (_ "ab", "c"), (_ h'0102', h'030405')] */
+	const guint8 buf[] = {0x9f,
+			      0x7f,
+			      0x62,
+			      0x61,
+			      0x62,
+			      0x61,
+			      0x63,
+			      0xff,
+			      0x5f,
+			      0x42,
+			      0x01,
+			      0x02,
+			      0x43,
+			      0x03,
+			      0x04,
+			      0x05,
+			      0xff,
+			      0xff};
+
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	g_assert_nonnull(stream);
+	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item);
+	g_assert_cmpint(fu_cbor_item_array_length(item), ==, 2);
+	str = fu_cbor_item_to_string(item);
+	g_assert_cmpstr(str, ==, "[\"abc\", 0x0102030405]");
+}
+
+static void
+fu_cbor_item_indefinite_nested_func(void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuCborItem) item = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	/* {_ 1: [_ 2, 3]} */
+	const guint8 buf[] = {0xbf, 0x01, 0x9f, 0x02, 0x03, 0xff, 0xff};
+
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	g_assert_nonnull(stream);
+	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item);
+	str = fu_cbor_item_to_string(item);
+	g_assert_cmpstr(str, ==, "{1: [2, 3]}");
+}
+
+static void
+fu_cbor_item_indefinite_error_func(void)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuCborItem) item_break = NULL;
+	g_autoptr(FuCborItem) item_int = NULL;
+	g_autoptr(FuCborItem) item_trunc = NULL;
+	g_autoptr(FuCborItem) item_limit = NULL;
+	g_autoptr(FuCborItem) item_exact = NULL;
+	g_autoptr(FuCborItem) item_kind = NULL;
+	g_autoptr(FuCborItem) item_nested = NULL;
+	const guint8 buf_break[] = {0xff};			   /* lone break stop-code */
+	const guint8 buf_int[] = {0x1f};			   /* indefinite integer */
+	const guint8 buf_trunc[] = {0x9f, 0x01};		   /* array, no break, EOF */
+	const guint8 buf_items[] = {0x9f, 0x01, 0x02, 0x03, 0xff}; /* [_ 1, 2, 3] */
+	const guint8 buf_kind[] = {0x9f, 0x7f, 0x01, 0xff, 0xff};  /* string chunk is an int */
+	const guint8 buf_nested[] = {0x9f, 0x7f, 0x7f, 0xff, 0xff, 0xff}; /* nested indefinite */
+
+	/* an unexpected break stop-code */
+	stream = fu_memory_input_stream_new_from_data(buf_break, sizeof(buf_break), NULL);
+	item_break = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item_break);
+	g_clear_error(&error);
+	g_clear_object(&stream);
+
+	/* indefinite length is not valid for an integer */
+	stream = fu_memory_input_stream_new_from_data(buf_int, sizeof(buf_int), NULL);
+	item_int = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item_int);
+	g_clear_error(&error);
+	g_clear_object(&stream);
+
+	/* truncated: no break before EOF */
+	stream = fu_memory_input_stream_new_from_data(buf_trunc, sizeof(buf_trunc), NULL);
+	item_trunc = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_nonnull(error);
+	g_assert_null(item_trunc);
+	g_clear_error(&error);
+	g_clear_object(&stream);
+
+	/* the incremental max-items limit is enforced (3 items, maximum of 2) */
+	stream = fu_memory_input_stream_new_from_data(buf_items, sizeof(buf_items), NULL);
+	item_limit = fu_cbor_parse(stream, NULL, 0, 2, 0, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item_limit);
+	g_clear_error(&error);
+	g_clear_object(&stream);
+
+	/* exactly max-items is allowed (3 items, maximum of 3) */
+	stream = fu_memory_input_stream_new_from_data(buf_items, sizeof(buf_items), NULL);
+	item_exact = fu_cbor_parse(stream, NULL, 0, 3, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item_exact);
+	g_assert_cmpint(fu_cbor_item_array_length(item_exact), ==, 3);
+	g_clear_object(&stream);
+
+	/* an indefinite-length string chunk of the wrong major type */
+	stream = fu_memory_input_stream_new_from_data(buf_kind, sizeof(buf_kind), NULL);
+	item_kind = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item_kind);
+	g_clear_error(&error);
+	g_clear_object(&stream);
+
+	/* a nested indefinite-length string chunk */
+	stream = fu_memory_input_stream_new_from_data(buf_nested, sizeof(buf_nested), NULL);
+	item_nested = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item_nested);
+}
+
+static void
 fu_cbor_item_func(void)
 {
 	g_autofree gchar *str = NULL;
@@ -259,5 +427,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/cbor-item/string", fu_cbor_item_string_func);
 	g_test_add_func("/fwupd/cbor-item/integer", fu_cbor_item_integer_func);
 	g_test_add_func("/fwupd/cbor-item/bytes", fu_cbor_item_bytes_func);
+	g_test_add_func("/fwupd/cbor-item/indefinite/array", fu_cbor_item_indefinite_array_func);
+	g_test_add_func("/fwupd/cbor-item/indefinite/map", fu_cbor_item_indefinite_map_func);
+	g_test_add_func("/fwupd/cbor-item/indefinite/string", fu_cbor_item_indefinite_string_func);
+	g_test_add_func("/fwupd/cbor-item/indefinite/nested", fu_cbor_item_indefinite_nested_func);
+	g_test_add_func("/fwupd/cbor-item/indefinite/error", fu_cbor_item_indefinite_error_func);
 	return g_test_run();
 }
