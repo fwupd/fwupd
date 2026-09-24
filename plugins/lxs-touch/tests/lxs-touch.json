@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/de02854169176787fccc9fd9c7ab2bd8e10ea6020aa9cc505b040791e922735f-lxs-touch-0A.02.cab",
-      "emulation-url": "https://fwupd.org/downloads/9561cedd41469670778858e8234394aabfb666b572848146a85ca13d932cbac3-lxs-touch-emulation.zip",
+      "url": "de02854169176787fccc9fd9c7ab2bd8e10ea6020aa9cc505b040791e922735f-lxs-touch-0A.02.cab",
+      "emulation-url": "9561cedd41469670778858e8234394aabfb666b572848146a85ca13d932cbac3-lxs-touch-emulation.zip",
       "components": [
         {
           "version": "0000.0002.0A02",
