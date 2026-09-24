@@ -592,8 +592,15 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 
 	if (!fu_sunplus_camera_device_set_enabled(self, 0x01, error))
 		return FALSE;
-	if (!fu_sunplus_camera_device_clear_download_state(self, error))
-		return FALSE;
+
+	/* preserve compatibility with old emulations */
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.4")) {
+		if (!fu_sunplus_camera_device_clear_download_state(self, error)) {
+			g_prefix_error_literal(error, "failed to clear download state: ");
+			return FALSE;
+		}
+	}
 	fu_progress_step_done(progress);
 
 	chunks = fu_chunk_array_new_from_stream(stream,
