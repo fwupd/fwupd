@@ -17,8 +17,7 @@ Write release entries:
 Commit changes to git:
 
     # MAKE SURE THIS IS CORRECT
-    export release_ver="2.1.8"
-    ninja fwupd-pot
+    export release_ver="2.1.9"
     git commit -a -m "Release fwupd ${release_ver}" --no-verify
     git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
     ninja dist
@@ -34,16 +33,3 @@ Commit changes:
 
     git commit -a -m "trivial: post release version bump" --no-verify
     git push
-
-Update [flatpak](https://github.com/flathub/org.freedesktop.fwupd) package for new release:
-
-Forking main
-------------
-
-When forking `main` into a stable `2_1_X`, be sure to disable the following CI jobs:
-
-* `publish-docs` (`.circleci/config.yml`)
-* `deploy-store` (`snap.yaml`)
-
-Also update `SECURITY.md`, removing the oldest branch and add the new branch at the top.
-To make sure it's done right, you can the reference [this commit](https://github.com/fwupd/fwupd/commit/433e809318c68c9ab6d4ae50ee9c4312503185d8).
