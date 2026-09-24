@@ -13,6 +13,12 @@ enum FuCborTag {
     Special,
 }
 
+#[derive(ToString)]
+enum FuCborMode {
+    Definite,
+    Indefinite,
+}
+
 enum FuCborLen {
     ShortMax  = 23,
     Ext8  = 24,
