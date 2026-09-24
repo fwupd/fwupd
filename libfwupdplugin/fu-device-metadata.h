@@ -46,4 +46,25 @@ G_BEGIN_DECLS
  */
 #define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS "UefiCapsuleFlags"
 
+/**
+ * FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK:
+ *
+ * If set to %TRUE, use Capsule-on-Disk for a proxy UEFI capsule device even
+ * when native firmware discovery selected another update method.
+ *
+ * Since: 2.2.2
+ **/
+#define FU_DEVICE_METADATA_UEFI_CAPSULE_ON_DISK "UefiCapsuleOnDisk"
+
+/**
+ * FU_DEVICE_METADATA_UEFI_CAPSULE_NO_RT_SET_VARIABLE:
+ *
+ * If set to %TRUE, do not set `OsIndications` after staging a proxy capsule.
+ * This is used when a bootloader consumes Capsule-on-Disk updates without EFI
+ * runtime services.
+ *
+ * Since: 2.2.2
+ **/
+#define FU_DEVICE_METADATA_UEFI_CAPSULE_NO_RT_SET_VARIABLE "UefiCapsuleNoRtSetVariable"
+
 G_END_DECLS
