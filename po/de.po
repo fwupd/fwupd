@@ -14,13 +14,14 @@
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Poolitzer <weblate@poolitzer.eu>, 2026.
 # DerDilla <derdilla06@gmail.com>, 2026.
+# nautilusx <translate@disroot.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-09-22 19:51+0000\n"
-"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
+"PO-Revision-Date: 2026-09-24 09:37+0000\n"
+"Last-Translator: nautilusx <translate@disroot.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -514,11 +515,11 @@ msgstr "Entschlüsselt"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
-msgstr "Verdorben"
+msgstr "Verfälscht"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
-msgstr "Unverdorben"
+msgstr "Unverfälscht"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
@@ -630,7 +631,7 @@ msgid "Verify"
 msgstr "Verifizieren"
 
 msgid "Store"
-msgstr ""
+msgstr "Speichern"
 
 msgid "Activate"
 msgstr "Aktivieren"
@@ -805,7 +806,7 @@ msgid "Available Releases ({count})"
 msgstr "Verfügbare Veröffentlichungen ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Aktualisieren"
 
 msgid "Downgrade"
 msgstr "Herabstufen"
