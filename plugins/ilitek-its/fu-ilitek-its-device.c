@@ -521,8 +521,10 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* skip */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
+	}
 
 	parent = FU_UDEV_DEVICE(fu_ilitek_its_device_get_backend_parent(self, error));
 	if (parent == NULL)
