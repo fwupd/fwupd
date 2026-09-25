@@ -33,6 +33,12 @@ Firehose program file to use during the QCDM switch to EDL (Emergency Download) 
 
 Since: 1.8.10
 
+### ModemManagerLibFirmwarePath
+
+The system firmware path to use during the mhi driver switch to EDL (Emergency Download) mode.
+
+Since: 2.2.1
+
 ### ModemManagerMbimDetachMethod
 
 The quirk key specifies which detach method the MBIM device should use when transitioning the
