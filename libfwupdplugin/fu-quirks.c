@@ -1143,6 +1143,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VENDOR_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION_FORMAT);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION_RAW);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE);
