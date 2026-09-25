@@ -136,6 +136,12 @@ libfwupd_src = [
   'fwupd-version.c',
 ]
 
+if host_machine.system() == 'linux'
+  libfwupd_src += 'fwupd-network-linux.c'
+else
+  libfwupd_src += 'fwupd-network-fallback.c'
+endif
+
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = library(
