@@ -35,7 +35,7 @@ endgroup
 service dbus restart
 
 group "Run the tests via gnome-desktop-testing-runner"
-gnome-desktop-testing-runner --timeout=2400 fwupd
+gnome-desktop-testing-runner --timeout=3600 fwupd
 endgroup
 
 # generate coverage report

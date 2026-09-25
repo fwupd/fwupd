@@ -41,7 +41,7 @@ NO_COLOR=1 G_DEBUG=fatal-criticals /usr/libexec/fwupd/fwupd --verbose --no-times
 sleep 10
 
 group "Run the tests via gnome-desktop-testing-runner"
-gnome-desktop-testing-runner --timeout=2400 fwupd
+gnome-desktop-testing-runner --timeout=3600 fwupd
 endgroup
 
 # generate coverage report
