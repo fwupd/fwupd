@@ -1,6 +1,7 @@
 {
   "name": "Lenovo 700 Wireless Keyboard",
   "interactive": false,
+  "broken": true,
   "steps": [
     {
       "url": "e636ff9d98647ae22559d33bf3d42bb3c6cf261f38d0b490078872cc7a5bbda5-Lenovo-keyboard_6297-vs1.0.00.cab",
