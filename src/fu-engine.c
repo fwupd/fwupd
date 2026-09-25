@@ -2397,7 +2397,7 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 	}
 	if (any_emulated) {
 		if (!fu_engine_emulator_load_phase(self->emulation,
-						   self->emulator_composite_cnt,
+						   FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2406,14 +2406,19 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
-		if (!fu_plugin_runner_composite_prepare(plugin_tmp, devices, error))
+		if (!fu_plugin_runner_composite_prepare(plugin_tmp, devices, error)) {
+			g_prefix_error(error,
+				       "cnt=%u, phase=%s: ",
+				       self->emulator_composite_cnt,
+				       fu_engine_emulator_phase_to_string(self->emulator_phase));
 			return FALSE;
+		}
 	}
 
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
-						   self->emulator_composite_cnt,
+						   FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2454,7 +2459,7 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	}
 	if (any_emulated) {
 		if (!fu_engine_emulator_load_phase(self->emulation,
-						   self->emulator_composite_cnt,
+						   FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2470,7 +2475,7 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
-						   self->emulator_composite_cnt,
+						   FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
