@@ -195,8 +195,11 @@ fu_pixart_tp_pjp360_device_setup(FuDevice *device, GError **error)
 {
 	FuPixartTpPjp360Device *self = FU_PIXART_TP_PJP360_DEVICE(device);
 
-	if (!fu_pixart_tp_device_ensure_vendor_reports(FU_PIXART_TP_DEVICE(self), error))
-		return FALSE;
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.8")) {
+		if (!fu_pixart_tp_device_ensure_vendor_reports(FU_PIXART_TP_DEVICE(self), error))
+			return FALSE;
+	}
 
 	if (!fu_pixart_tp_pjp360_device_ensure_partid(self, error))
 		return FALSE;
