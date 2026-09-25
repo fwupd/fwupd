@@ -1,6 +1,7 @@
 {
   "name": "Lenovo AI Mouse",
   "interactive": false,
+  "broken": true,
   "steps": [
     {
       "url": "13d615bce0446ecfea722273d45bac6535d3d2bd431de3c0ae43f8c21967086b-Lenovo-mouse_62f5-62f6-vs1.0.6.cab",

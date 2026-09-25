@@ -1,6 +1,7 @@
 {
   "name": "Lenovo 700 Wireless Silent Mouse",
   "interactive": false,
+  "broken": true,
   "steps": [
     {
       "url": "627e5b178920f483f1e7109d08a4dd987905d8f3e84f763d9a3913899d4485a5-Lenovo-mouse_629a-vs1.0.00.cab",

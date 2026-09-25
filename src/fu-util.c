@@ -1098,6 +1098,7 @@ fu_util_device_test_filename(FuUtil *self,
 {
 	gint64 repeat = 1;
 	gboolean interactive = FALSE;
+	gboolean broken = FALSE;
 	g_autoptr(FwupdJsonArray) json_archs_cpu = NULL;
 	g_autoptr(FwupdJsonArray) json_archs_plat = NULL;
 	g_autoptr(FwupdJsonArray) json_steps = NULL;
@@ -1140,6 +1141,15 @@ fu_util_device_test_filename(FuUtil *self,
 							error))
 		return FALSE;
 	fwupd_json_object_add_boolean(json_object_result, "interactive", interactive);
+
+	/* known broken */
+	if (!fwupd_json_object_get_boolean_with_default(json_obj, "broken", &broken, FALSE, error))
+		return FALSE;
+	fwupd_json_object_add_boolean(json_object_result, "broken", broken);
+	if (broken) {
+		helper->nr_skipped++;
+		return TRUE;
+	}
 
 	json_archs_cpu = fwupd_json_object_get_array(json_obj, "cpu-architectures", NULL);
 	if (json_archs_cpu != NULL) {
