@@ -92,6 +92,7 @@ fu_steelseries_firmware_class_init(FuSteelseriesFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_steelseries_firmware_parse;
 	firmware_class->export = fu_steelseries_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *
