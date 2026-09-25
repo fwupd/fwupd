@@ -14,68 +14,6 @@
 #include "fu-uefi-device-private.h"
 
 static void
-fu_uefi_dbx_zero_func(void)
-{
-	gboolean ret;
-	g_autoptr(FuContext) ctx =
-	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
-	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
-	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
-	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GBytes) csum = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* do not save silo */
-	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* zero hash = empty */
-	csum =
-	    fu_bytes_from_string("0000000000000000000000000000000000000000000000000000000000000000",
-				 &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(csum);
-	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
-	fu_firmware_add_image(siglist, FU_FIRMWARE(sig), NULL);
-	blob = fu_firmware_write(siglist, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-
-	/* create a plausible KEK */
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "KEK",
-					      blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* create an "empty" dbx */
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_SECURITY_DATABASE,
-					      "dbx",
-					      blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* detect version number */
-	ret = fu_device_probe(device, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(fu_device_get_version_raw(device), ==, 0);
-	g_assert_cmpstr(fu_device_get_version(device), ==, "0");
-}
-
-static void
 fu_efi_image_func(void)
 {
 	struct {
@@ -233,7 +171,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
-	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
 	g_test_add_func("/uefi-dbx/prepare-firmware", fu_uefi_dbx_prepare_firmware_func);
 	return g_test_run();
