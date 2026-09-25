@@ -1186,9 +1186,11 @@ fu_firmware_parse_stream(FuFirmware *self,
 		/* we want all firmware subclasses to set this now */
 		if (G_OBJECT_TYPE(self) != FU_TYPE_FIRMWARE &&
 		    cpriv->size_max == FU_FIRMWARE_SIZE_MAX_DEFAULT) {
-			g_critical(
-			    "%s did not set firmware max size with fu_firmware_set_size_max()",
-			    G_OBJECT_TYPE_NAME(self));
+			g_autofree gchar *sz = g_format_size(priv->streamsz);
+			g_critical("%s did not set firmware max size with "
+				   "fu_firmware_set_size_max(); stream was %s",
+				   G_OBJECT_TYPE_NAME(self),
+				   sz);
 		}
 #endif
 	}
