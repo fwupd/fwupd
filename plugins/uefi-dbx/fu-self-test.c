@@ -130,6 +130,7 @@ fu_uefi_dbx_zero_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(csum);
 	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
+	fu_efi_signature_set_owner(sig, FU_EFI_SIGNATURE_GUID_ZERO);
 	fu_firmware_add_image(siglist, FU_FIRMWARE(sig), NULL);
 	blob = fu_firmware_write(siglist, &error);
 	g_assert_no_error(error);

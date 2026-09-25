@@ -2426,8 +2426,14 @@ fu_device_set_quirk_kv(FuDevice *self,
 			fu_device_add_issue(self, sections[i]);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_VERSION_RAW) == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		fu_device_set_version_raw(self, tmp);
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION) == 0) {
-		fu_device_set_version(self, value);
+		fu_device_set_version(self, value); /* nocheck:set-version */
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION_LOWEST) == 0) {
@@ -3506,7 +3512,7 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 		if (fu_device_get_version_raw(self) != 0) {
 			g_autofree gchar *version =
 			    device_class->convert_version(self, fu_device_get_version_raw(self));
-			fu_device_set_version(self, version);
+			fu_device_set_version(self, version); /* nocheck:set-version */
 		}
 		if (fu_device_get_version_lowest_raw(self) != 0) {
 			g_autofree gchar *version =
@@ -3712,7 +3718,7 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 	if (device_class->convert_version != NULL) {
 		g_autofree gchar *version = device_class->convert_version(self, version_raw);
 		if (version != NULL)
-			fu_device_set_version(self, version);
+			fu_device_set_version(self, version); /* nocheck:set-version */
 	}
 }
 
@@ -7358,7 +7364,7 @@ fu_device_ensure_from_component_verfmt(FuDevice *self, XbNode *component)
 		if (fu_device_get_version_raw(self) != 0x0) {
 			g_autofree gchar *version = NULL;
 			version = fu_version_from_uint32(fu_device_get_version_raw(self), verfmt);
-			fu_device_set_version(self, version);
+			fu_device_set_version(self, version); /* nocheck:set-version */
 		}
 		if (fu_device_get_version_lowest_raw(self) != 0x0) {
 			g_autofree gchar *version = NULL;
@@ -7467,7 +7473,7 @@ fu_device_ensure_from_release(FuDevice *self, XbNode *rel)
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION)) {
 		const gchar *version = xb_node_get_attr(rel, "version");
 		if (version != NULL) {
-			fu_device_set_version(self, version);
+			fu_device_set_version(self, version); /* nocheck:set-version */
 			fu_device_remove_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
 		}
 	}
