@@ -343,9 +343,32 @@ fu_cli_prompt_for_device(FuCli *self, GPtrArray *devices, GError **error)
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		FwupdDevice *device_tmp = g_ptr_array_index(devices_filtered, i);
-		g_autofree gchar *id_display = fwupd_device_get_id_display(device_tmp);
-		if (id_display != NULL)
-			fu_console_print(priv->console, "%u.\t%s", i + 1, id_display);
+		if (fwupd_device_get_vendor(device_tmp) != NULL &&
+		    fwupd_device_get_name(device_tmp) != NULL) {
+			fu_console_print(priv->console,
+					 "%u.\t%s %s %s",
+					 i + 1,
+					 fu_device_get_id(device_tmp),
+					 fwupd_device_get_vendor(device_tmp),
+					 fwupd_device_get_name(device_tmp));
+		} else if (fwupd_device_get_vendor(device_tmp) != NULL) {
+			fu_console_print(priv->console,
+					 "%u.\t%s %s",
+					 i + 1,
+					 fu_device_get_id(device_tmp),
+					 fwupd_device_get_vendor(device_tmp));
+		} else if (fwupd_device_get_name(device_tmp) != NULL) {
+			fu_console_print(priv->console,
+					 "%u.\t%s %s",
+					 i + 1,
+					 fu_device_get_id(device_tmp),
+					 fwupd_device_get_name(device_tmp));
+		} else {
+			fu_console_print(priv->console,
+					 "%u.\t%s",
+					 i + 1,
+					 fu_device_get_id(device_tmp));
+		}
 	}
 	/* TRANSLATORS: get interactive prompt */
 	idx = fu_console_input_uint(priv->console, devices_filtered->len, "%s", _("Choose device"));
