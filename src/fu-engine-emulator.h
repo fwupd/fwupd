@@ -15,6 +15,9 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE_EMULATOR (fu_engine_emulator_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineEmulator, fu_engine_emulator, FU, ENGINE_EMULATOR, GObject)
 
+/* the default count, e.g. for composite actions */
+#define FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT 0
+
 /* the default write count, e.g. for composite actions */
 #define FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT 0
 

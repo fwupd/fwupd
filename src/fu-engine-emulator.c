@@ -286,6 +286,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
+	g_autoptr(FuFirmware) img_composite = NULL;
 	g_autoptr(FuInputStream) stream_empty = NULL;
 	g_autoptr(GError) error_archive = NULL;
 
@@ -307,6 +308,13 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 				      &error_archive)) {
 		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);
 		return fu_engine_emulator_load_json_from_stream(self, stream, error);
+	}
+
+	/* fix up some invalid names */
+	img_composite = fu_firmware_get_image_by_id(archive, "*:composite-cleanup.json", NULL);
+	if (img_composite != NULL) {
+		g_debug("fixing composite cleanup image ID: %s", fu_firmware_get_id(img_composite));
+		fu_firmware_set_id(img_composite, "composite-cleanup.json");
 	}
 
 	/* load JSON files from archive */
