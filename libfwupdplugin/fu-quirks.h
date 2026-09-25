@@ -174,6 +174,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_VERSION "Version"
 /**
+ * FU_QUIRKS_VERSION_RAW:
+ *
+ * The quirk key for the version, e.g. `0x123`.
+ *
+ * Since: 2.1.9
+ **/
+#define FU_QUIRKS_VERSION_RAW "VersionRaw"
+/**
  * FU_QUIRKS_VERSION_LOWEST:
  *
  * The quirk key for the lowest allowed version, e.g. `1.2.3`.
