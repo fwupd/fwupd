@@ -11,6 +11,7 @@
 #include "fwupd-test.h"
 
 #include "fu-context-private.h"
+#include "fu-fmap-struct.h"
 #include "fu-ifwi-struct.h"
 
 static void
@@ -237,13 +238,19 @@ fu_firmware_dfuse_func(void)
 static void
 fu_firmware_fmap_func(void)
 {
+	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum = NULL;
 	g_autofree gchar *img_str = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_invalid = g_byte_array_new();
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_decoy = fu_fmap_firmware_new();
+	g_autoptr(FuFirmware) firmware_invalid = fu_fmap_firmware_new();
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
+	g_autoptr(GBytes) roundtrip_decoy = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
@@ -282,6 +289,71 @@ fu_firmware_fmap_func(void)
 	g_assert_cmpstr(csum,
 			==,
 			"229fcd952264f42ae4853eda7e716cc5c1ae18e7f804a6ba39ab1dfde5737d7e");
+
+	/* ignore an invalid signature before the real FMAP */
+	fu_byte_array_append_bytes(buf, roundtrip);
+	g_assert_true(fu_memcpy_safe(buf->data,
+				     buf->len,
+				     0x0,
+				     (const guint8 *)"__FMAP__",
+				     0x8,
+				     0x0,
+				     0x8,
+				     &error));
+	g_assert_no_error(error);
+	roundtrip_decoy = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	ret = fu_firmware_parse_bytes(firmware_decoy,
+				      roundtrip_decoy,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_firmware_get_offset(firmware_decoy), ==, 0x10);
+
+	/* reject an FMAP area that extends beyond the image */
+	fu_byte_array_append_bytes(buf_invalid, roundtrip);
+	fu_memwrite_uint32(buf_invalid->data + 0x10 + FU_STRUCT_FMAP_SIZE +
+			       FU_STRUCT_FMAP_AREA_OFFSET_SIZE,
+			   G_MAXUINT32,
+			   G_LITTLE_ENDIAN);
+	g_clear_pointer(&roundtrip_decoy, g_bytes_unref);
+	roundtrip_decoy = g_byte_array_free_to_bytes(g_steal_pointer(&buf_invalid));
+	ret = fu_firmware_parse_bytes(firmware_invalid,
+				      roundtrip_decoy,
+				      0x10,
+				      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+				      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
+static void
+fu_firmware_magic_offset_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_src = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST,
+					 "tests",
+					 "efi-variable-authentication2.builder.xml",
+					 NULL);
+	firmware_src = fu_firmware_new_from_filename(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware_src);
+	blob = fu_firmware_write(firmware_src, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+
+	/* magic at a relative offset must not resolve before the requested base */
+	firmware = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x1, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_false(ret);
 }
 
 static void
@@ -1256,6 +1328,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/dfu-patch", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware/dfuse", fu_firmware_dfuse_func);
 	g_test_add_func("/fwupd/firmware/fmap", fu_firmware_fmap_func);
+	g_test_add_func("/fwupd/firmware/magic-offset", fu_firmware_magic_offset_func);
 	g_test_add_func("/fwupd/firmware/gtypes", fu_firmware_new_from_gtypes_func);
 	g_test_add_func("/fwupd/firmware/sorted", fu_firmware_sorted_func);
 	return g_test_run();

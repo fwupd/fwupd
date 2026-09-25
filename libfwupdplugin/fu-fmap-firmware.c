@@ -28,6 +28,7 @@
 
 typedef struct {
 	gsize signature_offset; /* only for constructing the image */
+	gsize table_size;
 	guint8 ver_major;
 	guint8 ver_minor;
 } FuFmapFirmwarePrivate;
@@ -84,7 +85,74 @@ fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static gboolean
 fu_fmap_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_fmap_validate_stream(stream, offset, error);
+	gsize fmap_size;
+	gsize streamsz = 0;
+	gsize table_offset = offset;
+	gsize table_size;
+	guint16 nareas;
+	g_autoptr(FuStructFmap) st_hdr = NULL;
+
+	st_hdr = fu_struct_fmap_parse_stream(stream, offset, error);
+	if (st_hdr == NULL)
+		return FALSE;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	fmap_size = fu_struct_fmap_get_size(st_hdr);
+	/* an embedded FMAP can be smaller than its padded backing MTD stream */
+	if (fmap_size > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FMAP size 0x%x exceeds stream size 0x%x",
+			    (guint)fmap_size,
+			    (guint)streamsz);
+		return FALSE;
+	}
+
+	nareas = fu_struct_fmap_get_nareas(st_hdr);
+	if (nareas < 1 || nareas > FU_FMAP_FIRMWARE_AREAS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "number of FMAP areas invalid: %u",
+			    (guint)nareas);
+		return FALSE;
+	}
+	table_size = st_hdr->buf->len;
+	if (!fu_size_checked_inc_product(&table_size, FU_STRUCT_FMAP_AREA_SIZE, nareas, error))
+		return FALSE;
+	if (offset > fmap_size || table_size > fmap_size - offset) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP table exceeds image size");
+		return FALSE;
+	}
+	if (!fu_size_checked_inc(&table_offset, st_hdr->buf->len, error))
+		return FALSE;
+	for (guint16 i = 0; i < nareas; i++) {
+		guint32 area_offset;
+		guint32 area_size;
+		g_autoptr(FuStructFmapArea) st_area = NULL;
+
+		st_area = fu_struct_fmap_area_parse_stream(stream, table_offset, error);
+		if (st_area == NULL)
+			return FALSE;
+		area_offset = fu_struct_fmap_area_get_offset(st_area);
+		area_size = fu_struct_fmap_area_get_size(st_area);
+		if (area_offset > fmap_size || area_size > fmap_size - area_offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP area 0x%x exceeds image size 0x%x",
+				    (guint)i,
+				    (guint)fmap_size);
+			return FALSE;
+		}
+		if (!fu_size_checked_inc(&table_offset, st_area->buf->len, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -96,7 +164,6 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(FuStructFmap) st_hdr = NULL;
 
@@ -105,36 +172,17 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
+	fu_firmware_set_size(firmware, fu_struct_fmap_get_size(st_hdr));
 	priv->ver_major = fu_struct_fmap_get_ver_major(st_hdr);
 	priv->ver_minor = fu_struct_fmap_get_ver_minor(st_hdr);
 
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	if (fu_struct_fmap_get_size(st_hdr) > streamsz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "file size incorrect, expected 0x%04x got 0x%04x",
-			    fu_struct_fmap_get_size(st_hdr),
-			    (guint)streamsz);
-		return FALSE;
-	}
 	nareas = fu_struct_fmap_get_nareas(st_hdr);
-	if (nareas < 1) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "number of areas invalid");
+	priv->table_size = st_hdr->buf->len;
+	if (!fu_size_checked_inc_product(&priv->table_size,
+					 FU_STRUCT_FMAP_AREA_SIZE,
+					 nareas,
+					 error))
 		return FALSE;
-	}
-	if (nareas > FU_FMAP_FIRMWARE_AREAS_MAX) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "excessive number of areas: %u",
-			    (guint)nareas);
-		return FALSE;
-	}
 	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
 		g_prefix_error_literal(error, "FMAP header offset overflow: ");
 		return FALSE;
@@ -152,6 +200,10 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		st_area = fu_struct_fmap_area_parse_stream(stream, offset, error);
 		if (st_area == NULL)
 			return FALSE;
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
+			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
+			return FALSE;
+		}
 		area_size = fu_struct_fmap_area_get_size(st_area);
 		if (area_size == 0)
 			continue;
@@ -185,12 +237,9 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
+		fu_firmware_set_size(img, area_size);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
-			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
-			return FALSE;
-		}
 	}
 
 	/* success */
@@ -322,4 +371,22 @@ FuFirmware *
 fu_fmap_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_FMAP_FIRMWARE, NULL));
+}
+
+/**
+ * fu_fmap_firmware_get_table_size:
+ * @self: a #FuFmapFirmware
+ *
+ * Gets the size of the FMAP header and area table.
+ *
+ * Returns: size in bytes
+ *
+ * Since: 2.2.1
+ **/
+gsize
+fu_fmap_firmware_get_table_size(FuFmapFirmware *self)
+{
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FMAP_FIRMWARE(self), 0);
+	return priv->table_size;
 }
