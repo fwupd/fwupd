@@ -290,6 +290,18 @@ fu_ioctl_execute(FuIoctl *self,
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
+		/* prior to 66406db239daa5d6480e0a3e5f8e97744e6a9f4d we would not record the
+		 * emulation failure, and just not write a "DataOut" key -- and we can't use
+		 * fu_device_check_fwupd_version() as the FuDevice is not visible here */
+		if (fu_device_event_get_str(event, "DataOut", NULL) == NULL &&
+		    (flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "no DataOut so emulating read failure for old emulation");
+			return FALSE;
+		}
 		if (self->fixups->len == 0) {
 			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
 				if (!fu_device_event_copy_data(event,
