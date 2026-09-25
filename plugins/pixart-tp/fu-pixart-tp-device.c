@@ -1294,8 +1294,11 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 	guint16 version_raw = 0;
 	g_autoptr(GByteArray) buf = NULL;
 
-	if (!fu_pixart_tp_device_ensure_vendor_reports(self, error))
-		return FALSE;
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.8")) {
+		if (!fu_pixart_tp_device_ensure_vendor_reports(self, error))
+			return FALSE;
+	}
 
 	/* read tp part id */
 	buf = fu_pixart_tp_device_register_read_array(self,
