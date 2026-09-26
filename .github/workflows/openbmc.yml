@@ -31,7 +31,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Find container image
         id: find_container
-        uses: $/.github/actions/find-container
+        uses: ./.github/actions/find-container
         with:
           distro: ubuntu
           arch: amd64
