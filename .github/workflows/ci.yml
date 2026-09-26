@@ -66,7 +66,8 @@ jobs:
     with:
       publish: false
       container_lut: ${{ needs.containers.outputs.container_lut }}
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   macos:
     permissions:
@@ -92,7 +93,8 @@ jobs:
     uses: $/.github/workflows/snap.yml
     with:
       deploy: ${{ github.ref == 'refs/heads/main' }}
-    secrets: inherit
+    secrets:
+      STORE_LOGIN: ${{ secrets.STORE_LOGIN }}
 
   static-analysis:
     permissions:
@@ -109,7 +111,6 @@ jobs:
     uses: $/.github/workflows/windows.yml
     with:
       publish: false
-    secrets: inherit
 
   fuzzing:
     permissions:
