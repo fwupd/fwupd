@@ -162,8 +162,8 @@ jobs:
         if: steps.should_we.outputs.run == 'true' && steps.tag.outputs.exists != 'true' && github.event_name == 'pull_request'
         env:
           USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          TAG="${{steps.tag.outputs.tag}}"
           echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
           echo "The push pipelines should be listed here: https://github.com/${USER_REPO}/actions"
           exit 1
