@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   rebuild-arch-container:
-    uses: ./.github/workflows/create_containers.yml
+    uses: $/.github/workflows/create_containers.yml
     with:
       force_rebuild: true
       distro_filter: 'arch'

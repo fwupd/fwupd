@@ -5,6 +5,9 @@ on:
       deploy:
         required: true
         type: boolean
+    secrets:
+      STORE_LOGIN:
+        required: true
 
 permissions:
   contents: read
