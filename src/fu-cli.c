@@ -1770,6 +1770,20 @@ fu_cli_device_test_filename(FuCli *self,
 		return TRUE;
 	}
 
+	/* requires actual hardware */
+	if (g_hash_table_contains(helper->report_metadata, "IsContainer")) {
+		if (!fwupd_json_object_get_boolean_with_default(json_obj,
+								"broken-container",
+								&broken,
+								FALSE,
+								error))
+			return FALSE;
+		if (broken) {
+			helper->nr_skipped++;
+			return TRUE;
+		}
+	}
+
 	json_archs_cpu = fwupd_json_object_get_array(json_obj, "cpu-architectures", NULL);
 	if (json_archs_cpu != NULL) {
 		gboolean matched = FALSE;
