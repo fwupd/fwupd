@@ -91,8 +91,10 @@ fu_sunplus_camera_device_xu_get_len(FuSunplusCameraDevice *self,
 					       UVC_GET_LEN,
 					       buf,
 					       sizeof(buf),
-					       error))
+					       error)) {
+		g_prefix_error_literal(error, "failed to get len: ");
 		return FALSE;
+	}
 	*len = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* success */
@@ -128,8 +130,10 @@ fu_sunplus_camera_device_set_enabled(FuSunplusCameraDevice *self, guint8 value, 
 						 FU_SUNPLUS_CAMERA_SELECTOR_ENABLE,
 						 buf,
 						 sizeof(buf),
-						 error))
+						 error)) {
+		g_prefix_error_literal(error, "failed to set enabled: ");
 		return FALSE;
+	}
 
 	/* success */
 	fu_device_sleep(FU_DEVICE(self), 200);
@@ -290,14 +294,18 @@ fu_sunplus_camera_device_read_chunk(FuSunplusCameraDevice *self,
 			    bufsz);
 		return FALSE;
 	}
-	if (!fu_sunplus_camera_device_set_read_addr(self, addr, error))
+	if (!fu_sunplus_camera_device_set_read_addr(self, addr, error)) {
+		g_prefix_error_literal(error, "failed to read addr: ");
 		return FALSE;
+	}
 	if (!fu_sunplus_camera_device_xu_get_cur(self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_READ_CHUNK,
 						 buf,
 						 (guint16)bufsz,
-						 error))
+						 error)) {
+		g_prefix_error(error, "failed to read chunk at 0x%x: ", addr);
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -518,8 +526,10 @@ fu_sunplus_camera_device_write_chunk(FuSunplusCameraDevice *self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_ACCESS,
 						 buf->data,
 						 buf->len,
-						 error))
+						 error)) {
+		g_prefix_error_literal(error, "failed to write chunk: ");
 		return FALSE;
+	}
 
 	/* success */
 	*checksum ^= fu_xor8(buf->data, buf->len);
@@ -625,8 +635,10 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 						 FU_SUNPLUS_CAMERA_SELECTOR_CHECKSUM,
 						 &checksum_dev,
 						 sizeof(checksum_dev),
-						 error))
+						 error)) {
+		g_prefix_error_literal(error, "failed to read checksum: ");
 		return FALSE;
+	}
 	if (checksum_dev != checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -640,8 +652,10 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 						 FU_SUNPLUS_CAMERA_SELECTOR_FINISH,
 						 &finish,
 						 sizeof(finish),
-						 error))
+						 error)) {
+		g_prefix_error_literal(error, "failed to finish: ");
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	if (!fu_sunplus_camera_device_verify(self, chunks, fu_progress_get_child(progress), error))
