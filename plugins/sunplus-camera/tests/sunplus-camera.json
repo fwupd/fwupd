@@ -1,6 +1,9 @@
 {
   "name": "Sunplus Camera",
   "interactive": false,
+  "platform-architectures": [
+    "x86_64"
+  ],
   "steps": [
     {
       "url": "4d995de8c66d5c42fc1dcfd67db881d5b3a6ca5634f7e0ab451a33ac9871039b-sunplus-camera-9.7.cab",
