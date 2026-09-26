@@ -2263,6 +2263,12 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (host_bkc != NULL)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_steal_pointer(&host_bkc));
 
+	/* useful for debugging */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_IS_CONTAINER))
+		g_hash_table_insert(hash, g_strdup("IsContainer"), g_strdup("true"));
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR))
+		g_hash_table_insert(hash, g_strdup("IsHypervisor"), g_strdup("true"));
+
 #ifdef HAVE_PASSIM
 	/* this is useful to know if passim support is actually helping bandwidth use */
 	fu_engine_ensure_passim_client(self);
