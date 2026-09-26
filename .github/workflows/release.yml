@@ -20,7 +20,9 @@ jobs:
     with:
       publish: true
       container_lut: ${{ needs.containers.outputs.container_lut }}
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      FWUPD_GITHUB_IO_SSH_KEY: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
 
   windows:
     permissions:
@@ -28,4 +30,3 @@ jobs:
     uses: $/.github/workflows/windows.yml
     with:
       publish: true
-    secrets: inherit
