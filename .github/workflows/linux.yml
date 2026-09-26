@@ -97,6 +97,14 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: tarball
+      - name: prepare LVFS firmware cache
+        run: mkdir -p "$RUNNER_TEMP/lvfs-firmware-cache"
+      - name: restore LVFS firmware cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/lvfs-firmware-cache
+          key: lvfs-firmware-${{ hashFiles('plugins/**/*test*/*.json') }}
+          restore-keys: lvfs-firmware-
       - name: Build in container
         env:
           CI_NETWORK: true
@@ -111,6 +119,7 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
+              -v "$RUNNER_TEMP/lvfs-firmware-cache:/root/.cache/fwupd" \
               "${CONTAINER_URI}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-build.sh"
       - name: Save any applicable artifacts
@@ -144,8 +153,22 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
+              -v "$RUNNER_TEMP/lvfs-firmware-cache:/root/.cache/fwupd" \
               "${CONTAINER_URI}" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
+      - name: fix LVFS firmware cache ownership
+        if: ${{ !cancelled() }}
+        run: sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/lvfs-firmware-cache"
+      - name: save LVFS firmware cache
+        # only one job can be allowed to save the cache
+        if: ${{ !cancelled()
+          && matrix.env.DISTRO == 'fedora'
+          && matrix.env.ARCH == 'amd64'
+          && matrix.env.VARIANT == '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/lvfs-firmware-cache
+          key: lvfs-firmware-${{ hashFiles('plugins/**/*test*/*.json') }}
       - name: Save any coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
