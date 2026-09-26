@@ -1,6 +1,7 @@
 {
   "name": "Lenovo Pro Unified Pairing Receiver",
   "interactive": false,
+  "broken": true,
   "steps": [
     {
       "url": "f73be118c45efc87b15935851ffc9de5250e37db6bda86484bd13be7f00a01ee-Lenovo-hid_629d-vs1.2.0.cab",

@@ -1694,6 +1694,7 @@ fu_cli_device_test_filename(FuCli *self,
 {
 	gint64 repeat = 1;
 	gboolean interactive = FALSE;
+	gboolean broken = FALSE;
 	g_autoptr(FwupdJsonArray) json_archs_cpu = NULL;
 	g_autoptr(FwupdJsonArray) json_archs_plat = NULL;
 	g_autoptr(FwupdJsonArray) json_steps = NULL;
@@ -1736,6 +1737,29 @@ fu_cli_device_test_filename(FuCli *self,
 							error))
 		return FALSE;
 	fwupd_json_object_add_boolean(json_object_result, "interactive", interactive);
+
+	/* known broken */
+	if (!fwupd_json_object_get_boolean_with_default(json_obj, "broken", &broken, FALSE, error))
+		return FALSE;
+	fwupd_json_object_add_boolean(json_object_result, "broken", broken);
+	if (broken) {
+		helper->nr_skipped++;
+		return TRUE;
+	}
+
+	/* requires actual hardware */
+	if (g_hash_table_contains(helper->report_metadata, "IsContainer")) {
+		if (!fwupd_json_object_get_boolean_with_default(json_obj,
+								"broken-container",
+								&broken,
+								FALSE,
+								error))
+			return FALSE;
+		if (broken) {
+			helper->nr_skipped++;
+			return TRUE;
+		}
+	}
 
 	json_archs_cpu = fwupd_json_object_get_array(json_obj, "cpu-architectures", NULL);
 	if (json_archs_cpu != NULL) {

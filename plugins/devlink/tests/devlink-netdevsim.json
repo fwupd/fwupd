@@ -1,6 +1,7 @@
 {
   "name": "Devlink Netdevsim Setup",
   "interactive": false,
+  "broken-container": true,
   "steps": [
     {
       "url": "fbdca7ac3b80f7df24b1a1b435963a46aee19b987ba55b5cff7dddb4de158664-netdevsim_test_firmware_new.cab",
