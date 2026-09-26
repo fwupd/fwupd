@@ -9,14 +9,14 @@ jobs:
   containers:
     permissions:
       contents: read
-    uses: ./.github/workflows/create_containers.yml
+    uses: $/.github/workflows/create_containers.yml
 
   linux:
     permissions:
       contents: read
     needs: [containers]
     if: ${{ always() && needs.containers.result == 'success' }}
-    uses: ./.github/workflows/linux.yml
+    uses: $/.github/workflows/linux.yml
     with:
       publish: true
       container_lut: ${{ needs.containers.outputs.container_lut }}
@@ -25,7 +25,7 @@ jobs:
   windows:
     permissions:
       contents: write
-    uses: ./.github/workflows/windows.yml
+    uses: $/.github/workflows/windows.yml
     with:
       publish: true
     secrets: inherit
