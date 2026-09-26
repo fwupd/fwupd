@@ -249,8 +249,12 @@ fu_security_attr_get_name_translated(FuSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return g_strdup(_("UEFI NX protection"));
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
+		return g_strdup(_("UEFI db (Microsoft UEFI)"));
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION) == 0) {
+		/* TRANSLATORS: Title: is UEFI db does not have a test key */
 		return g_strdup(_("UEFI db"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
@@ -470,7 +474,11 @@ fu_security_attr_get_title_translated(FuSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return _("UEFI NX Protection");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI) == 0) {
+		/* TRANSLATORS: Title: is UEFI db up-to-date */
+		return _("UEFI db (Microsoft UEFI)");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return _("UEFI db");
 	}
@@ -704,7 +712,8 @@ fu_security_attr_get_description_translated(FuSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI bootloader compiled with Data Execution Prevention support.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("The UEFI db contains the list of valid certificates that can be used to "
 			 "authorize what EFI binaries are allowed to run.");

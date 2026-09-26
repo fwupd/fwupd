@@ -427,13 +427,21 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT "org.fwupd.hsi.Uefi.NxCompat"
 /**
- * FWUPD_SECURITY_ATTR_ID_UEFI_DB: (skip)
+ * FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI: (skip)
  *
- * Host Security ID attribute for UEFI db certificate store
+ * Host Security ID attribute for UEFI db certificate store (Microsoft UEFI cert)
  *
- * Since: 2.0.8
+ * Since: 2.1.8
  **/
-#define FWUPD_SECURITY_ATTR_ID_UEFI_DB "org.fwupd.hsi.Uefi.Db"
+#define FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI "org.fwupd.hsi.Uefi.Db.MsUefi"
+/**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION: (skip)
+ *
+ * Host Security ID attribute for UEFI db certificate store (no test keys)
+ *
+ * Since: 2.1.8
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION "org.fwupd.hsi.Uefi.Db.Production"
 /**
  * FWUPD_SECURITY_ATTR_ID_HP_SURESTART: (skip)
  *

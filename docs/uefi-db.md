@@ -47,11 +47,11 @@ Updating the KEK and db is a generally safe procedure, with the only limitations
 
     ...
     {
-      "AppstreamId" : "org.fwupd.hsi.Uefi.Db",
+      "AppstreamId" : "org.fwupd.hsi.Uefi.Db.MsUefi",
       "HsiResult" : "not-valid",
       "Name" : "UEFI db",
       "Description" : "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run.",
-      "Uri" : "https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.Uefi.Db",
+      "Uri" : "https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.Uefi.Db.MsUefi",
       "Flags" : [
         "runtime-issue",
         "action-config-fw"
@@ -111,11 +111,11 @@ Updating the KEK and db is a generally safe procedure, with the only limitations
 
     ...
     {
-      "AppstreamId" : "org.fwupd.hsi.Uefi.Db",
+      "AppstreamId" : "org.fwupd.hsi.Uefi.Db.MsUefi",
       "HsiResult" : "valid",
       "Name" : "UEFI db",
       "Description" : "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run.",
-      "Uri" : "https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.Uefi.Db",
+      "Uri" : "https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.Uefi.Db.MsUefi",
       "Flags" : [
         "success",
         "runtime-issue",
