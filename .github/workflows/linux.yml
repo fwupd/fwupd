@@ -7,6 +7,11 @@ on:
       container_lut:
         required: true
         type: string
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+      FWUPD_GITHUB_IO_SSH_KEY:
+        required: false
 
 permissions:
   contents: read
