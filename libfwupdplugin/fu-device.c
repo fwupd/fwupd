@@ -22,6 +22,7 @@
 #include "fu-device-poll-locker.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
+#include "fu-kernel-search-path-private.h"
 #include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
 #include "fu-progress-private.h"
@@ -8205,6 +8206,47 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		    id,
 		    id_hash);
 	return NULL;
+}
+
+/**
+ * fu_device_kernel_search_path_locker_new:
+ * @self: a #FuDevice
+ * @path: the new devivce path
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets the kernel firmware search path. When the #FuKernelSearchPathLocker is deallocated path
+ * is restored to the previous value. The @path is also created if it does not already exist.
+ *
+ * This object is typically called using g_autoptr() but the device can also be
+ * manually closed using g_clear_object().
+ *
+ * Returns: (transfer full): a #FuKernelSearchPathLocker, or %NULL on error
+ *
+ * Since: 2.1.9
+ **/
+FuKernelSearchPathLocker *
+fu_device_kernel_search_path_locker_new(FuDevice *self, const gchar *path, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuPathStore *pstore = fu_context_get_path_store(priv->ctx);
+	FuKernelSearchPathLockerFlags flags = FU_KERNEL_SEARCH_PATH_LOCKER_FLAG_NONE;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(path != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (g_mkdir_with_parents(path, 0700) == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to create %s: %s",
+			    path,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		flags |= FU_KERNEL_SEARCH_PATH_LOCKER_FLAG_EMULATED;
+	return fu_kernel_search_path_locker_new(pstore, path, flags, error);
 }
 
 /**

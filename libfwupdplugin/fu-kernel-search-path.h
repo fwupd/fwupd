@@ -18,10 +18,11 @@ G_DECLARE_FINAL_TYPE(FuKernelSearchPathLocker,
 		     KERNEL_SEARCH_PATH_LOCKER,
 		     GObject)
 
-FuKernelSearchPathLocker *
-fu_kernel_search_path_locker_new(FuPathStore *pstore,
-				 const gchar *path,
-				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+typedef enum {
+	FU_KERNEL_SEARCH_PATH_LOCKER_FLAG_NONE = 0,
+	FU_KERNEL_SEARCH_PATH_LOCKER_FLAG_EMULATED = 1 << 0,
+} FuKernelSearchPathLockerFlags;
+
 const gchar *
 fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self)
     G_GNUC_NON_NULL(1) G_GNUC_PURE;

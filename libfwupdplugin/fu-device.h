@@ -13,6 +13,7 @@
 #include "fu-device-struct.h"
 #include "fu-firmware.h"
 #include "fu-input-stream.h"
+#include "fu-kernel-search-path.h"
 #include "fu-progress.h"
 #include "fu-security-attrs.h"
 #include "fu-version-common.h"
@@ -1403,5 +1404,11 @@ void
 fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
 GPtrArray *
 fu_device_get_events(FuDevice *self);
+
+FuKernelSearchPathLocker *
+fu_device_kernel_search_path_locker_new(FuDevice *self,
+					const gchar *path,
+					GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

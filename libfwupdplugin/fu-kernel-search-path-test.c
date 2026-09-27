@@ -44,7 +44,10 @@ fu_kernel_search_path_func(void)
 	g_assert_true(ret);
 
 	fu_path_store_set_path(pstore, FU_PATH_KIND_FIRMWARE_SEARCH, search_path);
-	locker = fu_kernel_search_path_locker_new(pstore, "/foo/bar", &error);
+	locker = fu_kernel_search_path_locker_new(pstore,
+						  "/foo/bar",
+						  FU_KERNEL_SEARCH_PATH_LOCKER_FLAG_NONE,
+						  &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
 	g_assert_cmpstr(fu_kernel_search_path_locker_get_path(locker), ==, "/foo/bar");
