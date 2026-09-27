@@ -58,7 +58,6 @@ static FuKernelSearchPathLocker *
 fu_mm_mhi_qcdm_device_search_path_locker_new(FuMmMhiQcdmDevice *self, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autofree gchar *mm_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
@@ -71,16 +70,7 @@ fu_mm_mhi_qcdm_device_search_path_locker_new(FuMmMhiQcdmDevice *self, GError **e
 					      NULL);
 	if (mm_fw_dir == NULL)
 		return NULL;
-	if (g_mkdir_with_parents(mm_fw_dir, 0700) == -1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to create '%s': %s",
-			    mm_fw_dir,
-			    fwupd_strerror(errno));
-		return NULL;
-	}
-	locker = fu_kernel_search_path_locker_new(pstore, mm_fw_dir, error);
+	locker = fu_device_kernel_search_path_locker_new(FU_DEVICE(self), mm_fw_dir, error);
 	if (locker == NULL)
 		return NULL;
 	return g_steal_pointer(&locker);
