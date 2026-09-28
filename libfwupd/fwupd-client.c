@@ -77,6 +77,7 @@ typedef struct {
 	gchar *host_vendor;
 	gchar *host_machine_id;
 	gchar *host_security_id;
+	FwupdFeatureFlags feature_flags; /* deferred */
 	gboolean only_trusted;
 	gboolean pending_reboot;
 	GMutex proxy_mutex; /* for @proxy */
@@ -1098,7 +1099,7 @@ fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
 }
 
 static void
-fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_set_feature_flags_defer_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
@@ -1120,6 +1121,34 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 
 	/* success */
 	g_task_return_boolean(task, TRUE);
+}
+
+static void
+fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+	FwupdClient *self = g_task_get_source_object(task);
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	GCancellable *cancellable = g_task_get_cancellable(task);
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* set feature flags */
+	g_dbus_proxy_call(priv->proxy,
+			  "SetFeatureFlags",
+			  g_variant_new("(t)", (guint64)priv->feature_flags),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_set_feature_flags_defer_cb,
+			  g_steal_pointer(&task));
 }
 
 /**
@@ -5640,14 +5669,16 @@ fwupd_client_set_feature_flags_async(FwupdClient *self,
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_set_feature_flags_async);
 
-	/* sanity check before using proxy */
+	/* always store in case the SetHints callback is yet to run */
+	priv->feature_flags = feature_flags;
+
+	/* if the client has not been started, defer this for later */
 	if (priv->proxy == NULL) {
-		g_task_return_new_error_literal(task,
-						FWUPD_ERROR,
-						FWUPD_ERROR_NOT_SUPPORTED,
-						"no proxy");
+		g_task_return_boolean(task, TRUE);
 		return;
 	}
+
+	/* update existing flags */
 	g_dbus_proxy_call(priv->proxy,
 			  "SetFeatureFlags",
 			  g_variant_new("(t)", (guint64)feature_flags),

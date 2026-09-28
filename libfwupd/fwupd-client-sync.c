@@ -179,6 +179,10 @@ fwupd_client_quit(FwupdClient *self, GCancellable *cancellable, GError **error)
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
 	if (impl->quit == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3141,10 +3145,7 @@ fwupd_client_set_feature_flags(FwupdClient *self,
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* connect */
-	if (!fwupd_client_connect(self, cancellable, error))
-		return FALSE;
-
+	/* deliberately do not connect as we can defer this */
 	if (impl->set_feature_flags == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3249,6 +3250,12 @@ fwupd_client_download_bytes(FwupdClient *self,
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	g_return_val_if_fail(fwupd_client_get_user_agent(self) != NULL, NULL);
+
+	/* connect if not already set */
+	if (fwupd_client_get_daemon_version(self) == NULL) {
+		if (!fwupd_client_connect(self, cancellable, error))
+			return NULL;
+	}
 
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);

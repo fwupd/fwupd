@@ -2574,6 +2574,10 @@ fu_engine_cli_efiboot_next(FuCli *cli, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint64 value = 0;
 
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
+
 	/* just show */
 	if (values[0] == NULL) {
 		guint16 idx = 0;
@@ -2597,6 +2601,10 @@ fu_engine_cli_efiboot_order(FuCli *cli, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GArray) order = NULL;
+
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 
 	/* just show */
 	if (values[0] == NULL) {
@@ -2642,6 +2650,10 @@ fu_engine_cli_efiboot_create(FuCli *cli, gchar **values, GError **error)
 		    _("Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"));
 		return FALSE;
 	}
+
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 
 	/* check the index does not already exist */
 	if (!fu_strtoull(values[0], &idx, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
@@ -2712,6 +2724,10 @@ fu_engine_cli_efiboot_delete(FuCli *cli, gchar **values, GError **error)
 	if (!fu_strtoull(values[0], &value, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
 
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
+
 	/* success */
 	return fu_efivars_set_boot_data(efivars, (guint16)value, NULL, error);
 }
@@ -2772,6 +2788,10 @@ fu_engine_cli_efiboot_hive(FuCli *cli, gchar **values, GError **error)
 				    _("Invalid arguments, expected INDEX KEY [VALUE]"));
 		return FALSE;
 	}
+
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 
 	/* load the boot entry */
 	if (!fu_strtoull(values[0], &idx, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
@@ -2837,6 +2857,10 @@ fu_engine_cli_efiboot_info(FuCli *cli, gchar **values, GError **error)
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 	guint16 idx = 0;
+
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 
 	entries = fu_efivars_get_boot_entries(efivars, error);
 	if (entries == NULL)
@@ -2918,6 +2942,10 @@ fu_engine_cli_efivar_files(FuCli *cli, gchar **values, GError **error)
 	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(GPtrArray) files = NULL;
 
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
+
 	files = fu_context_get_esp_files(self->ctx,
 					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
 					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE |
@@ -2957,6 +2985,10 @@ fu_engine_cli_efivar_list(FuCli *cli, gchar **values, GError **error)
 				    _("Invalid arguments, expected GUID"));
 		return FALSE;
 	}
+
+	/* connect */
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 	names = fu_efivars_get_names(efivars, values[0], error);
 	if (names == NULL)
 		return FALSE;
@@ -3036,6 +3068,8 @@ fu_engine_cli_clear_history(FuCli *cli, gchar **values, GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(cli);
 	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
+	if (!fu_engine_cli_start_engine(self, FU_ENGINE_LOAD_FLAG_NO_CACHE, self->progress, error))
+		return FALSE;
 	return fu_history_remove_all(history, error);
 }
 

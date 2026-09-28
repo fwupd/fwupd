@@ -139,7 +139,8 @@ fwupd_client_download_func(void)
 		return;
 	}
 
-	fwupd_client_set_user_agent_for_package(client, PACKAGE_NAME, PACKAGE_VERSION);
+	fwupd_client_set_user_agent_for_package(client, g_get_prgname(), PACKAGE_VERSION);
+	fwupd_client_set_daemon_version(client, PACKAGE_VERSION);
 	uri = g_strdup_printf("file://%s", fn);
 	blob1 =
 	    fwupd_client_download_bytes(client, uri, FWUPD_CLIENT_DOWNLOAD_FLAG_NONE, NULL, &error);
