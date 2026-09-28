@@ -19,5 +19,4 @@ ninja -C "$BUILD" -v
 meson test -C "$BUILD" --print-errorlogs --verbose
 
 # generate coverage report
-ninja -C "$BUILD" coverage-xml
-cp "$BUILD/meson-logs/coverage.xml" .
+./contrib/ci/coverage.sh
