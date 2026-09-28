@@ -84,6 +84,3 @@ endgroup
 group "Run fwupdtool-efiboot.sh installed test"
 /usr/share/installed-tests/fwupd/fwupdtool-efiboot.sh
 endgroup
-
-# generate coverage report
-./contrib/ci/coverage.sh
