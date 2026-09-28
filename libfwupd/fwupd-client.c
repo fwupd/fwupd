@@ -1106,12 +1106,6 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
-		/* new libfwupd and old daemon, just swallow the error */
-		if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_METHOD)) {
-			g_debug("ignoring %s", error->message);
-			g_task_return_boolean(task, TRUE);
-			return;
-		}
 		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
