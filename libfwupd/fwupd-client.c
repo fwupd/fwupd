@@ -959,10 +959,11 @@ fwupd_client_ensure_networking(FwupdClient *self, GError **error)
 		return FALSE;
 	}
 	if (g_strstr_len(priv->user_agent, -1, "fwupd/") == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "user agent unsuitable; fwupd version required");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "user agent '%s' unsuitable; fwupd version required",
+			    priv->user_agent);
 		return FALSE;
 	}
 	return TRUE;
