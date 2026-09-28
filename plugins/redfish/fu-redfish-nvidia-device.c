@@ -617,15 +617,8 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 /*
  * The PLDM bundle is an opaque blob of about 117MB, which is larger than the
  * FuFirmware base-class parse ceiling of FU_FIRMWARE_SIZE_MAX_DEFAULT, so read
- * it straight into a FuFirmware rather than parsing it.
- *
- * The size is checked here rather than relying only on the limit set with
- * fu_device_set_firmware_size_max() in probe(): fu_device_prepare_firmware()
- * runs this vfunc first and only compares against size_max afterwards, once
- * fu_firmware_get_size() can be called.  By then the whole stream has already
- * been read into memory, so the engine's check validates the image but cannot
- * bound the allocation.  Checking the stream size up front is what keeps a
- * malformed or hostile CAB from being read in full before it is rejected.
+ * it straight into a FuFirmware rather than parsing it.  The daemon enforces the
+ * limit set with fu_device_set_firmware_size_max() in probe().
  */
 static FuFirmware *
 fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
@@ -634,23 +627,9 @@ fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
-	gsize streamsz = 0;
-	guint64 size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GBytes) blob = NULL;
 
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return NULL;
-	if (size_max > 0 && streamsz > size_max) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware is 0x%x bytes larger than the allowed maximum size of "
-			    "0x%x bytes",
-			    (guint)(streamsz - size_max),
-			    (guint)size_max);
-		return NULL;
-	}
-	blob = fu_input_stream_read_bytes(stream, 0, streamsz, progress, error);
+	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, progress, error);
 	if (blob == NULL)
 		return NULL;
 	return fu_firmware_new_from_bytes(blob);
