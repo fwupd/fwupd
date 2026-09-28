@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 13:09+0100\n"
-"PO-Revision-Date: 2026-07-29 19:01+0000\n"
+"PO-Revision-Date: 2026-09-28 04:34+0000\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh <https://hosted.weblate.org/projects/fwupd/fwupd/kk/>\n"
 "Language: kk\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.8.dev0\n"
+"X-Generator: Weblate 2026.10.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (тұрақты микробағдарлама)"
@@ -51,7 +51,7 @@ msgid "Memory Encryption"
 msgstr "Жадыны шифрлеу"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Бөлінген видео жады"
 
 msgid "Camera"
 msgstr "Камера"
@@ -406,67 +406,67 @@ msgid "No action specified!"
 msgstr "Әрекет көрсетілмеді!"
 
 msgid "Unnamed setting"
-msgstr ""
+msgstr "Атаусыз баптау"
 
 msgid "Choose one of the available values"
-msgstr ""
+msgstr "Қолжетімді мәндердің біреуін таңдаңыз"
 
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Жарамды бүтін санды енгізіңіз"
 
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "Мән {lower} және {upper} арасында болуы керек"
 
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Мәннің өсу қадамы {increment} болуы керек"
 
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "Мәтін ұзындығы {lower} және {upper} арасында болуы керек"
 
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Баптаудың бұл түрін өзгерту мүмкін емес"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Бас тарту"
 
 msgid "Save"
-msgstr ""
+msgstr "Сақтау"
 
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Жергілікті микробағдарламаны орнату"
 
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr ".cab микробағдарлама архивінің жолы"
 
 msgid "Continue"
-msgstr ""
+msgstr "Жалғастыру"
 
 msgid "File not found"
-msgstr ""
+msgstr "Файл табылмады"
 
 msgid "bytes"
-msgstr ""
+msgstr "байт"
 
 msgid "KB"
-msgstr ""
+msgstr "КБ"
 
 msgid "MB"
-msgstr ""
+msgstr "МБ"
 
 msgid "GB"
-msgstr ""
+msgstr "ГБ"
 
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} секунд"
 
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} минут"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -527,167 +527,167 @@ msgid "Not supported"
 msgstr "Қолдау көрсетілмейді"
 
 msgid "HSI-1 Critical"
-msgstr ""
+msgstr "HSI-1 критикалық"
 
 msgid "HSI-2 Important"
-msgstr ""
+msgstr "HSI-2 маңызды"
 
 msgid "HSI-3 Theoretical"
-msgstr ""
+msgstr "HSI-3 теориялық"
 
 msgid "HSI-4 System Protection"
-msgstr ""
+msgstr "HSI-4 жүйені қорғау"
 
 msgid "HSI-5 System Attestation"
-msgstr ""
+msgstr "HSI-5 жүйелік аттестация"
 
 msgid "fwupd"
-msgstr ""
+msgstr "fwupd"
 
 msgid "Firmware management"
-msgstr ""
+msgstr "Микробағдарламаны басқару"
 
 msgid "Quit"
-msgstr ""
+msgstr "Шығу"
 
 msgid "Home"
-msgstr ""
+msgstr "Басты бет"
 
 msgid "Search"
-msgstr ""
+msgstr "Іздеу"
 
 msgid "Edit"
-msgstr ""
+msgstr "Түзету"
 
 msgid "Apply"
-msgstr ""
+msgstr "Қолдану"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Жаңарту"
 
 msgid "Firmware Management"
-msgstr ""
+msgstr "Микробағдарламаны басқару"
 
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Тексергіңіз немесе өзгерткіңіз келетін нәрсені таңдаңыз."
 
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "↑/↓ және Enter пернелерін пайдаланыңыз, немесе 1, 2 не 3 басыңыз."
 
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "BIOS баптауларын басқару"
 
 msgid "Manage Devices"
-msgstr ""
+msgstr "Құрылғыларды басқару"
 
 msgid "View Security Measurement"
-msgstr ""
+msgstr "Қауіпсіздік өлшемін көру"
 
 msgid "Search BIOS settings"
-msgstr ""
+msgstr "BIOS баптауларын іздеу"
 
 msgid "BIOS Settings"
-msgstr ""
+msgstr "BIOS баптаулары"
 
 msgid "Select a setting to view its details."
-msgstr ""
+msgstr "Толық ақпаратын көру үшін баптауды таңдаңыз."
 
 msgid "Search devices"
-msgstr ""
+msgstr "Құрылғыларды іздеу"
 
 msgid "Devices"
-msgstr ""
+msgstr "Құрылғылар"
 
 msgid "Refresh Metadata"
-msgstr ""
+msgstr "Метадеректерді жаңарту"
 
 msgid "Enable LVFS"
-msgstr ""
+msgstr "LVFS іске қосу"
 
 msgid "Install Local File"
-msgstr ""
+msgstr "Жергілікті файлды орнату"
 
 msgid "Select a device to view its details."
-msgstr ""
+msgstr "Толық ақпаратын көру үшін құрылғыны таңдаңыз."
 
 msgid "Available Releases"
-msgstr ""
+msgstr "Қолжетімді шығарылымдар"
 
 msgid "Unlock"
-msgstr ""
+msgstr "Құлпын ашу"
 
 msgid "Verify"
-msgstr ""
+msgstr "Тексеру"
 
 msgid "Store"
-msgstr ""
+msgstr "Сақтау"
 
 msgid "Activate"
-msgstr ""
+msgstr "Белсендіру"
 
 msgid "Install"
-msgstr ""
+msgstr "Орнату"
 
 msgid "Security Attributes"
-msgstr ""
+msgstr "Қауіпсіздік атрибуттары"
 
 msgid "Select a security attribute to view its details."
-msgstr ""
+msgstr "Толық ақпаратын көру үшін қауіпсіздік атрибутын таңдаңыз."
 
 msgid "fwupd is not connected"
-msgstr ""
+msgstr "fwupd қосылмаған"
 
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
-msgstr ""
+msgstr "BIOS баптауларын жүктеу сәтсіз аяқталды: {error}"
 
 #, python-brace-format
 msgid "{count} settings"
-msgstr ""
+msgstr "{count} баптау"
 
 msgid "This system does not expose BIOS settings"
-msgstr ""
+msgstr "Бұл жүйеде BIOS баптаулары ұсынылмайды"
 
 msgid "Current value"
-msgstr ""
+msgstr "Ағымдағы мән"
 
 msgid "Pending value"
-msgstr ""
+msgstr "Күтудегі мән"
 
 msgid "Available values"
-msgstr ""
+msgstr "Қолжетімді мәндер"
 
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
-msgstr ""
+msgstr "Ауқымы: {lower}–{upper}, өсу қадамы: {increment}"
 
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
-msgstr ""
+msgstr "Ұзындығы: {lower}–{upper} таңба"
 
 msgid "This setting is read-only."
-msgstr ""
+msgstr "Бұл баптау тек оқуға арналған."
 
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
-msgstr ""
+msgstr "BIOS баптауларын өзгерту сәтсіз аяқталды: {error}"
 
 msgid "BIOS settings changed successfully; reboot required"
-msgstr ""
+msgstr "BIOS баптаулары сәтті өзгертілді; қайта жүктеу қажет"
 
 msgid "BIOS settings changed successfully"
-msgstr ""
+msgstr "BIOS баптаулары сәтті өзгертілді"
 
 #, python-brace-format
 msgid "Failed to load devices: {error}"
-msgstr ""
+msgstr "Құрылғыларды жүктеу сәтсіз аяқталды: {error}"
 
 #, python-brace-format
 msgid "{count} devices"
-msgstr ""
+msgstr "{count} құрылғы"
 
 msgid "No supported devices were found"
-msgstr ""
+msgstr "Қолдау көрсетілетін құрылғылар табылмады"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -698,42 +698,42 @@ msgid "Updatable"
 msgstr "Жаңартылатын"
 
 msgid "Requires AC power"
-msgstr ""
+msgstr "AC қуатын талап етеді"
 
 msgid "Supported by a remote"
-msgstr ""
+msgstr "Қашықтағы репозиторий қолдайды"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Қайта іске қосуды қажет етеді"
 
 msgid "Needs shutdown"
-msgstr ""
+msgstr "Өшіруді қажет етеді"
 
 msgid "Needs activation"
-msgstr ""
+msgstr "Белсендіруді қажет етеді"
 
 msgid "Stages updates"
-msgstr ""
+msgstr "Жаңартуларды кезеңдейді"
 
 msgid "Supports self-recovery"
-msgstr ""
+msgstr "Өздігінен қалпына келтіруді қолдайды"
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Қолдау мерзімінің аяқталуы"
 
 msgid "Signed payload"
-msgstr ""
+msgstr "Қол қойылған пайдалы жүктеме"
 
 msgid "Unsigned payload"
-msgstr ""
+msgstr "Қол қойылмаған пайдалы жүктеме"
 
 msgid "Emulated device"
-msgstr ""
+msgstr "Эмуляцияланған құрылғы"
 
 msgid "Unnamed device"
-msgstr ""
+msgstr "Атаусыз құрылғы"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -760,23 +760,23 @@ msgid "Install Duration"
 msgstr "Орнату ұзақтығы"
 
 msgid "Flashes Left"
-msgstr ""
+msgstr "Қалған қайта жазулар"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Жаңарту қатесі"
 
 msgid "Checksums"
-msgstr ""
+msgstr "Бақылау сомалары"
 
 msgid "GUIDs"
-msgstr ""
+msgstr "GUID-тер"
 
 msgid "Instance IDs"
-msgstr ""
+msgstr "Дана идентификаторлары"
 
 msgid "Security Issues"
-msgstr ""
+msgstr "Қауіпсіздік мәселелері"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -791,29 +791,29 @@ msgstr "Белгісіз"
 
 #, python-brace-format
 msgid "Available Releases ({count})"
-msgstr ""
+msgstr "Қолжетімді шығарылымдар ({count})"
 
 msgid "Update"
-msgstr ""
+msgstr "Жаңарту"
 
 msgid "Downgrade"
-msgstr ""
+msgstr "Нұсқасын төмендету"
 
 msgid "Reinstall"
-msgstr ""
+msgstr "Қайта орнату"
 
 msgid "Firmware"
-msgstr ""
+msgstr "Микробағдарлама"
 
 msgid "Action"
-msgstr ""
+msgstr "Әрекет"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Қорытынды"
 
 msgid "Remote"
-msgstr ""
+msgstr "Қашықтағы репозиторий"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -824,68 +824,68 @@ msgid "Update Message"
 msgstr "Жаңарту хабарламасы"
 
 msgid "Issues"
-msgstr ""
+msgstr "Мәселелер"
 
 msgid "Suspend full-disk encryption protection before continuing."
-msgstr ""
+msgstr "Жалғастыру алдында дискті толық шифрлеу қорғауын кідірте тұрыңыз."
 
 msgid "This release switches to an alternate firmware branch."
-msgstr ""
+msgstr "Бұл шығарылым балама микробағдарлама тармағына ауыстырады."
 
 msgid "This firmware was built by the community."
-msgstr ""
+msgstr "Бұл микробағдарлама қоғамдастықпен құрастырылған."
 
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
-msgstr ""
+msgstr "{device} құрылғысын {version} нұсқасына {action} керек пе?"
 
 msgid "Installing firmware"
-msgstr ""
+msgstr "Микробағдарлама орнатылуда"
 
 msgid "Firmware installation completed"
-msgstr ""
+msgstr "Микробағдарламаны орнату аяқталды"
 
 #, python-brace-format
 msgid "{prefix}: {error}"
-msgstr ""
+msgstr "{prefix}: {error}"
 
 #, python-brace-format
 msgid "{operation}…"
-msgstr ""
+msgstr "{operation}…"
 
 msgid "Failed to inspect firmware file"
-msgstr ""
+msgstr "Микробағдарлама файлын тексеру сәтсіз аяқталды"
 
 msgid "The firmware archive contains no installable releases"
-msgstr ""
+msgstr "Микробағдарлама архивінде орнатуға болатын шығарылымдар жоқ"
 
 msgid "unknown"
-msgstr ""
+msgstr "белгісіз"
 
 msgid "firmware"
-msgstr ""
+msgstr "микробағдарлама"
 
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
-msgstr ""
+msgstr "{name} {version} нұсқасын {path} жолынан орнату керек пе?"
 
 msgid "Local firmware installation completed"
-msgstr ""
+msgstr "Жергілікті микробағдарламаны орнату аяқталды"
 
 msgid "Install Firmware"
-msgstr ""
+msgstr "Микробағдарламаны орнату"
 
 msgid "Refreshing metadata"
-msgstr ""
+msgstr "Метадеректер жаңартылуда"
 
 msgid "Firmware metadata refreshed"
-msgstr ""
+msgstr "Микробағдарлама метадеректері жаңартылды"
 
 msgid "Enabling LVFS"
-msgstr ""
+msgstr "LVFS іске қосылуда"
 
 msgid "LVFS was enabled and its metadata refreshed"
-msgstr ""
+msgstr "LVFS іске қосылды және оның метадеректері жаңартылды"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
@@ -893,117 +893,117 @@ msgstr "OK"
 
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
-msgstr ""
+msgstr "Қауіпсіздік атрибуттарын жүктеу сәтсіз аяқталды: {error}"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Орындалу уақытының суффиксі"
 
 msgid "Unknown attribute"
-msgstr ""
+msgstr "Белгісіз атрибут"
 
 msgid "Unavailable"
-msgstr ""
+msgstr "Қолжетімсіз"
 
 msgid "Host Security ID"
-msgstr ""
+msgstr "Хост қауіпсіздігі идентификаторы"
 
 #, python-brace-format
 msgid "{count} security attributes"
-msgstr ""
+msgstr "{count} қауіпсіздік атрибуты"
 
 msgid "Recent Security Events"
-msgstr ""
+msgstr "Жуырдағы қауіпсіздік оқиғалары"
 
 msgid "Security attribute"
-msgstr ""
+msgstr "Қауіпсіздік атрибуты"
 
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
-msgstr ""
+msgstr "{time} {name}: {old} → {new}"
 
 #, python-brace-format
 msgid "{device}: {issue}"
-msgstr ""
+msgstr "{device}: {issue}"
 
 msgid "Unknown device"
-msgstr ""
+msgstr "Белгісіз құрылғы"
 
 msgid "Device Security Issues"
-msgstr ""
+msgstr "Құрылғы қауіпсіздігі мәселелері"
 
 msgid "No recent security events"
-msgstr ""
+msgstr "Жуырдағы қауіпсіздік оқиғалары жоқ"
 
 msgid "Result"
-msgstr ""
+msgstr "Нәтиже"
 
 msgid "Level"
-msgstr ""
+msgstr "Деңгей"
 
 msgid "Plugin"
-msgstr ""
+msgstr "Плагин"
 
 msgid "Firmware Setting"
-msgstr ""
+msgstr "Микробағдарлама баптауы"
 
 msgid "Current Firmware Value"
-msgstr ""
+msgstr "Микробағдарламаның ағымдағы мәні"
 
 msgid "Target Firmware Value"
-msgstr ""
+msgstr "Микробағдарламаның мақсатты мәні"
 
 msgid "Current Kernel Value"
-msgstr ""
+msgstr "Ядроның ағымдағы мәні"
 
 msgid "Target Kernel Value"
-msgstr ""
+msgstr "Ядроның мақсатты мәні"
 
 msgid "More Information"
-msgstr ""
+msgstr "Қосымша ақпарат"
 
 msgid "Change the firmware configuration"
-msgstr ""
+msgstr "Микробағдарлама конфигурациясын өзгерту"
 
 msgid "Change the operating system configuration"
-msgstr ""
+msgstr "Операциялық жүйе конфигурациясын өзгерту"
 
 msgid "Contact the hardware vendor"
-msgstr ""
+msgstr "Аппараттық құрал өндірушісіне хабарласу"
 
 msgid "Suggested Actions"
-msgstr ""
+msgstr "Ұсынылатын әрекеттер"
 
 msgid "Unlocking device"
-msgstr ""
+msgstr "Құрылғы құлпы ашылуда"
 
 msgid "Device unlocked"
-msgstr ""
+msgstr "Құрылғының құлпы ашылды"
 
 msgid "Verifying firmware"
-msgstr ""
+msgstr "Микробағдарлама тексерілуде"
 
 msgid "Firmware verification succeeded"
-msgstr ""
+msgstr "Микробағдарламаны тексеру сәтті аяқталды"
 
 msgid "Updating verification data"
-msgstr ""
+msgstr "Тексеру деректері жаңартылуда"
 
 msgid "Verification data updated"
-msgstr ""
+msgstr "Тексеру деректері жаңартылды"
 
 msgid "Activating firmware"
-msgstr ""
+msgstr "Микробағдарлама белсендірілуде"
 
 msgid "Device firmware activated"
-msgstr ""
+msgstr "Құрылғы микробағдарламасы белсендірілді"
 
 msgid "Manage firmware and platform security in a terminal interface"
-msgstr ""
+msgstr "Терминал интерфейсінде микробағдарлама мен платформа қауіпсіздігін басқару"
 
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
-msgstr ""
+msgstr "fwupd баптандыру сәтсіз аяқталды: {error}"
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -2327,7 +2327,7 @@ msgstr "%s белсендіруді күтуде; жаңартуды аяқта�
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
 msgid "Successfully uploaded report"
-msgstr ""
+msgstr "Есеп сәтті жүктеп салынды"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2680,11 +2680,11 @@ msgstr "%s үшін жалаушаларды талдау сәтсіз аяқт�
 
 #. TRANSLATORS: for the --verbose arg
 msgid "CLI Options"
-msgstr ""
+msgstr "CLI опциялары"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show CLI options"
-msgstr ""
+msgstr "CLI опцияларын көрсету"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -3092,7 +3092,7 @@ msgstr "Көмек алу үшін %s пайдаланыңыз"
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
 msgid "No command specified"
-msgstr ""
+msgstr "Команда көрсетілмеген"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
