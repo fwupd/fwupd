@@ -43,6 +43,3 @@ sleep 10
 group "Run the tests via gnome-desktop-testing-runner"
 gnome-desktop-testing-runner --timeout=2400 fwupd
 endgroup
-
-# generate coverage report
-./contrib/ci/coverage.sh
