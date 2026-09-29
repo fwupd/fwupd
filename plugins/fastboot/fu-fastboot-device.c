@@ -372,7 +372,7 @@ fu_fastboot_device_write_qfil_part(FuFastbootDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
-	GBytes *data;
+	g_autoptr(GBytes) data = NULL;
 	const gchar *fn;
 	const gchar *partition;
 
@@ -474,7 +474,7 @@ fu_fastboot_device_write_motorola_part(FuFastbootDevice *self,
 
 	/* flash */
 	if (g_strcmp0(op, "flash") == 0) {
-		GBytes *data;
+		g_autoptr(GBytes) data = NULL;
 		const gchar *filename = xb_node_get_attr(part, "filename");
 		const gchar *partition = xb_node_get_attr(part, "partition");
 		struct {
@@ -554,7 +554,7 @@ fu_fastboot_device_write_motorola(FuFastbootDevice *self,
 				  FuProgress *progress,
 				  GError **error)
 {
-	GBytes *data;
+	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GPtrArray) parts = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
@@ -604,7 +604,7 @@ fu_fastboot_device_write_qfil(FuFastbootDevice *self,
 			      FuProgress *progress,
 			      GError **error)
 {
-	GBytes *data;
+	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GPtrArray) parts = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
