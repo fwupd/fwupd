@@ -29,6 +29,9 @@
 #include <winerror.h>
 #include <winreg.h>
 #endif
+#ifdef __ANDROID__
+#include <sys/system_properties.h>
+#endif
 
 #include <fwupdplugin.h>
 
@@ -2031,6 +2034,23 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 		}
 	}
 	g_hash_table_insert(hash, g_strdup(FWUPD_RESULT_KEY_DISTRO_ID), g_strdup("macos"));
+#elif defined(__ANDROID__)
+#define FWUPD_GOOGLEBOOK_DISTRO_ID "googlebookOS"
+	char prop_val[PROP_VALUE_MAX] = {0};
+	g_hash_table_insert(hash,
+			    g_strdup(FWUPD_RESULT_KEY_DISTRO_ID),
+			    g_strdup(FWUPD_GOOGLEBOOK_DISTRO_ID));
+	g_hash_table_insert(hash, g_strdup("DistroName"), g_strdup(FWUPD_GOOGLEBOOK_DISTRO_ID));
+	if (__system_property_get("ro.build.version.release", prop_val) > 0) {
+		g_hash_table_insert(hash,
+				    g_strdup(FWUPD_RESULT_KEY_DISTRO_VERSION),
+				    g_strdup(prop_val));
+	}
+	if (__system_property_get("ro.build.type", prop_val) > 0) {
+		g_hash_table_insert(hash,
+				    g_strdup(FWUPD_RESULT_KEY_DISTRO_VARIANT),
+				    g_strdup(prop_val));
+	}
 #else
 	struct {
 		const gchar *key;

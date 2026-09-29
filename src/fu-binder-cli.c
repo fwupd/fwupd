@@ -476,6 +476,18 @@ fu_binder_cli_sync_impl_get_host_security_events(FwupdClient *client,
 	return fu_binder_cli_bridge_get_host_security_events(self->fwupd_binder, limit, error);
 }
 
+static gchar *
+fu_binder_cli_sync_impl_self_sign(FwupdClient *client,
+				  const gchar *value,
+				  FwupdSelfSignFlags flags,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_self_sign(self->fwupd_binder, value, flags, error);
+}
+
 static void
 fu_binder_cli_init(FuBinderCli *self)
 {
@@ -506,6 +518,7 @@ fu_binder_cli_init(FuBinderCli *self)
 	    .modify_device = fu_binder_cli_sync_impl_modify_device,
 	    .modify_remote = fu_binder_cli_sync_impl_modify_remote,
 	    .reset_config = fu_binder_cli_sync_impl_reset_config,
+	    .self_sign = fu_binder_cli_sync_impl_self_sign,
 	    .set_feature_flags = fu_binder_cli_sync_impl_set_feature_flags,
 	    .unlock = fu_binder_cli_sync_impl_unlock,
 	    .update_metadata = fu_binder_cli_sync_impl_update_metadata,
