@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-20 17:33+0000\n"
+"PO-Revision-Date: 2026-09-29 18:21+0000\n"
 "Last-Translator: Andrei Stepanov <adem4ik@gmail.com>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/fwupd/fwupd/ru/>\n"
 "Language: ru\n"
@@ -1566,7 +1566,7 @@ msgstr "Находится в режиме загрузчика"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "Устройство ожидает повторного подключения"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2111,16 +2111,16 @@ msgstr "Автоматическая отправка отчётов"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда %s будет отключено и подключено снова."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда устройство будет отключено и подключено снова."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "Обновление продолжится, когда USB-кабель %s будет отключён."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -2129,11 +2129,11 @@ msgstr "Обновление продолжится, когда кабель USB
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда USB-кабель %s будет подключён снова."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда USB-кабель устройства будет подключён снова."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2146,20 +2146,20 @@ msgstr "Не выключайте компьютер и не отключайт�
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "Отключите %s и подключите снова, чтобы продолжить процесс обновления."
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "Отключите устройство и подключите снова, чтобы продолжить процесс обновления."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда кабель питания %s будет отсоединён и подключён снова."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "Обновление продолжится, когда кабель питания устройства будет отсоединён и подключён снова."
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2247,11 +2247,11 @@ msgstr "Хранилище сертификатов UEFI теперь актуа
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "Хранилище сертификатов UEFI больше не содержит тестовый ключ"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "Хранилище сертификатов UEFI теперь содержит тестовый ключ"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -4200,7 +4200,7 @@ msgstr "Защита UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "База данных UEFI (Microsoft UEFI)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date
