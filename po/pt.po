@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-21 19:28+0000\n"
+"PO-Revision-Date: 2026-09-29 18:21+0000\n"
 "Last-Translator: Américo Monteiro <a_monteiro@gmx.com>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/fwupd/fwupd/pt/>\n"
 "Language: pt\n"
@@ -1558,7 +1558,7 @@ msgstr "Está no modo gestor de arranque"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "Dispositivo está à espera de voltar a ser ligado"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2100,16 +2100,16 @@ msgstr "Relatórios automáticos"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando %s for desligado e voltar a ser ligado."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando o dispositivo for desligado e voltar a ser ligado."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "A atualização vai continuar quando o cabo USB de %s for desligado."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -2118,11 +2118,11 @@ msgstr "A atualização continuará quando o cabo USB do dispositivo tiver sido 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando o cabo USB de %s voltar a ser ligado."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando o cabo USB do dispositivo voltar a ser ligado."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2135,20 +2135,20 @@ msgstr "Não desligue o seu computador nem remova o cabo de alimentação da tom
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "Desligue %s e volte a liga-lo para continuar o processo de atualização."
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "Desligue o dispositivo e volte a liga-lo para continuar o processo de atualização."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando o cabo de energia de %s for desligado e voltar a ser ligado."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "A atualização vai continuar quando o cabo de energia do dispositivo for desligado e voltar a ser ligado."
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2236,11 +2236,11 @@ msgstr "O armazenamento de certificados UEFI agora está atualizado"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "O armazenamento de certificado UEFI já não contém uma chave de teste"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "O armazenamento de certificado UEFI agora contém uma chave de teste"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -4179,7 +4179,7 @@ msgstr "proteção NX de UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "UEFI db (UEFI da Microsoft)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date
