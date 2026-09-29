@@ -53,6 +53,34 @@ fu_secure_bytes_new(guint8 *buf, gsize bufsz, GDestroyNotify destroy_fn)
 	return self;
 }
 
+/**
+ * fu_secure_bytes_new_from_bytes: (skip):
+ * @bytes: (not nullable): some #GBytes
+ *
+ * Creates a secure byte array that is cleared when deallocated.
+ *
+ * Returns: (transfer full): a #FuSecureBytes
+ *
+ * Since: 2.1.9
+ **/
+FuSecureBytes *
+fu_secure_bytes_new_from_bytes(GBytes *bytes)
+{
+	const guint8 *buf;
+	gsize bufsz = 0;
+	g_autoptr(FuSecureBytes) self = g_new0(FuSecureBytes, 1);
+
+	g_return_val_if_fail(bytes != NULL, NULL);
+
+	buf = g_bytes_get_data(bytes, &bufsz);
+	if (bufsz > 0) {
+		self->buf = g_memdup2(buf, bufsz);
+		self->bufsz = bufsz;
+		self->destroy_fn = g_free;
+	}
+	return g_steal_pointer(&self);
+}
+
 static void
 fu_secure_bytes_memzero(guint8 *buf, gsize bufsz)
 {
