@@ -1762,9 +1762,6 @@
     </distro>
   </dependency>
   <dependency id="shfmt">
-    <distro id="fedora">
-      <package only-if="amd64" />
-    </distro>
     <distro id="debian" />
     <distro id="ubuntu">
       <package only-if="amd64" />
