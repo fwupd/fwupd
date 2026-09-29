@@ -741,12 +741,23 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	 * set and the apply time is Immediate */
 	blob_fw = g_bytes_new_static("hello", 5);
 	firmware = fu_firmware_new_from_bytes(blob_fw);
+
+	/* inside an install transaction the staged components are only flagged once
+	 * every component of the archive has been processed, as fwupd refuses to
+	 * install onto a device that is already waiting for activation */
+	ret = fu_plugin_runner_composite_prepare(self->nvidia_plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
 					      dev,
 					      firmware,
 					      progress,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	ret = fu_plugin_runner_composite_cleanup(self->nvidia_plugin, devices, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

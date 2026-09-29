@@ -18,6 +18,7 @@
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -805,6 +806,32 @@ fu_redfish_plugin_finalize(GObject *obj)
 	G_OBJECT_CLASS(fu_redfish_plugin_parent_class)->finalize(obj);
 }
 
+static gboolean
+fu_redfish_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
+	fu_redfish_backend_set_composite(self->backend, TRUE);
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
+	FuDevice *device_written = fu_redfish_backend_get_written_device(self->backend);
+	g_autoptr(FuDevice) device = NULL;
+
+	/* every component of the archive has now been processed, so flagging the
+	 * ones the BMC staged can no longer block the install of another */
+	if (device_written != NULL)
+		device = g_object_ref(device_written);
+	fu_redfish_backend_set_written_device(self->backend, NULL);
+	fu_redfish_backend_set_composite(self->backend, FALSE);
+	if (device == NULL)
+		return TRUE;
+	return fu_redfish_nvidia_device_refresh_pending(FU_REDFISH_NVIDIA_DEVICE(device), error);
+}
+
 static void
 fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 {
@@ -817,5 +844,7 @@ fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 	plugin_class->startup = fu_redfish_plugin_startup;
 	plugin_class->coldplug = fu_redfish_plugin_coldplug;
 	plugin_class->cleanup = fu_redfish_plugin_cleanup;
+	plugin_class->composite_prepare = fu_redfish_plugin_composite_prepare;
+	plugin_class->composite_cleanup = fu_redfish_plugin_composite_cleanup;
 	plugin_class->modify_config = fu_redfish_plugin_modify_config;
 }

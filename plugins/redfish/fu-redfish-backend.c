@@ -34,6 +34,8 @@ struct _FuRedfishBackend {
 	gchar *uuid;
 	gchar *update_uri_path;
 	gchar *uploaded_checksum;
+	FuDevice *written_device; /* uploaded a bundle in this composite install */
+	gboolean composite;	  /* between composite_prepare() and composite_cleanup() */
 	gchar *push_uri_path;
 	gchar *path_prefix;
 	gboolean use_https;
@@ -87,6 +89,39 @@ fu_redfish_backend_set_uploaded_checksum(FuRedfishBackend *self, const gchar *ch
 		return;
 	g_free(self->uploaded_checksum);
 	self->uploaded_checksum = g_strdup(checksum);
+}
+
+/* Between the engine's composite_prepare() and composite_cleanup() each component
+ * of an archive is installed in turn. fwupd refuses to install onto a device that
+ * is already waiting for activation, so the components the BMC staged are only
+ * flagged once every one of them has been processed, and the device whose write
+ * uploaded the bundle is remembered until then. */
+void
+fu_redfish_backend_set_composite(FuRedfishBackend *self, gboolean composite)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	self->composite = composite;
+}
+
+gboolean
+fu_redfish_backend_get_composite(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
+	return self->composite;
+}
+
+void
+fu_redfish_backend_set_written_device(FuRedfishBackend *self, FuDevice *device)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	g_set_object(&self->written_device, device);
+}
+
+FuDevice *
+fu_redfish_backend_get_written_device(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->written_device;
 }
 
 FuRedfishRequest *
@@ -920,6 +955,8 @@ fu_redfish_backend_finalize(GObject *object)
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
 	g_free(self->uploaded_checksum);
+	if (self->written_device != NULL)
+		g_object_unref(self->written_device);
 	g_free(self->push_uri_path);
 	g_free(self->path_prefix);
 	g_free(self->hostname);

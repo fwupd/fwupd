@@ -60,3 +60,11 @@ const gchar *
 fu_redfish_backend_get_uploaded_checksum(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_uploaded_checksum(FuRedfishBackend *self, const gchar *checksum);
+void
+fu_redfish_backend_set_composite(FuRedfishBackend *self, gboolean composite);
+gboolean
+fu_redfish_backend_get_composite(FuRedfishBackend *self);
+void
+fu_redfish_backend_set_written_device(FuRedfishBackend *self, FuDevice *device);
+FuDevice *
+fu_redfish_backend_get_written_device(FuRedfishBackend *self);

@@ -644,8 +644,11 @@ fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
  * FW_BMC_0 routinely stages FW_CPU_0 instead.  Flagging the addressed device
  * would therefore point the operator, and `fwupdmgr activate`, at the wrong
  * component.  Ask the BMC which slots report PendingActivation and flag those.
+ *
+ * Inside a composite install this runs from the plugin's composite_cleanup()
+ * rather than after the upload, once every component has been processed.
  */
-static gboolean
+gboolean
 fu_redfish_nvidia_device_refresh_pending(FuRedfishNvidiaDevice *self, GError **error)
 {
 	FuRedfishBackend *backend;
@@ -857,8 +860,14 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	 * poweroff, which leaves the aux rail energised and so activates nothing,
 	 * while steering the user away from the activation that does work. */
 	fu_redfish_backend_set_uploaded_checksum(backend, csum);
-	if (!fu_redfish_nvidia_device_refresh_pending(FU_REDFISH_NVIDIA_DEVICE(device), error))
+	if (fu_redfish_backend_get_composite(backend)) {
+		/* the archive's other components are still to come, and fwupd refuses to
+		 * install onto a device already waiting for activation */
+		fu_redfish_backend_set_written_device(backend, device);
+	} else if (!fu_redfish_nvidia_device_refresh_pending(FU_REDFISH_NVIDIA_DEVICE(device),
+							     error)) {
 		return FALSE;
+	}
 	fwupd_request_set_kind(request_activate, FWUPD_REQUEST_KIND_POST);
 	fwupd_request_set_id(request_activate, FWUPD_REQUEST_ID_REPLUG_POWER);
 	fwupd_request_add_flag(request_activate, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);

@@ -15,3 +15,6 @@ G_DECLARE_FINAL_TYPE(FuRedfishNvidiaDevice,
 		     FU,
 		     REDFISH_NVIDIA_DEVICE,
 		     FuRedfishDevice)
+
+gboolean
+fu_redfish_nvidia_device_refresh_pending(FuRedfishNvidiaDevice *self, GError **error);
