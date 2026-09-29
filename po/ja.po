@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 13:09+0100\n"
+"POT-Creation-Date: 2026-09-29 16:01+0100\n"
 "PO-Revision-Date: 2026-03-18 00:09+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
@@ -361,6 +361,7 @@ msgid "Failed to load system dbx"
 msgstr "システムの dbx の読み込みに失敗しました"
 
 #. TRANSLATORS: the detected version number of the dbx
+#. TRANSLATORS: device field label: firmware version
 msgid "Version"
 msgstr "バージョン"
 
@@ -413,49 +414,65 @@ msgstr "完了!"
 msgid "No action specified!"
 msgstr "アクションが指定されていません!"
 
+#. TRANSLATORS: fallback name shown when a BIOS setting has no name
 msgid "Unnamed setting"
 msgstr ""
 
+#. TRANSLATORS: error shown when an invalid value is entered
 msgid "Choose one of the available values"
 msgstr ""
 
+#. TRANSLATORS: error shown when a non-numeric value is entered
 msgid "Enter a valid integer"
 msgstr ""
 
+#. TRANSLATORS: error shown when a number is out of range
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
 msgstr ""
 
+#. TRANSLATORS: error shown when a number is not a valid increment
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
 msgstr ""
 
+#. TRANSLATORS: error shown when text is the wrong length
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
 msgstr ""
 
+#. TRANSLATORS: error shown when a setting type cannot be edited
 msgid "This setting type cannot be changed"
 msgstr ""
 
+#. TRANSLATORS: button to close the editor without saving
+#. TRANSLATORS: button to cancel the confirmation dialog
+#. TRANSLATORS: button to cancel the dialog
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "キャンセル"
 
+#. TRANSLATORS: button to save the edited setting value
 msgid "Save"
 msgstr ""
 
+#. TRANSLATORS: dialog title for installing a local firmware file
 msgid "Install Local Firmware"
 msgstr ""
 
+#. TRANSLATORS: input placeholder for the firmware archive path
 msgid "Path to a .cab firmware archive"
 msgstr ""
 
+#. TRANSLATORS: button to proceed with the entered path
 msgid "Continue"
 msgstr ""
 
+#. TRANSLATORS: error shown when the entered path does not exist
 msgid "File not found"
 msgstr ""
 
+#. TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
 msgid "bytes"
 msgstr ""
 
@@ -468,328 +485,437 @@ msgstr ""
 msgid "GB"
 msgstr ""
 
+#. TRANSLATORS: a duration in seconds
 #, python-brace-format
 msgid "{seconds} seconds"
 msgstr ""
 
+#. TRANSLATORS: a duration in minutes
 #, python-brace-format
 msgid "{minutes} minutes"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the check passed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "有効"
 
+#. TRANSLATORS: host security attribute result: the check failed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "無効"
 
+#. TRANSLATORS: host security attribute result: the feature is enabled
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "有効"
 
+#. TRANSLATORS: host security attribute result: the feature is disabled
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "無効"
 
+#. TRANSLATORS: host security attribute result: the feature is locked
+#. TRANSLATORS: device flag label: the device is locked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
 msgstr "ロック済み"
 
+#. TRANSLATORS: host security attribute result: the feature is unlocked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "ロック解除済み"
 
+#. TRANSLATORS: host security attribute result: the data is encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
 msgstr "暗号化済み"
 
+#. TRANSLATORS: host security attribute result: the data is not encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "暗号化されていません"
 
+#. TRANSLATORS: host security attribute result: the system is tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
 msgstr "汚染済み"
 
+#. TRANSLATORS: host security attribute result: the system is not tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
 msgstr "非汚染"
 
+#. TRANSLATORS: host security attribute result: the feature was found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "検出"
 
+#. TRANSLATORS: host security attribute result: the feature was not found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "未検出"
 
+#. TRANSLATORS: host security attribute result: the feature is supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "対応済み"
 
+#. TRANSLATORS: host security attribute result: the feature is not supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not supported"
 msgstr "未対応"
 
+#. TRANSLATORS: host security level label (HSI-1)
 msgid "HSI-1 Critical"
 msgstr ""
 
+#. TRANSLATORS: host security level label (HSI-2)
 msgid "HSI-2 Important"
 msgstr ""
 
+#. TRANSLATORS: host security level label (HSI-3)
 msgid "HSI-3 Theoretical"
 msgstr ""
 
+#. TRANSLATORS: host security level label (HSI-4)
 msgid "HSI-4 System Protection"
 msgstr ""
 
+#. TRANSLATORS: host security level label (HSI-5)
 msgid "HSI-5 System Attestation"
 msgstr ""
 
+#. TRANSLATORS: application title shown in the header
 msgid "fwupd"
 msgstr ""
 
+#. TRANSLATORS: application subtitle shown in the header
 msgid "Firmware management"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that quits the application
+#. TRANSLATORS: button to quit the application
 msgid "Quit"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that returns to the home screen
+#. TRANSLATORS: button to return to the home screen
 msgid "Home"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that focuses the search box
 msgid "Search"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that edits the selected setting
+#. TRANSLATORS: button to edit the selected setting
 msgid "Edit"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that applies pending changes
+#. TRANSLATORS: button to apply pending BIOS changes
 msgid "Apply"
 msgstr ""
 
+#. TRANSLATORS: footer label for the key that refreshes the current view
+#. TRANSLATORS: button to reload the list of devices
+#. TRANSLATORS: button to reload the security attributes
 msgid "Refresh"
 msgstr ""
 
+#. TRANSLATORS: title of the home menu
 msgid "Firmware Management"
 msgstr ""
 
+#. TRANSLATORS: home screen introductory text
 msgid "Choose what you would like to inspect or change."
 msgstr ""
 
+#. TRANSLATORS: home screen hint on how to navigate the menu
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
 msgstr ""
 
+#. TRANSLATORS: button to open the BIOS settings view
 msgid "Manage BIOS Settings"
 msgstr ""
 
+#. TRANSLATORS: button to open the devices view
 msgid "Manage Devices"
 msgstr ""
 
+#. TRANSLATORS: button to open the host security view
 msgid "View Security Measurement"
 msgstr ""
 
+#. TRANSLATORS: search box placeholder for BIOS settings
 msgid "Search BIOS settings"
 msgstr ""
 
+#. TRANSLATORS: tree root label for the BIOS settings list
 msgid "BIOS Settings"
 msgstr ""
 
+#. TRANSLATORS: placeholder shown before a setting is selected
 msgid "Select a setting to view its details."
 msgstr ""
 
+#. TRANSLATORS: search box placeholder for devices
 msgid "Search devices"
 msgstr ""
 
+#. TRANSLATORS: tree root label for the devices list
 msgid "Devices"
 msgstr ""
 
+#. TRANSLATORS: button to refresh firmware metadata
 msgid "Refresh Metadata"
 msgstr ""
 
+#. TRANSLATORS: button to enable the LVFS remote
 msgid "Enable LVFS"
 msgstr ""
 
+#. TRANSLATORS: button to install firmware from a local file
 msgid "Install Local File"
 msgstr ""
 
+#. TRANSLATORS: placeholder shown before a device is selected
 msgid "Select a device to view its details."
 msgstr ""
 
+#. TRANSLATORS: tree root label for the list of releases
 msgid "Available Releases"
 msgstr ""
 
+#. TRANSLATORS: button to unlock the selected device
 msgid "Unlock"
 msgstr ""
 
+#. TRANSLATORS: button to verify the device firmware
 msgid "Verify"
 msgstr ""
 
+#. TRANSLATORS: button to store the device verification data
 msgid "Store"
 msgstr ""
 
+#. TRANSLATORS: button to activate staged device firmware
 msgid "Activate"
 msgstr ""
 
+#. TRANSLATORS: button to install the selected release
 msgid "Install"
 msgstr ""
 
+#. TRANSLATORS: tree root label for host security attributes
 msgid "Security Attributes"
 msgstr ""
 
+#. TRANSLATORS: placeholder shown before an attribute is selected
 msgid "Select a security attribute to view its details."
 msgstr ""
 
+#. TRANSLATORS: status message when the fwupd daemon is unavailable
 msgid "fwupd is not connected"
 msgstr ""
 
+#. TRANSLATORS: error message when BIOS settings cannot be read
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
 msgstr ""
 
+#. TRANSLATORS: status message showing how many settings are listed
 #, python-brace-format
 msgid "{count} settings"
 msgstr ""
 
+#. TRANSLATORS: status message when the system has no BIOS settings
 msgid "This system does not expose BIOS settings"
 msgstr ""
 
+#. TRANSLATORS: field label for the setting's current value
 msgid "Current value"
 msgstr ""
 
+#. TRANSLATORS: field label for a not-yet-applied setting value
 msgid "Pending value"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of values a setting accepts
 msgid "Available values"
 msgstr ""
 
+#. TRANSLATORS: dialog text describing the allowed integer range
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
 msgstr ""
 
+#. TRANSLATORS: dialog text describing the allowed text length
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
 msgstr ""
 
+#. TRANSLATORS: dialog text shown when a setting cannot be changed
 msgid "This setting is read-only."
 msgstr ""
 
+#. TRANSLATORS: error message when BIOS settings cannot be changed
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
 msgstr ""
 
+#. TRANSLATORS: status message after a change that needs a reboot
 msgid "BIOS settings changed successfully; reboot required"
 msgstr ""
 
+#. TRANSLATORS: status message after BIOS settings are changed
 msgid "BIOS settings changed successfully"
 msgstr ""
 
+#. TRANSLATORS: error message when the device list cannot be read
 #, python-brace-format
 msgid "Failed to load devices: {error}"
 msgstr ""
 
+#. TRANSLATORS: status message showing how many devices are listed
 #, python-brace-format
 msgid "{count} devices"
 msgstr ""
 
+#. TRANSLATORS: status message when no devices are available
 msgid "No supported devices were found"
 msgstr ""
 
+#. TRANSLATORS: device flag label: built into the machine
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "内蔵デバイス"
 
+#. TRANSLATORS: device flag label: firmware can be updated
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
 msgstr "アップデート可能"
 
+#. TRANSLATORS: device flag label: needs mains power to update
 msgid "Requires AC power"
 msgstr ""
 
+#. TRANSLATORS: device flag label: available from a remote
 msgid "Supported by a remote"
 msgstr ""
 
+#. TRANSLATORS: device flag label: a reboot is required
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "再起動が必要です"
 
+#. TRANSLATORS: device flag label: a shutdown is required
 msgid "Needs shutdown"
 msgstr ""
 
+#. TRANSLATORS: device flag label: an activation step is required
 msgid "Needs activation"
 msgstr ""
 
+#. TRANSLATORS: device flag label: updates are staged before use
 msgid "Stages updates"
 msgstr ""
 
+#. TRANSLATORS: device flag label: the device can self-recover
 msgid "Supports self-recovery"
 msgstr ""
 
+#. TRANSLATORS: device flag label: no longer supported by the vendor
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "サポート終了"
 
+#. TRANSLATORS: device flag label: firmware is cryptographically signed
 msgid "Signed payload"
 msgstr ""
 
+#. TRANSLATORS: device flag label: firmware is not signed
 msgid "Unsigned payload"
 msgstr ""
 
+#. TRANSLATORS: device flag label: the device is emulated
 msgid "Emulated device"
 msgstr ""
 
+#. TRANSLATORS: fallback name shown when a device has no name
 msgid "Unnamed device"
 msgstr ""
 
+#. TRANSLATORS: device field label: lowest allowed version
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "最小バージョン"
 
+#. TRANSLATORS: device field label: bootloader version
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "ブートローダーバージョン"
 
+#. TRANSLATORS: device field label: hardware vendor
+#. TRANSLATORS: release field label: firmware vendor
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "ベンダー"
 
+#. TRANSLATORS: device field label: firmware branch
+#. TRANSLATORS: release field label: firmware branch
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "ブランチ"
 
+#. TRANSLATORS: device field label: serial number
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "シリアルナンバー"
 
+#. TRANSLATORS: device field label: estimated install time
+#. TRANSLATORS: release field label: estimated install time
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "インストール所要時間"
 
+#. TRANSLATORS: device field label: remaining firmware writes
 msgid "Flashes Left"
 msgstr ""
 
+#. TRANSLATORS: device field label: last update error
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "アップデートエラー"
 
+#. TRANSLATORS: heading for the list of device checksums
+#. TRANSLATORS: heading for the list of release checksums
 msgid "Checksums"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of device GUIDs
 msgid "GUIDs"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of device instance IDs
 msgid "Instance IDs"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of device security issues
 msgid "Security Issues"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of device flags
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
 msgstr "フラグ"
 
+#. TRANSLATORS: shown in the release list when a version is unknown
+#. TRANSLATORS: shown when the previous security result is unknown
+#. TRANSLATORS: shown when the new security result is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 #. TRANSLATORS: Suffix: the fallback HSI result
@@ -797,218 +923,286 @@ msgstr "フラグ"
 msgid "Unknown"
 msgstr "不明"
 
+#. TRANSLATORS: tree root label showing the number of releases
 #, python-brace-format
 msgid "Available Releases ({count})"
 msgstr ""
 
+#. TRANSLATORS: action label for installing a newer release
 msgid "Update"
 msgstr ""
 
+#. TRANSLATORS: action label for installing an older release
 msgid "Downgrade"
 msgstr ""
 
+#. TRANSLATORS: action label for reinstalling the current release
 msgid "Reinstall"
 msgstr ""
 
+#. TRANSLATORS: fallback title shown when a release has no name
 msgid "Firmware"
 msgstr ""
 
+#. TRANSLATORS: release field label: the action to perform
 msgid "Action"
 msgstr ""
 
+#. TRANSLATORS: release field label: short summary
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "デバイスの概要"
 
+#. TRANSLATORS: release field label: source remote
 msgid "Remote"
 msgstr ""
 
+#. TRANSLATORS: release field label: download size
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "サイズ"
 
+#. TRANSLATORS: release field label: message shown after updating
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "アップデートメッセージ"
 
+#. TRANSLATORS: heading for the list of known release issues
 msgid "Issues"
 msgstr ""
 
+#. TRANSLATORS: warning shown before updating an encrypted device
 msgid "Suspend full-disk encryption protection before continuing."
 msgstr ""
 
+#. TRANSLATORS: warning that the update changes firmware branch
 msgid "This release switches to an alternate firmware branch."
 msgstr ""
 
+#. TRANSLATORS: warning that the firmware is community-built
 msgid "This firmware was built by the community."
 msgstr ""
 
+#. TRANSLATORS: confirmation dialog text before installing a release
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
 msgstr ""
 
+#. TRANSLATORS: status message while firmware is being installed
 msgid "Installing firmware"
 msgstr ""
 
+#. TRANSLATORS: status message after firmware is installed
 msgid "Firmware installation completed"
 msgstr ""
 
+#. TRANSLATORS: error message format, "<operation>: <error text>"
 #, python-brace-format
 msgid "{prefix}: {error}"
 msgstr ""
 
+#. TRANSLATORS: status message shown while an operation is in progress
 #, python-brace-format
 msgid "{operation}…"
 msgstr ""
 
+#. TRANSLATORS: error prefix when a firmware file cannot be read
 msgid "Failed to inspect firmware file"
 msgstr ""
 
+#. TRANSLATORS: status message when a firmware file has no releases
 msgid "The firmware archive contains no installable releases"
 msgstr ""
 
+#. TRANSLATORS: placeholder for an unknown firmware version
 msgid "unknown"
 msgstr ""
 
+#. TRANSLATORS: fallback name for firmware from a local file
 msgid "firmware"
 msgstr ""
 
+#. TRANSLATORS: confirmation dialog text before installing a local file
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
 msgstr ""
 
+#. TRANSLATORS: status message after a local file is installed
 msgid "Local firmware installation completed"
 msgstr ""
 
+#. TRANSLATORS: dialog title and button for installing firmware
 msgid "Install Firmware"
 msgstr ""
 
+#. TRANSLATORS: status message while firmware metadata is refreshed
 msgid "Refreshing metadata"
 msgstr ""
 
+#. TRANSLATORS: status message after firmware metadata is refreshed
 msgid "Firmware metadata refreshed"
 msgstr ""
 
+#. TRANSLATORS: status message while enabling the LVFS remote
 msgid "Enabling LVFS"
 msgstr ""
 
+#. TRANSLATORS: status message after the LVFS remote is enabled
 msgid "LVFS was enabled and its metadata refreshed"
 msgstr ""
 
+#. TRANSLATORS: fallback security results: passed ("OK") or unknown
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: error message when security attributes cannot be read
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
 msgstr ""
 
+#. TRANSLATORS: tree group label for runtime security attributes
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "ランタイム接尾辞"
 
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Unknown attribute"
 msgstr ""
 
+#. TRANSLATORS: shown when the host security ID cannot be determined
 msgid "Unavailable"
 msgstr ""
 
+#. TRANSLATORS: field label for the host security ID (HSI)
 msgid "Host Security ID"
 msgstr ""
 
+#. TRANSLATORS: status message showing the number of attributes
 #, python-brace-format
 msgid "{count} security attributes"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of recent security events
 msgid "Recent Security Events"
 msgstr ""
 
+#. TRANSLATORS: fallback name for a security event with no name
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Security attribute"
 msgstr ""
 
+#. TRANSLATORS: security event line "<time> <name>: <old> → <new>"
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
 msgstr ""
 
+#. TRANSLATORS: security issue line "<device>: <issue>"
 #, python-brace-format
 msgid "{device}: {issue}"
 msgstr ""
 
+#. TRANSLATORS: fallback name for a device with no name
 msgid "Unknown device"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of per-device security issues
 msgid "Device Security Issues"
 msgstr ""
 
+#. TRANSLATORS: shown when there are no recent security events
 msgid "No recent security events"
 msgstr ""
 
+#. TRANSLATORS: field label for a security attribute's result
 msgid "Result"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: HSI level
 msgid "Level"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: providing plugin
 msgid "Plugin"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: related BIOS setting
 msgid "Firmware Setting"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: current firmware value
 msgid "Current Firmware Value"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: desired firmware value
 msgid "Target Firmware Value"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: current kernel value
 msgid "Current Kernel Value"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: desired kernel value
 msgid "Target Kernel Value"
 msgstr ""
 
+#. TRANSLATORS: security attribute field label: link to more info
 msgid "More Information"
 msgstr ""
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the firmware configuration"
 msgstr ""
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the operating system configuration"
 msgstr ""
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Contact the hardware vendor"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of suggested actions
 msgid "Suggested Actions"
 msgstr ""
 
+#. TRANSLATORS: status message while the device is being unlocked
 msgid "Unlocking device"
 msgstr ""
 
+#. TRANSLATORS: status message after the device is unlocked
 msgid "Device unlocked"
 msgstr ""
 
+#. TRANSLATORS: status message while firmware is being verified
 msgid "Verifying firmware"
 msgstr ""
 
+#. TRANSLATORS: status message after firmware verification succeeds
 msgid "Firmware verification succeeded"
 msgstr ""
 
+#. TRANSLATORS: status message while verification data is updated
 msgid "Updating verification data"
 msgstr ""
 
+#. TRANSLATORS: status message after verification data is updated
 msgid "Verification data updated"
 msgstr ""
 
+#. TRANSLATORS: status message while firmware is being activated
 msgid "Activating firmware"
 msgstr ""
 
+#. TRANSLATORS: status message after firmware is activated
 msgid "Device firmware activated"
 msgstr ""
 
+#. TRANSLATORS: command-line help description for the application
 msgid "Manage firmware and platform security in a terminal interface"
 msgstr ""
 
+#. TRANSLATORS: error printed when the fwupd daemon cannot be reached
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
 msgstr ""
@@ -1357,9 +1551,9 @@ msgstr "ユーザーに通知済み"
 msgid "Is in bootloader mode"
 msgstr "ブートローダーモードです"
 
-#. TRANSLATORS: the hardware is waiting to be replugged
-msgid "Hardware is waiting to be replugged"
-msgstr "ハードウェアの再接続を待機しています"
+#. TRANSLATORS: the hardware is waiting for the user to do something
+msgid "Device is waiting to be plugged back in"
+msgstr ""
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -1892,17 +2086,32 @@ msgstr "レポート URI"
 msgid "Automatic Reporting"
 msgstr "自動レポート"
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
-msgstr "デバイスの USB ケーブルを抜き差しすると、アップデートが続行されます。"
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when %s has been unplugged and plugged back in."
+msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
+#. TRANSLATORS: message text
+msgid "The update will continue when the device has been unplugged and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been unplugged."
+msgstr ""
+
+#. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "デバイスの USB ケーブルを抜くと、アップデートが続行されます。"
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been re-inserted."
-msgstr "デバイスの USB ケーブルを差し込むと、アップデートが続行されます。"
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device USB cable has been plugged back in."
+msgstr ""
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -1912,13 +2121,23 @@ msgstr "更新処理を続行するには、デバイス上でロック解除を
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
 msgstr "アップデート中は、コンピューターの電源を切ったり、AC アダプターを取り外したりしないでください。"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device to continue the update process."
-msgstr "デバイスを抜き差しして、アップデートプロセスを続行してください。"
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "Unplug %s and replug it to continue the update process."
+msgstr ""
 
-#. TRANSLATORS: warning message
-msgid "The update will continue when the device power cable has been removed and re-inserted."
-msgstr "デバイスの電源ケーブルを抜き差しすると、アップデートが続行されます。"
+#. TRANSLATORS: message text
+msgid "Unplug the device and replug it to continue the update process."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the power cable of %s has been removed and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device power cable has been removed and plugged back in."
+msgstr ""
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2003,6 +2222,14 @@ msgstr ""
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
 msgstr "UEFI 証明書ストアが最新になりました"
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store no longer contains a test key"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store now contains a test key"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -3920,6 +4147,11 @@ msgid "UEFI NX protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db (Microsoft UEFI)"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI db does not have a test key
+#. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
 msgstr "UEFI データベース"
 
@@ -4284,6 +4516,21 @@ msgstr "HP SureStart は、BIOS を改ざんから保護するファームウェ
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
+
+#~ msgid "Hardware is waiting to be replugged"
+#~ msgstr "ハードウェアの再接続を待機しています"
+
+#~ msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+#~ msgstr "デバイスの USB ケーブルを抜き差しすると、アップデートが続行されます。"
+
+#~ msgid "The update will continue when the device USB cable has been re-inserted."
+#~ msgstr "デバイスの USB ケーブルを差し込むと、アップデートが続行されます。"
+
+#~ msgid "Unplug and replug the device to continue the update process."
+#~ msgstr "デバイスを抜き差しして、アップデートプロセスを続行してください。"
+
+#~ msgid "The update will continue when the device power cable has been removed and re-inserted."
+#~ msgstr "デバイスの電源ケーブルを抜き差しすると、アップデートが続行されます。"
 
 #~ msgid "Enable"
 #~ msgstr "有効"
