@@ -288,7 +288,9 @@ def fwupdate_nvidia():
     if data.get("@Redfish.OperationApplyTime") != "Immediate":
         return _failure("apply time invalid")
     fileitem = request.files["UpdateFile"]
-    if fileitem.read().decode() != "hello":
+    # each upload in the test is its own payload, as the plugin sends a given
+    # payload only once per archive
+    if not fileitem.read().decode().startswith("hello"):
         return _failure("payload invalid")
     # successive uploads exercise the three ways the task monitor can come back;
     # the plugin has to derive the persistent /Tasks/<id> resource from all of

@@ -696,13 +696,19 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	GPtrArray *devices;
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_badodata = NULL;
+	g_autoptr(FuFirmware) firmware_nolocation = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_again = fu_progress_new(G_STRLOC);
 	g_autoptr(FuProgress) progress_nolocation = fu_progress_new(G_STRLOC);
 	g_autoptr(FuProgress) progress_badodata = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GBytes) blob_fw_badodata = NULL;
+	g_autoptr(GBytes) blob_fw_nolocation = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_flag(progress_again, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_flag(progress_nolocation, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_flag(progress_badodata, FU_PROGRESS_FLAG_NO_PROFILE);
 
@@ -749,6 +755,19 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
 	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN));
 
+	/* every component of an archive shares one payload, so writing it again must
+	 * not send it a second time; redfish.py counts uploads, so a resend would
+	 * consume the no-Location response the next upload is meant to get */
+	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
+					      dev,
+					      firmware,
+					      progress_again,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
 	/* activation finds the OEM action on BMC_0 and asks for the aux cycle;
 	 * redfish.py rejects any ResetType other than AuxPowerCycleForce */
 	ret = fu_plugin_runner_activate(self->nvidia_plugin, dev, progress, &error);
@@ -756,11 +775,14 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	g_assert_true(ret);
 	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
 
-	/* the second upload comes back without a Location header, so the monitor
-	 * URI has to be taken from @odata.id in the response body instead */
+	/* the second upload, a different payload, comes back without a Location
+	 * header, so the monitor URI has to be taken from @odata.id in the response
+	 * body instead */
+	blob_fw_nolocation = g_bytes_new_static("hello-nolocation", 16);
+	firmware_nolocation = fu_firmware_new_from_bytes(blob_fw_nolocation);
 	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
 					      dev,
-					      firmware,
+					      firmware_nolocation,
 					      progress_nolocation,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
@@ -772,9 +794,11 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	 * rather than a string -- testing only that the node exists accepts this and
 	 * leaves the location NULL, so the write has to fail here rather than go on
 	 * to poll a NULL task */
+	blob_fw_badodata = g_bytes_new_static("hello-badodata", 14);
+	firmware_badodata = fu_firmware_new_from_bytes(blob_fw_badodata);
 	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
 					      dev,
-					      firmware,
+					      firmware_badodata,
 					      progress_badodata,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
