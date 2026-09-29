@@ -966,3 +966,25 @@ fu_binder_cli_bridge_get_host_security_events(AIBinder *binder, guint limit, GEr
 	}
 	return g_steal_pointer(&attrs);
 }
+
+gchar *
+fu_binder_cli_bridge_self_sign(AIBinder *binder,
+			       const char *value,
+			       FwupdSelfSignFlags flags,
+			       GError **error)
+{
+	std::shared_ptr<aidl_fwupd::IFwupd> service =
+	    fu_binder_cli_bridge_get_service(binder, error);
+	if (service == NULL)
+		return NULL;
+
+	std::string out_sig;
+	if (!fu_binder_cli_bridge_propagate_status(
+		service->selfSign(std::string(value != NULL ? value : ""),
+				  (int64_t)flags,
+				  &out_sig),
+		error))
+		return NULL;
+
+	return g_strdup(out_sig.c_str());
+}
