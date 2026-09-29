@@ -3185,6 +3185,8 @@ fwupd_client_self_sign(FwupdClient *self,
 		       GCancellable *cancellable,
 		       GError **error)
 {
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
@@ -3195,6 +3197,8 @@ fwupd_client_self_sign(FwupdClient *self,
 	/* connect */
 	if (!fwupd_client_connect(self, cancellable, error))
 		return NULL;
+	if (impl->self_sign != NULL)
+		return impl->self_sign(self, value, flags, impl_userdata, cancellable, error);
 
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);

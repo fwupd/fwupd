@@ -495,6 +495,25 @@ fu_binder_daemon_set_bios_settings_bridge(void *daemon_instance,
 	return fu_engine_modify_bios_settings(engine, settings, FALSE, error);
 }
 
+gchar *
+fu_binder_daemon_self_sign_bridge(void *daemon_instance,
+				  const gchar *value,
+				  guint64 flags,
+				  GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuJcatSignFlags jcat_flags = FU_JCAT_SIGN_FLAG_NONE;
+
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.self-sign", error))
+		return NULL;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_CERT)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
+	return fu_engine_self_sign(engine, value, jcat_flags, error);
+}
+
 static void
 fu_binder_daemon_engine_changed_cb(FuEngine *engine, FuBinderDaemon *self)
 {

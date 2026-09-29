@@ -45,4 +45,5 @@ interface IFwupd {
         FwupdSecurityAttr[] getHostSecurityAttrs();
         FwupdSecurityAttr[] getHostSecurityEvents(in int limit);
         void quit();
+        String selfSign(in String data, in long flags);
 }
