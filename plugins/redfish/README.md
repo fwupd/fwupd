@@ -161,6 +161,33 @@ which is not the chassis used to detect the GB300. The `Force` variant does not
 wait for the host to shut down, so the system loses power as soon as the BMC
 accepts the request -- save your work before activating.
 
+### Design notes
+
+* **Detection.** Vendor `NVIDIA` at the Redfish root is not sufficient: other
+  Redfish implementations must not receive the GB300 update semantics above, so
+  the `Chassis_0` model is always verified.
+* **Task polling.** A failed poll is tolerated when the error is retryable
+  (`FWUPD_ERROR_BUSY`), so a brief connectivity blip during a flash of tens of
+  minutes does not abandon a running update. The failure counter is reset by every
+  poll that returns a valid task body, so only consecutive failures abort.
+* **Pending activation.** Each time a device is probed the BMC's OEM slot data
+  is consulted, so a pending activation survives a daemon restart, a host reboot
+  and a same-version reinstall, none of which the engine's history can express.
+  `FirmwareState` alone is not enough: the BMC also reports `PendingActivation`
+  for a slot holding no image, after an update erased it and failed to
+  authenticate the replacement, and acting on that would ask for an aux-rail
+  power cycle that activates nothing.
+* **Firmware size.** The PLDM bundle is an opaque blob of about 117MB, above the
+  `FuFirmware` parse ceiling, so it is read straight into a `FuFirmware` without
+  parsing. The daemon enforces the limit set in `probe()`.
+* **Which component is flagged.** The bundle is uploaded with an empty `Targets`
+  and the BMC picks the components from the PLDM manifest, so the device a CAB
+  addressed is usually not the one left pending -- a bundle targeting `FW_BMC_0`
+  routinely stages `FW_CPU_0`. The plugin therefore asks the BMC which slots
+  report `PendingActivation` and flags those, so `fwupdmgr activate` is pointed at
+  the right component. Inside a composite install this runs from
+  `composite_cleanup()`, once every component has been processed.
+
 ### Platform archives
 
 A PLDM bundle is a single payload that the BMC fans out across every component

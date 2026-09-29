@@ -219,13 +219,6 @@ fu_redfish_nvidia_device_parse_task(const gchar *task_uri,
 	return TRUE;
 }
 
-/*
- * Poll @uri once and classify the result.
- *
- * Returns %TRUE when @response is TASK or REAPED, and %FALSE with @error set
- * otherwise. FWUPD_ERROR_BUSY marks the conditions the caller may retry; every
- * other error code aborts the poll.
- */
 static gboolean
 fu_redfish_nvidia_device_poll_request(FuRedfishBackend *backend,
 				      const gchar *uri,
@@ -294,14 +287,6 @@ fu_redfish_nvidia_device_poll_request(FuRedfishBackend *backend,
 	return FALSE;
 }
 
-/*
- * Account for a failed poll, always returning %FALSE with @error set.
- *
- * Transient failures are tolerated so that brief connectivity blips during a
- * flash lasting tens of minutes do not abandon a still-running update. The
- * counter is reset by every poll that returns a valid task body, so only
- * consecutive failures abort.
- */
 static gboolean
 fu_redfish_nvidia_device_poll_error(FuRedfishNvidiaTaskHelper *helper,
 				    GError *error_local,
@@ -504,20 +489,6 @@ fu_redfish_nvidia_device_poll_task(FuRedfishNvidiaDevice *self,
 	return TRUE;
 }
 
-/*
- * Has the BMC staged an image for this component that is waiting on the
- * aux-rail power cycle?
- *
- * The OEM slot data is the authoritative answer, and asking the BMC each time
- * the device is probed means a pending activation survives a daemon restart,
- * a host reboot, and a same-version reinstall -- none of which the engine's
- * own history can express.
- *
- * FirmwareState alone is not enough: the BMC also reports PendingActivation for
- * a slot that holds no image at all, which happens when an update erased the
- * slot and then failed to authenticate the replacement. Acting on that would
- * mark the device as needing an aux-rail power cycle to activate nothing.
- */
 static gboolean
 fu_redfish_nvidia_device_slot_is_pending(FwupdJsonObject *json_member)
 {
@@ -614,12 +585,6 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-/*
- * The PLDM bundle is an opaque blob of about 117MB, which is larger than the
- * FuFirmware base-class parse ceiling of FU_FIRMWARE_SIZE_MAX_DEFAULT, so read
- * it straight into a FuFirmware rather than parsing it.  The daemon enforces the
- * limit set with fu_device_set_firmware_size_max() in probe().
- */
 static FuFirmware *
 fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
 					  FuInputStream *stream,
@@ -635,19 +600,6 @@ fu_redfish_nvidia_device_prepare_firmware(FuDevice *device,
 	return fu_firmware_new_from_bytes(blob);
 }
 
-/*
- * Flag whichever components the BMC has actually left staged.
- *
- * The bundle is uploaded with an empty Targets[] and the BMC resolves the
- * components to flash from the PLDM manifest, so the device a CAB happened to
- * address is usually not the one left pending: a bundle whose metainfo targets
- * FW_BMC_0 routinely stages FW_CPU_0 instead.  Flagging the addressed device
- * would therefore point the operator, and `fwupdmgr activate`, at the wrong
- * component.  Ask the BMC which slots report PendingActivation and flag those.
- *
- * Inside a composite install this runs from the plugin's composite_cleanup()
- * rather than after the upload, once every component has been processed.
- */
 gboolean
 fu_redfish_nvidia_device_refresh_pending(FuRedfishNvidiaDevice *self, GError **error)
 {

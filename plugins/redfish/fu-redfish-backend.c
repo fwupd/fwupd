@@ -474,14 +474,6 @@ fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_pre
 	g_set_str(&self->path_prefix, path_prefix);
 }
 
-/*
- * Detect an NVIDIA DGX Station GB300 BMC by probing Chassis_0.
- *
- * Vendor="NVIDIA" at the Redfish root is necessary but not sufficient —
- * other NVIDIA Redfish implementations (non-GB300 systems) must not receive
- * GB300-specific update semantics (empty Targets, ForceUpdate, GB300 task
- * lifecycle).  Always verify the chassis model.
- */
 static gboolean
 fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
 {
