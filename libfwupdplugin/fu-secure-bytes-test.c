@@ -29,11 +29,21 @@ fu_secure_bytes_take_func(void)
 		g_assert_cmpint(buf[i], ==, 0x0);
 }
 
+static void
+fu_secure_bytes_from_bytes_func(void)
+{
+	guint8 buf[] = {'s', 'e', 'c', 'r', 'e', 't'};
+	g_autoptr(GBytes) bytes = g_bytes_new_static(buf, sizeof(buf));
+	g_autoptr(FuSecureBytes) sbytes = fu_secure_bytes_new_from_bytes(bytes);
+	g_assert_cmpint(fu_secure_bytes_get_size(sbytes), ==, 6);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/secure-bytes", fu_secure_bytes_func);
+	g_test_add_func("/fwupd/secure-bytes/from_bytes", fu_secure_bytes_from_bytes_func);
 	g_test_add_func("/fwupd/secure-bytes/take", fu_secure_bytes_take_func);
 	return g_test_run();
 }

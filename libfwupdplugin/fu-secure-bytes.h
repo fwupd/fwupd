@@ -22,6 +22,8 @@ typedef struct FuSecureBytes FuSecureBytes;
 
 FuSecureBytes *
 fu_secure_bytes_new(guint8 *buf, gsize bufsz, GDestroyNotify destroy_fn);
+FuSecureBytes *
+fu_secure_bytes_new_from_bytes(GBytes *bytes);
 void
 fu_secure_bytes_free(FuSecureBytes *self) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSecureBytes, fu_secure_bytes_free)
