@@ -26,6 +26,8 @@ struct _FuRedfishDeviceClass {
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self, GError **error);
 gboolean
+fu_redfish_device_verify_target_identity(FuRedfishDevice *self, GError **error);
+gboolean
 fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 				   const gchar *message_id,
 				   const gchar *message,
