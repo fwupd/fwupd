@@ -73,6 +73,7 @@ class BiosSetting:
     @classmethod
     def from_fwupd(cls, setting) -> "BiosSetting":
         """Create an immutable view from an introspected FwupdBiosSetting."""
+        # TRANSLATORS: fallback name shown when a BIOS setting has no name
         name = setting.get_name() or _("Unnamed setting")
         description = setting.get_description()
         kind = setting.get_kind()
@@ -102,21 +103,25 @@ class BiosSetting:
         """Validate and normalize a value before sending it to fwupd."""
         if self.kind == Fwupd.BiosSettingKind.ENUMERATION:
             if value not in self.possible_values:
+                # TRANSLATORS: error shown when an invalid value is entered
                 raise ValueError(_("Choose one of the available values"))
             return value
         if self.kind == Fwupd.BiosSettingKind.INTEGER:
             try:
                 number = int(value, 0)
             except ValueError as error:
+                # TRANSLATORS: error shown when a non-numeric value is entered
                 raise ValueError(_("Enter a valid integer")) from error
             if not self.lower_bound <= number <= self.upper_bound:
                 raise ValueError(
+                    # TRANSLATORS: error shown when a number is out of range
                     _("Value must be between {lower} and {upper}").format(
                         lower=self.lower_bound, upper=self.upper_bound
                     )
                 )
             if (number - self.lower_bound) % self.scalar_increment != 0:
                 raise ValueError(
+                    # TRANSLATORS: error shown when a number is not a valid increment
                     _("Value must use an increment of {increment}").format(
                         increment=self.scalar_increment
                     )
@@ -125,11 +130,13 @@ class BiosSetting:
         if self.kind == Fwupd.BiosSettingKind.STRING:
             if not self.lower_bound <= len(value) <= self.upper_bound:
                 raise ValueError(
+                    # TRANSLATORS: error shown when text is the wrong length
                     _("Text length must be between {lower} and {upper}").format(
                         lower=self.lower_bound, upper=self.upper_bound
                     )
                 )
             return value
+        # TRANSLATORS: error shown when a setting type cannot be edited
         raise ValueError(_("This setting type cannot be changed"))
 
 
@@ -190,7 +197,9 @@ class SettingEditor(ModalScreen):
                 yield Input(value=self.value, id="editor-input")
             yield Static("", id="editor-error")
             with Horizontal():
+                # TRANSLATORS: button to close the editor without saving
                 yield Button(_("Cancel"), id="editor-cancel")
+                # TRANSLATORS: button to save the edited setting value
                 yield Button(_("Save"), id="editor-save", variant="primary")
 
     def on_mount(self) -> None:
@@ -254,6 +263,7 @@ class ConfirmAction(ModalScreen):
             yield Label(self.dialog_title, classes="dialog-title")
             yield Static(self.message)
             with Horizontal():
+                # TRANSLATORS: button to cancel the confirmation dialog
                 yield Button(_("Cancel"), id="confirm-cancel")
                 yield Button(self.action, id="confirm-action", variant="warning")
 
@@ -295,11 +305,15 @@ class PathPrompt(ModalScreen):
 
     def compose(self) -> ComposeResult:
         with Vertical():
+            # TRANSLATORS: dialog title for installing a local firmware file
             yield Label(_("Install Local Firmware"), classes="dialog-title")
+            # TRANSLATORS: input placeholder for the firmware archive path
             yield Input(placeholder=_("Path to a .cab firmware archive"), id="cab-path")
             yield Static("", id="path-error")
             with Horizontal():
+                # TRANSLATORS: button to cancel the dialog
                 yield Button(_("Cancel"), id="path-cancel")
+                # TRANSLATORS: button to proceed with the entered path
                 yield Button(_("Continue"), id="path-continue", variant="primary")
 
     def on_mount(self) -> None:
@@ -311,6 +325,7 @@ class PathPrompt(ModalScreen):
             return
         path = pathlib.Path(self.query_one("#cab-path", Input).value).expanduser()
         if not path.is_file():
+            # TRANSLATORS: error shown when the entered path does not exist
             self.query_one("#path-error", Static).update(_("File not found"))
             return
         self.dismiss(str(path))
@@ -328,6 +343,7 @@ def xml_to_text(value: Optional[str]) -> str:
 def format_size(size: int) -> str:
     """Format a byte count for display."""
     value = float(size)
+    # TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
     for unit in (_("bytes"), _("KB"), _("MB"), _("GB")):
         if value < 1024 or unit == _("GB"):
             return (
@@ -342,32 +358,53 @@ def format_duration(seconds: int) -> str:
     if seconds <= 0:
         return ""
     if seconds < 60:
+        # TRANSLATORS: a duration in seconds
         return _("{seconds} seconds").format(seconds=seconds)
+    # TRANSLATORS: a duration in minutes
     return _("{minutes} minutes").format(minutes=max(1, round(seconds / 60)))
 
 
 SECURITY_RESULTS = {
+    # TRANSLATORS: host security attribute result: the check passed
     Fwupd.SecurityAttrResult.VALID: _("Valid"),
+    # TRANSLATORS: host security attribute result: the check failed
     Fwupd.SecurityAttrResult.NOT_VALID: _("Invalid"),
+    # TRANSLATORS: host security attribute result: the feature is enabled
     Fwupd.SecurityAttrResult.ENABLED: _("Enabled"),
+    # TRANSLATORS: host security attribute result: the feature is disabled
     Fwupd.SecurityAttrResult.NOT_ENABLED: _("Disabled"),
+    # TRANSLATORS: host security attribute result: the feature is locked
     Fwupd.SecurityAttrResult.LOCKED: _("Locked"),
+    # TRANSLATORS: host security attribute result: the feature is unlocked
     Fwupd.SecurityAttrResult.NOT_LOCKED: _("Unlocked"),
+    # TRANSLATORS: host security attribute result: the data is encrypted
     Fwupd.SecurityAttrResult.ENCRYPTED: _("Encrypted"),
+    # TRANSLATORS: host security attribute result: the data is not encrypted
     Fwupd.SecurityAttrResult.NOT_ENCRYPTED: _("Unencrypted"),
+    # TRANSLATORS: host security attribute result: the system is tainted
     Fwupd.SecurityAttrResult.TAINTED: _("Tainted"),
+    # TRANSLATORS: host security attribute result: the system is not tainted
     Fwupd.SecurityAttrResult.NOT_TAINTED: _("Untainted"),
+    # TRANSLATORS: host security attribute result: the feature was found
     Fwupd.SecurityAttrResult.FOUND: _("Found"),
+    # TRANSLATORS: host security attribute result: the feature was not found
     Fwupd.SecurityAttrResult.NOT_FOUND: _("Not found"),
+    # TRANSLATORS: host security attribute result: the feature is supported
     Fwupd.SecurityAttrResult.SUPPORTED: _("Supported"),
+    # TRANSLATORS: host security attribute result: the feature is not supported
     Fwupd.SecurityAttrResult.NOT_SUPPORTED: _("Not supported"),
 }
 
 SECURITY_LEVELS = {
+    # TRANSLATORS: host security level label (HSI-1)
     Fwupd.SecurityAttrLevel.CRITICAL: _("HSI-1 Critical"),
+    # TRANSLATORS: host security level label (HSI-2)
     Fwupd.SecurityAttrLevel.IMPORTANT: _("HSI-2 Important"),
+    # TRANSLATORS: host security level label (HSI-3)
     Fwupd.SecurityAttrLevel.THEORETICAL: _("HSI-3 Theoretical"),
+    # TRANSLATORS: host security level label (HSI-4)
     Fwupd.SecurityAttrLevel.SYSTEM_PROTECTION: _("HSI-4 System Protection"),
+    # TRANSLATORS: host security level label (HSI-5)
     Fwupd.SecurityAttrLevel.SYSTEM_ATTESTATION: _("HSI-5 System Attestation"),
 }
 
@@ -375,7 +412,9 @@ SECURITY_LEVELS = {
 class FwupdTui(App):
     """Terminal interface for firmware, BIOS, and host-security management."""
 
+    # TRANSLATORS: application title shown in the header
     TITLE = _("fwupd")
+    # TRANSLATORS: application subtitle shown in the header
     SUB_TITLE = _("Firmware management")
 
     HOME_BUTTON_IDS = (
@@ -504,11 +543,17 @@ class FwupdTui(App):
     """
 
     BINDINGS = [
+        # TRANSLATORS: footer label for the key that quits the application
         ("q", "quit", _("Quit")),
+        # TRANSLATORS: footer label for the key that returns to the home screen
         ("escape", "home", _("Home")),
+        # TRANSLATORS: footer label for the key that focuses the search box
         ("slash", "focus_search", _("Search")),
+        # TRANSLATORS: footer label for the key that edits the selected setting
         ("e", "edit", _("Edit")),
+        # TRANSLATORS: footer label for the key that applies pending changes
         ("ctrl+s", "apply", _("Apply")),
+        # TRANSLATORS: footer label for the key that refreshes the current view
         ("r", "refresh", _("Refresh")),
     ]
 
@@ -537,75 +582,105 @@ class FwupdTui(App):
         with ContentSwitcher(initial="home-view", id="views"):
             with Vertical(id="home-view", classes="view"):
                 with Vertical(id="home-menu"):
+                    # TRANSLATORS: title of the home menu
                     yield Label(_("Firmware Management"), id="home-title")
                     yield Static(
+                        # TRANSLATORS: home screen introductory text
                         _("Choose what you would like to inspect or change."),
                     )
                     yield Static(
+                        # TRANSLATORS: home screen hint on how to navigate the menu
                         _("Use ↑/↓ and Enter, or press 1, 2, or 3."),
                     )
+                    # TRANSLATORS: button to open the BIOS settings view
                     yield Button(_("Manage BIOS Settings"), id="home-bios")
+                    # TRANSLATORS: button to open the devices view
                     yield Button(_("Manage Devices"), id="home-devices")
+                    # TRANSLATORS: button to open the host security view
                     yield Button(_("View Security Measurement"), id="home-security")
+                    # TRANSLATORS: button to quit the application
                     yield Button(_("Quit"), id="home-quit")
             with Horizontal(id="bios-view", classes="view"):
                 with Vertical(classes="browser"):
                     yield Input(
+                        # TRANSLATORS: search box placeholder for BIOS settings
                         placeholder=_("Search BIOS settings"),
                         id="search",
                         classes="search",
                     )
                     yield Tree(
+                        # TRANSLATORS: tree root label for the BIOS settings list
                         _("BIOS Settings"),
                         id="settings-tree",
                         classes="browser-tree",
                     )
                 with Vertical(classes="details-pane"):
                     yield Static(
+                        # TRANSLATORS: placeholder shown before a setting is selected
                         _("Select a setting to view its details."),
                         id="details",
                         classes="details",
                     )
                     yield Static("", id="status", classes="status")
                     with Horizontal(classes="buttons"):
+                        # TRANSLATORS: button to return to the home screen
                         yield Button(_("Home"), id="bios-home")
+                        # TRANSLATORS: button to edit the selected setting
                         yield Button(_("Edit"), id="edit", disabled=True)
                         yield Button(
-                            _("Apply"), id="apply", variant="success", disabled=True
+                            # TRANSLATORS: button to apply pending BIOS changes
+                            _("Apply"),
+                            id="apply",
+                            variant="success",
+                            disabled=True,
                         )
             with Horizontal(id="devices-view", classes="view"):
                 with Vertical(classes="browser"):
                     yield Input(
+                        # TRANSLATORS: search box placeholder for devices
                         placeholder=_("Search devices"),
                         id="device-search",
                         classes="search",
                     )
+                    # TRANSLATORS: tree root label for the devices list
                     yield Tree(_("Devices"), id="device-tree", classes="browser-tree")
                     with Horizontal(id="device-actions-secondary"):
+                        # TRANSLATORS: button to reload the list of devices
                         yield Button(_("Refresh"), id="devices-refresh")
+                        # TRANSLATORS: button to refresh firmware metadata
                         yield Button(_("Refresh Metadata"), id="metadata-refresh")
                     with Horizontal():
+                        # TRANSLATORS: button to enable the LVFS remote
                         yield Button(_("Enable LVFS"), id="enable-lvfs", disabled=True)
+                        # TRANSLATORS: button to install firmware from a local file
                         yield Button(_("Install Local File"), id="install-file")
                 with Vertical(classes="details-pane"):
                     yield Static(
+                        # TRANSLATORS: placeholder shown before a device is selected
                         _("Select a device to view its details."),
                         id="device-details",
                         classes="details",
                     )
+                    # TRANSLATORS: tree root label for the list of releases
                     yield Tree(_("Available Releases"), id="release-tree")
                     yield Static("", id="device-status", classes="status")
                     with Grid(id="device-actions"):
+                        # TRANSLATORS: button to return to the home screen
                         yield Button(_("Home"), id="devices-home")
+                        # TRANSLATORS: button to unlock the selected device
                         yield Button(_("Unlock"), id="device-unlock", disabled=True)
+                        # TRANSLATORS: button to verify the device firmware
                         yield Button(_("Verify"), id="device-verify", disabled=True)
                         yield Button(
+                            # TRANSLATORS: button to store the device verification data
                             _("Store"),
                             id="device-verify-update",
                             disabled=True,
                         )
+                        # TRANSLATORS: button to activate staged device firmware
                         yield Button(_("Activate"), id="device-activate", disabled=True)
                         yield Button(
+                            # TRANSLATORS: button to install the selected release
                             _("Install"),
                             id="release-install",
                             variant="success",
@@ -614,6 +689,7 @@ class FwupdTui(App):
             with Horizontal(id="security-view", classes="view"):
                 with Vertical(classes="browser"):
                     yield Tree(
+                        # TRANSLATORS: tree root label for host security attributes
                         _("Security Attributes"),
                         id="security-tree",
                         classes="browser-tree",
@@ -621,6 +697,7 @@ class FwupdTui(App):
                 with Vertical(classes="details-pane"):
                     yield Static("", id="security-summary")
                     yield Static(
+                        # TRANSLATORS: placeholder shown before an attribute is selected
                         _("Select a security attribute to view its details."),
                         id="security-details",
                         classes="details",
@@ -628,7 +705,9 @@ class FwupdTui(App):
                     yield Static("", id="security-events")
                     yield Static("", id="security-status", classes="status")
                     with Horizontal(classes="buttons"):
+                        # TRANSLATORS: button to return to the home screen
                         yield Button(_("Home"), id="security-home")
+                        # TRANSLATORS: button to reload the security attributes
                         yield Button(_("Refresh"), id="security-refresh")
         yield Footer()
 
@@ -729,6 +808,7 @@ class FwupdTui(App):
             self.rebuild_tree(self.query_one("#search", Input).value)
             return
         if self.client is None:
+            # TRANSLATORS: status message when the fwupd daemon is unavailable
             self.query_one("#status", Static).update(_("fwupd is not connected"))
             return
         try:
@@ -737,6 +817,7 @@ class FwupdTui(App):
             )
         except GLib.Error as error:
             self.query_one("#status", Static).update(
+                # TRANSLATORS: error message when BIOS settings cannot be read
                 _("Failed to load BIOS settings: {error}").format(error=error.message)
             )
             return
@@ -773,8 +854,10 @@ class FwupdTui(App):
             parent_node.add_leaf(Text(f"{prefix}{setting.name}"), data=setting.key)
             visible += 1
         tree.root.expand()
+        # TRANSLATORS: status message showing how many settings are listed
         message = _("{count} settings").format(count=visible)
         if self.settings_loaded and not self.settings:
+            # TRANSLATORS: status message when the system has no BIOS settings
             message = _("This system does not expose BIOS settings")
         self.query_one("#status", Static).update(message)
 
@@ -783,6 +866,7 @@ class FwupdTui(App):
         details = self.query_one("#details", Static)
         edit = self.query_one("#edit", Button)
         if key is None:
+            # TRANSLATORS: placeholder shown before a setting is selected
             details.update(_("Select a setting to view its details."))
             self.set_button_available(edit, False)
             return
@@ -796,18 +880,22 @@ class FwupdTui(App):
         lines.extend(
             (
                 "",
+                # TRANSLATORS: field label for the setting's current value
                 f"[b]{escape(_('Current value'))}:[/b] {escape(setting.current_value)}",
             )
         )
         if pending is not None:
             lines.append(
+                # TRANSLATORS: field label for a not-yet-applied setting value
                 f"[b]{escape(_('Pending value'))}:[/b] [yellow]{escape(pending)}[/yellow]"
             )
         if setting.kind == Fwupd.BiosSettingKind.ENUMERATION:
+            # TRANSLATORS: heading for the list of values a setting accepts
             lines.extend(("", f"[b]{escape(_('Available values'))}[/b]"))
             lines.extend(f" • {escape(value)}" for value in setting.possible_values)
         elif setting.kind == Fwupd.BiosSettingKind.INTEGER:
             lines.append(
+                # TRANSLATORS: dialog text describing the allowed integer range
                 _("Range: {lower}–{upper}, increment {increment}").format(
                     lower=setting.lower_bound,
                     upper=setting.upper_bound,
@@ -816,11 +904,13 @@ class FwupdTui(App):
             )
         elif setting.kind == Fwupd.BiosSettingKind.STRING:
             lines.append(
+                # TRANSLATORS: dialog text describing the allowed text length
                 _("Length: {lower}–{upper} characters").format(
                     lower=setting.lower_bound, upper=setting.upper_bound
                 )
             )
         if setting.read_only:
+            # TRANSLATORS: dialog text shown when a setting cannot be changed
             lines.extend(("", f"[dim]{escape(_('This setting is read-only.'))}[/dim]"))
         details.update("\n".join(lines))
         self.set_button_available(edit, not setting.read_only)
@@ -851,12 +941,14 @@ class FwupdTui(App):
         if self.current_view != "bios-view" or not self.pending:
             return
         if self.client is None:
+            # TRANSLATORS: status message when the fwupd daemon is unavailable
             self.query_one("#status", Static).update(_("fwupd is not connected"))
             return
         try:
             self.client.modify_bios_setting(dict(self.pending))
         except GLib.Error as error:
             self.query_one("#status", Static).update(
+                # TRANSLATORS: error message when BIOS settings cannot be changed
                 _("Failed to modify BIOS settings: {error}").format(error=error.message)
             )
             return
@@ -865,8 +957,10 @@ class FwupdTui(App):
         self.settings_loaded = False
         self.load_bios_settings()
         if self.client.get_pending_reboot():
+            # TRANSLATORS: status message after a change that needs a reboot
             message = _("BIOS settings changed successfully; reboot required")
         else:
+            # TRANSLATORS: status message after BIOS settings are changed
             message = _("BIOS settings changed successfully")
         self.query_one("#status", Static).update(message)
 
@@ -881,12 +975,14 @@ class FwupdTui(App):
         self.releases.clear()
         self.query_one("#release-tree", Tree).clear()
         if self.client is None:
+            # TRANSLATORS: status message when the fwupd daemon is unavailable
             self.query_one("#device-status", Static).update(_("fwupd is not connected"))
             return
         try:
             devices = list(self.client.get_devices() or [])
         except GLib.Error as error:
             self.query_one("#device-status", Static).update(
+                # TRANSLATORS: error message when the device list cannot be read
                 _("Failed to load devices: {error}").format(error=error.message)
             )
             return
@@ -991,27 +1087,43 @@ class FwupdTui(App):
             add_device(tree.root, device_id)
         tree.root.expand()
         self.query_one("#device-status", Static).update(
+            # TRANSLATORS: status message showing how many devices are listed
             _("{count} devices").format(count=len(matches))
             if self.devices
+            # TRANSLATORS: status message when no devices are available
             else _("No supported devices were found")
         )
 
     @staticmethod
     def device_flag_names(device) -> List[str]:
         flags = (
+            # TRANSLATORS: device flag label: built into the machine
             (Fwupd.DeviceFlags.INTERNAL, _("Internal device")),
+            # TRANSLATORS: device flag label: firmware can be updated
             (Fwupd.DeviceFlags.UPDATABLE, _("Updatable")),
+            # TRANSLATORS: device flag label: needs mains power to update
             (Fwupd.DeviceFlags.REQUIRE_AC, _("Requires AC power")),
+            # TRANSLATORS: device flag label: the device is locked
             (Fwupd.DeviceFlags.LOCKED, _("Locked")),
+            # TRANSLATORS: device flag label: available from a remote
             (Fwupd.DeviceFlags.SUPPORTED, _("Supported by a remote")),
+            # TRANSLATORS: device flag label: a reboot is required
             (Fwupd.DeviceFlags.NEEDS_REBOOT, _("Needs reboot")),
+            # TRANSLATORS: device flag label: a shutdown is required
             (Fwupd.DeviceFlags.NEEDS_SHUTDOWN, _("Needs shutdown")),
+            # TRANSLATORS: device flag label: an activation step is required
             (Fwupd.DeviceFlags.NEEDS_ACTIVATION, _("Needs activation")),
+            # TRANSLATORS: device flag label: updates are staged before use
             (Fwupd.DeviceFlags.DUAL_IMAGE, _("Stages updates")),
+            # TRANSLATORS: device flag label: the device can self-recover
             (Fwupd.DeviceFlags.SELF_RECOVERY, _("Supports self-recovery")),
+            # TRANSLATORS: device flag label: no longer supported by the vendor
             (Fwupd.DeviceFlags.END_OF_LIFE, _("End of life")),
+            # TRANSLATORS: device flag label: firmware is cryptographically signed
             (Fwupd.DeviceFlags.SIGNED_PAYLOAD, _("Signed payload")),
+            # TRANSLATORS: device flag label: firmware is not signed
             (Fwupd.DeviceFlags.UNSIGNED_PAYLOAD, _("Unsigned payload")),
+            # TRANSLATORS: device flag label: the device is emulated
             (Fwupd.DeviceFlags.EMULATED, _("Emulated device")),
         )
         return [label for flag, label in flags if device.has_flag(flag)]
@@ -1020,37 +1132,54 @@ class FwupdTui(App):
         self.current_device_id = device_id
         self.current_release_key = None
         install = self.query_one("#release-install", Button)
+        # TRANSLATORS: button to install the selected release
         install.label = _("Install")
         self.set_button_available(install, False)
         if device_id is None:
             self.query_one("#device-details", Static).update(
+                # TRANSLATORS: placeholder shown before a device is selected
                 _("Select a device to view its details.")
             )
             return
         device = self.devices[device_id]
+        # TRANSLATORS: fallback name shown when a device has no name
         lines = [f"[b]{escape(device.get_name() or _('Unnamed device'))}[/b]"]
         fields = (
+            # TRANSLATORS: device field label: firmware version
             (_("Version"), device.get_version()),
+            # TRANSLATORS: device field label: lowest allowed version
             (_("Minimum Version"), device.get_version_lowest()),
+            # TRANSLATORS: device field label: bootloader version
             (_("Bootloader Version"), device.get_version_bootloader()),
+            # TRANSLATORS: device field label: hardware vendor
             (_("Vendor"), device.get_vendor()),
+            # TRANSLATORS: device field label: firmware branch
             (_("Branch"), device.get_branch()),
+            # TRANSLATORS: device field label: serial number
             (_("Serial Number"), device.get_serial()),
+            # TRANSLATORS: device field label: estimated install time
             (_("Install Duration"), format_duration(device.get_install_duration())),
             (
+                # TRANSLATORS: device field label: remaining firmware writes
                 _("Flashes Left"),
                 str(device.get_flashes_left()) if device.get_flashes_left() else "",
             ),
+            # TRANSLATORS: device field label: last update error
             (_("Update Error"), device.get_update_error()),
         )
         for label, value in fields:
             if value:
                 lines.append(f"[b]{escape(label)}:[/b] {escape(str(value))}")
         for label, values in (
+            # TRANSLATORS: heading for the list of device checksums
             (_("Checksums"), list(device.get_checksums() or [])),
+            # TRANSLATORS: heading for the list of device GUIDs
             (_("GUIDs"), list(device.get_guids() or [])),
+            # TRANSLATORS: heading for the list of device instance IDs
             (_("Instance IDs"), list(device.get_instance_ids() or [])),
+            # TRANSLATORS: heading for the list of device security issues
             (_("Security Issues"), list(device.get_issues() or [])),
+            # TRANSLATORS: heading for the list of device flags
             (_("Flags"), self.device_flag_names(device)),
         ):
             if values:
@@ -1090,7 +1219,9 @@ class FwupdTui(App):
             self.releases[key] = release
             action = self.release_action(release)
             tree.root.add_leaf(
-                Text(f"{release.get_version() or _('Unknown')}  [{action}]"), data=key
+                # TRANSLATORS: shown in the release list when a version is unknown
+                Text(f"{release.get_version() or _('Unknown')}  [{action}]"),
+                data=key,
             )
             if preferred_key is None and release.has_flag(
                 Fwupd.ReleaseFlags.IS_UPGRADE
@@ -1098,6 +1229,7 @@ class FwupdTui(App):
                 preferred_key = key
         tree.root.expand()
         tree.root.label = Text(
+            # TRANSLATORS: tree root label showing the number of releases
             _("Available Releases ({count})").format(count=len(releases))
         )
         if preferred_key is not None:
@@ -1106,15 +1238,19 @@ class FwupdTui(App):
     @staticmethod
     def release_action(release) -> str:
         if release.has_flag(Fwupd.ReleaseFlags.IS_UPGRADE):
+            # TRANSLATORS: action label for installing a newer release
             return _("Update")
         if release.has_flag(Fwupd.ReleaseFlags.IS_DOWNGRADE):
+            # TRANSLATORS: action label for installing an older release
             return _("Downgrade")
+        # TRANSLATORS: action label for reinstalling the current release
         return _("Reinstall")
 
     def show_release(self, key: Optional[str]) -> None:
         if key is None or self.current_device_id is None:
             self.current_release_key = None
             button = self.query_one("#release-install", Button)
+            # TRANSLATORS: button to install the selected release
             button.label = _("Install")
             self.set_button_available(button, False)
             return
@@ -1122,17 +1258,26 @@ class FwupdTui(App):
         release = self.releases[key]
         action = self.set_release_action(key)
         lines = [
+            # TRANSLATORS: fallback title shown when a release has no name
             f"[b]{escape(release.get_name() or device.get_name() or _('Firmware'))} "
             f"{escape(release.get_version() or '')}[/b]"
         ]
         fields = (
+            # TRANSLATORS: release field label: the action to perform
             (_("Action"), action),
+            # TRANSLATORS: release field label: short summary
             (_("Summary"), release.get_summary()),
+            # TRANSLATORS: release field label: firmware vendor
             (_("Vendor"), release.get_vendor()),
+            # TRANSLATORS: release field label: source remote
             (_("Remote"), release.get_remote_id()),
+            # TRANSLATORS: release field label: firmware branch
             (_("Branch"), release.get_branch()),
+            # TRANSLATORS: release field label: download size
             (_("Size"), format_size(release.get_size()) if release.get_size() else ""),
+            # TRANSLATORS: release field label: estimated install time
             (_("Install Duration"), format_duration(release.get_install_duration())),
+            # TRANSLATORS: release field label: message shown after updating
             (_("Update Message"), release.get_update_message()),
         )
         for label, value in fields:
@@ -1142,7 +1287,9 @@ class FwupdTui(App):
         if description:
             lines.extend(("", escape(description)))
         for label, values in (
+            # TRANSLATORS: heading for the list of known release issues
             (_("Issues"), list(release.get_issues() or [])),
+            # TRANSLATORS: heading for the list of release checksums
             (_("Checksums"), list(release.get_checksums() or [])),
         ):
             if values:
@@ -1180,12 +1327,16 @@ class FwupdTui(App):
         warnings = []
         if device.has_flag(Fwupd.DeviceFlags.AFFECTS_FDE):
             warnings.append(
+                # TRANSLATORS: warning shown before updating an encrypted device
                 _("Suspend full-disk encryption protection before continuing.")
             )
         if release.has_flag(Fwupd.ReleaseFlags.IS_ALTERNATE_BRANCH):
+            # TRANSLATORS: warning that the update changes firmware branch
             warnings.append(_("This release switches to an alternate firmware branch."))
         if release.has_flag(Fwupd.ReleaseFlags.IS_COMMUNITY):
+            # TRANSLATORS: warning that the firmware is community-built
             warnings.append(_("This firmware was built by the community."))
+        # TRANSLATORS: confirmation dialog text before installing a release
         message = _("{action} {device} to version {version}?").format(
             action=action,
             device=device.get_name(),
@@ -1198,6 +1349,7 @@ class FwupdTui(App):
             if not confirmed:
                 return
             self.run_device_operation(
+                # TRANSLATORS: status message while firmware is being installed
                 _("Installing firmware"),
                 lambda: self.client.install_release(
                     device,
@@ -1205,6 +1357,7 @@ class FwupdTui(App):
                     self.install_flags_for_release(release),
                     Fwupd.ClientDownloadFlags.NONE,
                 ),
+                # TRANSLATORS: status message after firmware is installed
                 _("Firmware installation completed"),
             )
 
@@ -1212,6 +1365,7 @@ class FwupdTui(App):
 
     def device_error(self, prefix: str, error: GLib.Error) -> None:
         self.query_one("#device-status", Static).update(
+            # TRANSLATORS: error message format, "<operation>: <error text>"
             _("{prefix}: {error}").format(prefix=prefix, error=error.message)
         )
 
@@ -1223,6 +1377,7 @@ class FwupdTui(App):
         refresh_devices: bool = True,
     ) -> None:
         status = self.query_one("#device-status", Static)
+        # TRANSLATORS: status message shown while an operation is in progress
         status.update(_("{operation}…").format(operation=title))
 
         def complete(message: str) -> None:
@@ -1234,6 +1389,7 @@ class FwupdTui(App):
             try:
                 operation()
             except GLib.Error as error:
+                # TRANSLATORS: error message format, "<operation>: <error text>"
                 message = _("{prefix}: {error}").format(
                     prefix=title, error=error.message
                 )
@@ -1255,22 +1411,27 @@ class FwupdTui(App):
         try:
             details = list(self.client.get_details(path) or [])
         except GLib.Error as error:
+            # TRANSLATORS: error prefix when a firmware file cannot be read
             self.device_error(_("Failed to inspect firmware file"), error)
             return
         if not details:
             self.query_one("#device-status", Static).update(
+                # TRANSLATORS: status message when a firmware file has no releases
                 _("The firmware archive contains no installable releases")
             )
             return
         archive_device = details[0]
         release = archive_device.get_release_default()
+        # TRANSLATORS: placeholder for an unknown firmware version
         version = release.get_version() if release is not None else _("unknown")
+        # TRANSLATORS: fallback name for firmware from a local file
         name = archive_device.get_name() or _("firmware")
         flags = (
             self.install_flags_for_release(release)
             if release is not None
             else Fwupd.InstallFlags.NONE
         )
+        # TRANSLATORS: confirmation dialog text before installing a local file
         message = _("Install {name} version {version} from {path}?").format(
             name=name, version=version, path=path
         )
@@ -1279,13 +1440,17 @@ class FwupdTui(App):
             if not confirmed:
                 return
             self.run_device_operation(
+                # TRANSLATORS: status message while firmware is being installed
                 _("Installing firmware"),
                 lambda: self.client.install(Fwupd.DEVICE_ID_ANY, path, flags),
+                # TRANSLATORS: status message after a local file is installed
                 _("Local firmware installation completed"),
             )
 
         self.push_screen(
-            ConfirmAction(_("Install Firmware"), message, _("Install")), complete
+            # TRANSLATORS: dialog title and button for installing firmware
+            ConfirmAction(_("Install Firmware"), message, _("Install")),
+            complete,
         )
 
     def refresh_metadata(self) -> None:
@@ -1302,8 +1467,10 @@ class FwupdTui(App):
                 self.client.refresh_remote(remote, Fwupd.ClientDownloadFlags.NONE)
 
         self.run_device_operation(
+            # TRANSLATORS: status message while firmware metadata is refreshed
             _("Refreshing metadata"),
             operation,
+            # TRANSLATORS: status message after firmware metadata is refreshed
             _("Firmware metadata refreshed"),
             refresh_devices=False,
         )
@@ -1326,8 +1493,10 @@ class FwupdTui(App):
                 self.client.refresh_remote(remote, Fwupd.ClientDownloadFlags.NONE)
 
         self.run_device_operation(
+            # TRANSLATORS: status message while enabling the LVFS remote
             _("Enabling LVFS"),
             operation,
+            # TRANSLATORS: status message after the LVFS remote is enabled
             _("LVFS was enabled and its metadata refreshed"),
         )
 
@@ -1337,6 +1506,7 @@ class FwupdTui(App):
     def security_result(attr) -> str:
         return SECURITY_RESULTS.get(
             attr.get_result(),
+            # TRANSLATORS: fallback security results: passed ("OK") or unknown
             _("OK") if attr.has_flag(Fwupd.SecurityAttrFlags.SUCCESS) else _("Unknown"),
         )
 
@@ -1347,6 +1517,7 @@ class FwupdTui(App):
         self.security_attrs.clear()
         if self.client is None:
             self.query_one("#security-status", Static).update(
+                # TRANSLATORS: status message when the fwupd daemon is unavailable
                 _("fwupd is not connected")
             )
             return
@@ -1354,6 +1525,7 @@ class FwupdTui(App):
             attrs = list(self.client.get_host_security_attrs() or [])
         except GLib.Error as error:
             self.query_one("#security-status", Static).update(
+                # TRANSLATORS: error message when security attributes cannot be read
                 _("Failed to load security attributes: {error}").format(
                     error=error.message
                 )
@@ -1362,12 +1534,14 @@ class FwupdTui(App):
         groups = {}
         for level, label in SECURITY_LEVELS.items():
             groups[level] = tree.root.add(Text(label), expand=True)
+        # TRANSLATORS: tree group label for runtime security attributes
         runtime = tree.root.add(Text(_("Runtime Suffix")), expand=True)
         for index, attr in enumerate(attrs):
             if attr.has_flag(Fwupd.SecurityAttrFlags.OBSOLETED):
                 continue
             key = f"security:{index}"
             self.security_attrs[key] = attr
+            # TRANSLATORS: fallback name for a security attribute with no name
             name = attr.get_name() or attr.get_appstream_id() or _("Unknown attribute")
             marker = "✔" if attr.has_flag(Fwupd.SecurityAttrFlags.SUCCESS) else "✘"
             label = Text(f"{marker} {_(name)}: {self.security_result(attr)}")
@@ -1376,26 +1550,35 @@ class FwupdTui(App):
             if attr.has_flag(Fwupd.SecurityAttrFlags.RUNTIME_ISSUE):
                 runtime.add_leaf(label.copy(), data=key)
         tree.root.expand()
+        # TRANSLATORS: shown when the host security ID cannot be determined
         host_id = self.client.get_host_security_id() or _("Unavailable")
         self.query_one("#security-summary", Static).update(
+            # TRANSLATORS: field label for the host security ID (HSI)
             f"[b]{escape(_('Host Security ID'))}:[/b] {escape(host_id)}"
         )
         self.query_one("#security-status", Static).update(
+            # TRANSLATORS: status message showing the number of attributes
             _("{count} security attributes").format(count=len(self.security_attrs))
         )
         self.load_security_events()
 
     def load_security_events(self) -> None:
+        # TRANSLATORS: heading for the list of recent security events
         lines = [f"[b]{escape(_('Recent Security Events'))}[/b]"]
         try:
             events = list(self.client.get_host_security_events(10) or [])
         except GLib.Error:
             events = []
         for event in events:
+            # TRANSLATORS: shown when the previous security result is unknown
             old = SECURITY_RESULTS.get(event.get_result_fallback(), _("Unknown"))
+            # TRANSLATORS: shown when the new security result is unknown
             new = SECURITY_RESULTS.get(event.get_result(), _("Unknown"))
             name = (
-                event.get_name() or event.get_appstream_id() or _("Security attribute")
+                event.get_name()
+                or event.get_appstream_id()
+                # TRANSLATORS: fallback name for a security event with no name
+                or _("Security attribute")
             )
             created = event.get_created()
             timestamp = (
@@ -1406,6 +1589,7 @@ class FwupdTui(App):
                 else ""
             )
             lines.append(
+                # TRANSLATORS: security event line "<time> <name>: <old> → <new>"
                 _("{time} {name}: {old} → {new}").format(
                     time=timestamp, name=_(name), old=old, new=new
                 )
@@ -1418,37 +1602,53 @@ class FwupdTui(App):
         for device in devices:
             for issue in list(device.get_issues() or []):
                 issues.append(
+                    # TRANSLATORS: security issue line "<device>: <issue>"
                     _("{device}: {issue}").format(
-                        device=device.get_name() or _("Unknown device"), issue=issue
+                        # TRANSLATORS: fallback name for a device with no name
+                        device=device.get_name() or _("Unknown device"),
+                        issue=issue,
                     )
                 )
         if issues:
+            # TRANSLATORS: heading for the list of per-device security issues
             lines.extend(("", f"[b]{escape(_('Device Security Issues'))}[/b]"))
             lines.extend(f" • {escape(issue)}" for issue in issues)
         if len(lines) == 1:
+            # TRANSLATORS: shown when there are no recent security events
             lines.append(_("No recent security events"))
         self.query_one("#security-events", Static).update("\n".join(lines))
 
     def show_security_attr(self, key: Optional[str]) -> None:
         details = self.query_one("#security-details", Static)
         if key is None:
+            # TRANSLATORS: placeholder shown before an attribute is selected
             details.update(_("Select a security attribute to view its details."))
             return
         attr = self.security_attrs[key]
+        # TRANSLATORS: fallback name for a security attribute with no name
         name = attr.get_name() or attr.get_appstream_id() or _("Security attribute")
         lines = [
             f"[b]{escape(_(name))}[/b]",
+            # TRANSLATORS: field label for a security attribute's result
             f"[b]{escape(_('Result'))}:[/b] {escape(self.security_result(attr))}",
         ]
         level = SECURITY_LEVELS.get(attr.get_level())
         fields = (
+            # TRANSLATORS: security attribute field label: HSI level
             (_("Level"), level),
+            # TRANSLATORS: security attribute field label: providing plugin
             (_("Plugin"), attr.get_plugin()),
+            # TRANSLATORS: security attribute field label: related BIOS setting
             (_("Firmware Setting"), attr.get_bios_setting_id()),
+            # TRANSLATORS: security attribute field label: current firmware value
             (_("Current Firmware Value"), attr.get_bios_setting_current_value()),
+            # TRANSLATORS: security attribute field label: desired firmware value
             (_("Target Firmware Value"), attr.get_bios_setting_target_value()),
+            # TRANSLATORS: security attribute field label: current kernel value
             (_("Current Kernel Value"), attr.get_kernel_current_value()),
+            # TRANSLATORS: security attribute field label: desired kernel value
             (_("Target Kernel Value"), attr.get_kernel_target_value()),
+            # TRANSLATORS: security attribute field label: link to more info
             (_("More Information"), attr.get_url()),
         )
         for label, value in fields:
@@ -1459,12 +1659,16 @@ class FwupdTui(App):
             lines.extend(("", escape(_(description))))
         actions = []
         if attr.has_flag(Fwupd.SecurityAttrFlags.ACTION_CONFIG_FW):
+            # TRANSLATORS: suggested action to fix a security issue
             actions.append(_("Change the firmware configuration"))
         if attr.has_flag(Fwupd.SecurityAttrFlags.ACTION_CONFIG_OS):
+            # TRANSLATORS: suggested action to fix a security issue
             actions.append(_("Change the operating system configuration"))
         if attr.has_flag(Fwupd.SecurityAttrFlags.ACTION_CONTACT_OEM):
+            # TRANSLATORS: suggested action to fix a security issue
             actions.append(_("Contact the hardware vendor"))
         if actions:
+            # TRANSLATORS: heading for the list of suggested actions
             lines.extend(("", f"[b]{escape(_('Suggested Actions'))}[/b]"))
             lines.extend(f" • {escape(action)}" for action in actions)
         details.update("\n".join(lines))
@@ -1532,26 +1736,34 @@ class FwupdTui(App):
             self.confirm_release_install()
         elif button_id == "device-unlock" and self.current_device_id:
             self.run_device_operation(
+                # TRANSLATORS: status message while the device is being unlocked
                 _("Unlocking device"),
                 lambda: self.client.unlock(self.current_device_id),
+                # TRANSLATORS: status message after the device is unlocked
                 _("Device unlocked"),
             )
         elif button_id == "device-verify" and self.current_device_id:
             self.run_device_operation(
+                # TRANSLATORS: status message while firmware is being verified
                 _("Verifying firmware"),
                 lambda: self.client.verify(self.current_device_id),
+                # TRANSLATORS: status message after firmware verification succeeds
                 _("Firmware verification succeeded"),
             )
         elif button_id == "device-verify-update" and self.current_device_id:
             self.run_device_operation(
+                # TRANSLATORS: status message while verification data is updated
                 _("Updating verification data"),
                 lambda: self.client.verify_update(self.current_device_id),
+                # TRANSLATORS: status message after verification data is updated
                 _("Verification data updated"),
             )
         elif button_id == "device-activate" and self.current_device_id:
             self.run_device_operation(
+                # TRANSLATORS: status message while firmware is being activated
                 _("Activating firmware"),
                 lambda: self.client.activate(device_id=self.current_device_id),
+                # TRANSLATORS: status message after firmware is activated
                 _("Device firmware activated"),
             )
         elif button_id == "security-refresh":
@@ -1565,6 +1777,7 @@ def load_settings(client) -> List[BiosSetting]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
+        # TRANSLATORS: command-line help description for the application
         description=_("Manage firmware and platform security in a terminal interface")
     )
     parser.add_argument("--version", action="version", version=PACKAGE_VERSION)
@@ -1577,6 +1790,7 @@ def main() -> int:
         client = Fwupd.Client()
     except (GLib.Error, TypeError) as error:
         print(
+            # TRANSLATORS: error printed when the fwupd daemon cannot be reached
             _("Failed to initialize fwupd: {error}").format(error=error),
             file=sys.stderr,
         )
