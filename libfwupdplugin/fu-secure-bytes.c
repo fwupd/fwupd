@@ -145,7 +145,7 @@ fu_secure_bytes_get_size(FuSecureBytes *self)
  *
  * Since: 2.2.1
  **/
-const guint8 *
+guint8 *
 fu_secure_bytes_get_data(FuSecureBytes *self)
 {
 	g_return_val_if_fail(self != NULL, NULL);

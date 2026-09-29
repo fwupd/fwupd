@@ -30,7 +30,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSecureBytes, fu_secure_bytes_free)
 
 gsize
 fu_secure_bytes_get_size(FuSecureBytes *self) G_GNUC_NON_NULL(1);
-const guint8 *
+guint8 *
 fu_secure_bytes_get_data(FuSecureBytes *self) G_GNUC_NON_NULL(1);
 
 FuSecureBytes *
