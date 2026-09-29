@@ -82,9 +82,11 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* optional properties */
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	tmp = fwupd_json_object_get_string(json_obj, "DeviceClass", NULL);
 	if (tmp != NULL && tmp[0] != '\0')
 		fu_redfish_device_set_device_class(self, tmp);
@@ -158,7 +160,9 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	members_array = fwupd_json_object_get_array(json_obj, "Members", NULL);
 	if (members_array != NULL) {
 		for (guint i = 0; i < fwupd_json_array_get_size(members_array); i++) {
@@ -196,9 +200,11 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* optional properties */
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	tmp = fwupd_json_object_get_string(json_obj, "SerialNumber", NULL);
 	if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "N/A") != 0)
 		fu_device_set_serial(FU_DEVICE(self), tmp);
@@ -822,7 +828,9 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 		return FALSE;
 
 	/* percentage is optional */
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							"PercentComplete",
 							&pc,
