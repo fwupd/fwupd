@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 13:09+0100\n"
+"POT-Creation-Date: 2026-09-29 16:01+0100\n"
 "PO-Revision-Date: 2026-09-22 19:51+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
@@ -354,6 +354,7 @@ msgid "Failed to load system dbx"
 msgstr "A eșuat încărcarea bazei de date dbx a sistemului"
 
 #. TRANSLATORS: the detected version number of the dbx
+#. TRANSLATORS: device field label: firmware version
 msgid "Version"
 msgstr "Versiunea"
 
@@ -406,49 +407,65 @@ msgstr "Gata!"
 msgid "No action specified!"
 msgstr "Nicio acțiune specificată!"
 
+#. TRANSLATORS: fallback name shown when a BIOS setting has no name
 msgid "Unnamed setting"
 msgstr "Opțiune fără nume"
 
+#. TRANSLATORS: error shown when an invalid value is entered
 msgid "Choose one of the available values"
 msgstr "Alegeți una dintre valorile disponibile"
 
+#. TRANSLATORS: error shown when a non-numeric value is entered
 msgid "Enter a valid integer"
 msgstr "Introduceți un număr întreg valid"
 
+#. TRANSLATORS: error shown when a number is out of range
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
 msgstr "Valoarea trebuie să fie între {lower} și {upper}"
 
+#. TRANSLATORS: error shown when a number is not a valid increment
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
 msgstr "Valoarea trebuie să utilizeze un increment de {increment}"
 
+#. TRANSLATORS: error shown when text is the wrong length
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
 msgstr "Lungimea textului trebuie să fie între {lower} și {upper}"
 
+#. TRANSLATORS: error shown when a setting type cannot be edited
 msgid "This setting type cannot be changed"
 msgstr "Acest tip de opțiune nu poate fi modificat"
 
+#. TRANSLATORS: button to close the editor without saving
+#. TRANSLATORS: button to cancel the confirmation dialog
+#. TRANSLATORS: button to cancel the dialog
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Anulează"
 
+#. TRANSLATORS: button to save the edited setting value
 msgid "Save"
 msgstr "Salvează"
 
+#. TRANSLATORS: dialog title for installing a local firmware file
 msgid "Install Local Firmware"
 msgstr "Instalează firmware local"
 
+#. TRANSLATORS: input placeholder for the firmware archive path
 msgid "Path to a .cab firmware archive"
 msgstr "Ruta către o arhivă de firmware .cab"
 
+#. TRANSLATORS: button to proceed with the entered path
 msgid "Continue"
 msgstr "Continuă"
 
+#. TRANSLATORS: error shown when the entered path does not exist
 msgid "File not found"
 msgstr "Fișierul nu a fost găsit"
 
+#. TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
 msgid "bytes"
 msgstr "octeți"
 
@@ -461,328 +478,437 @@ msgstr "Mo"
 msgid "GB"
 msgstr "Go"
 
+#. TRANSLATORS: a duration in seconds
 #, python-brace-format
 msgid "{seconds} seconds"
 msgstr "{seconds} secunde"
 
+#. TRANSLATORS: a duration in minutes
 #, python-brace-format
 msgid "{minutes} minutes"
 msgstr "{minutes} minute"
 
+#. TRANSLATORS: host security attribute result: the check passed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Valid"
 
+#. TRANSLATORS: host security attribute result: the check failed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Nevalid"
 
+#. TRANSLATORS: host security attribute result: the feature is enabled
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Activat"
 
+#. TRANSLATORS: host security attribute result: the feature is disabled
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "dezactivat"
 
+#. TRANSLATORS: host security attribute result: the feature is locked
+#. TRANSLATORS: device flag label: the device is locked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
 msgstr "Blocat"
 
+#. TRANSLATORS: host security attribute result: the feature is unlocked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "Deblocat"
 
+#. TRANSLATORS: host security attribute result: the data is encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
 msgstr "Criptat"
 
+#. TRANSLATORS: host security attribute result: the data is not encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Necriptat"
 
+#. TRANSLATORS: host security attribute result: the system is tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
 msgstr "„Contaminat”"
 
+#. TRANSLATORS: host security attribute result: the system is not tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
 msgstr "„Necontaminat”"
 
+#. TRANSLATORS: host security attribute result: the feature was found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Găsit"
 
+#. TRANSLATORS: host security attribute result: the feature was not found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Negăsit"
 
+#. TRANSLATORS: host security attribute result: the feature is supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "Compatibil"
 
+#. TRANSLATORS: host security attribute result: the feature is not supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not supported"
 msgstr "Necompatibil"
 
+#. TRANSLATORS: host security level label (HSI-1)
 msgid "HSI-1 Critical"
 msgstr "Nivel HSI-1 «critic»"
 
+#. TRANSLATORS: host security level label (HSI-2)
 msgid "HSI-2 Important"
 msgstr "Nivel HSI-2 «important»"
 
+#. TRANSLATORS: host security level label (HSI-3)
 msgid "HSI-3 Theoretical"
 msgstr "Nivel HSI-3 «teoretic»"
 
+#. TRANSLATORS: host security level label (HSI-4)
 msgid "HSI-4 System Protection"
 msgstr "Nivel HSI-4 «protecție sistem»"
 
+#. TRANSLATORS: host security level label (HSI-5)
 msgid "HSI-5 System Attestation"
 msgstr "Nivel HSI-5 «atestare sistem»"
 
+#. TRANSLATORS: application title shown in the header
 msgid "fwupd"
 msgstr "fwupd"
 
+#. TRANSLATORS: application subtitle shown in the header
 msgid "Firmware management"
 msgstr "Gestionarea firmware-ului"
 
+#. TRANSLATORS: footer label for the key that quits the application
+#. TRANSLATORS: button to quit the application
 msgid "Quit"
 msgstr "Ieșire"
 
+#. TRANSLATORS: footer label for the key that returns to the home screen
+#. TRANSLATORS: button to return to the home screen
 msgid "Home"
 msgstr "Ecranul inițal"
 
+#. TRANSLATORS: footer label for the key that focuses the search box
 msgid "Search"
 msgstr "Caută"
 
+#. TRANSLATORS: footer label for the key that edits the selected setting
+#. TRANSLATORS: button to edit the selected setting
 msgid "Edit"
 msgstr "Editează"
 
+#. TRANSLATORS: footer label for the key that applies pending changes
+#. TRANSLATORS: button to apply pending BIOS changes
 msgid "Apply"
 msgstr "Aplică"
 
+#. TRANSLATORS: footer label for the key that refreshes the current view
+#. TRANSLATORS: button to reload the list of devices
+#. TRANSLATORS: button to reload the security attributes
 msgid "Refresh"
 msgstr "Reîmprospătează"
 
+#. TRANSLATORS: title of the home menu
 msgid "Firmware Management"
 msgstr "Gestionarea firmware-ului"
 
+#. TRANSLATORS: home screen introductory text
 msgid "Choose what you would like to inspect or change."
 msgstr "Alegeți ce doriți să examinați sau să modificați."
 
+#. TRANSLATORS: home screen hint on how to navigate the menu
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
 msgstr "Folosește ↑/↓ și «Enter» sau apasă 1, 2 sau 3."
 
+#. TRANSLATORS: button to open the BIOS settings view
 msgid "Manage BIOS Settings"
 msgstr "Gestionare opțiuni BIOS"
 
+#. TRANSLATORS: button to open the devices view
 msgid "Manage Devices"
 msgstr "Gestionare dispozitive"
 
+#. TRANSLATORS: button to open the host security view
 msgid "View Security Measurement"
 msgstr "Vizualizare măsurători de securitate"
 
+#. TRANSLATORS: search box placeholder for BIOS settings
 msgid "Search BIOS settings"
 msgstr "Căutare opțiuni BIOS"
 
+#. TRANSLATORS: tree root label for the BIOS settings list
 msgid "BIOS Settings"
 msgstr "Opțiuni BIOS"
 
+#. TRANSLATORS: placeholder shown before a setting is selected
 msgid "Select a setting to view its details."
 msgstr "Selectează o opțiune pentru a-i vizualiza detaliile."
 
+#. TRANSLATORS: search box placeholder for devices
 msgid "Search devices"
 msgstr "Căutare dispozitive"
 
+#. TRANSLATORS: tree root label for the devices list
 msgid "Devices"
 msgstr "Dispozitive"
 
+#. TRANSLATORS: button to refresh firmware metadata
 msgid "Refresh Metadata"
 msgstr "Reîmprospătează metadatele"
 
+#. TRANSLATORS: button to enable the LVFS remote
 msgid "Enable LVFS"
 msgstr "Activează LVFS"
 
+#. TRANSLATORS: button to install firmware from a local file
 msgid "Install Local File"
 msgstr "Instalează fișierul local"
 
+#. TRANSLATORS: placeholder shown before a device is selected
 msgid "Select a device to view its details."
 msgstr "Selectează un dispozitiv pentru a-i vizualiza detaliile."
 
+#. TRANSLATORS: tree root label for the list of releases
 msgid "Available Releases"
 msgstr "Versiuni disponibile"
 
+#. TRANSLATORS: button to unlock the selected device
 msgid "Unlock"
 msgstr "Deblocare"
 
+#. TRANSLATORS: button to verify the device firmware
 msgid "Verify"
 msgstr "Verifică"
 
+#. TRANSLATORS: button to store the device verification data
 msgid "Store"
 msgstr "Stocare"
 
+#. TRANSLATORS: button to activate staged device firmware
 msgid "Activate"
 msgstr "Activare"
 
+#. TRANSLATORS: button to install the selected release
 msgid "Install"
 msgstr "Instalează"
 
+#. TRANSLATORS: tree root label for host security attributes
 msgid "Security Attributes"
 msgstr "Atribute de securitate"
 
+#. TRANSLATORS: placeholder shown before an attribute is selected
 msgid "Select a security attribute to view its details."
 msgstr "Selectați un atribut de securitate pentru a-i vizualiza detaliile."
 
+#. TRANSLATORS: status message when the fwupd daemon is unavailable
 msgid "fwupd is not connected"
 msgstr "fwupd nu este conectat"
 
+#. TRANSLATORS: error message when BIOS settings cannot be read
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
 msgstr "Încărcarea opțiunilor BIOS a eșuat: {error}"
 
+#. TRANSLATORS: status message showing how many settings are listed
 #, python-brace-format
 msgid "{count} settings"
 msgstr "{count} opțiuni"
 
+#. TRANSLATORS: status message when the system has no BIOS settings
 msgid "This system does not expose BIOS settings"
 msgstr "Acest sistem nu expune opțiunile BIOS."
 
+#. TRANSLATORS: field label for the setting's current value
 msgid "Current value"
 msgstr "Valoarea actuală"
 
+#. TRANSLATORS: field label for a not-yet-applied setting value
 msgid "Pending value"
 msgstr "Valoare în așteptare"
 
+#. TRANSLATORS: heading for the list of values a setting accepts
 msgid "Available values"
 msgstr "Valori disponibile"
 
+#. TRANSLATORS: dialog text describing the allowed integer range
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
 msgstr "Interval: {lower}–{upper}, pas {increment}"
 
+#. TRANSLATORS: dialog text describing the allowed text length
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
 msgstr "Lungime: {lower}–{upper} caractere"
 
+#. TRANSLATORS: dialog text shown when a setting cannot be changed
 msgid "This setting is read-only."
 msgstr "Această opțiune este doar-citire."
 
+#. TRANSLATORS: error message when BIOS settings cannot be changed
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
 msgstr "Modificarea parametrilor BIOS a eșuat: {error}"
 
+#. TRANSLATORS: status message after a change that needs a reboot
 msgid "BIOS settings changed successfully; reboot required"
 msgstr "Modificarea parametrilor BIOS s-a realizat cu succes; este necesară repornirea"
 
+#. TRANSLATORS: status message after BIOS settings are changed
 msgid "BIOS settings changed successfully"
 msgstr "Modificarea parametrilor BIOS s-a realizat cu succes"
 
+#. TRANSLATORS: error message when the device list cannot be read
 #, python-brace-format
 msgid "Failed to load devices: {error}"
 msgstr "Încărcarea dispozitivelor a eșuat: {error}"
 
+#. TRANSLATORS: status message showing how many devices are listed
 #, python-brace-format
 msgid "{count} devices"
 msgstr "{count} dispozitive"
 
+#. TRANSLATORS: status message when no devices are available
 msgid "No supported devices were found"
 msgstr "Nu au fost găsite dispozitive compatibile"
 
+#. TRANSLATORS: device flag label: built into the machine
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Dispozitiv intern"
 
+#. TRANSLATORS: device flag label: firmware can be updated
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
 msgstr "Actualizabil"
 
+#. TRANSLATORS: device flag label: needs mains power to update
 msgid "Requires AC power"
 msgstr "Necesită alimentare de la rețea"
 
+#. TRANSLATORS: device flag label: available from a remote
 msgid "Supported by a remote"
 msgstr "Deservit de un depozit de la distanță"
 
+#. TRANSLATORS: device flag label: a reboot is required
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Necesită repornirea"
 
+#. TRANSLATORS: device flag label: a shutdown is required
 msgid "Needs shutdown"
 msgstr "Necesită oprirea sistemului"
 
+#. TRANSLATORS: device flag label: an activation step is required
 msgid "Needs activation"
 msgstr "Necesită activarea"
 
+#. TRANSLATORS: device flag label: updates are staged before use
 msgid "Stages updates"
 msgstr "Actualizări în etape"
 
+#. TRANSLATORS: device flag label: the device can self-recover
 msgid "Supports self-recovery"
 msgstr "Capacitate de autorecuperare"
 
+#. TRANSLATORS: device flag label: no longer supported by the vendor
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Sfârșitul vieții utile"
 
+#. TRANSLATORS: device flag label: firmware is cryptographically signed
 msgid "Signed payload"
 msgstr "Date de actualizare semnate digital"
 
+#. TRANSLATORS: device flag label: firmware is not signed
 msgid "Unsigned payload"
 msgstr "Date de actualizare nesemnate digital"
 
+#. TRANSLATORS: device flag label: the device is emulated
 msgid "Emulated device"
 msgstr "Dispozitiv emulat"
 
+#. TRANSLATORS: fallback name shown when a device has no name
 msgid "Unnamed device"
 msgstr "Dispozitiv fără nume"
 
+#. TRANSLATORS: device field label: lowest allowed version
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Versiunea minimă"
 
+#. TRANSLATORS: device field label: bootloader version
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Versiunea încărcătorului de pornire"
 
+#. TRANSLATORS: device field label: hardware vendor
+#. TRANSLATORS: release field label: firmware vendor
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Producător"
 
+#. TRANSLATORS: device field label: firmware branch
+#. TRANSLATORS: release field label: firmware branch
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "Ramura"
 
+#. TRANSLATORS: device field label: serial number
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "Numărul de serie"
 
+#. TRANSLATORS: device field label: estimated install time
+#. TRANSLATORS: release field label: estimated install time
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Durata instalării"
 
+#. TRANSLATORS: device field label: remaining firmware writes
 msgid "Flashes Left"
 msgstr "Rescrieri ale memoriei rămase disponibile"
 
+#. TRANSLATORS: device field label: last update error
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Eroare la actualizare"
 
+#. TRANSLATORS: heading for the list of device checksums
+#. TRANSLATORS: heading for the list of release checksums
 msgid "Checksums"
 msgstr "Sume de verificare"
 
+#. TRANSLATORS: heading for the list of device GUIDs
 msgid "GUIDs"
 msgstr "GUID-uri"
 
+#. TRANSLATORS: heading for the list of device instance IDs
 msgid "Instance IDs"
 msgstr "Identificatori de instanță"
 
+#. TRANSLATORS: heading for the list of device security issues
 msgid "Security Issues"
 msgstr "Probleme de securitate"
 
+#. TRANSLATORS: heading for the list of device flags
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
 msgstr "Fanioane"
 
+#. TRANSLATORS: shown in the release list when a version is unknown
+#. TRANSLATORS: shown when the previous security result is unknown
+#. TRANSLATORS: shown when the new security result is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 #. TRANSLATORS: Suffix: the fallback HSI result
@@ -790,218 +916,286 @@ msgstr "Fanioane"
 msgid "Unknown"
 msgstr "Necunoscut"
 
+#. TRANSLATORS: tree root label showing the number of releases
 #, python-brace-format
 msgid "Available Releases ({count})"
 msgstr "Versiuni disponibile ({count})"
 
+#. TRANSLATORS: action label for installing a newer release
 msgid "Update"
 msgstr "Actualizare"
 
+#. TRANSLATORS: action label for installing an older release
 msgid "Downgrade"
 msgstr "Retrogradare"
 
+#. TRANSLATORS: action label for reinstalling the current release
 msgid "Reinstall"
 msgstr "Reinstalare"
 
+#. TRANSLATORS: fallback title shown when a release has no name
 msgid "Firmware"
 msgstr "Firmware"
 
+#. TRANSLATORS: release field label: the action to perform
 msgid "Action"
 msgstr "Acțiune"
 
+#. TRANSLATORS: release field label: short summary
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Rezumat"
 
+#. TRANSLATORS: release field label: source remote
 msgid "Remote"
 msgstr "Depozit"
 
+#. TRANSLATORS: release field label: download size
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Dimensiune"
 
+#. TRANSLATORS: release field label: message shown after updating
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Mesajul de actualizare"
 
+#. TRANSLATORS: heading for the list of known release issues
 msgid "Issues"
 msgstr "Probleme"
 
+#. TRANSLATORS: warning shown before updating an encrypted device
 msgid "Suspend full-disk encryption protection before continuing."
 msgstr "Suspendați protecția prin criptare completă a discului înainte de a continua."
 
+#. TRANSLATORS: warning that the update changes firmware branch
 msgid "This release switches to an alternate firmware branch."
 msgstr "Această versiune face trecerea la o ramură alternativă de firmware."
 
+#. TRANSLATORS: warning that the firmware is community-built
 msgid "This firmware was built by the community."
 msgstr "Acest firmware a fost creat de către comunitate."
 
+#. TRANSLATORS: confirmation dialog text before installing a release
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
 msgstr "{action} {device} la versiunea {version}?"
 
+#. TRANSLATORS: status message while firmware is being installed
 msgid "Installing firmware"
 msgstr "Se instalează firmware-ul"
 
+#. TRANSLATORS: status message after firmware is installed
 msgid "Firmware installation completed"
 msgstr "Instalarea firmware-ului s-a finalizat cu succes"
 
+#. TRANSLATORS: error message format, "<operation>: <error text>"
 #, python-brace-format
 msgid "{prefix}: {error}"
 msgstr "{prefix}: {error}"
 
+#. TRANSLATORS: status message shown while an operation is in progress
 #, python-brace-format
 msgid "{operation}…"
 msgstr "{operation}…"
 
+#. TRANSLATORS: error prefix when a firmware file cannot be read
 msgid "Failed to inspect firmware file"
 msgstr "Verificarea fișierului de firmware a eșuat."
 
+#. TRANSLATORS: status message when a firmware file has no releases
 msgid "The firmware archive contains no installable releases"
 msgstr "Arhiva de firmware nu conține versiuni care pot fi instalate"
 
+#. TRANSLATORS: placeholder for an unknown firmware version
 msgid "unknown"
 msgstr "necunoscut"
 
+#. TRANSLATORS: fallback name for firmware from a local file
 msgid "firmware"
 msgstr "firmware"
 
+#. TRANSLATORS: confirmation dialog text before installing a local file
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
 msgstr "Doriți să instalați {name} versiunea {version} din {path}?"
 
+#. TRANSLATORS: status message after a local file is installed
 msgid "Local firmware installation completed"
 msgstr "Instalarea firmware-ului local s-a finalizat"
 
+#. TRANSLATORS: dialog title and button for installing firmware
 msgid "Install Firmware"
 msgstr "Instalează firmware-ul"
 
+#. TRANSLATORS: status message while firmware metadata is refreshed
 msgid "Refreshing metadata"
 msgstr "Se actualizează metadatele"
 
+#. TRANSLATORS: status message after firmware metadata is refreshed
 msgid "Firmware metadata refreshed"
 msgstr "Metadatele firmware-ului au fost actualizate"
 
+#. TRANSLATORS: status message while enabling the LVFS remote
 msgid "Enabling LVFS"
 msgstr "Se activează LVFS"
 
+#. TRANSLATORS: status message after the LVFS remote is enabled
 msgid "LVFS was enabled and its metadata refreshed"
 msgstr "LVFS a fost activat, iar metadatele sale au fost actualizate"
 
+#. TRANSLATORS: fallback security results: passed ("OK") or unknown
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "Ok"
 
+#. TRANSLATORS: error message when security attributes cannot be read
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
 msgstr "Nu s-au putut încărca atributele de securitate: {error}"
 
+#. TRANSLATORS: tree group label for runtime security attributes
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufixul de timp de execuție"
 
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Unknown attribute"
 msgstr "Atribut necunoscut"
 
+#. TRANSLATORS: shown when the host security ID cannot be determined
 msgid "Unavailable"
 msgstr "Indisponibil"
 
+#. TRANSLATORS: field label for the host security ID (HSI)
 msgid "Host Security ID"
 msgstr "ID-ul de securitate al gazdei"
 
+#. TRANSLATORS: status message showing the number of attributes
 #, python-brace-format
 msgid "{count} security attributes"
 msgstr "{count} atribute de securitate"
 
+#. TRANSLATORS: heading for the list of recent security events
 msgid "Recent Security Events"
 msgstr "Evenimente de securitate recente"
 
+#. TRANSLATORS: fallback name for a security event with no name
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Security attribute"
 msgstr "Atribut de securitate"
 
+#. TRANSLATORS: security event line "<time> <name>: <old> → <new>"
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
 msgstr "{time} {name}: {old} → {new}"
 
+#. TRANSLATORS: security issue line "<device>: <issue>"
 #, python-brace-format
 msgid "{device}: {issue}"
 msgstr "{device}: {issue}"
 
+#. TRANSLATORS: fallback name for a device with no name
 msgid "Unknown device"
 msgstr "Dispozitiv necunoscut"
 
+#. TRANSLATORS: heading for the list of per-device security issues
 msgid "Device Security Issues"
 msgstr "Probleme de securitate ale dispozitivului"
 
+#. TRANSLATORS: shown when there are no recent security events
 msgid "No recent security events"
 msgstr "Nu există evenimente de securitate recente"
 
+#. TRANSLATORS: field label for a security attribute's result
 msgid "Result"
 msgstr "Rezultat"
 
+#. TRANSLATORS: security attribute field label: HSI level
 msgid "Level"
 msgstr "Nivel"
 
+#. TRANSLATORS: security attribute field label: providing plugin
 msgid "Plugin"
 msgstr "Modul"
 
+#. TRANSLATORS: security attribute field label: related BIOS setting
 msgid "Firmware Setting"
 msgstr "Opțiune de firmware"
 
+#. TRANSLATORS: security attribute field label: current firmware value
 msgid "Current Firmware Value"
 msgstr "Valoarea curentă a firmware-ului"
 
+#. TRANSLATORS: security attribute field label: desired firmware value
 msgid "Target Firmware Value"
 msgstr "Valoarea țintă a firmware-ului"
 
+#. TRANSLATORS: security attribute field label: current kernel value
 msgid "Current Kernel Value"
 msgstr "Valoarea curentă a nucleului"
 
+#. TRANSLATORS: security attribute field label: desired kernel value
 msgid "Target Kernel Value"
 msgstr "Valoarea țintă a nucleului"
 
+#. TRANSLATORS: security attribute field label: link to more info
 msgid "More Information"
 msgstr "Mai multe informații"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the firmware configuration"
 msgstr "Modifică configurația firmware-ului"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the operating system configuration"
 msgstr "Modifică configurația sistemului de operare"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Contact the hardware vendor"
 msgstr "Contactați producătorul hardware-ului"
 
+#. TRANSLATORS: heading for the list of suggested actions
 msgid "Suggested Actions"
 msgstr "Acțiuni sugerate"
 
+#. TRANSLATORS: status message while the device is being unlocked
 msgid "Unlocking device"
 msgstr "Se deblochează discpozitivul"
 
+#. TRANSLATORS: status message after the device is unlocked
 msgid "Device unlocked"
 msgstr "Dispozitiv deblocat"
 
+#. TRANSLATORS: status message while firmware is being verified
 msgid "Verifying firmware"
 msgstr "Se verifică firmware-ul"
 
+#. TRANSLATORS: status message after firmware verification succeeds
 msgid "Firmware verification succeeded"
 msgstr "Verificarea firmware-ului s-a finalizat cu succes"
 
+#. TRANSLATORS: status message while verification data is updated
 msgid "Updating verification data"
 msgstr "Se actualizează datele de verificare"
 
+#. TRANSLATORS: status message after verification data is updated
 msgid "Verification data updated"
 msgstr "Datele de verificare au fost actualizate"
 
+#. TRANSLATORS: status message while firmware is being activated
 msgid "Activating firmware"
 msgstr "Se activează firmware-ul"
 
+#. TRANSLATORS: status message after firmware is activated
 msgid "Device firmware activated"
 msgstr "Firmware-ul dispozitivului a fost activat"
 
+#. TRANSLATORS: command-line help description for the application
 msgid "Manage firmware and platform security in a terminal interface"
 msgstr "Gestionează securitatea firmware-ului și a platformei printr-o interfață de terminal"
 
+#. TRANSLATORS: error printed when the fwupd daemon cannot be reached
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
 msgstr "Nu s-a putut inițializa fwupd: {error}"
@@ -1358,9 +1552,9 @@ msgstr "Utilizatorul a fost notificat"
 msgid "Is in bootloader mode"
 msgstr "Este în modul încărcător de pornire"
 
-#. TRANSLATORS: the hardware is waiting to be replugged
-msgid "Hardware is waiting to be replugged"
-msgstr "Hardware-ul așteaptă să fie reconectat"
+#. TRANSLATORS: the hardware is waiting for the user to do something
+msgid "Device is waiting to be plugged back in"
+msgstr ""
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -1899,17 +2093,32 @@ msgstr "Adresa URI pentru trimiterea rapoartelor"
 msgid "Automatic Reporting"
 msgstr "Raportare automată"
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
-msgstr "Actualizarea va continua după ce cablul USB al dispozitivului a fost deconectat și apoi reinserat."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when %s has been unplugged and plugged back in."
+msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
+#. TRANSLATORS: message text
+msgid "The update will continue when the device has been unplugged and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been unplugged."
+msgstr ""
+
+#. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Actualizarea va continua după ce cablul USB al dispozitivului a fost deconectat."
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been re-inserted."
-msgstr "Actualizarea va continua după ce cablul USB al dispozitivului a fost reinserat."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device USB cable has been plugged back in."
+msgstr ""
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -1919,13 +2128,23 @@ msgstr "Apăsați butonul de deblocare pe dispozitiv pentru a continua procesul 
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
 msgstr "Nu opriți calculatorul și nu scoateți adaptorul de curent alternativ în timp ce actualizarea este în curs."
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device to continue the update process."
-msgstr "Deconectați și reconectați dispozitivul pentru a continua procesul de actualizare."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "Unplug %s and replug it to continue the update process."
+msgstr ""
 
-#. TRANSLATORS: warning message
-msgid "The update will continue when the device power cable has been removed and re-inserted."
-msgstr "Actualizarea va continua după ce cablul de alimentare al dispozitivului a fost scos și introdus din nou."
+#. TRANSLATORS: message text
+msgid "Unplug the device and replug it to continue the update process."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the power cable of %s has been removed and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device power cable has been removed and plugged back in."
+msgstr ""
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2010,6 +2229,14 @@ msgstr "Protecția încărcătorului de pornire UEFI NX este acum dezactivată"
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
 msgstr "Stocul de certificate UEFI este acum actualizat"
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store no longer contains a test key"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store now contains a test key"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -3947,6 +4174,11 @@ msgid "UEFI NX protection"
 msgstr "Protecție UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db (Microsoft UEFI)"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI db does not have a test key
+#. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
 msgstr "Baza de date UEFI (UEFI db)"
 
@@ -4311,6 +4543,21 @@ msgstr "HP SureStart este o caracteristică de securitate a firmware-ului care p
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verificarea semnăturii microcodului AMD garantează că microcodul procesorului este autentic și nu a fost modificat(alterat)."
+
+#~ msgid "Hardware is waiting to be replugged"
+#~ msgstr "Hardware-ul așteaptă să fie reconectat"
+
+#~ msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+#~ msgstr "Actualizarea va continua după ce cablul USB al dispozitivului a fost deconectat și apoi reinserat."
+
+#~ msgid "The update will continue when the device USB cable has been re-inserted."
+#~ msgstr "Actualizarea va continua după ce cablul USB al dispozitivului a fost reinserat."
+
+#~ msgid "Unplug and replug the device to continue the update process."
+#~ msgstr "Deconectați și reconectați dispozitivul pentru a continua procesul de actualizare."
+
+#~ msgid "The update will continue when the device power cable has been removed and re-inserted."
+#~ msgstr "Actualizarea va continua după ce cablul de alimentare al dispozitivului a fost scos și introdus din nou."
 
 #~ msgid "Enable"
 #~ msgstr "Activare"
