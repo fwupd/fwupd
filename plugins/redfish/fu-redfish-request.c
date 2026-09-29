@@ -26,9 +26,13 @@ typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 
 FwupdJsonObject *
-fu_redfish_request_get_json_object(FuRedfishRequest *self)
+fu_redfish_request_get_json_object(FuRedfishRequest *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), NULL);
+	if (self->json_obj == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no object");
+		return NULL;
+	}
 	return fwupd_json_object_ref(self->json_obj);
 }
 
@@ -240,7 +244,9 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 			g_prefix_error_literal(error, "failed to request etag: ");
 			return FALSE;
 		}
-		json_obj2 = fu_redfish_request_get_json_object(self);
+		json_obj2 = fu_redfish_request_get_json_object(self, error);
+		if (json_obj2 == NULL)
+			return FALSE;
 		etag = fwupd_json_object_get_string(json_obj2, "@odata.etag", NULL);
 		if (etag != NULL)
 			etag_header = g_strdup_printf("If-Match: %s", etag);

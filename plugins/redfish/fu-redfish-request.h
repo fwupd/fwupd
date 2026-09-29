@@ -28,7 +28,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 				FuRedfishRequestPerformFlags flags,
 				GError **error);
 FwupdJsonObject *
-fu_redfish_request_get_json_object(FuRedfishRequest *self);
+fu_redfish_request_get_json_object(FuRedfishRequest *self, GError **error);
 CURL *
 fu_redfish_request_get_curl(FuRedfishRequest *self);
 void

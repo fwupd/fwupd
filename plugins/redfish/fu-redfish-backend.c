@@ -204,7 +204,9 @@ fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 						error))
 			return FALSE;
-		json_obj_tmp = fu_redfish_request_get_json_object(request);
+		json_obj_tmp = fu_redfish_request_get_json_object(request, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
 		if (!fu_redfish_backend_coldplug_member(self, json_obj_tmp, error))
 			return FALSE;
 	}
@@ -228,7 +230,9 @@ fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	return fu_redfish_backend_coldplug_collection(self, json_obj, error);
 }
 
@@ -322,7 +326,11 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 		return FALSE;
 
 	/* save the session URI so we can log out later */
-	json_obj_resp = fu_redfish_request_get_json_object(request);
+	json_obj_resp = fu_redfish_request_get_json_object(request, error);
+	if (json_obj_resp == NULL) {
+		fu_redfish_backend_set_session_key(self, NULL);
+		return FALSE;
+	}
 	session_uri = fwupd_json_object_get_string(json_obj_resp, "@odata.id", error);
 	if (session_uri == NULL) {
 		g_prefix_error_literal(error, "failed to get session URI: ");
@@ -446,7 +454,9 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 					error))
 		return FALSE;
 
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	if (!fwupd_json_object_get_boolean_with_default(json_obj,
 							"ServiceEnabled",
 							&service_enabled,
@@ -537,7 +547,9 @@ fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	if (!fwupd_json_object_has_node(json_obj, "Oem")) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no Oem in Member");
 		return FALSE;
@@ -579,7 +591,9 @@ fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	json_arr_members = fwupd_json_object_get_array(json_obj, "Members", error);
 	if (json_arr_members == NULL)
 		return FALSE;
@@ -628,7 +642,9 @@ fu_redfish_backend_setup(FuBackend *backend,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error))
 		return FALSE;
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	if (fwupd_json_object_has_node(json_obj, "ServiceVersion")) {
 		version = fwupd_json_object_get_string(json_obj, "ServiceVersion", NULL);
 	} else if (fwupd_json_object_has_node(json_obj, "RedfishVersion")) {
