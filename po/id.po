@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 13:09+0100\n"
+"POT-Creation-Date: 2026-09-29 16:01+0100\n"
 "PO-Revision-Date: 2026-09-22 19:51+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
@@ -356,6 +356,7 @@ msgid "Failed to load system dbx"
 msgstr "Gagal memuat dbx sistem"
 
 #. TRANSLATORS: the detected version number of the dbx
+#. TRANSLATORS: device field label: firmware version
 msgid "Version"
 msgstr "Versi"
 
@@ -408,49 +409,65 @@ msgstr "Selesai!"
 msgid "No action specified!"
 msgstr "Tidak ada tindakan yang ditentukan!"
 
+#. TRANSLATORS: fallback name shown when a BIOS setting has no name
 msgid "Unnamed setting"
 msgstr "Pengaturan tanpa nama"
 
+#. TRANSLATORS: error shown when an invalid value is entered
 msgid "Choose one of the available values"
 msgstr "Pilih salah satu nilai yang tersedia"
 
+#. TRANSLATORS: error shown when a non-numeric value is entered
 msgid "Enter a valid integer"
 msgstr "Masukkan bilangan bulat yang valid"
 
+#. TRANSLATORS: error shown when a number is out of range
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
 msgstr "Nilai harus berada antara {lower} dan {upper}"
 
+#. TRANSLATORS: error shown when a number is not a valid increment
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
 msgstr "Nilai harus menggunakan kenaikan sebesar {increment}"
 
+#. TRANSLATORS: error shown when text is the wrong length
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
 msgstr "Panjang teks harus berada antara {lower} dan {upper}"
 
+#. TRANSLATORS: error shown when a setting type cannot be edited
 msgid "This setting type cannot be changed"
 msgstr "Jenis pengaturan ini tidak dapat diubah"
 
+#. TRANSLATORS: button to close the editor without saving
+#. TRANSLATORS: button to cancel the confirmation dialog
+#. TRANSLATORS: button to cancel the dialog
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Batal"
 
+#. TRANSLATORS: button to save the edited setting value
 msgid "Save"
 msgstr "Simpan"
 
+#. TRANSLATORS: dialog title for installing a local firmware file
 msgid "Install Local Firmware"
 msgstr "Instal Firmware Lokal"
 
+#. TRANSLATORS: input placeholder for the firmware archive path
 msgid "Path to a .cab firmware archive"
 msgstr "Jalur ke arsip firmware .cab"
 
+#. TRANSLATORS: button to proceed with the entered path
 msgid "Continue"
 msgstr "Lanjutkan"
 
+#. TRANSLATORS: error shown when the entered path does not exist
 msgid "File not found"
 msgstr "Berkas tidak ditemukan"
 
+#. TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
 msgid "bytes"
 msgstr "byte"
 
@@ -463,328 +480,437 @@ msgstr "MB"
 msgid "GB"
 msgstr "GB"
 
+#. TRANSLATORS: a duration in seconds
 #, python-brace-format
 msgid "{seconds} seconds"
 msgstr "{seconds} detik"
 
+#. TRANSLATORS: a duration in minutes
 #, python-brace-format
 msgid "{minutes} minutes"
 msgstr "{minutes} menit"
 
+#. TRANSLATORS: host security attribute result: the check passed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Valid"
 
+#. TRANSLATORS: host security attribute result: the check failed
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Tak valid"
 
+#. TRANSLATORS: host security attribute result: the feature is enabled
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Difungsikan"
 
+#. TRANSLATORS: host security attribute result: the feature is disabled
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Dinonaktifkan"
 
+#. TRANSLATORS: host security attribute result: the feature is locked
+#. TRANSLATORS: device flag label: the device is locked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
 msgstr "Terkunci"
 
+#. TRANSLATORS: host security attribute result: the feature is unlocked
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "Tak terkunci"
 
+#. TRANSLATORS: host security attribute result: the data is encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
 msgstr "Terenkripsi"
 
+#. TRANSLATORS: host security attribute result: the data is not encrypted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Tidak terenkripsi"
 
+#. TRANSLATORS: host security attribute result: the system is tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
 msgstr "Ternoda"
 
+#. TRANSLATORS: host security attribute result: the system is not tainted
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
 msgstr "Tidak ternoda"
 
+#. TRANSLATORS: host security attribute result: the feature was found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Ditemukan"
 
+#. TRANSLATORS: host security attribute result: the feature was not found
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Tidak ditemukan"
 
+#. TRANSLATORS: host security attribute result: the feature is supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "Didukung"
 
+#. TRANSLATORS: host security attribute result: the feature is not supported
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not supported"
 msgstr "Tak didukung"
 
+#. TRANSLATORS: host security level label (HSI-1)
 msgid "HSI-1 Critical"
 msgstr "HSI-1 Kritis"
 
+#. TRANSLATORS: host security level label (HSI-2)
 msgid "HSI-2 Important"
 msgstr "HSI-2 Penting"
 
+#. TRANSLATORS: host security level label (HSI-3)
 msgid "HSI-3 Theoretical"
 msgstr "HSI-3 Teoretis"
 
+#. TRANSLATORS: host security level label (HSI-4)
 msgid "HSI-4 System Protection"
 msgstr "HSI-4 Perlindungan Sistem"
 
+#. TRANSLATORS: host security level label (HSI-5)
 msgid "HSI-5 System Attestation"
 msgstr "HSI-5 Atestasi Sistem"
 
+#. TRANSLATORS: application title shown in the header
 msgid "fwupd"
 msgstr "fwupd"
 
+#. TRANSLATORS: application subtitle shown in the header
 msgid "Firmware management"
 msgstr "Manajemen firmware"
 
+#. TRANSLATORS: footer label for the key that quits the application
+#. TRANSLATORS: button to quit the application
 msgid "Quit"
 msgstr "Keluar"
 
+#. TRANSLATORS: footer label for the key that returns to the home screen
+#. TRANSLATORS: button to return to the home screen
 msgid "Home"
 msgstr "Beranda"
 
+#. TRANSLATORS: footer label for the key that focuses the search box
 msgid "Search"
 msgstr "Cari"
 
+#. TRANSLATORS: footer label for the key that edits the selected setting
+#. TRANSLATORS: button to edit the selected setting
 msgid "Edit"
 msgstr "Edit"
 
+#. TRANSLATORS: footer label for the key that applies pending changes
+#. TRANSLATORS: button to apply pending BIOS changes
 msgid "Apply"
 msgstr "Terapkan"
 
+#. TRANSLATORS: footer label for the key that refreshes the current view
+#. TRANSLATORS: button to reload the list of devices
+#. TRANSLATORS: button to reload the security attributes
 msgid "Refresh"
 msgstr "Segarkan"
 
+#. TRANSLATORS: title of the home menu
 msgid "Firmware Management"
 msgstr "Manajemen Firmware"
 
+#. TRANSLATORS: home screen introductory text
 msgid "Choose what you would like to inspect or change."
 msgstr "Pilih yang ingin Anda periksa atau ubah."
 
+#. TRANSLATORS: home screen hint on how to navigate the menu
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
 msgstr "Gunakan ↑/↓ dan Enter, atau tekan 1, 2, atau 3."
 
+#. TRANSLATORS: button to open the BIOS settings view
 msgid "Manage BIOS Settings"
 msgstr "Kelola Pengaturan BIOS"
 
+#. TRANSLATORS: button to open the devices view
 msgid "Manage Devices"
 msgstr "Kelola Perangkat"
 
+#. TRANSLATORS: button to open the host security view
 msgid "View Security Measurement"
 msgstr "Lihat Pengukuran Keamanan"
 
+#. TRANSLATORS: search box placeholder for BIOS settings
 msgid "Search BIOS settings"
 msgstr "Cari pengaturan BIOS"
 
+#. TRANSLATORS: tree root label for the BIOS settings list
 msgid "BIOS Settings"
 msgstr "Pengaturan BIOS"
 
+#. TRANSLATORS: placeholder shown before a setting is selected
 msgid "Select a setting to view its details."
 msgstr "Pilih pengaturan untuk melihat detailnya."
 
+#. TRANSLATORS: search box placeholder for devices
 msgid "Search devices"
 msgstr "Cari perangkat"
 
+#. TRANSLATORS: tree root label for the devices list
 msgid "Devices"
 msgstr "Perangkat"
 
+#. TRANSLATORS: button to refresh firmware metadata
 msgid "Refresh Metadata"
 msgstr "Segarkan Metadata"
 
+#. TRANSLATORS: button to enable the LVFS remote
 msgid "Enable LVFS"
 msgstr "Aktifkan LVFS"
 
+#. TRANSLATORS: button to install firmware from a local file
 msgid "Install Local File"
 msgstr "Instal Berkas Lokal"
 
+#. TRANSLATORS: placeholder shown before a device is selected
 msgid "Select a device to view its details."
 msgstr "Pilih perangkat untuk melihat detailnya."
 
+#. TRANSLATORS: tree root label for the list of releases
 msgid "Available Releases"
 msgstr "Rilis yang Tersedia"
 
+#. TRANSLATORS: button to unlock the selected device
 msgid "Unlock"
 msgstr "Buka Kunci"
 
+#. TRANSLATORS: button to verify the device firmware
 msgid "Verify"
 msgstr "Verifikasi"
 
+#. TRANSLATORS: button to store the device verification data
 msgid "Store"
 msgstr "Simpan"
 
+#. TRANSLATORS: button to activate staged device firmware
 msgid "Activate"
 msgstr "Aktifkan"
 
+#. TRANSLATORS: button to install the selected release
 msgid "Install"
 msgstr "Instal"
 
+#. TRANSLATORS: tree root label for host security attributes
 msgid "Security Attributes"
 msgstr "Atribut Keamanan"
 
+#. TRANSLATORS: placeholder shown before an attribute is selected
 msgid "Select a security attribute to view its details."
 msgstr "Pilih atribut keamanan untuk melihat detailnya."
 
+#. TRANSLATORS: status message when the fwupd daemon is unavailable
 msgid "fwupd is not connected"
 msgstr "fwupd tidak terhubung"
 
+#. TRANSLATORS: error message when BIOS settings cannot be read
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
 msgstr "Gagal memuat pengaturan BIOS: {error}"
 
+#. TRANSLATORS: status message showing how many settings are listed
 #, python-brace-format
 msgid "{count} settings"
 msgstr "{count} pengaturan"
 
+#. TRANSLATORS: status message when the system has no BIOS settings
 msgid "This system does not expose BIOS settings"
 msgstr "Sistem ini tidak menyediakan pengaturan BIOS"
 
+#. TRANSLATORS: field label for the setting's current value
 msgid "Current value"
 msgstr "Nilai saat ini"
 
+#. TRANSLATORS: field label for a not-yet-applied setting value
 msgid "Pending value"
 msgstr "Nilai tertunda"
 
+#. TRANSLATORS: heading for the list of values a setting accepts
 msgid "Available values"
 msgstr "Nilai yang tersedia"
 
+#. TRANSLATORS: dialog text describing the allowed integer range
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
 msgstr "Rentang: {lower}–{upper}, kenaikan {increment}"
 
+#. TRANSLATORS: dialog text describing the allowed text length
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
 msgstr "Panjang: {lower}–{upper} karakter"
 
+#. TRANSLATORS: dialog text shown when a setting cannot be changed
 msgid "This setting is read-only."
 msgstr "Pengaturan ini bersifat hanya-baca."
 
+#. TRANSLATORS: error message when BIOS settings cannot be changed
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
 msgstr "Gagal mengubah pengaturan BIOS: {error}"
 
+#. TRANSLATORS: status message after a change that needs a reboot
 msgid "BIOS settings changed successfully; reboot required"
 msgstr "Pengaturan BIOS berhasil diubah; perlu memulai ulang"
 
+#. TRANSLATORS: status message after BIOS settings are changed
 msgid "BIOS settings changed successfully"
 msgstr "Pengaturan BIOS berhasil diubah"
 
+#. TRANSLATORS: error message when the device list cannot be read
 #, python-brace-format
 msgid "Failed to load devices: {error}"
 msgstr "Gagal memuat perangkat: {error}"
 
+#. TRANSLATORS: status message showing how many devices are listed
 #, python-brace-format
 msgid "{count} devices"
 msgstr "{count} perangkat"
 
+#. TRANSLATORS: status message when no devices are available
 msgid "No supported devices were found"
 msgstr "Tidak ditemukan perangkat yang didukung"
 
+#. TRANSLATORS: device flag label: built into the machine
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Perangkat internal"
 
+#. TRANSLATORS: device flag label: firmware can be updated
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
 msgstr "Dapat diperbarui"
 
+#. TRANSLATORS: device flag label: needs mains power to update
 msgid "Requires AC power"
 msgstr "Memerlukan daya AC"
 
+#. TRANSLATORS: device flag label: available from a remote
 msgid "Supported by a remote"
 msgstr "Didukung oleh remote"
 
+#. TRANSLATORS: device flag label: a reboot is required
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Perlu reboot"
 
+#. TRANSLATORS: device flag label: a shutdown is required
 msgid "Needs shutdown"
 msgstr "Memerlukan pematian sistem"
 
+#. TRANSLATORS: device flag label: an activation step is required
 msgid "Needs activation"
 msgstr "Memerlukan aktivasi"
 
+#. TRANSLATORS: device flag label: updates are staged before use
 msgid "Stages updates"
 msgstr "Memperbarui secara bertahap"
 
+#. TRANSLATORS: device flag label: the device can self-recover
 msgid "Supports self-recovery"
 msgstr "Mendukung pemulihan mandiri"
 
+#. TRANSLATORS: device flag label: no longer supported by the vendor
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Akhir hidup"
 
+#. TRANSLATORS: device flag label: firmware is cryptographically signed
 msgid "Signed payload"
 msgstr "Payload bertanda tangan"
 
+#. TRANSLATORS: device flag label: firmware is not signed
 msgid "Unsigned payload"
 msgstr "Payload tanpa tanda tangan"
 
+#. TRANSLATORS: device flag label: the device is emulated
 msgid "Emulated device"
 msgstr "Perangkat teremuasi"
 
+#. TRANSLATORS: fallback name shown when a device has no name
 msgid "Unnamed device"
 msgstr "Perangkat tanpa nama"
 
+#. TRANSLATORS: device field label: lowest allowed version
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Versi Minimum"
 
+#. TRANSLATORS: device field label: bootloader version
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Versi Bootloader"
 
+#. TRANSLATORS: device field label: hardware vendor
+#. TRANSLATORS: release field label: firmware vendor
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Vendor"
 
+#. TRANSLATORS: device field label: firmware branch
+#. TRANSLATORS: release field label: firmware branch
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "Cabang"
 
+#. TRANSLATORS: device field label: serial number
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "Nomor Seri"
 
+#. TRANSLATORS: device field label: estimated install time
+#. TRANSLATORS: release field label: estimated install time
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Durasi Instalasi"
 
+#. TRANSLATORS: device field label: remaining firmware writes
 msgid "Flashes Left"
 msgstr "Sisa Flash"
 
+#. TRANSLATORS: device field label: last update error
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Kesalahan Pembaruan"
 
+#. TRANSLATORS: heading for the list of device checksums
+#. TRANSLATORS: heading for the list of release checksums
 msgid "Checksums"
 msgstr "Checksum"
 
+#. TRANSLATORS: heading for the list of device GUIDs
 msgid "GUIDs"
 msgstr "GUID"
 
+#. TRANSLATORS: heading for the list of device instance IDs
 msgid "Instance IDs"
 msgstr "ID Instans"
 
+#. TRANSLATORS: heading for the list of device security issues
 msgid "Security Issues"
 msgstr "Masalah Keamanan"
 
+#. TRANSLATORS: heading for the list of device flags
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
 msgstr "Flag"
 
+#. TRANSLATORS: shown in the release list when a version is unknown
+#. TRANSLATORS: shown when the previous security result is unknown
+#. TRANSLATORS: shown when the new security result is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 #. TRANSLATORS: Suffix: the fallback HSI result
@@ -792,218 +918,286 @@ msgstr "Flag"
 msgid "Unknown"
 msgstr "Tidak diketahui"
 
+#. TRANSLATORS: tree root label showing the number of releases
 #, python-brace-format
 msgid "Available Releases ({count})"
 msgstr "Rilis yang Tersedia ({count})"
 
+#. TRANSLATORS: action label for installing a newer release
 msgid "Update"
 msgstr "Perbarui"
 
+#. TRANSLATORS: action label for installing an older release
 msgid "Downgrade"
 msgstr "Turunkan Versi"
 
+#. TRANSLATORS: action label for reinstalling the current release
 msgid "Reinstall"
 msgstr "Instal Ulang"
 
+#. TRANSLATORS: fallback title shown when a release has no name
 msgid "Firmware"
 msgstr "Firmware"
 
+#. TRANSLATORS: release field label: the action to perform
 msgid "Action"
 msgstr "Tindakan"
 
+#. TRANSLATORS: release field label: short summary
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Ringkasan"
 
+#. TRANSLATORS: release field label: source remote
 msgid "Remote"
 msgstr "Remote"
 
+#. TRANSLATORS: release field label: download size
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Ukuran"
 
+#. TRANSLATORS: release field label: message shown after updating
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Pesan Pembaruan"
 
+#. TRANSLATORS: heading for the list of known release issues
 msgid "Issues"
 msgstr "Masalah"
 
+#. TRANSLATORS: warning shown before updating an encrypted device
 msgid "Suspend full-disk encryption protection before continuing."
 msgstr "Tangguhkan perlindungan enkripsi seluruh disk sebelum melanjutkan."
 
+#. TRANSLATORS: warning that the update changes firmware branch
 msgid "This release switches to an alternate firmware branch."
 msgstr "Rilis ini beralih ke cabang firmware alternatif."
 
+#. TRANSLATORS: warning that the firmware is community-built
 msgid "This firmware was built by the community."
 msgstr "Firmware ini dibuat oleh komunitas."
 
+#. TRANSLATORS: confirmation dialog text before installing a release
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
 msgstr "{action} {device} ke versi {version}?"
 
+#. TRANSLATORS: status message while firmware is being installed
 msgid "Installing firmware"
 msgstr "Menginstal firmware"
 
+#. TRANSLATORS: status message after firmware is installed
 msgid "Firmware installation completed"
 msgstr "Instalasi firmware selesai"
 
+#. TRANSLATORS: error message format, "<operation>: <error text>"
 #, python-brace-format
 msgid "{prefix}: {error}"
 msgstr "{prefix}: {error}"
 
+#. TRANSLATORS: status message shown while an operation is in progress
 #, python-brace-format
 msgid "{operation}…"
 msgstr "{operation}…"
 
+#. TRANSLATORS: error prefix when a firmware file cannot be read
 msgid "Failed to inspect firmware file"
 msgstr "Gagal memeriksa berkas firmware"
 
+#. TRANSLATORS: status message when a firmware file has no releases
 msgid "The firmware archive contains no installable releases"
 msgstr "Arsip firmware tidak berisi rilis yang dapat diinstal"
 
+#. TRANSLATORS: placeholder for an unknown firmware version
 msgid "unknown"
 msgstr "tidak diketahui"
 
+#. TRANSLATORS: fallback name for firmware from a local file
 msgid "firmware"
 msgstr "firmware"
 
+#. TRANSLATORS: confirmation dialog text before installing a local file
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
 msgstr "Instal {name} versi {version} dari {path}?"
 
+#. TRANSLATORS: status message after a local file is installed
 msgid "Local firmware installation completed"
 msgstr "Instalasi firmware lokal selesai"
 
+#. TRANSLATORS: dialog title and button for installing firmware
 msgid "Install Firmware"
 msgstr "Instal Firmware"
 
+#. TRANSLATORS: status message while firmware metadata is refreshed
 msgid "Refreshing metadata"
 msgstr "Menyegarkan metadata"
 
+#. TRANSLATORS: status message after firmware metadata is refreshed
 msgid "Firmware metadata refreshed"
 msgstr "Metadata firmware telah disegarkan"
 
+#. TRANSLATORS: status message while enabling the LVFS remote
 msgid "Enabling LVFS"
 msgstr "Mengaktifkan LVFS"
 
+#. TRANSLATORS: status message after the LVFS remote is enabled
 msgid "LVFS was enabled and its metadata refreshed"
 msgstr "LVFS telah diaktifkan dan metadatanya telah disegarkan"
 
+#. TRANSLATORS: fallback security results: passed ("OK") or unknown
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: error message when security attributes cannot be read
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
 msgstr "Gagal memuat atribut keamanan: {error}"
 
+#. TRANSLATORS: tree group label for runtime security attributes
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Akhiran Runtime"
 
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Unknown attribute"
 msgstr "Atribut tidak diketahui"
 
+#. TRANSLATORS: shown when the host security ID cannot be determined
 msgid "Unavailable"
 msgstr "Tidak tersedia"
 
+#. TRANSLATORS: field label for the host security ID (HSI)
 msgid "Host Security ID"
 msgstr "ID Keamanan Host"
 
+#. TRANSLATORS: status message showing the number of attributes
 #, python-brace-format
 msgid "{count} security attributes"
 msgstr "{count} atribut keamanan"
 
+#. TRANSLATORS: heading for the list of recent security events
 msgid "Recent Security Events"
 msgstr "Peristiwa Keamanan Terkini"
 
+#. TRANSLATORS: fallback name for a security event with no name
+#. TRANSLATORS: fallback name for a security attribute with no name
 msgid "Security attribute"
 msgstr "Atribut keamanan"
 
+#. TRANSLATORS: security event line "<time> <name>: <old> → <new>"
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
 msgstr "{time} {name}: {old} → {new}"
 
+#. TRANSLATORS: security issue line "<device>: <issue>"
 #, python-brace-format
 msgid "{device}: {issue}"
 msgstr "{device}: {issue}"
 
+#. TRANSLATORS: fallback name for a device with no name
 msgid "Unknown device"
 msgstr "Perangkat tidak diketahui"
 
+#. TRANSLATORS: heading for the list of per-device security issues
 msgid "Device Security Issues"
 msgstr "Masalah Keamanan Perangkat"
 
+#. TRANSLATORS: shown when there are no recent security events
 msgid "No recent security events"
 msgstr "Tidak ada peristiwa keamanan terkini"
 
+#. TRANSLATORS: field label for a security attribute's result
 msgid "Result"
 msgstr "Hasil"
 
+#. TRANSLATORS: security attribute field label: HSI level
 msgid "Level"
 msgstr "Tingkat"
 
+#. TRANSLATORS: security attribute field label: providing plugin
 msgid "Plugin"
 msgstr "Plugin"
 
+#. TRANSLATORS: security attribute field label: related BIOS setting
 msgid "Firmware Setting"
 msgstr "Pengaturan Firmware"
 
+#. TRANSLATORS: security attribute field label: current firmware value
 msgid "Current Firmware Value"
 msgstr "Nilai Firmware Saat Ini"
 
+#. TRANSLATORS: security attribute field label: desired firmware value
 msgid "Target Firmware Value"
 msgstr "Nilai Firmware Target"
 
+#. TRANSLATORS: security attribute field label: current kernel value
 msgid "Current Kernel Value"
 msgstr "Nilai Kernel Saat Ini"
 
+#. TRANSLATORS: security attribute field label: desired kernel value
 msgid "Target Kernel Value"
 msgstr "Nilai Kernel Target"
 
+#. TRANSLATORS: security attribute field label: link to more info
 msgid "More Information"
 msgstr "Informasi Selengkapnya"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the firmware configuration"
 msgstr "Ubah konfigurasi firmware"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Change the operating system configuration"
 msgstr "Ubah konfigurasi sistem operasi"
 
+#. TRANSLATORS: suggested action to fix a security issue
 msgid "Contact the hardware vendor"
 msgstr "Hubungi vendor perangkat keras"
 
+#. TRANSLATORS: heading for the list of suggested actions
 msgid "Suggested Actions"
 msgstr "Tindakan yang Disarankan"
 
+#. TRANSLATORS: status message while the device is being unlocked
 msgid "Unlocking device"
 msgstr "Membuka kunci perangkat"
 
+#. TRANSLATORS: status message after the device is unlocked
 msgid "Device unlocked"
 msgstr "Perangkat berhasil dibuka kuncinya"
 
+#. TRANSLATORS: status message while firmware is being verified
 msgid "Verifying firmware"
 msgstr "Memverifikasi firmware"
 
+#. TRANSLATORS: status message after firmware verification succeeds
 msgid "Firmware verification succeeded"
 msgstr "Verifikasi firmware berhasil"
 
+#. TRANSLATORS: status message while verification data is updated
 msgid "Updating verification data"
 msgstr "Memperbarui data verifikasi"
 
+#. TRANSLATORS: status message after verification data is updated
 msgid "Verification data updated"
 msgstr "Data verifikasi berhasil diperbarui"
 
+#. TRANSLATORS: status message while firmware is being activated
 msgid "Activating firmware"
 msgstr "Mengaktifkan firmware"
 
+#. TRANSLATORS: status message after firmware is activated
 msgid "Device firmware activated"
 msgstr "Firmware perangkat berhasil diaktifkan"
 
+#. TRANSLATORS: command-line help description for the application
 msgid "Manage firmware and platform security in a terminal interface"
 msgstr "Kelola firmware dan keamanan platform melalui antarmuka terminal"
 
+#. TRANSLATORS: error printed when the fwupd daemon cannot be reached
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
 msgstr "Gagal menginisialisasi fwupd: {error}"
@@ -1352,9 +1546,9 @@ msgstr "Pengguna telah diberitahu"
 msgid "Is in bootloader mode"
 msgstr "Sedang dalam mode bootloader"
 
-#. TRANSLATORS: the hardware is waiting to be replugged
-msgid "Hardware is waiting to be replugged"
-msgstr "Perangkat keras sedang menunggu untuk ditancapkan kembali"
+#. TRANSLATORS: the hardware is waiting for the user to do something
+msgid "Device is waiting to be plugged back in"
+msgstr ""
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -1887,17 +2081,32 @@ msgstr "URI Lapor"
 msgid "Automatic Reporting"
 msgstr "Pelaporan Otomatis"
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
-msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut dan kemudian ditancapkan kembali."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when %s has been unplugged and plugged back in."
+msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
+#. TRANSLATORS: message text
+msgid "The update will continue when the device has been unplugged and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been unplugged."
+msgstr ""
+
+#. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut."
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-msgid "The update will continue when the device USB cable has been re-inserted."
-msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah ditancapkan kembali."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the USB cable of %s has been plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device USB cable has been plugged back in."
+msgstr ""
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -1907,13 +2116,23 @@ msgstr "Tekan buka kunci pada perangkat untuk melanjutkan proses pembaruan."
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
 msgstr "Jangan matikan komputer Anda atau lepaskan adaptor AC saat pembaruan sedang berlangsung."
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device to continue the update process."
-msgstr "Cabut dan pasang kembali perangkat untuk melanjutkan proses pembaruan."
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "Unplug %s and replug it to continue the update process."
+msgstr ""
 
-#. TRANSLATORS: warning message
-msgid "The update will continue when the device power cable has been removed and re-inserted."
-msgstr "Pembaruan akan berlanjut saat kabel daya perangkat telah dilepas dan dipasang kembali."
+#. TRANSLATORS: message text
+msgid "Unplug the device and replug it to continue the update process."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#, c-format
+msgid "The update will continue when the power cable of %s has been removed and plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+msgid "The update will continue when the device power cable has been removed and plugged back in."
+msgstr ""
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -1998,6 +2217,14 @@ msgstr "Perlindungan bootloader NX UEFI sekarang dinonaktifkan"
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
 msgstr "Penyimpanan sertifikat UEFI sekarang sudah mutakhir"
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store no longer contains a test key"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store now contains a test key"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -3915,6 +4142,11 @@ msgid "UEFI NX protection"
 msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db (Microsoft UEFI)"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI db does not have a test key
+#. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
 msgstr "db UEFI"
 
@@ -4279,6 +4511,21 @@ msgstr "HP SureStart adalah fitur keamanan firmware yang melindungi BIOS dari ma
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verifikasi Tanda Tangan Mikrokode AMD memastikan bahwa mikrokode CPU bersifat autentik dan tidak telah dirusak."
+
+#~ msgid "Hardware is waiting to be replugged"
+#~ msgstr "Perangkat keras sedang menunggu untuk ditancapkan kembali"
+
+#~ msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+#~ msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut dan kemudian ditancapkan kembali."
+
+#~ msgid "The update will continue when the device USB cable has been re-inserted."
+#~ msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah ditancapkan kembali."
+
+#~ msgid "Unplug and replug the device to continue the update process."
+#~ msgstr "Cabut dan pasang kembali perangkat untuk melanjutkan proses pembaruan."
+
+#~ msgid "The update will continue when the device power cable has been removed and re-inserted."
+#~ msgstr "Pembaruan akan berlanjut saat kabel daya perangkat telah dilepas dan dipasang kembali."
 
 #~ msgid "Enable"
 #~ msgstr "Fungsikan"
