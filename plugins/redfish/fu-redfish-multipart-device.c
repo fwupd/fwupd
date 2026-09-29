@@ -146,7 +146,9 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	if (location == NULL || g_utf8_strlen(location, 1) == 0) {
 		const gchar *location_tmp;
 
-		json_obj = fu_redfish_request_get_json_object(request);
+		json_obj = fu_redfish_request_get_json_object(request, error);
+		if (json_obj == NULL)
+			return FALSE;
 		if (fwupd_json_object_has_node(json_obj, "TaskMonitor")) {
 			const gchar *tmp =
 			    fwupd_json_object_get_string(json_obj, "TaskMonitor", NULL);

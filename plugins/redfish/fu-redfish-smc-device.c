@@ -107,8 +107,9 @@ fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progres
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
-	json_obj = fu_redfish_request_get_json_object(request);
-
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	location = fu_redfish_smc_device_get_task(json_obj);
 	if (location == NULL) {
 		g_set_error(error,
@@ -191,9 +192,11 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 			    fu_redfish_request_get_status_code(request));
 		return FALSE;
 	}
-	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* poll the verify task for progress */
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	location = fu_redfish_smc_device_get_task(json_obj);
 	if (location == NULL) {
 		g_set_error(error,

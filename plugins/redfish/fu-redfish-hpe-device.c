@@ -41,7 +41,9 @@ fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error
 		return FALSE;
 
 	/* percentage is optional */
-	json_obj = fu_redfish_request_get_json_object(request);
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	json_oem = fwupd_json_object_get_object(json_obj, "Oem", NULL);
 	if (json_oem != NULL) {
 		g_autoptr(FwupdJsonObject) json_oem_hpe = NULL;
@@ -116,8 +118,9 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 		return FALSE;
 
 	/* percentage is optional */
-	json_obj = fu_redfish_request_get_json_object(request);
-
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
 	json_oem = fwupd_json_object_get_object(json_obj, "Oem", NULL);
 	if (json_oem == NULL)
 		return TRUE;
