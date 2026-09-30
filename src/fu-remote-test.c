@@ -18,6 +18,7 @@ fu_remote_download_func(void)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *expected_metadata = NULL;
+	g_autofree gchar *expected_metadata_abs = NULL;
 	g_autofree gchar *expected_signature = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
@@ -31,7 +32,8 @@ fu_remote_download_func(void)
 					     "lvfs-testing",
 					     "firmware.xml.gz",
 					     NULL);
-	expected_signature = g_strdup_printf("%s.jcat", expected_metadata);
+	expected_metadata_abs = g_canonicalize_filename(expected_metadata, NULL);
+	expected_signature = g_strdup_printf("%s.jcat", expected_metadata_abs);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "remotes2.d", "lvfs-testing.conf", NULL);
 	ret = fu_remote_load_from_filename(remote, fn, &error);
@@ -51,7 +53,7 @@ fu_remote_download_func(void)
 	g_assert_cmpstr(fwupd_remote_get_report_uri(remote),
 			==,
 			"https://fwupd.org/lvfs/firmware/report");
-	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote), ==, expected_metadata);
+	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote), ==, expected_metadata_abs);
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
 }
 
@@ -165,7 +167,7 @@ fu_remote_auth_func(void)
 	fwupd_remote_set_checksum_sig(
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
-	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/firmware.xml.gz");
+	fwupd_remote_set_filename_cache(remote2, NULL);
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
@@ -182,8 +184,6 @@ fu_remote_auth_func(void)
 	    "  \"Password\": \"pass\",\n"
 	    "  \"ChecksumSig\": "
 	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
-	    "  \"FilenameCache\": \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
-	    "  \"FilenameCacheSig\": \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
 	    "  \"Flags\": 137,\n"
 	    "  \"Enabled\": true,\n"
 	    "  \"ApprovalRequired\": false,\n"
@@ -305,6 +305,7 @@ static void
 fu_remote_local_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename_cache_abs = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
@@ -325,9 +326,9 @@ fu_remote_local_func(void)
 	g_assert_cmpstr(fwupd_remote_get_title(remote),
 			==,
 			"Enable UEFI capsule updates on Dell systems");
-	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote),
-			==,
-			"@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml");
+	filename_cache_abs =
+	    g_canonicalize_filename("@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml", NULL);
+	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote), ==, filename_cache_abs);
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 
@@ -340,6 +341,7 @@ fu_remote_local_func(void)
 
 	/* to JSON */
 	fwupd_remote_set_filename_source(remote2, NULL);
+	fwupd_remote_set_filename_cache(remote2, NULL);
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
@@ -349,7 +351,6 @@ fu_remote_local_func(void)
 	    "  \"Id\": \"dell-esrt\",\n"
 	    "  \"Kind\": \"local\",\n"
 	    "  \"Title\": \"Enable UEFI capsule updates on Dell systems\",\n"
-	    "  \"FilenameCache\": \"@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml\",\n"
 	    "  \"Flags\": 1,\n"
 	    "  \"Enabled\": true,\n"
 	    "  \"ApprovalRequired\": false,\n"
