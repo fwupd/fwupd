@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 13:09+0100\n"
+"POT-Creation-Date: 2026-09-29 16:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -307,7 +307,7 @@ msgid "Authentication is required to delete metadata from a remote"
 msgstr ""
 
 #. TRANSLATORS: firmware approved by the admin
-#: policy/org.freedesktop.fwupd.policy.in:272 src/fu-cli.c:7123
+#: policy/org.freedesktop.fwupd.policy.in:272 src/fu-cli.c:7159
 msgid "Sets the list of approved firmware"
 msgstr ""
 
@@ -359,7 +359,7 @@ msgid "Authentication is required to undo the fix for a host security issue"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: policy/org.freedesktop.fwupd.policy.in:339 src/fu-cli.c:7233
+#: policy/org.freedesktop.fwupd.policy.in:339 src/fu-cli.c:7269
 msgid "Load device emulation data"
 msgstr ""
 
@@ -369,7 +369,7 @@ msgid "Authentication is required to load hardware emulation data"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: policy/org.freedesktop.fwupd.policy.in:350 src/fu-cli.c:7240
+#: policy/org.freedesktop.fwupd.policy.in:350 src/fu-cli.c:7276
 msgid "Save device emulation data"
 msgstr ""
 
@@ -427,8 +427,8 @@ msgid "Specify the dbx database file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: plugins/uefi-dbx/fu-dbxtool.c:147 src/fu-cli.c:7231 src/fu-cli.c:7238
-#: src/fu-engine-cli.c:4828
+#: plugins/uefi-dbx/fu-dbxtool.c:147 src/fu-cli.c:7267 src/fu-cli.c:7274
+#: src/fu-engine-cli.c:4862
 msgid "FILENAME"
 msgstr ""
 
@@ -459,7 +459,7 @@ msgstr ""
 
 #. TRANSLATORS: the user didn't read the man page
 #: plugins/uefi-dbx/fu-dbxtool.c:185 src/fu-binder-cli.c:577
-#: src/fu-dbus-cli.c:110 src/fu-engine-cli.c:4903
+#: src/fu-dbus-cli.c:110 src/fu-engine-cli.c:4937
 msgid "Failed to parse arguments"
 msgstr ""
 
@@ -480,12 +480,13 @@ msgid "Failed to load system dbx"
 msgstr ""
 
 #. TRANSLATORS: the detected version number of the dbx
-#: plugins/uefi-dbx/fu-dbxtool.c:239 src/fwupdtui/fwupdtui.py:1033
+#. TRANSLATORS: device field label: firmware version
+#: plugins/uefi-dbx/fu-dbxtool.c:239 src/fwupdtui/fwupdtui.py:1149
 msgid "Version"
 msgstr ""
 
 #. TRANSLATORS: we're poking around as a power user
-#: plugins/uefi-dbx/fu-dbxtool.c:262 src/fu-cli.c:7435
+#: plugins/uefi-dbx/fu-dbxtool.c:262 src/fu-cli.c:7471
 msgid "This program may only work correctly as root"
 msgstr ""
 
@@ -545,800 +546,993 @@ msgstr ""
 msgid "No action specified!"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:76
+#. TRANSLATORS: fallback name shown when a BIOS setting has no name
+#: src/fwupdtui/fwupdtui.py:77
 msgid "Unnamed setting"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:105
+#. TRANSLATORS: error shown when an invalid value is entered
+#: src/fwupdtui/fwupdtui.py:107
 msgid "Choose one of the available values"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:111
+#. TRANSLATORS: error shown when a non-numeric value is entered
+#: src/fwupdtui/fwupdtui.py:114
 msgid "Enter a valid integer"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:114
+#. TRANSLATORS: error shown when a number is out of range
+#: src/fwupdtui/fwupdtui.py:118
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:120
+#. TRANSLATORS: error shown when a number is not a valid increment
+#: src/fwupdtui/fwupdtui.py:125
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:128
+#. TRANSLATORS: error shown when text is the wrong length
+#: src/fwupdtui/fwupdtui.py:134
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:133
+#. TRANSLATORS: error shown when a setting type cannot be edited
+#: src/fwupdtui/fwupdtui.py:140
 msgid "This setting type cannot be changed"
 msgstr ""
 
+#. TRANSLATORS: button to close the editor without saving
+#. TRANSLATORS: button to cancel the confirmation dialog
+#. TRANSLATORS: button to cancel the dialog
 #. TRANSLATORS: this is to abort the interactive prompt
-#: src/fwupdtui/fwupdtui.py:193 src/fwupdtui/fwupdtui.py:257
-#: src/fwupdtui/fwupdtui.py:302 src/fu-cli.c:343 src/fu-cli.c:3243
-#: src/fu-cli.c:4326 src/fu-engine-cli.c:402 src/fu-engine-cli.c:1710
+#: src/fwupdtui/fwupdtui.py:201 src/fwupdtui/fwupdtui.py:267
+#: src/fwupdtui/fwupdtui.py:315 src/fu-cli.c:343 src/fu-cli.c:3279
+#: src/fu-cli.c:4362 src/fu-engine-cli.c:402 src/fu-engine-cli.c:1710
 #: src/fu-engine-cli.c:2412
 msgid "Cancel"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:194
+#. TRANSLATORS: button to save the edited setting value
+#: src/fwupdtui/fwupdtui.py:203
 msgid "Save"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:298
+#. TRANSLATORS: dialog title for installing a local firmware file
+#: src/fwupdtui/fwupdtui.py:309
 msgid "Install Local Firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:299
+#. TRANSLATORS: input placeholder for the firmware archive path
+#: src/fwupdtui/fwupdtui.py:311
 msgid "Path to a .cab firmware archive"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:303
+#. TRANSLATORS: button to proceed with the entered path
+#: src/fwupdtui/fwupdtui.py:317
 msgid "Continue"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:314
+#. TRANSLATORS: error shown when the entered path does not exist
+#: src/fwupdtui/fwupdtui.py:329
 msgid "File not found"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:331 src/fwupdtui/fwupdtui.py:334
+#. TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
+#: src/fwupdtui/fwupdtui.py:347 src/fwupdtui/fwupdtui.py:350
 msgid "bytes"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:331
+#: src/fwupdtui/fwupdtui.py:347
 msgid "KB"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:331
+#: src/fwupdtui/fwupdtui.py:347
 msgid "MB"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:331 src/fwupdtui/fwupdtui.py:332
+#: src/fwupdtui/fwupdtui.py:347 src/fwupdtui/fwupdtui.py:348
 msgid "GB"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:345
+#. TRANSLATORS: a duration in seconds
+#: src/fwupdtui/fwupdtui.py:362
 #, python-brace-format
 msgid "{seconds} seconds"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:346
+#. TRANSLATORS: a duration in minutes
+#: src/fwupdtui/fwupdtui.py:364
 #, python-brace-format
 msgid "{minutes} minutes"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the check passed
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:350 src/fu-cli-common.c:1812
+#: src/fwupdtui/fwupdtui.py:369 src/fu-cli-common.c:1848
 msgid "Valid"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the check failed
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:351 src/fu-cli-common.c:1816
+#: src/fwupdtui/fwupdtui.py:371 src/fu-cli-common.c:1852
 msgid "Invalid"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is enabled
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:352 src/fu-cli-common.c:1665
-#: src/fu-cli-common.c:1820
+#: src/fwupdtui/fwupdtui.py:373 src/fu-cli-common.c:1665
+#: src/fu-cli-common.c:1856
 msgid "Enabled"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is disabled
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:353 src/fu-cli-common.c:1203
-#: src/fu-cli-common.c:1824
+#: src/fwupdtui/fwupdtui.py:375 src/fu-cli-common.c:1203
+#: src/fu-cli-common.c:1860
 msgid "Disabled"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is locked
+#. TRANSLATORS: device flag label: the device is locked
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:354 src/fwupdtui/fwupdtui.py:1005
-#: src/fu-cli-common.c:1828
+#: src/fwupdtui/fwupdtui.py:377 src/fwupdtui/fwupdtui.py:1107
+#: src/fu-cli-common.c:1864
 msgid "Locked"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is unlocked
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:355 src/fu-cli-common.c:1832
+#: src/fwupdtui/fwupdtui.py:379 src/fu-cli-common.c:1868
 msgid "Unlocked"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the data is encrypted
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:356 src/fu-cli-common.c:1836
+#: src/fwupdtui/fwupdtui.py:381 src/fu-cli-common.c:1872
 msgid "Encrypted"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the data is not encrypted
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:357 src/fu-cli-common.c:1840
+#: src/fwupdtui/fwupdtui.py:383 src/fu-cli-common.c:1876
 msgid "Unencrypted"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the system is tainted
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:358 src/fu-cli-common.c:1844
+#: src/fwupdtui/fwupdtui.py:385 src/fu-cli-common.c:1880
 msgid "Tainted"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the system is not tainted
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:359 src/fu-cli-common.c:1848
+#: src/fwupdtui/fwupdtui.py:387 src/fu-cli-common.c:1884
 msgid "Untainted"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature was found
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:360 src/fu-cli-common.c:1852
+#: src/fwupdtui/fwupdtui.py:389 src/fu-cli-common.c:1888
 msgid "Found"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature was not found
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:361 src/fu-cli-common.c:1856
+#: src/fwupdtui/fwupdtui.py:391 src/fu-cli-common.c:1892
 msgid "Not found"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is supported
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:362 src/fu-cli-common.c:1860
+#: src/fwupdtui/fwupdtui.py:393 src/fu-cli-common.c:1896
 msgid "Supported"
 msgstr ""
 
+#. TRANSLATORS: host security attribute result: the feature is not supported
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:363 src/fu-cli-common.c:1864
+#: src/fwupdtui/fwupdtui.py:395 src/fu-cli-common.c:1900
 msgid "Not supported"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:367
+#. TRANSLATORS: host security level label (HSI-1)
+#: src/fwupdtui/fwupdtui.py:400
 msgid "HSI-1 Critical"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:368
+#. TRANSLATORS: host security level label (HSI-2)
+#: src/fwupdtui/fwupdtui.py:402
 msgid "HSI-2 Important"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:369
+#. TRANSLATORS: host security level label (HSI-3)
+#: src/fwupdtui/fwupdtui.py:404
 msgid "HSI-3 Theoretical"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:370
+#. TRANSLATORS: host security level label (HSI-4)
+#: src/fwupdtui/fwupdtui.py:406
 msgid "HSI-4 System Protection"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:371
+#. TRANSLATORS: host security level label (HSI-5)
+#: src/fwupdtui/fwupdtui.py:408
 msgid "HSI-5 System Attestation"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:378
+#. TRANSLATORS: application title shown in the header
+#: src/fwupdtui/fwupdtui.py:416
 msgid "fwupd"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:379
+#. TRANSLATORS: application subtitle shown in the header
+#: src/fwupdtui/fwupdtui.py:418
 msgid "Firmware management"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:507 src/fwupdtui/fwupdtui.py:550
+#. TRANSLATORS: footer label for the key that quits the application
+#. TRANSLATORS: button to quit the application
+#: src/fwupdtui/fwupdtui.py:547 src/fwupdtui/fwupdtui.py:602
 msgid "Quit"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:508 src/fwupdtui/fwupdtui.py:571
-#: src/fwupdtui/fwupdtui.py:599 src/fwupdtui/fwupdtui.py:631
+#. TRANSLATORS: footer label for the key that returns to the home screen
+#. TRANSLATORS: button to return to the home screen
+#: src/fwupdtui/fwupdtui.py:549 src/fwupdtui/fwupdtui.py:627
+#: src/fwupdtui/fwupdtui.py:669 src/fwupdtui/fwupdtui.py:709
 msgid "Home"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:509
+#. TRANSLATORS: footer label for the key that focuses the search box
+#: src/fwupdtui/fwupdtui.py:551
 msgid "Search"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:510 src/fwupdtui/fwupdtui.py:572
+#. TRANSLATORS: footer label for the key that edits the selected setting
+#. TRANSLATORS: button to edit the selected setting
+#: src/fwupdtui/fwupdtui.py:553 src/fwupdtui/fwupdtui.py:629
 msgid "Edit"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:511 src/fwupdtui/fwupdtui.py:574
+#. TRANSLATORS: footer label for the key that applies pending changes
+#. TRANSLATORS: button to apply pending BIOS changes
+#: src/fwupdtui/fwupdtui.py:555 src/fwupdtui/fwupdtui.py:632
 msgid "Apply"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:512 src/fwupdtui/fwupdtui.py:585
-#: src/fwupdtui/fwupdtui.py:632
+#. TRANSLATORS: footer label for the key that refreshes the current view
+#. TRANSLATORS: button to reload the list of devices
+#. TRANSLATORS: button to reload the security attributes
+#: src/fwupdtui/fwupdtui.py:557 src/fwupdtui/fwupdtui.py:649
+#: src/fwupdtui/fwupdtui.py:711
 msgid "Refresh"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:540
+#. TRANSLATORS: title of the home menu
+#: src/fwupdtui/fwupdtui.py:586
 msgid "Firmware Management"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:542
+#. TRANSLATORS: home screen introductory text
+#: src/fwupdtui/fwupdtui.py:589
 msgid "Choose what you would like to inspect or change."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:545
+#. TRANSLATORS: home screen hint on how to navigate the menu
+#: src/fwupdtui/fwupdtui.py:593
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:547
+#. TRANSLATORS: button to open the BIOS settings view
+#: src/fwupdtui/fwupdtui.py:596
 msgid "Manage BIOS Settings"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:548
+#. TRANSLATORS: button to open the devices view
+#: src/fwupdtui/fwupdtui.py:598
 msgid "Manage Devices"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:549
+#. TRANSLATORS: button to open the host security view
+#: src/fwupdtui/fwupdtui.py:600
 msgid "View Security Measurement"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:554
+#. TRANSLATORS: search box placeholder for BIOS settings
+#: src/fwupdtui/fwupdtui.py:607
 msgid "Search BIOS settings"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:559
+#. TRANSLATORS: tree root label for the BIOS settings list
+#: src/fwupdtui/fwupdtui.py:613
 msgid "BIOS Settings"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:565 src/fwupdtui/fwupdtui.py:786
+#. TRANSLATORS: placeholder shown before a setting is selected
+#: src/fwupdtui/fwupdtui.py:620 src/fwupdtui/fwupdtui.py:870
 msgid "Select a setting to view its details."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:579
+#. TRANSLATORS: search box placeholder for devices
+#: src/fwupdtui/fwupdtui.py:641
 msgid "Search devices"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:583
+#. TRANSLATORS: tree root label for the devices list
+#: src/fwupdtui/fwupdtui.py:646
 msgid "Devices"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:586
+#. TRANSLATORS: button to refresh firmware metadata
+#: src/fwupdtui/fwupdtui.py:651
 msgid "Refresh Metadata"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:588
+#. TRANSLATORS: button to enable the LVFS remote
+#: src/fwupdtui/fwupdtui.py:654
 msgid "Enable LVFS"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:589
+#. TRANSLATORS: button to install firmware from a local file
+#: src/fwupdtui/fwupdtui.py:656
 msgid "Install Local File"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:592 src/fwupdtui/fwupdtui.py:1027
+#. TRANSLATORS: placeholder shown before a device is selected
+#: src/fwupdtui/fwupdtui.py:660 src/fwupdtui/fwupdtui.py:1141
 msgid "Select a device to view its details."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:596
+#. TRANSLATORS: tree root label for the list of releases
+#: src/fwupdtui/fwupdtui.py:665
 msgid "Available Releases"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:600
+#. TRANSLATORS: button to unlock the selected device
+#: src/fwupdtui/fwupdtui.py:671
 msgid "Unlock"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:601
+#. TRANSLATORS: button to verify the device firmware
+#: src/fwupdtui/fwupdtui.py:673
 msgid "Verify"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:603
+#. TRANSLATORS: button to store the device verification data
+#: src/fwupdtui/fwupdtui.py:676
 msgid "Store"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:607
+#. TRANSLATORS: button to activate staged device firmware
+#: src/fwupdtui/fwupdtui.py:681
 msgid "Activate"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:609 src/fwupdtui/fwupdtui.py:1023
-#: src/fwupdtui/fwupdtui.py:1118 src/fwupdtui/fwupdtui.py:1288
+#. TRANSLATORS: button to install the selected release
+#: src/fwupdtui/fwupdtui.py:684 src/fwupdtui/fwupdtui.py:1136
+#: src/fwupdtui/fwupdtui.py:1254 src/fwupdtui/fwupdtui.py:1452
 msgid "Install"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:617
+#. TRANSLATORS: tree root label for host security attributes
+#: src/fwupdtui/fwupdtui.py:693
 msgid "Security Attributes"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:624 src/fwupdtui/fwupdtui.py:1435
+#. TRANSLATORS: placeholder shown before an attribute is selected
+#: src/fwupdtui/fwupdtui.py:701 src/fwupdtui/fwupdtui.py:1625
 msgid "Select a security attribute to view its details."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:732 src/fwupdtui/fwupdtui.py:854
-#: src/fwupdtui/fwupdtui.py:884 src/fwupdtui/fwupdtui.py:1350
+#. TRANSLATORS: status message when the fwupd daemon is unavailable
+#: src/fwupdtui/fwupdtui.py:812 src/fwupdtui/fwupdtui.py:945
+#: src/fwupdtui/fwupdtui.py:979 src/fwupdtui/fwupdtui.py:1521
 msgid "fwupd is not connected"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:740
+#. TRANSLATORS: error message when BIOS settings cannot be read
+#: src/fwupdtui/fwupdtui.py:821
 #, python-brace-format
 msgid "Failed to load BIOS settings: {error}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:776
+#. TRANSLATORS: status message showing how many settings are listed
+#: src/fwupdtui/fwupdtui.py:858
 #, python-brace-format
 msgid "{count} settings"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:778
+#. TRANSLATORS: status message when the system has no BIOS settings
+#: src/fwupdtui/fwupdtui.py:861
 msgid "This system does not expose BIOS settings"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:799
+#. TRANSLATORS: field label for the setting's current value
+#: src/fwupdtui/fwupdtui.py:884
 msgid "Current value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:804
+#. TRANSLATORS: field label for a not-yet-applied setting value
+#: src/fwupdtui/fwupdtui.py:890
 msgid "Pending value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:807
+#. TRANSLATORS: heading for the list of values a setting accepts
+#: src/fwupdtui/fwupdtui.py:894
 msgid "Available values"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:811
+#. TRANSLATORS: dialog text describing the allowed integer range
+#: src/fwupdtui/fwupdtui.py:899
 #, python-brace-format
 msgid "Range: {lower}–{upper}, increment {increment}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:819
+#. TRANSLATORS: dialog text describing the allowed text length
+#: src/fwupdtui/fwupdtui.py:908
 #, python-brace-format
 msgid "Length: {lower}–{upper} characters"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:824
+#. TRANSLATORS: dialog text shown when a setting cannot be changed
+#: src/fwupdtui/fwupdtui.py:914
 msgid "This setting is read-only."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:860
+#. TRANSLATORS: error message when BIOS settings cannot be changed
+#: src/fwupdtui/fwupdtui.py:952
 #, python-brace-format
 msgid "Failed to modify BIOS settings: {error}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:868
+#. TRANSLATORS: status message after a change that needs a reboot
+#: src/fwupdtui/fwupdtui.py:961
 msgid "BIOS settings changed successfully; reboot required"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:870
+#. TRANSLATORS: status message after BIOS settings are changed
+#: src/fwupdtui/fwupdtui.py:964
 msgid "BIOS settings changed successfully"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:890
+#. TRANSLATORS: error message when the device list cannot be read
+#: src/fwupdtui/fwupdtui.py:986
 #, python-brace-format
 msgid "Failed to load devices: {error}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:994
+#. TRANSLATORS: status message showing how many devices are listed
+#: src/fwupdtui/fwupdtui.py:1091
 #, python-brace-format
 msgid "{count} devices"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:996
+#. TRANSLATORS: status message when no devices are available
+#: src/fwupdtui/fwupdtui.py:1094
 msgid "No supported devices were found"
 msgstr ""
 
+#. TRANSLATORS: device flag label: built into the machine
 #. TRANSLATORS: Device cannot be removed easily
-#: src/fwupdtui/fwupdtui.py:1002 src/fu-cli-common.c:614
+#: src/fwupdtui/fwupdtui.py:1101 src/fu-cli-common.c:614
 msgid "Internal device"
 msgstr ""
 
+#. TRANSLATORS: device flag label: firmware can be updated
 #. TRANSLATORS: Device is updatable in this or any other mode
-#: src/fwupdtui/fwupdtui.py:1003 src/fu-cli-common.c:619
+#: src/fwupdtui/fwupdtui.py:1103 src/fu-cli-common.c:619
 msgid "Updatable"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1004
+#. TRANSLATORS: device flag label: needs mains power to update
+#: src/fwupdtui/fwupdtui.py:1105
 msgid "Requires AC power"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1006
+#. TRANSLATORS: device flag label: available from a remote
+#: src/fwupdtui/fwupdtui.py:1109
 msgid "Supported by a remote"
 msgstr ""
 
+#. TRANSLATORS: device flag label: a reboot is required
 #. TRANSLATORS: the update state of the specific device
-#: src/fwupdtui/fwupdtui.py:1007 src/fu-cli-common.c:811
+#: src/fwupdtui/fwupdtui.py:1111 src/fu-cli-common.c:811
 msgid "Needs reboot"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1008
+#. TRANSLATORS: device flag label: a shutdown is required
+#: src/fwupdtui/fwupdtui.py:1113
 msgid "Needs shutdown"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1009
+#. TRANSLATORS: device flag label: an activation step is required
+#: src/fwupdtui/fwupdtui.py:1115
 msgid "Needs activation"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1010
+#. TRANSLATORS: device flag label: updates are staged before use
+#: src/fwupdtui/fwupdtui.py:1117
 msgid "Stages updates"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1011
+#. TRANSLATORS: device flag label: the device can self-recover
+#: src/fwupdtui/fwupdtui.py:1119
 msgid "Supports self-recovery"
 msgstr ""
 
+#. TRANSLATORS: device flag label: no longer supported by the vendor
 #. TRANSLATORS: the vendor is no longer supporting the device
-#: src/fwupdtui/fwupdtui.py:1012 src/fu-cli-common.c:734
+#: src/fwupdtui/fwupdtui.py:1121 src/fu-cli-common.c:734
 msgid "End of life"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1013
+#. TRANSLATORS: device flag label: firmware is cryptographically signed
+#: src/fwupdtui/fwupdtui.py:1123
 msgid "Signed payload"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1014
+#. TRANSLATORS: device flag label: firmware is not signed
+#: src/fwupdtui/fwupdtui.py:1125
 msgid "Unsigned payload"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1015
+#. TRANSLATORS: device flag label: the device is emulated
+#: src/fwupdtui/fwupdtui.py:1127
 msgid "Emulated device"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1031
+#. TRANSLATORS: fallback name shown when a device has no name
+#: src/fwupdtui/fwupdtui.py:1146
 msgid "Unnamed device"
 msgstr ""
 
+#. TRANSLATORS: device field label: lowest allowed version
 #. TRANSLATORS: smallest version number installable on device
-#: src/fwupdtui/fwupdtui.py:1034 src/fu-cli-common.c:986
+#: src/fwupdtui/fwupdtui.py:1151 src/fu-cli-common.c:986
 msgid "Minimum Version"
 msgstr ""
 
+#. TRANSLATORS: device field label: bootloader version
 #. TRANSLATORS: firmware version of bootloader
-#: src/fwupdtui/fwupdtui.py:1035 src/fu-cli-common.c:996
+#: src/fwupdtui/fwupdtui.py:1153 src/fu-cli-common.c:996
 msgid "Bootloader Version"
 msgstr ""
 
+#. TRANSLATORS: device field label: hardware vendor
+#. TRANSLATORS: release field label: firmware vendor
 #. TRANSLATORS: manufacturer of hardware
-#: src/fwupdtui/fwupdtui.py:1036 src/fwupdtui/fwupdtui.py:1131
+#: src/fwupdtui/fwupdtui.py:1155 src/fwupdtui/fwupdtui.py:1271
 #: src/fu-cli-common.c:1005 src/fu-cli-common.c:1008 src/fu-cli-common.c:1012
 #: src/fu-cli-common.c:1565
 msgid "Vendor"
 msgstr ""
 
+#. TRANSLATORS: device field label: firmware branch
+#. TRANSLATORS: release field label: firmware branch
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
-#: src/fwupdtui/fwupdtui.py:1037 src/fwupdtui/fwupdtui.py:1133
+#: src/fwupdtui/fwupdtui.py:1157 src/fwupdtui/fwupdtui.py:1275
 #: src/fu-cli-common.c:1513
 msgid "Branch"
 msgstr ""
 
+#. TRANSLATORS: device field label: serial number
 #. TRANSLATORS: serial number of hardware
-#: src/fwupdtui/fwupdtui.py:1038 src/fu-cli-common.c:1033
+#: src/fwupdtui/fwupdtui.py:1159 src/fu-cli-common.c:1033
 msgid "Serial Number"
 msgstr ""
 
+#. TRANSLATORS: device field label: estimated install time
+#. TRANSLATORS: release field label: estimated install time
 #. TRANSLATORS: length of time the update takes to apply
-#: src/fwupdtui/fwupdtui.py:1039 src/fwupdtui/fwupdtui.py:1135
+#: src/fwupdtui/fwupdtui.py:1161 src/fwupdtui/fwupdtui.py:1279
 #: src/fu-cli-common.c:1029
 msgid "Install Duration"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1041
+#. TRANSLATORS: device field label: remaining firmware writes
+#: src/fwupdtui/fwupdtui.py:1164
 msgid "Flashes Left"
 msgstr ""
 
+#. TRANSLATORS: device field label: last update error
 #. TRANSLATORS: error message from last update attempt
-#: src/fwupdtui/fwupdtui.py:1044 src/fu-cli-common.c:1072
+#: src/fwupdtui/fwupdtui.py:1168 src/fu-cli-common.c:1072
 msgid "Update Error"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1050 src/fwupdtui/fwupdtui.py:1146
+#. TRANSLATORS: heading for the list of device checksums
+#. TRANSLATORS: heading for the list of release checksums
+#: src/fwupdtui/fwupdtui.py:1175 src/fwupdtui/fwupdtui.py:1293
 msgid "Checksums"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1051
+#. TRANSLATORS: heading for the list of device GUIDs
+#: src/fwupdtui/fwupdtui.py:1177
 msgid "GUIDs"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1052
+#. TRANSLATORS: heading for the list of device instance IDs
+#: src/fwupdtui/fwupdtui.py:1179
 msgid "Instance IDs"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1053
+#. TRANSLATORS: heading for the list of device security issues
+#: src/fwupdtui/fwupdtui.py:1181
 msgid "Security Issues"
 msgstr ""
 
+#. TRANSLATORS: heading for the list of device flags
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#: src/fwupdtui/fwupdtui.py:1054 src/fu-cli-common.c:1320
+#: src/fwupdtui/fwupdtui.py:1183 src/fu-cli-common.c:1320
 msgid "Flags"
 msgstr ""
 
+#. TRANSLATORS: shown in the release list when a version is unknown
+#. TRANSLATORS: shown when the previous security result is unknown
+#. TRANSLATORS: shown when the new security result is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: current daemon status is unknown
-#: src/fwupdtui/fwupdtui.py:1093 src/fwupdtui/fwupdtui.py:1340
-#: src/fwupdtui/fwupdtui.py:1395 src/fwupdtui/fwupdtui.py:1396
-#: src/fu-cli-common.c:1354 src/fu-cli-common.c:1394 src/fu-cli-common.c:1886
+#: src/fwupdtui/fwupdtui.py:1223 src/fwupdtui/fwupdtui.py:1510
+#: src/fwupdtui/fwupdtui.py:1574 src/fwupdtui/fwupdtui.py:1576
+#: src/fu-cli-common.c:1354 src/fu-cli-common.c:1394 src/fu-cli-common.c:1922
 #: src/fu-console.c:458
 msgid "Unknown"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1101
+#. TRANSLATORS: tree root label showing the number of releases
+#: src/fwupdtui/fwupdtui.py:1233
 #, python-brace-format
 msgid "Available Releases ({count})"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1109
+#. TRANSLATORS: action label for installing a newer release
+#: src/fwupdtui/fwupdtui.py:1242
 msgid "Update"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1111
+#. TRANSLATORS: action label for installing an older release
+#: src/fwupdtui/fwupdtui.py:1245
 msgid "Downgrade"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1112
+#. TRANSLATORS: action label for reinstalling the current release
+#: src/fwupdtui/fwupdtui.py:1247
 msgid "Reinstall"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1125
+#. TRANSLATORS: fallback title shown when a release has no name
+#: src/fwupdtui/fwupdtui.py:1262
 msgid "Firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1129
+#. TRANSLATORS: release field label: the action to perform
+#: src/fwupdtui/fwupdtui.py:1267
 msgid "Action"
 msgstr ""
 
+#. TRANSLATORS: release field label: short summary
 #. TRANSLATORS: one line summary of device
-#: src/fwupdtui/fwupdtui.py:1130 src/fu-cli-common.c:957
+#: src/fwupdtui/fwupdtui.py:1269 src/fu-cli-common.c:957
 #: src/fu-cli-common.c:1518
 msgid "Summary"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1132
+#. TRANSLATORS: release field label: source remote
+#: src/fwupdtui/fwupdtui.py:1273
 msgid "Remote"
 msgstr ""
 
+#. TRANSLATORS: release field label: download size
 #. TRANSLATORS: file size of the download
-#: src/fwupdtui/fwupdtui.py:1134 src/fu-cli-common.c:1532
+#: src/fwupdtui/fwupdtui.py:1277 src/fu-cli-common.c:1532
 msgid "Size"
 msgstr ""
 
+#. TRANSLATORS: release field label: message shown after updating
 #. TRANSLATORS: helpful messages for the update
-#: src/fwupdtui/fwupdtui.py:1136 src/fu-cli-common.c:1575
+#: src/fwupdtui/fwupdtui.py:1281 src/fu-cli-common.c:1575
 msgid "Update Message"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1145
+#. TRANSLATORS: heading for the list of known release issues
+#: src/fwupdtui/fwupdtui.py:1291
 msgid "Issues"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1183
+#. TRANSLATORS: warning shown before updating an encrypted device
+#: src/fwupdtui/fwupdtui.py:1331
 msgid "Suspend full-disk encryption protection before continuing."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1186
+#. TRANSLATORS: warning that the update changes firmware branch
+#: src/fwupdtui/fwupdtui.py:1335
 msgid "This release switches to an alternate firmware branch."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1188
+#. TRANSLATORS: warning that the firmware is community-built
+#: src/fwupdtui/fwupdtui.py:1338
 msgid "This firmware was built by the community."
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1189
+#. TRANSLATORS: confirmation dialog text before installing a release
+#: src/fwupdtui/fwupdtui.py:1340
 #, python-brace-format
 msgid "{action} {device} to version {version}?"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1201 src/fwupdtui/fwupdtui.py:1282
+#. TRANSLATORS: status message while firmware is being installed
+#: src/fwupdtui/fwupdtui.py:1353 src/fwupdtui/fwupdtui.py:1444
 msgid "Installing firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1208
+#. TRANSLATORS: status message after firmware is installed
+#: src/fwupdtui/fwupdtui.py:1361
 msgid "Firmware installation completed"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1215 src/fwupdtui/fwupdtui.py:1237
+#. TRANSLATORS: error message format, "<operation>: <error text>"
+#: src/fwupdtui/fwupdtui.py:1369 src/fwupdtui/fwupdtui.py:1393
 #, python-brace-format
 msgid "{prefix}: {error}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1226
+#. TRANSLATORS: status message shown while an operation is in progress
+#: src/fwupdtui/fwupdtui.py:1381
 #, python-brace-format
 msgid "{operation}…"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1258
+#. TRANSLATORS: error prefix when a firmware file cannot be read
+#: src/fwupdtui/fwupdtui.py:1415
 msgid "Failed to inspect firmware file"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1262
+#. TRANSLATORS: status message when a firmware file has no releases
+#: src/fwupdtui/fwupdtui.py:1420
 msgid "The firmware archive contains no installable releases"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1267
+#. TRANSLATORS: placeholder for an unknown firmware version
+#: src/fwupdtui/fwupdtui.py:1426
 msgid "unknown"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1268
+#. TRANSLATORS: fallback name for firmware from a local file
+#: src/fwupdtui/fwupdtui.py:1428
 msgid "firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1274
+#. TRANSLATORS: confirmation dialog text before installing a local file
+#: src/fwupdtui/fwupdtui.py:1435
 #, python-brace-format
 msgid "Install {name} version {version} from {path}?"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1284
+#. TRANSLATORS: status message after a local file is installed
+#: src/fwupdtui/fwupdtui.py:1447
 msgid "Local firmware installation completed"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1288
+#. TRANSLATORS: dialog title and button for installing firmware
+#: src/fwupdtui/fwupdtui.py:1452
 msgid "Install Firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1305
+#. TRANSLATORS: status message while firmware metadata is refreshed
+#: src/fwupdtui/fwupdtui.py:1471
 msgid "Refreshing metadata"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1307
+#. TRANSLATORS: status message after firmware metadata is refreshed
+#: src/fwupdtui/fwupdtui.py:1474
 msgid "Firmware metadata refreshed"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1329
+#. TRANSLATORS: status message while enabling the LVFS remote
+#: src/fwupdtui/fwupdtui.py:1497
 msgid "Enabling LVFS"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1331
+#. TRANSLATORS: status message after the LVFS remote is enabled
+#: src/fwupdtui/fwupdtui.py:1500
 msgid "LVFS was enabled and its metadata refreshed"
 msgstr ""
 
+#. TRANSLATORS: fallback security results: passed ("OK") or unknown
 #. TRANSLATORS: Suffix: the HSI result
-#: src/fwupdtui/fwupdtui.py:1340 src/fu-cli-common.c:1882
+#: src/fwupdtui/fwupdtui.py:1510 src/fu-cli-common.c:1918
 msgid "OK"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1357
+#. TRANSLATORS: error message when security attributes cannot be read
+#: src/fwupdtui/fwupdtui.py:1529
 #, python-brace-format
 msgid "Failed to load security attributes: {error}"
 msgstr ""
 
+#. TRANSLATORS: tree group label for runtime security attributes
 #. TRANSLATORS:  this is the HSI suffix
-#: src/fwupdtui/fwupdtui.py:1365 src/fu-cli-common.c:2268
+#: src/fwupdtui/fwupdtui.py:1538 src/fu-cli-common.c:2315
 msgid "Runtime Suffix"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1371
+#. TRANSLATORS: fallback name for a security attribute with no name
+#: src/fwupdtui/fwupdtui.py:1545
 msgid "Unknown attribute"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1379
+#. TRANSLATORS: shown when the host security ID cannot be determined
+#: src/fwupdtui/fwupdtui.py:1554
 msgid "Unavailable"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1381
+#. TRANSLATORS: field label for the host security ID (HSI)
+#: src/fwupdtui/fwupdtui.py:1557
 msgid "Host Security ID"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1384
+#. TRANSLATORS: status message showing the number of attributes
+#: src/fwupdtui/fwupdtui.py:1561
 #, python-brace-format
 msgid "{count} security attributes"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1389
+#. TRANSLATORS: heading for the list of recent security events
+#: src/fwupdtui/fwupdtui.py:1567
 msgid "Recent Security Events"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1398 src/fwupdtui/fwupdtui.py:1438
+#. TRANSLATORS: fallback name for a security event with no name
+#. TRANSLATORS: fallback name for a security attribute with no name
+#: src/fwupdtui/fwupdtui.py:1581 src/fwupdtui/fwupdtui.py:1629
 msgid "Security attribute"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1409
+#. TRANSLATORS: security event line "<time> <name>: <old> → <new>"
+#: src/fwupdtui/fwupdtui.py:1593
 #, python-brace-format
 msgid "{time} {name}: {old} → {new}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1421
+#. TRANSLATORS: security issue line "<device>: <issue>"
+#: src/fwupdtui/fwupdtui.py:1606
 #, python-brace-format
 msgid "{device}: {issue}"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1422
+#. TRANSLATORS: fallback name for a device with no name
+#: src/fwupdtui/fwupdtui.py:1608
 msgid "Unknown device"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1426
+#. TRANSLATORS: heading for the list of per-device security issues
+#: src/fwupdtui/fwupdtui.py:1614
 msgid "Device Security Issues"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1429
+#. TRANSLATORS: shown when there are no recent security events
+#: src/fwupdtui/fwupdtui.py:1618
 msgid "No recent security events"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1441
+#. TRANSLATORS: field label for a security attribute's result
+#: src/fwupdtui/fwupdtui.py:1633
 msgid "Result"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1445
+#. TRANSLATORS: security attribute field label: HSI level
+#: src/fwupdtui/fwupdtui.py:1638
 msgid "Level"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1446
+#. TRANSLATORS: security attribute field label: providing plugin
+#: src/fwupdtui/fwupdtui.py:1640
 msgid "Plugin"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1447
+#. TRANSLATORS: security attribute field label: related BIOS setting
+#: src/fwupdtui/fwupdtui.py:1642
 msgid "Firmware Setting"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1448
+#. TRANSLATORS: security attribute field label: current firmware value
+#: src/fwupdtui/fwupdtui.py:1644
 msgid "Current Firmware Value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1449
+#. TRANSLATORS: security attribute field label: desired firmware value
+#: src/fwupdtui/fwupdtui.py:1646
 msgid "Target Firmware Value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1450
+#. TRANSLATORS: security attribute field label: current kernel value
+#: src/fwupdtui/fwupdtui.py:1648
 msgid "Current Kernel Value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1451
+#. TRANSLATORS: security attribute field label: desired kernel value
+#: src/fwupdtui/fwupdtui.py:1650
 msgid "Target Kernel Value"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1452
+#. TRANSLATORS: security attribute field label: link to more info
+#: src/fwupdtui/fwupdtui.py:1652
 msgid "More Information"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1462
+#. TRANSLATORS: suggested action to fix a security issue
+#: src/fwupdtui/fwupdtui.py:1663
 msgid "Change the firmware configuration"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1464
+#. TRANSLATORS: suggested action to fix a security issue
+#: src/fwupdtui/fwupdtui.py:1666
 msgid "Change the operating system configuration"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1466
+#. TRANSLATORS: suggested action to fix a security issue
+#: src/fwupdtui/fwupdtui.py:1669
 msgid "Contact the hardware vendor"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1468
+#. TRANSLATORS: heading for the list of suggested actions
+#: src/fwupdtui/fwupdtui.py:1672
 msgid "Suggested Actions"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1535
+#. TRANSLATORS: status message while the device is being unlocked
+#: src/fwupdtui/fwupdtui.py:1740
 msgid "Unlocking device"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1537
+#. TRANSLATORS: status message after the device is unlocked
+#: src/fwupdtui/fwupdtui.py:1743
 msgid "Device unlocked"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1541
+#. TRANSLATORS: status message while firmware is being verified
+#: src/fwupdtui/fwupdtui.py:1748
 msgid "Verifying firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1543
+#. TRANSLATORS: status message after firmware verification succeeds
+#: src/fwupdtui/fwupdtui.py:1751
 msgid "Firmware verification succeeded"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1547
+#. TRANSLATORS: status message while verification data is updated
+#: src/fwupdtui/fwupdtui.py:1756
 msgid "Updating verification data"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1549
+#. TRANSLATORS: status message after verification data is updated
+#: src/fwupdtui/fwupdtui.py:1759
 msgid "Verification data updated"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1553
+#. TRANSLATORS: status message while firmware is being activated
+#: src/fwupdtui/fwupdtui.py:1764
 msgid "Activating firmware"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1555
+#. TRANSLATORS: status message after firmware is activated
+#: src/fwupdtui/fwupdtui.py:1767
 msgid "Device firmware activated"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1568
+#. TRANSLATORS: command-line help description for the application
+#: src/fwupdtui/fwupdtui.py:1781
 msgid "Manage firmware and platform security in a terminal interface"
 msgstr ""
 
-#: src/fwupdtui/fwupdtui.py:1580
+#. TRANSLATORS: error printed when the fwupd daemon cannot be reached
+#: src/fwupdtui/fwupdtui.py:1794
 #, python-brace-format
 msgid "Failed to initialize fwupd: {error}"
 msgstr ""
@@ -1762,9 +1956,9 @@ msgstr ""
 msgid "Is in bootloader mode"
 msgstr ""
 
-#. TRANSLATORS: the hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting for the user to do something
 #: src/fu-cli-common.c:659
-msgid "Hardware is waiting to be replugged"
+msgid "Device is waiting to be plugged back in"
 msgstr ""
 
 #. TRANSLATORS: Device update needs to be separately activated
@@ -2430,206 +2624,250 @@ msgstr ""
 msgid "Automatic Reporting"
 msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-#: src/fu-cli-common.c:1772
+#. TRANSLATORS: message text, with %1 as the device name
+#: src/fu-cli-common.c:1776
+#, c-format
 msgid ""
-"The update will continue when the device USB cable has been unplugged and "
-"then re-inserted."
+"The update will continue when %s has been unplugged and plugged back in."
 msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-#: src/fu-cli-common.c:1777
+#. TRANSLATORS: message text
+#: src/fu-cli-common.c:1781
+msgid ""
+"The update will continue when the device has been unplugged and plugged back "
+"in."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#: src/fu-cli-common.c:1787
+#, c-format
+msgid "The update will continue when the USB cable of %s has been unplugged."
+msgstr ""
+
+#. TRANSLATORS: message text
+#: src/fu-cli-common.c:1792
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr ""
 
-#. TRANSLATORS: warning message shown after update has been scheduled
-#: src/fu-cli-common.c:1782
+#. TRANSLATORS: message text, with %1 as the device name
+#: src/fu-cli-common.c:1798
+#, c-format
 msgid ""
-"The update will continue when the device USB cable has been re-inserted."
+"The update will continue when the USB cable of %s has been plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+#: src/fu-cli-common.c:1803
+msgid ""
+"The update will continue when the device USB cable has been plugged back in."
 msgstr ""
 
 #. TRANSLATORS: warning message
-#: src/fu-cli-common.c:1787
+#: src/fu-cli-common.c:1808
 msgid "Press unlock on the device to continue the update process."
 msgstr ""
 
 #. TRANSLATORS: warning message shown after update has been scheduled
-#: src/fu-cli-common.c:1791
+#: src/fu-cli-common.c:1813
 msgid ""
 "Do not turn off your computer or remove the AC adaptor while the update is "
 "in progress."
 msgstr ""
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-#: src/fu-cli-common.c:1796
-msgid "Unplug and replug the device to continue the update process."
+#. TRANSLATORS: message text, with %1 as the device name
+#: src/fu-cli-common.c:1819
+#, c-format
+msgid "Unplug %s and replug it to continue the update process."
 msgstr ""
 
-#. TRANSLATORS: warning message
-#: src/fu-cli-common.c:1800
+#. TRANSLATORS: message text
+#: src/fu-cli-common.c:1824
+msgid "Unplug the device and replug it to continue the update process."
+msgstr ""
+
+#. TRANSLATORS: message text, with %1 as the device name
+#: src/fu-cli-common.c:1830
+#, c-format
 msgid ""
-"The update will continue when the device power cable has been removed and re-"
-"inserted."
+"The update will continue when the power cable of %s has been removed and "
+"plugged back in."
+msgstr ""
+
+#. TRANSLATORS: message text
+#: src/fu-cli-common.c:1836
+msgid ""
+"The update will continue when the device power cable has been removed and "
+"plugged back in."
 msgstr ""
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
-#: src/fu-cli-common.c:1936
+#: src/fu-cli-common.c:1972
 msgid "(obsoleted)"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1954
+#: src/fu-cli-common.c:1990
 msgid "IOMMU device protection enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1959
+#: src/fu-cli-common.c:1995
 msgid "IOMMU device protection disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1978
+#: src/fu-cli-common.c:2014
 msgid "Kernel is no longer tainted"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1983
+#: src/fu-cli-common.c:2019
 msgid "Kernel is tainted"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1989
+#: src/fu-cli-common.c:2025
 msgid "Kernel lockdown disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:1994
+#: src/fu-cli-common.c:2030
 msgid "Kernel lockdown enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2000
+#: src/fu-cli-common.c:2036
 msgid "Pre-boot DMA protection is disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2005
+#: src/fu-cli-common.c:2041
 msgid "Pre-boot DMA protection is enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2011
+#: src/fu-cli-common.c:2047
 msgid "Secure Boot disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2016
+#: src/fu-cli-common.c:2052
 msgid "Secure Boot enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2022
+#: src/fu-cli-common.c:2058
 msgid "All TPM PCRs are valid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2027
+#: src/fu-cli-common.c:2063
 msgid "A TPM PCR is now an invalid value"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2032
+#: src/fu-cli-common.c:2068
 msgid "All TPM PCRs are now valid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2038
+#: src/fu-cli-common.c:2074
 msgid "TPM PCR0 reconstruction is invalid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2043
+#: src/fu-cli-common.c:2079
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2049
+#: src/fu-cli-common.c:2085
 msgid "UEFI memory protection is now locked"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2054
+#: src/fu-cli-common.c:2090
 msgid "UEFI memory protection is now unlocked"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2060
+#: src/fu-cli-common.c:2096
 msgid "UEFI NX bootloader protection is now enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2065
+#: src/fu-cli-common.c:2101
 msgid "UEFI NX bootloader protection is now disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2071
+#: src/fu-cli-common.c:2107
 msgid "The UEFI certificate store is now up to date"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2076
+#: src/fu-cli-common.c:2113
+msgid "The UEFI certificate store no longer contains a test key"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+#: src/fu-cli-common.c:2118
+msgid "The UEFI certificate store now contains a test key"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+#: src/fu-cli-common.c:2123
 msgid "HP SureStart is enabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-#: src/fu-cli-common.c:2081
+#: src/fu-cli-common.c:2128
 msgid "AMD microcode signature vulnerability fixed"
 msgstr ""
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
-#: src/fu-cli-common.c:2106
+#: src/fu-cli-common.c:2153
 #, c-format
 msgid "%s disappeared: %s"
 msgstr ""
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 #. %2 refers to a result value, e.g. "Invalid"
-#: src/fu-cli-common.c:2118
+#: src/fu-cli-common.c:2165
 #, c-format
 msgid "%s appeared: %s"
 msgstr ""
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
 #. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
-#: src/fu-cli-common.c:2128
+#: src/fu-cli-common.c:2175
 #, c-format
 msgid "%s changed: %s → %s"
 msgstr ""
 
 #. TRANSLATORS: title for host security events
-#: src/fu-cli-common.c:2173
+#: src/fu-cli-common.c:2220
 msgid "Host Security Events"
 msgstr ""
 
 #. TRANSLATORS: now list devices with unfixed high-priority issues
-#: src/fu-cli-common.c:2201
+#: src/fu-cli-common.c:2248
 msgid "There are devices with issues:"
 msgstr ""
 
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
-#: src/fu-cli-common.c:2290
+#: src/fu-cli-common.c:2337
 msgid "This system has a low HSI security level."
 msgstr ""
 
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
-#: src/fu-cli-common.c:2298
+#: src/fu-cli-common.c:2345
 msgid "This system has HSI runtime issues."
 msgstr ""
 
 #. TRANSLATORS: this is more background on a security measurement problem
-#: src/fu-cli-common.c:2307
+#: src/fu-cli-common.c:2354
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr ""
 
@@ -2641,7 +2879,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: program name
-#: src/fu-binder-cli.c:571 src/fu-dbus-cli.c:103 src/fu-engine-cli.c:4895
+#: src/fu-binder-cli.c:571 src/fu-dbus-cli.c:103 src/fu-engine-cli.c:4929
 msgid "Firmware Utility"
 msgstr ""
 
@@ -2685,20 +2923,20 @@ msgid "Selected device"
 msgstr ""
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-cli.c:351 src/fu-engine-cli.c:410
+#: src/fu-cli.c:374 src/fu-engine-cli.c:410
 msgid "Choose device"
 msgstr ""
 
 #. TRANSLATORS: BKC is the industry name for the best known configuration and is a set
 #. * of firmware that works together
-#: src/fu-cli.c:436
+#: src/fu-cli.c:459
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr ""
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
 #. command name, e.g. `fwupdmgr sync`
-#: src/fu-cli.c:442
+#: src/fu-cli.c:465
 #, c-format
 msgid ""
 "This device will be reverted back to %s when the %s command is performed."
@@ -2706,38 +2944,38 @@ msgstr ""
 
 #. TRANSLATORS: the best known configuration is a set of software that we know works
 #. * well together. In the OEM and ODM industries it is often called a BKC
-#: src/fu-cli.c:450
+#: src/fu-cli.c:473
 msgid "Deviate from the best known configuration?"
 msgstr ""
 
 #. TRANSLATORS: prompt to apply the update
-#: src/fu-cli.c:455 src/fu-cli.c:560 src/fu-cli.c:600 src/fu-cli.c:4994
+#: src/fu-cli.c:478 src/fu-cli.c:583 src/fu-cli.c:623 src/fu-cli.c:5030
 msgid "Perform operation?"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know an downgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
-#: src/fu-cli.c:490
+#: src/fu-cli.c:513
 #, c-format
 msgid "Downgrade %s from %s to %s?"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
-#: src/fu-cli.c:499
+#: src/fu-cli.c:522
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 is a version string
-#: src/fu-cli.c:508
+#: src/fu-cli.c:531
 #, c-format
 msgid "Reinstall %s to %s?"
 msgstr ""
 
 #. TRANSLATORS: warn the user before updating, %1 is a device name
-#: src/fu-cli.c:530
+#: src/fu-cli.c:553
 #, c-format
 msgid "%s and all connected devices may not be usable while updating."
 msgstr ""
@@ -2745,7 +2983,7 @@ msgstr ""
 #. TRANSLATORS: warn the user before
 #. * updating, %1 is a device name
 #.
-#: src/fu-cli.c:542
+#: src/fu-cli.c:565
 #, c-format
 msgid ""
 "%s must remain connected for the duration of the update to avoid damage."
@@ -2754,7 +2992,7 @@ msgstr ""
 #. TRANSLATORS: warn the user before updating, %1 is a machine
 #. * name
 #.
-#: src/fu-cli.c:551
+#: src/fu-cli.c:574
 #, c-format
 msgid ""
 "%s must remain plugged into a power source for the duration of the update to "
@@ -2762,36 +3000,36 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
-#: src/fu-cli.c:585
+#: src/fu-cli.c:608
 msgid ""
 "Some of the platform secrets may be invalidated when updating this firmware."
 msgstr ""
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
-#: src/fu-cli.c:590
+#: src/fu-cli.c:613
 msgid "Please ensure you have the volume recovery key before continuing."
 msgstr ""
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
-#: src/fu-cli.c:594
+#: src/fu-cli.c:617
 #, c-format
 msgid "See %s for more details."
 msgstr ""
 
 #. TRANSLATORS: title text, shown as a warning
-#: src/fu-cli.c:597
+#: src/fu-cli.c:620
 msgid "Full Disk Encryption Detected"
 msgstr ""
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
-#: src/fu-cli.c:700
+#: src/fu-cli.c:723
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr ""
 
 #. TRANSLATORS: %1 is the device vendor name
-#: src/fu-cli.c:707
+#: src/fu-cli.c:730
 #, c-format
 msgid ""
 "Your hardware may be damaged using this firmware, and installing this "
@@ -2800,143 +3038,143 @@ msgstr ""
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name
-#: src/fu-cli.c:725
+#: src/fu-cli.c:748
 #, c-format
 msgid "Switch branch from %s to %s?"
 msgstr ""
 
 #. TRANSLATORS: should the branch be changed
-#: src/fu-cli.c:734
+#: src/fu-cli.c:757
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr ""
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
-#: src/fu-cli.c:762
+#: src/fu-cli.c:785
 msgid "Enable new remote?"
 msgstr ""
 
 #. TRANSLATORS: should the remote still be enabled
-#: src/fu-cli.c:768
+#: src/fu-cli.c:791
 msgid "Agree and enable the remote?"
 msgstr ""
 
 #. TRANSLATORS: unsupported build of the package
-#: src/fu-cli.c:796
+#: src/fu-cli.c:819
 msgid "This package has not been validated, it may not work properly."
 msgstr ""
 
 #. TRANSLATORS: a list of failed updates
-#: src/fu-cli.c:950
+#: src/fu-cli.c:973
 msgid "Devices that were not updated correctly:"
 msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-#: src/fu-cli.c:966
+#: src/fu-cli.c:989
 msgid "Devices that have been updated successfully:"
 msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
-#: src/fu-cli.c:981
+#: src/fu-cli.c:1004
 msgid ""
 "Uploading firmware reports helps hardware vendors to quickly identify "
 "failing and successful updates on real devices."
 msgstr ""
 
 #. TRANSLATORS: ask the user to upload
-#: src/fu-cli.c:988
+#: src/fu-cli.c:1011
 msgid "Review and upload report now?"
 msgstr ""
 
 #. TRANSLATORS: metadata is downloaded
-#: src/fu-cli.c:990 src/fu-cli.c:3350 src/fu-cli.c:3972 src/fu-cli.c:6456
+#: src/fu-cli.c:1013 src/fu-cli.c:3386 src/fu-cli.c:4008 src/fu-cli.c:6492
 msgid "Requires internet connection"
 msgstr ""
 
 #. TRANSLATORS: offer to disable this nag
-#: src/fu-cli.c:995
+#: src/fu-cli.c:1018
 msgid "Do you want to disable this feature for future updates?"
 msgstr ""
 
 #. TRANSLATORS: offer to stop asking the question
-#: src/fu-cli.c:1029
+#: src/fu-cli.c:1052
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr ""
 
 #. TRANSLATORS: explain why
-#: src/fu-cli.c:1145
+#: src/fu-cli.c:1168
 msgid "An update requires the system to shutdown to complete."
 msgstr ""
 
 #. TRANSLATORS: shutdown to apply the update
-#: src/fu-cli.c:1148
+#: src/fu-cli.c:1171
 msgid "Shutdown now?"
 msgstr ""
 
 #. TRANSLATORS: explain why we want to reboot
-#: src/fu-cli.c:1159
+#: src/fu-cli.c:1182
 msgid "An update requires a reboot to complete."
 msgstr ""
 
 #. TRANSLATORS: reboot to apply the update
-#: src/fu-cli.c:1161
+#: src/fu-cli.c:1184
 msgid "Restart now?"
 msgstr ""
 
 #. TRANSLATORS: no rebooting needed
-#: src/fu-cli.c:1196
+#: src/fu-cli.c:1219
 msgid "No reboot is necessary"
 msgstr ""
 
 #. TRANSLATORS: nothing attached that can be upgraded
-#: src/fu-cli.c:1248
+#: src/fu-cli.c:1271
 msgid "No hardware detected with firmware update capability"
 msgstr ""
 
 #. TRANSLATORS: this is for the device tests
-#: src/fu-cli.c:1423
+#: src/fu-cli.c:1449
 msgid "Did not find any devices with matching GUIDs"
 msgstr ""
 
 #. TRANSLATORS: this is for the device tests
-#: src/fu-cli.c:1477
+#: src/fu-cli.c:1503
 msgid "OK!"
 msgstr ""
 
 #. TRANSLATORS: the inhibit ID is a short string like dbus-123456
-#: src/fu-cli.c:1890
+#: src/fu-cli.c:1926
 #, c-format
 msgid "Inhibit ID is %s."
 msgstr ""
 
 #. TRANSLATORS: we can auto-uninhibit after a timeout
-#: src/fu-cli.c:1895
+#: src/fu-cli.c:1931
 #, c-format
 msgid "Automatically uninhibiting in %ums…"
 msgstr ""
 
 #. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program
-#: src/fu-cli.c:1900
+#: src/fu-cli.c:1936
 msgid "Use CTRL^C to cancel."
 msgstr ""
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
-#: src/fu-cli.c:1902
+#: src/fu-cli.c:1938
 msgid "System Update Inhibited"
 msgstr ""
 
 #. TRANSLATORS: the device is already connected
-#: src/fu-cli.c:1977 src/fu-cli.c:1983
+#: src/fu-cli.c:2013 src/fu-cli.c:2019
 msgid "Device already exists"
 msgstr ""
 
 #. TRANSLATORS: the device showed up in time
-#: src/fu-cli.c:2011
+#: src/fu-cli.c:2047
 #, c-format
 msgid "Successfully waited %.0fms for device"
 msgstr ""
 
 #. TRANSLATORS: device tests can be specific to a CPU type
-#: src/fu-cli.c:2075
+#: src/fu-cli.c:2111
 #, c-format
 msgid "%u test was skipped"
 msgid_plural "%u tests were skipped"
@@ -2944,35 +3182,35 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: success message
-#: src/fu-cli.c:2215 src/fu-cli.c:4262
+#: src/fu-cli.c:2251 src/fu-cli.c:4298
 msgid "Successfully installed firmware"
 msgstr ""
 
 #. show the user the entire data blob
-#: src/fu-cli.c:2307 src/fu-cli.c:4753 src/fu-cli.c:6441
+#: src/fu-cli.c:2343 src/fu-cli.c:4789 src/fu-cli.c:6477
 msgid "Target"
 msgstr ""
 
-#: src/fu-cli.c:2308 src/fu-cli.c:4755 src/fu-cli.c:6442
+#: src/fu-cli.c:2344 src/fu-cli.c:4791 src/fu-cli.c:6478
 msgid "Payload"
 msgstr ""
 
-#: src/fu-cli.c:2310 src/fu-cli.c:4757
+#: src/fu-cli.c:2346 src/fu-cli.c:4793
 msgid "Signature"
 msgstr ""
 
-#: src/fu-cli.c:2311 src/fu-cli.c:4758
+#: src/fu-cli.c:2347 src/fu-cli.c:4794
 msgid "Proceed with upload?"
 msgstr ""
 
 #. TRANSLATORS: the server sent the user a small message
-#: src/fu-cli.c:2337
+#: src/fu-cli.c:2373
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr ""
 
 #. TRANSLATORS: success message -- where the user has uploaded
 #. * success and/or failure reports to the remote server
-#: src/fu-cli.c:2381
+#: src/fu-cli.c:2417
 #, c-format
 msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
@@ -2980,67 +3218,67 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: key for a offline report filename
-#: src/fu-cli.c:2513
+#: src/fu-cli.c:2549
 msgid "Saved report"
 msgstr ""
 
 #. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
 #. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
-#: src/fu-cli.c:2558
+#: src/fu-cli.c:2594
 #, c-format
 msgid "%s is pending activation; use %s to complete the update."
 msgstr ""
 
 #. TRANSLATORS: where the user has uploaded success and/or failure report to the server
-#: src/fu-cli.c:2620
+#: src/fu-cli.c:2656
 msgid "Successfully uploaded report"
 msgstr ""
 
 #. TRANSLATORS: success message when user refreshes device checksums
-#: src/fu-cli.c:2815
+#: src/fu-cli.c:2851
 msgid "Successfully updated device checksums"
 msgstr ""
 
 #. TRANSLATORS: explain why no metadata available
-#: src/fu-cli.c:2837
+#: src/fu-cli.c:2873
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr ""
 
 #. TRANSLATORS: explain why no metadata available
-#: src/fu-cli.c:2841
+#: src/fu-cli.c:2877
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr ""
 
 #. TRANSLATORS: Turn on the remote
-#: src/fu-cli.c:2844
+#: src/fu-cli.c:2880
 msgid "Enable this remote?"
 msgstr ""
 
-#: src/fu-cli.c:2944
+#: src/fu-cli.c:2980
 msgid "Updating"
 msgstr ""
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
-#: src/fu-cli.c:2974
+#: src/fu-cli.c:3010
 #, c-format
 msgid "Metadata is up to date; use %s to refresh again."
 msgstr ""
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-#: src/fu-cli.c:2998
+#: src/fu-cli.c:3034
 msgid "Successfully downloaded new metadata:"
 msgstr ""
 
 #. TRANSLATORS: no devices that can be upgraded with new firmware
-#: src/fu-cli.c:3006
+#: src/fu-cli.c:3042
 msgid "No devices are updatable"
 msgstr ""
 
 #. TRANSLATORS: how many devices could be updated in theory if
 #. we had the firmware locally
-#: src/fu-cli.c:3013
+#: src/fu-cli.c:3049
 #, c-format
 msgid "%u device is updatable"
 msgid_plural "%u devices are updatable"
@@ -3049,7 +3287,7 @@ msgstr[1] ""
 
 #. TRANSLATORS: how many devices have published updates on
 #. something like the LVFS
-#: src/fu-cli.c:3022
+#: src/fu-cli.c:3058
 #, c-format
 msgid ""
 "%u device is supported in the enabled remotes (an update has been published)"
@@ -3060,32 +3298,32 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
-#: src/fu-cli.c:3070
+#: src/fu-cli.c:3106
 msgid "Successfully refreshed metadata manually"
 msgstr ""
 
 #. TRANSLATORS: no repositories to download from
-#: src/fu-cli.c:3123
+#: src/fu-cli.c:3159
 msgid "No releases available"
 msgstr ""
 
 #. TRANSLATORS: no repositories to download from
-#: src/fu-cli.c:3180
+#: src/fu-cli.c:3216
 msgid "No matching releases for search token"
 msgstr ""
 
 #. TRANSLATORS: get interactive prompt
-#: src/fu-cli.c:3252
+#: src/fu-cli.c:3288
 msgid "Choose release"
 msgstr ""
 
 #. TRANSLATORS: success message when user verified device checksums
-#: src/fu-cli.c:3284
+#: src/fu-cli.c:3320
 msgid "Successfully verified device checksums"
 msgstr ""
 
 #. TRANSLATORS: the metadata is very out of date; %u is a number > 1
-#: src/fu-cli.c:3338
+#: src/fu-cli.c:3374
 #, c-format
 msgid ""
 "Firmware metadata has not been updated for %u day and may not be up to date."
@@ -3095,7 +3333,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: ask if we can update metadata
-#: src/fu-cli.c:3348
+#: src/fu-cli.c:3384
 msgid "Update now?"
 msgstr ""
 
@@ -3103,162 +3341,162 @@ msgstr ""
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
-#: src/fu-cli.c:3508 src/fu-cli.c:3846
+#: src/fu-cli.c:3544 src/fu-cli.c:3882
 msgid "Devices with no available firmware updates:"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available
-#: src/fu-cli.c:3518 src/fu-cli.c:3836
+#: src/fu-cli.c:3554 src/fu-cli.c:3872
 msgid "Devices with the latest available firmware version:"
 msgstr ""
 
 #. TRANSLATORS: this is an error string
-#: src/fu-cli.c:3535
+#: src/fu-cli.c:3571
 msgid "No updatable devices"
 msgstr ""
 
 #. TRANSLATORS: this is an error string
-#: src/fu-cli.c:3544
+#: src/fu-cli.c:3580
 msgid "No updates available"
 msgstr ""
 
 #. TRANSLATORS: no repositories to download from
-#: src/fu-cli.c:3573
+#: src/fu-cli.c:3609
 msgid "No remotes available"
 msgstr ""
 
 #. TRANSLATORS: there are reasons the device can't update
-#: src/fu-cli.c:3627
+#: src/fu-cli.c:3663
 #, c-format
 msgid "%s is not currently updatable:"
 msgstr ""
 
 #. TRANSLATORS: no update can be installed
-#: src/fu-cli.c:3641
+#: src/fu-cli.c:3677
 msgid "Nothing to do"
 msgstr ""
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
-#: src/fu-cli.c:3856
+#: src/fu-cli.c:3892
 msgid "Devices with firmware updates that need user action:"
 msgstr ""
 
 #. TRANSLATORS: success message for a per-remote setting change
-#: src/fu-cli.c:3922
+#: src/fu-cli.c:3958
 msgid "Successfully modified remote"
 msgstr ""
 
 #. TRANSLATORS: success message
-#: src/fu-cli.c:3962 src/fu-cli.c:3974
+#: src/fu-cli.c:3998 src/fu-cli.c:4010
 msgid "Successfully enabled remote"
 msgstr ""
 
 #. TRANSLATORS: ask if we can update the metadata
-#: src/fu-cli.c:3970
+#: src/fu-cli.c:4006
 msgid "Do you want to refresh this remote now?"
 msgstr ""
 
 #. TRANSLATORS: success message
-#: src/fu-cli.c:3986
+#: src/fu-cli.c:4022
 msgid "Successfully enabled and refreshed remote"
 msgstr ""
 
 #. TRANSLATORS: success message
-#: src/fu-cli.c:4015 src/fu-cli.c:4067
+#: src/fu-cli.c:4051 src/fu-cli.c:4103
 msgid "Successfully cleaned remote"
 msgstr ""
 
 #. TRANSLATORS: success message
-#: src/fu-cli.c:4049
+#: src/fu-cli.c:4085
 msgid "Successfully disabled remote"
 msgstr ""
 
 #. TRANSLATORS: this is now useless
-#: src/fu-cli.c:4059
+#: src/fu-cli.c:4095
 msgid "Delete the now-unused remote cache files?"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
-#: src/fu-cli.c:4107
+#: src/fu-cli.c:4143
 #, c-format
 msgid "No downgrades for %s"
 msgstr ""
 
 #. TRANSLATORS: get interactive prompt, where branch is the
 #. * supplier of the firmware, e.g. "non-free" or "free"
-#: src/fu-cli.c:4336
+#: src/fu-cli.c:4372
 msgid "Choose branch"
 msgstr ""
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
-#: src/fu-cli.c:4474
+#: src/fu-cli.c:4510
 msgid "Activating firmware update for"
 msgstr ""
 
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
-#: src/fu-cli.c:4488
+#: src/fu-cli.c:4524
 msgid "Successfully activated all devices"
 msgstr ""
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
-#: src/fu-cli.c:4563
+#: src/fu-cli.c:4599
 msgid "There is no approved firmware."
 msgstr ""
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
-#: src/fu-cli.c:4569
+#: src/fu-cli.c:4605
 msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: changes only take effect on restart
-#: src/fu-cli.c:4617 src/fu-cli.c:4656
+#: src/fu-cli.c:4653 src/fu-cli.c:4692
 msgid "Restart the daemon to make the change effective?"
 msgstr ""
 
 #. TRANSLATORS: success message -- a per-system setting value
-#: src/fu-cli.c:4627
+#: src/fu-cli.c:4663
 msgid "Successfully modified configuration value"
 msgstr ""
 
 #. TRANSLATORS: success message -- a per-system setting value
-#: src/fu-cli.c:4666
+#: src/fu-cli.c:4702
 msgid "Successfully reset configuration values"
 msgstr ""
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
-#: src/fu-cli.c:4731
+#: src/fu-cli.c:4767
 #, c-format
 msgid "Upload these anonymous results to the %s to help other users?"
 msgstr ""
 
 #. TRANSLATORS: success, so say thank you to the user
-#: src/fu-cli.c:4782
+#: src/fu-cli.c:4818
 msgid "Host Security ID attributes uploaded successfully, thanks!"
 msgstr ""
 
 #. TRANSLATORS: can we JFDI?
-#: src/fu-cli.c:4790
+#: src/fu-cli.c:4826
 msgid "Automatically upload every time?"
 msgstr ""
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
-#: src/fu-cli.c:4939
+#: src/fu-cli.c:4975
 msgid "Configuration Change Suggested"
 msgstr ""
 
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
-#: src/fu-cli.c:4951
+#: src/fu-cli.c:4987
 #, c-format
 msgid ""
 "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, "
@@ -3266,7 +3504,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#: src/fu-cli.c:4960
+#: src/fu-cli.c:4996
 msgid ""
 "You should ensure you are comfortable restoring the setting from the system "
 "firmware setup, as this change may cause the system to not boot into Linux "
@@ -3274,7 +3512,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: the %1 is a kernel command line key=value
-#: src/fu-cli.c:4970
+#: src/fu-cli.c:5006
 #, c-format
 msgid ""
 "This tool can change the kernel argument from '%s' to '%s', but it will only "
@@ -3282,7 +3520,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: the %1 is a kernel command line key=value
-#: src/fu-cli.c:4978
+#: src/fu-cli.c:5014
 #, c-format
 msgid ""
 "This tool can add a kernel argument of '%s', but it will only be active "
@@ -3290,7 +3528,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#: src/fu-cli.c:4985
+#: src/fu-cli.c:5021
 msgid ""
 "You should ensure you are comfortable restoring the setting from a recovery "
 "or installation disk, as this change may cause the system to not boot into "
@@ -3298,146 +3536,146 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: error message for unsupported feature
-#: src/fu-cli.c:5023 src/fu-cli.c:6328 src/fu-cli.c:6495
+#: src/fu-cli.c:5059 src/fu-cli.c:6364 src/fu-cli.c:6531
 msgid "Host Security ID (HSI) is not supported"
 msgstr ""
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
-#: src/fu-cli.c:5064
+#: src/fu-cli.c:5100
 msgid "Host Security ID:"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5464
+#: src/fu-cli.c:5500
 msgid "Show client and daemon versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5472
+#: src/fu-cli.c:5508
 msgid "Set the download retries for transient errors"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5480
+#: src/fu-cli.c:5516
 msgid "Only use peer-to-peer networking when downloading files"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5488
+#: src/fu-cli.c:5524
 msgid "Don't prompt for authentication (less details may be shown)"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5496
+#: src/fu-cli.c:5532
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5504
+#: src/fu-cli.c:5540
 msgid "Allow reinstalling existing firmware versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5512
+#: src/fu-cli.c:5548
 msgid "Allow downgrading firmware versions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5520
+#: src/fu-cli.c:5556
 msgid "Allow switching firmware branch"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5528
+#: src/fu-cli.c:5564
 msgid "Force the action by relaxing some runtime checks"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5536
+#: src/fu-cli.c:5572
 msgid "Answer yes to all questions"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5544
+#: src/fu-cli.c:5580
 msgid "Sign the uploaded data with the client certificate"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5552
+#: src/fu-cli.c:5588
 msgid "Do not check for unreported history"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5560
+#: src/fu-cli.c:5596
 msgid "Do not check for old metadata"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5568
+#: src/fu-cli.c:5604
 msgid "Do not check if download remotes should be enabled"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5576
+#: src/fu-cli.c:5612
 msgid "Do not check or prompt for reboot after update"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5584
+#: src/fu-cli.c:5620
 msgid "Do not perform device safety checks"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5592
+#: src/fu-cli.c:5628
 msgid "Do not prompt for devices"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5600
+#: src/fu-cli.c:5636
 msgid "Show all results"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5608
+#: src/fu-cli.c:5644
 msgid "Show devices that are not updatable"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5616
+#: src/fu-cli.c:5652
 msgid "Ignore SSL strict checks when downloading files"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5624
+#: src/fu-cli.c:5660
 msgid "Do not prompt to fix security issues"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5632
+#: src/fu-cli.c:5668
 msgid "Only install onto emulated devices"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5640
+#: src/fu-cli.c:5676
 msgid "Do not write to the history database"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5648
+#: src/fu-cli.c:5684
 msgid ""
 "Filter with a set of device flags using a ~ prefix to exclude, e.g. "
 "'internal,~needs-reboot'"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5657
+#: src/fu-cli.c:5693
 msgid ""
 "Filter with a set of release flags using a ~ prefix to exclude, e.g. "
 "'trusted-release,~trusted-metadata'"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-cli.c:5666
+#: src/fu-cli.c:5702
 msgid ""
 "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
 msgstr ""
@@ -3445,79 +3683,79 @@ msgstr ""
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
-#: src/fu-cli.c:5734 src/fu-cli.c:5744 src/fu-cli.c:5754
+#: src/fu-cli.c:5770 src/fu-cli.c:5780 src/fu-cli.c:5790
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr ""
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-cli.c:5773
+#: src/fu-cli.c:5809
 msgid "CLI Options"
 msgstr ""
 
 #. TRANSLATORS: for the --verbose arg
-#: src/fu-cli.c:5775
+#: src/fu-cli.c:5811
 msgid "Show CLI options"
 msgstr ""
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#: src/fu-cli.c:5847
+#: src/fu-cli.c:5883
 #, c-format
 msgid "Alias to %s"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-cli.c:5892
+#: src/fu-cli.c:5928
 msgid "Command not found"
 msgstr ""
 
 #. TRANSLATORS: the user is SOL for support...
-#: src/fu-cli.c:6045
+#: src/fu-cli.c:6081
 msgid ""
 "The daemon has loaded 3rd party code and is no longer supported by the "
 "upstream developers!"
 msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
-#: src/fu-cli.c:6098
+#: src/fu-cli.c:6134
 #, c-format
 msgid "See %s for more information."
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-cli.c:6173
+#: src/fu-cli.c:6209
 msgid "Invalid arguments"
 msgstr ""
 
 #. TRANSLATORS: Configured a BIOS setting to a value
-#: src/fu-cli.c:6207
+#: src/fu-cli.c:6243
 #, c-format
 msgid "Set BIOS setting '%s' using '%s'."
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-cli.c:6305
+#: src/fu-cli.c:6341
 msgid "This system doesn't support firmware settings"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-cli.c:6313
+#: src/fu-cli.c:6349
 msgid "Unable to find attribute"
 msgstr ""
 
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
-#: src/fu-cli.c:6338 src/fu-cli.c:6505
+#: src/fu-cli.c:6374 src/fu-cli.c:6541
 msgid "Invalid arguments, expected an AppStream ID"
 msgstr ""
 
 #. TRANSLATORS: we've fixed a security problem on the machine
-#: src/fu-cli.c:6348
+#: src/fu-cli.c:6384
 msgid "Fixed successfully"
 msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
-#: src/fu-cli.c:6446
+#: src/fu-cli.c:6482
 #, c-format
 msgid ""
 "Uploading a device list allows the %s team to know what hardware exists, and "
@@ -3526,466 +3764,466 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: ask the user to upload
-#: src/fu-cli.c:6454
+#: src/fu-cli.c:6490
 msgid "Upload data now?"
 msgstr ""
 
 #. TRANSLATORS: success, so say thank you to the user
-#: src/fu-cli.c:6480
+#: src/fu-cli.c:6516
 msgid "Device list uploaded successfully, thanks!"
 msgstr ""
 
 #. TRANSLATORS: we've fixed a security problem on the machine
-#: src/fu-cli.c:6518
+#: src/fu-cli.c:6554
 msgid "Fix reverted successfully"
 msgstr ""
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
-#: src/fu-cli.c:6628
+#: src/fu-cli.c:6664
 #, c-format
 msgid "Enter your email address for remote '%s'"
 msgstr ""
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
-#: src/fu-cli.c:6648
+#: src/fu-cli.c:6684
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
 msgstr ""
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
-#: src/fu-cli.c:6654
+#: src/fu-cli.c:6690
 #, c-format
 msgid "Enter your token for remote '%s'"
 msgstr ""
 
 #. TRANSLATORS: we've gained access to a new firmware remote
-#: src/fu-cli.c:6704
+#: src/fu-cli.c:6740
 msgid "Remote enabled and refreshed successfully"
 msgstr ""
 
 #. TRANSLATORS: this is from ctrl+c
-#: src/fu-cli.c:6833
+#: src/fu-cli.c:6869
 msgid "Cancelled"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-cli.c:6850
+#: src/fu-cli.c:6886
 msgid "Device added:"
 msgstr ""
 
 #. TRANSLATORS: this is when a device is hotplugged
-#: src/fu-cli.c:6866
+#: src/fu-cli.c:6902
 msgid "Device removed:"
 msgstr ""
 
 #. TRANSLATORS: this is when a device has been updated
-#: src/fu-cli.c:6882
+#: src/fu-cli.c:6918
 msgid "Device changed:"
 msgstr ""
 
 #. TRANSLATORS: this is when the daemon state changes
-#: src/fu-cli.c:6895
+#: src/fu-cli.c:6931
 msgid "Changed"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6932
+#: src/fu-cli.c:6968
 msgid "Get all enabled plugins registered with the system"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:6936 src/fu-cli.c:6988 src/fu-cli.c:6996 src/fu-cli.c:7004
-#: src/fu-cli.c:7032 src/fu-cli.c:7052 src/fu-cli.c:7066 src/fu-cli.c:7108
-#: src/fu-cli.c:7142 src/fu-cli.c:7245 src/fu-cli.c:7252
-#: src/fu-engine-cli.c:4584
+#: src/fu-cli.c:6972 src/fu-cli.c:7024 src/fu-cli.c:7032 src/fu-cli.c:7040
+#: src/fu-cli.c:7068 src/fu-cli.c:7088 src/fu-cli.c:7102 src/fu-cli.c:7144
+#: src/fu-cli.c:7178 src/fu-cli.c:7281 src/fu-cli.c:7288
+#: src/fu-engine-cli.c:4618
 msgid "[DEVICE-ID|GUID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6938
+#: src/fu-cli.c:6974
 msgid "Check if any devices are pending a reboot to complete update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6944
+#: src/fu-cli.c:6980
 msgid "Get all devices that support firmware updates"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6950
+#: src/fu-cli.c:6986
 msgid "Show history of firmware updates"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6956
+#: src/fu-cli.c:6992
 msgid "Share firmware history with the developers"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6962
+#: src/fu-cli.c:6998
 msgid "Export firmware history for manual upload"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:6967
+#: src/fu-cli.c:7003
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6969
+#: src/fu-cli.c:7005
 msgid "Install a specific firmware file on all devices that match"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:6974
+#: src/fu-cli.c:7010
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6976
+#: src/fu-cli.c:7012
 msgid "Install a firmware file in cabinet format on this hardware"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:6981 src/fu-engine-cli.c:4544
+#: src/fu-cli.c:7017 src/fu-engine-cli.c:4578
 msgid "FILE"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6983
+#: src/fu-cli.c:7019
 msgid "Gets details about a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6990
+#: src/fu-cli.c:7026
 msgid ""
 "Gets the list of updates for all specified devices, or all devices if "
 "unspecified"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:6998
+#: src/fu-cli.c:7034
 msgid ""
 "Updates all specified devices to latest firmware version, or all devices if "
 "unspecified"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7006
+#: src/fu-cli.c:7042
 msgid "Checks cryptographic hash matches firmware"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7011 src/fu-cli.c:7018 src/fu-cli.c:7025
-#: src/fu-engine-cli.c:4564 src/fu-engine-cli.c:4577
+#: src/fu-cli.c:7047 src/fu-cli.c:7054 src/fu-cli.c:7061
+#: src/fu-engine-cli.c:4598 src/fu-engine-cli.c:4611
 msgid "DEVICE-ID|GUID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7013
+#: src/fu-cli.c:7049
 msgid "Unlocks the device for firmware access"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7020
+#: src/fu-cli.c:7056
 msgid "Clears the results from the last update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7027
+#: src/fu-cli.c:7063
 msgid "Gets the results from the last update"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7034
+#: src/fu-cli.c:7070
 msgid "Gets the releases for a device"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7039
+#: src/fu-cli.c:7075
 msgid "WORD"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7041
+#: src/fu-cli.c:7077
 msgid "Finds firmware releases from the metadata"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7047
+#: src/fu-cli.c:7083
 msgid "Gets the configured remotes"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7054
+#: src/fu-cli.c:7090
 msgid "Downgrades the firmware on a device"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7059
+#: src/fu-cli.c:7095
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7061
+#: src/fu-cli.c:7097
 msgid "Refresh metadata from remote server"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7068
+#: src/fu-cli.c:7104
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7073
+#: src/fu-cli.c:7109
 msgid "REMOTE-ID KEY VALUE"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7075
+#: src/fu-cli.c:7111
 msgid "Modifies a given remote"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7080 src/fu-cli.c:7087 src/fu-cli.c:7094
+#: src/fu-cli.c:7116 src/fu-cli.c:7123 src/fu-cli.c:7130
 msgid "REMOTE-ID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7082
+#: src/fu-cli.c:7118
 msgid "Enables a given remote"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7089
+#: src/fu-cli.c:7125
 msgid "Cleans a given remote"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7096
+#: src/fu-cli.c:7132
 msgid "Disables a given remote"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7101
+#: src/fu-cli.c:7137
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7103
+#: src/fu-cli.c:7139
 msgid "Enable an authenticated remote"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7110
+#: src/fu-cli.c:7146
 msgid "Activate devices"
 msgstr ""
 
 #. TRANSLATORS: firmware approved by the admin
-#: src/fu-cli.c:7116
+#: src/fu-cli.c:7152
 msgid "Gets the list of approved firmware"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7121
+#: src/fu-cli.c:7157
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7128
+#: src/fu-cli.c:7164
 msgid "[SECTION] KEY VALUE"
 msgstr ""
 
 #. TRANSLATORS: sets something in the daemon configuration file
-#: src/fu-cli.c:7130
+#: src/fu-cli.c:7166
 msgid "Modifies a daemon configuration value"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7135
+#: src/fu-cli.c:7171
 msgid "SECTION"
 msgstr ""
 
 #. TRANSLATORS: sets something in the daemon configuration file
-#: src/fu-cli.c:7137
+#: src/fu-cli.c:7173
 msgid "Resets a daemon configuration section"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7144
+#: src/fu-cli.c:7180
 msgid "Reinstall current firmware on the device"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7149
+#: src/fu-cli.c:7185
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7151
+#: src/fu-cli.c:7187
 msgid "Switch the firmware branch on the device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7157
+#: src/fu-cli.c:7193
 msgid "Gets the host security attributes"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7163
+#: src/fu-cli.c:7199
 msgid "Sync firmware versions to the chosen configuration"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7168
+#: src/fu-cli.c:7204
 msgid "LOCATION"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7170
+#: src/fu-cli.c:7206
 msgid "Download a file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7175 src/fu-cli.c:7182
+#: src/fu-cli.c:7211 src/fu-cli.c:7218
 msgid "[FILENAME1] [FILENAME2]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7177
+#: src/fu-cli.c:7213
 msgid "Test a device using a JSON manifest"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7184
+#: src/fu-cli.c:7220
 msgid "Emulate a device using a JSON manifest"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7189
+#: src/fu-cli.c:7225
 msgid "[REASON] [TIMEOUT]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7191
+#: src/fu-cli.c:7227
 msgid "Inhibit the system to prevent upgrades"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7196
+#: src/fu-cli.c:7232
 msgid "INHIBIT-ID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7198
+#: src/fu-cli.c:7234
 msgid "Uninhibit the system to allow upgrades"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7203
+#: src/fu-cli.c:7239
 msgid "GUID|DEVICE-ID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7205
+#: src/fu-cli.c:7241
 msgid "Wait for a device to appear"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7211
+#: src/fu-cli.c:7247
 msgid "Asks the daemon to quit"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7217
+#: src/fu-cli.c:7253
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7219
+#: src/fu-cli.c:7255
 msgid ""
 "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7224
+#: src/fu-cli.c:7260
 msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7226
+#: src/fu-cli.c:7262
 msgid "Sets one or more BIOS settings"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7247
+#: src/fu-cli.c:7283
 msgid "Adds devices to watch for future emulation"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7254
+#: src/fu-cli.c:7290
 msgid "Removes devices to watch for future emulation"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-cli.c:7259 src/fu-cli.c:7266
+#: src/fu-cli.c:7295 src/fu-cli.c:7302
 msgid "[APPSTREAM_ID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7261
+#: src/fu-cli.c:7297
 msgid "Fix a specific host security attribute"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7268
+#: src/fu-cli.c:7304
 msgid "Undo the host security attribute fix"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7274
+#: src/fu-cli.c:7310
 msgid "Upload the list of updatable devices to a remote server"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7280
+#: src/fu-cli.c:7316
 msgid "Return all the hardware IDs for the machine"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-cli.c:7286
+#: src/fu-cli.c:7322
 msgid "Monitor the daemon for events"
 msgstr ""
 
 #. TRANSLATORS: try to help
-#: src/fu-cli.c:7326 src/fu-engine-cli.c:4915
+#: src/fu-cli.c:7362 src/fu-engine-cli.c:4949
 msgid ""
 "Ignoring SSL strict checks, to do this automatically in the future export "
 "DISABLE_SSL_STRICT in your environment"
 msgstr ""
 
 #. TRANSLATORS: try to help
-#: src/fu-cli.c:7340
+#: src/fu-cli.c:7376
 msgid ""
 "The system clock has not been set correctly and downloading files may fail."
 msgstr ""
 
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
-#: src/fu-cli.c:7374 src/fu-cli.c:7417
+#: src/fu-cli.c:7410 src/fu-cli.c:7453
 #, c-format
 msgid "Use %s for help"
 msgstr ""
 
 #. TRANSLATORS: the user just typed in fwupdmgr with no command
-#: src/fu-cli.c:7376
+#: src/fu-cli.c:7412
 msgid "No command specified"
 msgstr ""
 
 #. TRANSLATORS: a feature is something like "can show an image"
-#: src/fu-cli.c:7396
+#: src/fu-cli.c:7432
 msgid "Failed to set front-end features"
 msgstr ""
 
@@ -4156,38 +4394,38 @@ msgid "Choose volume"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2642
+#: src/fu-engine-cli.c:2650
 msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2656
+#: src/fu-engine-cli.c:2668
 msgid "Already exists, and no --force specified"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2684
+#: src/fu-engine-cli.c:2696
 #, c-format
 msgid "No volume matched %s"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2709
+#: src/fu-engine-cli.c:2721
 msgid "Invalid arguments, expected base-16 integer"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2772
+#: src/fu-engine-cli.c:2788
 msgid "Invalid arguments, expected INDEX KEY [VALUE]"
 msgstr ""
 
 #. TRANSLATORS: try to treat the legacy format as a hive
-#: src/fu-engine-cli.c:2790
+#: src/fu-engine-cli.c:2810
 msgid "The EFI boot entry was not in hive format, falling back"
 msgstr ""
 
 #. TRANSLATORS: the boot entry was in a legacy format
-#: src/fu-engine-cli.c:2808
+#: src/fu-engine-cli.c:2828
 msgid ""
 "The EFI boot entry is not in hive format, and shim may not be new enough to "
 "read it."
@@ -4195,452 +4433,452 @@ msgstr ""
 
 #. TRANSLATORS: ask the user if it's okay to convert,
 #. * "it" being the data contained in the EFI boot entry
-#: src/fu-engine-cli.c:2816
+#: src/fu-engine-cli.c:2836
 msgid "Do you want to convert it now?"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2957
+#: src/fu-engine-cli.c:2985
 msgid "Invalid arguments, expected GUID"
 msgstr ""
 
 #. TRANSLATORS: error message
-#: src/fu-engine-cli.c:2985
+#: src/fu-engine-cli.c:3017
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4453
+#: src/fu-engine-cli.c:4487
 msgid "Ignore firmware checksum failures"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4461
+#: src/fu-engine-cli.c:4495
 msgid "Ignore firmware hardware mismatch failures"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4469
+#: src/fu-engine-cli.c:4503
 msgid "Ignore non-critical firmware requirements"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4477
+#: src/fu-engine-cli.c:4511
 msgid "Do not search the firmware when parsing"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4485 src/fu-engine-cli.c:4493
+#: src/fu-engine-cli.c:4519 src/fu-engine-cli.c:4527
 msgid "Manually enable specific plugins"
 msgstr ""
 
-#: src/fu-engine-cli.c:4500
+#: src/fu-engine-cli.c:4534
 msgid "Location of public key directories used for JCat verification"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4508
+#: src/fu-engine-cli.c:4542
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr ""
 
 #. TRANSLATORS: command line option
-#: src/fu-engine-cli.c:4516
+#: src/fu-engine-cli.c:4550
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr ""
 
-#: src/fu-engine-cli.c:4523
+#: src/fu-engine-cli.c:4557
 msgid "Prefix for import and output files"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4546
+#: src/fu-engine-cli.c:4580
 msgid "Dump SMBIOS data from a file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4552
+#: src/fu-engine-cli.c:4586
 msgid "Get all device flags supported by fwupd"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4557
+#: src/fu-engine-cli.c:4591
 msgid "FILENAME DEVICE-ID [VERSION]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4559
+#: src/fu-engine-cli.c:4593
 msgid "Install a raw firmware blob on a device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4566
+#: src/fu-engine-cli.c:4600
 msgid "Attach to firmware mode"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4572
+#: src/fu-engine-cli.c:4606
 msgid "Get device report metadata"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4579
+#: src/fu-engine-cli.c:4613
 msgid "Detach to bootloader mode"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4586
+#: src/fu-engine-cli.c:4620
 msgid "Unbind current driver"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4591
+#: src/fu-engine-cli.c:4625
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4593
+#: src/fu-engine-cli.c:4627
 msgid "Bind new kernel driver"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4598
+#: src/fu-engine-cli.c:4632
 msgid "HWIDS-FILE"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4600
+#: src/fu-engine-cli.c:4634
 msgid "Save a file that allows generation of hardware IDs"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4605
+#: src/fu-engine-cli.c:4639
 msgid "TEXT"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4607
+#: src/fu-engine-cli.c:4641
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4612
+#: src/fu-engine-cli.c:4646
 msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4614
+#: src/fu-engine-cli.c:4648
 msgid "Sign a firmware with a new key"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4619 src/fu-engine-cli.c:4626
+#: src/fu-engine-cli.c:4653 src/fu-engine-cli.c:4660
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4621
+#: src/fu-engine-cli.c:4655
 msgid "Read a firmware blob from a device"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4628
+#: src/fu-engine-cli.c:4662
 msgid "Read a firmware from a device"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4633
+#: src/fu-engine-cli.c:4667
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4635
+#: src/fu-engine-cli.c:4669
 msgid "Patch a firmware blob at a known offset"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4640
+#: src/fu-engine-cli.c:4674
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4642
+#: src/fu-engine-cli.c:4676
 msgid "Convert a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4647
+#: src/fu-engine-cli.c:4681
 msgid "BUILDER-XML FILENAME-DST"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4649
+#: src/fu-engine-cli.c:4683
 msgid "Build a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4654 src/fu-engine-cli.c:4661 src/fu-engine-cli.c:4668
+#: src/fu-engine-cli.c:4688 src/fu-engine-cli.c:4695 src/fu-engine-cli.c:4702
 msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4656
+#: src/fu-engine-cli.c:4690
 msgid "Parse and show details about a firmware file"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4663
+#: src/fu-engine-cli.c:4697
 msgid "Export a firmware file structure to XML"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4670
+#: src/fu-engine-cli.c:4704
 msgid "Extract a firmware blob to images"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4676
+#: src/fu-engine-cli.c:4710
 msgid "List the available firmware types"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4682
+#: src/fu-engine-cli.c:4716
 msgid "List the available firmware GTypes"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4688
+#: src/fu-engine-cli.c:4722
 msgid "Mounts the ESP"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4694
+#: src/fu-engine-cli.c:4728
 msgid "Unmounts the ESP"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4700
+#: src/fu-engine-cli.c:4734
 msgid "Lists files on the ESP"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4706
+#: src/fu-engine-cli.c:4740
 msgid "Erase all firmware update history"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4711
+#: src/fu-engine-cli.c:4745
 msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4713
+#: src/fu-engine-cli.c:4747
 msgid "Build a cabinet archive from a firmware blob and XML metadata"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4718
+#: src/fu-engine-cli.c:4752
 msgctxt "command-argument"
 msgid "GUID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4720
+#: src/fu-engine-cli.c:4754
 msgid "List EFI variables with a specific GUID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4728
+#: src/fu-engine-cli.c:4762
 msgid "List EFI boot parameters"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4733 src/fu-engine-cli.c:4747
+#: src/fu-engine-cli.c:4767 src/fu-engine-cli.c:4781
 msgid "INDEX"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4735
+#: src/fu-engine-cli.c:4769
 msgid "Set the EFI boot next"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4740
+#: src/fu-engine-cli.c:4774
 msgid "INDEX1,INDEX2"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4742
+#: src/fu-engine-cli.c:4776
 msgid "Set the EFI boot order"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4749
+#: src/fu-engine-cli.c:4783
 msgid "Delete an EFI boot entry"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4754
+#: src/fu-engine-cli.c:4788
 msgid "INDEX NAME TARGET [MOUNTPOINT]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4756
+#: src/fu-engine-cli.c:4790
 msgid "Create an EFI boot entry"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4761
+#: src/fu-engine-cli.c:4795
 msgid "INDEX KEY [VALUE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4763
+#: src/fu-engine-cli.c:4797
 msgid "Set or remove an EFI boot hive entry"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4770
+#: src/fu-engine-cli.c:4804
 msgid "List EFI boot files"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4775
+#: src/fu-engine-cli.c:4809
 msgid "[DEVICE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4777
+#: src/fu-engine-cli.c:4811
 msgid "Run the post-reboot cleanup action"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4783
+#: src/fu-engine-cli.c:4817
 msgid "Enables virtual testing devices"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4789
+#: src/fu-engine-cli.c:4823
 msgid "Disables virtual testing devices"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4795
+#: src/fu-engine-cli.c:4829
 msgid "Get all known version formats"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4800
+#: src/fu-engine-cli.c:4834
 msgid "VERSION1 VERSION2 [FORMAT]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4802
+#: src/fu-engine-cli.c:4836
 msgid "Compares two versions for equality"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4807
+#: src/fu-engine-cli.c:4841
 msgid "KIND FILENAME"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4809
+#: src/fu-engine-cli.c:4843
 msgid "Calculates a CRC of a file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4814
+#: src/fu-engine-cli.c:4848
 msgid "CRC FILENAME"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4816
+#: src/fu-engine-cli.c:4850
 msgid "Finds an algorithm that matches the file CRC"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4821
+#: src/fu-engine-cli.c:4855
 msgid "[PCR]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4823
+#: src/fu-engine-cli.c:4857
 msgid "Parse the system PCR eventlog"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4830
+#: src/fu-engine-cli.c:4864
 msgid "Show information about a JCat file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4835 src/fu-engine-cli.c:4842
+#: src/fu-engine-cli.c:4869 src/fu-engine-cli.c:4876
 msgid "FILENAME ID ALIAS_ID"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4837
+#: src/fu-engine-cli.c:4871
 msgid "Add an alias for a specific JCat item"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4844
+#: src/fu-engine-cli.c:4878
 msgid "Remove an alias for a specific JCat item"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4849
+#: src/fu-engine-cli.c:4883
 msgid "FILENAME [KIND]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4851
+#: src/fu-engine-cli.c:4885
 msgid "Exports all embedded signatures to files"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4856
+#: src/fu-engine-cli.c:4890
 msgid "FILENAME DATA DETACHED_KEY"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4858
+#: src/fu-engine-cli.c:4892
 msgid "Import an existing signature to a JCat file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4863
+#: src/fu-engine-cli.c:4897
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4865
+#: src/fu-engine-cli.c:4899
 msgid "Add a self-signed signature to a JCat file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4870
+#: src/fu-engine-cli.c:4904
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4872
+#: src/fu-engine-cli.c:4906
 msgid "Add a signature to a JCat file"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#: src/fu-engine-cli.c:4877
+#: src/fu-engine-cli.c:4911
 msgid "FILENAME [SOURCE]"
 msgstr ""
 
 #. TRANSLATORS: command description
-#: src/fu-engine-cli.c:4879
+#: src/fu-engine-cli.c:4913
 msgid "Verify a signature from a JCat file"
 msgstr ""
 
 #. TRANSLATORS: CLI description
-#: src/fu-engine-cli.c:4891
+#: src/fu-engine-cli.c:4925
 msgid ""
 "This tool allows an administrator to use the fwupd plugins without being "
 "installed on the host system."
@@ -4743,7 +4981,7 @@ msgid "SPI BIOS Descriptor"
 msgstr ""
 
 #. TRANSLATORS: Title: MTD is the acronym for Memory Technology Device
-#: src/fu-security-attr-common.c:37 src/fu-security-attr-common.c:290
+#: src/fu-security-attr-common.c:37 src/fu-security-attr-common.c:294
 msgid "Locked MTD"
 msgstr ""
 
@@ -4758,7 +4996,7 @@ msgid "Pre-boot DMA protection"
 msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
-#: src/fu-security-attr-common.c:49 src/fu-security-attr-common.c:302
+#: src/fu-security-attr-common.c:49 src/fu-security-attr-common.c:306
 msgid "Intel BootGuard"
 msgstr ""
 
@@ -4804,7 +5042,7 @@ msgid "SMAP"
 msgstr ""
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
-#: src/fu-security-attr-common.c:87 src/fu-security-attr-common.c:334
+#: src/fu-security-attr-common.c:87 src/fu-security-attr-common.c:338
 msgid "Encrypted RAM"
 msgstr ""
 
@@ -4865,7 +5103,7 @@ msgid "TPM PCR0 reconstruction"
 msgstr ""
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
-#: src/fu-security-attr-common.c:136 src/fu-security-attr-common.c:383
+#: src/fu-security-attr-common.c:136 src/fu-security-attr-common.c:387
 msgid "TPM v2.0"
 msgstr ""
 
@@ -5008,349 +5246,355 @@ msgid "UEFI NX protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
-#: src/fu-security-attr-common.c:254 src/fu-security-attr-common.c:475
+#: src/fu-security-attr-common.c:254 src/fu-security-attr-common.c:479
+msgid "UEFI db (Microsoft UEFI)"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI db does not have a test key
+#. TRANSLATORS: Title: is UEFI db up-to-date
+#: src/fu-security-attr-common.c:258 src/fu-security-attr-common.c:483
 msgid "UEFI db"
 msgstr ""
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
-#: src/fu-security-attr-common.c:258 src/fu-security-attr-common.c:479
+#: src/fu-security-attr-common.c:262 src/fu-security-attr-common.c:487
 msgid "HP SureStart"
 msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
-#: src/fu-security-attr-common.c:262
+#: src/fu-security-attr-common.c:266
 msgid "AMD microcode signature"
 msgstr ""
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
-#: src/fu-security-attr-common.c:274
+#: src/fu-security-attr-common.c:278
 msgid "Firmware Write Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
-#: src/fu-security-attr-common.c:278
+#: src/fu-security-attr-common.c:282
 msgid "Firmware Write Protection Lock"
 msgstr ""
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
-#: src/fu-security-attr-common.c:282
+#: src/fu-security-attr-common.c:286
 msgid "Firmware BIOS Region"
 msgstr ""
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
-#: src/fu-security-attr-common.c:286
+#: src/fu-security-attr-common.c:290
 msgid "Firmware BIOS Descriptor"
 msgstr ""
 
 #. TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group'
-#: src/fu-security-attr-common.c:294
+#: src/fu-security-attr-common.c:298
 msgid "Hardware Disk Encryption"
 msgstr ""
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
-#: src/fu-security-attr-common.c:298
+#: src/fu-security-attr-common.c:302
 msgid "Pre-boot DMA Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
-#: src/fu-security-attr-common.c:307
+#: src/fu-security-attr-common.c:311
 msgid "Intel BootGuard Verified Boot"
 msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
-#: src/fu-security-attr-common.c:312
+#: src/fu-security-attr-common.c:316
 msgid "Intel BootGuard ACM Protected"
 msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
-#: src/fu-security-attr-common.c:317
+#: src/fu-security-attr-common.c:321
 msgid "Intel BootGuard Error Policy"
 msgstr ""
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
-#: src/fu-security-attr-common.c:321
+#: src/fu-security-attr-common.c:325
 msgid "Intel BootGuard Fuse"
 msgstr ""
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
-#: src/fu-security-attr-common.c:326
+#: src/fu-security-attr-common.c:330
 msgid "Control-flow Enforcement Technology"
 msgstr ""
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-#: src/fu-security-attr-common.c:330
+#: src/fu-security-attr-common.c:334
 msgid "Supervisor Mode Access Prevention"
 msgstr ""
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
-#: src/fu-security-attr-common.c:339
+#: src/fu-security-attr-common.c:343
 msgid "IOMMU Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
-#: src/fu-security-attr-common.c:343
+#: src/fu-security-attr-common.c:347
 msgid "Linux Kernel Lockdown"
 msgstr ""
 
 #. TRANSLATORS: Title: if it's tainted or not
-#: src/fu-security-attr-common.c:347
+#: src/fu-security-attr-common.c:351
 msgid "Linux Kernel Verification"
 msgstr ""
 
 #. TRANSLATORS: Title: swap space or swap partition
-#: src/fu-security-attr-common.c:351
+#: src/fu-security-attr-common.c:355
 msgid "Linux Swap"
 msgstr ""
 
 #. TRANSLATORS: Title: sleep state
-#: src/fu-security-attr-common.c:355
+#: src/fu-security-attr-common.c:359
 msgid "Suspend To RAM"
 msgstr ""
 
 #. TRANSLATORS: Title: a better sleep state
-#: src/fu-security-attr-common.c:359
+#: src/fu-security-attr-common.c:363
 msgid "Suspend To Idle"
 msgstr ""
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
-#: src/fu-security-attr-common.c:363
+#: src/fu-security-attr-common.c:367
 msgid "UEFI Platform Key"
 msgstr ""
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
-#: src/fu-security-attr-common.c:367
+#: src/fu-security-attr-common.c:371
 msgid "UEFI Secure Boot"
 msgstr ""
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
-#: src/fu-security-attr-common.c:371
+#: src/fu-security-attr-common.c:375
 msgid "UEFI Bootservice Variables"
 msgstr ""
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
-#: src/fu-security-attr-common.c:375
+#: src/fu-security-attr-common.c:379
 msgid "TPM Platform Configuration"
 msgstr ""
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
-#: src/fu-security-attr-common.c:379
+#: src/fu-security-attr-common.c:383
 msgid "TPM Reconstruction"
 msgstr ""
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
-#: src/fu-security-attr-common.c:387
+#: src/fu-security-attr-common.c:391
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr ""
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is enabled
 #. * with a jumper -- luckily it is probably not accessible to end users on consumer
 #. * boards
-#: src/fu-security-attr-common.c:393
+#: src/fu-security-attr-common.c:397
 msgid "Intel Management Engine Override"
 msgstr ""
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
 #. * to the private/public key used to secure loading of firmware
-#: src/fu-security-attr-common.c:398
+#: src/fu-security-attr-common.c:402
 msgid "MEI Key Manifest"
 msgstr ""
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
-#: src/fu-security-attr-common.c:402
+#: src/fu-security-attr-common.c:406
 msgid "Intel Management Engine Version"
 msgstr ""
 
 #. TRANSLATORS: Title: if firmware updates are available
-#: src/fu-security-attr-common.c:406
+#: src/fu-security-attr-common.c:410
 msgid "Firmware Updates"
 msgstr ""
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
-#: src/fu-security-attr-common.c:410
+#: src/fu-security-attr-common.c:414
 msgid "Firmware Attestation"
 msgstr ""
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
-#: src/fu-security-attr-common.c:414
+#: src/fu-security-attr-common.c:418
 msgid "Firmware Updater Verification"
 msgstr ""
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
-#: src/fu-security-attr-common.c:419
+#: src/fu-security-attr-common.c:423
 msgid "Platform Debugging"
 msgstr ""
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
-#: src/fu-security-attr-common.c:423
+#: src/fu-security-attr-common.c:427
 msgid "Processor Security Checks"
 msgstr ""
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-#: src/fu-security-attr-common.c:427
+#: src/fu-security-attr-common.c:431
 msgid "AMD Secure Processor Rollback Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: APU is root of trust
-#: src/fu-security-attr-common.c:431
+#: src/fu-security-attr-common.c:435
 msgid "AMD Platform Secure Boot"
 msgstr ""
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
-#: src/fu-security-attr-common.c:435
+#: src/fu-security-attr-common.c:439
 msgid "AMD Firmware Replay Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
-#: src/fu-security-attr-common.c:439
+#: src/fu-security-attr-common.c:443
 msgid "AMD Firmware Write Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
-#: src/fu-security-attr-common.c:443
+#: src/fu-security-attr-common.c:447
 msgid "coreboot Verified Boot"
 msgstr ""
 
 #. TRANSLATORS: Title: if the part has been fused
-#: src/fu-security-attr-common.c:447
+#: src/fu-security-attr-common.c:451
 msgid "Fused Platform"
 msgstr ""
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-#: src/fu-security-attr-common.c:451
+#: src/fu-security-attr-common.c:455
 msgid "BIOS Rollback Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
-#: src/fu-security-attr-common.c:455
+#: src/fu-security-attr-common.c:459
 msgid "Intel GDS Mitigation"
 msgstr ""
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
-#: src/fu-security-attr-common.c:459
+#: src/fu-security-attr-common.c:463
 msgid "BIOS Firmware Updates"
 msgstr ""
 
 #. TRANSLATORS: Title: Whether firmware is locked down
-#: src/fu-security-attr-common.c:463
+#: src/fu-security-attr-common.c:467
 msgid "System Management Mode"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
-#: src/fu-security-attr-common.c:467
+#: src/fu-security-attr-common.c:471
 msgid "UEFI Memory Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
-#: src/fu-security-attr-common.c:471
+#: src/fu-security-attr-common.c:475
 msgid "UEFI NX Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
-#: src/fu-security-attr-common.c:483
+#: src/fu-security-attr-common.c:491
 msgid "AMD Microcode Signature"
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:497
+#: src/fu-security-attr-common.c:505
 msgid ""
 "Firmware Write Protection protects device firmware memory from being "
 "tampered with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:502
+#: src/fu-security-attr-common.c:510
 msgid ""
 "Firmware BIOS Region protects device firmware memory from being tampered "
 "with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:507
+#: src/fu-security-attr-common.c:515
 msgid ""
 "Firmware BIOS Descriptor protects device firmware memory from being tampered "
 "with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:512
+#: src/fu-security-attr-common.c:520
 msgid ""
 "Locked MTD prevents device firmware from being changed after the device has "
 "started."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:517
+#: src/fu-security-attr-common.c:525
 msgid ""
 "Hardware disk encryption means that an attacker with physical access cannot "
 "read data from removed NVMe drives."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:522
+#: src/fu-security-attr-common.c:530
 msgid ""
 "Pre-boot DMA protection prevents devices from accessing system memory after "
 "being connected to the computer."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:530
+#: src/fu-security-attr-common.c:538
 msgid ""
 "Intel BootGuard prevents unauthorized device software from operating when "
 "the device is started."
 msgstr ""
 
-#: src/fu-security-attr-common.c:536
+#: src/fu-security-attr-common.c:544
 msgid ""
 "Intel BootGuard Error Policy ensures the device does not continue to start "
 "if its device software has been tampered with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:542
+#: src/fu-security-attr-common.c:550
 msgid ""
 "Control-Flow Enforcement Technology detects and prevents certain methods for "
 "running malicious software on the device."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:547
+#: src/fu-security-attr-common.c:555
 msgid ""
 "Supervisor Mode Access Prevention ensures critical parts of device memory "
 "are not accessed by less secure programs."
 msgstr ""
 
-#: src/fu-security-attr-common.c:553
+#: src/fu-security-attr-common.c:561
 msgid ""
 "Encrypted RAM makes it impossible for information that is stored in device "
 "memory to be read if the memory chip is removed and accessed."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:558
+#: src/fu-security-attr-common.c:566
 msgid ""
 "IOMMU Protection prevents connected devices from accessing unauthorized "
 "parts of system memory."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:563
+#: src/fu-security-attr-common.c:571
 msgid ""
 "Linux Kernel Lockdown mode prevents administrator (root) accounts from "
 "accessing and changing critical parts of system software."
 msgstr ""
 
-#: src/fu-security-attr-common.c:569
+#: src/fu-security-attr-common.c:577
 msgid ""
 "Linux Kernel Verification makes sure that critical system software has not "
 "been tampered with. Using device drivers which are not provided with the "
 "system can prevent this security feature from working correctly."
 msgstr ""
 
-#: src/fu-security-attr-common.c:576
+#: src/fu-security-attr-common.c:584
 msgid ""
 "Linux Kernel Swap temporarily saves information to disk as you work. If the "
 "information is not protected, it could be accessed by someone if they "
@@ -5358,7 +5602,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:582
+#: src/fu-security-attr-common.c:590
 msgid ""
 "Suspend to RAM allows the device to quickly go to sleep in order to save "
 "power. While the device has been suspended, its memory could be physically "
@@ -5366,7 +5610,7 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:588
+#: src/fu-security-attr-common.c:596
 msgid ""
 "Suspend to Idle allows the device to quickly go to sleep in order to save "
 "power. While the device has been suspended, its memory could be physically "
@@ -5374,171 +5618,171 @@ msgid ""
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:594
+#: src/fu-security-attr-common.c:602
 msgid ""
 "The UEFI Platform Key is used to determine if device software comes from a "
 "trusted source."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:599
+#: src/fu-security-attr-common.c:607
 msgid ""
 "UEFI Secure Boot prevents malicious software from being loaded when the "
 "device starts."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:604
+#: src/fu-security-attr-common.c:612
 msgid "UEFI boot service variables should not be readable from runtime mode."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:608
+#: src/fu-security-attr-common.c:616
 msgid ""
 "The TPM (Trusted Platform Module) Platform Configuration is used to check "
 "whether the device start process has been modified."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:613
+#: src/fu-security-attr-common.c:621
 msgid ""
 "The TPM (Trusted Platform Module) Reconstruction is used to check whether "
 "the device start process has been modified."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:618
+#: src/fu-security-attr-common.c:626
 msgid ""
 "TPM (Trusted Platform Module) is a computer chip that detects when hardware "
 "components have been tampered with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:624
+#: src/fu-security-attr-common.c:632
 msgid ""
 "Manufacturing Mode is used when the device is manufactured and security "
 "features are not yet enabled."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:629
+#: src/fu-security-attr-common.c:637
 msgid ""
 "Intel Management Engine Override disables checks for device software "
 "tampering."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:634
+#: src/fu-security-attr-common.c:642
 msgid ""
 "The Intel Management Engine Key Manifest must be valid so that the device "
 "firmware can be trusted by the CPU."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:639
+#: src/fu-security-attr-common.c:647
 msgid ""
 "The Intel Management Engine controls device components and needs to have a "
 "recent version to avoid security issues."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:644
+#: src/fu-security-attr-common.c:652
 msgid "Device software updates are provided for this device."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:648
+#: src/fu-security-attr-common.c:656
 msgid ""
 "Firmware Attestation checks device software using a reference copy, to make "
 "sure that it has not been changed."
 msgstr ""
 
-#: src/fu-security-attr-common.c:654
+#: src/fu-security-attr-common.c:662
 msgid ""
 "Firmware Updater Verification checks that software used for updating has not "
 "been tampered with."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:660
+#: src/fu-security-attr-common.c:668
 msgid ""
 "Platform Debugging allows device security features to be disabled. This "
 "should only be used by hardware manufacturers."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:665
+#: src/fu-security-attr-common.c:673
 msgid "Each system should have tests to ensure firmware security."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:671
+#: src/fu-security-attr-common.c:679
 msgid ""
 "Rollback Protection prevents device software from being downgraded to an "
 "older version that has security problems."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:676
+#: src/fu-security-attr-common.c:684
 msgid ""
 "Platform Secure Boot prevents unsigned software from being loaded when the "
 "device starts."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:681
+#: src/fu-security-attr-common.c:689
 msgid ""
 "coreboot verified boot prevents unsigned firmware from being loaded when the "
 "device starts."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:686
+#: src/fu-security-attr-common.c:694
 msgid ""
 "CPU Microcode must be updated to mitigate against various information-"
 "disclosure security issues."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:691
+#: src/fu-security-attr-common.c:699
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:695
+#: src/fu-security-attr-common.c:703
 msgid ""
 "System management mode is used by the firmware to access resident BIOS code "
 "and data."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:700
+#: src/fu-security-attr-common.c:708
 msgid ""
 "The UEFI system can set up memory attributes at boot which prevent common "
 "exploits from running."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:705
+#: src/fu-security-attr-common.c:713
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:709
+#: src/fu-security-attr-common.c:718
 msgid ""
 "The UEFI db contains the list of valid certificates that can be used to "
 "authorize what EFI binaries are allowed to run."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:714
+#: src/fu-security-attr-common.c:723
 msgid ""
 "HP SureStart is a firmware security feature that protects the BIOS from "
 "tampering."
 msgstr ""
 
 #. TRANSLATORS: longer description
-#: src/fu-security-attr-common.c:719
+#: src/fu-security-attr-common.c:728
 msgid ""
 "AMD Microcode Signature verification ensures that CPU microcode is authentic "
 "and has not been tampered with."

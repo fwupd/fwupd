@@ -16,6 +16,7 @@ typedef struct {
 	FwupdJsonObject *json_obj_member;
 	guint64 milestone;
 	gchar *build;
+	gchar *software_id;
 	guint reset_pre_delay;	/* default of 0ms */
 	guint reset_post_delay; /* default of 0ms */
 } FuRedfishDevicePrivate;
@@ -33,6 +34,7 @@ fu_redfish_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append_hex(str, idt, "Milestone", priv->milestone);
 	fwupd_codec_string_append(str, idt, "Build", priv->build);
+	fwupd_codec_string_append(str, idt, "SoftwareId", priv->software_id);
 	fwupd_codec_string_append_int(str, idt, "ResetPretDelay", priv->reset_pre_delay);
 	fwupd_codec_string_append_int(str, idt, "ResetPostDelay", priv->reset_post_delay);
 }
@@ -462,6 +464,34 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 					   NULL);
 }
 
+static void
+fu_redfish_device_set_software_id(FuRedfishDevice *self, const gchar *software_id)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *software_id_lower = g_ascii_strdown(software_id, -1);
+
+	/* save this as-provided */
+	g_set_str(&priv->software_id, software_id);
+
+	/* already a GUID */
+	if (fwupd_guid_is_valid(software_id_lower)) {
+		fu_device_add_instance_id(FU_DEVICE(self), software_id_lower);
+		return;
+	}
+
+	/* for Lenovo */
+	fu_device_add_instance_str(FU_DEVICE(self), "SOFTWAREID", software_id);
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
+		fu_device_add_instance_str(FU_DEVICE(self), "TYPE", "UNSIGNED");
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "REDFISH",
+				    "VENDOR",
+				    "SOFTWAREID",
+				    "TYPE",
+				    NULL);
+}
+
 static gboolean
 fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
@@ -519,23 +549,8 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
 	software_id = fwupd_json_object_get_string(priv->json_obj_member, "SoftwareId", NULL);
-	if (software_id != NULL) {
-		g_autofree gchar *software_id_lower = g_ascii_strdown(software_id, -1);
-		if (fwupd_guid_is_valid(software_id_lower)) {
-			fu_device_add_instance_id(dev, software_id_lower);
-		} else {
-			fu_device_add_instance_str(dev, "SOFTWAREID", software_id);
-			if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
-				fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");
-			fu_device_build_instance_id(dev,
-						    NULL,
-						    "REDFISH",
-						    "VENDOR",
-						    "SOFTWAREID",
-						    "TYPE",
-						    NULL);
-		}
-	}
+	if (software_id != NULL)
+		fu_redfish_device_set_software_id(self, software_id);
 
 	/* get vendor-specific properties too */
 	json_oem = fwupd_json_object_get_object(priv->json_obj_member, "Oem", NULL);
@@ -1059,6 +1074,7 @@ fu_redfish_device_finalize(GObject *object)
 	if (priv->json_obj_member != NULL)
 		fwupd_json_object_unref(priv->json_obj_member);
 	g_free(priv->build);
+	g_free(priv->software_id);
 	G_OBJECT_CLASS(fu_redfish_device_parent_class)->finalize(object);
 }
 
