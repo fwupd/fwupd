@@ -415,10 +415,13 @@ void
 fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *filename_abs = NULL;
+
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-	if (priv->filename_source == filename_source)
-		return;
-	g_set_str(&priv->filename_source, filename_source);
+
+	if (filename_source != NULL)
+		filename_abs = g_canonicalize_filename(filename_source, NULL);
+	g_set_str(&priv->filename_source, filename_abs);
 }
 
 static gchar *
@@ -617,15 +620,18 @@ void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *filename_abs = NULL;
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
-	g_set_str(&priv->filename_cache, filename);
+	if (filename != NULL)
+		filename_abs = g_canonicalize_filename(filename, NULL);
+	g_set_str(&priv->filename_cache, filename_abs);
 	g_clear_pointer(&priv->filename_cache_sig, g_free);
 
 	/* create for all non-local remote types */
 	if (priv->kind != FWUPD_REMOTE_KIND_LOCAL)
-		priv->filename_cache_sig = g_strconcat(filename, ".jcat", NULL);
+		priv->filename_cache_sig = g_strconcat(filename_abs, ".jcat", NULL);
 }
 
 /**
