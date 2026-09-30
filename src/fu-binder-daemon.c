@@ -174,6 +174,9 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 	    "org.freedesktop.fwupd.get-bios-settings",
 	    "org.freedesktop.fwupd.get-host-security-attrs",
 	    "org.freedesktop.fwupd.get-host-security-events",
+	    "org.freedesktop.fwupd.update-hotplug-trusted",
+	    "org.freedesktop.fwupd.update-internal-trusted",
+	    "org.freedesktop.fwupd.refresh-remote",
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(public_action_ids); i++) {
 		if (g_strcmp0(action_id, public_action_ids[i]) == 0)
@@ -188,7 +191,7 @@ fu_binder_daemon_authorize(const gchar *action_id, GError **error)
 {
 	uid_t calling_uid;
 
-	/* anyone can perform read-only actions */
+	/* read-only actions, or ones that are trusted by Jcat signatures */
 	if (!fu_binder_daemon_action_id_requires_root(action_id))
 		return TRUE;
 
