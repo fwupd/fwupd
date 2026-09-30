@@ -525,6 +525,7 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *id,
 			     int fd,
 			     FwupdInstallFlags install_flags,
+			     const char *filename_hint,
 			     GError **error)
 {
 	AIBinder_incStrong(binder_handle);
@@ -554,6 +555,8 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 	req.id = std::string(id);
 	req.firmwareFd = std::move(sfd);
 	req.flags = install_flags;
+	if (filename_hint != NULL)
+		req.filename_hint = std::string(filename_hint);
 
 	auto status = service->install(req);
 

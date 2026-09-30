@@ -93,6 +93,14 @@ The `[fwupd]` section can contain the following parameters:
 
   Ignore power levels of devices when running updates.
 
+**AllowFilenameHint={{AllowFilenameHint}}**
+
+  Read the archive from an enabled directory remote using the install filename hint.
+  This is required if the process installing local firmware does not have access to the files from
+  the directory remote, but the daemon does.
+
+  If this option is enabled and the filename hint matches then the passed file descriptor is ignored.
+
 **IgnoreRequirements={{IgnoreRequirements}}**
 
   Ignore some device requirements, for instance removing the generic GUID requirement of a CHID,

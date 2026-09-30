@@ -260,6 +260,7 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					const char *device_id,
 					int fd,
 					guint64 flags,
+					const char *filename_hint,
 					GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
@@ -279,11 +280,35 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 
 	fu_engine_installer_set_request(helper->engine_installer, helper->request);
 
+	/* is this file available locally, i.e. in a directory remote */
+	if (fu_context_get_config_bool(ctx, "AllowFilenameHint") && filename_hint != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		stream = fu_daemon_input_stream_from_filename_hint(FU_DAEMON(self),
+								   filename_hint,
+								   &error_local);
+		if (stream == NULL) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+			g_debug("ignoring: %s", error_local->message);
+		}
+	}
+
 	/* get stream */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
 	if (stream == NULL) {
-		g_prefix_error_literal(error, "invalid stream: ");
-		return FALSE;
+		if (fd < 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "invalid file descriptor received");
+			return FALSE;
+		}
+		stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+		if (stream == NULL) {
+			g_prefix_error_literal(error, "invalid stream: ");
+			return FALSE;
+		}
 	}
 
 	if (fu_context_get_config_bool(ctx, "IgnoreRequirements"))

@@ -53,4 +53,8 @@ fu_daemon_get_percentage(FuDaemon *self) G_GNUC_NON_NULL(1);
 void
 fu_daemon_set_percentage(FuDaemon *self, gdouble percentage) G_GNUC_NON_NULL(1);
 
+FuInputStream *
+fu_daemon_input_stream_from_filename_hint(FuDaemon *self, const gchar *filename, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+
 G_END_DECLS

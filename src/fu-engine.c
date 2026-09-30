@@ -1069,6 +1069,7 @@ fu_engine_modify_config(FuEngine *self,
 		    "IdleTimeout",
 		    "IgnoreEfivarsFreeSpace",
 		    "IgnorePower",
+		    "AllowFilenameHint",
 		    "IgnoreRequirements",
 		    "OnlyTrustPostQuantumSignatures",
 		    "P2pPolicy",
@@ -9577,6 +9578,7 @@ fu_engine_constructed(GObject *obj)
 	fu_config_set_default(config, "fwupd", "IdleInhibitStartupThreshold", "500"); /* ms */
 	fu_config_set_default(config, "fwupd", "IgnoreEfivarsFreeSpace", "false");
 	fu_config_set_default(config, "fwupd", "IgnorePower", "false");
+	fu_config_set_default(config, "fwupd", "AllowFilenameHint", "false");
 	fu_config_set_default(config, "fwupd", "IgnoreRequirements", "false");
 	fu_config_set_default(config, "fwupd", "OnlyTrusted", "true");
 	fu_config_set_default(config, "fwupd", "P2pPolicy", FU_DEFAULT_P2P_POLICY);

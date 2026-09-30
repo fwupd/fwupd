@@ -329,18 +329,19 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	{
 		g_info("received install request for device %s", in_request.id.c_str());
 
+		/* this many be -1 if we're relying on AllowFilenameHint */
 		int engine_fd = in_request.firmwareFd.get();
-		if (engine_fd < 0) {
-			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid file descriptor received");
-		}
 
 		g_autoptr(GError) error = NULL;
+		const gchar *filename_hint = NULL;
+
+		if (in_request.filename_hint.has_value())
+			filename_hint = in_request.filename_hint.value().c_str();
 		if (!fu_binder_daemon_perform_install_bridge(m_daemon,
 							     in_request.id.c_str(),
 							     engine_fd,
 							     in_request.flags,
+							     filename_hint,
 							     &error)) {
 			std::string err_msg = error ? error->message : "Unknown engine error";
 			int err_code = error ? error->code : -1;
