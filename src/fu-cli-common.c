@@ -1435,6 +1435,10 @@ fu_cli_release_flag_to_string(FwupdReleaseFlags release_flag)
 		/* TRANSLATORS: someone we trust has tested this */
 		return _("Tested by trusted vendor");
 	}
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_LOCAL) {
+		/* TRANSLATORS: release came from a local file or directory */
+		return _("Local");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_release_flag_to_string(release_flag);

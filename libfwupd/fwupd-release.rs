@@ -28,6 +28,9 @@ enum FwupdReleaseFlags {
     // The payload has been tested by a report we trust.
     // Since: 1.9.1
     TrustedReport = 1 << 8,
+    // The release was found from a local or directory remote.
+    // Since: 2.2.1
+    IsLocal = 1 << 9,
     // The release flag is unknown, typically caused by using mismatched client and daemon.
     Unknown = u64::MAX,
 }
