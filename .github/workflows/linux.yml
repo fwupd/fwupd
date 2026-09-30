@@ -90,7 +90,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Find container image
         id: find_container
-        uses: ./.github/actions/find-container
+        uses: ./.github/actions/find-container # zizmor: ignore[self-repository]
         with:
           distro: ${{ matrix.env.DISTRO }}
           arch: ${{ matrix.env.ARCH }}
