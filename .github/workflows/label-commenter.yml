@@ -3,7 +3,7 @@ name: Label Commenter
 on:
   issues:
     types: [labeled, unlabeled]
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [labeled, unlabeled]
 
 permissions:
@@ -13,10 +13,16 @@ permissions:
 
 jobs:
   comment:
+    if: github.repository == 'fwupd/fwupd'
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: |
+            .github/label-commenter-config.yml
+          sparse-checkout-cone-mode: false
           persist-credentials: false
       - name: Label Commenter
         uses: peaceiris/actions-label-commenter@f0dbbef043eb1b150b566db36b0bdc8b7f505579 # v1.10.0
