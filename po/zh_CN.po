@@ -19,7 +19,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-21 17:51+0000\n"
+"PO-Revision-Date: 2026-09-30 23:51+0000\n"
 "Last-Translator: Hosted Weblate user 54392 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -1555,7 +1555,7 @@ msgstr "处于引导程序模式"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "设备正在等待回插"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2091,16 +2091,16 @@ msgstr "自动报告"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "当 %s 被拔出并插回时更新将继续。"
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "当设备已被拔出并插回时更新将继续。"
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "当 %s 的 USB 线已被拔出时更新将继续。"
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -2109,11 +2109,11 @@ msgstr "当USB 连接线被拔出更新会继续。"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "当 %s 的 USB 线已被插回时更新将继续。"
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "当设备的 USB 线已被插回时更新将继续。"
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2126,20 +2126,20 @@ msgstr "更新进行时不要关闭计算机或删除直流适配器。"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "拔出 %s 并重新插入它来继续更新过程。"
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "拔出设备并插回来继续更新过程。"
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "当 %s 的电源线已被移除并插回时更新将继续。"
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "当设备电源线已被移除并插回时更新将继续。"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2227,11 +2227,11 @@ msgstr "UEFI 证书存储现已是最新"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "UEFI 证书存储不再包含测试密钥"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "UEFI 证书存储现包含测试密钥"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -4150,7 +4150,7 @@ msgstr "UEFI NX 保护"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "UEFI 数据库 (Microsoft UEFI)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date
