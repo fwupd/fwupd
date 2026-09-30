@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
 
+permissions: {}
+
 jobs:
   pre-commit:
     permissions:
