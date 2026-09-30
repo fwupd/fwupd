@@ -77,7 +77,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_TRUSTED_REPORT; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_IS_LOCAL; i *= 2) {
 		const gchar *tmp = fwupd_release_flag_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
