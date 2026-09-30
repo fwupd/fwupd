@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: find-container
     container:
-      image: ${{ needs.find-container.outputs.container_uri }}
+      image: ${{ needs.find-container.outputs.container_uri }} # zizmor: ignore[unpinned-images]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
