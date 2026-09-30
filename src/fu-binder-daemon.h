@@ -31,6 +31,7 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					const gchar *device_id,
 					int fd,
 					guint64 flags,
+					const char *filename_hint,
 					GError **error);
 
 gboolean

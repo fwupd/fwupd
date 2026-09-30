@@ -260,6 +260,7 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					const char *device_id,
 					int fd,
 					guint64 flags,
+					const char *filename_hint,
 					GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
@@ -280,10 +281,34 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 	fu_engine_installer_set_request(helper->engine_installer, helper->request);
 
 	/* get stream */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
-	if (stream == NULL) {
-		g_prefix_error_literal(error, "invalid stream: ");
-		return FALSE;
+	if (fd >= 0) {
+		stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+		if (stream == NULL) {
+			g_prefix_error_literal(error, "invalid stream: ");
+			return FALSE;
+		}
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_context_get_config_bool(ctx, "AllowFilenameHintForLocal")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "no fd and AllowFilenameHintForLocal unset");
+			return FALSE;
+		}
+		if (filename_hint == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "no fd and filename hint unset");
+			return FALSE;
+		}
+		/* is this file available locally, i.e. in a directory remote */
+		stream = fu_daemon_input_stream_from_filename_hint(FU_DAEMON(self),
+								   filename_hint,
+								   error);
+		if (stream == NULL)
+			return FALSE;
 	}
 
 	if (fu_context_get_config_bool(ctx, "IgnoreRequirements"))
