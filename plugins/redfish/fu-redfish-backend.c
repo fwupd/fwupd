@@ -477,7 +477,6 @@ fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_pre
 static gboolean
 fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
 {
-	const gchar *manufacturer;
 	const gchar *model;
 	g_autofree gchar *model_lower = NULL;
 	g_autoptr(FuRedfishRequest) req = NULL;
@@ -496,9 +495,8 @@ fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
 	json_chassis = fu_redfish_request_get_json_object(req, NULL);
 	if (json_chassis == NULL)
 		return FALSE;
-	manufacturer = fwupd_json_object_get_string(json_chassis, "Manufacturer", NULL);
 	model = fwupd_json_object_get_string(json_chassis, "Model", NULL);
-	if (g_strcmp0(manufacturer, "NVIDIA") != 0 || model == NULL)
+	if (model == NULL)
 		return FALSE;
 	/* match "GB300" and "Station" anywhere in the model string, in any order and
 	 * case, covering "GB300 Station", "DGX Station GB300" and similar */
@@ -755,8 +753,11 @@ fu_redfish_backend_setup(FuBackend *backend,
 	if (fwupd_json_object_has_node(json_obj, "Vendor"))
 		g_set_str(&self->vendor, fwupd_json_object_get_string(json_obj, "Vendor", NULL));
 	if (g_strcmp0(self->vendor, "Dell") == 0) {
-		if (!fu_redfish_backend_setup_dell(self, error))
-			return FALSE;
+		g_autoptr(GError) error_dell = NULL;
+		/* a Dell-branded DGX Station has no Oem.Dell.DellSystem, and must still
+		 * be set up: the system ID only refines the instance IDs */
+		if (!fu_redfish_backend_setup_dell(self, &error_dell))
+			g_debug("ignoring Dell system ID: %s", error_dell->message);
 	}
 	json_update_service = fwupd_json_object_get_object(json_obj, "UpdateService", error);
 	if (json_update_service == NULL)

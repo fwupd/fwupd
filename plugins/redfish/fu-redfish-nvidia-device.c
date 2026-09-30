@@ -516,6 +516,46 @@ fu_redfish_nvidia_device_slot_is_pending(FwupdJsonObject *json_member)
 	return version != NULL && version[0] != '\0';
 }
 
+static void
+fu_redfish_nvidia_device_set_vendor_ids(FuRedfishNvidiaDevice *self)
+{
+	FuRedfishBackend *backend;
+	const gchar *brand;
+	const gchar *ids;
+	g_autofree gchar *brand_upper = NULL;
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *key = NULL;
+
+	brand = fu_context_get_hwid_value(fu_device_get_context(FU_DEVICE(self)),
+					  FU_HWIDS_KEY_MANUFACTURER);
+	if (brand == NULL || brand[0] == '\0') {
+		backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), NULL);
+		if (backend != NULL)
+			brand = fu_redfish_backend_get_vendor(backend);
+	}
+	if (brand == NULL || brand[0] == '\0')
+		return;
+
+	/* replace the vendor ID the base probe derived from the inventory entry */
+	g_ptr_array_set_size(fu_device_get_vendor_ids(FU_DEVICE(self)), 0);
+	key = g_strdup_printf("DMI\\MANUFACTURER_%s", brand);
+	guid = fwupd_guid_hash_string(key);
+	ids = fu_context_lookup_quirk_by_id(fu_device_get_context(FU_DEVICE(self)),
+					    guid,
+					    "RedfishOemVendorIds");
+	if (ids != NULL) {
+		g_auto(GStrv) split = g_strsplit(ids, "|", -1);
+		for (guint i = 0; split[i] != NULL; i++)
+			fu_device_add_vendor_id(FU_DEVICE(self), split[i]);
+		return;
+	}
+	brand_upper = g_ascii_strup(brand, -1);
+	g_strdelimit(brand_upper, " ", '_');
+	fu_device_build_vendor_id(FU_DEVICE(self), "REDFISH", brand_upper);
+	fu_device_build_vendor_id(FU_DEVICE(self), "DMI", brand);
+	fu_device_build_vendor_id(FU_DEVICE(self), "OEM", brand);
+}
+
 static gboolean
 fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 {
@@ -569,10 +609,7 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	}
 
-	/* DMI:NVIDIA pairs with the GB300 SMBIOS identity, and OEM:NVIDIA is the
-	 * non-bus fallback as OOB-managed components have no host bus identity */
-	fu_device_add_vendor_id(device, "DMI:NVIDIA");
-	fu_device_add_vendor_id(device, "OEM:NVIDIA");
+	fu_redfish_nvidia_device_set_vendor_ids(FU_REDFISH_NVIDIA_DEVICE(device));
 
 	/* the backend replaces this with MaxImageSizeBytes when the BMC reports one */
 	fu_device_set_firmware_size_max(device, FU_REDFISH_NVIDIA_FIRMWARE_SIZE_MAX);

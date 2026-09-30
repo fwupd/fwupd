@@ -198,8 +198,8 @@ def update_service():
 
 
 # ── NVIDIA DGX Station GB300 ──────────────────────────────────────────────────
-# The plugin recognises a GB300 by probing Chassis_0 for Manufacturer=NVIDIA and
-# a Model containing both "GB300" and "Station"; every other persona must fail
+# The plugin recognises a GB300 by probing Chassis_0 for a Model containing both
+# "GB300" and "Station", whatever the Manufacturer; every other persona must fail
 # that check so it keeps the generic multipart device.
 @app.route("/redfish/v1/Chassis/Chassis_0")
 def chassis_chassis_0():
@@ -209,7 +209,7 @@ def chassis_chassis_0():
         "@odata.id": "/redfish/v1/Chassis/Chassis_0",
         "@odata.type": "#Chassis.v1_25_0.Chassis",
         "Id": "Chassis_0",
-        "Manufacturer": "NVIDIA",
+        "Manufacturer": "Dell Technologies",
         "Model": "DGX Station GB300",
         "Name": "Chassis",
     }

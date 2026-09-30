@@ -118,11 +118,18 @@ enough to re-authenticate, with no need to restart `fwupd`.
 
 ## NVIDIA DGX Station GB300
 
-The BMC is detected by probing `/redfish/v1/Chassis/Chassis_0` for
-`Manufacturer=NVIDIA` and a `Model` containing both `GB300` and `Station`. Each
+The BMC is detected by probing `/redfish/v1/Chassis/Chassis_0` for a `Model`
+containing both `GB300` and `Station`, case-insensitively. The `Manufacturer` is
+deliberately ignored, as OEM-built stations report their own brand. Each
 entry in the BMC's `FirmwareInventory` -- for example
 `/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0` -- is then exposed as its
 own device.
+
+The vendor IDs of these devices are `REDFISH:`, `DMI:` and `OEM:` followed by the
+system's brand -- the SMBIOS manufacturer, or the Redfish root `Vendor` when that
+is unavailable -- rather than the `Manufacturer` of the inventory entry, which is
+NVIDIA on every station. A firmware release therefore only matches the LVFS
+account of the vendor that sold the system.
 
 A matching BMC gets GB300-specific update semantics, which diverge from DMTF
 DSP0266 in several places:
@@ -163,9 +170,21 @@ accepts the request -- save your work before activating.
 
 ### Design notes
 
-* **Detection.** Vendor `NVIDIA` at the Redfish root is not sufficient: other
-  Redfish implementations must not receive the GB300 update semantics above, so
-  the `Chassis_0` model is always verified.
+* **Detection.** The Redfish root `Vendor` is not a usable signal, as OEMs also
+  sell the Station and their BMCs report their own brand rather than NVIDIA.
+  Other Redfish implementations must still not receive the GB300 update
+  semantics above, so the `Chassis_0` model is verified, whatever the
+  `Manufacturer` says.
+* **Vendor IDs.** A firmware release is only offered to a device whose vendor IDs
+  match the namespace of the LVFS account it was uploaded to, so an OEM-built
+  Station must carry the OEM's identity to take only that OEM's releases. The
+  inventory `Manufacturer` is no guide, as every entry is NVIDIA-made whoever sold
+  the system; the host SMBIOS manufacturer is, falling back to the Redfish root
+  `Vendor` when SMBIOS is unavailable. `redfish.quirk` maps each known SMBIOS
+  manufacturer, as `[DMI\MANUFACTURER_<name>]`, to the `|`-separated vendor IDs of
+  that OEM's LVFS account in `RedfishOemVendorIds`; a manufacturer with no section
+  gets `REDFISH:`, `DMI:` and `OEM:` IDs built from its own name. Add a section
+  there to support another OEM, with no rebuild.
 * **Task polling.** A failed poll is tolerated when the error is retryable
   (`FWUPD_ERROR_BUSY`), so a brief connectivity blip during a flash of tens of
   minutes does not abandon a running update. The failure counter is reset by every
