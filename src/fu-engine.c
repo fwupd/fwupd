@@ -5747,8 +5747,8 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 	if (remotes->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "No remotes configured");
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no remotes configured");
 		return NULL;
 	}
 
@@ -5781,8 +5781,11 @@ fu_engine_get_remote_by_id(FuEngine *self, const gchar *remote_id, GError **erro
 			return remote;
 	}
 
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Couldn't find remote %s", remote_id);
-
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "could not find remote %s",
+		    remote_id);
 	return NULL;
 }
 

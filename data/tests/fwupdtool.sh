@@ -153,7 +153,7 @@ expect_rc 0
 # ---
 echo " ● Modify unknown remote (should fail)…"
 run modify-remote foo Enabled true
-expect_rc 1
+expect_rc 3
 
 # ---
 echo " ● Modify known remote but unknown key (should fail)…"
