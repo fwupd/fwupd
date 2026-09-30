@@ -3891,7 +3891,7 @@ fwupd_client_install_async(FwupdClient *self,
 	fwupd_client_install_stream_async(self,
 					  device_id,
 					  istr,
-					  NULL,
+					  filename, /* a hint */
 					  install_flags,
 					  cancellable,
 					  callback,
