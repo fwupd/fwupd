@@ -261,6 +261,7 @@ fu_binder_cli_sync_impl_install(FwupdClient *client,
 					    device_id,
 					    fd,
 					    install_flags,
+					    filename,
 					    error);
 }
 

@@ -2200,6 +2200,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	const gchar *device_id = NULL;
 	const gchar *prop_key;
 	gint32 fd_handle = 0;
+	g_autofree gchar *filename_hint = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
@@ -2229,6 +2230,13 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
 		}
 
+		/* useful for android -- we can open the local file directly */
+		if (g_strcmp0(prop_key, "filename") == 0) {
+			const gchar *filename = fwupd_variant_get_string(prop_value);
+			if (filename != NULL)
+				g_set_str(&filename_hint, filename);
+		}
+
 		/* these are all set by libfwupd < 2.0.x; parse for compatibility */
 		if (g_strcmp0(prop_key, "allow-older") == 0 &&
 		    fwupd_variant_get_boolean(prop_value))
@@ -2243,11 +2251,30 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 		g_variant_unref(prop_value);
 	}
 
-	/* get stream */
-	stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
+	/* is this file available locally, i.e. in a directory remote */
+	if (fu_context_get_config_bool(ctx, "AllowFilenameHintForLocal") && filename_hint != NULL) {
+		g_autoptr(GError) error_local = NULL;
+
+		stream = fu_daemon_input_stream_from_filename_hint(FU_DAEMON(self),
+								   filename_hint,
+								   &error_local);
+		if (stream == NULL) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				fu_dbus_daemon_method_invocation_return_gerror(invocation,
+									       error_local);
+				return;
+			}
+			g_debug("ignoring: %s", error_local->message);
+		}
+	}
+
+	/* get stream from the passed fd */
 	if (stream == NULL) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
+		stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
+		if (stream == NULL) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
 	}
 
 	/* relax these */

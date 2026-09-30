@@ -115,6 +115,7 @@ fwupd_modify_config_opts=(
 	'HostBkc'
 	'IdleTimeout'
 	'IgnorePower'
+	'AllowFilenameHintForLocal'
 	'OnlyTrusted'
 	'P2pPolicy'
 	'ReleaseDedupe'
@@ -438,7 +439,7 @@ _fwupdmgr()
 			return 0
 		elif [[ "$args" = "4" ]]; then
 			case $prev in
-			EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe|TestDevices)
+			EnumerateAllDevices|OnlyTrusted|IgnorePower|AllowFilenameHintForLocal|UpdateMotd|ShowDevicePrivate|ReleaseDedupe|TestDevices)
 				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
 				;;
 			AnotherWriteRequired|NeedsActivation|NeedsReboot|RegistrationSupported|RequestSupported|WriteSupported)
