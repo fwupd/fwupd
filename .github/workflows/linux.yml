@@ -166,7 +166,7 @@ jobs:
         run: sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/lvfs-firmware-cache"
       - name: save LVFS firmware cache
         # only one job can be allowed to save the cache
-        if: ${{ !cancelled() && matrix.env.PRIMARY_JOB == true }}
+        if: ${{ !cancelled() && matrix.env.PRIMARY_JOB == true && github.event_name == 'push' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/lvfs-firmware-cache
