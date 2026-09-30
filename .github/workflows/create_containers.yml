@@ -21,6 +21,8 @@ on:
         description: "A JSON lookup table for container URIs"
         value: ${{ jobs.container_mapping.outputs.container_lut }}
 
+permissions: {}
+
 env:
   # Our containers are currently per-distro. This can be changed if needed.
   #
