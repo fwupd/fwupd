@@ -157,7 +157,7 @@ def main(args) -> int:
 
                 def find_size(fs, f, data):
                     """find our size, I hope..."""
-                    (ink, log) = gs.extents(f)
+                    ink, log = gs.extents(f)
                     if ink.height == 0 or ink.width == 0:
                         return False
                     data.update({"log": log, "ink": ink})
