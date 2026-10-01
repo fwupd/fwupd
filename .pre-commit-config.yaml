@@ -77,8 +77,8 @@ repos:
         entry: ./contrib/ci/check-potfiles.py
       - id: check-headers
         name: check for superfluous includes
-        language: script
-        entry: ./contrib/ci/check-headers.py
+        language: system
+        entry: ./fub check-headers
       - id: check-source
         name: check source code for common issues
         language: script
