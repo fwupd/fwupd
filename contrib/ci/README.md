@@ -109,7 +109,7 @@ The following builds are performed for every commit or pull request:
 
 ## Adding a new target
 
-Dockerfiles are generated dynamically by the python script `generate_docker.py`.
+Dockerfiles are generated dynamically by the command `./fub docker`.
 The python script takes `--distro`, `--version`, `--arch` and optionally `--variant`
 commandline arguments to determine what target to generate a Dockerfile for.
 
