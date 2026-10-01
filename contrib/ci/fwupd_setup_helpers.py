@@ -331,26 +331,20 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.getLogger().handlers[0].setFormatter(_ColorFormatter())
 
-    command = None
-    # compat mode for old training documentation
-    if "generate_dependencies.py" in sys.argv[0]:
-        command = "get-dependencies"
-
     parser = argparse.ArgumentParser()
-    if not command:
-        parser.add_argument(
-            "command",
-            choices=[
-                "get-dependencies",
-                "test-markdown",
-                "test-jinja2",
-                "test-meson",
-                "detect-profile",
-                "install-dependencies",
-                "install-pip",
-            ],
-            help="command to run",
-        )
+    parser.add_argument(
+        "command",
+        choices=[
+            "get-dependencies",
+            "test-markdown",
+            "test-jinja2",
+            "test-meson",
+            "detect-profile",
+            "install-dependencies",
+            "install-pip",
+        ],
+        help="command to run",
+    )
     parser.add_argument(
         "-o",
         "--os",
@@ -380,8 +374,7 @@ if __name__ == "__main__":
     # fall back in all cases
     if not args.variant:
         args.variant = os.uname().machine
-    if not command:
-        command = args.command
+    command = args.command
 
     args.variant = ARCH_TO_DEPS_MAP.get(args.variant, args.variant)
 
