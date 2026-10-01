@@ -31,10 +31,10 @@ env:
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
   ARCH_CONTAINER_TAG: "latest"  # 0002
-  CENTOS_CONTAINER_TAG: "2026-10-02.0"
-  DEBIAN_CONTAINER_TAG: "2026-09-18.2"
-  UBUNTU_CONTAINER_TAG: "2026-09-18.2"
-  FEDORA_CONTAINER_TAG: "2026-09-18.2"
+  CENTOS_CONTAINER_TAG: "2026-10-03.0"
+  DEBIAN_CONTAINER_TAG: "2026-10-03.0"
+  UBUNTU_CONTAINER_TAG: "2026-10-03.0"
+  FEDORA_CONTAINER_TAG: "2026-10-03.0"
 
 jobs:
   find_or_create_container:
@@ -173,8 +173,8 @@ jobs:
       - name: Generate Dockerfile
         if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
         run: >-
-          ./contrib/ci/generate_docker.py
-          --distro "${{ matrix.distros.DISTRO }}"
+          ./fub dockerfile
+          --os "${{ matrix.distros.DISTRO }}"
           --version "${{ matrix.distros.VERSION }}"
           --arch "${{ matrix.distros.ARCH }}"
           ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }};
