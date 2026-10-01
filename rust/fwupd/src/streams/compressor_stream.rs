@@ -15,7 +15,7 @@ use crate::streams::{IsSeekable, ReadSeek, StreamError};
 use std::io::{self, Read, Seek, SeekFrom};
 use std::sync::{Arc, Mutex};
 
-/// Used with [`Error::other`](std::io::Error::other) to signal the stream
+/// Returned as an `io::Error` with kind `Other` to signal the stream
 /// is not seekable.
 ///
 /// This is equivalent to [`ErrorKind::NotSeekable`](std::io::ErrorKind::NotSeekable),
