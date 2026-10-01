@@ -18,6 +18,7 @@ pub struct GString {
 }
 
 #[allow(dead_code)]
+#[link(name = "glib-2.0")]
 extern "C" {
     fn g_string_new(init: *const c_char) -> *mut GString;
     fn g_string_append_len(string: *mut GString, val: *const c_char, len: isize) -> *mut GString;

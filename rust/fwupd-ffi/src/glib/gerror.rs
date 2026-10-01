@@ -239,15 +239,17 @@ impl From<GIOError> for std::io::ErrorKind {
 type GQuark = u32;
 
 #[allow(dead_code)]
+#[cfg(not(test))]
 extern "C" {
     /// `GQuark fwupd_error_quark(void)` -- defined in libfwupd.
-    #[cfg(not(test))]
     fn fwupd_error_quark() -> GQuark;
 
     /// `GQuark g_io_error_quark(void)` -- defined in GIO.
-    #[cfg(not(test))]
     fn g_io_error_quark() -> GQuark;
+}
 
+#[link(name = "glib-2.0")]
+extern "C" {
     /// `void g_set_error_literal(GError **err, GQuark domain, gint code, const gchar *message)`
     fn g_set_error_literal(
         err: *mut *mut GError,
