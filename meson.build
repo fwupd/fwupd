@@ -4,7 +4,7 @@ project(
   'rust',
   version: '2.2.1',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=1.11.0',
+  meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
 
