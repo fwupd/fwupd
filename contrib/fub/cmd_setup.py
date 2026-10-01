@@ -86,9 +86,7 @@ def setup_deps(osname: OsName) -> int:
         logger.info("Skipping package install")
         return 0
 
-    dependencies = Dependencies.load_from(
-        directories.repository_root() / "contrib" / "ci" / "dependencies.xml"
-    )
+    dependencies = Dependencies.load()
     filter = OsArch.detect().value
     packages = dependencies.find_packages(osname, filter=filter)
     if not packages:

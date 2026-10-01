@@ -120,8 +120,16 @@ class Dependencies:
     _dependencies: list[_ParsedDependency]
 
     @classmethod
+    def load(cls) -> Self:
+        """Load contrib/ci/dependencies.xml for build dependencies."""
+        from .directories import directories
+
+        repo_root = directories.repository_root()
+        return Dependencies.load_from(repo_root / "contrib" / "ci" / "dependencies.xml")
+
+    @classmethod
     def load_from(cls, file: Path) -> Self:
-        """Parse contrib/ci/dependencies.xml for build dependencies."""
+        """Load a contrib/ci/dependencies.xml-compatible path for build dependencies."""
         tree = etree.parse(file)
         root = tree.getroot()
 
