@@ -440,7 +440,7 @@ fwupdplugin = library(
   sources: [fwupdplugin_src, fwupdplugin_headers],
   include_directories: [root_incdir, fwupd_incdir],
   dependencies: [library_deps],
-  link_with: [fwupd],
+  link_with: [fwupd, fwupd_ffi_lib],
   install_dir: libdir_pkg,
   install: true,
 )

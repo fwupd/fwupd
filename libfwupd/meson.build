@@ -139,6 +139,7 @@ fwupd = library(
   include_directories: root_incdir,
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupd_mapfile,
+  link_with: [fwupd_ffi_lib],
   install: true,
   install_tag: 'lib',
 )
@@ -269,6 +270,7 @@ if get_option('tests')
     sources: ['fwupd-test.c'] + libfwupd_src,
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps],
+    link_with: [fwupd_ffi_lib],
   )
   foreach test_name : [
     'bios-setting',

@@ -64,7 +64,7 @@ override_dh_auto_clean:
 
 override_dh_auto_configure:
 ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-	printf '[binaries]\nrust = ['\''rustc'\'', '\''--target'\'', '\''$(RUST_TARGET)'\'']\n' \
+	printf '[binaries]\nrust = ['\''rustc'\'', '\''--target'\'', '\''$(RUST_TARGET)'\'']\n[properties]\nrust_target = '\''$(RUST_TARGET)'\''\n' \
 		>$(CURDIR)/debian/rust-cross.ini
 endif
 	dh_auto_configure -- $(CONFARGS)

@@ -1,3 +1,6 @@
 [binaries]
 windmc = '/usr/bin/x86_64-w64-mingw32-windmc'
 exe_wrapper = 'wine'
+
+[properties]
+rust_target = 'x86_64-pc-windows-gnu'
