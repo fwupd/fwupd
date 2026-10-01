@@ -20,7 +20,6 @@ from .fwupd_logs import UPDATE_INFO, GET_DEVICES, DMI_DECODE
 from .fwupd_logs import GET_DEVICES_NO_VERSION
 from unittest.mock import patch
 
-
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 QUBES_FWUPDMGR_REPO = os.path.join(_THIS_DIR, "..", "src", "qubes_fwupdmgr.py")
 QUBES_FWUPDMGR_BINDIR = "/usr/sbin/qubes-fwupdmgr"

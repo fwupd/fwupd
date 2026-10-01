@@ -174,13 +174,14 @@ class FwupdReceiveUpdates:
             ]
             untrusted_metadata_file = os.path.join(tmpdir, metadata_name)
 
-            with open(untrusted_metadata_file, "bx") as untrusted_file_1, open(
-                untrusted_metadata_file + ".jcat", "bx"
-            ) as untrusted_file_2, subprocess.Popen(
-                cmd_copy_metadata_file, stdout=untrusted_file_1
-            ) as p, subprocess.Popen(
-                cmd_copy_metadata_file_signature, stdout=untrusted_file_2
-            ) as q:
+            with (
+                open(untrusted_metadata_file, "bx") as untrusted_file_1,
+                open(untrusted_metadata_file + ".jcat", "bx") as untrusted_file_2,
+                subprocess.Popen(cmd_copy_metadata_file, stdout=untrusted_file_1) as p,
+                subprocess.Popen(
+                    cmd_copy_metadata_file_signature, stdout=untrusted_file_2
+                ) as q,
+            ):
                 p.wait()
                 q.wait()
             if p.returncode != 0:
