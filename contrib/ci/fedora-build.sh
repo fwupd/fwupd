@@ -33,3 +33,10 @@ rpmbuild -ba "${QUBES_MACRO[@]}" build/fwupd.spec
 
 mkdir -p dist
 cp "$HOME"/rpmbuild/RPMS/*/*.rpm dist
+
+# retrieve the coverage report the spec %check section wrote into SOURCES; the
+# daemon tests run in a separate container so only the %check unit tests are
+# captured
+if [ -n "$CI" ]; then
+    cp "$HOME/rpmbuild/SOURCES/coverage.xml" coverage.xml
+fi

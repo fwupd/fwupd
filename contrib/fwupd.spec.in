@@ -311,6 +311,10 @@ cd -
 %endif
 %check
 %meson_test
+%if 0%{?enable_ci}
+# emit the coverage report into SOURCES so the CI build script can retrieve it
+CI=true COVERAGE_OUTPUT="%{_sourcedir}/coverage.xml" ./contrib/ci/coverage.sh
+%endif
 %endif
 
 %install
