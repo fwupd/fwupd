@@ -14,6 +14,11 @@ pacman -Sy --noconfirm qt5-base gcovr python-flask swtpm tpm2-tools
 pacman -U --noconfirm dist/*.pkg.*
 endgroup
 
+group "Generate coverage report"
+# makepkg builds out-of-source in build/src/build from build/src/fwupd
+COVERAGE_STRIP_PREFIX="build/src/fwupd/" ./contrib/ci/coverage.sh
+endgroup
+
 group "Run custom redfish simulator"
 plugins/redfish/tests/redfish.py &
 endgroup
