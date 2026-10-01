@@ -18,9 +18,17 @@ cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
-# build the package
-sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm --nocheck
+# build the package; the PKGBUILD check() runs the unit tests with coverage
+# enabled so we can produce a report below
+sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm
 
 # move the package to artifact dir
 mkdir -p ../dist
 mv ./*.pkg.* ../dist
+
+# generate the coverage report from the tree the tests just populated; makepkg
+# builds out-of-source in build/src/build from the source in build/src/fwupd
+if [ -n "$CI" ]; then
+    popd
+    COVERAGE_STRIP_PREFIX="build/src/fwupd/" ./contrib/ci/coverage.sh
+fi
