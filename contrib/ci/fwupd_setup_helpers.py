@@ -335,7 +335,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "command",
         choices=[
-            "get-dependencies",
             "test-markdown",
             "test-jinja2",
             "test-meson",
@@ -387,9 +386,6 @@ if __name__ == "__main__":
         test_meson()
     elif command == "detect-profile":
         print(detect_profile())
-    elif command == "get-dependencies":
-        dependencies = get_build_dependencies(args.os, args.variant, args.cross)
-        print(*dependencies, sep="\n")
     elif command == "install-dependencies":
         install_packages(
             args.os,
