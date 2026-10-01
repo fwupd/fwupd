@@ -108,8 +108,9 @@ repos:
       - id: clang-format
         name: clang-format
         language: script
-        entry: ./contrib/reformat-code.py
+        entry: ./fub format
         types_or: [c, c++]
+        pass_filenames: false
       - id: meson-format
         name: meson-format
         language: system

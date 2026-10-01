@@ -12,6 +12,14 @@ from .runcmd import RunCmd
 
 
 @dataclass(frozen=True)
+class InvalidGitRef(Exception):
+    ref: str
+
+    def __post_init__(self) -> None:
+        super().__init__(f"Invalid git ref: {self.ref}")
+
+
+@dataclass(frozen=True)
 class GitSha:
     """
     Represents a single git sha in a given repository.
@@ -66,9 +74,13 @@ class GitRepo:
 
     def as_sha(self, ref: str) -> GitSha:
         """
-        Return the sha for the given named ref
+        Return the sha for the given named ref.
+
+        Raises InvalidGitRef if the ref cannot be parsed.
         """
-        cmd = RunCmd(["git", "rev-parse", ref], cwd=self.root, check=True)
+        cmd = RunCmd(["git", "rev-parse", ref], cwd=self.root)
+        if not cmd.success:
+            raise InvalidGitRef(ref)
         return GitSha(sha=cmd.stdout.strip(), _repo=self)
 
     def clone_into(self, destdir: Path, depth: int = 0) -> Self:
@@ -84,6 +96,23 @@ class GitRepo:
         destdir.mkdir(exist_ok=True, parents=True)
         RunCmd(["git", "clone", str(self.root)] + git_args, cwd=destdir, check=True)
         return GitRepo(root=destdir / self.root.name)
+
+    def diff(self, ref: str | None = None, *, context_lines: int | None = None) -> str:
+        """
+        Return the diff against the given ref (if any)
+        """
+        args = []
+        if context_lines is not None:
+            args.append(f"-U{context_lines}")
+        if ref is not None:
+            args.append(ref)
+
+        cmd = RunCmd(["git", "diff"] + args, cwd=self.root)
+        if not cmd.success:
+            # Invalid ref is the only possible error here
+            raise InvalidGitRef(ref)
+
+        return cmd.stdout.strip()
 
     @contextmanager
     def checkout(self, sha: GitSha):

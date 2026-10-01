@@ -122,7 +122,7 @@ class TestShas:
             result = repo.as_sha(ref)
             assert result.sha == sha.strip()
             mock_runcmd.assert_called_once_with(
-                ["git", "rev-parse", ref], cwd=Path("/repo"), check=True
+                ["git", "rev-parse", ref], cwd=Path("/repo")
             )
 
 

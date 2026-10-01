@@ -102,7 +102,6 @@ from the PackageKit Coding Style.
 
 **NOTE:** Do not use `g_error()` -- it's not appropriate to abort the daemon on error.
 
-`./contrib/reformat-code.py` can be used in order to get automated
-formatting. Calling the script without arguments formats the current
-patch while passing commits will do formatting on everything changed since that
-commit.
+`fub format` can be used in order to get automated formatting. Calling the
+script without arguments formats the current patch while passing commits will do
+formatting on everything changed since that commit.
