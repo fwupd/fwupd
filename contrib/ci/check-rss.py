@@ -37,9 +37,9 @@ def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
         if line.find("in use at exit: ") != -1:
             value = int(line.split(" ")[9].strip().replace(",", ""))
     if limit and value > limit * 1024:
-        print(f"RSS usage was {value//1024}kB (limit of {limit}kB)")
+        print(f"RSS usage was {value // 1024}kB (limit of {limit}kB)")
         return 1
-    print(f"RSS usage was {value//1024}kB")
+    print(f"RSS usage was {value // 1024}kB")
     return 0
 
 

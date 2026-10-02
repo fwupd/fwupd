@@ -159,8 +159,9 @@ def run(args):
 
     errors = []
     for file in filter(
-        lambda f: f not in ignore_files
-        and not any(f.is_relative_to(d) for d in ignore_dirs),
+        lambda f: (
+            f not in ignore_files and not any(f.is_relative_to(d) for d in ignore_dirs)
+        ),
         files_to_check,
     ):
         logger.debug(f"Checking {file}")

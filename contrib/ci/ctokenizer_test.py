@@ -13,7 +13,6 @@ from ctokenizer import Tokenizer, Token, TokenList
 
 
 class TestCTokenize(unittest.TestCase):
-
     def _compare_tokens(self, data: str, tokens_wanted: List[str]) -> None:
         tokens = Tokenizer(data).tokens
         print(tokens)

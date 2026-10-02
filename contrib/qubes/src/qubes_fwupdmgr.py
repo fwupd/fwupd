@@ -295,7 +295,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                     for i, fw_dngd in enumerate(releases):
                         print(decorator)
                         print(
-                            f"  {i+1}. Firmware downgrade version:"
+                            f"  {i + 1}. Firmware downgrade version:"
                             f"\t {fw_dngd['Version']}"
                         )
                         description = fw_dngd["Description"].replace("<p>", "")
@@ -755,11 +755,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                     print("Available updates:")
                     print(decorator)
                 print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-                print(f"{i+1+prefix}. Device: {device['Name']}")
+                print(f"{i + 1 + prefix}. Device: {device['Name']}")
                 print(f"   Current firmware version:\t {device['Version']}")
                 for update in device["Releases"]:
                     print(decorator)
-                    print("   Firmware update " f"version:\t {update['Version']}")
+                    print(f"   Firmware update version:\t {update['Version']}")
                     print(f"   URL:\t {update['Url']}")
                     print(f"   SHA256 checksum:\t {update['Checksum']}")
                     description = update["Description"].replace("<p>", "")

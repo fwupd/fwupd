@@ -15,7 +15,6 @@ import copy
 
 
 class TokenHint(Enum):
-
     COMMENT = 1
     STRING = 2
     DEFINE = 3
@@ -44,7 +43,6 @@ def _check_int(s: str) -> bool:
 
 
 class Token:
-
     def __init__(self, data: str, linecnt: int = 0, hint: Optional[TokenHint] = None):
         self.linecnt: int = linecnt
         self.linecnt_end: int = linecnt
@@ -108,7 +106,6 @@ def _token_fuzzy_match(token: Token, data: str) -> bool:
 
 
 class TokenList(list):
-
     def __init__(self, tokens: Optional[list[Token]] = None):
         for token in tokens or []:
             self.append(token)
@@ -152,7 +149,6 @@ class TokenList(list):
         else:
             pos_range = range(offset or 0, len(self) - (len(data_fuzzy) - 1))
         for pos in pos_range:
-
             all_match: bool = True
             for datapos in range(len(data_fuzzy)):
                 comment_offset: int = 0
@@ -197,7 +193,6 @@ class TokenList(list):
 
 
 class NodeHint(Enum):
-
     UNION = 1
     ENUM = 2
     STRUCT = 3
@@ -206,7 +201,6 @@ class NodeHint(Enum):
 
 
 class Node:
-
     def __init__(
         self, depth: int, linecnt: int, tokens_pre: Optional[TokenList] = None
     ):
@@ -282,10 +276,8 @@ class Tokenizer:
         is_escape_mode: bool = False
 
         for pos, char in enumerate(data):
-
             # newline
             if char == "\n":
-
                 if is_comment_mode:
                     self.dump_acc(hint=TokenHint.COMMENT)
                 else:
@@ -389,7 +381,6 @@ class Tokenizer:
         node_parent: Optional[Node] = None
 
         for token in self.tokens:
-
             # ignore __attribute__
             if token.data == "G_GNUC_FLAG_ENUM":
                 continue
@@ -449,7 +440,6 @@ class Tokenizer:
 
 
 if __name__ == "__main__":
-
     for fn in sys.argv[1:]:
         with open(fn, "rb") as f:
             tok = Tokenizer(f.read().decode())
