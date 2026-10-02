@@ -232,7 +232,7 @@ expect_rc 0
 
 # ---
 echo " ● Enabling lvfs-embargo remote (wrong auth)…"
-fwupdmgr enable-remote-auth lvfs-embargo nobody@fwupd.org NOTSECRET
+fwupdmgr --download-retries=5 enable-remote-auth lvfs-embargo nobody@fwupd.org NOTSECRET
 expect_rc 1
 
 # success!
