@@ -2165,7 +2165,7 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 				"write-file",
 				G_CALLBACK(fu_context_esp_write_file_cb),
 				self,
-				0);
+				G_CONNECT_DEFAULT);
 	g_ptr_array_add(priv->esp_volumes, g_object_ref(volume));
 }
 
