@@ -645,6 +645,14 @@ fu_hpi_cfu_device_untransmitted_data(GByteArray *payload_data,
 	}
 	remaining_byte_count = payload_header_length - fill_from_position;
 	fu_byte_array_set_size(untransmitted_data, remaining_byte_count, 0x00);
+	if (untransmitted_data->data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "position 0x%zx had no untransmitted data",
+			    fill_from_position);
+		return FALSE;
+	}
 	return fu_memcpy_safe(untransmitted_data->data,
 			      untransmitted_data->len,
 			      0x0,
