@@ -39,6 +39,7 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *id,
 			     int fd,
 			     FwupdInstallFlags install_flags,
+			     const char *filename_hint,
 			     GError **error);
 gboolean
 fu_binder_cli_bridge_update_metadata(AIBinder *binder,

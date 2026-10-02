@@ -3725,10 +3725,11 @@ fwupd_client_install_stream_async(FwupdClient *self,
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	g_variant_builder_add(&builder, "{sv}", "reason", g_variant_new_string("user-action"));
 	if (filename_hint != NULL) {
+		g_autofree gchar *filename_abs = g_canonicalize_filename(filename_hint, NULL);
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      "filename",
-				      g_variant_new_string(filename_hint));
+				      g_variant_new_string(filename_abs));
 	}
 	g_variant_builder_add(&builder,
 			      "{sv}",
@@ -3891,7 +3892,7 @@ fwupd_client_install_async(FwupdClient *self,
 	fwupd_client_install_stream_async(self,
 					  device_id,
 					  istr,
-					  NULL,
+					  filename, /* a hint */
 					  install_flags,
 					  cancellable,
 					  callback,

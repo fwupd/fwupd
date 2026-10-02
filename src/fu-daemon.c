@@ -347,6 +347,59 @@ fu_daemon_stop(FuDaemon *self, GError **error)
 	return TRUE;
 }
 
+FuInputStream *
+fu_daemon_input_stream_from_filename_hint(FuDaemon *self, const gchar *filename, GError **error)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *filename_abs = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	g_return_val_if_fail(FU_IS_DAEMON(self), NULL);
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check -- GFile canonicalizes the path for free */
+	file = g_file_new_for_path(filename);
+	filename_abs = g_file_get_path(file);
+	if (g_file_test(filename_abs, G_FILE_TEST_IS_SYMLINK)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot lazy read from symlink");
+		return NULL;
+	}
+
+	/* find the local remote where the filename matches load the file prefix */
+	remotes = fu_engine_get_remotes(priv->engine, error);
+	if (remotes == NULL)
+		return NULL;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_autoptr(GFile) file_cache = NULL;
+
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
+			continue;
+		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DIRECTORY)
+			continue;
+		g_debug("checking filename hint against %s",
+			fwupd_remote_get_filename_cache(remote));
+		file_cache = g_file_new_for_path(fwupd_remote_get_filename_cache(remote));
+		if (!g_file_has_prefix(file, file_cache))
+			continue;
+		g_debug("load from %s as AllowFilenameHint enabled", filename_abs);
+		return fu_input_stream_from_path(filename_abs, error);
+	}
+
+	/* not found */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "did not find %s in any enabled local remote",
+		    filename);
+	return NULL;
+}
+
 static void
 fu_daemon_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {

@@ -5,6 +5,7 @@ import android.os.ParcelFileDescriptor;
 @VintfStability
 parcelable FwupdInstallRequest {
     String id;
-    ParcelFileDescriptor firmwareFd;
+    @nullable ParcelFileDescriptor firmwareFd;
     long flags;
+    @nullable String filename_hint;
 }

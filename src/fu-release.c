@@ -1341,6 +1341,13 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 		}
 	}
 
+	/* mark releases coming from a local file or directory */
+	if (self->remote != NULL &&
+	    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
+	     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
+		fu_release_add_flag(self, FWUPD_RELEASE_FLAG_IS_LOCAL);
+	}
+
 	/* success */
 	return TRUE;
 }

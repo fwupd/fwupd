@@ -1069,6 +1069,7 @@ fu_engine_modify_config(FuEngine *self,
 		    "IdleTimeout",
 		    "IgnoreEfivarsFreeSpace",
 		    "IgnorePower",
+		    "AllowFilenameHint",
 		    "IgnoreRequirements",
 		    "OnlyTrustPostQuantumSignatures",
 		    "P2pPolicy",
@@ -5747,8 +5748,8 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 	if (remotes->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "No remotes configured");
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no remotes configured");
 		return NULL;
 	}
 
@@ -5781,8 +5782,11 @@ fu_engine_get_remote_by_id(FuEngine *self, const gchar *remote_id, GError **erro
 			return remote;
 	}
 
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Couldn't find remote %s", remote_id);
-
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "could not find remote %s",
+		    remote_id);
 	return NULL;
 }
 
@@ -9574,6 +9578,7 @@ fu_engine_constructed(GObject *obj)
 	fu_config_set_default(config, "fwupd", "IdleInhibitStartupThreshold", "500"); /* ms */
 	fu_config_set_default(config, "fwupd", "IgnoreEfivarsFreeSpace", "false");
 	fu_config_set_default(config, "fwupd", "IgnorePower", "false");
+	fu_config_set_default(config, "fwupd", "AllowFilenameHint", "false");
 	fu_config_set_default(config, "fwupd", "IgnoreRequirements", "false");
 	fu_config_set_default(config, "fwupd", "OnlyTrusted", "true");
 	fu_config_set_default(config, "fwupd", "P2pPolicy", FU_DEFAULT_P2P_POLICY);
