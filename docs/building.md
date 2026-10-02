@@ -178,7 +178,7 @@ This will send the firmware archive from the locally built `fwupdmgr` to the loc
 
 The `./contrib/setup` script automatically sets up [pre-commit](https://pre-commit.com/) to run many different source tools when adding code with `git commit` -- for instance:
 
-* Reformatting the code to match the project guidelines, using standard language specific linting tools like `black`, `shfmt` and `clang-format`
+* Reformatting the code to match the project guidelines, using standard language specific linting tools like `ruff`, `shfmt` and `clang-format`
 * Shell scripts are verified using `shellcheck`
 * Checking if all the user-visible commands in `fwupdmgr` are documented in `fwupdmgr.md`
 * Checking if the correct headers are being used for the plugin

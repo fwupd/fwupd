@@ -44,7 +44,9 @@ FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
 FWUPD_DOM0_METADATA_FILE = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.xz")
 FWUPD_DOM0_METADATA_FILE_JCAT = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.xz")
 REQUIRED_DEV = "Requires device not connected"
-XL_LIST_LOG = "Name                                        ID   Mem VCPUs	State	Time(s)"
+XL_LIST_LOG = (
+    "Name                                        ID   Mem VCPUs	State	Time(s)"
+)
 FWUPDMGR = "/bin/fwupdmgr"
 BIOS_UPDATE_FLAG = os.path.join(FWUPD_DOM0_DIR, "bios_update")
 LVFS_TESTING_DOM0_FLAG = os.path.join(FWUPD_DOM0_DIR, "lvfs_testing")

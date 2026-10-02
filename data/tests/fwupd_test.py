@@ -122,9 +122,7 @@ class FwupdTest(dbusmock.DBusTestCase):
         # note: Python doesn't propagate the setenv from Testbed.new(), so we
         # have to do that ourselves
         env["UMOCKDEV_DIR"] = self.testbed.get_root_dir()
-        self.daemon_log = (
-            tempfile.NamedTemporaryFile()
-        )  # pylint: disable=consider-using-with
+        self.daemon_log = tempfile.NamedTemporaryFile()  # pylint: disable=consider-using-with
         daemon_path = [self.daemon_path, "-vv"]
 
         # pylint: disable=consider-using-with

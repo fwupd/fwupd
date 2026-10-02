@@ -581,8 +581,7 @@ class FwupdTui(App):
         yield Header()
         with ContentSwitcher(initial="home-view", id="views"):
             with Vertical(id="home-view", classes="view"):
-                with Vertical(id="home-menu"):
-                    # TRANSLATORS: title of the home menu
+                with Vertical(id="home-menu"):  # TRANSLATORS: title of the home menu
                     yield Label(_("Firmware Management"), id="home-title")
                     yield Static(
                         # TRANSLATORS: home screen introductory text
