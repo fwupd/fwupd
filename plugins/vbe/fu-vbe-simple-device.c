@@ -12,6 +12,7 @@
 #include <errno.h>
 #endif
 #include <fcntl.h>
+#include <glib-unix.h>
 #include <stdio.h>
 
 #include "fu-vbe-simple-device.h"
@@ -169,8 +170,7 @@ fu_vbe_simple_device_close(FuDevice *device, GError **error)
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 
 	/* close device */
-	close(self->fd);
-	self->fd = -1;
+	g_clear_fd(&self->fd, NULL);
 
 	/* success */
 	return TRUE;
