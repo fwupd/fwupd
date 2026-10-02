@@ -84,3 +84,9 @@ endgroup
 group "Run fwupdtool-efiboot.sh installed test"
 /usr/share/installed-tests/fwupd/fwupdtool-efiboot.sh
 endgroup
+
+# run gcovr from the build directory
+WORKSPACE="$PWD"
+(cd build/src/fwupd &&
+    GCOVR_SEARCH=../build GCOVR_OUTPUT="$WORKSPACE/coverage.xml" \
+        "$WORKSPACE/contrib/ci/coverage.sh")
