@@ -46,6 +46,3 @@ level = "ignore"
 
 [rules.use_g_source_once]
 level = "ignore"
-
-[rules.use_clear_functions]
-level = "ignore"
