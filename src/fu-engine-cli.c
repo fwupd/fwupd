@@ -4116,7 +4116,6 @@ fu_engine_cli_sync_impl_install(FwupdClient *client,
 							  error);
 		if (devices_possible == NULL)
 			return FALSE;
-		g_ptr_array_add(devices_possible, device);
 	}
 
 	/* download if required */
