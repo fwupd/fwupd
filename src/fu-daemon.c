@@ -199,7 +199,7 @@ fu_daemon_schedule_housekeeping(FuDaemon *self)
 	    fu_context_add_timeout_seconds(ctx, delay, fu_daemon_schedule_housekeeping_cb, self);
 }
 
-static gboolean
+static void
 fu_daemon_schedule_process_quit_cb(gpointer user_data)
 {
 	FuDaemon *self = FU_DAEMON(user_data);
@@ -211,7 +211,6 @@ fu_daemon_schedule_process_quit_cb(gpointer user_data)
 
 	if (!fu_daemon_stop(self, &error))
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
-	return G_SOURCE_REMOVE;
 }
 
 void
@@ -228,7 +227,7 @@ fu_daemon_schedule_process_quit(FuDaemon *self)
 	/* allow the daemon to respond to the request, then quit */
 	if (priv->process_quit_id != 0)
 		g_source_remove(priv->process_quit_id);
-	priv->process_quit_id = g_idle_add(fu_daemon_schedule_process_quit_cb, self);
+	priv->process_quit_id = g_idle_add_once(fu_daemon_schedule_process_quit_cb, self);
 }
 
 static gboolean

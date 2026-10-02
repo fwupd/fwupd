@@ -43,6 +43,3 @@ level = "ignore"
 
 [rules.matching_declare_define]
 level = "ignore"
-
-[rules.use_g_source_once]
-level = "ignore"

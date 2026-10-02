@@ -14,12 +14,11 @@ typedef struct {
 	GThread *worker_thread;
 } FuThreadTestSelf;
 
-static gboolean
+static void
 fwupd_thread_test_exit_idle_cb(gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
 	g_application_release(self->app);
-	return G_SOURCE_REMOVE;
 }
 
 static gpointer
@@ -36,11 +35,11 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 		  g_main_context_get_thread_default());
 	if (!fwupd_client_connect(self->client, NULL, &error_local))
 		g_warning("%s", error_local->message);
-	g_idle_add(fwupd_thread_test_exit_idle_cb, self);
+	g_idle_add_once(fwupd_thread_test_exit_idle_cb, self);
 	return NULL;
 }
 
-static gboolean
+static void
 fwupd_thread_test_idle_cb(gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
@@ -48,7 +47,6 @@ fwupd_thread_test_idle_cb(gpointer user_data)
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
 	self->worker_thread = g_thread_new("worker00", fwupd_thread_test_thread_cb, self);
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -56,7 +54,7 @@ fwupd_thread_test_activate_cb(GApplication *app, gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
 	g_application_hold(self->app);
-	g_idle_add(fwupd_thread_test_idle_cb, self);
+	g_idle_add_once(fwupd_thread_test_idle_cb, self);
 }
 
 static void

@@ -362,7 +362,7 @@ write_controller_fw(const gchar *nvm)
 	g_assert_cmpuint(n, >, 0);
 }
 
-static gboolean
+static void
 mock_tree_attach_device(gpointer user_data)
 {
 	FuThunderboltMockTree *tree = (FuThunderboltMockTree *)user_data;
@@ -420,10 +420,8 @@ mock_tree_attach_device(gpointer user_data)
 		child->bed = g_object_ref(tree->bed);
 		child->sysfs_parent = g_strdup(tree->path);
 
-		g_timeout_add(child->device->delay_ms, mock_tree_attach_device, child);
+		g_timeout_add_once(child->device->delay_ms, mock_tree_attach_device, child);
 	}
-
-	return G_SOURCE_REMOVE;
 }
 
 typedef struct {
@@ -431,12 +429,11 @@ typedef struct {
 	GMainLoop *loop;
 } FuThunderboltSyncContext;
 
-static gboolean
+static void
 on_sync_timeout(gpointer user_data)
 {
 	FuThunderboltSyncContext *ctx = (FuThunderboltSyncContext *)user_data;
 	g_main_loop_quit(ctx->loop);
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -504,7 +501,7 @@ mock_tree_sync(FuThunderboltMockTree *root, FuPlugin *plugin, int timeout_ms)
 				  &ctx);
 
 	if (timeout_ms > 0)
-		g_timeout_add(timeout_ms, on_sync_timeout, &ctx);
+		g_timeout_add_once(timeout_ms, on_sync_timeout, &ctx);
 
 	g_main_loop_run(mainloop);
 
@@ -571,7 +568,7 @@ mock_tree_attach(FuThunderboltMockTree *root, UMockdevTestbed *bed, FuPlugin *pl
 	root->sysfs_parent = udev_mock_add_usb4_port(bed, 1);
 	g_assert_nonnull(root->sysfs_parent);
 
-	g_timeout_add(root->device->delay_ms, mock_tree_attach_device, root);
+	g_timeout_add_once(root->device->delay_ms, mock_tree_attach_device, root);
 
 	return mock_tree_settle(root, plugin);
 }
@@ -676,7 +673,7 @@ update_context_free(FuThunderboltUpdateContext *ctx)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuThunderboltUpdateContext, update_context_free);
 #pragma clang diagnostic pop
 
-static gboolean
+static void
 reattach_tree(gpointer user_data)
 {
 	FuThunderboltUpdateContext *ctx = (FuThunderboltUpdateContext *)user_data;
@@ -685,9 +682,7 @@ reattach_tree(gpointer user_data)
 	g_debug("mock update done, reattaching tree…");
 
 	node->bed = g_object_ref(ctx->bed);
-	g_timeout_add(node->device->delay_ms, mock_tree_attach_device, node);
-
-	return G_SOURCE_REMOVE;
+	g_timeout_add_once(node->device->delay_ms, mock_tree_attach_device, node);
 }
 
 static void
@@ -738,7 +733,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 	}
 
 	g_debug("device tree reattachment in %3.2f seconds", ctx->timeout / 1000.0);
-	g_timeout_add(ctx->timeout, reattach_tree, ctx);
+	g_timeout_add_once(ctx->timeout, reattach_tree, ctx);
 }
 
 static FuThunderboltUpdateContext *
