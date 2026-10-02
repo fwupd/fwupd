@@ -15,3 +15,5 @@ typedef struct {
 
 void
 fu_amd_afc_config_entry_free(FuAmdAfcConfigEntry *self);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuAmdAfcConfigEntry, fu_amd_afc_config_entry_free)

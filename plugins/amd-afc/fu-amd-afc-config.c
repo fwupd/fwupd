@@ -120,7 +120,7 @@ fu_amd_afc_config_parse(GBytes *bytes, GError **error)
 	}
 	for (guint i = 0; i < entry_count; i++) {
 		g_autoptr(GPtrArray) path = g_ptr_array_new_with_free_func(g_free);
-		FuAmdAfcConfigEntry *entry;
+		g_autoptr(FuAmdAfcConfigEntry) entry = NULL;
 		guint16 token;
 		guint path_length;
 
@@ -163,11 +163,18 @@ fu_amd_afc_config_parse(GBytes *bytes, GError **error)
 			entry = g_new0(FuAmdAfcConfigEntry, 1);
 			entry->path = g_steal_pointer(&path);
 			entry->value = g_strdup(value);
+			break;
+		}
+		if (entry == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "no matching entry in AFC config");
+			return NULL;
 		}
 		for (guint j = 0; j < entries->len; j++) {
 			FuAmdAfcConfigEntry *entry_old = g_ptr_array_index(entries, j);
 			if (fu_amd_afc_config_paths_equal(entry_old->path, entry->path)) {
-				fu_amd_afc_config_entry_free(entry);
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_INVALID_DATA,
@@ -175,7 +182,7 @@ fu_amd_afc_config_parse(GBytes *bytes, GError **error)
 				return NULL;
 			}
 		}
-		g_ptr_array_add(entries, entry);
+		g_ptr_array_add(entries, g_steal_pointer(&entry));
 	}
 	if (offset != bufsz) {
 		g_set_error_literal(error,
