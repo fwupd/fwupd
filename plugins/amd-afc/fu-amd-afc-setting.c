@@ -82,5 +82,5 @@ fu_amd_afc_setting_build_name(FuAmdAfcSetting *self)
 		for (const gchar *p = component; *p != '\0'; p++)
 			g_string_append_c(name, *p == '/' ? '!' : *p);
 	}
-	return g_string_free(g_steal_pointer(&name), FALSE);
+	return g_string_free_and_steal(g_steal_pointer(&name));
 }

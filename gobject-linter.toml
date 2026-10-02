@@ -50,8 +50,5 @@ level = "ignore"
 [rules.use_g_set_str]
 level = "ignore"
 
-[rules.use_g_string_free_and_steal]
-level = "ignore"
-
 [rules.use_clear_functions]
 level = "ignore"
