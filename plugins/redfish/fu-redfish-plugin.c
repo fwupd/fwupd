@@ -771,6 +771,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "RedfishResetPreDelay");
 	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
 	fu_context_add_quirk_key(ctx, "RedfishOemVendorIds");
+	fu_context_add_quirk_key(ctx, "RedfishProductNameTokens");
 	self->backend = fu_redfish_backend_new(ctx);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_REDFISH_SMBIOS);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_REDFISH_FIRMWARE);

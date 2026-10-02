@@ -53,6 +53,7 @@ fu_self_init(FuTest *self)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx_nvidia = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
@@ -146,8 +147,22 @@ fu_self_init(FuTest *self)
 		g_assert_true(ret);
 	}
 
-	/* NVIDIA DGX Station GB300 BMC */
-	self->nvidia_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	/* NVIDIA DGX Station GB300 BMC, detected by SMBIOS product name so it needs a
+	 * context of its own, as the other personas must not look like a station */
+	fu_context_add_flag(ctx_nvidia, FU_CONTEXT_FLAG_NO_CACHE);
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_config_set_basename(fu_context_get_config(ctx_nvidia), "redfish-fwupd.conf");
+	ret = fu_context_load(ctx_nvidia, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_add_flag(ctx_nvidia, FU_CONTEXT_FLAG_LOADED_HWINFO);
+	fu_hwids_add_value(fu_context_get_hwids(ctx_nvidia), FU_HWIDS_KEY_MANUFACTURER, "NVIDIA");
+	fu_hwids_add_value(fu_context_get_hwids(ctx_nvidia),
+			   FU_HWIDS_KEY_PRODUCT_NAME,
+			   "GB300 DGX Station");
+	self->nvidia_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx_nvidia);
 	ret = fu_plugin_runner_startup(self->nvidia_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_debug("ignoring: %s", error->message);
@@ -721,7 +736,7 @@ fu_redfish_nvidia_update_func(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	dev = g_ptr_array_index(devices, 0);
 
-	/* the GB300 is detected by chassis model, so the NVIDIA subclass must have
+	/* the GB300 is detected by SMBIOS product name, so the NVIDIA subclass must have
 	 * been chosen over the generic multipart device */
 	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
 

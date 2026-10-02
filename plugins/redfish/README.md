@@ -118,9 +118,11 @@ enough to re-authenticate, with no need to restart `fwupd`.
 
 ## NVIDIA DGX Station GB300
 
-The BMC is detected by probing `/redfish/v1/Chassis/Chassis_0` for a `Model`
-containing both `GB300` and `Station`, case-insensitively. The `Manufacturer` is
-deliberately ignored, as OEM-built stations report their own brand. Each
+The system is detected by its SMBIOS product name, which must contain every
+token listed in `RedfishProductNameTokens` in `redfish.quirk` -- `GB300` and
+`Station` -- case-insensitively and in any order. The manufacturer is
+deliberately not checked, as OEM-built stations report their own brand. With no
+such quirk entry, no system is detected. Each
 entry in the BMC's `FirmwareInventory` -- for example
 `/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0` -- is then exposed as its
 own device.
@@ -173,8 +175,10 @@ accepts the request -- save your work before activating.
 * **Detection.** The Redfish root `Vendor` is not a usable signal, as OEMs also
   sell the Station and their BMCs report their own brand rather than NVIDIA.
   Other Redfish implementations must still not receive the GB300 update
-  semantics above, so the `Chassis_0` model is verified, whatever the
-  `Manufacturer` says.
+  semantics above, so the SMBIOS product name is verified, whatever the
+  manufacturer says. The BMC is not asked: the product name is read from the host
+  the daemon runs on, and is empty where there is no SMBIOS, such as a virtual
+  machine, so such a system keeps the generic device.
 * **Vendor IDs.** A firmware release is only offered to a device whose vendor IDs
   match the namespace of the LVFS account it was uploaded to, so an OEM-built
   Station must carry the OEM's identity to take only that OEM's releases. The

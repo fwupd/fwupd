@@ -198,26 +198,12 @@ def update_service():
 
 
 # ── NVIDIA DGX Station GB300 ──────────────────────────────────────────────────
-# The plugin recognises a GB300 by probing Chassis_0 for a Model containing both
-# "GB300" and "Station", whatever the Manufacturer; every other persona must fail
-# that check so it keeps the generic multipart device.
-@app.route("/redfish/v1/Chassis/Chassis_0")
-def chassis_chassis_0():
-    if not _is_nvidia():
-        return _not_found("/redfish/v1/Chassis/Chassis_0")
-    res = {
-        "@odata.id": "/redfish/v1/Chassis/Chassis_0",
-        "@odata.type": "#Chassis.v1_25_0.Chassis",
-        "Id": "Chassis_0",
-        "Manufacturer": "Dell Technologies",
-        "Model": "DGX Station GB300",
-        "Name": "Chassis",
-    }
-    return Response(json.dumps(res), status=200, mimetype="application/json")
+# The plugin recognises a GB300 from the SMBIOS product name, not from anything
+# the BMC reports, so the self test gives this persona its own SMBIOS identity.
 
 
-# The aux-rail reset is advertised by BMC_0, deliberately not by the chassis used
-# for detection above -- the plugin has to read the action target from here.
+# The aux-rail reset is advertised by BMC_0 -- the plugin has to read the action
+# target from here.
 @app.route("/redfish/v1/Chassis/BMC_0")
 def chassis_bmc_0():
     if not _is_nvidia():

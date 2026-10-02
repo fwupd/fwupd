@@ -477,31 +477,38 @@ fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_pre
 static gboolean
 fu_redfish_backend_is_nvidia_bmc(FuRedfishBackend *self)
 {
-	const gchar *model;
-	g_autofree gchar *model_lower = NULL;
-	g_autoptr(FuRedfishRequest) req = NULL;
-	g_autoptr(FwupdJsonObject) json_chassis = NULL;
-	g_autoptr(GError) error_local = NULL;
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	const gchar *product;
+	const gchar *tokens;
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *product_lower = NULL;
+	g_auto(GStrv) split = NULL;
+	guint n_tokens = 0;
 
-	req = fu_redfish_backend_request_new(self);
-	if (!fu_redfish_request_perform(req,
-					"/redfish/v1/Chassis/Chassis_0",
-					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					&error_local)) {
-		g_debug("Chassis_0 probe failed: %s", error_local->message);
+	product = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
+	if (product == NULL) {
+		g_debug("no SMBIOS product name, not a DGX Station GB300");
 		return FALSE;
 	}
-	/* a BMC without this chassis may answer with no JSON body at all */
-	json_chassis = fu_redfish_request_get_json_object(req, NULL);
-	if (json_chassis == NULL)
+	guid = fwupd_guid_hash_string("REDFISH\\NVIDIA_OOB_PRODUCT");
+	tokens = fu_context_lookup_quirk_by_id(ctx, guid, "RedfishProductNameTokens");
+	if (tokens == NULL) {
+		g_debug("no RedfishProductNameTokens quirk, not a DGX Station GB300");
 		return FALSE;
-	model = fwupd_json_object_get_string(json_chassis, "Model", NULL);
-	if (model == NULL)
-		return FALSE;
-	/* match "GB300" and "Station" anywhere in the model string, in any order and
-	 * case, covering "GB300 Station", "DGX Station GB300" and similar */
-	model_lower = g_ascii_strdown(model, -1);
-	return strstr(model_lower, "gb300") != NULL && strstr(model_lower, "station") != NULL;
+	}
+
+	/* every token must appear, in any order and case */
+	product_lower = g_ascii_strdown(product, -1);
+	split = g_strsplit(tokens, "|", -1);
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_autofree gchar *token_lower = g_ascii_strdown(split[i], -1);
+		if (token_lower[0] == '\0')
+			continue;
+		if (strstr(product_lower, token_lower) == NULL)
+			return FALSE;
+		n_tokens++;
+	}
+	return n_tokens > 0;
 }
 
 static gboolean

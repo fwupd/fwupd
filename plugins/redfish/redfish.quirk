@@ -35,6 +35,12 @@ RedfishResetPreDelay = 100000
 Flags = manager-reset,no-manager-reset-request
 RedfishResetPreDelay = 120000
 
+# A system is a DGX Station GB300 when its SMBIOS product name contains every
+# |-separated token, in any order and case. The manufacturer is not checked, as
+# OEM-built stations report their own brand.
+[REDFISH\NVIDIA_OOB_PRODUCT]
+RedfishProductNameTokens = GB300|Station
+
 # DGX Station GB300 sold by an OEM: the section is the SMBIOS system manufacturer
 # and RedfishOemVendorIds the |-separated vendor IDs of that OEM's LVFS account,
 # so only that account's firmware is offered. A manufacturer with no section here
