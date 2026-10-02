@@ -72,8 +72,8 @@ fu_amd_afc_setting_build_name(FuAmdAfcSetting *self)
 	g_autoptr(GString) name = g_string_new(NULL);
 	g_autofree gchar *component = NULL;
 	for (guint i = 0; i < self->paths->len; i++) {
-		g_clear_pointer(&component, g_free);
-		component = g_strdup(g_ptr_array_index(self->paths, i));
+		const gchar *path = g_ptr_array_index(self->paths, i);
+		g_set_str(&component, path);
 		g_strstrip(component);
 		if (component[0] == '\0')
 			continue;

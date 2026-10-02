@@ -190,14 +190,12 @@ fu_mm_mhi_firehose_device_set_quirk_kv(FuDevice *device,
 	FuMmMhiFirehoseDevice *self = FU_MM_MHI_FIREHOSE_DEVICE(device);
 
 	if (g_strcmp0(key, "ModemManagerFirehoseProgFile") == 0) {
-		g_free(self->firehose_prog_file);
-		self->firehose_prog_file = g_strdup(value);
+		g_set_str(&self->firehose_prog_file, value);
 		return TRUE;
 	}
 
 	if (g_strcmp0(key, "ModemManagerLibFirmwarePath") == 0) {
-		g_free(self->lib_firmware_path);
-		self->lib_firmware_path = g_strdup(value);
+		g_set_str(&self->lib_firmware_path, value);
 		return TRUE;
 	}
 
