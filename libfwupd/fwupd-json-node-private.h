@@ -15,3 +15,5 @@ FwupdJsonNode *
 fwupd_json_node_new_from_rust(FwupdRsJsonNode *rs) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 FwupdRsJsonNode *
 fwupd_json_node_get_rust(FwupdJsonNode *self) G_GNUC_NON_NULL(1);
+
+G_END_DECLS
