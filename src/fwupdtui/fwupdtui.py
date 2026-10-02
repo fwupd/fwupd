@@ -1256,11 +1256,10 @@ class FwupdTui(App):
         device = self.devices[self.current_device_id]
         release = self.releases[key]
         action = self.set_release_action(key)
-        lines = [
-            # TRANSLATORS: fallback title shown when a release has no name
-            f"[b]{escape(release.get_name() or device.get_name() or _('Firmware'))} "
-            f"{escape(release.get_version() or '')}[/b]"
-        ]
+        # TRANSLATORS: fallback title shown when a release has no name
+        title = escape(release.get_name() or device.get_name() or _("Firmware"))
+        version = escape(release.get_version() or "")
+        lines = [f"[b]{title} {version}[/b]"]
         fields = (
             # TRANSLATORS: release field label: the action to perform
             (_("Action"), action),
