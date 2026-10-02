@@ -267,7 +267,7 @@ fu_usb_backend_idle_helper_copy(gconstpointer src, gpointer user_data)
 }
 
 /* always in the main thread */
-static gboolean
+static void
 fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(user_data);
@@ -298,7 +298,6 @@ fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 	}
 
 	/* all done */
-	return G_SOURCE_REMOVE;
 }
 
 /* this is run in the libusb thread */
@@ -321,7 +320,7 @@ fu_usb_backend_hotplug_cb(struct libusb_context *ctx,
 
 	g_ptr_array_add(self->idle_events, helper);
 	if (self->idle_events_id == 0)
-		self->idle_events_id = g_idle_add(fu_usb_backend_idle_hotplug_cb, self);
+		self->idle_events_id = g_idle_add_once(fu_usb_backend_idle_hotplug_cb, self);
 
 	return 0;
 }

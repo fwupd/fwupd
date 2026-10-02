@@ -13,12 +13,11 @@ typedef struct {
 	GPtrArray *worker_threads;
 } FuThreadTestSelf;
 
-static gboolean
+static void
 fwupd_thread_test_exit_idle_cb(gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
 	g_application_release(self->app);
-	return G_SOURCE_REMOVE;
 }
 
 static gpointer
@@ -37,11 +36,11 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 	devices = fwupd_client_get_devices(self->client, NULL, &error_local);
 	if (devices == NULL)
 		g_warning("%s", error_local->message);
-	g_idle_add(fwupd_thread_test_exit_idle_cb, self);
+	g_idle_add_once(fwupd_thread_test_exit_idle_cb, self);
 	return NULL;
 }
 
-static gboolean
+static void
 fwupd_thread_test_idle_cb(gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
@@ -59,8 +58,6 @@ fwupd_thread_test_idle_cb(gpointer user_data)
 		if (i > 0)
 			g_application_hold(self->app);
 	}
-
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -68,7 +65,7 @@ fwupd_thread_test_activate_cb(GApplication *app, gpointer user_data)
 {
 	FuThreadTestSelf *self = user_data;
 	g_application_hold(self->app);
-	g_idle_add(fwupd_thread_test_idle_cb, self);
+	g_idle_add_once(fwupd_thread_test_idle_cb, self);
 }
 
 static gboolean

@@ -37,14 +37,13 @@ fu_main_sigterm_cb(gpointer user_data)
 }
 #endif
 
-static gboolean
+static void
 fu_main_timed_exit_cb(gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
 	g_autoptr(GError) error = NULL;
 	if (!fu_daemon_stop(daemon, &error))
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -177,9 +176,9 @@ main(int argc, char *argv[])
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */
 	if (immediate_exit)
-		g_idle_add(fu_main_timed_exit_cb, daemon);
+		g_idle_add_once(fu_main_timed_exit_cb, daemon);
 	else if (timed_exit)
-		g_timeout_add_seconds(5, fu_main_timed_exit_cb, daemon);
+		g_timeout_add_seconds_once(5, fu_main_timed_exit_cb, daemon);
 
 	/* wait */
 	g_message("fwupd %s ready for requests (locale %s)", VERSION, g_getenv("LANG"));

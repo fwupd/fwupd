@@ -255,7 +255,7 @@ typedef struct {
 static void
 fu_mm_qmi_device_load_config(FuMmQmiDeviceWriteContext *ctx);
 
-static gboolean
+static void
 fu_mm_qmi_device_load_config_timeout(gpointer user_data)
 {
 	FuMmQmiDeviceWriteContext *ctx = user_data;
@@ -268,8 +268,6 @@ fu_mm_qmi_device_load_config_timeout(gpointer user_data)
 			    FWUPD_ERROR_TIMED_OUT,
 			    "couldn't load mcfg: timed out");
 	g_main_loop_quit(ctx->mainloop);
-
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -367,7 +365,7 @@ fu_mm_qmi_device_load_config_ready(GObject *qmi_client, GAsyncResult *res, gpoin
 
 	/* don't wait forever */
 	g_warn_if_fail(ctx->timeout_id == 0);
-	ctx->timeout_id = g_timeout_add_seconds(5, fu_mm_qmi_device_load_config_timeout, ctx);
+	ctx->timeout_id = g_timeout_add_seconds_once(5, fu_mm_qmi_device_load_config_timeout, ctx);
 }
 
 static void
@@ -476,7 +474,7 @@ typedef struct {
 	guint token;
 } FuMmQmiDeviceActivateContext;
 
-static gboolean
+static void
 fu_mm_qmi_device_activate_config_timeout(gpointer user_data)
 {
 	FuMmQmiDeviceActivateContext *ctx = user_data;
@@ -486,8 +484,6 @@ fu_mm_qmi_device_activate_config_timeout(gpointer user_data)
 
 	/* not an error, the device may go away without sending the indication */
 	g_main_loop_quit(ctx->mainloop);
-
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -565,7 +561,8 @@ fu_mm_qmi_device_activate_config_ready(GObject *qmi_client, GAsyncResult *res, g
 
 	/* don't wait forever */
 	g_warn_if_fail(ctx->timeout_id == 0);
-	ctx->timeout_id = g_timeout_add_seconds(5, fu_mm_qmi_device_activate_config_timeout, ctx);
+	ctx->timeout_id =
+	    g_timeout_add_seconds_once(5, fu_mm_qmi_device_activate_config_timeout, ctx);
 }
 
 static void
@@ -588,7 +585,7 @@ fu_mm_qmi_device_activate_config(FuMmQmiDeviceActivateContext *ctx)
 				       ctx);
 }
 
-static gboolean
+static void
 fu_mm_qmi_device_set_selected_config_timeout(gpointer user_data)
 {
 	FuMmQmiDeviceActivateContext *ctx = user_data;
@@ -601,8 +598,6 @@ fu_mm_qmi_device_set_selected_config_timeout(gpointer user_data)
 			    FWUPD_ERROR_TIMED_OUT,
 			    "couldn't set selected config: timed out");
 	g_main_loop_quit(ctx->mainloop);
-
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -670,7 +665,7 @@ fu_mm_qmi_device_set_selected_config_ready(GObject *qmi_client,
 	/* don't wait forever */
 	g_warn_if_fail(ctx->timeout_id == 0);
 	ctx->timeout_id =
-	    g_timeout_add_seconds(5, fu_mm_qmi_device_set_selected_config_timeout, ctx);
+	    g_timeout_add_seconds_once(5, fu_mm_qmi_device_set_selected_config_timeout, ctx);
 }
 
 static void

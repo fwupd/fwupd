@@ -46,14 +46,13 @@ fu_main_svc_report_status(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwW
 	SetServiceStatus(g_svc_status_handle, &g_svc_status);
 }
 
-static gboolean
+static void
 fu_main_svc_control_stop_cb(gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
 	g_autoptr(GError) error = NULL;
 	if (!fu_daemon_stop(daemon, &error))
 		g_warning("Failed to stop daemon, will wait: %s\n", error->message);
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -63,7 +62,7 @@ fu_main_svc_control_cb(DWORD dwCtrl)
 	case SERVICE_CONTROL_STOP:
 		fu_main_svc_report_status(SERVICE_STOP_PENDING, NO_ERROR, 0);
 		/* there is no user_data, because global state with threads is completely fine */
-		g_idle_add(fu_main_svc_control_stop_cb, g_daemon);
+		g_idle_add_once(fu_main_svc_control_stop_cb, g_daemon);
 		fu_main_svc_report_status(g_svc_status.dwCurrentState, NO_ERROR, 0);
 		break;
 	default:

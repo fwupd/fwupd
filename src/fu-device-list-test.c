@@ -119,20 +119,18 @@ typedef struct {
 	FuDeviceList *device_list;
 } FuDeviceListReplugHelper;
 
-static gboolean
+static void
 fu_device_list_remove_cb(gpointer user_data)
 {
 	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *)user_data;
 	fu_device_list_remove(helper->device_list, helper->device_old);
-	return G_SOURCE_REMOVE;
 }
 
-static gboolean
+static void
 fu_device_list_add_cb(gpointer user_data)
 {
 	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *)user_data;
 	fu_device_list_add(helper->device_list, helper->device_new);
-	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -180,8 +178,8 @@ fu_device_list_replug_auto_func(void)
 	helper.device_old = device1;
 	helper.device_new = device2;
 	helper.device_list = device_list;
-	g_timeout_add(100, fu_device_list_remove_cb, &helper);
-	g_timeout_add(200, fu_device_list_add_cb, &helper);
+	g_timeout_add_once(100, fu_device_list_remove_cb, &helper);
+	g_timeout_add_once(200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
@@ -250,8 +248,8 @@ fu_device_list_replug_user_func(void)
 	helper.device_old = device1;
 	helper.device_new = device2;
 	helper.device_list = device_list;
-	g_timeout_add(100, fu_device_list_remove_cb, &helper);
-	g_timeout_add(200, fu_device_list_add_cb, &helper);
+	g_timeout_add_once(100, fu_device_list_remove_cb, &helper);
+	g_timeout_add_once(200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
