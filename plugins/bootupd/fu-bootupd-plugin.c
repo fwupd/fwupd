@@ -187,7 +187,7 @@ fu_bootupd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 				"esp-write",
 				G_CALLBACK(fu_bootupd_plugin_sync_esp_cb),
 				self,
-				0);
+				G_CONNECT_DEFAULT);
 
 	/* success */
 	return TRUE;

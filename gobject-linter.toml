@@ -55,6 +55,3 @@ level = "ignore"
 
 [rules.use_clear_functions]
 level = "ignore"
-
-[rules.use_explicit_default_flags]
-level = "ignore"
