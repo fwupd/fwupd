@@ -38,7 +38,7 @@ enum FuAsusHidReportId {
 #[repr(C, packed)]
 struct FuStructAsusManCommand {
     report_id: FuAsusHidReportId == Info,
-    data: [char; 14] == "ASUSTech.Inc.", // FIXME: Was this supposed to be "ASUS Tech.Inc."?
+    data: [char; 14] == "ASUS Tech.Inc.",
     terminator: u8 == 0,
 }
 
@@ -57,7 +57,7 @@ struct FuStructAsusHidCommand {
     length: u8,
 }
 
-#[derive(Default, New)]
+#[derive(Default, New, Getters)]
 #[repr(C, packed)]
 struct FuStructAsusHidResult {
     report_id: FuAsusHidReportId == Info,
@@ -97,6 +97,7 @@ struct FuStructAsusHidPreUpdateCommand {
 #[derive(Default, New)]
 #[repr(C, packed)]
 struct FuStructAsusFlashReset {
+    report_id: FuAsusHidReportId == Flashing,
     command: u8 == 0xc4,
     reserved: [u8; 62],
 }
@@ -104,8 +105,64 @@ struct FuStructAsusFlashReset {
 #[derive(Default, New, Getters)]
 #[repr(C, packed)]
 struct FuStructAsusReadFlashCommand {
+    report_id: FuAsusHidReportId == Flashing,
     command: u8 == 0xd1,
     offset: u24le,
     datasz: u8,
     data: [u8; 58],
+}
+
+// erases whole 1kB blocks, so `blocks` is a count and not a length in bytes
+#[derive(Default, New)]
+#[repr(C, packed)]
+struct FuStructAsusEraseFlashCommand {
+    report_id: FuAsusHidReportId == Flashing,
+    command: u8 == 0xc2,
+    offset: u24le,
+    blocks: u16le,
+    reserved: [u8; 57],
+}
+
+#[derive(Default, New)]
+#[repr(C, packed)]
+struct FuStructAsusFlashBlockStart {
+    report_id: FuAsusHidReportId == Flashing,
+    command: u8 == 0xc0,
+    reserved: [u8; 62],
+}
+
+// `offset` is relative to the start of the 1kB block being filled
+#[derive(Default, New)]
+#[repr(C, packed)]
+struct FuStructAsusWriteFlashCommand {
+    report_id: FuAsusHidReportId == Flashing,
+    command: u8 == 0xc1,
+    offset: u16le,
+    datasz: u8,
+    data: [u8; 59],
+}
+
+#[derive(Default, New)]
+#[repr(C, packed)]
+struct FuStructAsusCommitFlashCommand {
+    report_id: FuAsusHidReportId == Flashing,
+    command: u8 == 0xc3,
+    offset: u24le,
+    datasz: u16le,
+    reserved: [u8; 57],
+}
+
+// the last 1kB block of the image describes which parts of the flash the
+// payload is allowed to touch -- notably it does not cover the recovery
+// bootloader that sits between the two regions
+#[derive(Getters, ParseStream)]
+#[repr(C, packed)]
+struct FuStructAsusHidTrailer {
+    reserved: [u8; 4],
+    region1_end: u32le,
+    region1_start: u32le,
+    reserved: [u8; 4],
+    region2_end: u32le,
+    region2_start: u32le,
+    device_id: u32le,
 }
