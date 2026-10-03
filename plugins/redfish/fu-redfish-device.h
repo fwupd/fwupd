@@ -47,3 +47,5 @@ guint
 fu_redfish_device_get_reset_pre_delay(FuRedfishDevice *self);
 guint
 fu_redfish_device_get_reset_post_delay(FuRedfishDevice *self);
+FwupdJsonObject *
+fu_redfish_device_get_json_obj_member(FuRedfishDevice *self);

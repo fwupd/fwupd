@@ -38,6 +38,13 @@ Additionally, this Instance ID is added for quirk and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
 
+On the NVIDIA DGX Station GB300 two further Instance IDs are added, as the BMC
+reports `Name=Software Inventory` for every FirmwareInventory entry:
+
+* `NVIDIA_OOB\URI_${odata.id}` -- always added, and unique per inventory entry
+* `NVIDIA_OOB\SWID_${RedfishSoftwareId}` -- added when a `SoftwareId` is present,
+  so that a unified-image archive can target several components at once
+
 ## Update Behavior
 
 The firmware will be deployed as appropriate. The Redfish API does not specify
@@ -89,6 +96,150 @@ Use unsigned development builds.
 ### `Flags=manager-reset`
 
 Reset the manager (typically the BMC) after updating this device.
+
+## Session Token Authentication
+
+Instead of storing a password, the plugin can reuse a Redfish `X-Auth-Token`
+created out of band by setting `SessionKeyFile` in `/etc/fwupd/redfish.conf` to
+the path of a file containing the token:
+
+```ini
+[redfish]
+SessionKeyFile=/run/example-bmc-auth/session
+```
+
+The file should live on tmpfs and be readable only by root so that no secret is
+written to persistent storage. When the key is unset, or the file does not
+exist, the plugin falls back to the configured username and password.
+
+The file is read on each use rather than cached at startup, as the session it
+names expires independently of the daemon. Replacing the file is therefore
+enough to re-authenticate, with no need to restart `fwupd`.
+
+## NVIDIA DGX Station GB300
+
+The system is detected by its SMBIOS product name, which must contain every
+token listed in `RedfishProductNameTokens` in `redfish.quirk` -- `GB300` and
+`Station` -- case-insensitively and in any order. The manufacturer is
+deliberately not checked, as OEM-built stations report their own brand. With no
+such quirk entry, no system is detected. Each
+entry in the BMC's `FirmwareInventory` -- for example
+`/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0` -- is then exposed as its
+own device.
+
+The vendor IDs of these devices are `REDFISH:`, `DMI:` and `OEM:` followed by the
+system's brand -- the SMBIOS manufacturer, or the Redfish root `Vendor` when that
+is unavailable -- rather than the `Manufacturer` of the inventory entry, which is
+NVIDIA on every station. A firmware release therefore only matches the LVFS
+account of the vendor that sold the system.
+
+A matching BMC gets GB300-specific update semantics, which diverge from DMTF
+DSP0266 in several places:
+
+* `Targets` must be an empty array, as the BMC resolves the components to update
+  from the PLDM bundle manifest; naming a component returns HTTP 400.
+* `ForceUpdate` must be `true`, as the BMC otherwise rejects same-version installs.
+* `@Redfish.OperationApplyTime` must be `Immediate`, as `OnReset` is not in the
+  BMC's list of acceptable values.
+* `PercentComplete` is only updated on `/redfish/v1/TaskService/Tasks/<id>`, so
+  polling `/Tasks/<id>/Monitor` always reports 0%.
+* Once a task completes the BMC returns HTTP 200 with an empty body for the task
+  monitor rather than the HTTP 404 that normally signals it has been reaped.
+* When both the task monitor and `/Tasks/<id>` have been reaped, the
+  resource-gone condition is treated as a completed update.
+
+This device requires a session token, so see **Session Token Authentication**
+above before installing firmware:
+
+```shell
+fwupdmgr get-devices        # lists FW_BMC_0, FW_GPU_0, FW_CPU_0, ...
+fwupdmgr install firmware.cab --allow-reinstall
+```
+
+A full PLDM bundle flash takes about 20 minutes. The firmware is staged rather
+than applied, and the device is marked as needing activation: it becomes active
+only after an aux-rail power cycle.
+
+```shell
+fwupdmgr activate
+```
+
+This POSTs `{"ResetType":"AuxPowerCycleForce"}` to the OEM
+`NvidiaChassis.AuxPowerReset` action advertised by `/redfish/v1/Chassis/BMC_0`,
+which is not the chassis used to detect the GB300. The `Force` variant does not
+wait for the host to shut down, so the system loses power as soon as the BMC
+accepts the request -- save your work before activating.
+
+### Design notes
+
+* **Detection.** The Redfish root `Vendor` is not a usable signal, as OEMs also
+  sell the Station and their BMCs report their own brand rather than NVIDIA.
+  Other Redfish implementations must still not receive the GB300 update
+  semantics above, so the SMBIOS product name is verified, whatever the
+  manufacturer says. The BMC is not asked: the product name is read from the host
+  the daemon runs on, and is empty where there is no SMBIOS, such as a virtual
+  machine, so such a system keeps the generic device.
+* **Vendor IDs.** A firmware release is only offered to a device whose vendor IDs
+  match the namespace of the LVFS account it was uploaded to, so an OEM-built
+  Station must carry the OEM's identity to take only that OEM's releases. The
+  inventory `Manufacturer` is no guide, as every entry is NVIDIA-made whoever sold
+  the system; the host SMBIOS manufacturer is, falling back to the Redfish root
+  `Vendor` when SMBIOS is unavailable. `redfish.quirk` maps each known SMBIOS
+  manufacturer, as `[DMI\MANUFACTURER_<name>]`, to the `|`-separated vendor IDs of
+  that OEM's LVFS account in `RedfishOemVendorIds`; a manufacturer with no section
+  gets `REDFISH:`, `DMI:` and `OEM:` IDs built from its own name. Add a section
+  there to support another OEM, with no rebuild.
+* **Task polling.** A failed poll is tolerated when the error is retryable
+  (`FWUPD_ERROR_BUSY`), so a brief connectivity blip during a flash of tens of
+  minutes does not abandon a running update. The failure counter is reset by every
+  poll that returns a valid task body, so only consecutive failures abort.
+* **Pending activation.** Each time a device is probed the BMC's OEM slot data
+  is consulted, so a pending activation survives a daemon restart, a host reboot
+  and a same-version reinstall, none of which the engine's history can express.
+  `FirmwareState` alone is not enough: the BMC also reports `PendingActivation`
+  for a slot holding no image, after an update erased it and failed to
+  authenticate the replacement, and acting on that would ask for an aux-rail
+  power cycle that activates nothing.
+* **Firmware size.** The PLDM bundle is an opaque blob of about 117MB, above the
+  `FuFirmware` parse ceiling, so it is read straight into a `FuFirmware` without
+  parsing. The daemon enforces the limit set in `probe()`.
+* **Which component is flagged.** The bundle is uploaded with an empty `Targets`
+  and the BMC picks the components from the PLDM manifest, so the device a CAB
+  addressed is usually not the one left pending -- a bundle targeting `FW_BMC_0`
+  routinely stages `FW_CPU_0`. The plugin therefore asks the BMC which slots
+  report `PendingActivation` and flags those, so `fwupdmgr activate` is pointed at
+  the right component. Inside a composite install this runs from
+  `composite_cleanup()`, once every component has been processed.
+
+### Platform archives
+
+A PLDM bundle is a single payload that the BMC fans out across every component
+in its manifest, so an archive declares **one component per firmware image**,
+each targeting that component's own device at its own version, all sharing one
+`firmware.bin`. Two shipping GB300 bundles carry an identical BMC image and
+differ only in the SBIOS, so naming an archive after any one component would
+make the other invisible.
+
+Declaring components separately is also what lets an archive carry any subset of
+what a board has -- a bundle may ship images for hardware the board does not
+have, and a board may have components the bundle does not touch -- and lets
+components move in different directions within one release. A single version
+could express neither.
+
+The plugin uploads the payload once per archive. `fu_engine_install_releases()`
+is a plain loop with no dedupe, so without this the same ~117MB bundle would be
+POSTed once per matching component. The checksum of the last uploaded payload is
+remembered, and a component presenting the same bytes skips the POST once the
+BMC confirms its slot is staged. Keying on the payload rather than on a
+transaction is also correct across invocations: re-installing the same archive
+before activating does not resend it, and a stale `PendingActivation` from an
+unrelated bundle cannot suppress a genuine install, because its checksum
+differs.
+
+Because the components move together as a qualified set rather than as
+independent upgrades, `fwupdmgr sync` against a Best Known Configuration tag is
+the natural way to apply one: it installs anything not already at the tagged
+version, in either direction.
 
 ## Setting Service IP Manually
 

@@ -34,3 +34,46 @@ RedfishResetPreDelay = 100000
 [REDFISH\VENDOR_Dell&SOFTWAREID_25227]
 Flags = manager-reset,no-manager-reset-request
 RedfishResetPreDelay = 120000
+
+# A system is a DGX Station GB300 when its SMBIOS product name contains every
+# |-separated token, in any order and case. The manufacturer is not checked, as
+# OEM-built stations report their own brand.
+[REDFISH\NVIDIA_OOB_PRODUCT]
+RedfishProductNameTokens = GB300|Station
+
+# DGX Station GB300 sold by an OEM: the section is the SMBIOS system manufacturer
+# and RedfishOemVendorIds the |-separated vendor IDs of that OEM's LVFS account,
+# so only that account's firmware is offered. A manufacturer with no section here
+# gets vendor IDs built from its own name.
+[DMI\MANUFACTURER_NVIDIA]
+RedfishOemVendorIds = REDFISH:NVIDIA|DMI:NVIDIA|OEM:NVIDIA
+
+[DMI\MANUFACTURER_Dell Inc.]
+RedfishOemVendorIds = REDFISH:DELL|DMI:Dell Inc.|OEM:Dell Inc.
+
+[DMI\MANUFACTURER_Super Micro Computer, Inc.]
+RedfishOemVendorIds = REDFISH:SMCI|DMI:Super Micro Computer, Inc.|OEM:Super Micro Computer, Inc.
+
+[DMI\MANUFACTURER_Supermicro]
+RedfishOemVendorIds = REDFISH:SMCI|DMI:Supermicro|OEM:Supermicro
+
+[DMI\MANUFACTURER_HP]
+RedfishOemVendorIds = REDFISH:HP|DMI:HP|OEM:HP
+
+[DMI\MANUFACTURER_HPE]
+RedfishOemVendorIds = REDFISH:HPE|DMI:HPE|OEM:HPE
+
+[DMI\MANUFACTURER_Hewlett Packard Enterprise]
+RedfishOemVendorIds = REDFISH:HPE|DMI:Hewlett Packard Enterprise|OEM:Hewlett Packard Enterprise
+
+[DMI\MANUFACTURER_ASUSTeK COMPUTER INC.]
+RedfishOemVendorIds = REDFISH:ASUS|DMI:ASUSTeK COMPUTER INC.|OEM:ASUSTeK COMPUTER INC.
+
+[DMI\MANUFACTURER_GIGABYTE]
+RedfishOemVendorIds = REDFISH:GIGABYTE|DMI:GIGABYTE|OEM:GIGABYTE
+
+[DMI\MANUFACTURER_Giga Computing]
+RedfishOemVendorIds = REDFISH:GIGABYTE|DMI:Giga Computing|OEM:Giga Computing
+
+[DMI\MANUFACTURER_Micro-Star International Co., Ltd.]
+RedfishOemVendorIds = REDFISH:MSI|DMI:Micro-Star International Co., Ltd.|OEM:Micro-Star International Co., Ltd.
