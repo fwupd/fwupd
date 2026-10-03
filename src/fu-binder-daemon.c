@@ -461,6 +461,25 @@ fu_binder_daemon_set_bios_settings_bridge(void *daemon_instance,
 	return fu_engine_modify_bios_settings(engine, settings, FALSE, error);
 }
 
+gchar *
+fu_binder_daemon_self_sign_bridge(void *daemon_instance,
+				  const gchar *value,
+				  guint64 flags,
+				  GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuJcatSignFlags jcat_flags = FU_JCAT_SIGN_FLAG_NONE;
+
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.self-sign", error))
+		return NULL;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_CERT)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
+	return fu_engine_self_sign(engine, value, jcat_flags, error);
+}
+
 static void
 fu_binder_daemon_engine_changed_cb(FuEngine *engine, FuBinderDaemon *self)
 {
@@ -556,10 +575,24 @@ fu_binder_daemon_setup(FuDaemon *daemon, const gchar *address, FuProgress *progr
 	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 100, "load-engine");
 
+	/* ensure persistent machine-id exists at FWUPD_LOCALSTATEDIR/lib/dbus/machine-id */
+	{
+		g_autofree gchar *machine_id_fn =
+		    g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
+		if (!g_file_test(machine_id_fn, G_FILE_TEST_EXISTS)) {
+			g_autofree gchar *uuid = g_uuid_string_random();
+			g_autofree gchar *dirname = g_path_get_dirname(machine_id_fn);
+			g_mkdir_with_parents(dirname, 0700);
+			if (!g_file_set_contents(machine_id_fn, uuid, -1, error))
+				return FALSE;
+		}
+	}
+
 	if (!fu_engine_load(engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
 				FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
 				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_HISTORY,
 			    fu_progress_get_child(progress),

@@ -184,6 +184,12 @@ struct FwupdClientSyncImpl {
 			     gpointer user_data,
 			     GCancellable *cancellable,
 			     GError **error);
+	gchar *(*self_sign)(FwupdClient *self,
+			    const gchar *value,
+			    FwupdSelfSignFlags flags,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
 	gboolean (*set_feature_flags)(FwupdClient *self,
 				      FwupdFeatureFlags feature_flags,
 				      gpointer user_data,
