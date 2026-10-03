@@ -3,6 +3,7 @@
 # 'init' subcommand — run all setup steps in sequence
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
@@ -12,13 +13,39 @@ from .logger import logger, printer
 from .osprofile import OsName, UnknownOsException
 
 
+def detect_shell():
+    """Detect the user's login shell.
+
+    Returns a tuple of (shell_name, activate_command, activate_path) where:
+    - shell_name: 'fish', 'zsh', 'bash', 'sh', or 'unknown'
+    - activate_command: the command to source the activate script
+    - activate_path: path to the activate script
+    """
+    shell_path = os.environ.get("SHELL", "")
+    shell_name = os.path.basename(shell_path) if shell_path else "unknown"
+
+    build_root = directories.build_root()
+    activate_path = build_root / "bin" / "activate"
+    activate_fish_path = build_root / "bin" / "activate.fish"
+
+    if shell_name == "fish" and activate_fish_path.exists():
+        return ("fish", "source", str(activate_fish_path))
+    elif shell_name in ("zsh", "bash") and activate_path.exists():
+        return (shell_name, "source", str(activate_path))
+    elif activate_path.exists():
+        return ("sh", ".", str(activate_path))
+    elif activate_fish_path.exists():
+        return ("fish", "source", str(activate_fish_path))
+
+    return (shell_name, "source", str(activate_path))
+
+
 def print_blurb():
+    shell_name, activate_cmd, activate_path = detect_shell()
     printer.message("")
     printer.message("To enter the fwupd development environment environment:")
     printer.message("")
-    printer.message(
-        f"    [bold]# source {directories.build_root()}/bin/activate[/bold]"
-    )
+    printer.message(f"    [bold]# {activate_cmd} {activate_path}[/bold]")
     printer.message("")
     printer.message("To build, run: ")
     printer.message("    [bold]# fub build[/bold]")
