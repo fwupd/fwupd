@@ -82,9 +82,9 @@ class Meson:
         kwargs = {
             "capture": self.capture_logs,
         }
+        args = []
         if destdir:
-            env = {"DESTDIR": destdir}
-            kwargs["env"] = env
+            args += ["--destdir", destdir]
 
         # Bit of a hack: we know if we call meson install the only question
         # it'll ask is:
@@ -94,7 +94,7 @@ class Meson:
         if allow_sudo:
             kwargs["input"] = "y\n"
 
-        return RunCmd(["meson", "install", "-C", self.builddir], **kwargs)
+        return RunCmd(["meson", "install", "-C", self.builddir] + args, **kwargs)
 
     def test(
         self, test_args: list[str] | None = None, test_env: dict[str, str] | None = None
