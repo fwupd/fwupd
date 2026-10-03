@@ -19,5 +19,7 @@ struct _FuFmapFirmwareClass {
 
 FuFirmware *
 fu_fmap_firmware_new(void);
+gsize
+fu_fmap_firmware_get_table_size(FuFmapFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

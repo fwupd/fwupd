@@ -987,35 +987,43 @@ fu_firmware_validate_with_magic(FuFirmware *self,
 
 	for (guint i = 0; i < priv->magic->len; i++) {
 		FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
-		gsize offset_tmp = 0;
-		g_autoptr(GError) error_local = NULL;
+		gsize offset_search = offset;
 
 		g_debug("searching for 0x%zx bytes of magic", g_bytes_get_size(patch->blob));
-		if (!fu_input_stream_find(stream,
-					  g_bytes_get_data(patch->blob, NULL),
-					  g_bytes_get_size(patch->blob),
-					  offset,
-					  &offset_tmp,
-					  &error_local)) {
-			g_debug("ignoring: %s", error_local->message);
-			continue;
-		}
+		while (TRUE) {
+			gsize offset_tmp = 0;
+			g_autoptr(GError) error_local = NULL;
 
-		/* ensure magic found at or after expected offset */
-		if (offset_tmp < patch->offset) {
-			g_debug("magic at 0x%zx but expected >= 0x%zx", offset_tmp, patch->offset);
-			continue;
-		}
-		offset_tmp -= patch->offset;
-		g_debug("found magic at 0x%zx", offset_tmp);
-		if (!klass->validate(self, stream, offset_tmp, &error_local)) {
-			g_debug("ignoring: %s", error_local->message);
-			continue;
-		}
+			if (!fu_input_stream_find(stream,
+						  g_bytes_get_data(patch->blob, NULL),
+						  g_bytes_get_size(patch->blob),
+						  offset_search,
+						  &offset_tmp,
+						  &error_local)) {
+				g_debug("ignoring: %s", error_local->message);
+				break;
+			}
 
-		/* any better? */
-		if (offset_tmp < offset_lowest)
-			offset_lowest = offset_tmp;
+			/* ensure magic found at or after expected offset */
+			offset_search = offset_tmp + 1;
+			if (offset_tmp < patch->offset || offset_tmp - patch->offset < offset) {
+				g_debug("magic at 0x%zx resolves before requested offset 0x%zx",
+					offset_tmp,
+					offset);
+				continue;
+			}
+			offset_tmp -= patch->offset;
+			g_debug("found magic at 0x%zx", offset_tmp);
+			if (!klass->validate(self, stream, offset_tmp, &error_local)) {
+				g_debug("ignoring: %s", error_local->message);
+				continue;
+			}
+
+			/* any better? */
+			if (offset_tmp < offset_lowest)
+				offset_lowest = offset_tmp;
+			break;
+		}
 	}
 	if (offset_lowest == G_MAXSIZE) {
 		g_set_error_literal(error,
