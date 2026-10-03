@@ -13,7 +13,7 @@ from .logger import logger, printer
 from .meson import Meson
 from .osprofile import Compiler, RunCmd
 
-VALID_BINARIES = ("fwupdtool", "fwupdmgr", "fwupd")
+VALID_BINARIES = ("fwupdtool", "fwupdmgr", "fwupdtui", "fwupd")
 
 DBUSPOLICY = Path("/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf")
 PKPOLICY = Path("/usr/share/polkit-1/actions/org.freedesktop.fwupd.policy")
@@ -23,7 +23,7 @@ def register(subparsers):
     """Register the 'run' subcommand."""
     parser = subparsers.add_parser(
         "run",
-        help="run fwupdtool, fwupdmgr, or fwupd from the venv",
+        help="run fwupdtool, fwupdmgr, fwupdtui, or fwupd from the venv",
         description=(
             "Run one of the fwupd binaries from the venv build. "
             "Set DEBUG=1 in the environment to launch via gdbserver."
