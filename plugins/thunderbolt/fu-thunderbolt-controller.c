@@ -31,8 +31,12 @@ static void
 fu_thunderbolt_controller_check_safe_mode(FuThunderboltController *self)
 {
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
-	/* failed to read, for host check for safe mode */
-	if (self->controller_kind != FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE)
+	/*
+	 * A connected device in safe mode always needs recovery, and so does a
+	 * Thunderbolt 3 (gen < 4) host controller. USB4 host controllers do not
+	 * have a legacy safe mode state, so don't flag those (see PR #2030).
+	 */
+	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST && self->gen >= 4)
 		return;
 	g_warning("%s is in safe mode --  VID/DID will "
 		  "need to be set by another plugin",
