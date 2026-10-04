@@ -18,7 +18,7 @@ class GitSha:
     """
 
     sha: str
-    _repo: GitRepo
+    _repo: "GitRepo"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GitSha):
