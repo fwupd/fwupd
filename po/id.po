@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-22 19:51+0000\n"
+"PO-Revision-Date: 2026-10-04 05:51+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.10.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -1548,7 +1548,7 @@ msgstr "Sedang dalam mode bootloader"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "Perangkat menunggu untuk disambungkan kembali"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2084,16 +2084,16 @@ msgstr "Pelaporan Otomatis"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah %s dicabut dan disambungkan kembali."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah perangkat dicabut dan disambungkan kembali."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah kabel USB %s dicabut."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -2102,11 +2102,11 @@ msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut."
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah kabel USB %s disambungkan kembali."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah kabel USB perangkat disambungkan kembali."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2119,20 +2119,20 @@ msgstr "Jangan matikan komputer Anda atau lepaskan adaptor AC saat pembaruan sed
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "Cabut %s lalu sambungkan kembali untuk melanjutkan proses pembaruan."
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "Cabut perangkat lalu sambungkan kembali untuk melanjutkan proses pembaruan."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah kabel daya %s dicabut dan disambungkan kembali."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "Pembaruan akan dilanjutkan setelah kabel daya perangkat dicabut dan disambungkan kembali."
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2220,11 +2220,11 @@ msgstr "Penyimpanan sertifikat UEFI sekarang sudah mutakhir"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "Penyimpanan sertifikat UEFI tidak lagi berisi kunci pengujian"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "Penyimpanan sertifikat UEFI kini berisi kunci pengujian"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -4143,7 +4143,7 @@ msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "db UEFI (Microsoft UEFI)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date
