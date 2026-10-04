@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import shlex
 import shutil
 import stat
 import sys
@@ -223,6 +224,25 @@ export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
         with activate.open("a") as f:
             f.write(additions)
         logger.info(f"Augmented {activate} with usage instructions")
+
+    activate_fish = wrapper_dir / "activate.fish"
+    if activate_fish.exists():
+        repo_root = directories.repository_root()
+        fish_completion_dir = repo_root / "data" / "fish-completion"
+        fish_completion_dir_escaped = shlex.quote(str(fish_completion_dir))
+        fish_marker = "# fub additions (fish)"
+        fish_additions = f"""\n{fish_marker}
+
+set -gx MANPATH $VIRTUAL_ENV/dist/share/man: $MANPATH
+
+if [ -d {fish_completion_dir_escaped} ]
+    set -ga fish_complete_path {fish_completion_dir_escaped}
+end
+"""
+        if fish_marker not in activate_fish.read_text(encoding="utf-8"):
+            with activate_fish.open("a", encoding="utf-8") as f:
+                f.write(fish_additions)
+            logger.info(f"Augmented {activate_fish} with usage instructions")
 
     # Install required Python packages using the venv's pip
     venv_python = build_root / "bin" / "python3"
