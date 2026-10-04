@@ -32,8 +32,8 @@ def argparse_func_wrapper(func):
     return wrapper
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Main entry point for fub."""
+def _get_parser(argv: list[str] | None = None) -> argparse.ArgumentParser:
+    """Create and return the argument parser for fub."""
     parser = argparse.ArgumentParser(
         prog="fub",
         description="""
@@ -46,6 +46,15 @@ This command should not be used for building distribution packages. Use normal
 meson build commands instead.
 """,
     )
+
+    parser.add_argument(
+        "--print-completion",
+        choices=("bash", "fish"),
+        help=argparse.SUPPRESS,
+        type=str,
+        default=None,
+    )
+
     parser.add_argument(
         "-v", "--verbose", action="count", default=0, help="increase debug output"
     )
@@ -103,7 +112,24 @@ meson build commands instead.
             except Exception as e:
                 logger.error(f"Failed to import module {module_name}: {e}")
 
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Main entry point for fub."""
+    parser = _get_parser(argv)
+
     args = parser.parse_args(argv)
+
+    if args.print_completion:
+        try:
+            import shtab  # pylint: disable=import-outside-toplevel
+
+            print(shtab.complete(parser, shell=args.print_completion))
+        except ImportError:
+            logger.error("shtab is required for completion generation")
+            return 1
+        return 0
 
     match args.verbose:
         case 0:

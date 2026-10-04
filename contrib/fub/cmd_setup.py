@@ -4,9 +4,12 @@
 
 import argparse
 import os
+import re
+import shlex
 import shutil
 import stat
 import sys
+from pathlib import Path
 
 from .cli import argparse_func_wrapper
 from .dependencies import PIP_PACKAGES, Dependencies
@@ -20,7 +23,6 @@ from .osprofile import (
     RunCmd,
     UnknownOsException,
 )
-from pathlib import Path
 
 
 def register(subparsers):
@@ -74,6 +76,31 @@ def _setup_help(parser, args) -> int:
         parser.print_help()
         return 1
     return 0
+
+
+def generate_fub_completions(wrapper_dir: Path, python: Path) -> None:
+    """Generate and save shell completions for fub."""
+    repo_root = directories.repository_root()
+    completion_env = os.environ.copy()
+    completion_env["PYTHONPATH"] = str(repo_root / "contrib")
+
+    completion_dir = wrapper_dir / "completion"
+    completion_dir.mkdir(exist_ok=True)
+
+    for shell in ("bash", "fish"):
+        completion_file = completion_dir / f"fub.{shell}"
+        cmd = RunCmd(
+            [python, "-m", "fub", "--print-completion", shell],
+            capture=True,
+            env=completion_env,
+        )
+        if cmd.success and cmd.stdout:
+            completion_file.write_text(cmd.stdout, encoding="utf-8")
+            logger.info(f"Generated {shell} completion: {completion_file}")
+        else:
+            logger.debug(
+                f"Failed to generate {shell} completion (shtab may not be installed)"
+            )
 
 
 def setup_system_deps(osname: OsName) -> int:
@@ -193,7 +220,7 @@ def setup_venv() -> int:
     fub_link.symlink_to(fub_wrapper)
     logger.info(f"Created symlink: {fub_link}")
 
-    wrapper_dir = build_root / "bin"
+    wrapper_dir = (build_root / "bin").resolve()
 
     def create_run_wrapper(binary):
         """Create a small wrapper script in venv/bin/ that calls fub run."""
@@ -212,8 +239,16 @@ def setup_venv() -> int:
     if not activate.exists():
         return 0
 
-    marker = "# fub additions"
-    additions = f"""\n{marker}
+    completion_dir = wrapper_dir / "completion"
+    completion_dir.mkdir(exist_ok=True)
+
+    shell_configs = {
+        "bash": {
+            "activate_path": activate,
+            "marker": "# fub additions",
+            "completion_file": completion_dir / "fub.bash",
+            "additions_template": """
+{marker}
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# fub build"
@@ -231,15 +266,84 @@ echo ""
 echo "# deactivate"
 
 if [ -n "$BASH_VERSION" ]; then
+    . {completion_file} 2>/dev/null || true
     . data/bash-completion/fwupdtool 2>/dev/null || true
     . data/bash-completion/fwupdmgr 2>/dev/null || true
 fi
 export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
-"""
-    if marker not in activate.read_text():
-        with activate.open("a") as f:
-            f.write(additions)
-        logger.info(f"Augmented {activate} with usage instructions")
+""",
+            "source_pattern": r"^(\s+)\.\s+.*fub\.bash\s+",
+            "existing_completions": [
+                ". data/bash-completion/fwupdtool 2>/dev/null || true",
+                ". data/bash-completion/fwupdmgr 2>/dev/null || true",
+            ],
+        },
+        "fish": {
+            "activate_path": wrapper_dir / "activate.fish",
+            "marker": "# fub additions (fish)",
+            "completion_file": completion_dir / "fub.fish",
+            "additions_template": """
+{marker}
+
+set -gx MANPATH $VIRTUAL_ENV/dist/share/man: $MANPATH
+
+. {completion_file} 2>/dev/null || true
+set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_complete_path
+""",
+            "source_pattern": r"^(\s+)\.\s+.*fub\.fish\s+",
+            "existing_completions": [],
+        },
+    }
+
+    for shell_name, config in shell_configs.items():
+        activate_path = config["activate_path"]
+        if not activate_path.exists():
+            continue
+
+        marker = config["marker"]
+        completion_file = config["completion_file"]
+        completion_file_quoted = shlex.quote(str(completion_file))
+        additions = config["additions_template"].format(
+            marker=marker, completion_file=completion_file_quoted
+        )
+        activate_content = activate_path.read_text()
+
+        # Check if the fub completion source line is present
+        has_completion_source = (
+            re.search(config["source_pattern"], activate_content) is not None
+        )
+
+        if marker not in activate_content:
+            with activate_path.open(
+                "a", encoding="utf-8" if shell_name == "fish" else None
+            ) as f:
+                f.write(additions)
+            logger.info(
+                f"Augmented {activate_path} with usage instructions and completion"
+            )
+        elif not has_completion_source:
+            # Update the marked block with the new completion source
+            new_content = activate_content.rstrip() + additions
+            with activate_path.open(
+                "w", encoding="utf-8" if shell_name == "fish" else None
+            ) as f:
+                f.write(new_content)
+            logger.info(f"Updated {activate_path} with completion source")
+        else:
+            # Replace the old source line with the new one for paths containing spaces
+            old_fub_line = re.compile(config["source_pattern"])
+            new_activate_content = old_fub_line.sub(
+                rf"\1. {completion_file_quoted} ",
+                activate_content,
+            )
+            if new_activate_content != activate_content:
+                activate_path.write_text(
+                    new_activate_content,
+                    encoding="utf-8" if shell_name == "fish" else None,
+                )
+                logger.info(
+                    f"Updated {activate_path} with quoted fub.{shell_name} path"
+                )
 
     # Install required Python packages using the venv's pip
     venv_python = build_root / "bin" / "python3"
@@ -247,6 +351,7 @@ export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
         rc = setup_python_deps(venv_python)
         if rc != 0:
             return rc
+        generate_fub_completions(wrapper_dir, venv_python)
 
     # meson
     repo_dir = directories.repository_root()
