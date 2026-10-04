@@ -213,23 +213,8 @@ def setup_venv() -> int:
     if not activate.exists():
         return 0
 
-    marker = "# fub additions"
-    additions = f"""\n{marker}
-echo "To build or rebuild fwupd within development environment run:"
-echo ""
-echo "# fub build"
-echo ""
-echo "To run the test suite run:"
-echo ""
-echo "# fub test"
-echo ""
-echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
-echo ""
-echo "# DEBUG=1 fwupdtool get-devices"
-echo ""
-echo "To leave fwupd development environment run:"
-echo ""
-echo "# deactivate"
+    bash_marker = "# fub additions"
+    bash_additions = f"""\n{bash_marker}
 
 if [ -n "$BASH_VERSION" ]; then
     . data/bash-completion/fwupdtool 2>/dev/null || true
@@ -237,10 +222,10 @@ if [ -n "$BASH_VERSION" ]; then
 fi
 export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
 """
-    if marker not in activate.read_text():
+    if bash_marker not in activate.read_text():
         with activate.open("a") as f:
-            f.write(additions)
-        logger.info(f"Augmented {activate} with usage instructions")
+            f.write(bash_additions)
+        logger.info(f"Augmented {activate} with completion and MANPATH")
 
     activate_fish = wrapper_dir / "activate.fish"
     if activate_fish.exists():
