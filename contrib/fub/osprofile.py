@@ -25,6 +25,7 @@ class OsRelease:
 
     distro: str
     version: str
+    id_like: str | None = None
 
     @classmethod
     def detect(cls) -> Self:
@@ -37,6 +38,7 @@ class OsRelease:
         os_release = Path("/etc/os-release")
         distro = None
         version = None
+        id_like = None
         with os_release.open() as f:
             for line in f:
                 line = line.strip()
@@ -44,9 +46,11 @@ class OsRelease:
                     distro = line[3:].strip('"')
                 elif line.startswith("VERSION_ID="):
                     version = line[11:].strip('"')
+                elif line.startswith("ID_LIKE="):
+                    id_like = line[8:].strip("\"'")
         if distro is None or version is None:
             raise FileNotFoundError(os_release)
-        return OsRelease(distro, version)
+        return OsRelease(distro, version, id_like)
 
 
 class UnknownArchException(Exception):
@@ -119,8 +123,18 @@ class OsName(enum.StrEnum):
                 return cls.DARWIN
             if sys.platform.startswith("freebsd"):
                 return cls.FREEBSD
-            return cls.from_string(OsRelease.detect().distro)
-        except (FileNotFoundError, ValueError):
+            os_release = OsRelease.detect()
+            try:
+                return cls.from_string(os_release.distro)
+            except UnknownOsException:
+                if os_release.id_like is not None:
+                    for candidate in os_release.id_like.split():
+                        try:
+                            return cls.from_string(candidate)
+                        except UnknownOsException:
+                            continue
+                raise UnknownOsException("Unknown OS name '{name}'")
+        except FileNotFoundError:
             raise UnknownOsException("Unknown OS name '{name}'")
 
     @classmethod
