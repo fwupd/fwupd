@@ -345,22 +345,22 @@ fu_remote_local_func(void)
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	ret = fu_test_compare_lines(
-	    json,
-	    "{\n"
-	    "  \"Id\": \"dell-esrt\",\n"
-	    "  \"Kind\": \"local\",\n"
-	    "  \"Title\": \"Enable UEFI capsule updates on Dell systems\",\n"
-	    "  \"Flags\": 1,\n"
-	    "  \"Enabled\": true,\n"
-	    "  \"ApprovalRequired\": false,\n"
-	    "  \"AutomaticReports\": false,\n"
-	    "  \"AutomaticSecurityReports\": false,\n"
-	    "  \"Priority\": 0,\n"
-	    "  \"Mtime\": 0,\n"
-	    "  \"RefreshInterval\": 0\n"
-	    "}",
-	    &error);
+	ret =
+	    fu_test_compare_lines(json,
+				  "{\n"
+				  "  \"Id\": \"dell-esrt\",\n"
+				  "  \"Kind\": \"local\",\n"
+				  "  \"Title\": \"Enable UEFI capsule updates on Dell systems\",\n"
+				  "  \"Flags\": 1,\n"
+				  "  \"Enabled\": true,\n"
+				  "  \"ApprovalRequired\": false,\n"
+				  "  \"AutomaticReports\": false,\n"
+				  "  \"AutomaticSecurityReports\": false,\n"
+				  "  \"Priority\": 0,\n"
+				  "  \"Mtime\": 0,\n"
+				  "  \"RefreshInterval\": 0\n"
+				  "}",
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

@@ -7,8 +7,8 @@
 #include "config.h"
 
 #include "fu-fastboot-device.h"
-#include "fu-fastboot-rolling-device.h"
 #include "fu-fastboot-plugin.h"
+#include "fu-fastboot-rolling-device.h"
 
 struct _FuFastbootPlugin {
 	FuPlugin parent_instance;
