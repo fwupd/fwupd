@@ -12,7 +12,7 @@
   <!ATTLIST package only-if (android | arm64 | i386 | mingw64 | s390x | amd64 ) #IMPLIED>
   <!ATTLIST package name CDATA #IMPLIED>
 
-  <!ELEMENT control (version?, inclusive*, exclusive*)>
+  <!ELEMENT control (version?, inclusive*, exclusive*, profile*)>
 
   <!ELEMENT version (#PCDATA)>
   <!ELEMENT inclusive EMPTY>
@@ -20,6 +20,8 @@
 
   <!ELEMENT exclusive EMPTY>
   <!ATTLIST exclusive arch (amd64 | arm64 | armhf | i386 | ia64 ) #REQUIRED>
+
+  <!ELEMENT profile (#PCDATA)>
 
   <!ELEMENT build-target EMPTY >
   <!ATTLIST build-target mode (native | multi-arch | build-indep) #REQUIRED>
@@ -1543,7 +1545,9 @@
       <package name="python-flask" only-if="amd64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <profile>!nocheck</profile>
+      </control>
     </distro>
     <distro id="ubuntu">
       <control />

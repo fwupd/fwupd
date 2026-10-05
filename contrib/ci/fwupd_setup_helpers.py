@@ -209,6 +209,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
             if add_control:
                 inclusive = []
                 exclusive = []
+                profiles = []
                 if not distro.findall("control") and not is_build_indep:
                     continue
                 for control_parent in distro.findall("control"):
@@ -223,12 +224,17 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     for obj in control_parent.findall("version"):
                         if obj.text:
                             version = f" {obj.text}"
+                    for obj in control_parent.findall("profile"):
+                        if obj.text:
+                            profiles.append(obj.text)
                 if inclusive or exclusive:
                     inclusive = " ".join(inclusive).strip()
                     exclusive = " !".join(exclusive).strip()
                     if exclusive:
                         exclusive = f"!{exclusive}"
                     control = f" [{inclusive}{' ' if inclusive and exclusive else ''}{exclusive}]"
+                if profiles:
+                    control += f" <{' '.join(profiles)}>"
 
             if cross and build_target == "multi-arch":
                 arch_suffix = f":{variant}"
