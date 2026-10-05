@@ -968,9 +968,10 @@ fu_cli_perhaps_show_unreported(FuCli *self, GError **error)
 
 		/* failures */
 		if (devices_failed->len > 0) {
-			fu_console_print_literal(priv->console,
-						 /* TRANSLATORS: a list of failed updates */
-						 _("Devices that were not updated correctly:"));
+			fu_console_print_literal(
+			    priv->console,
+			    /* TRANSLATORS: a list of failed updates */
+			    _("Devices that were previously not updated correctly:"));
 			for (guint i = 0; i < devices_failed->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_failed, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
@@ -984,9 +985,10 @@ fu_cli_perhaps_show_unreported(FuCli *self, GError **error)
 
 		/* success */
 		if (devices_success->len > 0) {
-			fu_console_print_literal(priv->console,
-						 /* TRANSLATORS: a list of successful updates */
-						 _("Devices that have been updated successfully:"));
+			fu_console_print_literal(
+			    priv->console,
+			    /* TRANSLATORS: a list of successful updates */
+			    _("Devices that have previously been updated successfully:"));
 			for (guint i = 0; i < devices_success->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_success, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
