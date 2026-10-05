@@ -738,6 +738,15 @@ fu_hpi_cfu_device_send_append_untransmitted(FuHpiCfuDevice *self,
 		g_byte_array_append(cfu_data, untransmitted_data->data, untransmitted_data->len);
 
 		fill_from_position = FU_HPI_CFU_PAYLOAD_LENGTH - untransmitted_data->len;
+		if (fill_from_position > payload_data->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "payload data too small, got 0x%x and needed 0x%x",
+				    payload_data->len,
+				    (guint)fill_from_position);
+			return FALSE;
+		}
 		remaining_byte_count = payload_header_length - fill_from_position;
 
 		/* append actual payload_data */
