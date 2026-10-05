@@ -23,6 +23,7 @@ class MesonVersion:
     rc: int
 
     def __str__(self) -> str:
+        """Return the canonical PEP440-ish form, e.g. '1.11.0' or '1.11.0rc1'."""
         extra = f"rc{self.rc}" if self.rc else ""
         return f"{self.major}.{self.minor}.{self.micro}{extra}"
 
@@ -30,11 +31,11 @@ class MesonVersion:
     def from_string(cls, ver: str) -> Self:
         """Convert a meson version string to a comparable tuple.
 
-        Handles release candidates: x.y.z.rcN or x.y.zrcN (PEP440).
+        Handles release candidates: x.y.zrcN (PEP440), x.y.z.rcN or x.y.z-rcN.
+        The version is extracted from anywhere in the string, so surrounding
+        whitespace, parentheses or trailing text are all tolerated.
         """
-        import re
-
-        m = re.match(r"^(\d+)\.(\d+)\.(\d+)(?:[.]?rc(\d+))?$", ver)
+        m = re.search(r"(\d+)\.(\d+)\.(\d+)(?:[.-]?rc(\d+))?", ver)
         if not m:
             raise MesonError(f"Unknown meson version format: '{ver}'")
         major, minor, micro = int(m[1]), int(m[2]), int(m[3])
@@ -116,6 +117,11 @@ class Meson:
 
     @classmethod
     def current_meson_version(cls) -> MesonVersion:
+        """Return the version of the meson that is currently in use.
+
+        Prefers the installed package metadata and falls back to parsing
+        ``meson --version`` where meson is not a Python package we can see.
+        """
         from importlib.metadata import PackageNotFoundError, version
 
         try:
@@ -124,12 +130,13 @@ class Meson:
             result = RunCmd(["meson", "--version"])
             if not result.success:
                 raise MesonError("Unable to determine the meson version")
-            v = result.stdout.strip()
+            v = result.stdout.strip().split("\n")[0]
 
         return MesonVersion.from_string(v)
 
     @classmethod
     def require_version(cls, minimum_version: MesonVersion):
+        """Raise a MesonError unless the current meson is at least minimum_version."""
         v = cls.current_meson_version()
         if v < minimum_version:
             raise MesonError(
