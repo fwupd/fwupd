@@ -216,12 +216,14 @@ class PipPackageManager(PackageManager):
             raise ValueError(f"Invalid package name: {package}")
 
         try:
-            pypkgname = package.replace("-", "_")
+            # The distribution metadata is keyed off the pip package name, so
+            # this works regardless of what the importable module is called
+            # (e.g. meson installs as 'mesonbuild' and has no __version__).
             cmd = RunCmd(
                 [
                     self.python,
                     "-c",
-                    f"import {pypkgname}; print({pypkgname}.__version__)",
+                    f"from importlib.metadata import version; print(version('{package}'))",
                 ],
             )
             if not cmd.success:
@@ -234,9 +236,17 @@ class PipPackageManager(PackageManager):
                     raise ModuleNotFoundError()
             return None
         except (ModuleNotFoundError, ValueError):
-            logger.debug("Installing/upgrading markdown via pip")
+            logger.debug(f"Installing/upgrading {package} via pip")
             cmd = RunCmd(
-                [self.python, "-m", "pip", "install", "--upgrade", package],
+                [
+                    self.python,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    "--force-reinstall",
+                    package,
+                ],
             )
             return cmd
 

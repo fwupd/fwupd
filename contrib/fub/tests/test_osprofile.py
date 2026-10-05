@@ -242,6 +242,52 @@ class TestPipPackageManager:
             assert result is not None
             assert result == install_cmd
 
+    @pytest.mark.parametrize(
+        "package",
+        ["markdown", "meson", "pre-commit"],
+        ids=["plain", "module-name-differs", "hyphenated"],
+    )
+    def test_install_package_probes_distribution_metadata(self, tmp_path, package):
+        """The version probe keys off the pip name, not the importable module."""
+        python = tmp_path / "bin" / "python"
+        python.parent.mkdir(parents=True)
+        python.touch()
+
+        pm = PipPackageManager.new(python)
+
+        mock_cmd = MagicMock()
+        mock_cmd.success = True
+        mock_cmd.stdout = "1.2.3\n"
+
+        with patch("fub.osprofile.RunCmd", return_value=mock_cmd) as mock_run:
+            pm.install_package(package)
+
+        script = mock_run.call_args[0][0][-1]
+        assert "importlib.metadata" in script
+        assert f"version('{package}')" in script
+
+    def test_install_package_resolves_dependencies(self, tmp_path):
+        """pip must install transitive dependencies, so never pass --no-deps."""
+        python = tmp_path / "bin" / "python"
+        python.parent.mkdir(parents=True)
+        python.touch()
+
+        pm = PipPackageManager.new(python)
+
+        check_cmd = MagicMock()
+        check_cmd.success = False
+        install_cmd = MagicMock()
+        install_cmd.success = True
+
+        with patch(
+            "fub.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]
+        ) as mock_run:
+            pm.install_package("jinja2")
+
+        argv = [str(a) for a in mock_run.call_args[0][0]]
+        assert "--no-deps" not in argv
+        assert argv[-1] == "jinja2"
+
 
 class TestCompiler:
     def test_machine(self):
