@@ -1358,7 +1358,9 @@
       <package variant="x86_64">python-flask</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <profile>!nocheck</profile>
+      </control>
     </distro>
     <distro id="ubuntu">
       <control />
