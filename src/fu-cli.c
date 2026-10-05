@@ -6402,6 +6402,8 @@ fu_cli_hwids(FuCli *self, gchar **values, GError **error)
 	g_auto(GStrv) hwids_keys = NULL;
 	g_auto(GStrv) hwids_values = NULL;
 
+	if (!fwupd_client_connect(priv->client, priv->cancellable, error))
+		return FALSE;
 	fwupd_client_get_hwids(priv->client, &hwids_keys, &hwids_values);
 	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
 		fu_cli_hwids_as_json(self, hwids_keys, hwids_values);
