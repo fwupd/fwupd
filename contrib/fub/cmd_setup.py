@@ -20,6 +20,7 @@ from .osprofile import (
     RunCmd,
     UnknownOsException,
 )
+from pathlib import Path
 
 
 def register(subparsers):
@@ -75,15 +76,11 @@ def _setup_help(parser, args) -> int:
     return 0
 
 
-def setup_deps(osname: OsName) -> int:
+def setup_system_deps(osname: OsName) -> int:
     """Install build dependencies."""
 
     if osname == OsName.NIXOS:
         printer.message("NixOS detected, using nix-shell for build dependencies")
-        return 0
-
-    if not printer.ask_yn("Install build dependencies? (y/N) "):
-        logger.info("Skipping package install")
         return 0
 
     dependencies = Dependencies.load()
@@ -93,7 +90,13 @@ def setup_deps(osname: OsName) -> int:
         logger.warning(f"No packages found for {osname}")
         return 0
 
-    printer.message(f"Installing {len(packages)} packages for {osname}")
+    if not printer.ask_yn(
+        f"Install {len(packages)} build dependencies for {osname}? (y/N) "
+    ):
+        logger.info("Skipping package install")
+        return 0
+
+    printer.message(f"Installing packages for {osname}")
     try:
         pm = osname.package_manager()
         cmd = pm.install([p.package_name for p in packages])
@@ -107,6 +110,20 @@ def setup_deps(osname: OsName) -> int:
             f"Could not detect OS profile. Use --os to specify one of '{osnames}'.",
         )
         sys.exit(1)
+
+
+def setup_python_deps(venv_python: Path) -> int:
+    """Install Python packages from PIP_PACKAGES into the venv."""
+    pip = PipPackageManager.new(venv_python)
+    for package, version in PIP_PACKAGES.items():
+        cmd = pip.install_package(package, version)
+        if cmd is None:
+            continue
+        logger.debug(f"Installing {package} via pip")
+        if not cmd.success:
+            printer.error(f"Failed to install {package} via pip")
+            return cmd.returncode
+    return 0
 
 
 def run_deps(args) -> int:
@@ -131,7 +148,7 @@ def run_deps(args) -> int:
         return 0
 
     printer.default_yn_answer = Yes.YES
-    return setup_deps(osname)
+    return setup_system_deps(osname)
 
 
 def setup_venv() -> int:
@@ -227,12 +244,9 @@ export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
     # Install required Python packages using the venv's pip
     venv_python = build_root / "bin" / "python3"
     if venv_python.exists():
-        pip = PipPackageManager.new(venv_python)
-        for package, version in PIP_PACKAGES.items():
-            cmd = pip.install_package(package, version)
-            if cmd is not None and not cmd.success:
-                printer.error("Failed to install pre-commit via pip")
-                return cmd.returncode
+        rc = setup_python_deps(venv_python)
+        if rc != 0:
+            return rc
 
     # meson
     repo_dir = directories.repository_root()
