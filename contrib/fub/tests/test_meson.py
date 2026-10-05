@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from fub.meson import Meson, MesonError, MesonVersion
@@ -16,9 +16,15 @@ class TestMesonVersionFromString:
             ("10.20.30", MesonVersion(10, 20, 30, 0, 0)),
             ("1.2.3rc1", MesonVersion(1, 2, 3, -1, 1)),
             ("1.2.3.rc1", MesonVersion(1, 2, 3, -1, 1)),
+            ("1.2.3-rc1", MesonVersion(1, 2, 3, -1, 1)),
             ("1.2.3.rc99", MesonVersion(1, 2, 3, -1, 99)),
             ("0.62.0", MesonVersion(0, 62, 0, 0, 0)),
             ("1.0.0rc1", MesonVersion(1, 0, 0, -1, 1)),
+            (" 1.2.3 ", MesonVersion(1, 2, 3, 0, 0)),
+            ("(1.2.3)", MesonVersion(1, 2, 3, 0, 0)),
+            ("  0.62.0  ", MesonVersion(0, 62, 0, 0, 0)),
+            (" (1.2.3rc1) ", MesonVersion(1, 2, 3, -1, 1)),
+            ("1.0.0rc1 some suffix", MesonVersion(1, 0, 0, -1, 1)),
         ],
         ids=[
             "simple",
@@ -26,12 +32,36 @@ class TestMesonVersionFromString:
             "large-numbers",
             "rc-no-dot",
             "rc-with-dot",
+            "rc-with-dash",
             "rc-large-number",
             "typical-meson-version",
             "rc-with-zero-minor-micro",
+            "whitespace",
+            "parentheses",
+            "extra-whitespace",
+            "parentheses-whitespace",
+            "rc-with-suffix",
         ],
     )
     def test_valid_versions(self, ver, expected):
+        """Well-formed version strings parse to the expected tuple."""
+        assert MesonVersion.from_string(ver) == expected
+
+    @pytest.mark.parametrize(
+        "ver, expected",
+        [
+            ("1.2.3.4", MesonVersion(1, 2, 3, 0, 0)),
+            ("v1.2.3", MesonVersion(1, 2, 3, 0, 0)),
+            ("1.2.3beta1", MesonVersion(1, 2, 3, 0, 0)),
+        ],
+        ids=[
+            "four-components-extracts-first",
+            "v-prefix-extracts",
+            "beta-suffix-extracts",
+        ],
+    )
+    def test_extraced_versions(self, ver, expected):
+        """A version embedded in a larger string is extracted from it."""
         assert MesonVersion.from_string(ver) == expected
 
     @pytest.mark.parametrize(
@@ -41,29 +71,40 @@ class TestMesonVersionFromString:
             "1",
             "abc",
             "",
-            "1.2.3.4",
-            "1.2.3rc",
-            "1.2.3.rc",
-            "v1.2.3",
-            "1.2.3-rc1",
-            "1.2.3beta1",
         ],
         ids=[
             "two-components",
             "one-component",
             "letters",
             "empty",
-            "four-components",
-            "rc-no-number",
-            "dot-rc-no-number",
-            "v-prefix",
-            "dash-rc",
-            "beta-suffix",
         ],
     )
     def test_invalid_versions(self, ver):
+        """Strings without a complete x.y.z are rejected."""
         with pytest.raises(MesonError, match="Unknown meson version format"):
             MesonVersion.from_string(ver)
+
+    def test_invalid_rc_no_number(self):
+        """An 'rc' without a preceding x.y.z is still rejected."""
+        with pytest.raises(MesonError, match="Unknown meson version format"):
+            MesonVersion.from_string("abcrc")
+        with pytest.raises(MesonError, match="Unknown meson version format"):
+            MesonVersion.from_string("not-a-version")
+
+    @pytest.mark.parametrize(
+        "ver, expected",
+        [
+            ("1.2.3rc", MesonVersion(1, 2, 3, 0, 0)),
+            ("1.2.3.rc", MesonVersion(1, 2, 3, 0, 0)),
+        ],
+        ids=[
+            "rc-no-number-extracts",
+            "dot-rc-no-number-extracts",
+        ],
+    )
+    def test_extraced_rc_no_number(self, ver, expected):
+        """A dangling 'rc' with no number parses as the plain release."""
+        assert MesonVersion.from_string(ver) == expected
 
 
 class TestMesonVersionStr:
@@ -171,6 +212,40 @@ class TestMesonVersionComparison:
     )
     def test_not_equal(self, a, b):
         assert MesonVersion.from_string(a) != MesonVersion.from_string(b)
+
+
+class TestMesonCurrentMesonVersion:
+    @pytest.mark.parametrize(
+        "stdout, expected",
+        [
+            ("1.11.0", MesonVersion(1, 11, 0, 0, 0)),
+            ("  1.11.0  ", MesonVersion(1, 11, 0, 0, 0)),
+            ("1.11.0\nextra line", MesonVersion(1, 11, 0, 0, 0)),
+            ("(1.11.0)", MesonVersion(1, 11, 0, 0, 0)),
+            ("1.0.0rc1\nextra", MesonVersion(1, 0, 0, -1, 1)),
+        ],
+        ids=[
+            "simple",
+            "whitespace-stripped",
+            "multiline-takes-first-line",
+            "parentheses-stripped",
+            "rc-with-multiline",
+        ],
+    )
+    def test_from_run_cmd(self, stdout, expected):
+        """Without package metadata the version comes from `meson --version`."""
+        from importlib.metadata import PackageNotFoundError
+
+        with patch(
+            "importlib.metadata.version", side_effect=PackageNotFoundError("meson")
+        ):
+            with patch("fub.meson.RunCmd") as mock_run:
+                mock_result = Mock()
+                mock_result.success = True
+                mock_result.stdout = stdout
+                mock_run.return_value = mock_result
+                v = Meson.current_meson_version()
+                assert v == expected
 
 
 class TestMesonNeedsSetup:
