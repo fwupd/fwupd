@@ -33,6 +33,11 @@ repos:
     hooks:
       - id: codespell
         args: ["--config", "./contrib/codespell.cfg", --write-changes]
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v23.1.2
+    hooks:
+    - id: clang-format
+      types_or: ['c', 'c++']
   - repo: https://github.com/ambv/black
     rev: 25.12.0
     hooks:
@@ -106,11 +111,6 @@ repos:
         entry: ./fub test
         pass_filenames: false
         stages: [pre-push]
-      - id: clang-format
-        name: clang-format
-        language: script
-        entry: ./contrib/reformat-code.py
-        types_or: [c, c++]
       - id: meson-format
         name: meson-format
         language: system
