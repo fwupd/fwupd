@@ -90,10 +90,7 @@ fwupdmgr install ~/firmware.cab
 
 ### ALWAYS run these validation steps after making changes:
 ```bash
-# Format code
-./contrib/reformat-code.py
-
-# Run linting
+# Format code and run linting
 pre-commit run --all-files
 
 # Build and test (with proper timeouts)
@@ -145,12 +142,6 @@ fwupdtool --verbose --plugins YOUR_PLUGIN install-blob firmware.bin DEVICE_ID
 
 ### Code Quality
 ```bash
-# Auto-format current patch
-./contrib/reformat-code.py
-
-# Format specific commits
-./contrib/reformat-code.py HEAD~5
-
 # Run all pre-commit hooks
 pre-commit run --all-files
 
@@ -223,7 +214,7 @@ meson setup build -Dplugin_uefi_capsule=enabled # enable specific plugin
 - For firmware parsing: check plugin supports your hardware format
 
 ### Common Validation Failures
-- **Pre-commit failures**: Run `./contrib/reformat-code.py` first
+- **Pre-commit failures**: Run `pre-commit run clang-format --all-files` first
 - **Test failures**: Check if related to your changes or pre-existing
 - **Build failures**: Verify dependencies and increase timeout
 
