@@ -14,6 +14,7 @@ from .osprofile import OsArch, OsName, UnknownArchException
 PIP_PACKAGES: dict[str, tuple | None] = {
     "markdown": (3, 2, 0),
     "jinja2": None,
+    "meson": (1, 11, 0),
 }
 
 
