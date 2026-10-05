@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-20 17:34+0000\n"
+"PO-Revision-Date: 2026-10-05 08:51+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
 "Language: sl\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.10.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Storitev dobaviteljev strojne programske opreme za Linux (stabilna strojna programska oprema)"
@@ -1558,7 +1558,7 @@ msgstr "Je v načinu zagonskega nalagalnika"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "Naprava čaka, da bo ponovno priključena"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2103,29 +2103,29 @@ msgstr "Samodejno poročanje"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo naprava %s izključena in ponovno priključena."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo naprava izključena in ponovno priključena."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo kabel USB naprave %s izključen."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
-msgstr "Posodobitev se bo nadaljevala, ko bo kabel naprave USB izključen."
+msgstr "Posodobitev se bo nadaljevala, ko bo kabel USB naprave izključen."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo kabel USB naprave %s ponovno priključen."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo kabel USB naprave ponovno priključen."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2138,20 +2138,20 @@ msgstr "Med posodabljanjem ne izklapljajte računalnika in ne odstranjujte napaj
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "Odklopite %s in ponovno priključite za nadaljevanje postopka posodobitve."
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "Odklopite napravo in jo ponovno priključite za nadaljevanje postopka posodobitve."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo napajalni kabel naprave %s odstranjen in ponovno priključen."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "Posodobitev se bo nadaljevala, ko bo napajalni kabel naprave odstranjen in ponovno priključen."
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2239,11 +2239,11 @@ msgstr "Shramba potrdil UEFI je zdaj posodobljena"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "Shramba potrdil UEFI nič več ne vsebuje poskusnega ključa"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "Shramba potrdil UEFI zdaj vsebuje poskusni ključ"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -4192,7 +4192,7 @@ msgstr "Zaščita UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "Db UEFI (Microsoft UEFI)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date
