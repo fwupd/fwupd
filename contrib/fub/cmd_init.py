@@ -157,8 +157,8 @@ def run(args):
     logger.info(f"Using OS profile: '{osname}'")
 
     if args.deps:
-        printer.message("● Installing dependencies")
-        if (rc := cmd_setup.setup_deps(osname)) != 0:
+        printer.message("● Installing system dependencies")
+        if (rc := cmd_setup.setup_system_deps(osname)) != 0:
             return rc
     else:
         logger.info("Skipping dependencies (--no-deps)")
