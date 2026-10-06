@@ -264,7 +264,7 @@ mod tests {
             }
             compressed.push(buf[0]);
         }
-        assert!(!compressed.is_empty());
+        assert_ne!(compressed, Vec::<u8>::new());
         // Verify the compressed data is valid by decompressing it
         let decompressed = decompress(&compressed, CompressorFormat::Gzip);
         assert_eq!(decompressed, data);

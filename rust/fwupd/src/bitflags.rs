@@ -569,7 +569,7 @@ mod tests {
     fn iter_empty() {
         let mask = TestFlags::empty();
         let flags: Vec<TestFlag> = mask.iter().collect();
-        assert!(flags.is_empty());
+        assert_eq!(flags, Vec::<TestFlag>::new());
     }
 
     #[test]
