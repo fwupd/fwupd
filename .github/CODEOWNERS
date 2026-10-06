@@ -2,6 +2,10 @@
 # Format: [path pattern] [space-separated list of owners]
 # Order is important: last matching pattern takes precedence
 
+# Project build bootstrap
+fub @whot
+contrib/fub/ @whot
+
 # Plugin-specific owners
 plugins/algoltek-usb/ @MasonLyu
 plugins/amd-gpu/ @superm1
