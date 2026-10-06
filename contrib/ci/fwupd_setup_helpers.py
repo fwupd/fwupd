@@ -225,8 +225,9 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                         if obj.text:
                             version = f" {obj.text}"
                     for obj in control_parent.findall("profile"):
-                        if obj.text:
-                            profiles.append(obj.text)
+                        profile = (obj.text or "").strip()
+                        if profile:
+                            profiles.append(profile)
                 if inclusive or exclusive:
                     inclusive = " ".join(inclusive).strip()
                     exclusive = " !".join(exclusive).strip()

@@ -29,6 +29,7 @@ class Dependency:
     package_name: str
     inclusive: list[OsArch] = field(default_factory=list)
     exclusive: list[OsArch] = field(default_factory=list)
+    profiles: list[str] = field(default_factory=list)
     version_requirement: str | None = None
     build_target: BuildTarget = BuildTarget.ANY
 
@@ -45,6 +46,7 @@ class _ParsedDistroPackage:
     build_target: BuildTarget = BuildTarget.ANY
     inclusive: list[OsArch] = field(default_factory=list)
     exclusive: list[OsArch] = field(default_factory=list)
+    profiles: list[str] = field(default_factory=list)
     version_requirement: str | None = None
 
     def package_name(self, filter: str | None) -> str | None:
@@ -102,6 +104,7 @@ class _ParsedDependency:
                 package_name=pkgname,
                 inclusive=inclusive,
                 exclusive=exclusive,
+                profiles=distro_pkg.profiles,
                 version_requirement=version_requirement,
                 build_target=distro_pkg.build_target,
             )
@@ -199,8 +202,15 @@ class Dependencies:
                                 logger.warning(
                                     f"Unknown architecture '{exc.attrib['arch']}' in dependency {dependency_name}, skipping"
                                 )
+
+                    profiles = []
+                    for profile_elem in control_elem.findall("profile"):
+                        profile = (profile_elem.text or "").strip()
+                        if profile:
+                            profiles.append(profile)
                     distro_dep.inclusive = incl
                     distro_dep.exclusive = excl
+                    distro_dep.profiles = profiles
                     distro_dep.version_requirement = version
 
                     # FIXME: not sure what the deal is with empty control/
