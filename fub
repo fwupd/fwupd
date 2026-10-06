@@ -16,7 +16,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 
 # A marker file placed by fub init so we know it's our directory
-MARKER_FILE="fwupd.venv"
+MARKER_FILE="this-is-a-fwupd-build-root"
 
 # This is a bit annoying but it is supposed to work without the
 # venv activate script...
