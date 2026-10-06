@@ -21,10 +21,12 @@ G_DEFINE_TYPE(FuBluezBackend, fu_bluez_backend, FU_TYPE_BACKEND)
 static void
 fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *proxy)
 {
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	const gchar *path = g_dbus_proxy_get_object_path(proxy);
 	gboolean suitable;
 	FuDevice *device_tmp;
-	g_autoptr(FuBluezDevice) dev = NULL;
+	g_autoptr(FuBluezDevice) device_proxy = NULL;
+	g_autoptr(FuBluetoothDevice) device = NULL;
 	g_autoptr(GVariant) val_connected = NULL;
 	g_autoptr(GVariant) val_paired = NULL;
 	g_autoptr(GVariant) val_services_resolved = NULL;
@@ -67,16 +69,22 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	}
 
 	/* create device */
-	dev = g_object_new(FU_TYPE_BLUEZ_DEVICE,
-			   "backend-id",
-			   path,
-			   "object-manager",
-			   self->object_manager,
-			   "proxy",
-			   proxy,
-			   NULL);
+	device_proxy = g_object_new(FU_TYPE_BLUEZ_DEVICE,
+				    "object-manager",
+				    self->object_manager,
+				    "proxy",
+				    proxy,
+				    "context",
+				    ctx,
+				    NULL);
+	device = g_object_new(FU_TYPE_BLUETOOTH_DEVICE, "context", ctx, "backend-id", path, NULL);
+	fu_device_set_proxy(FU_DEVICE(device), FU_DEVICE(device_proxy));
+
+	/* weak */
+	fwupd_device_set_parent(FWUPD_DEVICE(device_proxy), FWUPD_DEVICE(device));
+
 	g_info("adding suitable BlueZ device: %s", path);
-	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(dev));
+	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
 
 static void
@@ -223,6 +231,6 @@ fu_bluez_backend_new(FuContext *ctx)
 				       "context",
 				       ctx,
 				       "device-gtype",
-				       FU_TYPE_BLUEZ_DEVICE,
+				       FU_TYPE_BLUETOOTH_DEVICE,
 				       NULL));
 }

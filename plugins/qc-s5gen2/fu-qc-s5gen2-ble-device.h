@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuQcS5gen2BleDevice,
 		     fu_qc_s5gen2_ble_device,
 		     FU,
 		     QC_S5GEN2_BLE_DEVICE,
-		     FuBluezDevice)
+		     FuBluetoothDevice)

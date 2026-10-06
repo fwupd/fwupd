@@ -81,7 +81,8 @@ fwupdplugin_src = [
   'fu-bios-setting.c', # fuzzing
   'fu-block-device.c',
   'fu-block-partition.c',
-  'fu-bluez-device.c',
+  'fu-bluetooth-device.c',
+  'fu-bluetooth-proxy.c',
   'fu-byte-array.c', # fuzzing
   'fu-bytes.c', # fuzzing
   'fu-cab-firmware.c', # fuzzing
@@ -258,7 +259,7 @@ fwupdplugin_headers = [
   'fu-bios-setting.h',
   'fu-block-device.h',
   'fu-block-partition.h',
-  'fu-bluez-device.h',
+  'fu-bluetooth-device.h',
   'fu-byte-array.h',
   'fu-bytes.h',
   'fu-cab-firmware.h',

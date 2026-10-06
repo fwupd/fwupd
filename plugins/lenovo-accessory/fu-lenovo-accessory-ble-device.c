@@ -11,7 +11,7 @@
 #include "fu-lenovo-accessory-impl.h"
 
 struct _FuLenovoAccessoryBleDevice {
-	FuBluezDevice parent_instance;
+	FuBluetoothDevice parent_instance;
 	FuIOChannel *notify_io; /* owned, for AcquireNotify mode */
 };
 
@@ -20,7 +20,7 @@ fu_lenovo_accessory_ble_device_impl_iface_init(FuLenovoAccessoryImplInterface *i
 
 G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryBleDevice,
 			fu_lenovo_accessory_ble_device,
-			FU_TYPE_BLUEZ_DEVICE,
+			FU_TYPE_BLUETOOTH_DEVICE,
 			G_IMPLEMENT_INTERFACE(FU_TYPE_LENOVO_ACCESSORY_IMPL,
 					      fu_lenovo_accessory_ble_device_impl_iface_init))
 
@@ -110,7 +110,7 @@ fu_lenovo_accessory_ble_device_verify_cb(FuDevice *device,
 		}
 	} else {
 		/* active read mode */
-		buf = fu_bluez_device_read(FU_BLUEZ_DEVICE(device), UUID_READ, error);
+		buf = fu_bluetooth_device_read(FU_BLUETOOTH_DEVICE(device), UUID_READ, error);
 		if (buf == NULL)
 			return FALSE;
 	}
@@ -448,8 +448,10 @@ fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 	/* if using notify mode, acquire the notify fd */
 	if (fu_device_has_private_flag(device, FU_LENOVO_ACCESSORY_BLE_DEVICE_FLAG_USE_NOTIFY)) {
 		gint32 mtu = 0;
-		self->notify_io =
-		    fu_bluez_device_notify_acquire(FU_BLUEZ_DEVICE(self), UUID_READ, &mtu, error);
+		self->notify_io = fu_bluetooth_device_notify_acquire(FU_BLUETOOTH_DEVICE(self),
+								     UUID_READ,
+								     &mtu,
+								     error);
 		if (self->notify_io == NULL) {
 			g_prefix_error_literal(error, "failed to acquire notify: ");
 			return FALSE;
@@ -482,7 +484,7 @@ static GByteArray *
 fu_lenovo_accessory_ble_device_read(FuLenovoAccessoryImpl *impl, GError **error)
 {
 	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(impl);
-	return fu_bluez_device_read(FU_BLUEZ_DEVICE(self), UUID_READ, error);
+	return fu_bluetooth_device_read(FU_BLUETOOTH_DEVICE(self), UUID_READ, error);
 }
 
 static gboolean
@@ -503,7 +505,7 @@ fu_lenovo_accessory_ble_device_write(FuLenovoAccessoryImpl *impl, GByteArray *bu
 			       FU_STRUCT_LENOVO_ACCESSORY_CMD_SIZE +
 				   fu_struct_lenovo_accessory_cmd_get_data_size(st_cmd),
 			       0x0);
-	return fu_bluez_device_write(FU_BLUEZ_DEVICE(self), UUID_WRITE, buf_padded, error);
+	return fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self), UUID_WRITE, buf_padded, error);
 }
 
 static gboolean

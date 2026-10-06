@@ -72,6 +72,7 @@ if host_machine.system() in ['linux', 'android']
 endif
 if bluez.allowed()
   fwupd_engine_src += 'fu-bluez-backend.c'
+  fwupd_engine_src += 'fu-bluez-device.c'
 endif
 
 # include event message file

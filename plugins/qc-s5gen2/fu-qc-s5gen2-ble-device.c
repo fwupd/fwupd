@@ -36,7 +36,7 @@ typedef struct {
 } FuQcS5gen2GaiaFeaturesVersion;
 
 struct _FuQcS5gen2BleDevice {
-	FuBluezDevice parent_instance;
+	FuBluetoothDevice parent_instance;
 	guint16 vid_v3;
 	FuIOChannel *io_cmd;
 	gint32 mtu;
@@ -48,7 +48,7 @@ fu_qc_s5gen2_ble_device_impl_iface_init(FuQcS5gen2ImplInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuQcS5gen2BleDevice,
 			fu_qc_s5gen2_ble_device,
-			FU_TYPE_BLUEZ_DEVICE,
+			FU_TYPE_BLUETOOTH_DEVICE,
 			G_IMPLEMENT_INTERFACE(FU_TYPE_QC_S5GEN2_IMPL,
 					      fu_qc_s5gen2_ble_device_impl_iface_init))
 
@@ -70,10 +70,10 @@ fu_qc_s5gen2_ble_device_notify_acquire(FuQcS5gen2BleDevice *self, GError **error
 	if (self->io_cmd != NULL)
 		return (TRUE);
 
-	self->io_cmd = fu_bluez_device_notify_acquire(FU_BLUEZ_DEVICE(self),
-						      FU_QC_S5GEN2_BLE_DEVICE_RECV,
-						      &(self->mtu),
-						      error);
+	self->io_cmd = fu_bluetooth_device_notify_acquire(FU_BLUETOOTH_DEVICE(self),
+							  FU_QC_S5GEN2_BLE_DEVICE_RECV,
+							  &(self->mtu),
+							  error);
 	if (self->io_cmd == NULL) {
 		self->mtu = 0;
 		return (FALSE);
@@ -91,7 +91,10 @@ fu_qc_s5gen2_ble_device_send(FuQcS5gen2BleDevice *self,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	buf = g_byte_array_append(buf, data, data_len);
 
-	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self), FU_QC_S5GEN2_BLE_DEVICE_SEND, buf, error))
+	if (!fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self),
+				       FU_QC_S5GEN2_BLE_DEVICE_SEND,
+				       buf,
+				       error))
 		return FALSE;
 
 	return TRUE;
