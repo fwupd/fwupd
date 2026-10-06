@@ -14,6 +14,7 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "fu-fmap-struct.h"
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 #include "fu-mtd-struct.h"
@@ -35,7 +36,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
-#define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_MTD_DEVICE_IOCTL_TIMEOUT	5000 /* ms */
 #define FU_MTD_DEVICE_FMAP_REGION_WP_RO "WP_RO"
 
 #define FU_MTD_DEVICE_FLAG_HAS_INTEL_SPI "has-intel-spi"
@@ -221,9 +222,9 @@ static gboolean
 fu_mtd_device_metadata_parse_fmap(FuMtdDevice *self, FuInputStream *stream, GError **error)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
-	gsize fmap_end;
-	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
-	g_autoptr(FuInputStream) stream_fmap = NULL;
+	gsize fmap_end = 0;
+	gsize search_offset;
+	g_autoptr(FuInputStream) stream_search = NULL;
 
 	g_clear_object(&priv->fmap_firmware);
 	if (priv->fmap_offset > G_MAXSIZE || priv->fmap_size > G_MAXSIZE) {
@@ -233,32 +234,68 @@ fu_mtd_device_metadata_parse_fmap(FuMtdDevice *self, FuInputStream *stream, GErr
 				    "FMAP search range is too large");
 		return FALSE;
 	}
-	if (priv->fmap_size > 0) {
-		fmap_end = fu_size_checked_add((gsize)priv->fmap_offset, (gsize)priv->fmap_size);
-		if (fmap_end == G_MAXSIZE) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "FMAP search range overflow");
+	if (priv->fmap_size == 0) {
+		g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+
+		if (!fu_firmware_parse_stream(firmware,
+					      stream,
+					      priv->fmap_offset,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+						  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+					      error))
 			return FALSE;
-		}
-		stream_fmap = fu_partial_input_stream_new(stream, 0x0, fmap_end, error);
-		if (stream_fmap == NULL)
-			return FALSE;
-	} else {
-		stream_fmap = g_object_ref(stream);
+		g_set_object(&priv->fmap_firmware, firmware);
+		return TRUE;
 	}
-	if (!fu_firmware_parse_stream(firmware,
-				      stream_fmap,
-				      priv->fmap_offset,
-				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
-					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
-				      error)) {
-		g_prefix_error_literal(error, "failed to parse FMAP: ");
+	fmap_end = fu_size_checked_add((gsize)priv->fmap_offset, (gsize)priv->fmap_size);
+	if (fmap_end == G_MAXSIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP search range overflow");
 		return FALSE;
 	}
-	g_set_object(&priv->fmap_firmware, firmware);
-	return TRUE;
+	stream_search = fu_partial_input_stream_new(stream, 0x0, fmap_end, error);
+	if (stream_search == NULL)
+		return FALSE;
+
+	/* bound search reads to BIOS, but validate whole-flash sizes and addresses */
+	search_offset = priv->fmap_offset;
+	while (TRUE) {
+		gsize offset = 0;
+		g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_input_stream_find(stream_search,
+					  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+					  FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					  search_offset,
+					  &offset,
+					  error))
+			return FALSE;
+		search_offset = offset + 1;
+		if (!fu_firmware_parse_stream(firmware,
+					      stream,
+					      offset,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						  FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+						  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+					      &error_local)) {
+			g_debug("ignoring FMAP at 0x%zx: %s", offset, error_local->message);
+			continue;
+		}
+		{
+			gsize table_size =
+			    fu_fmap_firmware_get_table_size(FU_FMAP_FIRMWARE(firmware));
+
+			if (table_size > fmap_end - offset) {
+				g_debug("FMAP table at 0x%zx is outside IFD BIOS region", offset);
+				continue;
+			}
+		}
+		g_set_object(&priv->fmap_firmware, firmware);
+		return TRUE;
+	}
 }
 
 static gboolean

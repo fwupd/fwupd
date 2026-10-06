@@ -225,7 +225,7 @@ fu_test_mtd_device_new_for_security_attrs(FuTest *self,
 }
 
 static GBytes *
-fu_test_mtd_ifd_with_fmap_decoy_new(void)
+fu_test_mtd_ifd_with_fmap_new(gboolean in_bios)
 {
 	gsize blob_size = 0;
 	const guint8 *blob_data;
@@ -233,12 +233,23 @@ fu_test_mtd_ifd_with_fmap_decoy_new(void)
 	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_bios = g_bytes_new(buf, FU_TEST_MTD_WP_RO_SIZE);
+	g_autoptr(FuFirmware) img_bios = NULL;
+	g_autoptr(FuFirmware) img_me = NULL;
 	g_autoptr(GError) error = NULL;
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "mtd-ifd.builder.xml", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
+	img_bios = fu_firmware_get_image_by_id(firmware, "bios", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img_bios);
+	fu_firmware_set_bytes(img_bios, blob_bios);
+	img_me = fu_firmware_get_image_by_id(firmware, "me", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img_me);
+	fu_firmware_set_addr(img_me, 0x1000 + FU_TEST_MTD_WP_RO_SIZE);
 	blob = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
@@ -253,8 +264,27 @@ fu_test_mtd_ifd_with_fmap_decoy_new(void)
 				     &error));
 	g_assert_no_error(error);
 
-	/* the BIOS region ends at 0x2000; put a valid decoy in the ME region */
-	fu_test_mtd_fmap_write(buf, FU_TEST_MTD_DEVICE_SIZE, 0x2000, 0x2000, FALSE);
+	/* skip a false signature before the table ending at the BIOS boundary */
+	if (in_bios) {
+		g_assert_true(fu_memcpy_safe(buf,
+					     FU_TEST_MTD_DEVICE_SIZE,
+					     0x1000,
+					     (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+					     FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					     0,
+					     FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					     &error));
+		g_assert_no_error(error);
+	}
+
+	/* the ME region follows BIOS; FMAP still describes the complete flash */
+	fu_test_mtd_fmap_write(buf,
+			       FU_TEST_MTD_DEVICE_SIZE,
+			       in_bios ? 0x1000 + FU_TEST_MTD_WP_RO_SIZE - FU_STRUCT_FMAP_SIZE -
+					     2 * FU_STRUCT_FMAP_AREA_SIZE
+				       : 0x1000 + FU_TEST_MTD_WP_RO_SIZE,
+			       in_bios ? 0x1000 : 0x1000 + FU_TEST_MTD_WP_RO_SIZE,
+			       FALSE);
 	return g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
 }
 
@@ -571,6 +601,32 @@ fu_test_mtd_device_security_attrs_wp_ro_no_vboot_func(gconstpointer user_data)
 }
 
 static void
+fu_test_mtd_device_security_attrs_wp_ro_ifd_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GBytes) blob = fu_test_mtd_ifd_with_fmap_new(TRUE);
+
+	device = fu_test_mtd_device_new_emulated(self, FU_TYPE_IFD_FIRMWARE, blob);
+	fu_test_mtd_device_add_memislocked_event(device, 0x1000, TRUE);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_true(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+#endif
+}
+
+static void
 fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
@@ -581,10 +637,10 @@ fu_test_mtd_device_security_attrs_wp_ro_ifd_bound_func(gconstpointer user_data)
 	g_autoptr(FuMtdDevice) device = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(GBytes) blob = fu_test_mtd_ifd_with_fmap_decoy_new();
+	g_autoptr(GBytes) blob = fu_test_mtd_ifd_with_fmap_new(FALSE);
 
 	device = fu_test_mtd_device_new_emulated(self, FU_TYPE_IFD_FIRMWARE, blob);
-	fu_test_mtd_device_add_memislocked_event(device, 0x2000, TRUE);
+	fu_test_mtd_device_add_memislocked_event(device, 0x1000 + FU_TEST_MTD_WP_RO_SIZE, TRUE);
 	plugin = fu_test_mtd_plugin_new(self, device);
 	fu_test_mtd_security_attrs_add_vboot(self, attrs);
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
@@ -1199,6 +1255,9 @@ main(int argc, char **argv)
 			     fu_test_mtd_device_read_firmware_invalid_gtype_func);
 	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
 	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
+	g_test_add_data_func("/mtd/device/security-attrs/wp-ro-ifd",
+			     self,
+			     fu_test_mtd_device_security_attrs_wp_ro_ifd_func);
 	g_test_add_data_func("/mtd/device/prepare-fmap-region",
 			     self,
 			     fu_test_mtd_device_prepare_fmap_region_func);
