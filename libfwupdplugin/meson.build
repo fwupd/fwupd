@@ -194,7 +194,6 @@ fwupdplugin_src = [
   'fu-pkcs7.c',
   'fu-processor-device.c',
   'fu-protobuf.c', # fuzzing
-  'fu-ptr-array.c', # fuzzing
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -366,7 +365,6 @@ fwupdplugin_headers = [
   'fu-plugin-private.h',
   'fu-processor-device.h',
   'fu-progress.h',
-  'fu-ptr-array.h',
   'fu-quirks.h',
   'fu-sbatlevel-section.h',
   'fu-secure-bytes.h',
@@ -549,7 +547,6 @@ if get_option('tests')
     'plugin',
     'progress',
     'protobuf',
-    'ptr-array',
     'quirks',
     'secure-bytes',
     'security-attrs',

@@ -19,7 +19,6 @@
 #include "fu-mem.h"
 #include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
-#include "fu-ptr-array.h"
 #include "fu-string.h"
 
 /**
@@ -2508,8 +2507,7 @@ static GPtrArray *
 fu_firmware_get_images_sorted(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) images =
-	    fu_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, g_object_unref);
+	g_autoptr(GPtrArray) images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX)
 		g_ptr_array_sort(images, fu_firmware_sort_by_idx_cb);
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID)
