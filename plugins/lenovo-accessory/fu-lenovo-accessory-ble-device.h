@@ -13,7 +13,7 @@ G_DECLARE_FINAL_TYPE(FuLenovoAccessoryBleDevice,
 		     fu_lenovo_accessory_ble_device,
 		     FU,
 		     LENOVO_ACCESSORY_BLE_DEVICE,
-		     FuBluezDevice)
+		     FuBluetoothDevice)
 
 /* the firmware pushes the response as a notification and clears its buffer, so an
  * active read afterwards returns zero bytes */

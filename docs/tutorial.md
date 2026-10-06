@@ -430,7 +430,7 @@ device type, we can add our new device type to that plugin. Otherwise we
 should create a plugin that will hold the new device type.
 
 The core fwupd code contains some basic device types (such as
-[FuUdevDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-udev-device.c), [FuUsbDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-usb-device.c), [FuBluezDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-bluez-device.c)) that can be used as a base
+[FuUdevDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-udev-device.c), [FuUsbDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-usb-device.c), [FuBluetoothDevice](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-bluetooth-device.c)) that can be used as a base
 type for most devices in case we have to implement our own device
 access, identification and communication from scratch.
 
@@ -752,7 +752,7 @@ with the device can be done through the [hidraw
 interface](https://www.kernel.org/doc/html/latest/hid/hidraw.html). If
 the device implements a custom BLE profile instead, then it will have to
 be managed by the `FuBluezBackend`, which uses the BlueZ DBus interface
-to communicate with the devices. The `FuBluezDevice` type implements
+to communicate with the devices. The `FuBluetoothDevice` type implements
 device enumeration as well as the basic primitives to read and write BLE
 characteristics, and can be used as the base type for a more specific
 BLE device.

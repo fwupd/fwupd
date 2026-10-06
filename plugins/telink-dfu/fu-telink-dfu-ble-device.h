@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuTelinkDfuBleDevice,
 		     fu_telink_dfu_ble_device,
 		     FU,
 		     TELINK_DFU_BLE_DEVICE,
-		     FuBluezDevice)
+		     FuBluetoothDevice)

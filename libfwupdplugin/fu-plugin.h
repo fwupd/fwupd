@@ -8,7 +8,7 @@
 
 #include <gio/gio.h>
 
-#include "fu-bluez-device.h"
+#include "fu-bluetooth-device.h"
 #include "fu-common-guid.h"
 #include "fu-common.h"
 #include "fu-context.h"

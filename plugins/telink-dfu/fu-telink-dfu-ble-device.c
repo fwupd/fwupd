@@ -12,10 +12,10 @@
 #include "fu-telink-dfu-struct.h"
 
 struct _FuTelinkDfuBleDevice {
-	FuBluezDevice parent_instance;
+	FuBluetoothDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuTelinkDfuBleDevice, fu_telink_dfu_ble_device, FU_TYPE_BLUEZ_DEVICE)
+G_DEFINE_TYPE(FuTelinkDfuBleDevice, fu_telink_dfu_ble_device, FU_TYPE_BLUETOOTH_DEVICE)
 
 #define FU_TELINK_DFU_HID_DEVICE_START_ADDR 0x5000
 
@@ -69,10 +69,10 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 								error);
 		if (st_pkt == NULL)
 			return FALSE;
-		if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
-					   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-					   st_pkt->buf,
-					   error))
+		if (!fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self),
+					       FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
+					       st_pkt->buf,
+					       error))
 			return FALSE;
 		fu_device_sleep(FU_DEVICE(self), 5);
 
@@ -94,10 +94,10 @@ fu_telink_dfu_ble_device_ota_start(FuTelinkDfuBleDevice *self, GError **error)
 	    fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_START, NULL, 0, error);
 	if (st_pkt == NULL)
 		return FALSE;
-	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
-				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt->buf,
-				   error))
+	if (!fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self),
+				       FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
+				       st_pkt->buf,
+				       error))
 		return FALSE;
 
 	/* success */
@@ -121,10 +121,10 @@ fu_telink_dfu_ble_device_ota_stop(FuTelinkDfuBleDevice *self, guint number_chunk
 							error);
 	if (st_pkt == NULL)
 		return FALSE;
-	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
-				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt->buf,
-				   error))
+	if (!fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self),
+				       FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
+				       st_pkt->buf,
+				       error))
 		return FALSE;
 
 	/* success */
@@ -154,10 +154,10 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 							error);
 	if (st_pkt == NULL)
 		return FALSE;
-	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
-				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt->buf,
-				   error))
+	if (!fu_bluetooth_device_write(FU_BLUETOOTH_DEVICE(self),
+				       FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
+				       st_pkt->buf,
+				       error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), 5);
 

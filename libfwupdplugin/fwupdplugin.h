@@ -14,7 +14,7 @@
 #include <libfwupdplugin/fu-bios-setting.h>
 #include <libfwupdplugin/fu-block-device.h>
 #include <libfwupdplugin/fu-block-partition.h>
-#include <libfwupdplugin/fu-bluez-device.h>
+#include <libfwupdplugin/fu-bluetooth-device.h>
 #include <libfwupdplugin/fu-byte-array.h>
 #include <libfwupdplugin/fu-bytes.h>
 #include <libfwupdplugin/fu-cab-firmware.h>

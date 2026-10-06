@@ -410,6 +410,8 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		device_gtypestr = fwupd_json_object_get_string(object_tmp, "GType", NULL);
 		if (device_gtypestr == NULL)
 			device_gtypestr = "FuUsbDevice";
+		if (g_strcmp0(device_gtypestr, "FuBluezDevice") == 0)
+			device_gtypestr = "FuBluetoothDevice";
 		device_gtype = g_type_from_name(device_gtypestr);
 		if (device_gtype == G_TYPE_INVALID) {
 			g_set_error(error,
