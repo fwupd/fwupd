@@ -48,9 +48,10 @@ class OsRelease:
                     version = line[11:].strip('"')
                 elif line.startswith("ID_LIKE="):
                     id_like = line[8:].strip("\"'")
-        if distro is None or version is None:
+        if distro is None:
             raise FileNotFoundError(os_release)
-        return OsRelease(distro, version, id_like)
+        # rolling releases (e.g. Arch, CachyOS) have no VERSION_ID
+        return OsRelease(distro, version or "latest", id_like)
 
 
 class UnknownArchException(Exception):
