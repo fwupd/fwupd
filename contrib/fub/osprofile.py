@@ -277,3 +277,48 @@ class Compiler:
     @classmethod
     def get_cc(cls, name: str = "cc") -> Self:
         return cls(prog=name)
+
+
+class Shell(enum.StrEnum):
+    BASH = "bash"
+    ZSH = "zsh"
+    FISH = "fish"
+    SH = "sh"
+
+    @classmethod
+    def guess_user_shell(cls) -> Self | None:
+        """
+        Returns the best guess for the current shell.
+        """
+        shell_path = os.environ.get("SHELL", "")
+        try:
+            return Shell(Path(shell_path).name)
+        except ValueError:
+            if os.environ.get("ZSH_VERSION"):
+                return Shell.ZSH
+            if os.environ.get("BASH_VERSION"):
+                return Shell.BASH
+            if os.environ.get("FISH_VERSION"):
+                return Shell.FISH
+
+        return None
+
+    def source_command(self, scriptname: Path, prefer_suffixed: bool = False) -> str:
+        """
+        Returns the shell command that is this shell's equivalent to bash's
+            source <scriptname>
+
+        If prefer_suffixed is True, a lookup for <scriptname>.<shell> is done and
+        preferred over a non-suffixed version.
+        """
+
+        if prefer_suffixed:
+            suffixed = scriptname.parent / f"{scriptname.name}.{self.value}"
+            if suffixed.exists():
+                scriptname = suffixed
+
+        match self:
+            case Shell.SH:
+                return f'. "{scriptname}"'
+            case Shell.BASH | Shell.ZSH | Shell.FISH:
+                return f'source "{scriptname}"'
