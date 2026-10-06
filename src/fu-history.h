@@ -35,6 +35,9 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_history_get_devices(FuHistory *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_history_has_device_flag(FuHistory *self, FwupdDeviceFlags flag, GError **error)
+    G_GNUC_NON_NULL(1);
 
 gboolean
 fu_history_clear_approved_firmware(FuHistory *self, GError **error) G_GNUC_NON_NULL(1);

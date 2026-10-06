@@ -169,6 +169,48 @@ fu_history_func(void)
 }
 
 static void
+fu_history_device_flag_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuHistory) history = fu_history_new(ctx);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("history-device-flag", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
+
+	/* no history entries have the flag */
+	ret = fu_history_has_device_flag(history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION, &error);
+	g_assert_no_error(error);
+	g_assert_false(ret);
+
+	/* add a device with the flag */
+	fu_device_set_id(device, "device-with-flag");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	ret = fu_history_add_device(history, device, release, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_has_device_flag(history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* removing the flag updates the result */
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	ret = fu_history_modify_device(history, device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_has_device_flag(history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION, &error);
+	g_assert_no_error(error);
+	g_assert_false(ret);
+}
+
+static void
 fu_history_modify_func(void)
 {
 	gboolean ret;
@@ -306,6 +348,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/history", fu_history_func);
+	g_test_add_func("/fwupd/history/device-flag", fu_history_device_flag_func);
 	g_test_add_func("/fwupd/history/modify", fu_history_modify_func);
 	g_test_add_func("/fwupd/history/migrate-v1", fu_history_migrate_v1_func);
 	g_test_add_func("/fwupd/history/migrate-v2", fu_history_migrate_v2_func);

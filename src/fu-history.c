@@ -1170,6 +1170,58 @@ fu_history_get_devices(FuHistory *self, GError **error)
 }
 
 /**
+ * fu_history_has_device_flag:
+ * @self: a #FuHistory
+ * @flag: a device flag
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks whether any device in the history database has @flag.
+ *
+ * Returns: %TRUE if a device has @flag
+ **/
+gboolean
+fu_history_has_device_flag(FuHistory *self, FwupdDeviceFlags flag, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
+	g_return_val_if_fail(flag != FWUPD_DEVICE_FLAG_NONE, FALSE);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load(self, error))
+			return FALSE;
+	}
+
+	rc = sqlite3_prepare_v2(self->db,
+				"SELECT 1 FROM history WHERE (flags & ?1) != 0 LIMIT 1;",
+				-1,
+				&stmt,
+				NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to prepare SQL to get device flags: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_int64(stmt, 1, flag);
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_ROW)
+		return TRUE;
+	if (rc == SQLITE_DONE)
+		return FALSE;
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_READ,
+		    "failed to query device flags: %s",
+		    sqlite3_errmsg(self->db));
+	return FALSE;
+}
+
+/**
  * fu_history_get_approved_firmware:
  * @self: a #FuHistory
  * @error: (nullable): optional return location for an error

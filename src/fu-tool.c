@@ -2832,9 +2832,32 @@ fu_util_enable_test_devices(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_check_activation_needed(FuUtil *self, GError **error)
 {
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	gboolean has_pending = FALSE;
-	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
-	g_autoptr(GPtrArray) devices = fu_history_get_devices(history, error);
+	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* only load enough context to find and inspect pending.db */
+	fu_path_store_load_defaults(pstore);
+	fu_path_store_load_from_env(pstore);
+	history = fu_history_new(self->ctx);
+	if (!fu_history_has_device_flag(history,
+					FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION,
+					&error_local)) {
+		if (error_local != NULL) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No devices to activate");
+		return FALSE;
+	}
+
+	/* load the pending rows to restrict engine startup to the required plugins */
+	devices = fu_history_get_devices(history, error);
 	if (devices == NULL)
 		return FALSE;
 
@@ -2864,6 +2887,10 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 	gboolean has_pending = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
+	/* avoid probing hardware when there is nothing pending to activate */
+	if (g_strv_length(values) == 0 && !fu_util_check_activation_needed(self, error))
+		return FALSE;
+
 	/* progress */
 	fu_progress_set_id(self->progress, G_STRLOC);
 	fu_progress_add_step(self->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
@@ -2880,10 +2907,6 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 		error))
 		return FALSE;
 	fu_progress_step_done(self->progress);
-
-	/* check the history database */
-	if (!fu_util_check_activation_needed(self, error))
-		return FALSE;
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
