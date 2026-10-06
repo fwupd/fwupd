@@ -121,3 +121,20 @@ class TestDependencies:
         assert len(result) == 2
         assert result[0].package_name == "pkg-a"
         assert result[1].package_name == "pkg-b"
+
+    def test_control_profiles(self, tmp_path):
+        """Build profiles are returned with the parsed dependency."""
+        deps = self._make_deps(
+            '<dependency id="python-flask">\n'
+            '  <distro id="debian">\n'
+            "    <control>\n"
+            "      <profile> !nocheck </profile>\n"
+            "      <profile>   </profile>\n"
+            "    </control>\n"
+            "  </distro>\n"
+            "</dependency>\n",
+            tmp_path,
+        )
+        result = deps.find_packages(OsName.DEBIAN)
+        assert len(result) == 1
+        assert result[0].profiles == ["!nocheck"]
