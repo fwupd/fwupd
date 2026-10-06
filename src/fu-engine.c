@@ -5754,7 +5754,7 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 	}
 
 	/* deep copy so the remote list can be kept up to date */
-	return fu_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, g_object_unref);
+	return g_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, NULL);
 }
 
 /**
