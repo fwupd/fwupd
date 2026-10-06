@@ -685,6 +685,63 @@ fu_test_mtd_device_prepare_full_image_func(gconstpointer user_data)
 }
 
 static void
+fu_test_mtd_device_prepare_fmap_region_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
+	g_autoptr(GBytes) blob = fu_test_mtd_fmap_new(FU_TEST_MTD_FMAP_OFFSET);
+	g_autoptr(GBytes) blob_moved = NULL;
+	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) stream_moved = NULL;
+	g_autofree guint8 *buf = g_malloc0(FU_TEST_MTD_DEVICE_SIZE);
+	g_autoptr(GError) error = NULL;
+
+	device = fu_test_mtd_device_new_emulated(self, G_TYPE_INVALID, blob);
+	g_assert_true(fu_device_set_quirk_kv(FU_DEVICE(device),
+					     "MtdFmapRegions",
+					     "WP_RO",
+					     FU_CONTEXT_QUIRK_SOURCE_DB,
+					     &error));
+	g_assert_no_error(error);
+	fu_test_mtd_device_add_memislocked_event(device, FU_TEST_MTD_FMAP_OFFSET, TRUE);
+	plugin = fu_test_mtd_plugin_new(self, device);
+	fu_test_mtd_security_attrs_add_vboot(self, attrs);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+
+	firmware = fu_device_prepare_firmware(FU_DEVICE(device),
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	g_clear_object(&firmware);
+
+	fu_test_mtd_fmap_write(buf,
+			       FU_TEST_MTD_DEVICE_SIZE,
+			       FU_TEST_MTD_FMAP_OFFSET,
+			       FU_TEST_MTD_FMAP_OFFSET - 0x1000,
+			       FALSE);
+	blob_moved = g_bytes_new_take(g_steal_pointer(&buf), FU_TEST_MTD_DEVICE_SIZE);
+	stream_moved = fu_memory_input_stream_new_from_bytes(blob_moved);
+	firmware = fu_device_prepare_firmware(FU_DEVICE(device),
+					      stream_moved,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(firmware);
+#endif
+}
+
+static void
 fu_test_mtd_device_security_attrs_wp_ro_boundary_func(gconstpointer user_data)
 {
 #ifndef HAVE_MTD_USER_H
@@ -1142,6 +1199,9 @@ main(int argc, char **argv)
 			     fu_test_mtd_device_read_firmware_invalid_gtype_func);
 	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
 	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
+	g_test_add_data_func("/mtd/device/prepare-fmap-region",
+			     self,
+			     fu_test_mtd_device_prepare_fmap_region_func);
 	g_test_add_data_func("/mtd/device/prepare-full-image",
 			     self,
 			     fu_test_mtd_device_prepare_full_image_func);

@@ -1350,14 +1350,14 @@ fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
 			return NULL;
 
 		/* check they're compatible */
-		if (fu_firmware_get_offset(img_device) != fu_firmware_get_offset(img_firmware)) {
+		if (fu_firmware_get_addr(img_device) != fu_firmware_get_addr(img_firmware)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "FMAP region %s moved, device @0x%x and firmware @0x%x",
 				    fmap_region,
-				    (guint)fu_firmware_get_offset(img_device),
-				    (guint)fu_firmware_get_offset(img_firmware));
+				    (guint)fu_firmware_get_addr(img_device),
+				    (guint)fu_firmware_get_addr(img_firmware));
 			return NULL;
 		}
 		if (fu_firmware_get_size(img_device) != fu_firmware_get_size(img_firmware)) {
