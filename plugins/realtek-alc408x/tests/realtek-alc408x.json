@@ -1,0 +1,18 @@
+{
+  "name": "Realtek ALC4080",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "0436493ba5c454720572a56d15665629db1c9c38a5fbd6b16a550af79f430f88-DGX-Station-GBx00-ALC4080-V9006.cab",
+      "emulation-url": "070d420f8bc69190f122f2a7b460ce7512576ae728095360cbdb528318638393-DGX-Station-GBx00-ALC4080-V9006-emulation.zip",
+      "components": [
+        {
+          "version": "4.502.0000-0000.9006",
+          "guids": [
+            "f789a370-0124-5f2c-b2e8-151ff633e6d7"
+          ]
+        }
+      ]
+    }
+  ]
+}
