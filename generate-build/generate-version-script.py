@@ -138,4 +138,5 @@ if __name__ == "__main__":
         for override_symbol, override_version in args.override:
             ld.overrides[override_symbol] = override_version
     ld.import_gir(argv[1])
-    open(argv[2], "w").write(ld.render())
+    with open(argv[2], "w") as f:
+        f.write(ld.render())

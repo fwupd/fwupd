@@ -46,60 +46,61 @@ def _parse_parts(fn_source):
     memory_id = None
     parts = []
 
-    for line in open(fn_source):
-        # try to clean up crazy syntax
-        line = line.replace("\n", "")
-        line = line.removesuffix(";")
+    with open(fn_source) as f:
+        for line in f:
+            # try to clean up crazy syntax
+            line = line.replace("\n", "")
+            line = line.removesuffix(";")
 
-        # ignore blank lines
-        line = line.rstrip()
-        if not line:
-            continue
-
-        # count how many spaces deep this is
-        lvl = 0
-        for char in line:
-            if char != " ":
-                break
-            lvl = lvl + 1
-
-        # ignore comments
-        line = line.strip()
-        if line[0] == "#":
-            continue
-
-        # level 0 of hell
-        if lvl == 0:
-            if line.startswith("part"):
-                memory_id = None
-                part = {}
-                parts.append(part)
-                if line.startswith("part parent "):
-                    part["parent"] = line[13:].replace('"', "")
-            continue
-
-        # level 4 of hell
-        if lvl == 4:
-            if line.startswith("memory"):
-                memory_id = "memory-" + line[7:].replace('"', "")
-                part[memory_id] = {}
+            # ignore blank lines
+            line = line.rstrip()
+            if not line:
                 continue
-            split = line.split("=")
-            if len(split) != 2:
-                print("ignoring", line)
-                continue
-            part[split[0].strip()] = split[1].strip().replace('"', "")
-            continue
 
-        # level 8 of hell
-        if lvl == 8:
-            if memory_id:
+            # count how many spaces deep this is
+            lvl = 0
+            for char in line:
+                if char != " ":
+                    break
+                lvl = lvl + 1
+
+            # ignore comments
+            line = line.strip()
+            if line[0] == "#":
+                continue
+
+            # level 0 of hell
+            if lvl == 0:
+                if line.startswith("part"):
+                    memory_id = None
+                    part = {}
+                    parts.append(part)
+                    if line.startswith("part parent "):
+                        part["parent"] = line[13:].replace('"', "")
+                continue
+
+            # level 4 of hell
+            if lvl == 4:
+                if line.startswith("memory"):
+                    memory_id = "memory-" + line[7:].replace('"', "")
+                    part[memory_id] = {}
+                    continue
                 split = line.split("=")
                 if len(split) != 2:
+                    print("ignoring", line)
                     continue
-                memory = part[memory_id]
-                memory[split[0].strip()] = split[1].strip()
-            continue
+                part[split[0].strip()] = split[1].strip().replace('"', "")
+                continue
+
+            # level 8 of hell
+            if lvl == 8:
+                if memory_id:
+                    split = line.split("=")
+                    if len(split) != 2:
+                        continue
+                    memory = part[memory_id]
+                    memory[split[0].strip()] = split[1].strip()
+                continue
     return parts
 
 
@@ -158,7 +159,8 @@ def _write_quirks(parts, fn_destination):
 
     # write file
     print("writing", fn_destination)
-    open(fn_destination, "w").writelines(outp)
+    with open(fn_destination, "w") as f:
+        f.writelines(outp)
 
 
 if __name__ == "__main__":
