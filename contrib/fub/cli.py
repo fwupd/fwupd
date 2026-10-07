@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .directories import directories
 from .logger import ColorFormatter, Yes, logger, printer
+from .osprofile import Shell
 
 
 def setup_globals(args: argparse.Namespace) -> None:
@@ -46,6 +47,15 @@ This command should not be used for building distribution packages. Use normal
 meson build commands instead.
 """,
     )
+
+    parser.add_argument(
+        "--print-completion",
+        choices=list(Shell),
+        help=argparse.SUPPRESS,
+        type=str,
+        default=None,
+    )
+
     parser.add_argument(
         "-v", "--verbose", action="count", default=0, help="increase debug output"
     )
@@ -104,6 +114,19 @@ meson build commands instead.
                 logger.error(f"Failed to import module {module_name}: {e}")
 
     args = parser.parse_args(argv)
+
+    if args.print_completion:
+        try:
+            import shtab  # pylint: disable=import-outside-toplevel
+
+            print(shtab.complete(parser, shell=args.print_completion))
+        except NotImplementedError:
+            logger.info(f"shtab does not support {args.print_completion}, skipping")
+            return 0
+        except ModuleNotFoundError:
+            logger.error("shtab is required for completion generation")
+            return 1
+        return 0
 
     match args.verbose:
         case 0:
