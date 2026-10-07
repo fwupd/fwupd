@@ -19,9 +19,10 @@ def register(subparsers):
         help="build and install fwupd in the venv",
         description=(
             "Configure (meson setup) and build/install fwupd into the build environment. "
-            "Extra meson arguments can be passed after '--'."
         ),
     )
+    # Note: this is handled through run(remaining), this arg
+    # is mostly just there for the help output
     parser.add_argument(
         "meson_args",
         nargs="*",
@@ -30,9 +31,9 @@ def register(subparsers):
     parser.set_defaults(func=run)
 
 
-def run(args):
+def run(args, remaining: list[str]):
     """Build and install fwupd in the venv."""
-    extra_args = ["-Dlibxmlb:gtkdoc=false", "-Dsystemd=disabled"]
+    extra_args = ["-Dsystemd=disabled"]
 
     # NixOS: extract vendor_ids_dir from mesonFlags
     nixos_marker = directories.build_root() / ".nixos"
@@ -42,16 +43,24 @@ def run(args):
             if flag.startswith(("-Dvendor_ids_dir=", "-Dplugin_uefi_capsule_splash=")):
                 extra_args.append(flag)
 
+    user_args = args.meson_args + remaining
+
     meson = Meson(
         builddir=directories.builddir(),
         prefix=directories.distdir(absolute=True),
-        meson_args=extra_args + args.meson_args,
+        meson_args=extra_args + user_args,
         cwd=directories.repository_root(),
     )
     if args.quiet:
         meson.capture_logs = True
-    if meson.needs_setup and not meson.setup().success:
-        return 1
+    if meson.needs_setup:
+        # subproject args can only be passed through at setup time
+        meson.meson_args.insert(0, "-Dlibxmlb:gtkdoc=false")
+        if not meson.setup().success:
+            return 1
+    elif user_args:
+        if not meson.setup().success:
+            return 1
 
     if not meson.build().success:
         return 1

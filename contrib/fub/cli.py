@@ -2,6 +2,7 @@
 
 import argparse
 import importlib
+import inspect
 import logging
 import os
 import pkgutil
@@ -93,13 +94,19 @@ meson build commands instead.
                 #
                 # def run(args):
                 #    ... function to be invoked for this subcommand ...
+                #
+                # Or if the parser should take any arguments not handled
+                # by argparse.
+                #
+                # def run(args, remaining: list[str]):
+                #    ... function to be invoked for this subcommand ...
+                #
 
                 module.register(subparsers)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to import module {module_name}: {e}")
 
-    args = parser.parse_args(argv)
-
+    args, remaining = parser.parse_known_args(argv)
     if args.print_completion:
         try:
             import shtab  # pylint: disable=import-outside-toplevel
@@ -128,8 +135,22 @@ meson build commands instead.
         parser.print_help()
         return 1
 
+    # Unpack known-args/remaining args and pass them as first + second
+    # argument into whatever our run func is
+    run_func = args.func
+    run_func_args: dict
+    match list(inspect.signature(run_func).parameters):
+        case [first, second, *_]:
+            run_func_args = {first: args, second: remaining}
+        case [first]:
+            if remaining:
+                parser.error(f"unrecognized arguments: {' '.join(remaining)}")
+            run_func_args = {first: args}
+        case []:
+            run_func_args = {}
+
     try:
         setup_globals(args)
-        return args.func(args)
+        return run_func(**run_func_args)
     except KeyboardInterrupt:
         return 130
