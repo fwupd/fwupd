@@ -61,7 +61,7 @@ def register(subparsers):
     parser.add_argument(
         "--os",
         dest="osname",
-        choices=OsName,
+        choices=list(OsName),
         default=None,
         help="OS profile to use (default:autodetect)",
     )

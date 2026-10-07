@@ -40,7 +40,7 @@ def register(subparsers):
     parser.add_argument(
         "--os",
         dest="os_name",
-        choices=OsName,
+        choices=list(OsName),
         default=None,
         help="distribution name (default: auto-detect)",
     )
