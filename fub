@@ -42,9 +42,9 @@ if [[ -n "${C_DIR}" ]]; then
         echo "${C_DIR} must match current virtualenv, run 'deactivate' to drop the virtualenv"
         exit 1
     fi
+    source "${VENV}/bin/activate"
 elif [[ -n "${VIRTUAL_ENV}" ]]; then
     VENV="${VIRTUAL_ENV}"
-    source "${VENV}/bin/activate"
 else
     # Find the most recent stamped venv
     latest_marker=""
@@ -59,7 +59,9 @@ else
 fi
 
 if [[ -e "${VENV}/bin/activate" ]]; then
-    source "${VENV}/bin/activate"
+    if [[ -z "$VIRTUAL_ENV" ]]; then
+        source "${VENV}/bin/activate"
+    fi
     PYTHON="${VENV}/bin/python3"
 elif [[ -n "${VENV}" ]] && [[ -f "${VENV}/bin/python3" ]]; then
     PYTHON="${VENV}/bin/python3"
