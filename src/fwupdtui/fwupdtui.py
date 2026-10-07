@@ -832,14 +832,7 @@ class FwupdTui(App):
         search_folded = search.casefold()
         visible = 0
         for setting in self.settings:
-            searchable = " ".join(
-                (
-                    setting.name,
-                    setting.parent,
-                    setting.description,
-                    setting.current_value,
-                )
-            ).casefold()
+            searchable = f"{setting.name} {setting.parent} {setting.description} {setting.current_value}".casefold()
             if search_folded and search_folded not in searchable:
                 continue
             parent_path = ""
