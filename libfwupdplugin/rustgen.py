@@ -227,7 +227,7 @@ class EnumItem:
         if val.startswith(("0x", "0b")):
             val = val.replace("_", "")
         if val.startswith("0b"):
-            val = hex(int(val[2:], 2))
+            val = hex(int(val, 0))
         self.default = val
 
     def check(self):
@@ -598,7 +598,7 @@ class StructItem:
             typestr, n_elements = val[1:-1].split(";", maxsplit=1)
             n_elements = n_elements.strip()
             if n_elements.startswith("0x"):
-                self.n_elements = int(n_elements[2:], 16)
+                self.n_elements = int(n_elements, 0)
             else:
                 self.n_elements = int(n_elements)
         else:
