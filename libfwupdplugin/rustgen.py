@@ -454,9 +454,7 @@ class StructItem:
     def enabled(self) -> bool:
         if self.element_id.startswith("_"):
             return False
-        if self.element_id == "reserved":
-            return False
-        return True
+        return self.element_id != "reserved"
 
     @property
     def endian_glib(self) -> str:
