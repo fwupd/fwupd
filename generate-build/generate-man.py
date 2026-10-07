@@ -38,7 +38,7 @@ def _strip_md(data: str) -> str:
         if line.startswith("|"):
             line = line[2:]
         # create links to other "man" pages
-        if line.startswith("<") and (line.endswith("(1)>") or line.endswith("(5)>")):
+        if line.startswith("<") and (line.endswith(("(1)>", "(5)>"))):
             line = line.strip("<>")
             name = line.split("(")[0]
             line = f"[`{line}`](./{name}.html)"

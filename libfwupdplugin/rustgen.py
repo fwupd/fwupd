@@ -202,7 +202,7 @@ class EnumItem:
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
-        if name_snake.endswith("flags") or name_snake.endswith("attrs"):
+        if name_snake.endswith(("flags", "attrs")):
             name_snake = name_snake[:-1]
         return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
@@ -224,7 +224,7 @@ class EnumItem:
             # make sure we promote to a larger integer type
             if int(bitshift) >= 31:
                 val = f"{int(number)}ull<<{bitshift}"
-        if val.startswith("0x") or val.startswith("0b"):
+        if val.startswith(("0x", "0b")):
             val = val.replace("_", "")
         if val.startswith("0b"):
             val = hex(int(val[2:], 2))
@@ -578,7 +578,7 @@ class StructItem:
             Type.U64,
             Type.B32,
         ]:
-            if val.startswith("0x") or val.startswith("0b"):
+            if val.startswith(("0x", "0b")):
                 val = val.replace("_", "")
             return val.replace("$struct_offset", str(self.offset))
         raise ValueError(f"do not know how to parse value for type: {self.type}")
@@ -785,7 +785,7 @@ class Generator:
                 comment = comment.strip()
                 if comment.startswith("Since:"):
                     since = comment[6:].strip()
-                elif comment.startswith("SPDX") or comment.startswith("Copyright"):
+                elif comment.startswith(("SPDX", "Copyright")):
                     pass
                 elif comment:
                     comments_cur.append(comment.strip())

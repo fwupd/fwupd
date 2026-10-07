@@ -21,11 +21,7 @@ def test_files():
         + glob.glob("data/*/*.xml")
         + glob.glob("libfwupdplugin/tests/bios-attrs/*/*.txt")
     ):
-        if (
-            fn.startswith("dist/")
-            or fn.startswith("subprojects/")
-            or fn.startswith("build/")
-        ):
+        if fn.startswith(("dist/", "subprojects/", "build/")):
             continue
         with open(fn, "rb") as f:
             blob = f.read().decode()
