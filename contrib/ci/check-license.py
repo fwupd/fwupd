@@ -22,10 +22,8 @@ def test_files() -> int:
             continue
         lic: str = ""
         cprts: list[str] = []
-        lines: list[str] = []
         with open(fn) as f:
-            for line in f.read().split("\n"):
-                lines.append(line)
+            lines: list[str] = f.read().split("\n")
         if len(lines) < 2:
             continue
         for line in lines:
