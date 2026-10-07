@@ -127,7 +127,7 @@ if __name__ == "__main__":
         )
         cab = generate_cab(ARGS.exe, directory, guid, version, version_format)
         install(CLIENT, cab, deviceid, True, True)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(e)
 
     if is_restore_required:

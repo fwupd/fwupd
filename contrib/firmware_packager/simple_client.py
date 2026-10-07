@@ -137,7 +137,7 @@ def modify_config(client, section, key, value):
     try:
         print(f"setting configuration key {key} to {value}")
         client.modify_config(section, key, value, None)
-    except Exception as e:
+    except GLib.Error as e:
         print(f"{e!s}")
         sys.exit(1)
 
