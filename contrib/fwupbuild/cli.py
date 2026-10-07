@@ -20,9 +20,9 @@ def setup_globals(args: argparse.Namespace) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Main entry point for fub."""
+    """Main entry point for fwupbuild."""
     parser = argparse.ArgumentParser(
-        prog="fub",
+        prog="fwupbuild",
         description="""
 The fwupd developer helper tool.
 
@@ -129,7 +129,7 @@ meson build commands instead.
             level = logging.DEBUG
     logging.basicConfig(level=level)
     logging.getLogger().handlers[0].setFormatter(ColorFormatter())
-    logging.getLogger("fub").setLevel(level)
+    logging.getLogger("fwupbuild").setLevel(level)
 
     if args.command is None or not hasattr(args, "func"):
         parser.print_help()

@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from fub.git import GitRepo, GitSha
+from fwupbuild.git import GitRepo, GitSha
 
 
 class TestGitSha:
@@ -61,7 +61,7 @@ class TestShas:
 
         mock_cmd = MagicMock()
         mock_cmd.stdout = abbrev_stdout
-        with patch("fub.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
             assert repo.current_ref == expected
             mock_runcmd.assert_called_once_with(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -75,7 +75,7 @@ class TestShas:
 
         mock_cmd = MagicMock()
         mock_cmd.stdout = "HEAD\n"
-        with patch("fub.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
             assert repo.current_ref is None
             mock_runcmd.assert_called_once_with(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -89,7 +89,7 @@ class TestShas:
 
         mock_cmd = MagicMock()
         mock_cmd.stdout = "abc123def456\n"
-        with patch("fub.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
             sha = repo.current_sha
             mock_runcmd.assert_called_once_with(
                 ["git", "rev-parse", "HEAD"], cwd=Path("/repo"), check=True
@@ -118,7 +118,7 @@ class TestShas:
 
         mock_cmd = MagicMock()
         mock_cmd.stdout = sha
-        with patch("fub.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
             result = repo.as_sha(ref)
             assert result.sha == sha.strip()
             mock_runcmd.assert_called_once_with(
@@ -129,7 +129,8 @@ class TestShas:
 class TestRepo:
     def test_calls_find_repo_root(self):
         with patch(
-            "fub.git.directories.repository_root", return_value=Path("/found/root")
+            "fwupbuild.git.directories.repository_root",
+            return_value=Path("/found/root"),
         ):
             repo = GitRepo.default()
             assert repo.root == Path("/found/root")
@@ -153,7 +154,7 @@ class TestRepo:
         destdir = tmp_path / "dest"
 
         repo = GitRepo(root=src)
-        with patch("fub.git.RunCmd") as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd") as mock_runcmd:
             result = repo.clone_into(destdir, depth=depth)
 
             expected_cmd = ["git", "clone", str(src)] + expected_extra_args
@@ -167,7 +168,7 @@ class TestRepo:
         destdir = tmp_path / "nested" / "dest"
 
         repo = GitRepo(root=src)
-        with patch("fub.git.RunCmd"):
+        with patch("fwupbuild.git.RunCmd"):
             repo.clone_into(destdir)
 
         assert destdir.exists()
@@ -180,7 +181,7 @@ class TestRepo:
         destdir.mkdir()
 
         repo = GitRepo(root=src)
-        with patch("fub.git.RunCmd"):
+        with patch("fwupbuild.git.RunCmd"):
             result = repo.clone_into(destdir)
             assert result.root == destdir / "myrepo"
 
@@ -191,7 +192,7 @@ class TestRepo:
         destdir = tmp_path / "clones"
 
         repo = GitRepo(root=src)
-        with patch("fub.git.RunCmd"):
+        with patch("fwupbuild.git.RunCmd"):
             result = repo.clone_into(destdir)
             assert result.root.name == "fwupd"
 
@@ -213,7 +214,7 @@ class TestRepo:
             runcmd_calls.append(args)
             return cmd
 
-        with patch("fub.git.RunCmd", side_effect=fake_runcmd):
+        with patch("fwupbuild.git.RunCmd", side_effect=fake_runcmd):
             sha = repo.as_sha("target-sha")
             with repo.checkout(sha):
                 pass
@@ -242,7 +243,7 @@ class TestRepo:
             runcmd_calls.append(args)
             return cmd
 
-        with patch("fub.git.RunCmd", side_effect=fake_runcmd):
+        with patch("fwupbuild.git.RunCmd", side_effect=fake_runcmd):
             sha = repo.as_sha("target")
             with pytest.raises(RuntimeError, match="boom"):
                 with repo.checkout(sha):
@@ -280,7 +281,7 @@ class TestRepo:
                     cmd.stdout = f"{resolved}\n"
             return cmd
 
-        with patch("fub.git.RunCmd", side_effect=fake_runcmd) as mock_runcmd:
+        with patch("fwupbuild.git.RunCmd", side_effect=fake_runcmd) as mock_runcmd:
             sha = repo.as_sha(ref)
             with repo.checkout(sha):
                 pass

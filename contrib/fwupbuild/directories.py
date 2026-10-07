@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Build/repo directory management for fub
+# Build/repo directory management for fwupbuild
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -87,8 +87,8 @@ class Directories:
         Mark the build root directory as ready
         """
         with open(self.build_root() / self.MARKERFILE, "w") as fd:
-            fd.write("This is a fwupd build environment created with fub\n")
-            fd.write("See fub --help for available commands.\n")
+            fd.write("This is a fwupd build environment created with fwupbuild\n")
+            fd.write("See fwupbuild --help for available commands.\n")
 
     @classmethod
     def populate(cls, builddir: Path | None = None) -> Self:

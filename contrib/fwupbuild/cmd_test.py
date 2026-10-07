@@ -116,7 +116,7 @@ def run(args):
     """Run the fwupd test suite."""
     meson = Meson(builddir=directories.builddir(), meson_args=[])
     if meson.needs_setup:
-        printer.error("Project not yet built, run [bold]fub build[/bold] first")
+        printer.error("Project not yet built, run [bold]fwupbuild build[/bold] first")
         sys.exit(1)
 
     build_root = directories.build_root()

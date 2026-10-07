@@ -42,7 +42,7 @@ repos:
     rev: v0.16.10
     hooks:
     - id: ruff-check
-      args: ['contrib/fub']
+      args: ['contrib/fwupbuild']
       pass_filenames: false
     - id: ruff-format
       args: ['--check', '--diff']
@@ -87,7 +87,7 @@ repos:
       - id: check-headers
         name: check for superfluous includes
         language: system
-        entry: ./fub check-headers
+        entry: ./fwupbuild check-headers
         types_or: [c]
       - id: check-source
         name: check source code for common issues
@@ -112,7 +112,7 @@ repos:
       - id: run-tests
         name: run tests before pushing
         language: system
-        entry: ./fub test
+        entry: ./fwupbuild test
         pass_filenames: false
         stages: [pre-push]
       - id: meson-format

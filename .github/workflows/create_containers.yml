@@ -173,7 +173,7 @@ jobs:
       - name: Generate Dockerfile
         if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
         run: >-
-          ./fub dockerfile
+          ./fwupbuild dockerfile
           --os "${{ matrix.distros.DISTRO }}"
           --version "${{ matrix.distros.VERSION }}"
           --arch "${{ matrix.distros.ARCH }}"

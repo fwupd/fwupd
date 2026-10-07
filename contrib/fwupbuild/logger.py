@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Shared utilities for fub
+# Shared utilities for fwupbuild
 
 import enum
 import logging
@@ -222,5 +222,5 @@ stderr_use_colors = os.environ.get("FORCE_COLOR") is not None or (
 
 stdout_colors = ConsoleColors().maybe_disable(stdout_use_colors)
 stderr_colors = ConsoleColors().maybe_disable(stderr_use_colors)
-logger = logging.getLogger("fub")
+logger = logging.getLogger("fwupbuild")
 printer = Printer()

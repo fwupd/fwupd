@@ -60,7 +60,9 @@ def run(args):
     if sys.version_info >= (3, 12):
         kwargs["delete"] = args.keep is False
 
-    with tempfile.TemporaryDirectory(prefix="fub-check-abi", **kwargs) as tmpdir_name:
+    with tempfile.TemporaryDirectory(
+        prefix="fwupbuild-check-abi", **kwargs
+    ) as tmpdir_name:
         tmpdir = Path(tmpdir_name)
         clone = repo.clone_into(tmpdir)
         logger.debug(f"Working git repo in {clone.root}")

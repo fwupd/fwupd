@@ -8,6 +8,6 @@ _contrib_dir = str(Path(__file__).absolute().parent.parent)
 if _contrib_dir not in sys.path:
     sys.path.insert(0, _contrib_dir)
 
-from fub.cli import main
+from fwupbuild.cli import main
 
 sys.exit(main())

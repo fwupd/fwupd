@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Meson wrappers for use by fub
+# Meson wrappers for use by fwupbuild
 
 import re
 from dataclasses import dataclass

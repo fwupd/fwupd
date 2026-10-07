@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Wrapper script for fub.
+# Wrapper script for fwupbuild.
 #
 # This script is intended to be called from the repository root directory, e.g.
-# $ ./fub init
-# $ ./fub build
+# $ ./fwupbuild init
+# $ ./fwupbuild build
 #
 # Once set up it will detect a virtual env and activate it if found, passing
 # through the various values to the python implementation.
 #
 
 # Resolve symlinks so SCRIPT_DIR is always the repo root,
-# even when invoked via venv/bin/fub -> ../../fub
+# even when invoked via venv/bin/fwupbuild -> ../../fwupbuild
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 
-# A marker file placed by fub init so we know it's our directory
+# A marker file placed by fwupbuild init so we know it's our directory
 MARKER_FILE="this-is-a-fwupd-build-root"
 
 # This is a bit annoying but it is supposed to work without the
@@ -70,4 +70,4 @@ else
     PYTHON=python3
 fi
 
-exec "${PYTHON}" "${SCRIPT_DIR}/contrib/fub/__main__.py" "$@"
+exec "${PYTHON}" "${SCRIPT_DIR}/contrib/fwupbuild/__main__.py" "$@"

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Subprocess execution wrapper for fub
+# Subprocess execution wrapper for fwupbuild
 
 import logging
 import shutil
