@@ -154,7 +154,7 @@ def main(args) -> int:
                     Pango.shape(label_translated, length, items[0].analysis, gs)
                 del img, cctx, pctx, layout
 
-                def find_size(fs, f, data):
+                def find_size(fs, f, data, gs=gs):
                     """find our size, I hope..."""
                     ink, log = gs.extents(f)
                     if ink.height == 0 or ink.width == 0:
@@ -187,7 +187,7 @@ def main(args) -> int:
                 cctx.set_source_rgb(1, 1, 1)
                 cctx.move_to(x, y - surface_height / 2)
 
-                def do_write(fs, f, data):
+                def do_write(fs, f, data, gs=gs, cctx=cctx):
                     """write out glyphs"""
                     ink = gs.extents(f)[0]
                     if ink.height == 0 or ink.width == 0:
