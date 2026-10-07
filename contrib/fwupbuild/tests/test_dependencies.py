@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 
-from fub.dependencies import Dependencies
-from fub.osprofile import OsName
+from fwupbuild.dependencies import Dependencies
+from fwupbuild.osprofile import OsName
 
 
 class TestDependencies:

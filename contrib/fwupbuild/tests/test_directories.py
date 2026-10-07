@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 import pytest
-from fub.directories import Directories
+from fwupbuild.directories import Directories
 
 
 class TestFindRepoRoot:
@@ -14,12 +14,12 @@ class TestFindRepoRoot:
         repo = tmp_path / "project"
         repo.mkdir()
         (repo / "meson_options.txt").touch()
-        subdir = repo / "contrib" / "fub"
+        subdir = repo / "contrib" / "fwupbuild"
         subdir.mkdir(parents=True)
         fake_file = subdir / "directories.py"
         fake_file.touch()
 
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         orig = mod.__file__
         try:
@@ -37,7 +37,7 @@ class TestFindRepoRoot:
         fake_file = subdir / "directories.py"
         fake_file.touch()
 
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         orig = mod.__file__
         try:
@@ -53,7 +53,7 @@ class TestFindRepoRoot:
 class TestFindMostRecentBuildRoot:
     def test_finds_most_recent(self, tmp_path):
         """find_most_recent_build_root returns the directory with the newest marker."""
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         repo = tmp_path / "project"
         repo.mkdir()
@@ -83,7 +83,7 @@ class TestFindMostRecentBuildRoot:
 
     def test_none_when_no_markers(self, tmp_path):
         """find_most_recent_build_root returns None when no markers exist."""
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         repo = tmp_path / "project"
         repo.mkdir()
@@ -168,7 +168,7 @@ class TestBuildRootState:
 class TestPopulate:
     def test_populate_with_explicit_builddir(self, tmp_path):
         """populate() uses the provided builddir."""
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         repo = tmp_path / "project"
         repo.mkdir()
@@ -186,7 +186,7 @@ class TestPopulate:
 
     def test_populate_defaults_to_builddir(self, tmp_path):
         """populate() defaults to repo_root/builddir when no build_root found."""
-        import fub.directories as mod
+        import fwupbuild.directories as mod
 
         repo = tmp_path / "project"
         repo.mkdir()

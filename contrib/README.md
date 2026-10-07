@@ -12,7 +12,7 @@ A Dockerfile for Fedora can be generated in `contrib/ci`.
 To prepare the Docker container run this command:
 
 ```shell
-./fub docker --distro fedora --version 44 --arch amd64 build
+./fwupbuild docker --distro fedora --version 44 --arch amd64 build
 ```
 
 To build the RPMs run this command (from the root of your git checkout):
@@ -37,9 +37,9 @@ A Dockerfile for Debian or Ubuntu can be generated in `contrib/ci`.
 To prepare the Docker container run one of these commands:
 
 ```shell
-./fub docker --distro debian --version testing --arch amd64 build
-./fub docker --distro debian --version testing --arch amd64 --variant i386 build
-./fub docker --distro ubuntu --version rolling --arch amd64 build
+./fwupbuild docker --distro debian --version testing --arch amd64 build
+./fwupbuild docker --distro debian --version testing --arch amd64 --variant i386 build
+./fwupbuild docker --distro ubuntu --version rolling --arch amd64 build
 ```
 
 To build the DEBs run one of these commands (from the root of your git checkout):
@@ -66,7 +66,7 @@ A Dockerfile for Arch can be generated in `contrib/ci`.
 To prepare the Docker container run this command:
 
 ```shell
-./fub dockerfile --os arch --version latest --arch amd64 build
+./fwupbuild dockerfile --os arch --version latest --arch amd64 build
 ```
 
 To build the PKGs run this command (from the root of your git checkout):

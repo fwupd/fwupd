@@ -76,17 +76,17 @@ def _setup_help(parser, args) -> int:
     return 0
 
 
-def generate_fub_completions(completion_dir: Path, python: Path) -> None:
-    """Generate and save shell completions for fub."""
+def generate_fwupbuild_completions(completion_dir: Path, python: Path) -> None:
+    """Generate and save shell completions for fwupbuild."""
     repo_root = directories.repository_root()
     completion_env = os.environ.copy()
     completion_env["PYTHONPATH"] = str(repo_root / "contrib")
 
     completion_dir.mkdir(exist_ok=True)
     for shell in Shell:
-        completion_file = completion_dir / f"fub.{shell}"
+        completion_file = completion_dir / f"fwupbuild.{shell}"
         cmd = RunCmd(
-            [python, "-m", "fub", "--print-completion", str(shell)],
+            [python, "-m", "fwupbuild", "--print-completion", str(shell)],
             capture=True,
             env=completion_env,
         )
@@ -207,19 +207,21 @@ def setup_venv() -> int:
             printer.error("Failed to set up virtualenv")
             return 1
 
-    fub_wrapper = directories.repository_root() / "fub"
-    fub_link = build_root / "bin" / "fub"
-    if fub_link.exists() or fub_link.is_symlink():
-        fub_link.unlink()
-    fub_link.symlink_to(fub_wrapper)
-    logger.info(f"Created symlink: {fub_link}")
+    fwupbuild_wrapper = directories.repository_root() / "fwupbuild"
+    fwupbuild_link = build_root / "bin" / "fwupbuild"
+    if fwupbuild_link.exists() or fwupbuild_link.is_symlink():
+        fwupbuild_link.unlink()
+    fwupbuild_link.symlink_to(fwupbuild_wrapper)
+    logger.info(f"Created symlink: {fwupbuild_link}")
 
     wrapper_dir = (build_root / "bin").resolve()
 
     def create_run_wrapper(binary):
-        """Create a small wrapper script in venv/bin/ that calls fub run."""
+        """Create a small wrapper script in venv/bin/ that calls fwupbuild run."""
         wrapper_path = wrapper_dir / binary
-        content = f"""#!/bin/bash\nexec "$(dirname "$0")/fub" run {binary} -- "$@" """
+        content = (
+            f"""#!/bin/bash\nexec "$(dirname "$0")/fwupbuild" run {binary} -- "$@" """
+        )
         wrapper_path.write_text(content)
         wrapper_path.chmod(
             wrapper_path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
@@ -233,20 +235,20 @@ def setup_venv() -> int:
     if not activate.exists():
         return 0
 
-    marker = "# fub additions"
+    marker = "# fwupbuild additions"
 
-    # for each shell we have additions for, create a fub.<shellname>
+    # for each shell we have additions for, create a fwupbuild.<shellname>
     # script that we can source from the activate script
 
     shell_configs = {
         Shell.BASH: """
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
-echo "# fub build"
+echo "# fwupbuild build"
 echo ""
 echo "To run the test suite run:"
 echo ""
-echo "# fub test"
+echo "# fwupbuild test"
 echo ""
 echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
 echo ""
@@ -257,20 +259,20 @@ echo ""
 echo "# deactivate"
 
 if [ -n "$BASH_VERSION" ]; then
-    . "{completion_dir}/fub.bash" 2>/dev/null || true
+    . "{completion_dir}/fwupbuild.bash" 2>/dev/null || true
     . data/bash-completion/fwupdtool 2>/dev/null || true
     . data/bash-completion/fwupdmgr 2>/dev/null || true
 fi
 if [ -n "$ZSH_VERSION" ]; then
-    fub_zsh="{completion_dir}/fub.zsh"
-    [[ -f "$fub_zsh" ]] && eval "$(<"$fub_zsh")" 2>/dev/null || true
+    fwupbuild_zsh="{completion_dir}/fwupbuild.zsh"
+    [[ -f "$fwupbuild_zsh" ]] && eval "$(<"$fwupbuild_zsh")" 2>/dev/null || true
 fi
 export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
 """,
         Shell.FISH: """
 set -gx MANPATH $VIRTUAL_ENV/dist/share/man: $MANPATH
 
-. "{completion_dir}/fub.fish" 2>/dev/null || true
+. "{completion_dir}/fwupbuild.fish" 2>/dev/null || true
 set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_complete_path
 """,
     }
@@ -282,17 +284,19 @@ set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_com
         if not activate_path.exists():
             continue
 
-        fub_script = wrapper_dir / f"fub.{shell}"
+        fwupbuild_script = wrapper_dir / f"fwupbuild.{shell}"
         activate_content = activate_path.read_text()
         if marker not in activate_content:
-            # The venv activate script simply sources our fub-specific script that contains
+            # The venv activate script simply sources our fwupbuild-specific script that contains
             # the actual data.
             with activate_path.open("a", encoding="utf-8") as f:
-                source_command = shell.source_command(fub_script, ignore_errors=True)
+                source_command = shell.source_command(
+                    fwupbuild_script, ignore_errors=True
+                )
                 f.write(f"\n{marker}\n{source_command}\n")
 
-        # We always overwrite our custom fub.<shell> script with newest data
-        with fub_script.open("w") as f:
+        # We always overwrite our custom fwupbuild.<shell> script with newest data
+        with fwupbuild_script.open("w") as f:
             content = content.format(completion_dir=completion_dir)
             f.write("# This file is generated and will be overwritten, do not edit\n")
             f.write(content)
@@ -306,7 +310,7 @@ set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_com
         if rc != 0:
             return rc
 
-        generate_fub_completions(completion_dir, venv_python)
+        generate_fwupbuild_completions(completion_dir, venv_python)
 
     # meson
     repo_dir = directories.repository_root()
@@ -317,7 +321,7 @@ set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_com
             venv_python,
             "-c",
             (
-                "from fub.meson import Meson, MesonVersion; "
+                "from fwupbuild.meson import Meson, MesonVersion; "
                 f"minimum = MesonVersion.from_string('{min_vers}'); "
                 "current = Meson.current_meson_version(); "
                 "assert minimum <= current, f'Required meson version not met'"

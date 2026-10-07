@@ -3,10 +3,10 @@
 ## Getting started
 
 To set up your local fwupd development environment, from the top level of
-the checkout run the **fub** build tool:
+the checkout run the **fwupbuild** build tool:
 
 ```shell
-./fub init builddir
+./fwupbuild init builddir
 ```
 
 Where `builddir` represents a user-specified directory that will contain
@@ -31,10 +31,10 @@ source builddir/bin/activate
 To build fwupd in the venv run:
 
 ```shell
-fub -C builddir build
+fwupbuild -C builddir build
 ```
 
-If the `-C builddir` argument is omitted, **fub** will find the most recently
+If the `-C builddir` argument is omitted, **fwupbuild** will find the most recently
 initiated directory.
 
 Wrappers are configured while in the venv to run `fwupdtool`, `fwupd`, and

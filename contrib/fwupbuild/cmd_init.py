@@ -22,17 +22,19 @@ def print_blurb():
     printer.message(f"    [bold]# {source_command}[/bold]")
     printer.message("")
     printer.message("To build, run: ")
-    printer.message("    [bold]# fub build[/bold]")
+    printer.message("    [bold]# fwupbuild build[/bold]")
     printer.message("")
     printer.message("To run the test suite, run: ")
-    printer.message("    [bold]# fub test[/bold]")
+    printer.message("    [bold]# fwupbuild test[/bold]")
     printer.message("")
     printer.message("To specify a specific build root, use:")
-    printer.message(f"     [bold]# fub -C {directories.build_root()} build[/bold]")
-    printer.message(f"     [bold]# fub -C {directories.build_root()} test[/bold]")
+    printer.message(
+        f"     [bold]# fwupbuild -C {directories.build_root()} build[/bold]"
+    )
+    printer.message(f"     [bold]# fwupbuild -C {directories.build_root()} test[/bold]")
     printer.message("")
     printer.message(
-        "See [bold]fub --help[/bold] for more information and other commands."
+        "See [bold]fwupbuild --help[/bold] for more information and other commands."
     )
 
 

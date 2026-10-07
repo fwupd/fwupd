@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Shared utilities for fub
+# Shared utilities for fwupbuild
 
 
 from dataclasses import dataclass

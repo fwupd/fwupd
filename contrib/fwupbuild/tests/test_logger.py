@@ -6,7 +6,7 @@ from typing import get_type_hints
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fub.logger import ColorFormatter, ConsoleColors, Printer, Yes
+from fwupbuild.logger import ColorFormatter, ConsoleColors, Printer, Yes
 
 
 class TestYes:
@@ -105,7 +105,7 @@ class TestColorFormatter:
             exc_info=None,
         )
         # Ensure stderr_colors is enabled for this test
-        with patch("fub.logger.stderr_colors", ConsoleColors()):
+        with patch("fwupbuild.logger.stderr_colors", ConsoleColors()):
             result = formatter.format(record)
             assert expected_color_prefix in result
             assert "test message" in result
@@ -139,7 +139,9 @@ class TestPrinter:
     def test_message_prints_to_stdout(self, capsys):
         """message() prints to stdout."""
         p = Printer()
-        with patch("fub.logger.stdout_colors", ConsoleColors().maybe_disable(False)):
+        with patch(
+            "fwupbuild.logger.stdout_colors", ConsoleColors().maybe_disable(False)
+        ):
             p.message("hello world")
         captured = capsys.readouterr()
         assert "hello world" in captured.out
@@ -176,7 +178,7 @@ class TestPrinter:
     def test_banner_with_colors(self, capsys, enabled):
         p = Printer()
         colors = ConsoleColors(enabled=enabled)
-        with patch("fub.logger.stdout_colors", colors):
+        with patch("fwupbuild.logger.stdout_colors", colors):
             p.banner("Build")
         captured = capsys.readouterr()
         assert "Build" in captured.out

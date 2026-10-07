@@ -3,8 +3,8 @@
 # Order is important: last matching pattern takes precedence
 
 # Project build bootstrap
-fub @whot
-contrib/fub/ @whot
+fwupbuild @whot
+contrib/fwupbuild/ @whot
 
 # Plugin-specific owners
 plugins/algoltek-usb/ @MasonLyu

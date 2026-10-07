@@ -26,8 +26,8 @@ def register(subparsers):
         description=(
             "Run one of the fwupd binaries from the venv build. "
             "Set DEBUG=1 in the environment to launch via gdbserver."
-            "To separate fub arguments from tool arguments, use --, "
-            "e.g. fub run -- fwupdtool --help"
+            "To separate fwupbuild arguments from tool arguments, use --, "
+            "e.g. fwupbuild run -- fwupdtool --help"
         ),
     )
     parser.add_argument(
@@ -48,7 +48,7 @@ def run(args):
 
     meson = Meson(builddir=directories.builddir(), meson_args=[])
     if meson.needs_setup:
-        printer.error("Project not yet built, run [bold]fub build[/bold] first")
+        printer.error("Project not yet built, run [bold]fwupbuild build[/bold] first")
         sys.exit(1)
 
     dist = directories.distdir()
@@ -63,7 +63,7 @@ def run(args):
         exe = dist / "bin" / binary
     if not exe.is_file():
         printer.error(
-            f"{binary} is not yet built, please run [bold]fub build[/bold] first",
+            f"{binary} is not yet built, please run [bold]fwupbuild build[/bold] first",
         )
         return 1
 

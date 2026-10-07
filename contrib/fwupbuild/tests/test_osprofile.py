@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fub.osprofile import (
+from fwupbuild.osprofile import (
     Compiler,
     OsArch,
     OsName,
@@ -103,7 +103,7 @@ class TestOsRelease:
             'NAME="Fedora Linux"\nID=fedora\nVERSION_ID="41"\nOTHER=stuff\n'
         )
 
-        with patch("fub.osprofile.Path") as mock_path:
+        with patch("fwupbuild.osprofile.Path") as mock_path:
             mock_file = tmp_path / "os-release"
             mock_file.write_text(os_release_content)
             mock_path.return_value = mock_file
@@ -116,7 +116,7 @@ class TestOsRelease:
         """detect() raises FileNotFoundError when required fields are missing."""
         os_release_content = "NAME=something\n"
 
-        with patch("fub.osprofile.Path") as mock_path:
+        with patch("fwupbuild.osprofile.Path") as mock_path:
             mock_file = tmp_path / "os-release"
             mock_file.write_text(os_release_content)
             mock_path.return_value = mock_file
@@ -149,7 +149,7 @@ class TestPackageManager:
     )
     def test_new_from_os_as_root(self, os_name, expected_cmd_parts):
         """As root, no sudo prefix is added."""
-        with patch("fub.osprofile.os.geteuid", return_value=0):
+        with patch("fwupbuild.osprofile.os.geteuid", return_value=0):
             pm = os_name.package_manager()
             # Should not have sudo when running as root
             assert pm.cmd[0] != "sudo"
@@ -164,13 +164,13 @@ class TestPackageManager:
     )
     def test_new_from_os_not_root_adds_sudo(self, os_name):
         """As non-root, sudo is prepended."""
-        with patch("fub.osprofile.os.geteuid", return_value=1000):
+        with patch("fwupbuild.osprofile.os.geteuid", return_value=1000):
             pm = os_name.package_manager()
             assert pm.cmd[0] == "sudo"
 
     def test_new_from_os_unknown_raises(self):
         """UnknownOsException is raised for unsupported OS."""
-        with patch("fub.osprofile.os.geteuid", return_value=0):
+        with patch("fwupbuild.osprofile.os.geteuid", return_value=0):
             with pytest.raises(UnknownOsException, match="does not support"):
                 OsName.NIXOS.package_manager()
 
@@ -199,7 +199,7 @@ class TestPipPackageManager:
         mock_cmd.success = True
         mock_cmd.stdout = "1.2.3\n"
 
-        with patch("fub.osprofile.RunCmd", return_value=mock_cmd):
+        with patch("fwupbuild.osprofile.RunCmd", return_value=mock_cmd):
             result = pm.install_package("markdown", version=(1, 0, 0))
             assert result is None
 
@@ -218,7 +218,7 @@ class TestPipPackageManager:
         install_cmd = MagicMock()
         install_cmd.success = True
 
-        with patch("fub.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]):
+        with patch("fwupbuild.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]):
             result = pm.install_package("markdown", version=(2, 0, 0))
             assert result is not None
             assert result == install_cmd
@@ -237,7 +237,7 @@ class TestPipPackageManager:
         install_cmd = MagicMock()
         install_cmd.success = True
 
-        with patch("fub.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]):
+        with patch("fwupbuild.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]):
             result = pm.install_package("markdown")
             assert result is not None
             assert result == install_cmd
@@ -259,7 +259,7 @@ class TestPipPackageManager:
         mock_cmd.success = True
         mock_cmd.stdout = "1.2.3\n"
 
-        with patch("fub.osprofile.RunCmd", return_value=mock_cmd) as mock_run:
+        with patch("fwupbuild.osprofile.RunCmd", return_value=mock_cmd) as mock_run:
             pm.install_package(package)
 
         script = mock_run.call_args[0][0][-1]
@@ -280,7 +280,7 @@ class TestPipPackageManager:
         install_cmd.success = True
 
         with patch(
-            "fub.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]
+            "fwupbuild.osprofile.RunCmd", side_effect=[check_cmd, install_cmd]
         ) as mock_run:
             pm.install_package("jinja2")
 
@@ -296,7 +296,7 @@ class TestCompiler:
         mock_cmd = MagicMock()
         mock_cmd.success = True
         mock_cmd.stdout = "x86_64-redhat-linux-gnu\n"
-        with patch("fub.osprofile.RunCmd", return_value=mock_cmd):
+        with patch("fwupbuild.osprofile.RunCmd", return_value=mock_cmd):
             assert compiler.machine == "x86_64-redhat-linux-gnu"
 
     def test_machine_failure(self):
@@ -305,7 +305,7 @@ class TestCompiler:
         mock_cmd = MagicMock()
         mock_cmd.success = False
         mock_cmd.stdout = ""
-        with patch("fub.osprofile.RunCmd", return_value=mock_cmd):
+        with patch("fwupbuild.osprofile.RunCmd", return_value=mock_cmd):
             assert compiler.machine == ""
 
     def test_get_cc(self):

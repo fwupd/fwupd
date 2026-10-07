@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fub.runcmd import RunCmd, SudoMissing
+from fwupbuild.runcmd import RunCmd, SudoMissing
 
 
 class TestRunCmdBasic:
@@ -66,8 +66,8 @@ class TestRunCmdArgs:
 class TestRunCmdSudo:
     def test_as_sudo_prepends_sudo(self):
         """as_sudo=True prepends the sudo binary to the command."""
-        with patch("fub.runcmd.shutil.which", return_value="/usr/bin/sudo"):
-            with patch("fub.runcmd.subprocess.run") as mock_run:
+        with patch("fwupbuild.runcmd.shutil.which", return_value="/usr/bin/sudo"):
+            with patch("fwupbuild.runcmd.subprocess.run") as mock_run:
                 mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
                 RunCmd(["ls"], as_sudo=True)
                 args = mock_run.call_args[0][0]
@@ -76,8 +76,8 @@ class TestRunCmdSudo:
 
     def test_as_sudo_with_env(self):
         """sudo_env inserts KEY=VALUE pairs after the sudo binary."""
-        with patch("fub.runcmd.shutil.which", return_value="/usr/bin/sudo"):
-            with patch("fub.runcmd.subprocess.run") as mock_run:
+        with patch("fwupbuild.runcmd.shutil.which", return_value="/usr/bin/sudo"):
+            with patch("fwupbuild.runcmd.subprocess.run") as mock_run:
                 mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
                 RunCmd(
                     ["ls"],
@@ -92,7 +92,7 @@ class TestRunCmdSudo:
 
     def test_as_sudo_missing_raises(self):
         """SudoMissing is raised when sudo is not found."""
-        with patch("fub.runcmd.shutil.which", return_value=None):
+        with patch("fwupbuild.runcmd.shutil.which", return_value=None):
             with pytest.raises(SudoMissing):
                 RunCmd(["ls"], as_sudo=True)
 
@@ -116,7 +116,7 @@ class TestRunCmdLogging:
     def test_log_stdout(self):
         """log_stdout sends stdout lines to the logger."""
         cmd = RunCmd(["echo", "test-line"])
-        with patch("fub.runcmd.logger") as mock_logger:
+        with patch("fwupbuild.runcmd.logger") as mock_logger:
             cmd.log_stdout()
             # At least one call should contain our test line
             logged = [str(call) for call in mock_logger.log.call_args_list]
@@ -127,7 +127,7 @@ class TestRunCmdLogging:
         cmd = RunCmd(["sh", "-c", "echo errmsg >&2; exit 1"])
         import logging
 
-        with patch("fub.runcmd.logger") as mock_logger:
+        with patch("fwupbuild.runcmd.logger") as mock_logger:
             cmd.log_stderr()
             # Should be called with ERROR level
             logged_levels = [call[0][0] for call in mock_logger.log.call_args_list]
@@ -138,7 +138,7 @@ class TestRunCmdLogging:
         cmd = RunCmd(["sh", "-c", "echo debugmsg >&2"])
         import logging
 
-        with patch("fub.runcmd.logger") as mock_logger:
+        with patch("fwupbuild.runcmd.logger") as mock_logger:
             cmd.log_stderr()
             logged_levels = [call[0][0] for call in mock_logger.log.call_args_list]
             assert all(level == logging.DEBUG for level in logged_levels)

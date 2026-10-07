@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from fub.meson import Meson, MesonError, MesonVersion
+from fwupbuild.meson import Meson, MesonError, MesonVersion
 
 
 class TestMesonVersionFromString:
@@ -240,7 +240,7 @@ class TestMesonCurrentMesonVersion:
             patch(
                 "importlib.metadata.version", side_effect=PackageNotFoundError("meson")
             ),
-            patch("fub.meson.RunCmd") as mock_run,
+            patch("fwupbuild.meson.RunCmd") as mock_run,
         ):
             mock_result = Mock()
             mock_result.success = True
@@ -344,7 +344,7 @@ class TestMesonSetup:
             capture_logs=capture_logs,
         )
 
-        with patch("fub.meson.RunCmd") as mock_runcmd:
+        with patch("fwupbuild.meson.RunCmd") as mock_runcmd:
             meson.setup()
 
             args, kwargs = mock_runcmd.call_args
@@ -363,7 +363,7 @@ class TestMesonBuild:
         builddir = tmp_path / "build"
         meson = Meson(builddir=builddir, meson_args=[], capture_logs=True)
 
-        with patch("fub.meson.RunCmd") as mock_runcmd:
+        with patch("fwupbuild.meson.RunCmd") as mock_runcmd:
             meson.build()
             mock_runcmd.assert_called_once_with(
                 ["meson", "compile", "-C", builddir], capture=True
@@ -378,7 +378,7 @@ class TestMesonBuild:
         builddir = tmp_path / "build"
         meson = Meson(builddir=builddir, meson_args=[], capture_logs=capture_logs)
 
-        with patch("fub.meson.RunCmd") as mock_runcmd:
+        with patch("fwupbuild.meson.RunCmd") as mock_runcmd:
             meson.build()
             mock_runcmd.assert_called_once_with(
                 ["meson", "compile", "-C", builddir], capture=capture_logs
@@ -405,7 +405,7 @@ class TestMesonInstall:
         builddir = tmp_path / "build"
         meson = Meson(builddir=builddir, meson_args=[], capture_logs=capture_logs)
 
-        with patch("fub.meson.RunCmd") as mock_runcmd:
+        with patch("fwupbuild.meson.RunCmd") as mock_runcmd:
             meson.install(destdir=destdir)
             args = []
             if destdir:
