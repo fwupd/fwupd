@@ -212,6 +212,21 @@ fu_common_guid_func(void)
 }
 
 static void
+fu_common_xmlb_builder_kx_func(void)
+{
+	g_autofree gchar *xml = NULL;
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(GError) error = NULL;
+
+	/* zero is omitted, and all 64 bits are kept even where gulong is 32 bits */
+	fu_xmlb_builder_insert_kx(bn, "idx", 0x0);
+	fu_xmlb_builder_insert_kx(bn, "addr", 0x123456789ABCDEF0ull);
+	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(xml, ==, "<firmware><addr>0x123456789abcdef0</addr></firmware>");
+}
+
+static void
 fu_common_olson_timezone_id_func(void)
 {
 	g_autofree gchar *localtime = NULL;
@@ -307,6 +322,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/bitwise", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common/crc", fu_common_crc_func);
 	g_test_add_func("/fwupd/common/guid", fu_common_guid_func);
+	g_test_add_func("/fwupd/common/xmlb-builder-kx", fu_common_xmlb_builder_kx_func);
 	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/common/random", fu_common_random_func);
 	g_test_add_func("/fwupd/common/cpuid", fu_cpuid_func);
