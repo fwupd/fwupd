@@ -338,8 +338,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.run(
             [FWUPDTOOL, "vercmp", version_a, version_b]
             + ([] if version_format in (None, "unknown") else [version_format]),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
         if p.returncode != 0:
             raise Exception(
@@ -993,7 +992,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             cmd.append("--allow-reinstall")
         cmd += ["get-releases", "--", device_id]
         try:
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = subprocess.run(cmd, capture_output=True)
         except Exception as e:
             return [], str(e)
         try:
