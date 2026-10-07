@@ -63,9 +63,11 @@ class Meson:
         if self.cwd:
             kwargs["cwd"] = str(self.cwd)
 
-        args = self.meson_args
+        args = ["--reconfigure"] + self.meson_args
+
         if self.prefix:
             args.insert(0, f"--prefix={self.prefix}")
+
         setup_cmd = ["meson", "setup", str(self.builddir)]
         if self.cwd:
             setup_cmd += [self.cwd]  # sourcedir
