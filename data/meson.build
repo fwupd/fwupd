@@ -184,15 +184,6 @@ if build_daemon
       install_dir: systemd_modules_load_dir,
     )
 
-    # for activation
-    configure_file(
-      input: 'fwupd.shutdown.in',
-      output: 'fwupd.shutdown',
-      configuration: build_conf,
-      install: true,
-      install_tag: 'runtime',
-      install_dir: systemd_shutdown_dir,
-    )
   else
     build_conf.set('systemd_service', '')
   endif
