@@ -21,6 +21,12 @@ meson setup "${BUILD}" \
 ninja -C "${BUILD}" -v
 ninja -C "${BUILD}" test
 
+# smoke-test the cross-built fwupdtool runs under the host-side Bionic wrapper
+export FWUPD_LOCKDIR="${BUILD}/lockdir"
+mkdir -p "${FWUPD_LOCKDIR}"
+android-exe-wrapper.sh "${BUILD}/src/fwupdtool" --version
+android-exe-wrapper.sh "${BUILD}/src/fwupdtool" get-plugins
+
 # generate coverage report using llvm-cov from the NDK
 export GCOV="/opt/android/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-cov gcov"
 ./contrib/ci/coverage.sh
