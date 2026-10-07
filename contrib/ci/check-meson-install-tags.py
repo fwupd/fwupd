@@ -40,7 +40,7 @@ def collect_tags(install_plan) -> list[str]:
 
 
 def collect_files(install_plan, tag) -> list[str]:
-    files = list()
+    files = []
 
     if tag == "null":
         tag = None
