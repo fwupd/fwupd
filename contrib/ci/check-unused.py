@@ -15,7 +15,7 @@ import sys
 def test_files() -> int:
     fns = sys.argv[1:]
     if not fns:
-        build = os.environ["BUILD"] if "BUILD" in os.environ else ""
+        build = os.environ.get("BUILD", "")
         fns.append(os.path.join(".", build, "plugins"))
         fns.append(os.path.join(".", build, "src"))
 
