@@ -91,20 +91,21 @@ class FwupdHeads:
             return EXIT_CODES["NOTHING_TO_DO"]
         for release in heads_metadata_info.find("releases").findall("release"):
             release_ver = release.get("version")
-            if self.heads_version == "heads" or LooseVersion(
-                release_ver
-            ) > LooseVersion(self.heads_version):
-                if not self.heads_update_version or LooseVersion(
-                    release_ver
-                ) > LooseVersion(self.heads_update_version):
-                    self.heads_update_url = release.find("location").text
-                    for sha in release.findall("checksum"):
-                        if (
-                            ".cab" in sha.attrib["filename"]
-                            and sha.attrib["type"] == "sha256"
-                        ):
-                            self.heads_update_sha = sha.text
-                    self.heads_update_version = release_ver
+            if (
+                self.heads_version == "heads"
+                or LooseVersion(release_ver) > LooseVersion(self.heads_version)
+            ) and (
+                not self.heads_update_version
+                or LooseVersion(release_ver) > LooseVersion(self.heads_update_version)
+            ):
+                self.heads_update_url = release.find("location").text
+                for sha in release.findall("checksum"):
+                    if (
+                        ".cab" in sha.attrib["filename"]
+                        and sha.attrib["type"] == "sha256"
+                    ):
+                        self.heads_update_sha = sha.text
+                self.heads_update_version = release_ver
         if self.heads_update_url:
             return EXIT_CODES["SUCCESS"]
         else:

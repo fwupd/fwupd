@@ -66,9 +66,8 @@ def find_uefi_device(client, deviceid):
     devices = client.get_devices()
     for item in devices:
         # match the device we were given
-        if deviceid:
-            if item.get_id() != deviceid:
-                continue
+        if deviceid and item.get_id() != deviceid:
+            continue
         # internal
         if not item.has_flag(Fwupd.DeviceFlags.INTERNAL):
             continue

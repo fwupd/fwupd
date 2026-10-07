@@ -251,9 +251,12 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                     else:
                         deps.append(f"{dep}{arch_suffix}{version}{control}")
             for package in distro.findall("package"):
-                if variant and "only-if" in package.attrib:
-                    if package.attrib["only-if"] != variant:
-                        continue
+                if (
+                    variant
+                    and "only-if" in package.attrib
+                    and package.attrib["only-if"] != variant
+                ):
+                    continue
 
                 dep = package.attrib.get("name") or child.attrib["id"]
                 if dep:

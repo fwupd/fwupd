@@ -477,12 +477,11 @@ class Checker:
         idx = node.tokens.find_fuzzy(
             ["g_set_error", "(", "~*", ",", "~*", ",", "~*", ",", "~*", ")"]
         )
-        if idx != -1:
-            if node.tokens[idx + 8].data.find("%m") == -1:
-                self.add_failure(
-                    "missing literal, use g_set_error_literal() instead",
-                    linecnt=node.linecnt,
-                )
+        if idx != -1 and node.tokens[idx + 8].data.find("%m") == -1:
+            self.add_failure(
+                "missing literal, use g_set_error_literal() instead",
+                linecnt=node.linecnt,
+            )
 
     def _test_missing_error_suffixes(self, node: Node) -> None:
         """test for missing : suffixes"""
@@ -753,13 +752,15 @@ class Checker:
             token1 = node.tokens[idx1 + 2]
             token2 = node.tokens[idx2 + 2]
             limit: int = 3
-            if token1.data == token2.data:
-                if abs(token1.linecnt - token2.linecnt) < limit:
-                    self.add_failure(
-                        "use fu_device_get_id_display() rather than "
-                        "fu_device_get_name()+fu_device_get_id()",
-                        linecnt=token1.linecnt,
-                    )
+            if (
+                token1.data == token2.data
+                and abs(token1.linecnt - token2.linecnt) < limit
+            ):
+                self.add_failure(
+                    "use fu_device_get_id_display() rather than "
+                    "fu_device_get_name()+fu_device_get_id()",
+                    linecnt=token1.linecnt,
+                )
 
     def _test_debug_fns(self, node: Node) -> None:
         # no console output expected

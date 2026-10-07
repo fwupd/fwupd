@@ -120,12 +120,11 @@ class TokenList(list):
         # autohint previous token
         if len(self) > 0 and token.hint == TokenHint.LBRACKET:
             token_prev: Token = self[-1]
-            if not token_prev.hint:
-                if token_prev.data.find("_") != -1:
-                    if token_prev.data.upper() == token_prev.data:
-                        token_prev.hint = TokenHint.MACRO
-                    else:
-                        token_prev.hint = TokenHint.FUNCTION
+            if not token_prev.hint and token_prev.data.find("_") != -1:
+                if token_prev.data.upper() == token_prev.data:
+                    token_prev.hint = TokenHint.MACRO
+                else:
+                    token_prev.hint = TokenHint.FUNCTION
 
         # add
         list.append(self, token)
