@@ -264,6 +264,10 @@ if [ -n "$BASH_VERSION" ]; then
     . data/bash-completion/fwupdtool 2>/dev/null || true
     . data/bash-completion/fwupdmgr 2>/dev/null || true
 fi
+if [ -n "$ZSH_VERSION" ]; then
+    fub_zsh="{completion_dir}/fub.zsh"
+    [[ -f "$fub_zsh" ]] && eval "$(<"$fub_zsh")" 2>/dev/null || true
+fi
 export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
 """,
         Shell.FISH: """
