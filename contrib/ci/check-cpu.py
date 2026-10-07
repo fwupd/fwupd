@@ -23,8 +23,7 @@ def _check(cwd: str, argv: list[str], limit: int = 0) -> int:
         rc = subprocess.run(
             ["valgrind", "--tool=callgrind"] + argv,
             cwd=cwd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            capture_output=True,
             encoding="utf-8",
             check=True,
         )
