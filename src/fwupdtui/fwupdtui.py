@@ -542,7 +542,7 @@ class FwupdTui(App):
     }
     """
 
-    BINDINGS = [
+    BINDINGS = (
         # TRANSLATORS: footer label for the key that quits the application
         ("q", "quit", _("Quit")),
         # TRANSLATORS: footer label for the key that returns to the home screen
@@ -555,7 +555,7 @@ class FwupdTui(App):
         ("ctrl+s", "apply", _("Apply")),
         # TRANSLATORS: footer label for the key that refreshes the current view
         ("r", "refresh", _("Refresh")),
-    ]
+    )
 
     def __init__(
         self,
