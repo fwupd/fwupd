@@ -57,7 +57,7 @@ def _build_certs(path: str):
                 "--outfile",
                 ca_certificate,
             ]
-            rc = subprocess.run(argv)
+            rc = subprocess.run(argv, check=True)
             if rc.returncode != 0:
                 return 1
 

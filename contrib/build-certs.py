@@ -20,7 +20,7 @@ def _build_certs():
     if not os.path.exists(ca_privkey):
         print("generating private key...")
         argv = ["certtool", "--generate-privkey", "--outfile", ca_privkey]
-        rc = subprocess.run(argv)
+        rc = subprocess.run(argv, check=False)
         if rc.returncode != 0:
             return 1
     if not os.path.exists(ca_certificate):
@@ -57,7 +57,7 @@ def _build_certs():
                 "--outfile",
                 ca_certificate,
             ]
-            rc = subprocess.run(argv)
+            rc = subprocess.run(argv, check=False)
             if rc.returncode != 0:
                 return 1
 
@@ -94,7 +94,7 @@ def _build_certs():
             "--outfile",
             user_privkey,
         ]
-        rc = subprocess.run(argv)
+        rc = subprocess.run(argv, check=False)
         if rc.returncode != 0:
             return 1
     if not os.path.exists(user_certificate):
@@ -112,7 +112,7 @@ def _build_certs():
             "--outfile",
             user_certificate,
         ]
-        rc = subprocess.run(argv)
+        rc = subprocess.run(argv, check=False)
         if rc.returncode != 0:
             return 1
 
@@ -128,7 +128,7 @@ def _build_certs():
             "--outfile",
             user_request,
         ]
-        rc = subprocess.run(argv)
+        rc = subprocess.run(argv, check=False)
         if rc.returncode != 0:
             return 1
 
@@ -152,7 +152,7 @@ def _build_certs():
             "--outfile",
             user_certificate_signed,
         ]
-        rc = subprocess.run(argv)
+        rc = subprocess.run(argv, check=False)
         if rc.returncode != 0:
             return 1
 
