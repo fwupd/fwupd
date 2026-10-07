@@ -150,8 +150,7 @@ def _write_quirks(parts, fn_destination):
             result["mem_layout"] = mem_layout
             results[chip_id] = result
 
-    for chip_id in results:
-        result = results[chip_id]
+    for chip_id, result in results.items():
         outp.append(
             "# " + result["desc"] + f"\t[USER]\t\tUSER=0x{result['size']:x}" + "\n"
         )

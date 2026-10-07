@@ -314,7 +314,7 @@ class Pcap2Emulation:
             "Length": get_int(layers["usb_usb_bLength"][descriptor_index]),
             "DescriptorType": 4,
         }
-        for key in table:
+        for key, mapped_name in table.items():
             # data can be a string or a list of strings
             if type(layers[key]) is str:
                 val = get_int(layers[key])
@@ -327,7 +327,7 @@ class Pcap2Emulation:
             if key == "usb_usb_bInterfaceNumber" and val == 0:
                 continue
 
-            interface[table[key]] = val
+            interface[mapped_name] = val
             if key == "usb_usb_bNumEndpoints":
                 interface["UsbEndpoints"] = []
 
@@ -345,10 +345,10 @@ class Pcap2Emulation:
         endpoint = {
             "DescriptorType": 5,
         }
-        for key in table:
+        for key, mapped_name in table.items():
             val = get_int(layers[key][index])
             if val != 0:
-                endpoint[table[key]] = val
+                endpoint[mapped_name] = val
         return endpoint
 
     def _save_event(self, event: dict[str, str]) -> None:

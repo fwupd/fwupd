@@ -198,8 +198,8 @@ class Builder:
         dst = os.path.basename(src).replace(".in", "")
         with open(os.path.join(self.srcdir, src)) as f:
             blob = f.read()
-            for key in replacements:
-                blob = blob.replace(key, replacements[key])
+            for key, value in replacements.items():
+                blob = blob.replace(key, value)
             with open(os.path.join(self.builddir, dst), "w") as out:
                 out.write(blob)
         return dst
@@ -291,8 +291,7 @@ class Builder:
         os.makedirs(dstdir, exist_ok=True)
         print(f"writing {dst}")
         with open(os.path.join(dstdir, os.path.basename(dst)), "w") as f:
-            for key in defines:
-                value = defines[key]
+            for key, value in defines.items():
                 if value is not None:
                     if isinstance(value, int):
                         f.write(f"#define {key} {value}\n")

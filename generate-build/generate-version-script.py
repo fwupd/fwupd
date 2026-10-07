@@ -102,9 +102,7 @@ class LdVersionScript:
 
     def render(self):
         # get a sorted list of all the versions
-        versions = []
-        for version in self.releases:
-            versions.append(version)
+        versions = list(self.releases)
 
         # output the version data to a file
         verout = "# generated automatically, do not edit!\n"

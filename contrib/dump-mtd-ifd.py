@@ -12,10 +12,11 @@ import os
 import struct
 import subprocess
 import sys
+from typing import ClassVar
 
 
 class IfdPartition:
-    REGION_NAMES = [
+    REGION_NAMES: ClassVar[list[str]] = [
         "desc",
         "bios",
         "me",
