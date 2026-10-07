@@ -9,6 +9,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   zizmor:
     permissions:
@@ -26,7 +30,7 @@ jobs:
       contents: read
     needs: zizmor
     if: ${{ github.ref != 'refs/heads/main' }}
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     env:
       SKIP: no-commit-to-branch
     steps:

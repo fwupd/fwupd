@@ -389,8 +389,8 @@ class TestMesonInstall:
         [
             (None, False, {"capture": False}),
             (None, True, {"capture": True}),
-            ("/tmp/dest", False, {"capture": False, "env": {"DESTDIR": "/tmp/dest"}}),
-            ("/tmp/dest", True, {"capture": True, "env": {"DESTDIR": "/tmp/dest"}}),
+            ("/tmp/dest", False, {"capture": False}),
+            ("/tmp/dest", True, {"capture": True}),
         ],
         ids=[
             "no-destdir-no-capture",
@@ -405,8 +405,11 @@ class TestMesonInstall:
 
         with patch("fub.meson.RunCmd") as mock_runcmd:
             meson.install(destdir=destdir)
+            args = []
+            if destdir:
+                args += ["--destdir", destdir]
             mock_runcmd.assert_called_once_with(
-                ["meson", "install", "-C", builddir], **expected_kwargs
+                ["meson", "install", "-C", builddir] + args, **expected_kwargs
             )
 
 

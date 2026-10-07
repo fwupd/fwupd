@@ -59,12 +59,12 @@ fu_bios_setting_set_name(FuBiosSetting *self, const gchar *name);
 #define fu_bios_setting_set_kind(r, v)	   fwupd_bios_setting_set_kind(FWUPD_BIOS_SETTING(r), v)
 #define fu_bios_setting_set_lower_bound(r, v)                                                      \
 	fwupd_bios_setting_set_lower_bound(FWUPD_BIOS_SETTING(r), v)
-#define fu_bios_setting_set_path(r, v)	   fwupd_bios_setting_set_path(FWUPD_BIOS_SETTING(r), v)
+#define fu_bios_setting_set_path(r, v) fwupd_bios_setting_set_path(FWUPD_BIOS_SETTING(r), v)
 #define fu_bios_setting_set_read_only(r, v)                                                        \
 	fwupd_bios_setting_set_read_only(FWUPD_BIOS_SETTING(r), v)
 #define fu_bios_setting_set_scalar_increment(r, v)                                                 \
 	fwupd_bios_setting_set_scalar_increment(FWUPD_BIOS_SETTING(r), v)
-#define fu_bios_setting_set_type(r, v)	   fwupd_bios_setting_set_type(FWUPD_BIOS_SETTING(r), v)
+#define fu_bios_setting_set_type(r, v) fwupd_bios_setting_set_type(FWUPD_BIOS_SETTING(r), v)
 #define fu_bios_setting_set_upper_bound(r, v)                                                      \
 	fwupd_bios_setting_set_upper_bound(FWUPD_BIOS_SETTING(r), v)
 

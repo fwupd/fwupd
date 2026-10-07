@@ -3,7 +3,7 @@
 # Shared utilities for fub
 
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
 
@@ -18,7 +18,7 @@ class GitSha:
     """
 
     sha: str
-    _repo: GitRepo
+    _repo: "GitRepo"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GitSha):

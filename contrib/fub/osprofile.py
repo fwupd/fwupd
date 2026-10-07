@@ -48,9 +48,10 @@ class OsRelease:
                     version = line[11:].strip('"')
                 elif line.startswith("ID_LIKE="):
                     id_like = line[8:].strip("\"'")
-        if distro is None or version is None:
+        if distro is None:
             raise FileNotFoundError(os_release)
-        return OsRelease(distro, version, id_like)
+        # rolling releases (e.g. Arch, CachyOS) have no VERSION_ID
+        return OsRelease(distro, version or "latest", id_like)
 
 
 class UnknownArchException(Exception):
@@ -277,3 +278,48 @@ class Compiler:
     @classmethod
     def get_cc(cls, name: str = "cc") -> Self:
         return cls(prog=name)
+
+
+class Shell(enum.StrEnum):
+    BASH = "bash"
+    ZSH = "zsh"
+    FISH = "fish"
+    SH = "sh"
+
+    @classmethod
+    def guess_user_shell(cls) -> Self | None:
+        """
+        Returns the best guess for the current shell.
+        """
+        shell_path = os.environ.get("SHELL", "")
+        try:
+            return Shell(Path(shell_path).name)
+        except ValueError:
+            if os.environ.get("ZSH_VERSION"):
+                return Shell.ZSH
+            if os.environ.get("BASH_VERSION"):
+                return Shell.BASH
+            if os.environ.get("FISH_VERSION"):
+                return Shell.FISH
+
+        return None
+
+    def source_command(self, scriptname: Path, prefer_suffixed: bool = False) -> str:
+        """
+        Returns the shell command that is this shell's equivalent to bash's
+            source <scriptname>
+
+        If prefer_suffixed is True, a lookup for <scriptname>.<shell> is done and
+        preferred over a non-suffixed version.
+        """
+
+        if prefer_suffixed:
+            suffixed = scriptname.parent / f"{scriptname.name}.{self.value}"
+            if suffixed.exists():
+                scriptname = suffixed
+
+        match self:
+            case Shell.SH:
+                return f'. "{scriptname}"'
+            case Shell.BASH | Shell.ZSH | Shell.FISH:
+                return f'source "{scriptname}"'

@@ -22,9 +22,7 @@ typedef struct {
 } FuFastbootRollingDeviceWaitHelper;
 
 static gboolean
-fu_fastboot_rolling_device_wait_interface_cb(FuDevice *device,
-					     gpointer user_data,
-					     GError **error)
+fu_fastboot_rolling_device_wait_interface_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuFastbootRollingDeviceWaitHelper *helper = user_data;
 
@@ -121,7 +119,8 @@ fu_fastboot_rolling_device_attach(FuDevice *device, FuProgress *progress, GError
 	FuFastbootRollingDevice *self = FU_FASTBOOT_ROLLING_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
-	if (!FU_DEVICE_CLASS(fu_fastboot_rolling_device_parent_class)->attach(device, progress, error))
+	if (!FU_DEVICE_CLASS(fu_fastboot_rolling_device_parent_class)
+		 ->attach(device, progress, error))
 		return FALSE;
 
 	if (!fu_fastboot_rolling_device_rebind_cdc_mbim(self, &error_local))

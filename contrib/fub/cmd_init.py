@@ -9,16 +9,18 @@ from pathlib import Path
 from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger, printer
-from .osprofile import OsName, UnknownOsException
+from .osprofile import OsName, Shell, UnknownOsException
 
 
 def print_blurb():
+    shell = Shell.guess_user_shell() or Shell.SH
+    activate_path = directories.build_root() / "bin" / "activate"
+    source_command = shell.source_command(activate_path, prefer_suffixed=True)
+
     printer.message("")
     printer.message("To enter the fwupd development environment environment:")
     printer.message("")
-    printer.message(
-        f"    [bold]# source {directories.build_root()}/bin/activate[/bold]"
-    )
+    printer.message(f"    [bold]# {source_command}[/bold]")
     printer.message("")
     printer.message("To build, run: ")
     printer.message("    [bold]# fub build[/bold]")

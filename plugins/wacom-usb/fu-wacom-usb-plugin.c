@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-wacom-usb-android-device.h"
+
 #include "fu-wacom-usb-device.h"
 #include "fu-wacom-usb-firmware.h"
 #include "fu-wacom-usb-module-bluetooth-id6.h"
