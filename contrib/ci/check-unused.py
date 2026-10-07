@@ -23,9 +23,9 @@ def test_files() -> int:
 
     # find all .o files
     for fn in fns:
-        for fn in glob.glob(f"{fn}/**/*.o", recursive=True):
-            print(f"Analyzing {fn}...")
-            p = subprocess.run(["nm", fn], check=True, capture_output=True)
+        for obj in glob.glob(f"{fn}/**/*.o", recursive=True):
+            print(f"Analyzing {obj}...")
+            p = subprocess.run(["nm", obj], check=True, capture_output=True)
             # parse data
             for line in p.stdout.decode().split("\n"):
                 line = line.rstrip()
