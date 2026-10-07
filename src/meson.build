@@ -391,6 +391,12 @@ if build_daemon == 'binder'
     native: false,
   )
 
+  if get_option('binder_vintf_stability')
+    binder_stability_args = ['-DBINDER_STABILITY_SUPPORT']
+  else
+    binder_stability_args = []
+  endif
+
   aidl_prog = find_program(
     'aidl',
     required: true,
@@ -489,8 +495,8 @@ if build_daemon == 'binder'
     install: true,
     install_rpath: libdir_pkg,
     install_dir: daemon_dir,
-    c_args: ['-DBINDER_STABILITY_SUPPORT'],
-    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    c_args: binder_stability_args,
+    cpp_args: binder_stability_args,
     # needed for AIBinder_markVintfStability
     link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
@@ -520,8 +526,8 @@ if build_daemon == 'binder'
       fwupdplugin,
       fwupdcli,
     ],
-    c_args: ['-DBINDER_STABILITY_SUPPORT'],
-    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    c_args: binder_stability_args,
+    cpp_args: binder_stability_args,
     link_language: 'cpp',
     install: true,
     install_rpath: libdir_pkg,

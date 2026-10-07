@@ -12,6 +12,7 @@ OUTPUT="${GCOVR_OUTPUT:-coverage.xml}"
 
 gcovr -x \
     ${GCOV:+--gcov-executable "${GCOV}"} \
+    ${GCOVR_IGNORE_ERRORS:+--gcov-ignore-errors "${GCOVR_IGNORE_ERRORS}"} \
     --filter '(^|/)libfwupd/' \
     --filter '(^|/)libfwupdplugin/' \
     --filter '(^|/)plugins/' \
