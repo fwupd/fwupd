@@ -448,7 +448,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         updates_list = self.dom0_updates_list
         ret_input = self._user_input(updates_list)
         if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
-            exit(EXIT_CODES["NOTHING_TO_DO"])
+            sys.exit(EXIT_CODES["NOTHING_TO_DO"])
         choice = ret_input
         self._parse_parameters(updates_list, choice)
         self._download_firmware_updates(self.url, self.sha, whonix=whonix)
@@ -668,7 +668,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         dom0_downgrades = self._parse_downgrades(self.dom0_devices_info)
         ret_input = self._user_input(dom0_downgrades, downgrade=True)
         if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
-            exit(EXIT_CODES["NOTHING_TO_DO"])
+            sys.exit(EXIT_CODES["NOTHING_TO_DO"])
         device_choice, downgrade_choice = ret_input
         downgrade = dom0_downgrades[device_choice]
         releases = downgrade["Releases"]
@@ -862,7 +862,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._download_firmware_updates(self.heads_update_url, self.heads_update_sha)
         return_code = self._copy_heads_firmware(self.arch_path)
         if return_code == EXIT_CODES["NOTHING_TO_DO"]:
-            exit(EXIT_CODES["NOTHING_TO_DO"])
+            sys.exit(EXIT_CODES["NOTHING_TO_DO"])
         elif return_code == EXIT_CODES["SUCCESS"]:
             print()
             while True:
@@ -1009,13 +1009,13 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
 def main():
     if os.geteuid() != 0:
         print("You need to have root privileges to run this script.\n")
-        exit(EXIT_CODES["ERROR"])
+        sys.exit(EXIT_CODES["ERROR"])
 
     q = QubesFwupdmgr()
 
     if len(sys.argv) < 2:
         q.help()
-        exit(1)
+        sys.exit(1)
 
     metadata_url = None
     device_override = None
@@ -1035,7 +1035,7 @@ def main():
                     " Vendor Firmware Service (https://fwupd.org/)"
                 )
                 print("Exiting...")
-                exit(1)
+                sys.exit(1)
         if "--sha=" in arg:
             firmware_sha = arg.replace("--sha=", "")
         if "--device=" in arg:
@@ -1086,12 +1086,12 @@ def main():
         install_version = install_pos[1] if len(install_pos) > 1 else None
         if install_device_id and metadata_url:
             print("install: use either DEVICE-UUID or --url, not both")
-            exit(EXIT_CODES["ERROR"])
+            sys.exit(EXIT_CODES["ERROR"])
         if not install_device_id and not (metadata_url and firmware_sha):
             print(
                 "install requires DEVICE-UUID [VERSION] or --url=<URL> --sha=<SHA256>"
             )
-            exit(EXIT_CODES["ERROR"])
+            sys.exit(EXIT_CODES["ERROR"])
         q.install_firmware(
             device_id=install_device_id,
             version=install_version,
@@ -1122,7 +1122,7 @@ def main():
         )
     else:
         q.help()
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

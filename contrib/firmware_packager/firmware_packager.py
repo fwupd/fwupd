@@ -10,6 +10,7 @@ import contextlib
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -19,7 +20,7 @@ except ImportError:
     print(
         "Error: jinja2 is required for this script. Install it with: pip install jinja2"
     )
-    exit(1)
+    sys.exit(1)
 
 
 @contextlib.contextmanager
