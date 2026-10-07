@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <glib/gstdio.h>
+
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -17,7 +19,9 @@
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
+#include "fu-redfish-request.h"
 #include "fu-redfish-smc-device.h"
 #include "fu-redfish-struct.h"
 
@@ -27,6 +31,7 @@ typedef struct {
 	FuPlugin *unlicensed_plugin;
 	FuPlugin *hpe_plugin;
 	FuPlugin *dell_plugin;
+	FuPlugin *nvidia_plugin;
 } FuTest;
 
 static void
@@ -48,6 +53,7 @@ fu_self_init(FuTest *self)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx_nvidia = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
@@ -137,6 +143,41 @@ fu_self_init(FuTest *self)
 		g_assert_no_error(error);
 		g_assert_true(ret);
 		ret = fu_plugin_runner_coldplug(self->hpe_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+
+	/* NVIDIA DGX Station GB300 BMC, detected by hardware ID so it needs a
+	 * context of its own, as the other personas must not look like a station */
+	fu_context_add_flag(ctx_nvidia, FU_CONTEXT_FLAG_NO_CACHE);
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx_nvidia, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_config_set_basename(fu_context_get_config(ctx_nvidia), "redfish-fwupd.conf");
+	/* CHID of "NVIDIA" + "GB300 DGX Station", added before loading so that the
+	 * context picks up the nvidia-oob flag redfish.quirk sets for it */
+	fu_hwids_add_guid(fu_context_get_hwids(ctx_nvidia), "c3cf31f2-8b8a-531d-bcf4-636a0aaa9ffc");
+	/* a brand other than NVIDIA shows the vendor IDs come from SMBIOS */
+	fu_hwids_add_value(fu_context_get_hwids(ctx_nvidia), FU_HWIDS_KEY_MANUFACTURER, "Contoso");
+	ret = fu_context_load(ctx_nvidia, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	self->nvidia_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx_nvidia);
+	ret = fu_plugin_runner_startup(self->nvidia_plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		g_clear_error(&error);
+	} else {
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		fu_redfish_plugin_set_credentials(self->nvidia_plugin,
+						  "nvidia_username",
+						  "password2");
+		ret = fu_redfish_plugin_reload(self->nvidia_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		ret = fu_plugin_runner_coldplug(self->nvidia_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
@@ -416,6 +457,73 @@ fu_redfish_common_lenovo_func(void)
 }
 
 static void
+fu_redfish_test_iterate_main_context(guint timeout_ms)
+{
+	gint64 end = g_get_monotonic_time() + (gint64)timeout_ms * 1000;
+	while (g_get_monotonic_time() < end) {
+		while (g_main_context_iteration(NULL, FALSE))
+			;
+		g_usleep(10 * 1000);
+	}
+}
+
+static void
+fu_redfish_session_key_file_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *session_key = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename(g_get_tmp_dir(), "fwupd-redfish-session", NULL);
+
+	/* the token is read when the file is set */
+	ret = g_file_set_contents(fn, "tok1\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_redfish_backend_set_session_key_file(backend, fn);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok1");
+
+	/* replacing the file re-authenticates without restarting the daemon, as the
+	 * file monitor refreshes the key when the main loop next runs */
+	ret = g_file_set_contents(fn, "  tok2  \n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	for (guint i = 0; i < 50; i++) {
+		g_autofree gchar *tmp = fu_redfish_backend_get_session_key(backend, NULL);
+		if (g_strcmp0(tmp, "tok2") == 0)
+			break;
+		fu_redfish_test_iterate_main_context(100);
+	}
+	request = fu_redfish_backend_request_new(backend);
+	g_assert_nonnull(request);
+	g_free(session_key);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok2");
+
+	/* a partially written file must not clear the key */
+	ret = g_file_set_contents(fn, "\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_redfish_test_iterate_main_context(500);
+	g_clear_object(&request);
+	request = fu_redfish_backend_request_new(backend);
+	g_assert_nonnull(request);
+	g_free(session_key);
+	session_key = fu_redfish_backend_get_session_key(backend, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(session_key, ==, "tok2");
+
+	g_unlink(fn);
+}
+
+static void
 fu_redfish_network_mac_addr_func(void)
 {
 	FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
@@ -603,6 +711,165 @@ fu_redfish_dell_devices_func(gconstpointer user_data)
 	    fu_device_has_guid(dev, "REDFISH\\VENDOR_Lenovo&SYSTEMID_0C60&SOFTWAREID_UEFI-AFE1-6"));
 }
 
+/* drives the whole GB300 flow against redfish.py: detection, the multipart
+ * upload parameters, deriving the persistent task from the monitor URI, the
+ * aux-rail power cycle on activation, and the three shapes the BMC can use to
+ * report the task monitor -- a Location header, the @odata.id fallback when the
+ * header is absent, and a non-string @odata.id that has to be rejected.
+ *
+ * The empty-200 monitor quirk is exercised too: /Tasks/900 reports Running on
+ * the first poll, which is what sets the plugin's saw_persistent_task guard,
+ * and is reaped afterwards so the plugin has to fall back to the monitor. The
+ * monitor then answers 200 with an empty body rather than the canonical 404,
+ * which is the GB300 behavior the reap handling exists for. */
+static void
+fu_redfish_nvidia_update_func(gconstpointer user_data)
+{
+	FuDevice *dev = NULL;
+	FuDevice *dev_gpu = NULL;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_badodata = NULL;
+	g_autoptr(FuFirmware) firmware_nolocation = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_again = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_nolocation = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_badodata = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GBytes) blob_fw_badodata = NULL;
+	g_autoptr(GBytes) blob_fw_nolocation = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_flag(progress_again, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_flag(progress_nolocation, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_flag(progress_badodata, FU_PROGRESS_FLAG_NO_PROFILE);
+
+	devices = fu_plugin_get_devices(self->nvidia_plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev_tmp = g_ptr_array_index(devices, i);
+		if (g_strcmp0(fu_device_get_backend_id(dev_tmp), "FW_BMC_0") == 0)
+			dev = dev_tmp;
+		else if (g_strcmp0(fu_device_get_backend_id(dev_tmp), "FW_GPU_0") == 0)
+			dev_gpu = dev_tmp;
+	}
+	g_assert_nonnull(dev);
+	g_assert_nonnull(dev_gpu);
+
+	/* the GB300 is detected by hardware ID, so the NVIDIA subclass must have
+	 * been chosen over the generic multipart device */
+	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
+
+	/* every inventory entry is called "Software Inventory", so the device
+	 * renames itself after the URI basename to stay distinguishable;
+	 * fu_device_set_name() turns the underscores into spaces */
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW BMC 0");
+	g_assert_true(fu_device_has_instance_id(dev,
+						"REDFISH\\ID_FW_BMC_0",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES));
+	g_assert_true(fu_device_has_vendor_id(dev, "DMI:Contoso"));
+	g_assert_true(fu_device_has_vendor_id(dev, "OEM:Contoso"));
+	g_assert_false(fu_device_has_vendor_id(dev, "REDFISH:NVIDIA"));
+	g_assert_false(fu_device_has_vendor_id(dev, "DMI:NVIDIA"));
+
+	/* the GPU's board variant comes from the PCIe function listed under its
+	 * chassis; the PCI vendor is not a vendor ID, as the system's brand is */
+	g_assert_true(
+	    fu_device_has_instance_id(dev_gpu,
+				      "REDFISH\\ID_FW_GPU_0&VEN_10DE&DEV_31C2&SUBSYS_10DE20E5",
+				      FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_false(fu_device_has_vendor_id(dev_gpu, "PCI:0x10DE"));
+	g_assert_true(fu_device_has_vendor_id(dev_gpu, "DMI:Contoso"));
+
+	/* redfish.py rejects the upload unless Targets is empty, ForceUpdate is
+	 * set and the apply time is Immediate */
+	blob_fw = g_bytes_new_static("hello", 5);
+	firmware = fu_firmware_new_from_bytes(blob_fw);
+
+	/* inside an install transaction the staged components are only flagged once
+	 * every component of the archive has been processed, as fwupd refuses to
+	 * install onto a device that is already waiting for activation */
+	ret = fu_plugin_runner_composite_prepare(self->nvidia_plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
+					      dev,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	ret = fu_plugin_runner_composite_cleanup(self->nvidia_plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* a completed write stages the firmware rather than applying it; this is
+	 * deliberately not done in attach(), which also runs after a failed write */
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN));
+
+	/* every component of an archive shares one payload, so writing it again must
+	 * not send it a second time; redfish.py counts uploads, so a resend would
+	 * consume the no-Location response the next upload is meant to get */
+	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
+					      dev,
+					      firmware,
+					      progress_again,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* activation finds the OEM action on BMC_0 and asks for the aux cycle;
+	 * redfish.py rejects any ResetType other than AuxPowerCycleForce */
+	ret = fu_plugin_runner_activate(self->nvidia_plugin, dev, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* the second upload, a different payload, comes back without a Location
+	 * header, so the monitor URI has to be taken from @odata.id in the response
+	 * body instead */
+	blob_fw_nolocation = g_bytes_new_static("hello-nolocation", 16);
+	firmware_nolocation = fu_firmware_new_from_bytes(blob_fw_nolocation);
+	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
+					      dev,
+					      firmware_nolocation,
+					      progress_nolocation,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* the third has no Location header either, and its @odata.id is a number
+	 * rather than a string -- testing only that the node exists accepts this and
+	 * leaves the location NULL, so the write has to fail here rather than go on
+	 * to poll a NULL task */
+	blob_fw_badodata = g_bytes_new_static("hello-badodata", 14);
+	firmware_badodata = fu_firmware_new_from_bytes(blob_fw_badodata);
+	ret = fu_plugin_runner_write_firmware(self->nvidia_plugin,
+					      dev,
+					      firmware_badodata,
+					      progress_badodata,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
+
 static void
 fu_redfish_hpe_update_func(gconstpointer user_data)
 {
@@ -616,6 +883,7 @@ fu_redfish_hpe_update_func(gconstpointer user_data)
 	g_autoptr(FuFirmware) stream_fw = NULL;
 	g_autoptr(FuFirmware) stream_fw_reboot = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_cleanup = fu_progress_new(G_STRLOC);
 
 	/* progress */
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
@@ -660,6 +928,12 @@ fu_redfish_hpe_update_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+
+	/* cleanup logs out of the session the writes opened, and redfish.py only
+	 * accepts that DELETE with the session's own X-Auth-Token */
+	ret = fu_device_cleanup(dev, progress_cleanup, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -783,6 +1057,8 @@ fu_self_free(FuTest *self)
 		g_object_unref(self->unlicensed_plugin);
 	if (self->hpe_plugin != NULL)
 		g_object_unref(self->hpe_plugin);
+	if (self->nvidia_plugin != NULL)
+		g_object_unref(self->nvidia_plugin);
 	if (self->dell_plugin != NULL)
 		g_object_unref(self->dell_plugin);
 	g_free(self);
@@ -821,6 +1097,7 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
 	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
+	g_test_add_func("/redfish/session-key-file", fu_redfish_session_key_file_func);
 	g_test_add_func("/redfish/network/mac_addr", fu_redfish_network_mac_addr_func);
 	g_test_add_func("/redfish/network/vid_pid", fu_redfish_network_vid_pid_func);
 	g_test_add_data_func("/redfish/unlicensed-plugin/devices",
@@ -829,6 +1106,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/redfish/smc_plugin/devices", self, fu_redfish_smc_devices_func);
 	g_test_add_data_func("/redfish/smc-plugin/update", self, fu_redfish_smc_update_func);
 	g_test_add_data_func("/redfish/hpe-plugin/update", self, fu_redfish_hpe_update_func);
+	g_test_add_data_func("/redfish/nvidia-plugin/update", self, fu_redfish_nvidia_update_func);
 	g_test_add_data_func("/redfish/plugin/devices", self, fu_redfish_devices_func);
 	g_test_add_data_func("/redfish/dell/devices", self, fu_redfish_dell_devices_func);
 	g_test_add_data_func("/redfish/plugin/update", self, fu_redfish_update_func);
