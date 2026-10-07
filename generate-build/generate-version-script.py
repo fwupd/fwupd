@@ -63,20 +63,20 @@ class LdVersionScript:
         # add all class methods
         for node in cls.findall(XMLNS + "method"):
             version_tmp = self._add_node(node)
-            if version_tmp:
-                if not version_lowest or parse_version(version_tmp) < parse_version(
-                    version_lowest
-                ):
-                    version_lowest = version_tmp
+            if version_tmp and (
+                not version_lowest
+                or parse_version(version_tmp) < parse_version(version_lowest)
+            ):
+                version_lowest = version_tmp
 
         # add the constructor
         for node in cls.findall(XMLNS + "constructor"):
             version_tmp = self._add_node(node)
-            if version_tmp:
-                if not version_lowest or parse_version(version_tmp) < parse_version(
-                    version_lowest
-                ):
-                    version_lowest = version_tmp
+            if version_tmp and (
+                not version_lowest
+                or parse_version(version_tmp) < parse_version(version_lowest)
+            ):
+                version_lowest = version_tmp
 
         if "{http://www.gtk.org/introspection/glib/1.0}get-type" not in cls.attrib:
             return

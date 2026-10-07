@@ -92,9 +92,8 @@ class EnumObj:
             return self._c_methods[suffix]
 
         name_snake = _camel_to_snake(self.name)
-        if self._is_force_enum:
-            if name_snake.endswith("flags"):
-                name_snake = name_snake[:-1]
+        if self._is_force_enum and name_snake.endswith("flags"):
+            name_snake = name_snake[:-1]
 
         return f"{name_snake}_{_camel_to_snake(suffix)}"
 
@@ -899,11 +898,10 @@ class Generator:
                     )
                 except ValueError as e:
                     raise ValueError(f"{e!s} on line {line_num}: {line}")
-                if len(type_parts) > 1:
-                    if "Default" not in derives:
-                        raise ValueError(
-                            f"struct requires #[derive(Default)] for line {line_num}: {line}"
-                        )
+                if len(type_parts) > 1 and "Default" not in derives:
+                    raise ValueError(
+                        f"struct requires #[derive(Default)] for line {line_num}: {line}"
+                    )
                 if len(type_parts) == 3:
                     item.parse_constant(type_parts[2].strip())
                 elif len(type_parts) == 2:

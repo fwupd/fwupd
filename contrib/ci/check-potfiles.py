@@ -25,10 +25,11 @@ def test_files():
             continue
         with open(fn, "rb") as f:
             blob = f.read().decode()
-        if blob.find('_("') != -1 or blob.find("TRANSLATORS") != -1:
-            if fn not in potfiles_fns:
-                print(f"{fn} is missing from po/POTFILES.in")
-                return 1
+        if (
+            blob.find('_("') != -1 or blob.find("TRANSLATORS") != -1
+        ) and fn not in potfiles_fns:
+            print(f"{fn} is missing from po/POTFILES.in")
+            return 1
 
     # success
     return 0

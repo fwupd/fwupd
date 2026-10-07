@@ -425,12 +425,13 @@ class Pcap2Emulation:
                                 for i in range(len(self.device_ids)):
                                     if get_int(layers["usb_usb_idVendor"]) == int(
                                         self.device_ids[i][0], 16
+                                    ) and (
+                                        len(self.device_ids[i]) == 1
+                                        or get_int(layers["usb_usb_idProduct"])
+                                        == int(self.device_ids[i][1], 16)
                                     ):
-                                        if len(self.device_ids[i]) == 1 or get_int(
-                                            layers["usb_usb_idProduct"]
-                                        ) == int(self.device_ids[i][1], 16):
-                                            found = True
-                                            break
+                                        found = True
+                                        break
                                 if not found:
                                     continue
 
