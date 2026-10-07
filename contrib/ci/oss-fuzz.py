@@ -518,9 +518,7 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        exe = bld.link(
-            [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
-        )
+        bld.link([bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer")
 
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
@@ -589,7 +587,7 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
-        exe = bld.link(
+        bld.link(
             fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
             f"{fzr.name}_fuzzer",
         )

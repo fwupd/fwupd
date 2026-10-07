@@ -235,7 +235,7 @@ class FwupdTest(dbusmock.DBusTestCase):
     def start_upower(self, on_battery):
         """Start the upower service with the given on_battery state"""
 
-        sys_bat = self.testbed.add_device(
+        self.testbed.add_device(
             "power_supply",
             "fakeBAT0",
             None,
@@ -258,7 +258,7 @@ class FwupdTest(dbusmock.DBusTestCase):
             ["POWER_SUPPLY_ONLINE", "1"],
         )
 
-        self.upowerd, obj_upower = self.spawn_server_template(
+        self.upowerd, _obj_upower = self.spawn_server_template(
             "upower",
             {"DaemonVersion": "0.99", "OnBattery": on_battery},
             stdout=subprocess.PIPE,

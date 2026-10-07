@@ -12,7 +12,6 @@ import sys
 
 def test_files() -> int:
     rc: int = 0
-    build_dirs = [os.path.dirname(cf) for cf in glob.glob("**/config.h")]
 
     for fn in (
         glob.glob("libfwupd/*.[c|h|py|rs]")
