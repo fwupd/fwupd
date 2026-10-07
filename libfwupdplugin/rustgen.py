@@ -672,8 +672,10 @@ class Generator:
         basename,
         modules_map: dict[str, str],
         prefix: str | None = None,
-        includes=[],
+        includes=None,
     ) -> None:
+        if includes is None:
+            includes = []
         self.basename: str = basename
         self.prefix: str | None = prefix
         self.import_headers: list[str] = []
