@@ -68,7 +68,7 @@ class Pcap2Emulation:
             device_id = device_ids[i].split(":")
             if len(device_id) > 2:
                 sys.stderr.write(f"Malformed device ID: {device_ids[i]}\n\n")
-                exit(1)
+                sys.exit(1)
             if len(device_id) == 2 and len(device_id[1]) == 0:
                 del device_id[1]
             if device_id not in self.device_ids:
@@ -602,7 +602,7 @@ class Pcap2Emulation:
                                 sys.stderr.write(
                                     "Unknown descriptor type: " + descriptor_type
                                 )
-                                exit(1)
+                                sys.exit(1)
 
                     elif "usb_usb_bmRequestType_type" in layers:
                         # Found vendor CONTROL URB request
