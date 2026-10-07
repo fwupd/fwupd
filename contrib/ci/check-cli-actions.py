@@ -29,6 +29,7 @@ if __name__ == "__main__":
             # stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
             encoding="utf-8",
+            check=False,
         )
     except (FileNotFoundError, subprocess.CalledProcessError):
         sys.exit(0)

@@ -103,7 +103,7 @@ def install_snap(directory, verbose, allow_reinstall, allow_older, uninstall):
     with open(os.devnull, "w") as devnull:
         if verbose:
             print(cmd)
-        ret = subprocess.run(cmd, stdout=devnull, stderr=devnull)
+        ret = subprocess.run(cmd, stdout=devnull, stderr=devnull, check=False)
         if ret.returncode == 0:
             cmd = ["snap", "remove", app]
             if verbose:
@@ -133,7 +133,7 @@ def install_snap(directory, verbose, allow_reinstall, allow_older, uninstall):
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
     # remove copied cabs
     for f in cabs:
@@ -144,7 +144,7 @@ def install_snap(directory, verbose, allow_reinstall, allow_older, uninstall):
         cmd = ["snap", "remove", app]
         if verbose:
             print(cmd)
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
 
 def install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall):
@@ -163,31 +163,31 @@ def install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall)
         cmd = ["flatpak", "info", dep]
         if verbose:
             print(cmd)
-        ret = subprocess.run(cmd, stdout=output, stderr=output)
+        ret = subprocess.run(cmd, stdout=output, stderr=output, check=False)
         # not installed
         if ret.returncode != 0:
             # look for remotes
             cmd = ["flatpak", "remote-info", repo, dep]
             if verbose:
                 print(cmd)
-            ret = subprocess.run(cmd, stdout=output, stderr=output)
+            ret = subprocess.run(cmd, stdout=output, stderr=output, check=False)
             # not enabled, enable it
             if ret.returncode != 0:
                 cmd = ["flatpak", "remote-add", repo, repo_url]
                 if verbose:
                     print(cmd)
-                ret = subprocess.run(cmd, stderr=output)
+                ret = subprocess.run(cmd, stderr=output, check=False)
             # install dep
             cmd = ["flatpak", "install", repo, dep]
             if verbose:
                 print(cmd)
-            ret = subprocess.run(cmd)
+            ret = subprocess.run(cmd, check=False)
 
         # check existing installed
         cmd = ["flatpak", "info", app]
         if verbose:
             print(cmd)
-        ret = subprocess.run(cmd, stdout=output, stderr=output)
+        ret = subprocess.run(cmd, stdout=output, stderr=output, check=False)
         if ret.returncode == 0:
             cmd = ["flatpak", "remove", app]
             if verbose:
@@ -213,7 +213,7 @@ def install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall)
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
     # remove copied cabs
     for f in cabs:
@@ -224,7 +224,7 @@ def install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall)
         cmd = ["flatpak", "remove", app]
         if verbose:
             print(cmd)
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
 
 # Check which package to use
@@ -289,7 +289,7 @@ def install_builtin(directory, verbose, allow_reinstall, allow_older):
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
 
 def run_installation(directory, verbose, allow_reinstall, allow_older, uninstall):
