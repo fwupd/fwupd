@@ -136,7 +136,7 @@ def _write_quirks(parts, fn_destination):
 
         # output the line for the quirk
         chip_id = "0x" + part["signature"].replace("0x", "").replace(" ", "")
-        mem_layout = "@Flash/0x0/1*%.0iKg" % int(size / 1024)
+        mem_layout = f"@Flash/0x0/1*{int(size / 1024):.0f}Kg"
 
         # merge duplicate quirks
         if chip_id in results:

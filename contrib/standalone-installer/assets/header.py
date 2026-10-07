@@ -243,13 +243,11 @@ def use_included_version(minimum_version):
     if minimum_version:
         if minimum_version > version:
             print(
-                "fwupd %s is already installed but this package requires %s"
-                % (version.version, minimum_version)
+                f"fwupd {version.version} is already installed but this package requires {minimum_version}"
             )
         else:
             print(
-                "Using existing fwupd version %s already installed on system."
-                % version.version
+                f"Using existing fwupd version {version.version} already installed on system."
             )
             return False
     else:
@@ -335,8 +333,7 @@ if __name__ == "__main__":
     if "extract" in args.command:
         if args.allow_reinstall:
             error(
-                "allow-reinstall argument doesn't make sense with command %s"
-                % args.command
+                f"allow-reinstall argument doesn't make sense with command {args.command}"
             )
         if args.allow_older:
             error(
@@ -353,8 +350,7 @@ if __name__ == "__main__":
     else:
         if args.directory:
             error(
-                "Directory argument %s doesn't make sense with command %s"
-                % (args.directory, args.command)
+                f"Directory argument {args.directory} doesn't make sense with command {args.command}"
             )
         if os.getuid() != 0:
             error("This tool must be run as root")

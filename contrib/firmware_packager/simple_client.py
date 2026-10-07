@@ -45,7 +45,7 @@ class Progress:
                     status_str += "*"
                 else:
                     status_str += " "
-            status_str += "] %d%% %s" % (percent, status)
+            status_str += f"] {percent:d}% {status}"
             self.erase = len(status_str)
             sys.stdout.write(status_str)
             sys.stdout.flush()
