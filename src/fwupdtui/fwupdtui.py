@@ -1573,9 +1573,9 @@ class FwupdTui(App):
             )
             created = event.get_created()
             timestamp = (
-                datetime.datetime.fromtimestamp(
-                    created, tz=datetime.timezone.utc
-                ).strftime("%Y-%m-%d %H:%M")
+                datetime.datetime.fromtimestamp(created, tz=datetime.UTC).strftime(
+                    "%Y-%m-%d %H:%M"
+                )
                 if created
                 else ""
             )

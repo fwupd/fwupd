@@ -31,7 +31,7 @@ def _get_next_release(last_tag: str) -> str:
 
 
 def _get_appstream_date() -> str:
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+    return datetime.datetime.now(tz=datetime.UTC).strftime("%Y-%m-%d")
 
 
 def _generate_release_notes(last_tag: str, next_tag: str) -> str:
