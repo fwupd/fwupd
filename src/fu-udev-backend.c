@@ -694,7 +694,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	int rcvbuf = FU_UDEV_BACKEND_SOCKET_RCV_SIZE;
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
-	    .nl_pid = getpid(),
+	    .nl_pid = 0,
 #ifdef HAVE_UDEV_HOTPLUG
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_UDEV,
 #else
@@ -702,15 +702,6 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 #endif
 	};
 	g_autoptr(GSource) source = NULL;
-
-	/* minijail -p prevents access */
-	if (nls.nl_pid <= 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to get PID, perhaps sandboxed?");
-		return FALSE;
-	}
 
 	self->netlink_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
 	if (self->netlink_fd < 0) {
