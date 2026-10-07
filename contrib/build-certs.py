@@ -42,24 +42,24 @@ def _build_certs():
         lines.append("cert_signing_key")
         lines.append("crl_signing_key")
         lines.append("code_signing_key")
-        cfg = tempfile.NamedTemporaryFile(
+        with tempfile.NamedTemporaryFile(
             mode="w", prefix="cert_", suffix=".cfg", dir=None, delete=True
-        )
-        cfg.write("\n".join(lines))
-        cfg.flush()
-        argv = [
-            "certtool",
-            "--generate-self-signed",
-            "--load-privkey",
-            ca_privkey,
-            "--template",
-            cfg.name,
-            "--outfile",
-            ca_certificate,
-        ]
-        rc = subprocess.run(argv)
-        if rc.returncode != 0:
-            return 1
+        ) as cfg:
+            cfg.write("\n".join(lines))
+            cfg.flush()
+            argv = [
+                "certtool",
+                "--generate-self-signed",
+                "--load-privkey",
+                ca_privkey,
+                "--template",
+                cfg.name,
+                "--outfile",
+                ca_certificate,
+            ]
+            rc = subprocess.run(argv)
+            if rc.returncode != 0:
+                return 1
 
     # per-user key
     user = "rhughes"
@@ -77,7 +77,7 @@ def _build_certs():
     lines.append(f'expiration_date = "{dt_expiration}"')
     lines.append("signing_key")
     lines.append("code_signing_key")
-    cfg = tempfile.NamedTemporaryFile(
+    cfg = tempfile.NamedTemporaryFile(  # noqa: SIM115
         mode="w", prefix="cert_", suffix=".cfg", dir=None, delete=True
     )
     cfg.write("\n".join(lines))

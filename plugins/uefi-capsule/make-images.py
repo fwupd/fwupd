@@ -26,8 +26,9 @@ from gi.repository import Pango, PangoCairo
 
 
 def languages(podir: str):
-    for x in open(os.path.join(podir, "LINGUAS")):
-        yield x.strip()
+    with open(os.path.join(podir, "LINGUAS")) as f:
+        for x in f:
+            yield x.strip()
     yield "en"
 
 

@@ -640,7 +640,7 @@ if __name__ == "__main__":
                 "python3",
                 "python3-jinja2",
             ],
-            stdout=open(os.devnull, "wb"),
+            stdout=subprocess.DEVNULL,
         )
     except FileNotFoundError:
         pass
