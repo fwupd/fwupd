@@ -304,13 +304,22 @@ class Shell(enum.StrEnum):
 
         return None
 
-    def source_command(self, scriptname: Path, prefer_suffixed: bool = False) -> str:
+    def source_command(
+        self,
+        scriptname: Path,
+        /,
+        prefer_suffixed: bool = False,
+        ignore_errors: bool = False,
+    ) -> str:
         """
         Returns the shell command that is this shell's equivalent to bash's
             source <scriptname>
 
         If prefer_suffixed is True, a lookup for <scriptname>.<shell> is done and
         preferred over a non-suffixed version.
+
+        If ignore_errors is True, the resulting command silences any errors
+        and always succeeds.
         """
 
         if prefer_suffixed:
@@ -318,8 +327,25 @@ class Shell(enum.StrEnum):
             if suffixed.exists():
                 scriptname = suffixed
 
+        ignore = " 2>/dev/null || true" if ignore_errors else ""
+
         match self:
             case Shell.SH:
-                return f'. "{scriptname}"'
+                return f'. "{scriptname}"{ignore}'
             case Shell.BASH | Shell.ZSH | Shell.FISH:
-                return f'source "{scriptname}"'
+                return f'source "{scriptname}"{ignore}'
+
+    def venv_activate_script(self, venv_root: Path | None = None) -> Path:
+        """
+        Returns the name of the 'activate' script generated
+        by python's venv setup.
+        """
+        if venv_root is not None:
+            basedir = venv_root.resolve()
+        else:
+            basedir = Path(".")
+        match self:
+            case Shell.FISH:
+                return basedir / "activate.fish"
+            case _:
+                return basedir / "activate"

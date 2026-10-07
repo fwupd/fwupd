@@ -217,7 +217,7 @@ def setup_venv() -> int:
     fub_link.symlink_to(fub_wrapper)
     logger.info(f"Created symlink: {fub_link}")
 
-    wrapper_dir = build_root / "bin"
+    wrapper_dir = (build_root / "bin").resolve()
 
     def create_run_wrapper(binary):
         """Create a small wrapper script in venv/bin/ that calls fub run."""
@@ -237,7 +237,12 @@ def setup_venv() -> int:
         return 0
 
     marker = "# fub additions"
-    additions = f"""\n{marker}
+
+    # for each shell we have additions for, create a fub.<shellname>
+    # script that we can source from the activate script
+
+    shell_configs = {
+        Shell.BASH: """
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# fub build"
@@ -255,15 +260,43 @@ echo ""
 echo "# deactivate"
 
 if [ -n "$BASH_VERSION" ]; then
+    . "{completion_dir}/fub.bash" 2>/dev/null || true
     . data/bash-completion/fwupdtool 2>/dev/null || true
     . data/bash-completion/fwupdmgr 2>/dev/null || true
 fi
 export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
-"""
-    if marker not in activate.read_text():
-        with activate.open("a") as f:
-            f.write(additions)
-        logger.info(f"Augmented {activate} with usage instructions")
+""",
+        Shell.FISH: """
+set -gx MANPATH $VIRTUAL_ENV/dist/share/man: $MANPATH
+
+. "{completion_dir}/fub.fish" 2>/dev/null || true
+set -g fish_complete_path $VIRTUAL_ENV/share/fish/vendor_completions.d $fish_complete_path
+""",
+    }
+
+    completion_dir = (build_root / "completion").resolve()
+
+    for shell, content in shell_configs.items():
+        activate_path = shell.venv_activate_script(venv_root=wrapper_dir)
+        if not activate_path.exists():
+            continue
+
+        fub_script = wrapper_dir / f"fub.{shell}"
+        activate_content = activate_path.read_text()
+        if marker not in activate_content:
+            # The venv activate script simply sources our fub-specific script that contains
+            # the actual data.
+            with activate_path.open("a", encoding="utf-8") as f:
+                source_command = shell.source_command(fub_script, ignore_errors=True)
+                f.write(f"\n{marker}\n{source_command}\n")
+
+        # We always overwrite our custom fub.<shell> script with newest data
+        with fub_script.open("w") as f:
+            content = content.format(completion_dir=completion_dir)
+            f.write("# This file is generated and will be overwritten, do not edit\n")
+            f.write(content)
+
+        logger.info(f"Augmented {activate_path} with usage instructions and completion")
 
     # Install required Python packages using the venv's pip
     venv_python = build_root / "bin" / "python3"
@@ -272,7 +305,6 @@ export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
         if rc != 0:
             return rc
 
-        completion_dir = build_root / "completion"
         generate_fub_completions(completion_dir, venv_python)
 
     # meson
