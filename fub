@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # Wrapper script for fub.
@@ -7,67 +7,60 @@
 # $ ./fub init
 # $ ./fub build
 #
-# Once set up it will detect a virtual env and activate it if found, passing
-# through the various values to the python implementation.
-#
+# Once set up it will detect a virtual env and use its Python interpreter.
 
-# Resolve symlinks so SCRIPT_DIR is always the repo root,
-# even when invoked via venv/bin/fub -> ../../fub
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+from __future__ import annotations
 
-# A marker file placed by fub init so we know it's our directory
-MARKER_FILE="this-is-a-fwupd-build-root"
+import argparse
+import os
+import sys
+from pathlib import Path
 
-# This is a bit annoying but it is supposed to work without the
-# venv activate script...
-#
-# Check for -C <directory> in the arguments so we can use the right python.
-# The -C flag is consumed by the python side, we just peek at it here.
-C_DIR=""
-for ((i = 1; i <= $#; i++)); do
-    arg="${!i}"
-    if [[ "$arg" = "-C" ]]; then
-        next=$((i + 1))
-        C_DIR="${!next}"
-        break
-    fi
-done
 
-# VIRTUAL_ENV is set by <venv>/bin/activate, use that or otherwise
-# search for the directory most recently created by our init.
-# A -C flag takes precedence over both.
-if [[ -n "${C_DIR}" ]]; then
-    VENV="${C_DIR}"
-    if [[ -n "${VIRTUAL_ENV}" ]] && [[ "$(realpath "${VIRTUAL_ENV}")" != "$(realpath "${C_DIR}")" ]]; then
-        echo "${C_DIR} must match current virtualenv, run 'deactivate' to drop the virtualenv"
-        exit 1
-    fi
-    source "${VENV}/bin/activate"
-elif [[ -n "${VIRTUAL_ENV}" ]]; then
-    VENV="${VIRTUAL_ENV}"
-else
-    # Find the most recent stamped venv
-    latest_marker=""
-    while IFS= read -r -d '' marker; do
-        if [[ -z "${latest_marker}" ]] || [[ "${marker}" -nt "${latest_marker}" ]]; then
-            latest_marker="${marker}"
-        fi
-    done < <(find ./ -type f -name "${MARKER_FILE}" -print0)
-    if [[ -n "${latest_marker}" ]]; then
-        VENV="$(dirname "${latest_marker}")"
-    fi
-fi
+def main() -> int:
+    # Inject contrib/ into sys.path so `from fub.cli import main` works
+    contrib_dir = Path(__file__).resolve().parent / "contrib"
+    if str(contrib_dir) not in sys.path:
+        sys.path.insert(0, str(contrib_dir))
 
-if [[ -e "${VENV}/bin/activate" ]]; then
-    if [[ -z "$VIRTUAL_ENV" ]]; then
-        source "${VENV}/bin/activate"
-    fi
-    PYTHON="${VENV}/bin/python3"
-elif [[ -n "${VENV}" ]] && [[ -f "${VENV}/bin/python3" ]]; then
-    PYTHON="${VENV}/bin/python3"
-    export PATH="${VENV}/bin:${PATH}"
-else
-    PYTHON=python3
-fi
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("-C", dest="directory", default=None)
+    args, remaining = parser.parse_known_args()
 
-exec "${PYTHON}" "${SCRIPT_DIR}/contrib/fub/__main__.py" "$@"
+    if args.directory:
+        resolved = Path(args.directory).resolve()
+        virtual_env = os.environ.get("VIRTUAL_ENV")
+        if virtual_env and Path(virtual_env).resolve() != resolved:
+            print(
+                f"{args.directory} must match current virtualenv, run 'deactivate' to drop the virtualenv"
+            )
+            return 1
+        venv_dir = resolved
+    elif os.environ.get("VIRTUAL_ENV"):
+        venv_dir = Path(os.environ["VIRTUAL_ENV"])
+    else:
+        # Discover the most recent stamped venv
+        marker_file = "this-is-a-fwupd-build-root"
+        latest_mtime = 0.0
+        venv_dir = None
+        for marker in Path.cwd().rglob(marker_file):
+            if marker.stat().st_mtime > latest_mtime:
+                latest_mtime = marker.stat().st_mtime
+                venv_dir = marker.parent
+
+    if venv_dir is not None:
+        python_path = venv_dir / "bin" / "python3"
+        if python_path.exists():
+            # Running under this python already — just ensure bin is on PATH
+            bin_dir = venv_dir / "bin"
+            if str(bin_dir) not in os.environ.get("PATH", ""):
+                os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
+
+    from fub.cli import main as cli_main
+
+    sys.argv = ["fub"] + remaining
+    return cli_main()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
