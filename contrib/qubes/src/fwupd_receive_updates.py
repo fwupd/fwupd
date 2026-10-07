@@ -91,13 +91,13 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             stderr_str = stderr.decode()
             if "SignatureNotValidYet" in stderr_str:
-                raise Exception(
+                raise RuntimeError(
                     "PGP signature creation time is in the"
                     " future (update-vm clock may be out of sync).\n"
                     "Run /usr/bin/qvm-sync-clock to update the time.\n" + stderr_str
                 )
             else:
-                raise Exception("jcat-tool: Verification failed")
+                raise RuntimeError("jcat-tool: Verification failed")
 
     def handle_fw_update(self, updatevm, sha, filename):
         """Copies firmware update archives from the updateVM.
@@ -130,7 +130,7 @@ class FwupdReceiveUpdates:
                 p = subprocess.Popen(cmd_copy, stdout=untrusted_file, shell=False)
             p.wait()
             if p.returncode != 0:
-                raise Exception("qvm-run: Copying firmware file failed!!")
+                raise RuntimeError("qvm-run: Copying firmware file failed!!")
 
             self._check_shasum(dom0_firmware_untrusted_path, sha)
             # jcat verification will be done by fwupd itself
@@ -186,9 +186,9 @@ class FwupdReceiveUpdates:
                 p.wait()
                 q.wait()
             if p.returncode != 0:
-                raise Exception("qvm-run: Copying metadata file failed!!")
+                raise RuntimeError("qvm-run: Copying metadata file failed!!")
             if q.returncode != 0:
-                raise Exception("qvm-run: Copying metadata jcat failed!!")
+                raise RuntimeError("qvm-run: Copying metadata jcat failed!!")
 
             self._jcat_verification(
                 untrusted_metadata_file + ".jcat",

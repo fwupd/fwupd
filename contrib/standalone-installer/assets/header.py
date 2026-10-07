@@ -269,7 +269,7 @@ def remove_packaged_version(pkg, cache):
         pkg.mark_delete()
         res = cache.commit()
     if not res:
-        raise Exception("Need to remove packaged version")
+        raise RuntimeError("Need to remove packaged version")
     return True
 
 
@@ -319,7 +319,7 @@ def run_installation(directory, verbose, allow_reinstall, allow_older, uninstall
         try:
             install_snap(directory, verbose, allow_reinstall, allow_older, uninstall)
             return True
-        except Exception:
+        except subprocess.SubprocessError:
             if verbose:
                 print("Snap installation failed")
             if not try_flatpak:

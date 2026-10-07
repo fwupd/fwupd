@@ -54,7 +54,7 @@ class FwupdUpdate:
         self.updatevm = p.communicate()[0].decode().split("\n")[0]
         if p.returncode != 0 and not UPDATEVM_REGEX.match(self.updatevm):
             self.updatevm = None
-            raise Exception("Specifying updatevm failed")
+            raise RuntimeError("Specifying updatevm failed")
 
     def _check_updatevm(self):
         """Checks if updatevm is running"""
@@ -76,7 +76,7 @@ class FwupdUpdate:
         else:
             self.updatevm = "sys-whonix"
         if not self._check_updatevm():
-            raise Exception(f"{self.updatevm} is not running!!")
+            raise RuntimeError(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
             create_dirs(FWUPD_DOM0_DIR)
         cmd_metadata = [FWUPD_VM_DOWNLOAD, "--metadata"]
@@ -85,7 +85,7 @@ class FwupdUpdate:
         try:
             run_in_tty(self.updatevm, cmd_metadata)
         except subprocess.CalledProcessError:
-            raise Exception("Metadata download failed.")
+            raise RuntimeError("Metadata download failed.")
 
     def download_firmware_updates(self, url, sha, whonix=False):
         """Initializes downloading firmware update archive.
@@ -100,7 +100,7 @@ class FwupdUpdate:
         else:
             self.updatevm = "sys-whonix"
         if not self._check_updatevm():
-            raise Exception(f"{self.updatevm} is not running!!")
+            raise RuntimeError(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
             create_dirs(FWUPD_DOM0_DIR)
         self.arch_name = os.path.basename(url)
@@ -123,7 +123,7 @@ class FwupdUpdate:
             p = subprocess.Popen(cmd_firmware_download, stdin=subprocess.DEVNULL)
             p.wait()
             if p.returncode != 0:
-                raise Exception("Firmware download failed.")
+                raise RuntimeError("Firmware download failed.")
         else:
             self.cached = True
             print("Firmware already downloaded. Using cached files.")

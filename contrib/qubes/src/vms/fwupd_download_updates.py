@@ -31,7 +31,7 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwupd-qubes: Downloading metadata file failed")
+            raise RuntimeError("fwupd-qubes: Downloading metadata file failed")
         if not os.path.exists(self.metadata_file):
             raise FileNotFoundError(
                 "fwupd-qubes: Downloaded metadata file does not exist"
@@ -54,7 +54,7 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwupd-qubes: Downloading metadata file failed")
+            raise RuntimeError("fwupd-qubes: Downloading metadata file failed")
         if not os.path.exists(f"{self.metadata_file}.jcat"):
             raise FileNotFoundError(
                 "fwupd-qubes: Downloaded metadata file does not exist"
@@ -82,7 +82,7 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_export, stdout=subprocess.PIPE, env=environ)
         stdout, _ = p.communicate()
         if p.returncode != 0:
-            raise Exception("fwupd-qubes: Extracting jcat file failed")
+            raise RuntimeError("fwupd-qubes: Extracting jcat file failed")
         # rename extracted files to match jcat base name, instead of "ID"
         # inside jcat
         for line in stdout.decode("ascii").splitlines():
@@ -126,7 +126,7 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_update)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwupd-qubes: Downloading update file failed")
+            raise RuntimeError("fwupd-qubes: Downloading update file failed")
         if not os.path.exists(update_path):
             raise FileNotFoundError(
                 "fwupd-qubes: Downloaded update file does not exist"
@@ -149,7 +149,7 @@ def main():
     elif url and sha:
         dn.download_updates(url, sha)
     else:
-        raise Exception("Invalid command!!!")
+        raise ValueError("Invalid command!!!")
 
 
 if __name__ == "__main__":

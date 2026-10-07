@@ -30,7 +30,7 @@ class FwupdVmCommon:
         qubes_gid = grp.getgrnam("qubes").gr_gid
         self.old_umask = os.umask(0o002)
         if args is None:
-            raise Exception("Creating directories failed, no paths given.")
+            raise ValueError("Creating directories failed, no paths given.")
         for file_path in args:
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
@@ -85,7 +85,7 @@ class FwupdVmCommon:
         print(verification)
         if p.returncode != 0:
             self.clean_vm_cache()
-            raise Exception("jcat-tool: Verification failed")
+            raise RuntimeError("jcat-tool: Verification failed")
 
     def clean_vm_cache(self):
         """Removes updates data"""
