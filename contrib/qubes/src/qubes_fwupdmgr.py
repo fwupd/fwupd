@@ -975,9 +975,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             return True
         if rc == 0 and allow_reinstall:
             return True
-        if rc < 0 and allow_older:
-            return True
-        return False
+        return bool(rc < 0 and allow_older)
 
     def _fwupd_get_releases(self, device_id, allow_older=False, allow_reinstall=False):
         """Run `fwupdmgr --json get-releases <id>` and return its Releases list.
