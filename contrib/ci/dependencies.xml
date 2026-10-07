@@ -1758,14 +1758,6 @@
     <distro id="centos">
       <package only-if="amd64" />
     </distro>
-    <distro id="ubuntu">
-      <package only-if="android" />
-    </distro>
-  </dependency>
-  <dependency id="unzip">
-    <distro id="ubuntu">
-      <package only-if="android" />
-    </distro>
   </dependency>
   <dependency id="openjdk">
     <distro id="ubuntu">
