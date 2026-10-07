@@ -275,25 +275,31 @@ class TestCTokenize(unittest.TestCase):
         self._compare_nodes(
             "typedef struct {\n\tgchar *id;\n} FwupdDevicePrivate;\n",
             [
-                "Node(depth=0, linecnt=1, linecnt_end=3, hint=NodeHint.STRUCT_TYPEDEF, "
-                "tokens_pre=['typedef', 'struct', 'FwupdDevicePrivate'], "
-                "tokens=['gchar', '*', 'id', ';'])",
+                (
+                    "Node(depth=0, linecnt=1, linecnt_end=3, hint=NodeHint.STRUCT_TYPEDEF, "
+                    "tokens_pre=['typedef', 'struct', 'FwupdDevicePrivate'], "
+                    "tokens=['gchar', '*', 'id', ';'])"
+                ),
             ],
         )
 
         self._compare_nodes(
             "#define FOO_001 0x123\n#define FOO_002 0x123\n",
             [
-                "Node(depth=0, linecnt=1, tokens_pre=['#define', 'FOO_001', '0x123', "
-                "'#define', 'FOO_002', '0x123'])",
+                (
+                    "Node(depth=0, linecnt=1, tokens_pre=['#define', 'FOO_001', '0x123', "
+                    "'#define', 'FOO_002', '0x123'])"
+                ),
             ],
         )
 
         self._compare_nodes(
             "union { guint8 one; guint two; } name;",
             [
-                "Node(depth=0, linecnt=1, hint=NodeHint.UNION, tokens_pre=['union', 'name'], "
-                "tokens=['guint8', 'one', ';', 'guint', 'two', ';'])"
+                (
+                    "Node(depth=0, linecnt=1, hint=NodeHint.UNION, tokens_pre=['union', 'name'], "
+                    "tokens=['guint8', 'one', ';', 'guint', 'two', ';'])"
+                )
             ],
         )
         self._compare_nodes(
@@ -309,13 +315,19 @@ class TestCTokenize(unittest.TestCase):
             "  return rc;"
             "}",
             [
-                "Node(depth=0, linecnt=1, tokens_pre=['void', 'main', '(', 'void', ')'], "
-                "tokens=['gint', 'rc', ';', 'if', '(', '1', ')', 'middle', ';', 'if', "
-                "'(', '1', ')', 'return', 'rc', ';'])",
-                "Node(depth=1, linecnt=1, tokens_pre=['gint', 'rc', ';', 'if', '(', '1', "
-                "')'], tokens=['cond1', ';'])",
-                "Node(depth=1, linecnt=1, tokens_pre=['middle', ';', 'if', '(', '1', ')'], "
-                "tokens=['cond2', ';'])",
+                (
+                    "Node(depth=0, linecnt=1, tokens_pre=['void', 'main', '(', 'void', ')'], "
+                    "tokens=['gint', 'rc', ';', 'if', '(', '1', ')', 'middle', ';', 'if', "
+                    "'(', '1', ')', 'return', 'rc', ';'])"
+                ),
+                (
+                    "Node(depth=1, linecnt=1, tokens_pre=['gint', 'rc', ';', 'if', '(', '1', "
+                    "')'], tokens=['cond1', ';'])"
+                ),
+                (
+                    "Node(depth=1, linecnt=1, tokens_pre=['middle', ';', 'if', '(', '1', ')'], "
+                    "tokens=['cond2', ';'])"
+                ),
             ],
         )
 
