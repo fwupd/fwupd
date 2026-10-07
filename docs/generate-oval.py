@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "oval:product_name": "fwupd",
         "oval:product_version": args.version,
         "oval:schema_version": args.schema_version,
-        "oval:timestamp": datetime.datetime.now().isoformat(),
+        "oval:timestamp": datetime.datetime.now(tz=datetime.UTC).isoformat(),
     }.items():
         oval = ET.SubElement(generator, key)
         oval.text = value
