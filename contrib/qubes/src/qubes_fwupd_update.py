@@ -62,7 +62,6 @@ class FwupdUpdate:
         p = subprocess.Popen(
             cmd_xl_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        output = p.communicate()[0].decode()
         return p.returncode == 0
 
     def download_metadata(self, whonix=False, metadata_url=None):
