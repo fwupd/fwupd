@@ -3,10 +3,13 @@
 # 'setup' subcommand — deps, venv, hooks, vscode, git
 
 import argparse
+import importlib.util
 import os
 import shutil
 import stat
 import sys
+from pathlib import Path
+
 
 from .cli import argparse_func_wrapper
 from .dependencies import PIP_PACKAGES, Dependencies
@@ -19,8 +22,8 @@ from .osprofile import (
     PipPackageManager,
     RunCmd,
     UnknownOsException,
+    Shell,
 )
-from pathlib import Path
 
 
 def register(subparsers):
@@ -74,6 +77,27 @@ def _setup_help(parser, args) -> int:
         parser.print_help()
         return 1
     return 0
+
+
+def generate_fub_completions(completion_dir: Path, python: Path) -> None:
+    """Generate and save shell completions for fub."""
+    repo_root = directories.repository_root()
+    completion_env = os.environ.copy()
+    completion_env["PYTHONPATH"] = str(repo_root / "contrib")
+
+    completion_dir.mkdir(exist_ok=True)
+    for shell in Shell:
+        completion_file = completion_dir / f"fub.{shell}"
+        cmd = RunCmd(
+            [python, "-m", "fub", "--print-completion", str(shell)],
+            capture=True,
+            env=completion_env,
+        )
+        if cmd.success and cmd.stdout:
+            completion_file.write_text(cmd.stdout, encoding="utf-8")
+            logger.info(f"Generated {shell} completion: {completion_file}")
+        else:
+            logger.debug(f"Failed to generate {shell} completion")
 
 
 def setup_system_deps(osname: OsName) -> int:
@@ -247,6 +271,9 @@ export MANPATH=${{VIRTUAL_ENV}}/dist/share/man:
         rc = setup_python_deps(venv_python)
         if rc != 0:
             return rc
+
+        completion_dir = build_root / "completion"
+        generate_fub_completions(completion_dir, venv_python)
 
     # meson
     repo_dir = directories.repository_root()
