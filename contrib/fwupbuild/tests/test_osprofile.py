@@ -265,6 +265,8 @@ class TestPipPackageManager:
         script = mock_run.call_args[0][0][-1]
         assert "importlib.metadata" in script
         assert f"version('{package}')" in script
+        assert "except PackageNotFoundError:" in script
+        assert "raise SystemExit(1) from None" in script
 
     def test_install_package_resolves_dependencies(self, tmp_path):
         """pip must install transitive dependencies, so never pass --no-deps."""
