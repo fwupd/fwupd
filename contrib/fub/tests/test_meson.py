@@ -236,9 +236,12 @@ class TestMesonCurrentMesonVersion:
         """Without package metadata the version comes from `meson --version`."""
         from importlib.metadata import PackageNotFoundError
 
-        with patch(
-            "importlib.metadata.version", side_effect=PackageNotFoundError("meson")
-        ), patch("fub.meson.RunCmd") as mock_run:
+        with (
+            patch(
+                "importlib.metadata.version", side_effect=PackageNotFoundError("meson")
+            ),
+            patch("fub.meson.RunCmd") as mock_run,
+        ):
             mock_result = Mock()
             mock_result.success = True
             mock_result.stdout = stdout

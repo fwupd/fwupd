@@ -175,9 +175,10 @@ class Dependencies:
                     filters[None] = dependency_name
 
                 distro_dep = _ParsedDistroPackage(filters=filters)
-                if (bt := distro_elem.find("build-target")) is not None:
-                    if "mode" in bt.attrib:
-                        distro_dep.build_target = BuildTarget(bt.attrib["mode"])
+                if (
+                    bt := distro_elem.find("build-target")
+                ) is not None and "mode" in bt.attrib:
+                    distro_dep.build_target = BuildTarget(bt.attrib["mode"])
 
                 if (control_elem := distro_elem.find("control")) is not None:
                     if (v := control_elem.find("version")) is not None:
@@ -235,9 +236,8 @@ class Dependencies:
         logger.debug(f"Finding packages for {distro} with filter {filter}")
         deps = []
 
-        if cross_build_arch is not None:
-            if distro in [OsName.DEBIAN, OsName.UBUNTU]:
-                deps.append(Dependency(f"crossbuild-essential-{cross_build_arch}"))
+        if cross_build_arch is not None and distro in [OsName.DEBIAN, OsName.UBUNTU]:
+            deps.append(Dependency(f"crossbuild-essential-{cross_build_arch}"))
 
         for dep in self._dependencies:
             if dependency := dep.get_dependency(distro, filter, cross_build_arch):

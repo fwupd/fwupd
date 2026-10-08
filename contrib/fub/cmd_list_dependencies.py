@@ -5,7 +5,6 @@
 
 from .cli import argparse_func_wrapper
 from .dependencies import Dependencies
-from .directories import directories
 from .logger import printer
 from .osprofile import OsArch, OsName, UnknownOsException
 
@@ -42,8 +41,6 @@ def register(subparsers):
 
 
 def run(args):
-    repo_root = directories.repository_root()
-
     if not args.os_name:
         try:
             args.os_name = OsName.detect()
