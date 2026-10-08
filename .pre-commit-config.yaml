@@ -145,10 +145,11 @@ repos:
         files: ^(meson\.build|contrib/ci/dependencies\.xml)$
         pass_filenames: false
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.49.1
     hooks:
       - id: markdownlint
         args: ["--fix", "--ignore", ".github"]
+        types: [markdown]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:
