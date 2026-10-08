@@ -150,8 +150,10 @@ The `[fwupd]` section can contain the following parameters:
 
 **EspLocation=**
 
-  Set the preferred location used for the EFI system partition (ESP) path.
-  This is typically used if UDisks was not able to automatically identify the location for any reason.
+  Set the preferred mount point for the EFI system partition (ESP).
+  If this path matches an ESP identified by UDisks, it is used instead of the
+  ESP that fwupd would otherwise select automatically. If the path does not
+  match an identified ESP, fwupd falls back to automatic selection.
 
 **RequireImmutableEnumeration={{RequireImmutableEnumeration}}**
 
