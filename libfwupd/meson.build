@@ -280,6 +280,7 @@ if get_option('tests')
     'jcat',
     'json',
     'json-array',
+    'json-node',
     'json-object',
     'plugin',
     'release',
