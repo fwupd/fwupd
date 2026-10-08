@@ -5,7 +5,6 @@
 import os
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .docker import Dockerfile
 from .logger import logger, printer
@@ -84,7 +83,7 @@ def register(subparsers):
         default=None,
         help="image tag for --build (default: fwupd-DISTRO)",
     )
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def find_container_engine(engine: str | None) -> str:

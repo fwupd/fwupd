@@ -6,7 +6,6 @@ import argparse
 import shutil
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger, printer
 from .osprofile import OsName, Shell, UnknownOsException
@@ -89,7 +88,7 @@ def register(subparsers):
         default=False,
         help="whether to install pre-push test hooks (default: no)",
     )
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def run(args):

@@ -9,7 +9,6 @@ import stat
 import sys
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .dependencies import PIP_PACKAGES, Dependencies
 from .directories import directories
 from .logger import Yes, logger, printer
@@ -44,12 +43,12 @@ def register(subparsers):
         help="OS profile to use",
     )
     # We don't need --no here because why would you run a setup command if --no...
-    deps_parser.set_defaults(func=argparse_func_wrapper(run_deps))
+    deps_parser.set_defaults(func=run_deps)
 
     venv_parser = setup_sub.add_parser(
         "venv", help="create virtual environment and install Python dependencies"
     )
-    venv_parser.set_defaults(func=argparse_func_wrapper(run_venv))
+    venv_parser.set_defaults(func=run_venv)
 
     hooks_parser = setup_sub.add_parser("hooks", help="set up pre-commit hooks")
     hooks_parser.add_argument(
@@ -58,13 +57,13 @@ def register(subparsers):
         default=False,
         help="whether to install pre-push test hooks (default: no)",
     )
-    hooks_parser.set_defaults(func=argparse_func_wrapper(run_hooks))
+    hooks_parser.set_defaults(func=run_hooks)
 
     vscode_parser = setup_sub.add_parser("vscode", help="copy VS Code settings")
-    vscode_parser.set_defaults(func=argparse_func_wrapper(run_vscode))
+    vscode_parser.set_defaults(func=run_vscode)
 
     git_parser = setup_sub.add_parser("git", help="configure git environment")
-    git_parser.set_defaults(func=argparse_func_wrapper(run_git))
+    git_parser.set_defaults(func=run_git)
 
     setup_parser.set_defaults(func=lambda args: _setup_help(setup_parser, args))
 

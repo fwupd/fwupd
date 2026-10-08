@@ -7,7 +7,6 @@ import shutil
 import sys
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger, printer
 from .meson import Meson
@@ -41,7 +40,7 @@ def register(subparsers):
         nargs="*",
         help="arguments to pass to the binary",
     )
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def run(args):

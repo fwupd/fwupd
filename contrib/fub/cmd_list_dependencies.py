@@ -3,7 +3,6 @@
 # list-dependencies subcommand — list build dependencies
 
 
-from .cli import argparse_func_wrapper
 from .dependencies import Dependencies
 from .logger import printer
 from .osprofile import OsArch, OsName, UnknownOsException
@@ -37,7 +36,7 @@ def register(subparsers):
     )
 
     # parser.add_argument("files", nargs="*", default=None, help="File(s) to check")
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def run(args):

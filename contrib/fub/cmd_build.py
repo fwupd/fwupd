@@ -6,7 +6,6 @@ import os
 import subprocess
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger
 from .meson import Meson
@@ -28,7 +27,7 @@ def register(subparsers):
         nargs="*",
         help="extra arguments passed to meson setup",
     )
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def run(args):
