@@ -288,6 +288,7 @@ if get_option('tests')
     'report',
     'request',
     'security-attr',
+    'variant',
   ]
     e = executable(
       'fwupd-' + test_name + '-test',
