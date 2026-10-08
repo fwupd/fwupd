@@ -9,7 +9,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger, printer
 
@@ -96,7 +95,7 @@ def register(subparsers):
     )
 
     parser.add_argument("files", nargs="*", default=None, help="File(s) to check")
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def get_includes(file: Path) -> list[str]:

@@ -10,7 +10,6 @@ import sys
 import time
 from contextlib import contextmanager
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .logger import logger, printer
 from .meson import Meson
@@ -57,7 +56,7 @@ def register(subparsers):
         default=[],
         help="extra arguments passed to meson test",
     )
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def _parse_tests(tests_str):

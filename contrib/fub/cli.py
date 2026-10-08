@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import argparse
-import functools
 import importlib
 import logging
 import os
@@ -17,20 +16,6 @@ def setup_globals(args: argparse.Namespace) -> None:
     printer.quiet = args.quiet
     printer.default_yn_answer = Yes.from_args(args)
     directories.repopulate(args.directory)
-
-
-def argparse_func_wrapper(func):
-    """
-    Used from CLI invocations of the respective parser setup
-    # parser.set_defaults(func=func_wrapper(run))
-    """
-
-    @functools.wraps(func)
-    def wrapper(args):
-        setup_globals(args)
-        return func(args)
-
-    return wrapper
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -144,6 +129,7 @@ meson build commands instead.
         return 1
 
     try:
+        setup_globals(args)
         return args.func(args)
     except KeyboardInterrupt:
         return 130

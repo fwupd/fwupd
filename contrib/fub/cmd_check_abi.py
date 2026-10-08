@@ -7,7 +7,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .cli import argparse_func_wrapper
 from .directories import directories
 from .git import GitRepo
 from .logger import logger, printer
@@ -42,7 +41,7 @@ def register(subparsers):
         help="the new revision, to compare to the reference",
     )
 
-    parser.set_defaults(func=argparse_func_wrapper(run))
+    parser.set_defaults(func=run)
 
 
 def run(args):
