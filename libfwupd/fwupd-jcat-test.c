@@ -230,13 +230,78 @@ fwupd_jcat_file_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fwupd_jcat_item_target_func(void)
+{
+	g_autoptr(FwupdJcatBlob) blob = fwupd_jcat_blob_new_utf8(FWUPD_JCAT_BLOB_KIND_GPG, "BEGIN");
+	g_autoptr(FwupdJcatItem) item = fwupd_jcat_item_new("firmware.bin");
+
+	/* no blobs target an internal checksum */
+	g_assert_false(fwupd_jcat_item_has_target(item));
+
+	/* once a blob has a target, the item reports it */
+	fwupd_jcat_item_add_blob(item, blob);
+	g_assert_false(fwupd_jcat_item_has_target(item));
+	fwupd_jcat_blob_set_target(blob, FWUPD_JCAT_BLOB_KIND_SHA256);
+	g_assert_true(fwupd_jcat_item_has_target(item));
+}
+
+static void
+fwupd_jcat_file_lookup_func(void)
+{
+	g_autoptr(FwupdJcatFile) file = fwupd_jcat_file_new();
+	g_autoptr(FwupdJcatItem) item = fwupd_jcat_item_new("firmware.bin");
+	g_autoptr(FwupdJcatItem) item2 = fwupd_jcat_item_new("other.bin");
+	g_autoptr(FwupdJcatItem) item_alias = NULL;
+	g_autoptr(FwupdJcatItem) item_default = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fwupd_jcat_item_add_alias_id(item, "alias.bin");
+	fwupd_jcat_file_add_item(file, item);
+
+	/* look the item up via its alias */
+	item_alias = fwupd_jcat_file_get_item_by_id(file, "alias.bin", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item_alias);
+	g_assert_true(item_alias == item);
+
+	/* with more than one item there is no default */
+	fwupd_jcat_file_add_item(file, item2);
+	item_default = fwupd_jcat_file_get_item_default(file, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(item_default);
+}
+
+static void
+fwupd_jcat_file_invalid_func(void)
+{
+	gboolean ret;
+	g_autoptr(FwupdJcatFile) file = fwupd_jcat_file_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static("not a gzip file", 15);
+	g_autoptr(GError) error1 = NULL;
+	g_autoptr(GError) error2 = NULL;
+
+	/* invalid JSON */
+	ret = fwupd_jcat_file_import_json(file, "this is not valid json", &error1);
+	g_assert_error(error1, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+
+	/* not a gzip-compressed blob */
+	ret = fwupd_jcat_file_import_bytes(file, blob, &error2);
+	g_assert_error(error2, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/jcat/blob", fwupd_jcat_blob_func);
 	g_test_add_func("/fwupd/jcat/item", fwupd_jcat_item_func);
+	g_test_add_func("/fwupd/jcat/item/target", fwupd_jcat_item_target_func);
 	g_test_add_func("/fwupd/jcat/file", fwupd_jcat_file_func);
 	g_test_add_func("/fwupd/jcat/file/json", fwupd_jcat_file_json_func);
+	g_test_add_func("/fwupd/jcat/file/lookup", fwupd_jcat_file_lookup_func);
+	g_test_add_func("/fwupd/jcat/file/invalid", fwupd_jcat_file_invalid_func);
 	return g_test_run();
 }
