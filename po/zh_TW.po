@@ -2429,12 +2429,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "此套件尚未驗證，而可能不會正常運作。"
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "無法正確更新的裝置："
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "成功更新的裝置:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4515,6 +4515,12 @@ msgstr ""
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "無法正確更新的裝置："
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "成功更新的裝置:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "硬體正在等候重新插入"
