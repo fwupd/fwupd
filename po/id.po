@@ -2425,12 +2425,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Paket ini belum divalidasi, mungkin tidak berfungsi dengan baik."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Peranti yang tidak diperbarui dengan benar:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Peranti yang sukses diperbarui:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4511,6 +4511,12 @@ msgstr "HP SureStart adalah fitur keamanan firmware yang melindungi BIOS dari ma
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verifikasi Tanda Tangan Mikrokode AMD memastikan bahwa mikrokode CPU bersifat autentik dan tidak telah dirusak."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Peranti yang tidak diperbarui dengan benar:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Peranti yang sukses diperbarui:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Perangkat keras sedang menunggu untuk ditancapkan kembali"
