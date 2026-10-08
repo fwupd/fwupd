@@ -224,7 +224,13 @@ class PipPackageManager(PackageManager):
                 [
                     self.python,
                     "-c",
-                    f"from importlib.metadata import version; print(version('{package}'))",
+                    (
+                        "from importlib.metadata import PackageNotFoundError, version\n"
+                        "try:\n"
+                        f"    print(version('{package}'))\n"
+                        "except PackageNotFoundError:\n"
+                        "    raise SystemExit(1) from None"
+                    ),
                 ],
             )
             if not cmd.success:
