@@ -273,6 +273,7 @@ if get_option('tests')
   foreach test_name : [
     'bios-setting',
     'client',
+    'codec',
     'common',
     'device',
     'enums',
