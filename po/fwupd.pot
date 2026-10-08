@@ -3065,12 +3065,12 @@ msgstr ""
 
 #. TRANSLATORS: a list of failed updates
 #: src/fu-cli.c:973
-msgid "Devices that were not updated correctly:"
+msgid "Devices that were previously not updated correctly:"
 msgstr ""
 
 #. TRANSLATORS: a list of successful updates
 #: src/fu-cli.c:989
-msgid "Devices that have been updated successfully:"
+msgid "Devices that have previously been updated successfully:"
 msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
