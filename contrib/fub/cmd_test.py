@@ -87,10 +87,9 @@ def _resolve_sudo(sudo_mode) -> str:
             return ""
         case "noask":
             sudo = shutil.which("sudo")
-            if sudo:
-                # Check if we can sudo without a password
-                if not RunCmd([sudo, "-n", "true"]).success:
-                    return ""
+            # Check if we can sudo without a password
+            if sudo and not RunCmd([sudo, "-n", "true"]).success:
+                return ""
             return sudo or ""
         case _:
             return shutil.which("sudo") or ""

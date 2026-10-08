@@ -110,7 +110,7 @@ meson build commands instead.
                 #    ... function to be invoked for this subcommand ...
 
                 module.register(subparsers)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to import module {module_name}: {e}")
 
     args = parser.parse_args(argv)

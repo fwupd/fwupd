@@ -51,9 +51,8 @@ def run(args):
     )
     if args.quiet:
         meson.capture_logs = True
-    if meson.needs_setup:
-        if not meson.setup().success:
-            return 1
+    if meson.needs_setup and not meson.setup().success:
+        return 1
 
     if not meson.build().success:
         return 1

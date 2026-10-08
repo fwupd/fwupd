@@ -190,7 +190,7 @@ class Printer:
         msg = self._parse(f"[_error]Error:[/_error] {text}", stderr_colors)
         print(msg, file=sys.stderr)
 
-    def ask(self, question: str, default_answer: str = None) -> str | None:
+    def ask(self, question: str, default_answer: str | None = None) -> str | None:
         """Ask a question, collect the answer"""
         try:
             answer = input(f"{question} ")
