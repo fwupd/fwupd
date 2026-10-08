@@ -542,6 +542,7 @@ if get_option('tests')
     'lzma',
     'mem',
     'msgpack',
+    'output-stream',
     'partial-input-stream',
     'path',
     'path-store',
