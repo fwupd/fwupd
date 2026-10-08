@@ -279,6 +279,7 @@ if get_option('tests')
     'enums',
     'jcat',
     'json',
+    'json-array',
     'json-object',
     'plugin',
     'release',
