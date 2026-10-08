@@ -2401,6 +2401,7 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 	if (esp_volumes->len > 1) {
 		g_autoptr(GString) str = g_string_new("more than one ESP possible:");
 		g_autoptr(GHashTable) esp_scores = g_hash_table_new(g_direct_hash, g_direct_equal);
+		FuVolume *user_esp = NULL;
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = 0;
@@ -2415,20 +2416,16 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 				continue;
 			}
 
-			/* if user specified, make sure that it matches */
-			if (user_esp_location != NULL) {
-				g_autofree gchar *mount = fu_volume_get_mount_point(esp);
-				if (g_strcmp0(mount, user_esp_location) != 0) {
-					g_debug("skipping %s as it's not the user "
-						"specified ESP",
-						mount);
-					continue;
-				}
-			}
-
 			if (!fu_context_is_esp(esp)) {
 				g_debug("not an ESP: %s", fu_volume_get_id(esp));
 				continue;
+			}
+
+			/* use the user-specified ESP if it is valid */
+			if (user_esp_location != NULL) {
+				g_autofree gchar *mount = fu_volume_get_mount_point(esp);
+				if (g_strcmp0(mount, user_esp_location) == 0)
+					user_esp = esp;
 			}
 
 			/* big partitions are better than small partitions */
@@ -2446,6 +2443,14 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 				score += 64 * FU_KB;
 			}
 			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
+		}
+
+		if (user_esp != NULL)
+			return g_object_ref(user_esp);
+		if (user_esp_location != NULL) {
+			g_warning(
+			    "user specified ESP %s not found, falling back to automatic selection",
+			    user_esp_location);
 		}
 
 		if (g_hash_table_size(esp_scores) == 0) {
@@ -2474,17 +2479,14 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 		if (locker == NULL)
 			return NULL;
 
-		/* if user specified, does it match mountpoints ? */
+		/* prefer the user-specified ESP, but fall back to the detected ESP */
 		if (user_esp_location != NULL) {
 			g_autofree gchar *mount = fu_volume_get_mount_point(esp);
 
 			if (g_strcmp0(mount, user_esp_location) != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "user specified ESP %s not found",
-					    user_esp_location);
-				return NULL;
+				g_warning("user specified ESP %s not found, falling back to %s",
+					  user_esp_location,
+					  mount);
 			}
 		}
 	}
