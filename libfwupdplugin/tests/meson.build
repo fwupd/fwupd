@@ -59,6 +59,7 @@ install_data(
     'ihex.builder.xml',
     'ihex-signed.builder.xml',
     'intel-thunderbolt.builder.xml',
+    'intel-thunderbolt-firmware.builder.xml',
     'json.builder.xml',
     'linear.builder.xml',
     'metadata.xml',
