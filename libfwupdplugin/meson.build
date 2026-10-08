@@ -528,6 +528,7 @@ if get_option('tests')
     'device',
     'device-event',
     'device-locker',
+    'dump',
     'efi',
     'efivars',
     'fdt-firmware',
