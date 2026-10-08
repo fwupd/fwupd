@@ -2427,12 +2427,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Kjo paketë s’është vleftësuar, mund të mos funksionojë si duhet."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Pajisje që s’u përditësuan saktë:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Pajisje që janë përditësuar me sukses:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4523,6 +4523,12 @@ msgstr "HP SureStart është një veçori sigurie firmware-i që mbron BIOS-in n
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verifikimi i AMD Microcode Signature garanton që mikrokodi për CPU-në është i mirëfilltë dhe në të s’janë futur hundët."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Pajisje që s’u përditësuan saktë:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Pajisje që janë përditësuar me sukses:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Hardware-i po pritet të rifutet"
