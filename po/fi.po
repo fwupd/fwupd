@@ -2436,12 +2436,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Tätä pakettia ei ole vahvistettu, se ei välttämättä toimi oikein."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Laitteet, joita ei päivitetty oikein:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Onnistuneesti päivitetyt laitteet:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4532,6 +4532,12 @@ msgstr "HP SureStart on laiteohjelmiston turvaominaisuus, joka suojaa BIOSia peu
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "AMD:n mikrokoodin allekirjoituksen varmennus varmistaa, että suorittimen mikrokoodi on aito eikä sitä ole peukaloitu."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Laitteet, joita ei päivitetty oikein:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Onnistuneesti päivitetyt laitteet:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Laitteisto odottaa uudelleenkytkemistä"
