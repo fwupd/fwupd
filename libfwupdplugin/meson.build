@@ -566,6 +566,7 @@ if get_option('tests')
     'tpm-eventlog',
     'uefi-device',
     'udev-device',
+    'usb-hid-descriptor',
     'version',
     'volume',
     'x509-certificate',
