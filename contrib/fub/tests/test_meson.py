@@ -238,14 +238,13 @@ class TestMesonCurrentMesonVersion:
 
         with patch(
             "importlib.metadata.version", side_effect=PackageNotFoundError("meson")
-        ):
-            with patch("fub.meson.RunCmd") as mock_run:
-                mock_result = Mock()
-                mock_result.success = True
-                mock_result.stdout = stdout
-                mock_run.return_value = mock_result
-                v = Meson.current_meson_version()
-                assert v == expected
+        ), patch("fub.meson.RunCmd") as mock_run:
+            mock_result = Mock()
+            mock_result.success = True
+            mock_result.stdout = stdout
+            mock_run.return_value = mock_result
+            v = Meson.current_meson_version()
+            assert v == expected
 
 
 class TestMesonNeedsSetup:

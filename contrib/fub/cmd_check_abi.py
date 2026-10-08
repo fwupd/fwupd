@@ -2,18 +2,17 @@
 #
 # 'check-abi' subcommand — check for ABI incompatibilities
 
-from pathlib import Path
-
 import logging
 import sys
 import tempfile
+from pathlib import Path
 
 from .cli import argparse_func_wrapper
-from .logger import logger, printer
+from .directories import directories
 from .git import GitRepo
+from .logger import logger, printer
 from .meson import Meson
 from .runcmd import RunCmd
-from .directories import directories
 
 
 def register(subparsers):
