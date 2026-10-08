@@ -549,6 +549,7 @@ if get_option('tests')
     'partial-input-stream',
     'path',
     'path-store',
+    'pci-device',
     'pkcs7',
     'plugin',
     'progress',
