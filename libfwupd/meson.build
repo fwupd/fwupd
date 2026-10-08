@@ -282,6 +282,7 @@ if get_option('tests')
     'json-array',
     'json-node',
     'json-object',
+    'json-parser',
     'plugin',
     'release',
     'remote',
