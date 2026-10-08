@@ -2442,12 +2442,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Ovaj paket još nije provjeren, možda neće ispravno raditi."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Uređaji koji nisu ispravno nadopunjeni:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Uređaji koji su uspješno nadopunjeni:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4548,6 +4548,12 @@ msgstr ""
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Uređaji koji nisu ispravno nadopunjeni:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Uređaji koji su uspješno nadopunjeni:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Hardver čeka da ponovno bude spojen"
