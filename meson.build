@@ -358,6 +358,8 @@ if build_standalone
       dependencies: libusb,
     )
       conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+    elif build_daemon != 'none'
+      error('libusb_init_context (libusb >= 1.0.27) is needed when building the daemon')
     endif
     if cc.has_header_symbol(
       'libusb.h',
