@@ -2444,12 +2444,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Цей пакунок не було перевірено. Його належну роботу не можна гарантувати."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Пристрої, для яких не вдалося оновити дані належним чином:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Пристрої, для яких вдалося успішно оновити дані:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4560,6 +4560,12 @@ msgstr "HP SureStart є механізмом захисту мікропрогр
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Підпис мікрокоду AMD засвідчує достовірність мікрокоду процесора і те, що його не було змінено сторонніми особами."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Пристрої, для яких не вдалося оновити дані належним чином:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Пристрої, для яких вдалося успішно оновити дані:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Обладнання очікує на повторне з'єднання"
