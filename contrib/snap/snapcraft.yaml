@@ -158,6 +158,7 @@ parts:
       rm -rf ${CRAFT_PART_INSTALL}/share/installed-tests/fwupd/tests/bios-attrs
     build-packages:
       - bash-completion
+      - cargo
       - curl
       - fwupd-signed
       - fwupd-unsigned
