@@ -557,6 +557,7 @@ if get_option('tests')
     'stream-input-stream',
     'string',
     'struct',
+    'sum',
     'temporary-directory',
     'tpm-eventlog',
     'uefi-device',
