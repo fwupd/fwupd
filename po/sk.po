@@ -2444,11 +2444,11 @@ msgid "This package has not been validated, it may not work properly."
 msgstr ""
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
+msgid "Devices that were previously not updated correctly:"
 msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
+msgid "Devices that have previously been updated successfully:"
 msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
