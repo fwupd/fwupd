@@ -1168,6 +1168,11 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
+		"intel-thunderbolt-firmware.builder.xml",
+		"cdd9e574df976338685d7f26e431027a7fd857ef",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
 		"usb-bos-descriptor.builder.xml",
 		"a305749853781c6899c4b28039cb4c7d9059b910",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
