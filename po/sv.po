@@ -2439,12 +2439,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Detta paket har inte validerats, det kanske inte fungerar korrekt."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Enheter som inte uppdaterades korrekt:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Enheter som har uppdaterats:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4535,6 +4535,12 @@ msgstr "HP SureStart är en säkerhetsfunktion för fast programvara som skyddar
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verifiering av AMD-mikrokodsignatur försäkrar att processorns mikrokod är autentisk och att den inte har mixtrats med."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Enheter som inte uppdaterades korrekt:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Enheter som har uppdaterats:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Hårdvara väntar på att bli utdragen/återinsatt"
