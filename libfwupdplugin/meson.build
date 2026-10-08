@@ -538,6 +538,7 @@ if get_option('tests')
     'ihex-firmware',
     'input-stream',
     'intel-me',
+    'io-channel',
     'kernel',
     'kernel-search-path',
     'lzma',
