@@ -2430,12 +2430,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "このパッケージは検証されていません。正常に動作しない可能性があります。"
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "正常に更新されなかったデバイス:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "正常に更新されたデバイス:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4516,6 +4516,12 @@ msgstr "HP SureStart は、BIOS を改ざんから保護するファームウェ
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "正常に更新されなかったデバイス:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "正常に更新されたデバイス:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "ハードウェアの再接続を待機しています"
