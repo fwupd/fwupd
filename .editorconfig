@@ -33,6 +33,9 @@ indent_size = 4
 [*.rs]
 indent_size = 4
 
+[*.toml]
+indent_size = 4
+
 [*.{c,h}]
 indent_style = tab
 

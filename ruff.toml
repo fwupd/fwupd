@@ -1,0 +1,8 @@
+exclude = [
+  "subprojects"
+]
+
+[lint]
+ignore = [
+    "SIM117", # SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+]
