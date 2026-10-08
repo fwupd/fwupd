@@ -505,6 +505,7 @@ if get_option('tests')
     sources: [
       'fu-test.c',
       'fu-self-test-device.c',
+      'fu-test-bluetooth-proxy.c',
     ],
     include_directories: [root_incdir, fwupd_incdir],
     dependencies: [library_deps, fwupdplugin_rs_dep],
@@ -515,6 +516,7 @@ if get_option('tests')
     'acpi-table',
     'backend',
     'bios-setting',
+    'bluetooth-device',
     'byte-array',
     'bytes',
     'cab-firmware',
