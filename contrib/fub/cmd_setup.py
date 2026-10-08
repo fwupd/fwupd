@@ -3,26 +3,24 @@
 # 'setup' subcommand — deps, venv, hooks, vscode, git
 
 import argparse
-import importlib.util
 import os
 import shutil
 import stat
 import sys
 from pathlib import Path
 
-
 from .cli import argparse_func_wrapper
 from .dependencies import PIP_PACKAGES, Dependencies
 from .directories import directories
-from .logger import logger, printer, Yes
+from .logger import Yes, logger, printer
 from .meson import Meson
 from .osprofile import (
     OsArch,
     OsName,
     PipPackageManager,
     RunCmd,
-    UnknownOsException,
     Shell,
+    UnknownOsException,
 )
 
 

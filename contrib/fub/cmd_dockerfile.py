@@ -3,19 +3,12 @@
 # 'docker' subcommand — generate and optionally build a Dockerfile for CI
 
 import os
-import shutil
-from dataclasses import dataclass, field
 from pathlib import Path
 
-import jinja2
-import jinja2.environment
-
 from .cli import argparse_func_wrapper
-from .dependencies import Dependencies
-from .docker import Dockerfile
 from .directories import directories
+from .docker import Dockerfile
 from .logger import logger, printer
-from .runcmd import RunCmd
 from .osprofile import (
     OsArch,
     OsName,
@@ -23,6 +16,7 @@ from .osprofile import (
     UnknownArchException,
     UnknownOsException,
 )
+from .runcmd import RunCmd
 
 VALID_ENGINES = ("docker", "podman")
 

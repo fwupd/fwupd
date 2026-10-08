@@ -3,16 +3,14 @@
 # Shared utilities for fub
 
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Self
 
 import jinja2
 import jinja2.environment
 
-from .osprofile import OsArch, OsName
 from .dependencies import Dependencies
-from .directories import directories
+from .osprofile import OsArch, OsName
 
 
 def map_docker_distro(distro: OsName) -> str:
