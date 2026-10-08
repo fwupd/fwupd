@@ -566,6 +566,7 @@ if get_option('tests')
     'udev-device',
     'version',
     'volume',
+    'x509-certificate',
     'xor',
   ]
     e = executable(
