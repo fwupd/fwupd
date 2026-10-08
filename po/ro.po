@@ -2437,12 +2437,12 @@ msgid "This package has not been validated, it may not work properly."
 msgstr "Acest pachet nu a fost validat, este posibil să nu funcționeze corect."
 
 #. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Dispozitive care nu au fost actualizate corect:"
+msgid "Devices that were previously not updated correctly:"
+msgstr ""
 
 #. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Dispozitive care au fost actualizate cu succes:"
+msgid "Devices that have previously been updated successfully:"
+msgstr ""
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -4543,6 +4543,12 @@ msgstr "HP SureStart este o caracteristică de securitate a firmware-ului care p
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr "Verificarea semnăturii microcodului AMD garantează că microcodul procesorului este autentic și nu a fost modificat(alterat)."
+
+#~ msgid "Devices that were not updated correctly:"
+#~ msgstr "Dispozitive care nu au fost actualizate corect:"
+
+#~ msgid "Devices that have been updated successfully:"
+#~ msgstr "Dispozitive care au fost actualizate cu succes:"
 
 #~ msgid "Hardware is waiting to be replugged"
 #~ msgstr "Hardware-ul așteaptă să fie reconectat"
