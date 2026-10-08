@@ -859,6 +859,25 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		    "HSI support not enabled");
 #endif
 	}
+
+	::ndk::ScopedAStatus
+	selfSign(const std::string &in_data, int64_t in_flags, std::string *_aidl_return) override
+	{
+		g_autoptr(GError) error = NULL;
+		g_autofree gchar *sig = NULL;
+
+		sig = fu_binder_daemon_self_sign_bridge(m_daemon,
+							in_data.c_str(),
+							(guint64)in_flags,
+							&error);
+		if (sig == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		*_aidl_return = sig;
+		return ::ndk::ScopedAStatus::ok();
+	}
 };
 
 /* the bridge instance is owned by the daemon object via qdata */

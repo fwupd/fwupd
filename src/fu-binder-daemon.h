@@ -92,4 +92,10 @@ fu_binder_daemon_set_bios_settings_bridge(void *daemon_instance,
 					  GHashTable *settings,
 					  GError **error);
 
+gchar *
+fu_binder_daemon_self_sign_bridge(void *daemon_instance,
+				  const gchar *value,
+				  guint64 flags,
+				  GError **error);
+
 G_END_DECLS
