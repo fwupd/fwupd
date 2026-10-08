@@ -277,6 +277,7 @@ if get_option('tests')
     'common',
     'device',
     'enums',
+    'error',
     'jcat',
     'json',
     'json-array',
