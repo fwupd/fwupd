@@ -545,6 +545,7 @@ if get_option('tests')
     'kernel',
     'kernel-search-path',
     'lzma',
+    'mei-device',
     'mem',
     'msgpack',
     'output-stream',
