@@ -548,6 +548,7 @@ if get_option('tests')
     'partial-input-stream',
     'path',
     'path-store',
+    'pkcs7',
     'plugin',
     'progress',
     'protobuf',
