@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuAcpiFacp, fu_acpi_facp, G_TYPE_OBJECT)
 FuAcpiFacp *
 fu_acpi_facp_new(GBytes *blob, GError **error)
 {
-	FuAcpiFacp *self = g_object_new(FU_TYPE_ACPI_FACP, NULL);
+	g_autoptr(FuAcpiFacp) self = g_object_new(FU_TYPE_ACPI_FACP, NULL);
 	guint8 pm_profile = 0;
 	gsize bufsz = 0;
 	guint32 flags = 0;
@@ -40,7 +40,7 @@ fu_acpi_facp_new(GBytes *blob, GError **error)
 		return NULL;
 	g_debug("flags: 0x%04x", flags);
 	self->get_s2i = (flags & LOW_POWER_S0_IDLE_CAPABLE) > 0;
-	return self;
+	return g_steal_pointer(&self);
 }
 
 gboolean
