@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-29 18:21+0000\n"
+"PO-Revision-Date: 2026-10-09 10:47+0000\n"
 "Last-Translator: Américo Monteiro <a_monteiro@gmx.com>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/fwupd/fwupd/pt/>\n"
 "Language: pt\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.10.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware estável)"
@@ -2442,11 +2442,11 @@ msgstr "Este pacote não foi validado, pode não funcionar corretamente."
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were previously not updated correctly:"
-msgstr ""
+msgstr "Dispositivos que anteriormente não foram atualizados corretamente:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have previously been updated successfully:"
-msgstr ""
+msgstr "Dispositivos que anteriormente foram atualizados com sucesso:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
