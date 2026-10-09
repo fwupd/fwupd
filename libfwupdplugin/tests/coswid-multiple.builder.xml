@@ -1,0 +1,43 @@
+<firmware gtype="FuCoswidFirmware">
+  <id>00112233-4455-6677-8899-aabbccddeeff</id>
+  <version>2.0.0</version>
+  <version_scheme>semver</version_scheme>
+  <product>firmware-corpus</product>
+  <summary>Multiple entities and payloads</summary>
+  <link>
+    <rel>license</rel>
+    <href>https://spdx.org/licenses/LGPL-2.1-or-later.html</href>
+  </link>
+  <link>
+    <rel>component</rel>
+    <href>https://fwupd.org</href>
+  </link>
+  <payload>
+    <name>first.bin</name>
+    <size>1</size>
+    <hash>
+      <alg_id>sha256</alg_id>
+      <value>0000000000000000000000000000000000000000000000000000000000000000</value>
+    </hash>
+    <hash>
+      <alg_id>sha384</alg_id>
+      <value>000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</value>
+    </hash>
+  </payload>
+  <payload>
+    <name>second.bin</name>
+    <size>0</size>
+  </payload>
+  <entity>
+    <name>fwupd</name>
+    <regid>fwupd.org</regid>
+    <role>tag-creator</role>
+    <role>software-creator</role>
+  </entity>
+  <entity>
+    <name>Firmware distributor</name>
+    <regid>example.org</regid>
+    <role>distributor</role>
+    <role>maintainer</role>
+  </entity>
+</firmware>
