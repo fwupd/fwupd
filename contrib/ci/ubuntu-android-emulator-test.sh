@@ -72,16 +72,20 @@ wait_boot
 # manifest"), so install the fragment onto the (read-only) vendor image and
 # reboot for servicemanager to pick it up. Skip the work if it is already there.
 if ! adb shell "test -f ${VINTF_DEST}" >/dev/null 2>&1; then
-    echo "installing VINTF fragment and rebooting..."
-    adb remount >/dev/null 2>&1 || true
-    adb disable-verity >/dev/null 2>&1 || true
-    adb reboot
-    wait_boot
-    adb root
-    wait_boot
-    adb remount
+    echo "installing VINTF fragment..."
+    # the emulator must be started with -writable-system (see linux.yml) so
+    # /vendor can be remounted read-write; some images still need one reboot
+    # before remount takes effect
+    adb remount || {
+        adb reboot
+        wait_boot
+        adb root
+        wait_boot
+        adb remount
+    }
     adb shell "mkdir -p $(dirname "${VINTF_DEST}")"
     adb push "${VINTF_FRAGMENT}" "${VINTF_DEST}"
+    # reboot so servicemanager re-reads the device VINTF manifest at boot
     adb reboot
     wait_boot
     adb root

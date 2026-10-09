@@ -222,6 +222,10 @@ jobs:
           api-level: 35
           target: default
           arch: x86_64
+          # -writable-system is required so the test can remount /vendor and
+          # install the fwupd VINTF manifest fragment (otherwise adb remount
+          # fails with "Device must be bootloader unlocked")
+          emulator-options: -no-window -writable-system -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
           script: ./contrib/ci/ubuntu-android-emulator-test.sh dist-android
 
   publish-docs:
