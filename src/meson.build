@@ -590,6 +590,9 @@ if get_option('tests')
     'security-attr-common',
     'usb-backend',
   ]
+  if bluez.allowed()
+    test_names += 'bluez-device'
+  endif
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
   endif
