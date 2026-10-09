@@ -123,8 +123,10 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 			return FALSE;
 	}
 
-	/* add vendor ID */
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
+	/* add vendor ID, unless the vendor IDs come from the system rather than the BMC */
+	if (!fu_device_has_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_NO_REDFISH_VENDOR_ID))
+		fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
 
 	/* add more instance IDs if possible */
 	if (vendor_id != 0x0)
@@ -187,6 +189,66 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 }
 
 static gboolean
+fu_redfish_device_probe_related_pcie_devices(FuRedfishDevice *self,
+					     const gchar *uri,
+					     GError **error)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FwupdJsonArray) members_array = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	/* get URI */
+	if (!fu_redfish_request_perform(request,
+					uri,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
+					error))
+		return FALSE;
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
+	members_array = fwupd_json_object_get_array(json_obj, "Members", NULL);
+	if (members_array == NULL)
+		return TRUE;
+	for (guint i = 0; i < fwupd_json_array_get_size(members_array); i++) {
+		const gchar *id;
+		g_autoptr(FuRedfishRequest) request_device =
+		    fu_redfish_backend_request_new(priv->backend);
+		g_autoptr(FwupdJsonObject) json_obj_device = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_member = NULL;
+		g_autoptr(FwupdJsonObject) json_pcie = NULL;
+
+		json_obj_member = fwupd_json_array_get_object(members_array, i, error);
+		if (json_obj_member == NULL)
+			return FALSE;
+		id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
+		if (id == NULL)
+			continue;
+		if (!fu_redfish_request_perform(request_device,
+						id,
+						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+						    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
+						error))
+			return FALSE;
+		json_obj_device = fu_redfish_request_get_json_object(request_device, error);
+		if (json_obj_device == NULL)
+			return FALSE;
+		json_pcie = fwupd_json_object_get_object(json_obj_device, "PCIeFunctions", NULL);
+		if (json_pcie == NULL)
+			continue;
+		id = fwupd_json_object_get_string(json_pcie, "@odata.id", NULL);
+		if (id == NULL)
+			continue;
+		if (!fu_redfish_device_probe_related_pcie_functions(self, id, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
@@ -229,6 +291,22 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 		if (id != NULL) {
 			if (!fu_redfish_device_probe_related_pcie_functions(self, id, error))
 				return FALSE;
+		}
+	}
+
+	/* a chassis lists its PCIe devices rather than their functions; only followed
+	 * when asked, as a chassis can also be the whole system */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE)) {
+		g_autoptr(FwupdJsonObject) json_devices =
+		    fwupd_json_object_get_object(json_obj, "PCIeDevices", NULL);
+		if (json_devices != NULL) {
+			const gchar *id =
+			    fwupd_json_object_get_string(json_devices, "@odata.id", NULL);
+			if (id != NULL) {
+				if (!fu_redfish_device_probe_related_pcie_devices(self, id, error))
+					return FALSE;
+			}
 		}
 	}
 	return TRUE;
@@ -355,6 +433,9 @@ fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 	fu_device_set_vendor(FU_DEVICE(self), vendor);
 
 	/* add vendor-id */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_NO_REDFISH_VENDOR_ID))
+		return;
 	vendor_upper = g_ascii_strup(vendor, -1);
 	g_strdelimit(vendor_upper, " ", '_');
 	fu_device_build_vendor_id(FU_DEVICE(self), "REDFISH", vendor_upper);
@@ -973,6 +1054,23 @@ fu_redfish_device_get_reset_post_delay(FuRedfishDevice *self)
 	return priv->reset_post_delay;
 }
 
+/**
+ * fu_redfish_device_get_json_obj_member:
+ * @self: a #FuRedfishDevice
+ *
+ * Returns the raw FirmwareInventory JSON member object passed to this device
+ * at construction time.  Subclasses may call this in their probe() override to
+ * read vendor-specific fields that the base probe() does not expose.
+ *
+ * Returns: (transfer none) (nullable): a #FwupdJsonObject, or %NULL.
+ */
+FwupdJsonObject *
+fu_redfish_device_get_json_obj_member(FuRedfishDevice *self)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->json_obj_member;
+}
+
 static gboolean
 fu_redfish_device_set_quirk_kv(FuDevice *device,
 			       const gchar *key,
@@ -1094,6 +1192,8 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	device_class->set_quirk_kv = fu_redfish_device_set_quirk_kv;
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_NO_REDFISH_VENDOR_ID);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
 	fu_device_register_private_flag(device_class,

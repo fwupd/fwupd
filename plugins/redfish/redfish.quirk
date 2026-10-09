@@ -34,3 +34,11 @@ RedfishResetPreDelay = 100000
 [REDFISH\VENDOR_Dell&SOFTWAREID_25227]
 Flags = manager-reset,no-manager-reset-request
 RedfishResetPreDelay = 120000
+
+# NVIDIA GB300 DGX Station: HardwareID-09 of "NVIDIA&GB300 DGX Station"
+[c3cf31f2-8b8a-531d-bcf4-636a0aaa9ffc]
+Flags = nvidia-oob
+
+# NVIDIA DGX Station GB300: HardwareID-09 of "NVIDIA&DGX Station GB300"
+[ce9dc2f6-faf4-578c-94f3-89e1edf5ec55]
+Flags = nvidia-oob
