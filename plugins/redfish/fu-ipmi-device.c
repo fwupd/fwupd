@@ -196,6 +196,10 @@ fu_ipmi_device_lock_cb(FuDevice *device, GError **error)
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	struct flock lock = {.l_type = F_WRLCK, .l_whence = SEEK_SET};
+
+	/* no file descriptor to lock when emulated */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -212,6 +216,10 @@ fu_ipmi_device_unlock_cb(FuDevice *device, GError **error)
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	struct flock lock = {.l_type = F_UNLCK};
+
+	/* no file descriptor to unlock when emulated */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -352,39 +360,47 @@ fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **err
 				 error))
 		return FALSE;
 
-	pollfds[0].fd = fu_io_channel_unix_get_fd(io_channel);
-	pollfds[0].events = POLLIN;
+	/* no file descriptor to poll when emulated */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		pollfds[0].fd = fu_io_channel_unix_get_fd(io_channel);
+		pollfds[0].events = POLLIN;
+	}
 
 	for (;;) {
 		guint8 resp_netfn = 0;
 		guint8 resp_cmd = 0;
 		glong seq = 0;
-		gint rc;
 
-		rc = g_poll(pollfds,
-			    1,
-			    helper->timeout_ms - (g_timer_elapsed(timer, NULL) * 1000.f));
-		if (rc < 0) {
-			g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "poll() error %m");
-			return FALSE;
-		}
-		if (rc == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
-				    "timeout waiting for response "
-				    "(netfn %d, cmd %d)",
-				    helper->netfn,
-				    helper->cmd);
-			return FALSE;
-		}
-
-		if (!(pollfds[0].revents & POLLIN)) {
-			g_set_error_literal(error,
+		/* wait for the response, unless emulated when it is immediate */
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			gint rc =
+			    g_poll(pollfds,
+				   1,
+				   helper->timeout_ms - (g_timer_elapsed(timer, NULL) * 1000.f));
+			if (rc < 0) {
+				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "unexpected status");
-			return FALSE;
+					    "poll() error %m");
+				return FALSE;
+			}
+			if (rc == 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_TIMED_OUT,
+					    "timeout waiting for response "
+					    "(netfn %d, cmd %d)",
+					    helper->netfn,
+					    helper->cmd);
+				return FALSE;
+			}
+			if (!(pollfds[0].revents & POLLIN)) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INTERNAL,
+						    "unexpected status");
+				return FALSE;
+			}
 		}
 
 		if (!fu_ipmi_device_recv(self,
