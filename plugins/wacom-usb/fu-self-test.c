@@ -65,6 +65,13 @@ fu_wacom_usb_firmware_xml_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fu_wacom_usb_buffer_dump_func(void)
+{
+	const guint8 buf[] = {0x01, 0x02, 0x03, 0x04};
+	fu_wacom_usb_buffer_dump("test", FU_WACOM_USB_REPORT_ID_COMMAND, buf, sizeof(buf));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -76,5 +83,6 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_WACOM_USB_FIRMWARE);
 	g_test_add_func("/wacom-usb/firmware/parse", fu_wacom_usb_firmware_parse_func);
 	g_test_add_func("/wacom-usb/firmware/xml", fu_wacom_usb_firmware_xml_func);
+	g_test_add_func("/wacom-usb/buffer-dump", fu_wacom_usb_buffer_dump_func);
 	return g_test_run();
 }
