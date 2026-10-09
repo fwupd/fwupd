@@ -85,6 +85,7 @@ static void
 fu_elantp_haptic_firmware_class_init(FuElantpHapticFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	firmware_class->validate = fu_elantp_haptic_firmware_validate;
 	firmware_class->parse = fu_elantp_haptic_firmware_parse;
 	firmware_class->export = fu_elantp_haptic_firmware_export;
