@@ -165,6 +165,66 @@ fu_self_init(FuTest *self)
 }
 
 static void
+fu_redfish_ipmi_probe_func(void)
+{
+#ifdef HAVE_LINUX_IPMI_H
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_ipmi_device_new(ctx));
+	g_autoptr(FuDeviceEvent) ev_exists = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* probe finds the first node that exists */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	ev_exists = fu_device_event_new("FileExists:Filename=/dev/ipmi0");
+	fu_device_event_set_i64(ev_exists, "Exists", 1);
+	fu_device_add_event(device, ev_exists);
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "/dev/ipmi0");
+
+	/* the unset version info is still printable */
+	str = fu_device_to_string(device);
+	g_assert_nonnull(str);
+#else
+	g_test_skip("no linux/ipmi.h, so skipping");
+#endif
+}
+
+static void
+fu_redfish_ipmi_probe_missing_func(void)
+{
+#ifdef HAVE_LINUX_IPMI_H
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_ipmi_device_new(ctx));
+	g_autoptr(FuDeviceEvent) ev_missing0 = NULL;
+	g_autoptr(FuDeviceEvent) ev_missing1 = NULL;
+	g_autoptr(FuDeviceEvent) ev_missing2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* probe fails when none of the nodes exist */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	ev_missing0 = fu_device_event_new("FileExists:Filename=/dev/ipmi0");
+	fu_device_event_set_i64(ev_missing0, "Exists", 0);
+	fu_device_add_event(device, ev_missing0);
+	ev_missing1 = fu_device_event_new("FileExists:Filename=/dev/ipmi/0");
+	fu_device_event_set_i64(ev_missing1, "Exists", 0);
+	fu_device_add_event(device, ev_missing1);
+	ev_missing2 = fu_device_event_new("FileExists:Filename=/dev/ipmidev/0");
+	fu_device_event_set_i64(ev_missing2, "Exists", 0);
+	fu_device_add_event(device, ev_missing2);
+	ret = fu_device_probe(device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+#else
+	g_test_skip("no linux/ipmi.h, so skipping");
+#endif
+}
+
+static void
 fu_redfish_ipmi_func(void)
 {
 #ifdef HAVE_LINUX_IPMI_H
@@ -808,6 +868,8 @@ main(int argc, char **argv)
 
 	fu_self_init(self);
 	g_test_add_func("/redfish/ipmi", fu_redfish_ipmi_func);
+	g_test_add_func("/redfish/ipmi/probe", fu_redfish_ipmi_probe_func);
+	g_test_add_func("/redfish/ipmi/probe-missing", fu_redfish_ipmi_probe_missing_func);
 	g_test_add_func("/redfish/backend/session-key/none",
 			fu_redfish_backend_session_key_none_func);
 	g_test_add_func("/redfish/backend/session-key/missing",
