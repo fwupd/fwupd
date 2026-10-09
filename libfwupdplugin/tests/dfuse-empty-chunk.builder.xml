@@ -1,0 +1,19 @@
+<firmware gtype="FuDfuseFirmware">
+  <vendor>0x0000</vendor>
+  <product>0x0000</product>
+  <release>0x0100</release>
+  <firmware>
+    <idx>0x01</idx>
+    <id>empty-chunk</id>
+    <chunks>
+      <chunk>
+        <data></data>
+        <addr>0x08000000</addr>
+      </chunk>
+      <chunk>
+        <data>AA==</data>
+        <addr>0x08000000</addr>
+      </chunk>
+    </chunks>
+  </firmware>
+</firmware>
