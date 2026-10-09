@@ -26,6 +26,35 @@ plugin_builtin_lenovo_accessory = static_library(
 )
 plugin_builtins += plugin_builtin_lenovo_accessory
 
+if get_option('tests')
+  e = executable(
+    'lenovo-accessory-self-test',
+    plugin_rustgen_output,
+    sources: [
+      'fu-self-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
+    link_with: [
+      plugin_libs,
+      plugin_builtin_lenovo_accessory,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_tag: 'tests',
+    install_dir: installed_test_bindir,
+    c_args: cargs,
+  )
+  test(
+    'lenovo-accessory-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
+endif
+
 device_tests += files(
   'tests/lenovo-accessory-6202-receiver.json',
   'tests/lenovo-accessory-700-keyboard.json',
