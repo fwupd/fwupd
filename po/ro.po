@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-10-05 08:51+0000\n"
+"PO-Revision-Date: 2026-10-09 10:47+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
 "Language: ro\n"
@@ -2438,11 +2438,11 @@ msgstr "Acest pachet nu a fost validat, este posibil să nu funcționeze corect.
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were previously not updated correctly:"
-msgstr ""
+msgstr "Dispozitive care nu au fost actualizate corect anterior:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have previously been updated successfully:"
-msgstr ""
+msgstr "Dispozitive care au fost actualizate cu succes anterior:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
