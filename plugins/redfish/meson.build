@@ -99,4 +99,37 @@ if get_option('tests')
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
   )
+  e = executable(
+    'redfish-network-device-self-test',
+    rustgen.process('fu-redfish.rs'),
+    sources: [
+      'fu-redfish-network-device-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: [
+      plugin_deps,
+      libcurl,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+      plugin_builtin_redfish,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_tag: 'tests',
+    install_dir: installed_test_bindir,
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
+  )
+  test(
+    'redfish-network-device-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif
