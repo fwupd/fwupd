@@ -7,11 +7,10 @@
 #
 # pylint: disable=too-many-instance-attributes,no-self-use
 
-import os
-import sys
-import subprocess
 import glob
-from typing import Dict, Optional, List, Union
+import os
+import subprocess
+import sys
 
 DEFAULT_BUILDDIR = ".ossfuzz"
 
@@ -67,8 +66,8 @@ class Builder:
         self,
         name: str,
         url: str,
-        commit: Optional[str] = None,
-        patches: Optional[List[str]] = None,
+        commit: str | None = None,
+        patches: list[str] | None = None,
     ) -> str:
         """checkout source tree, optionally to a specific commit"""
         srcdir_name = os.path.join(self.srcdir, name)
@@ -193,7 +192,7 @@ class Builder:
         """add a LDFLAG"""
         self.ldflags.append(os.path.join(self.builddir, value))
 
-    def substitute(self, src: str, replacements: Dict[str, str]) -> str:
+    def substitute(self, src: str, replacements: dict[str, str]) -> str:
         """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
@@ -205,7 +204,7 @@ class Builder:
                 out.write(blob)
         return dst
 
-    def compile(self, src: str, argv_extra: Optional[list[str]] = None) -> str:
+    def compile(self, src: str, argv_extra: list[str] | None = None) -> str:
         """compile a specific source file"""
         argv = [self.cc]
         argv.extend(self.cflags)
@@ -224,7 +223,7 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, f"{dst}")
 
-    def rustgen(self, src: str, includes: List[str] = []) -> str:
+    def rustgen(self, src: str, includes: list[str] = []) -> str:
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
@@ -250,7 +249,7 @@ class Builder:
             sys.exit(1)
         return fulldst_c
 
-    def link(self, objs: List[str], dst: str) -> str:
+    def link(self, objs: list[str], dst: str) -> str:
         """link multiple objects into a binary"""
         argv = [self.cxx] + self.cxxflags
         for obj in objs:
@@ -264,10 +263,10 @@ class Builder:
         subprocess.run(argv, cwd=self.srcdir, check=True)
         return os.path.join(self.installdir, dst)
 
-    def mkfuzztargets(self, exe: str, globstr: str) -> List[str]:
+    def mkfuzztargets(self, exe: str, globstr: str) -> list[str]:
         """make binary fuzzing targets from builder.xml files"""
         builder_xmls = glob.glob(globstr)
-        corpus: List[str] = []
+        corpus: list[str] = []
         if not builder_xmls:
             builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
@@ -279,14 +278,12 @@ class Builder:
                 argv = [exe, fn_src, fn_dst]
                 subprocess.run(argv, check=True)
             except subprocess.CalledProcessError as e:
-                print(f"tried to run: `{' '.join(argv)}` and got {str(e)}")
+                print(f"tried to run: `{' '.join(argv)}` and got {e!s}")
                 sys.exit(1)
             corpus.append(fn_dst)
         return corpus
 
-    def write_header(
-        self, dst: str, defines: Dict[str, Optional[Union[str, int]]]
-    ) -> None:
+    def write_header(self, dst: str, defines: dict[str, str | int | None]) -> None:
         """write a header file"""
         dstdir = os.path.join(self.builddir, os.path.dirname(dst))
         os.makedirs(dstdir, exist_ok=True)
@@ -303,7 +300,7 @@ class Builder:
                     f.write(f"#define {key}\n")
         self.add_work_includedir(os.path.dirname(dst))
 
-    def makezip(self, dst: str, corpus: List[str]) -> None:
+    def makezip(self, dst: str, corpus: list[str]) -> None:
         """create a zip file archive from a glob"""
         if not corpus:
             return
@@ -311,7 +308,7 @@ class Builder:
         print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
-    def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
+    def grep_meson(self, src: str, token: str = "fuzzing") -> list[str]:
         """find source files tagged with a specific comment"""
         srcs = []
         with open(os.path.join(self.srcdir, src, "meson.build")) as f:
@@ -450,8 +447,8 @@ def _build(bld: Builder) -> None:
     )
 
     # libfwupd + libfwupdplugin
-    built_objs: List[str] = []
-    fuzzing_objs: List[str] = []
+    built_objs: list[str] = []
+    fuzzing_objs: list[str] = []
     bld.add_src_includedir("fwupd")
     bld.add_src_includedir("fwupd/rust/fwupd-ffi")
     for path in ["fwupd/libfwupd"]:

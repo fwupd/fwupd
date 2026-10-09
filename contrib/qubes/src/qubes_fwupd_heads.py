@@ -7,12 +7,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
-import subprocess
-import tempfile
 import os
 import shutil
+import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
-from qubes_fwupd_common import EXIT_CODES, create_dirs, LooseVersion
+
+from qubes_fwupd_common import EXIT_CODES, LooseVersion, create_dirs
 
 FWUPDTOOL = "/bin/fwupdtool"
 

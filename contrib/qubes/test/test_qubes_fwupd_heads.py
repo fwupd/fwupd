@@ -7,14 +7,15 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
+import importlib.util
 import io
 import os
 import platform
 import shutil
-import importlib.util
-import src.qubes_fwupd_heads as qf_heads
 import sys
 import unittest
+
+import src.qubes_fwupd_heads as qf_heads
 
 from test.fwupd_logs import HEADS_XML
 

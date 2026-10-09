@@ -5,15 +5,14 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import argparse
 import os
 import sys
 import textwrap
 import uuid
-import argparse
-
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -73,17 +72,17 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
-        self._since: Optional[str] = None
-        self.comments: List[str] = []
-        self.repr_type: Optional[str] = None
-        self.items: List[EnumItem] = []
+        self._since: str | None = None
+        self.comments: list[str] = []
+        self.repr_type: str | None = None
+        self.items: list[EnumItem] = []
         self.is_imported: bool = False
-        self._exports: Dict[str, Export] = {
+        self._exports: dict[str, Export] = {
             "ToString": Export.NONE,
             "FromString": Export.NONE,
         }
-        self._c_methods: Dict[str, Export] = {}
-        self._derives_since: Dict[str, str] = {}
+        self._c_methods: dict[str, Export] = {}
+        self._derives_since: dict[str, str] = {}
         self._is_bitfield = False
         self._is_force_enum = False
 
@@ -99,7 +98,7 @@ class EnumObj:
 
         return f"{name_snake}_{_camel_to_snake(suffix)}"
 
-    def since(self, derive: str) -> Optional[str]:
+    def since(self, derive: str) -> str | None:
         if derive in self._derives_since:
             return self._derives_since[derive]
         return self._since
@@ -128,7 +127,7 @@ class EnumObj:
                 return True
         return self._is_bitfield
 
-    def check(self, prefix: Optional[str] = None):
+    def check(self, prefix: str | None = None):
         # check we're prefixed with something sane
         if prefix and not self.name.startswith(prefix):
             raise ValueError(f"enum {self.name} does not have '{prefix}' prefix")
@@ -195,9 +194,9 @@ class EnumItem:
     def __init__(self, obj: EnumObj) -> None:
         self.obj: EnumObj = obj
         self.name: str = ""
-        self.default: Optional[str] = None
-        self.comments: List[str] = []
-        self.since: Optional[str] = None
+        self.default: str | None = None
+        self.comments: list[str] = []
+        self.since: str | None = None
         self.is_bitfield = False
 
     @property
@@ -254,9 +253,9 @@ class EnumItem:
 class StructObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
-        self.items: List[StructItem] = []
+        self.items: list[StructItem] = []
         self.is_imported: bool = False
-        self._exports: Dict[str, Export] = {
+        self._exports: dict[str, Export] = {
             "Validate": Export.NONE,
             "ValidateBytes": Export.NONE,
             "ValidateStream": Export.NONE,
@@ -301,7 +300,7 @@ class StructObj:
                 return True
         return False
 
-    def check(self, prefix: Optional[str] = None):
+    def check(self, prefix: str | None = None):
         # check we're prefixed with something sane
         if prefix and not self.name.startswith(prefix):
             raise ValueError(f"struct {self.name} does not have '{prefix}' prefix")
@@ -334,10 +333,7 @@ class StructObj:
                     item.enum_obj.add_private_export("ToString")
                 elif item.enabled:
                     item.add_private_export("Getters")
-        elif derive == "Parse":
-            self.add_private_export("NewInternal")
-            self.add_private_export("ParseInternal")
-        elif derive == "ParseStream":
+        elif derive == "Parse" or derive == "ParseStream":
             self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseBytes":
@@ -391,17 +387,17 @@ class StructItem:
         self.element_id: str = ""
         self.type: Type = Type.NONE
         self.is_packed: bool = False
-        self.enum_obj: Optional[EnumObj] = None
-        self.struct_obj: Optional[StructObj] = None
-        self.default: Optional[str] = None
-        self.constant: Optional[str] = None
-        self.padding: Optional[str] = None
+        self.enum_obj: EnumObj | None = None
+        self.struct_obj: StructObj | None = None
+        self.default: str | None = None
+        self.constant: str | None = None
+        self.padding: str | None = None
         self.endian: Endian = Endian.NATIVE
         self.n_elements: int = 0
         self._bits_size: int = 0
         self._bits_offset: int = 0
         self.offset: int = 0
-        self._exports: Dict[str, Export] = {
+        self._exports: dict[str, Export] = {
             "Getters": Export.NONE,
             "Setters": Export.NONE,
         }
@@ -595,7 +591,7 @@ class StructItem:
         self.constant = self.default
 
     def parse_type(
-        self, val: str, enum_objs: Dict[str, EnumObj], struct_objs: Dict[str, StructObj]
+        self, val: str, enum_objs: dict[str, EnumObj], struct_objs: dict[str, StructObj]
     ) -> None:
         # is array
         if val.startswith("[") and val.endswith("]"):
@@ -616,7 +612,7 @@ class StructItem:
         # find the type
         if typestr in enum_objs:
             self.enum_obj = enum_objs[typestr]
-            typestr_maybe: Optional[str] = enum_objs[typestr].repr_type
+            typestr_maybe: str | None = enum_objs[typestr].repr_type
             if not typestr_maybe:
                 raise ValueError(f"no repr for: {typestr}")
             typestr = typestr_maybe
@@ -676,25 +672,25 @@ class Generator:
     def __init__(
         self,
         basename,
-        modules_map: Dict[str, str],
-        prefix: Optional[str] = None,
+        modules_map: dict[str, str],
+        prefix: str | None = None,
         includes=[],
     ) -> None:
         self.basename: str = basename
-        self.prefix: Optional[str] = prefix
-        self.import_headers: List[str] = []
-        self.modules_map: Dict[str, str] = modules_map
-        self.input_files: List[str] = []
-        self.includes: List[str] = includes
-        self.struct_objs: Dict[str, StructObj] = {}
-        self.enum_objs: Dict[str, EnumObj] = {}
+        self.prefix: str | None = prefix
+        self.import_headers: list[str] = []
+        self.modules_map: dict[str, str] = modules_map
+        self.input_files: list[str] = []
+        self.includes: list[str] = includes
+        self.struct_objs: dict[str, StructObj] = {}
+        self.enum_objs: dict[str, EnumObj] = {}
         self._env = Environment(
             loader=FileSystemLoader(os.path.dirname(__file__)),
             autoescape=select_autoescape(),
             keep_trailing_newline=True,
         )
 
-    def _process_enums(self, enum_obj: EnumObj) -> Tuple[str, str]:
+    def _process_enums(self, enum_obj: EnumObj) -> tuple[str, str]:
         # render
         subst = {
             "Type": Type,
@@ -708,7 +704,7 @@ class Generator:
         self.input_files.extend([file_next_to_module(i) for i in [h, c]])
         return template_c.render(subst), template_h.render(subst)
 
-    def _process_structs(self, struct_obj: StructObj) -> Tuple[str, str]:
+    def _process_structs(self, struct_obj: StructObj) -> tuple[str, str]:
         # render
         subst = {
             "Type": Type,
@@ -759,15 +755,15 @@ class Generator:
 
     def _parse_input(self, contents: str) -> None:
         name = None
-        repr_type: Optional[str] = None
-        derives: List[str] = []
+        repr_type: str | None = None
+        derives: list[str] = []
         offset: int = 0
         struct_seen_b32: bool = False
         bits_offset: int = 0
-        since: Optional[str] = None
-        struct_cur: Optional[StructObj] = None
-        enum_cur: Optional[EnumObj] = None
-        comments_cur: List[str] = []
+        since: str | None = None
+        struct_cur: StructObj | None = None
+        enum_cur: EnumObj | None = None
+        comments_cur: list[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
@@ -902,7 +898,7 @@ class Generator:
                         struct_objs=self.struct_objs,
                     )
                 except ValueError as e:
-                    raise ValueError(f"{str(e)} on line {line_num}: {line}")
+                    raise ValueError(f"{e!s} on line {line_num}: {line}")
                 if len(type_parts) > 1:
                     if "Default" not in derives:
                         raise ValueError(
@@ -919,7 +915,7 @@ class Generator:
                 bits_offset += item.bits_size
                 struct_cur.items.append(item)
 
-    def process_input(self, contents: str) -> Tuple[str, str]:
+    def process_input(self, contents: str) -> tuple[str, str]:
         # parse input
         self._parse_input(contents)
 
@@ -971,7 +967,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # parse map from module to path
-    modules_map: Dict[str, str] = {}
+    modules_map: dict[str, str] = {}
     for entry in args.use:
         try:
             split = entry.split(":", maxsplit=1)
@@ -991,7 +987,7 @@ if __name__ == "__main__":
                 f.read().decode(),
             )
         except ValueError as e:
-            sys.exit(f"cannot process {args.src}: {str(e)}")
+            sys.exit(f"cannot process {args.src}: {e!s}")
     if args.outc:
         with open(args.outc, "wb") as f:  # type: ignore
             f.write(dst_c.encode())

@@ -5,9 +5,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import binascii
 import struct
 import sys
-import binascii
 
 from pcapng import FileScanner
 

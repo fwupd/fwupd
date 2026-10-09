@@ -7,7 +7,6 @@
 
 import argparse
 import gzip
-from typing import List
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -15,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("input", nargs="*", help="input")
     args = parser.parse_args()
 
-    lines: List[str] = []
+    lines: list[str] = []
     for fn in args.input:
         with open(fn, "rb") as f:
             for line in f.read().decode().split("\n"):

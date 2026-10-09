@@ -5,11 +5,11 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import glob
 import fnmatch
+import glob
 import os
-import sys
 import subprocess
+import sys
 
 
 def test_files() -> int:

@@ -18,10 +18,8 @@ with open(sys.argv[1], "w") as f:
         for fullpath in sys.argv[3].split(","):
             parts = fullpath.split("/")
             name = parts[-1]
-            if name.startswith("libfu_plugin_"):
-                name = name[13:]
-            if name.endswith(".a"):
-                name = name[:-2]
+            name = name.removeprefix("libfu_plugin_")
+            name = name.removesuffix(".a")
             plugin_names.append((parts[-2], name))
 
     # includes

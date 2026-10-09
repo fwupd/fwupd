@@ -411,9 +411,7 @@ def task_status_546():
         ],
         "Oem": {},
     }
-    if app._percentage546 == 0:
-        res["TaskState"] = "Running"
-    elif app._percentage546 in [25, 50, 75]:
+    if app._percentage546 == 0 or app._percentage546 in [25, 50, 75]:
         res["TaskState"] = "Running"
     elif app._percentage546 == 100:
         res["TaskState"] = "Completed"

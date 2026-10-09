@@ -5,10 +5,10 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import argparse
 import os
 import sys
-import argparse
-from typing import List, Dict
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
@@ -48,7 +48,7 @@ def _strip_md(data: str) -> str:
 
 def _convert_md_to_man(data: str) -> str:
     sections = data.split("\n\n")
-    troff_lines: List[str] = []
+    troff_lines: list[str] = []
 
     # ignore the docgen header
     if sections[0].startswith("---"):
@@ -59,9 +59,7 @@ def _convert_md_to_man(data: str) -> str:
     if split[0] != "%" or split[3] != "|":
         print(
             "no man header detected, expected something like "
-            "'% fwupdagent(1) 1.2.5 | fwupdagent man page' and got {}".format(
-                sections[0]
-            )
+            f"'% fwupdagent(1) 1.2.5 | fwupdagent man page' and got {sections[0]}"
         )
         sys.exit(1)
     man_cmd = split[1][:-3]
@@ -92,8 +90,7 @@ def _convert_md_to_man(data: str) -> str:
             if line_tmp.startswith("```"):
                 indent = not indent
                 line_tmp = "```"  # strip the language
-            if line_tmp.startswith("| "):
-                line_tmp = line_tmp[2:]
+            line_tmp = line_tmp.removeprefix("| ")
             if indent:
                 line += ".nf\n"
                 line += line_tmp + "\n"
@@ -134,7 +131,7 @@ def _convert_md_to_man(data: str) -> str:
     return "\n".join(troff_lines)
 
 
-def _add_defines(defines: Dict[str, str], fn: str) -> None:
+def _add_defines(defines: dict[str, str], fn: str) -> None:
     with open(fn, "rb") as f:
         for line in f.read().decode().split("\n"):
             for name, key_pos in {
@@ -176,7 +173,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # load in #defines to populate the defaults
-    subst: Dict[str, str] = {}
+    subst: dict[str, str] = {}
     if args.defines:
         for fn_define in args.defines:
             try:

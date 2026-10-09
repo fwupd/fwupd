@@ -4,14 +4,14 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-from base64 import b64decode
 import io
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 import tempfile
 import zipfile
+from base64 import b64decode
 
 TAG = b"#\x00"
 

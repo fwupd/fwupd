@@ -14,8 +14,8 @@ import os
 import pathlib
 import re
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional
 
 import gi
 from rich.markup import escape
@@ -45,7 +45,7 @@ if "GI_TYPELIB_PATH" not in os.environ and pathlib.Path(TYPELIBDIR).is_dir():
 
 gi.require_version("Fwupd", "2.0")
 
-from gi.repository import Fwupd, GLib  # noqa: E402
+from gi.repository import Fwupd, GLib
 
 PACKAGE_VERSION = "@FWUPD_VERSION@"
 LOCALEDIR = os.environ.get("FWUPD_LOCALEDIR", "@localedir@")
@@ -65,7 +65,7 @@ class BiosSetting:
     current_value: str
     kind: Fwupd.BiosSettingKind
     read_only: bool
-    possible_values: List[str]
+    possible_values: list[str]
     lower_bound: int
     upper_bound: int
     scalar_increment: int
@@ -331,7 +331,7 @@ class PathPrompt(ModalScreen):
         self.dismiss(str(path))
 
 
-def xml_to_text(value: Optional[str]) -> str:
+def xml_to_text(value: str | None) -> str:
     """Convert the small AppStream markup subset used by release descriptions."""
     if not value:
         return ""
@@ -559,7 +559,7 @@ class FwupdTui(App):
 
     def __init__(
         self,
-        settings: Optional[List[BiosSetting]] = None,
+        settings: list[BiosSetting] | None = None,
         client=None,
     ) -> None:
         super().__init__()
@@ -569,13 +569,13 @@ class FwupdTui(App):
             settings or [], key=lambda item: (item.parent, item.name)
         )
         self.settings_by_key = {setting.key: setting for setting in self.settings}
-        self.pending: Dict[str, str] = {}
-        self.current_key: Optional[str] = None
-        self.devices: Dict[str, object] = {}
-        self.current_device_id: Optional[str] = None
-        self.releases: Dict[str, object] = {}
-        self.current_release_key: Optional[str] = None
-        self.security_attrs: Dict[str, object] = {}
+        self.pending: dict[str, str] = {}
+        self.current_key: str | None = None
+        self.devices: dict[str, object] = {}
+        self.current_device_id: str | None = None
+        self.releases: dict[str, object] = {}
+        self.current_release_key: str | None = None
+        self.security_attrs: dict[str, object] = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -860,7 +860,7 @@ class FwupdTui(App):
             message = _("This system does not expose BIOS settings")
         self.query_one("#status", Static).update(message)
 
-    def show_details(self, key: Optional[str]) -> None:
+    def show_details(self, key: str | None) -> None:
         self.current_key = key
         details = self.query_one("#details", Static)
         edit = self.query_one("#edit", Button)
@@ -914,7 +914,7 @@ class FwupdTui(App):
         details.update("\n".join(lines))
         self.set_button_available(edit, not setting.read_only)
 
-    def edit_complete(self, value: Optional[str]) -> None:
+    def edit_complete(self, value: str | None) -> None:
         if value is None or self.current_key is None:
             return
         setting = self.settings_by_key[self.current_key]
@@ -1094,7 +1094,7 @@ class FwupdTui(App):
         )
 
     @staticmethod
-    def device_flag_names(device) -> List[str]:
+    def device_flag_names(device) -> list[str]:
         flags = (
             # TRANSLATORS: device flag label: built into the machine
             (Fwupd.DeviceFlags.INTERNAL, _("Internal device")),
@@ -1127,7 +1127,7 @@ class FwupdTui(App):
         )
         return [label for flag, label in flags if device.has_flag(flag)]
 
-    def show_device(self, device_id: Optional[str]) -> None:
+    def show_device(self, device_id: str | None) -> None:
         self.current_device_id = device_id
         self.current_release_key = None
         install = self.query_one("#release-install", Button)
@@ -1245,7 +1245,7 @@ class FwupdTui(App):
         # TRANSLATORS: action label for reinstalling the current release
         return _("Reinstall")
 
-    def show_release(self, key: Optional[str]) -> None:
+    def show_release(self, key: str | None) -> None:
         if key is None or self.current_device_id is None:
             self.current_release_key = None
             button = self.query_one("#release-install", Button)
@@ -1404,7 +1404,7 @@ class FwupdTui(App):
             thread=True,
         )
 
-    def install_local_file(self, path: Optional[str]) -> None:
+    def install_local_file(self, path: str | None) -> None:
         if path is None or self.client is None:
             return
         try:
@@ -1617,7 +1617,7 @@ class FwupdTui(App):
             lines.append(_("No recent security events"))
         self.query_one("#security-events", Static).update("\n".join(lines))
 
-    def show_security_attr(self, key: Optional[str]) -> None:
+    def show_security_attr(self, key: str | None) -> None:
         details = self.query_one("#security-details", Static)
         if key is None:
             # TRANSLATORS: placeholder shown before an attribute is selected
@@ -1769,7 +1769,7 @@ class FwupdTui(App):
             self.load_security()
 
 
-def load_settings(client) -> List[BiosSetting]:
+def load_settings(client) -> list[BiosSetting]:
     """Fetch settings through libfwupd's introspected client API."""
     return [BiosSetting.from_fwupd(setting) for setting in client.get_bios_settings()]
 

@@ -6,11 +6,11 @@
 #
 # pylint: disable=invalid-name,missing-docstring
 
-import sys
+import datetime
 import os
 import subprocess
-import datetime
-from typing import List
+import sys
+
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -24,7 +24,7 @@ def _get_last_release() -> str:
 
 def _get_next_release(last_tag: str) -> str:
     try:
-        triplet: List[str] = last_tag.split(".")
+        triplet: list[str] = last_tag.split(".")
         return f"{triplet[0]}.{triplet[1]}.{int(triplet[2]) + 1}"
     except IndexError:
         return last_tag
@@ -35,9 +35,9 @@ def _get_appstream_date() -> str:
 
 
 def _generate_release_notes(last_tag: str, next_tag: str) -> str:
-    lines_feat: List[str] = []
-    lines_bugs: List[str] = []
-    lines_devs: List[str] = []
+    lines_feat: list[str] = []
+    lines_bugs: list[str] = []
+    lines_devs: list[str] = []
     for line in (
         subprocess.check_output(
             [

@@ -6,8 +6,9 @@
 
 """A simple fwupd frontend"""
 
-import sys
 import os
+import sys
+
 import dbus
 import gi
 from gi.repository import GLib
@@ -34,12 +35,12 @@ class Progress:
     def status_changed(self, percent, status):
         """Indicate new status string or % complete to track"""
         if self.status != status or self.percent != percent:
-            for i in range(0, self.erase):
+            for i in range(self.erase):
                 sys.stdout.write("\b \b")
             self.status = status
             self.percent = percent
             status_str = "["
-            for i in range(0, 50):
+            for i in range(50):
                 if i < percent / 2:
                     status_str += "*"
                 else:
@@ -137,7 +138,7 @@ def modify_config(client, section, key, value):
         print(f"setting configuration key {key} to {value}")
         client.modify_config(section, key, value, None)
     except Exception as e:
-        print(f"{str(e)}")
+        print(f"{e!s}")
         sys.exit(1)
 
 

@@ -8,8 +8,7 @@
 
 import json
 import sys
-
-from typing import Dict, List, Any
+from typing import Any
 
 import gi
 from gi.repository import GLib
@@ -17,18 +16,20 @@ from gi.repository import GLib
 gi.require_version("Fwupd", "2.0")
 gi.require_version("Json", "1.0")
 
-from gi.repository import Fwupd  # pylint: disable=wrong-import-position
-from gi.repository import Json  # pylint: disable=wrong-import-position
+from gi.repository import (
+    Fwupd,  # pylint: disable=wrong-import-position
+    Json,  # pylint: disable=wrong-import-position
+)
 
 
 def _minimize_json(json_str: str) -> str:
     nodes = json.loads(json_str)
-    new_attrs: List[Dict[str, Any]] = []
-    new_devices: List[Dict[str, Any]] = []
-    new_bios_settings: List[Dict[str, Any]] = []
+    new_attrs: list[dict[str, Any]] = []
+    new_devices: list[dict[str, Any]] = []
+    new_bios_settings: list[dict[str, Any]] = []
     try:
         for attr in nodes["SecurityAttributes"]:
-            new_attr: Dict[str, Any] = {}
+            new_attr: dict[str, Any] = {}
             for key in attr:
                 if key in ["AppstreamId", "HsiResult", "Flags", "Plugin"]:
                     new_attr[key] = attr[key]
@@ -37,7 +38,7 @@ def _minimize_json(json_str: str) -> str:
         pass
     try:
         for device in nodes["Devices"]:
-            new_device: Dict[str, Any] = {}
+            new_device: dict[str, Any] = {}
             for key in device:
                 if key not in ["Created", "Modified", "Releases", "Plugin"]:
                     new_device[key] = device[key]
@@ -46,7 +47,7 @@ def _minimize_json(json_str: str) -> str:
         pass
     try:
         for device in nodes["BiosSettings"]:
-            new_attr: Dict[str, Any] = {}
+            new_attr: dict[str, Any] = {}
             for key in device:
                 if key not in ["Filename"]:
                     new_attr[key] = device[key]

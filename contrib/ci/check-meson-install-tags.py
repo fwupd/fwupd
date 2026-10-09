@@ -11,8 +11,7 @@ import logging
 import os
 import subprocess
 import sys
-
-from typing import Iterator, List
+from collections.abc import Iterator
 
 
 def parse_version(ver):
@@ -31,7 +30,7 @@ def objects_with_tag(obj) -> Iterator[dict]:
                 yield from objects_with_tag(i)
 
 
-def collect_tags(install_plan) -> List[str]:
+def collect_tags(install_plan) -> list[str]:
     tags = set()
 
     for obj in objects_with_tag(install_plan):
@@ -40,7 +39,7 @@ def collect_tags(install_plan) -> List[str]:
     return sorted(["null" if t is None else t for t in tags])
 
 
-def collect_files(install_plan, tag) -> List[str]:
+def collect_files(install_plan, tag) -> list[str]:
     files = list()
 
     if tag == "null":

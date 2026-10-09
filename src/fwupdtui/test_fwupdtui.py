@@ -9,7 +9,6 @@
 import asyncio
 
 import pytest
-
 from textual.widgets import Button, ContentSwitcher, Input, Select, Static, Tree
 
 from fwupdtui import BiosSetting, Fwupd, FwupdTui, SettingEditor

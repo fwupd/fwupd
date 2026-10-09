@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import sys
 import argparse
+import sys
 import xml.etree.ElementTree as ET
 
 XMLNS = "{http://www.gtk.org/introspection/core/1.0}"
@@ -111,13 +111,13 @@ class LdVersionScript:
         oldversion = None
         for version in sorted(versions, key=parse_version):
             symbols = sorted(self.releases[version])
-            verout += "\n{}_{} {{\n".format(self.library_name, version)
+            verout += f"\n{self.library_name}_{version} {{\n"
             verout += "  global:\n"
             for symbol in symbols:
                 verout += f"    {symbol};\n"
             verout += "  local: *;\n"
             if oldversion:
-                verout += "}} {}_{};\n".format(self.library_name, oldversion)
+                verout += f"}} {self.library_name}_{oldversion};\n"
             else:
                 verout += "};\n"
             oldversion = version

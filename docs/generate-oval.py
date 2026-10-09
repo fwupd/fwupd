@@ -7,11 +7,8 @@
 
 import argparse
 import datetime
-import sys
 import json
-
-from typing import List
-
+import sys
 import xml.etree.ElementTree as ET
 
 if __name__ == "__main__":
@@ -25,13 +22,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # parse JSON
-    items: List[str] = []
+    items: list[str] = []
     for fn in sorted(args.json_attrs):
         try:
             with open(fn, "rb") as f:
                 item = json.loads(f.read())
         except json.decoder.JSONDecodeError as e:
-            print(f"failed to parse {fn}: {str(e)}")
+            print(f"failed to parse {fn}: {e!s}")
             sys.exit(1)
         for tag in ["id", "name", "failure-results"]:
             if tag not in item:

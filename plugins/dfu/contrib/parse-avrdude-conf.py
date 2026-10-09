@@ -46,11 +46,10 @@ def _parse_parts(fn_source):
     memory_id = None
     parts = []
 
-    for line in open(fn_source).readlines():
+    for line in open(fn_source):
         # try to clean up crazy syntax
         line = line.replace("\n", "")
-        if line.endswith(";"):
-            line = line[:-1]
+        line = line.removesuffix(";")
 
         # ignore blank lines
         line = line.rstrip()

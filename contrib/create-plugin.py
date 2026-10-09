@@ -6,11 +6,12 @@
 #
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 
-import os
-import datetime
 import argparse
+import datetime
 import glob
+import os
 import sys
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 subst = {}

@@ -5,8 +5,8 @@
 #
 # pylint: disable=invalid-name,missing-module-docstring
 
-import sys
 import struct
+import sys
 import uuid
 
 buf = b""

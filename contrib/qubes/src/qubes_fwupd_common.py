@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import grp
-import re
 import os
+import re
 
 EXIT_CODES = {"ERROR": 1, "SUCCESS": 0, "NOTHING_TO_DO": 2}
 
@@ -92,7 +92,7 @@ class LooseVersion:
         return self.vstring
 
     def __repr__(self):
-        return f"LooseVersion ('{str(self)}')"
+        return f"LooseVersion ('{self!s}')"
 
     def _cmp(self, other):
         if isinstance(other, str):
