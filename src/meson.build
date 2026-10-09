@@ -313,6 +313,7 @@ if get_option('tests')
     'release',
     'remote',
     'remote-list',
+    'uefi-backend',
     'usb-backend',
     'util',
   ]
