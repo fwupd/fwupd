@@ -10,8 +10,12 @@
 
 #include "fu-amd-afc-config-entry.h"
 #include "fu-amd-afc-config.h"
+#include "fu-amd-afc-form.h"
+#include "fu-amd-afc-option.h"
+#include "fu-amd-afc-pending.h"
 #include "fu-amd-afc-state.h"
 #include "fu-amd-afc-struct.h"
+#include "fu-amd-afc-varstore.h"
 #include "fu-context-private.h"
 
 static guint
@@ -328,10 +332,71 @@ fu_amd_afc_write_func(void)
 			 1);
 }
 
+static void
+fu_amd_afc_form_func(void)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FuAmdAfcForm) form = g_new0(FuAmdAfcForm, 1);
+
+	form->id = 0x1234;
+	form->name = g_strdup("Setup");
+	form->visited = TRUE;
+	form->settings = g_array_new(FALSE, FALSE, sizeof(guint));
+	form->refs = g_array_new(FALSE, FALSE, sizeof(guint16));
+	fu_amd_afc_form_export(form, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+
+	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+}
+
+static void
+fu_amd_afc_option_func(void)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FuAmdAfcOption) option = g_new0(FuAmdAfcOption, 1);
+
+	option->name = g_strdup("Enabled");
+	option->value = 0x1;
+	fu_amd_afc_option_export(option, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+
+	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+}
+
+static void
+fu_amd_afc_varstore_func(void)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FuAmdAfcVarstore) varstore = g_new0(FuAmdAfcVarstore, 1);
+
+	varstore->id = 0x4321;
+	varstore->data = g_bytes_new_static("test", 4);
+	fu_amd_afc_varstore_export(varstore, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+
+	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+}
+
+static void
+fu_amd_afc_pending_func(void)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	FuAmdAfcPending *pending = g_new0(FuAmdAfcPending, 1);
+
+	/* no autoptr cleanup defined */
+	pending->setting = 0x20;
+	pending->value = g_strdup("Enabled");
+	fu_amd_afc_pending_export(pending, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+	fu_amd_afc_pending_free(pending);
+
+	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
+	g_test_add_func("/amd-afc/form", fu_amd_afc_form_func);
+	g_test_add_func("/amd-afc/option", fu_amd_afc_option_func);
+	g_test_add_func("/amd-afc/varstore", fu_amd_afc_varstore_func);
+	g_test_add_func("/amd-afc/pending", fu_amd_afc_pending_func);
 	g_test_add_func("/amd-afc/parse", fu_amd_afc_parse_func);
 	g_test_add_func("/amd-afc/parse/short-strings", fu_amd_afc_short_strings_func);
 	g_test_add_func("/amd-afc/parse/invalid-ucs2", fu_amd_afc_invalid_ucs2_func);
