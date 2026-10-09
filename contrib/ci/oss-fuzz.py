@@ -565,6 +565,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
         Fuzzer("hughski-colorhug", pattern="hughski-colorhug-device"),
         Fuzzer("pixart-rf"),
+        Fuzzer("realtek-alc408x"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
         Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),

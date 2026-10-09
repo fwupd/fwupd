@@ -1,0 +1,4 @@
+<firmware gtype="FuRealtekAlc408xFirmware">
+  <version_raw>0x1002000300040005</version_raw>
+  <chip>0x4080</chip>
+</firmware>

@@ -121,6 +121,7 @@ plugins = {
   'qc-s5gen2': false,
   'qsi-dock': false,
   'raydium-tp': false,
+  'realtek-alc408x': false,
   'realtek-mst': false,
   'redfish': false,
   'rp-pico': false,

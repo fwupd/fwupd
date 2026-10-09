@@ -1,0 +1,4 @@
+# NVIDIA DGX Station GB300
+[USB\VID_0955&PID_CF0A]
+Plugin = realtek_alc408x
+Name = ALC4080 USB Audio
