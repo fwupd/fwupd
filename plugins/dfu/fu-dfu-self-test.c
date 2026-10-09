@@ -11,6 +11,7 @@
 #include "fwupd-test.h"
 
 #include "fu-context-private.h"
+#include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
@@ -131,6 +132,27 @@ fu_dfu_target_dfuse_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_dfu_common_bytes_join_func(void)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob1 = g_bytes_new_static("hello ", 6);
+	g_autoptr(GBytes) blob2 = g_bytes_new_static("", 0);
+	g_autoptr(GBytes) blob3 = g_bytes_new_static("world", 5);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) chunks = g_ptr_array_new();
+
+	g_ptr_array_add(chunks, blob1);
+	g_ptr_array_add(chunks, blob2);
+	g_ptr_array_add(chunks, blob3);
+
+	blob = fu_dfu_utils_bytes_join_array(chunks, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	g_assert_cmpint(g_bytes_get_size(blob), ==, 11);
+	g_assert_cmpint(memcmp(g_bytes_get_data(blob, NULL), "hello world", 11), ==, 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -138,5 +160,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	g_test_add_func("/dfu/target/dfuse", fu_dfu_target_dfuse_func);
+	g_test_add_func("/dfu/common/bytes-join", fu_dfu_common_bytes_join_func);
 	return g_test_run();
 }
