@@ -55,11 +55,21 @@ fu_uefi_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 static FuDevice *
 fu_uefi_backend_create_device(FuBackend *backend, const gchar *backend_id, GError **error)
 {
-	g_auto(GStrv) split = g_strsplit(backend_id, "-", 2);
+	g_autofree gchar *guid = NULL;
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 
-	/* validate split array has exactly 2 elements, e.g. guid-name */
-	if (g_strv_length(split) != 2 || !fwupd_guid_is_valid(split[0])) {
+	/* the backend-id is `GUID-name`, e.g. 8be4df61-93ca-11d2-aa0d-00e098032b8c-PK;
+	 * the GUID is a fixed-length prefix as it contains dashes itself */
+	if (strlen(backend_id) < sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) ||
+	    backend_id[sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) - 1] != '-') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid backend-id");
+		return NULL;
+	}
+	guid = g_strndup(backend_id, sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) - 1);
+	if (!fwupd_guid_is_valid(guid)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -69,8 +79,8 @@ fu_uefi_backend_create_device(FuBackend *backend, const gchar *backend_id, GErro
 
 	uefi_device =
 	    g_object_new(FU_TYPE_UEFI_DEVICE, "backend", backend, "backend-id", backend_id, NULL);
-	fu_uefi_device_set_guid(uefi_device, split[0]);
-	fu_uefi_device_set_name(uefi_device, split[1]);
+	fu_uefi_device_set_guid(uefi_device, guid);
+	fu_uefi_device_set_name(uefi_device, backend_id + sizeof(FU_EFIVARS_GUID_EFI_GLOBAL));
 	return FU_DEVICE(g_steal_pointer(&uefi_device));
 }
 
