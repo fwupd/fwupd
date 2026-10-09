@@ -49,7 +49,7 @@ fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 	return fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA256, error);
 }
 
-static gboolean
+gboolean
 fu_uefi_dbx_signature_list_validate_filename(FuContext *ctx,
 					     FuEfiSignatureList *siglist,
 					     const gchar *fn,

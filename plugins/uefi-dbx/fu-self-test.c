@@ -11,6 +11,7 @@
 #include "fu-context-private.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-x509-signature-private.h"
+#include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 #include "fu-uefi-device-private.h"
 
@@ -318,6 +319,93 @@ fu_uefi_dbx_prepare_firmware_func(void)
 	g_assert_true(g_bytes_equal(blob, blob_out));
 }
 
+static void
+fu_uefi_dbx_validate_filename_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *checksum = NULL;
+	g_autofree gchar *fn_pe = NULL;
+	g_autofree gchar *fn_xml = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+	g_autoptr(FuFirmware) pefile = NULL;
+	g_autoptr(FuFirmware) pefile_tmp = fu_pefile_firmware_new();
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GBytes) blob_pe = NULL;
+	g_autoptr(GBytes) csum = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_pe = NULL;
+
+	/* so FuPefileFirmware et al. can be resolved from the builder XML */
+	fu_context_add_firmware_gtypes(ctx);
+
+	/* build a plausible PE file using a builder.xml */
+	fn_xml = g_test_build_filename(G_TEST_DIST, "tests", "pefile.builder.xml", NULL);
+	g_assert_nonnull(fn_xml);
+	pefile = fu_firmware_new_from_filename(fn_xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pefile);
+	blob_pe = fu_firmware_write(pefile, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_pe);
+
+	/* save it to disk so it can be re-parsed as an on-ESP binary */
+	tmpdir = fu_temporary_directory_new("uefi-dbx", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn_pe = fu_temporary_directory_build(tmpdir, "bootx64.efi", NULL);
+	g_assert_nonnull(fn_pe);
+	ret = fu_bytes_set_contents(fn_pe, blob_pe, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get the Authenticode checksum of the written PE file */
+	file_pe = g_file_new_for_path(fn_pe);
+	ret = fu_firmware_parse_file(pefile_tmp, file_pe, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	checksum = fu_firmware_get_checksum(pefile_tmp, G_CHECKSUM_SHA256, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum);
+
+	/* a dbx that does not contain the checksum validates fine */
+	ret = fu_uefi_dbx_signature_list_validate_filename(ctx,
+							   FU_EFI_SIGNATURE_LIST(siglist),
+							   fn_pe,
+							   FU_FIRMWARE_PARSE_FLAG_NONE,
+							   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add the Authenticode checksum of the PE file into the installed dbx */
+	csum = fu_bytes_from_string(checksum, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum);
+	fu_efi_signature_set_owner(sig, FU_EFI_SIGNATURE_GUID_MICROSOFT);
+	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig), NULL);
+
+	/* now the checksum is present in the dbx, validation must fail */
+	ret = fu_uefi_dbx_signature_list_validate_filename(ctx,
+							   FU_EFI_SIGNATURE_LIST(siglist),
+							   fn_pe,
+							   FU_FIRMWARE_PARSE_FLAG_NONE,
+							   &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* a file that is not a PE file is silently ignored */
+	ret = fu_uefi_dbx_signature_list_validate_filename(ctx,
+							   FU_EFI_SIGNATURE_LIST(siglist),
+							   fn_xml,
+							   FU_FIRMWARE_PARSE_FLAG_NONE,
+							   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -328,5 +416,6 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-dbx/version", fu_uefi_dbx_version_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
 	g_test_add_func("/uefi-dbx/prepare-firmware", fu_uefi_dbx_prepare_firmware_func);
+	g_test_add_func("/uefi-dbx/validate-filename", fu_uefi_dbx_validate_filename_func);
 	return g_test_run();
 }
