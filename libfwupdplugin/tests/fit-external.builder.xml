@@ -1,0 +1,28 @@
+<firmware gtype="FuFitFirmware">
+  <firmware gtype="FuFdtImage">
+    <metadata key="timestamp" format="uint32">0x629d4abd</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>images</id>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-external</id>
+        <metadata key="type" format="str">firmware</metadata>
+        <metadata key="description" format="str">external payload</metadata>
+        <metadata key="data-offset" format="uint32">0x1000</metadata>
+        <metadata key="data-size" format="uint32">0x3</metadata>
+        <firmware gtype="FuFdtImage">
+          <id>hash-crc32</id>
+          <metadata key="algo" format="str">crc32</metadata>
+          <metadata key="value" format="uint32">0x352441c2</metadata>
+        </firmware>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuFdtImage">
+      <id>configurations</id>
+      <firmware gtype="FuFdtImage">
+        <id>conf-external</id>
+        <metadata key="compatible" format="strlist">fwupd:external</metadata>
+        <metadata key="firmware" format="str">firmware-external</metadata>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>

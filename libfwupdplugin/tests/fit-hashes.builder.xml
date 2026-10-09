@@ -1,0 +1,42 @@
+<firmware gtype="FuFitFirmware">
+  <firmware gtype="FuFdtImage">
+    <metadata key="timestamp" format="uint32">0x629d4abd</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>images</id>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-1</id>
+        <metadata key="type" format="str">firmware</metadata>
+        <metadata key="description" format="str">checksum variants</metadata>
+        <metadata key="data" format="data">YWJj</metadata>
+        <firmware gtype="FuFdtImage">
+          <id>hash-crc32</id>
+          <metadata key="algo" format="str">crc32</metadata>
+          <metadata key="value" format="uint32">0x352441c2</metadata>
+        </firmware>
+        <firmware gtype="FuFdtImage">
+          <id>hash-md5</id>
+          <metadata key="algo" format="str">md5</metadata>
+          <metadata key="value" format="data">kAFQmDzST7DWlj99KOF/cg==</metadata>
+        </firmware>
+        <firmware gtype="FuFdtImage">
+          <id>hash-sha1</id>
+          <metadata key="algo" format="str">sha1</metadata>
+          <metadata key="value" format="data">qZk+NkcGgWq6PiVxeFDCbJzQ2J0=</metadata>
+        </firmware>
+        <firmware gtype="FuFdtImage">
+          <id>hash-sha256</id>
+          <metadata key="algo" format="str">sha256</metadata>
+          <metadata key="value" format="data">ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=</metadata>
+        </firmware>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuFdtImage">
+      <id>configurations</id>
+      <firmware gtype="FuFdtImage">
+        <id>conf-1</id>
+        <metadata key="compatible" format="strlist">fwupd:test</metadata>
+        <metadata key="firmware" format="str">firmware-1</metadata>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>

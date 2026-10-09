@@ -338,11 +338,12 @@ class Builder:
 
 
 class Fuzzer:
-    def __init__(self, name, srcdir=None, pattern=None) -> None:
+    def __init__(self, name, srcdir=None, pattern=None, harness=None) -> None:
         self.name = name
         self.srcdir = srcdir or name
         self.globstr = f"{name}*.bin"
         self.pattern = pattern or f"{name}-firmware"
+        self.harness = harness
 
     @property
     def name_camel(self) -> str:
@@ -491,7 +492,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("edid", pattern="edid"),
         Fuzzer("elf"),
         Fuzzer("fdt"),
-        Fuzzer("fit"),
+        Fuzzer("fit", harness="fwupd/libfwupdplugin/fu-fuzzer-fit.c"),
         Fuzzer("fmap"),
         Fuzzer("hid-descriptor", pattern="hid-descriptor"),
         Fuzzer("ihex"),
@@ -514,7 +515,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("tpm-eventlog-v2", pattern="tpm-eventlog-v2"),
         Fuzzer("zip"),
     ]:
-        src = bld.substitute(
+        src = fzr.harness or bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
                 "@GTYPE@": fzr.gtype,
@@ -545,6 +546,15 @@ def _build(bld: Builder) -> None:
                 f"{fzr.name}*.builder.xml",
             ),
         )
+        if fzr.name == "fit":
+            for filename in corpus:
+                if os.path.basename(filename) != "fit-external.bin":
+                    continue
+                padding = 0x1000 - os.path.getsize(filename)
+                if padding < 0:
+                    raise ValueError("FIT external-data fixture exceeds payload offset")
+                with open(filename, "ab") as output:
+                    output.write(b"\x00" * padding + b"abc")
         bld.makezip(
             f"{fzr.name}_fuzzer_seed_corpus.zip",
             corpus,
