@@ -4,7 +4,7 @@ plugins += {
 }
 
 plugin_quirks += files('ti-tps6598x.quirk')
-plugin_builtins += static_library(
+plugin_builtin_ti_tps6598x = static_library(
   'fu_plugin_ti_tps6598x',
   rustgen.process('fu-ti-tps6598x.rs'),
   sources: [
@@ -19,5 +19,34 @@ plugin_builtins += static_library(
   c_args: cargs,
   dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_ti_tps6598x
 
 device_tests += files('tests/caldigit-ts4.json')
+
+if get_option('tests')
+  e = executable(
+    'ti-tps6598x-self-test',
+    sources: [
+      'fu-self-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
+    link_with: [
+      plugin_libs,
+      plugin_builtin_ti_tps6598x,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_tag: 'tests',
+    install_dir: installed_test_bindir,
+    c_args: cargs,
+  )
+  test(
+    'ti-tps6598x-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
+endif
