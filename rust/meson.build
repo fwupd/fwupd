@@ -104,7 +104,7 @@ if build_docs
   custom_target(
     'rust-doc',
     output: 'doc',
-    command: [cargo_wrapper, 'doc', '--output', '@OUTPUT@', '--no-deps'],
+    command: [cargo_wrapper, 'doc', '--copy', '@OUTPUT@', '--no-deps'],
     env: cargo_env,
     console: true,
     install: false,
