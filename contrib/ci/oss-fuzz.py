@@ -545,6 +545,16 @@ def _build(bld: Builder) -> None:
                 f"{fzr.name}*.builder.xml",
             ),
         )
+        if fzr.name == "coswid":
+            generator = bld.link(
+                [bld.compile("fwupd/libfwupdplugin/fu-fuzzer-coswid-generate.c")]
+                + built_objs,
+                "coswid_corpus_generator",
+            )
+            for variant in ["single", "arrays", "directory", "uuid"]:
+                filename = os.path.join(bld.builddir, f"coswid-{variant}.bin")
+                subprocess.run([generator, variant, filename], check=True)
+                corpus.append(filename)
         bld.makezip(
             f"{fzr.name}_fuzzer_seed_corpus.zip",
             corpus,
