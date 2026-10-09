@@ -42,7 +42,6 @@ repos:
     rev: v0.16.10
     hooks:
     - id: ruff-check
-      args: ['contrib/fwupbuild']
       pass_filenames: false
     - id: ruff-format
       args: ['--check', '--diff']
