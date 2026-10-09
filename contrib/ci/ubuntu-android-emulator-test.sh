@@ -33,17 +33,56 @@ DAEMON_LOG="/data/local/tmp/fwupd-daemon.log"
 # time -- harmless if the tree was built without -Db_coverage
 GCOV_ENV="GCOV_PREFIX=/data/local/tmp/gcov GCOV_PREFIX_STRIP=99"
 
+# VINTF manifest fragment declaring the VINTF-stable binder service, and where it
+# must live on-device for servicemanager to read it at boot
+HERE="$(cd "$(dirname "$0")" && pwd)"
+VINTF_FRAGMENT="${HERE}/../android/vintf/org.freedesktop.fwupd.xml"
+VINTF_DEST="/vendor/etc/vintf/manifest/org.freedesktop.fwupd.xml"
+
 if [ ! -d "${DIST}${PREFIX}" ]; then
     echo "error: ${DIST}${PREFIX} not found -- run 'meson install --destdir' first" >&2
     exit 1
 fi
 
+# wait until the device is both connected and finished booting
+wait_boot() {
+    adb wait-for-device
+    for _ in $(seq 1 60); do
+        [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && return 0
+        sleep 5
+    done
+    echo "error: device did not finish booting" >&2
+    return 1
+}
+
 adb wait-for-device
 # AOSP userdebug images allow rooting; needed to write /data and relax SELinux
 adb root
-adb wait-for-device
-# the fwupd binder service name is not in the platform service_contexts, so
-# servicemanager would deny addService under enforcing SELinux
+wait_boot
+
+# Declare the VINTF-stable fwupd binder service. servicemanager refuses to
+# register or resolve a VINTF-stable instance that is not in the device VINTF
+# manifest ("Could not find org.freedesktop.fwupd.IFwupd/default in the VINTF
+# manifest"), so install the fragment onto the (read-only) vendor image and
+# reboot for servicemanager to pick it up. Skip the work if it is already there.
+if ! adb shell "test -f ${VINTF_DEST}" >/dev/null 2>&1; then
+    echo "installing VINTF fragment and rebooting..."
+    adb remount >/dev/null 2>&1 || true
+    adb disable-verity >/dev/null 2>&1 || true
+    adb reboot
+    wait_boot
+    adb root
+    wait_boot
+    adb remount
+    adb shell "mkdir -p $(dirname "${VINTF_DEST}")"
+    adb push "${VINTF_FRAGMENT}" "${VINTF_DEST}"
+    adb reboot
+    wait_boot
+    adb root
+    wait_boot
+fi
+
+# SELinux also has to allow a root caller to add/find the service
 adb shell setenforce 0 || true
 
 cleanup() {
@@ -59,7 +98,6 @@ trap cleanup EXIT
 # tar-based sync so file modes and symlinks are preserved on-device (plain
 # `adb push` drops the executable bit)
 adb shell "rm -rf ${PREFIX}"
-HERE="$(dirname "$0")"
 ADB_FLAGS="-e" "${HERE}/../android/adb-push-sync.sh" "${DIST}${PREFIX}" "${PREFIX}"
 adb shell "mkdir -p ${LOCALSTATEDIR}/run ${PREFIX}/cache /data/local/tmp/gcov"
 

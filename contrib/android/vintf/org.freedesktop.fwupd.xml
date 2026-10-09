@@ -1,0 +1,19 @@
+<!-- VINTF manifest fragment declaring the fwupd binder service.
+
+     The AIDL interface is generated with vintf stability (see src/meson.build),
+     so the daemon registers a VINTF-stable binder. servicemanager refuses to
+     register or resolve any VINTF-stable instance that is not declared in the
+     device VINTF manifest, failing with:
+
+       Could not find org.freedesktop.fwupd.IFwupd/default in the VINTF manifest
+
+     A real Android deployment ships this fragment in the vendor image
+     (/vendor/etc/vintf/manifest/); the emulator CI test pushes it there too
+     (see contrib/ci/ubuntu-android-emulator-test.sh). -->
+<manifest version="1.0" type="device">
+  <hal format="aidl">
+    <name>org.freedesktop.fwupd</name>
+    <version>1</version>
+    <fqname>IFwupd/default</fqname>
+  </hal>
+</manifest>
