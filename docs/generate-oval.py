@@ -32,7 +32,7 @@ if __name__ == "__main__":
             sys.exit(1)
         for tag in ["id", "name", "failure-results"]:
             if tag not in item:
-                print("skipping {} as no {}".format(fn), tag)
+                print(f"skipping {fn} as no {tag}")
                 continue
         items.append(item)
 

@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 import argparse
+import importlib.util
 import logging
 import os
 import sys
@@ -104,9 +105,7 @@ def pip_install_package(name):
 
 
 def test_jinja2():
-    try:
-        import jinja2
-    except ModuleNotFoundError:
+    if not importlib.util.find_spec("jinja2"):
         logger.info("python3-jinja2 must be installed/upgraded")
         pip_install_package("jinja2")
 
