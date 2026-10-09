@@ -1,0 +1,3 @@
+[Test]
+Type=session-exclusive
+Exec=sh -c "@installedtestsdir@/dbxtool.sh"

@@ -47,6 +47,23 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
+if plugins['uefi-dbx'] and host_machine.system() == 'linux'
+  configure_file(
+    input: 'dbxtool.test.in',
+    output: 'dbxtool.test',
+    configuration: con2,
+    install: true,
+    install_dir: installed_test_datadir,
+  )
+  configure_file(
+    input: 'dbxtool.sh',
+    output: 'dbxtool.sh',
+    configuration: con2,
+    install: true,
+    install_dir: installed_test_datadir,
+  )
+endif
+
 configure_file(
   input: 'fwupd.test.in',
   output: 'fwupd.test',
