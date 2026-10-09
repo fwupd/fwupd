@@ -219,10 +219,46 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fu_devlink_component_probe_func(void)
+{
+	gboolean ret;
+	const gchar *fixed_keys[] = {"VERSION_FIXED", NULL};
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuDevice) proxy = NULL;
+	g_autoptr(FuDevlinkComponent) component = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* no kernel device is needed just to build the instance IDs */
+	proxy = fu_devlink_device_new(ctx, "netdevsim", "netdevsim1", NULL);
+	g_assert_nonnull(proxy);
+	component = fu_devlink_component_new(proxy, "fw.mgmt");
+	g_assert_nonnull(component);
+	fu_device_add_child(proxy, FU_DEVICE(component));
+
+	/* exercise the VEN/DEV and quirked fixed-version instance-key paths */
+	fu_device_add_instance_str(FU_DEVICE(component), "VEN", "1234");
+	fu_device_add_instance_str(FU_DEVICE(component), "DEV", "5678");
+	fu_device_add_instance_str(FU_DEVICE(component), "VERSION_FIXED", "1");
+	fu_devlink_component_add_instance_keys(component, g_strdupv((gchar **)fixed_keys));
+
+	ret = fu_device_probe(FU_DEVICE(component), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(component)), ==, "fw.mgmt");
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
+	g_test_add_func("/devlink/component/probe", fu_devlink_component_probe_func);
 	g_test_add_func("/devlink/plugin/flash", fu_devlink_plugin_flash_func);
 	return g_test_run();
 }
