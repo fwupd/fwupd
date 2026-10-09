@@ -961,7 +961,7 @@ allow_uefi = host_machine.system() in ['linux', 'freebsd'] and host_machine.cpu_
 ]
 
 cargo = find_program('cargo')
-cargo_wrapper = find_program(join_paths('generate-build', 'meson-cargo.sh'))
+cargo_wrapper = find_program(join_paths('generate-build', 'meson-cargo.py'))
 
 subdir('generate-build')
 subdir('rust')
