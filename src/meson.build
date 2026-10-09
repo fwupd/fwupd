@@ -586,6 +586,7 @@ if get_option('tests')
     'release',
     'remote',
     'remote-list',
+    'security-attr-common',
     'usb-backend',
   ]
   if jcat_crypto in ['gnutls', 'libcrypto']
