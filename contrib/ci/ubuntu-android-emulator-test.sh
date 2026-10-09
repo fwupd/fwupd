@@ -44,9 +44,15 @@ if [ ! -d "${DIST}${PREFIX}" ]; then
     exit 1
 fi
 
-# wait until the device is both connected and finished booting
+# wait until the device is both connected and finished booting. Bound the
+# connectivity wait as well: after a reboot the emulator may never reconnect, and
+# a bare `adb wait-for-device` would block indefinitely -- past the boot poll
+# below -- so the job would only end at its overall timeout, not here.
 wait_boot() {
-    adb wait-for-device
+    if ! timeout 300 adb wait-for-device; then
+        echo "error: device did not reconnect to adb" >&2
+        return 1
+    fi
     for _ in $(seq 1 60); do
         [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && return 0
         sleep 5
@@ -55,7 +61,7 @@ wait_boot() {
     return 1
 }
 
-adb wait-for-device
+wait_boot
 # AOSP userdebug images allow rooting; needed to write /data and relax SELinux
 adb root
 wait_boot
