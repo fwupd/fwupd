@@ -1,0 +1,6 @@
+<firmware gtype="FuPefileFirmware">
+  <firmware gtype="FuFirmware">
+    <id>.text</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

@@ -15,3 +15,9 @@ fu_uefi_dbx_signature_list_validate(FuContext *ctx,
 				    FuEfiSignatureList *siglist,
 				    FuFirmwareParseFlags flags,
 				    GError **error);
+gboolean
+fu_uefi_dbx_signature_list_validate_filename(FuContext *ctx,
+					     FuEfiSignatureList *siglist,
+					     const gchar *fn,
+					     FuFirmwareParseFlags flags,
+					     GError **error);
