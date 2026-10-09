@@ -9,6 +9,9 @@
 #include "fu-context-private.h"
 #include "fu-synaptics-rmi-device.h"
 #include "fu-synaptics-rmi-firmware.h"
+#include "fu-synaptics-rmi-v5-device.h"
+#include "fu-synaptics-rmi-v6-device.h"
+#include "fu-synaptics-rmi-v7-device.h"
 
 /* a device that answers different PDT scans, dropping F01 or F34 in subsequent rounds */
 #define FU_TYPE_SYNAPTICS_RMI_MOCK_DEVICE (fu_synaptics_rmi_mock_device_get_type())
@@ -38,6 +41,7 @@ fu_synaptics_rmi_mock_device_read(FuSynapticsRmiDevice *device,
 {
 	FuSynapticsRmiMockDevice *self = FU_SYNAPTICS_RMI_MOCK_DEVICE(device);
 	const guint8 *src = pdt_end;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	if (self->scan_round == 0) {
 		if (addr == 0x00e9)
@@ -51,7 +55,19 @@ fu_synaptics_rmi_mock_device_read(FuSynapticsRmiDevice *device,
 		if (addr == 0x00e9)
 			src = pdt_f01;
 	}
-	return g_byte_array_new_take(g_memdup2(src, req_sz), req_sz);
+
+	/* return the requested size, zero-padded if larger than the source entry */
+	fu_byte_array_set_size(buf, req_sz, 0x0);
+	if (!fu_memcpy_safe(buf->data,
+			    buf->len,
+			    0x0,
+			    src,
+			    RMI_DEVICE_PDT_ENTRY_SIZE,
+			    0x0,
+			    MIN(req_sz, RMI_DEVICE_PDT_ENTRY_SIZE),
+			    error))
+		return NULL;
+	return g_steal_pointer(&buf);
 }
 
 static gboolean
@@ -181,6 +197,61 @@ fu_synaptics_rmi_firmware_10_func(void)
 	g_assert_true(ret);
 }
 
+static FuSynapticsRmiDevice *
+fu_synaptics_rmi_test_new_scanned_device(FuContext *ctx)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	FuSynapticsRmiDevice *device =
+	    g_object_new(FU_TYPE_SYNAPTICS_RMI_MOCK_DEVICE, "context", ctx, NULL);
+
+	fu_synaptics_rmi_device_set_max_page(device, 1);
+	ret = fu_synaptics_rmi_device_scan_pdt(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	return device;
+}
+
+static void
+fu_synaptics_rmi_v5_setup_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSynapticsRmiDevice) device = fu_synaptics_rmi_test_new_scanned_device(ctx);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_synaptics_rmi_v5_device_setup(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_synaptics_rmi_v6_setup_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSynapticsRmiDevice) device = fu_synaptics_rmi_test_new_scanned_device(ctx);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_synaptics_rmi_v6_device_setup(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_synaptics_rmi_v7_setup_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSynapticsRmiDevice) device = fu_synaptics_rmi_test_new_scanned_device(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* the mock returns a zeroed F34 query, so setup fails the block-size check */
+	ret = fu_synaptics_rmi_v7_device_setup(device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -190,5 +261,8 @@ main(int argc, char **argv)
 	g_test_add_func("/synaptics-rmi/firmware-0x", fu_synaptics_rmi_firmware_0x_func);
 	g_test_add_func("/synaptics-rmi/firmware-10", fu_synaptics_rmi_firmware_10_func);
 	g_test_add_func("/synaptics-rmi/pdt-rescan", fu_synaptics_rmi_device_pdt_rescan_func);
+	g_test_add_func("/synaptics-rmi/v5-setup", fu_synaptics_rmi_v5_setup_func);
+	g_test_add_func("/synaptics-rmi/v6-setup", fu_synaptics_rmi_v6_setup_func);
+	g_test_add_func("/synaptics-rmi/v7-setup", fu_synaptics_rmi_v7_setup_func);
 	return g_test_run();
 }
