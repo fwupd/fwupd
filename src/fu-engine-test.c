@@ -12,6 +12,7 @@
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
@@ -1164,6 +1165,8 @@ fu_engine_downgrade_func(void)
 	g_autofree gchar *fn_broken = NULL;
 	g_autofree gchar *fn_stable = NULL;
 	g_autofree gchar *fn_testing = NULL;
+	g_autofree gchar *motd = NULL;
+	g_autofree gchar *motd_data = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -1249,6 +1252,9 @@ fu_engine_downgrade_func(void)
 	    "    <provides>"
 	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
 	    "    </provides>"
+	    "    <tags>"
+	    "      <tag namespace=\"lvfs\">fwupd-self-test-bkc</tag>"
+	    "    </tags>"
 	    "    <releases>"
 	    "      <release version=\"1.2.5\" date=\"2017-09-16\">"
 	    "        <size type=\"installed\">123</size>"
@@ -1358,6 +1364,22 @@ fu_engine_downgrade_func(void)
 	releases_up2 = fu_engine_get_upgrades(engine, request, fu_device_get_id(device), &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 	g_assert_null(releases_up2);
+	g_clear_error(&error);
+
+	/* exercise fu_engine_get_release_with_tag() via the MOTD: the device is at
+	 * 1.2.3 but the newest release tagged with the host BKC is 1.2.6, so it is
+	 * not in the best known configuration */
+	fu_context_add_host_bkc(ctx, "fwupd-self-test-bkc");
+	ret = fu_engine_update_motd(engine, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	motd = fu_temporary_directory_build(tmpdir, MOTD_DIR, MOTD_FILE, NULL);
+	if (g_file_test(motd, G_FILE_TEST_EXISTS)) {
+		ret = g_file_get_contents(motd, &motd_data, NULL, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_assert_nonnull(g_strstr_len(motd_data, -1, "best known configuration"));
+	}
 }
 
 static void
