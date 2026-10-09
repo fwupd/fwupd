@@ -5,4 +5,5 @@ exclude = [
 [lint]
 ignore = [
     "SIM117", # SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+    "LOG015", # LOG015 debug/info/... call on root logger, use own logger instead
 ]
