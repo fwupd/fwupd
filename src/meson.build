@@ -578,6 +578,7 @@ if get_option('tests')
     'engine',
     'engine-gtypes',
     'engine-helper',
+    'engine-request',
     'engine-requirements',
     'engine-udev',
     'history',
