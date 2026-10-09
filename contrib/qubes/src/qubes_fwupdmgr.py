@@ -29,7 +29,7 @@ try:
     from fwupd_receive_updates import FwupdReceiveUpdates
     from qubes_fwupd_common import EXIT_CODES, create_dirs
     from qubes_fwupd_heads import FwupdHeads
-    from qubes_fwupd_update import FwupdUpdate, run_in_tty
+    from qubes_fwupd_update import FwupdUpdate
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
         "qubes-fwupd modules not found.  You may need to reinstall package."

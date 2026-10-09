@@ -15,7 +15,7 @@ import tempfile
 import time
 
 try:
-    from jinja2 import Environment, Template
+    from jinja2 import Environment
 except ImportError:
     print(
         "Error: jinja2 is required for this script. Install it with: pip install jinja2"
