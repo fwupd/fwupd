@@ -588,6 +588,7 @@ if get_option('tests')
     'remote',
     'remote-list',
     'security-attr-common',
+    'uefi-backend',
     'usb-backend',
   ]
   if bluez.allowed()
