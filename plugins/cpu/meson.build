@@ -47,7 +47,7 @@ if build_fwupdcethelper
     install: false,
   )
 
-  executable(
+  fwupd_detect_cet = executable(
     'fwupd-detect-cet',
     sources: [
       'fu-cpu-helper-cet.c',
@@ -62,4 +62,26 @@ if build_fwupdcethelper
     install: true,
     install_dir: join_paths(libexecdir, 'fwupd'),
   )
+
+  if get_option('tests')
+    e = executable(
+      'cpu-self-test',
+      sources: [
+        'fu-self-test.c',
+      ],
+      include_directories: plugin_incdirs,
+      dependencies: plugin_deps,
+      link_with: plugin_libs,
+      c_args: cargs,
+    )
+    test(
+      'cpu-self-test',
+      e,
+      depends: fwupd_detect_cet,
+      env: {
+        'G_TEST_BUILDDIR': meson.current_build_dir(),
+        'G_TEST_SRCDIR': meson.current_source_dir(),
+      },
+    )
+  endif
 endif
