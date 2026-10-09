@@ -4,14 +4,15 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-from base64 import b64encode
 import io
 import os
-import subprocess
 import shutil
+import subprocess
 import sys
 import tempfile
 import zipfile
+from base64 import b64encode
+
 from assets.header import TAG
 
 

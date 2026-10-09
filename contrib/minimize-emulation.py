@@ -6,9 +6,9 @@
 #
 # pylint: disable=invalid-name,missing-docstring
 
+import hashlib
 import json
 import sys
-import hashlib
 import zipfile
 
 

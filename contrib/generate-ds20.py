@@ -7,11 +7,10 @@
 #
 # pylint: disable=consider-using-f-string
 
-import sys
 import argparse
-import configparser
 import base64
-from typing import List
+import configparser
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -44,7 +43,7 @@ if __name__ == "__main__":
         args.instance_id = sections[0]
 
     # create the smallest kv store possible
-    lines: List[str] = []
+    lines: list[str] = []
     try:
         for key in config[args.instance_id]:
             if key in ["Inhibit", "Issue"]:

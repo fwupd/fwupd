@@ -9,15 +9,13 @@
 # pylint: disable=invalid-name,too-many-instance-attributes,missing-module-docstring
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
 
-import os
-import sys
 import argparse
-import zipfile
 import math
-import io
+import os
 import struct
-
-from typing import Dict, Optional, Any
+import sys
+import zipfile
+from typing import Any
 
 import cairo
 import gi
@@ -28,20 +26,20 @@ from gi.repository import Pango, PangoCairo
 
 
 def languages(podir: str):
-    for x in open(os.path.join(podir, "LINGUAS")).readlines():
+    for x in open(os.path.join(podir, "LINGUAS")):
         yield x.strip()
     yield "en"
 
 
 class PotFile:
     def __init__(self, fn=None):
-        self.msgs: Dict[str, str] = {}
+        self.msgs: dict[str, str] = {}
         if fn:
             self.parse(fn)
 
     def parse(self, fn: str) -> None:
         with open(fn) as f:
-            lang_en: Optional[str] = None
+            lang_en: str | None = None
             for line in f.read().split("\n"):
                 if not line:
                     continue
@@ -163,7 +161,7 @@ def main(args) -> int:
                     data.update({"log": log, "ink": ink})
                     return True
 
-                data: Dict[str, Any] = {}
+                data: dict[str, Any] = {}
                 fs.foreach(find_size, data)
                 if len(data) == 0:
                     print("Missing sans fonts")

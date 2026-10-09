@@ -14,16 +14,16 @@ one of the scenarios (expected to be called in when setting a test fixture),
 """
 
 import argparse
-import logging
 import base64
 import json
+import logging
 import os.path
-from io import StringIO
-from dataclasses import dataclass
 from collections.abc import Callable
-from typing import Any, Optional, List
+from dataclasses import dataclass
+from io import StringIO
+from typing import Any
 
-from flask import Flask, Response, request, current_app
+from flask import Flask, Response, current_app, request
 
 
 @dataclass
@@ -33,7 +33,7 @@ class Scenario:
 
 @dataclass
 class State:
-    scenario: Optional[str]
+    scenario: str | None
     stats: dict[str, int]
 
     def __init__(self):
@@ -50,8 +50,8 @@ supported_actions = [
 ]
 
 
-def assert_no_extra_keys(d: dict[str, Any], allowed: List[str]):
-    unexpected = [a for a in d.keys() if a not in allowed]
+def assert_no_extra_keys(d: dict[str, Any], allowed: list[str]):
+    unexpected = [a for a in d if a not in allowed]
     assert len(unexpected) == 0, f"unexpected keys in request data: {unexpected}"
 
 

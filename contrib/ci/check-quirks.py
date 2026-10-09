@@ -8,7 +8,6 @@
 
 import glob
 import sys
-from typing import List
 
 
 def gtype_is_valid(gtype: str) -> bool:
@@ -23,7 +22,7 @@ def gtype_is_valid(gtype: str) -> bool:
 def test_files() -> int:
     rc: int = 0
 
-    gtypes: List[str] = []
+    gtypes: list[str] = []
 
     # find the possible GTypes
     for fn in glob.glob("libfwupdplugin/fu-*-device.c") + glob.glob("plugins/*/fu-*.c"):

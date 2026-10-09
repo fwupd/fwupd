@@ -6,9 +6,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-import sys
-import subprocess
 import os
+import subprocess
+import sys
 
 from fwupd_common_vm import FwupdVmCommon
 

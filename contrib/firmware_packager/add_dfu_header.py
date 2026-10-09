@@ -4,9 +4,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import argparse
 import struct
 import zlib
-import argparse
 
 
 def main(bin_fn, dfu_fn, pad, vid, pid, rev):

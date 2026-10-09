@@ -4,10 +4,11 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import gi
 import os
 import sys
 import unittest
+
+import gi
 from fwupd_test import FwupdTest
 
 try:

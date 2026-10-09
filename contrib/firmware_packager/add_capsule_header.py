@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import sys
-import uuid
 import argparse
 import ctypes
+import sys
+import uuid
 
 CAPSULE_FLAGS_PERSIST_ACROSS_RESET = 0x00010000
 CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE = 0x00020000

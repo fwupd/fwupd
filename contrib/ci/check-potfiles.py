@@ -9,13 +9,11 @@
 import glob
 import sys
 
-from typing import List
-
 
 def test_files():
     # compare with POTFILES.in
     with open("po/POTFILES.in", "rb") as f:
-        potfiles_fns: List[str] = f.read().decode().split("\n")
+        potfiles_fns: list[str] = f.read().decode().split("\n")
     for fn in sorted(
         glob.glob("src/*.c")
         + glob.glob("plugins/*/*.c")

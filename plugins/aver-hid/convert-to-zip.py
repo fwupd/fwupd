@@ -6,10 +6,10 @@
 #
 # pylint: disable=invalid-name,missing-docstring
 
-import sys
 import io
-import zipfile
+import sys
 import tarfile
+import zipfile
 
 try:
     fn_old = sys.argv[1]

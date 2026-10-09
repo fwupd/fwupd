@@ -6,9 +6,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import argparse
-import sys
 import json
-from typing import List
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -24,13 +23,13 @@ if __name__ == "__main__":
     with open(args.filename_src, "rb") as f:
         template = f.read()
 
-    txt: List[str] = []
+    txt: list[str] = []
     for fn in sorted(args.json_attrs):
         try:
             with open(fn, "rb") as f:
                 item = json.loads(f.read())
         except json.decoder.JSONDecodeError as e:
-            print(f"failed to parse {fn}: {str(e)}")
+            print(f"failed to parse {fn}: {e!s}")
             sys.exit(1)
         if "id" not in item:
             print(f"skipping {fn} as no id")
@@ -50,7 +49,7 @@ if __name__ == "__main__":
                 txt += [para]
         if "failure-results" in item and "success-results" in item:
             txt += ["**Possible results:**"]
-            tmp: List[str] = []
+            tmp: list[str] = []
             for value, desc in item["failure-results"].items():
                 tmp += [f"- `{value}`: {desc} (failure)"]
             for value, desc in item["success-results"].items():
@@ -67,7 +66,7 @@ if __name__ == "__main__":
             txt += [f"**Resolution:** {item['resolution']}"]
         if "issues" in item:
             txt += ["**Issues:**"]
-            tmp: List[str] = []
+            tmp: list[str] = []
             for issue in item["issues"]:
                 if issue.startswith("CVE-"):
                     tmp += [f"- [{issue}](https://nvd.nist.gov/vuln/detail/{issue})"]
@@ -76,7 +75,7 @@ if __name__ == "__main__":
             txt += ["\n".join(tmp)]
         if "references" in item:
             txt += ["**References:**"]
-            tmp: List[str] = []
+            tmp: list[str] = []
             for url, title in item["references"].items():
                 tmp += [f"- [{title}]({url})"]
             txt += ["\n".join(tmp)]

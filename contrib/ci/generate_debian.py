@@ -6,6 +6,7 @@
 #
 import os
 import sys
+
 from fwupd_setup_helpers import parse_dependencies
 
 
@@ -42,8 +43,7 @@ def update_debian_control(target):
         for line in lines:
             if "Build-Depends:" in line and "%%%DYNAMIC%%%" in line:
                 wfd.write("Build-Depends:\n")
-                for dep in deps:
-                    wfd.write(f"\t{dep},\n")
+                wfd.writelines(f"\t{dep},\n" for dep in deps)
             elif "Build-Depends-Indep:" in line and "%%%DYNAMIC_INDEP%%%" in line:
                 wfd.write("Build-Depends-Indep:\n")
                 if build_indep:

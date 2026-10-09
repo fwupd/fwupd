@@ -4,11 +4,11 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import sys
 import argparse
-from urllib import request
 import base64
 import ssl
+import sys
+from urllib import request
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

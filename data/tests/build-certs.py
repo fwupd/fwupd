@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import os
-import sys
 import subprocess
+import sys
 import tempfile
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 
 def _build_certs(path: str):
@@ -36,8 +36,8 @@ def _build_certs(path: str):
         lines.append("serial = 1")
         lines.append("crl_number = 1")
         lines.append("path_len = 1")
-        lines.append('activation_date = "{}"'.format(dt_activation))
-        lines.append('expiration_date = "{}"'.format(dt_expiration))
+        lines.append(f'activation_date = "{dt_activation}"')
+        lines.append(f'expiration_date = "{dt_expiration}"')
         lines.append("ca")
         lines.append("cert_signing_key")
         lines.append("crl_signing_key")
@@ -73,8 +73,8 @@ def _build_certs(path: str):
     lines.append('cn = "Test Key"')
     lines.append('uri = "https://fwupd.org/testuser"')
     lines.append('email = "testuser@fwupd.org"')
-    lines.append('activation_date = "{}"'.format(dt_activation))
-    lines.append('expiration_date = "{}"'.format(dt_expiration))
+    lines.append(f'activation_date = "{dt_activation}"')
+    lines.append(f'expiration_date = "{dt_expiration}"')
     lines.append("signing_key")
     lines.append("code_signing_key")
     cfg = tempfile.NamedTemporaryFile(

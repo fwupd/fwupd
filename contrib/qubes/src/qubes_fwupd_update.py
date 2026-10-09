@@ -10,6 +10,7 @@
 import os
 import re
 import subprocess
+
 from qubes_fwupd_common import create_dirs
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"

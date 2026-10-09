@@ -13,11 +13,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
-import dbusmock
 
+import dbusmock
 import gi
-from gi.repository import GLib
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 gi.require_version("UMockdev", "1.0")
 from gi.repository import UMockdev

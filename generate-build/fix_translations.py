@@ -4,9 +4,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import sys
 import os
 import subprocess
+import sys
 
 
 def _do_msgattrib(fn):

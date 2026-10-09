@@ -6,13 +6,12 @@
 #
 # pylint: disable=invalid-name,missing-docstring,too-few-public-methods,too-many-locals
 
-import sys
+import argparse
+import io
 import os
 import struct
 import subprocess
-import io
-from typing import List, Optional
-import argparse
+import sys
 
 
 class IfdPartition:
@@ -73,7 +72,7 @@ def _read_partitions(f: io.BufferedReader) -> bytearray:
     # read out FREGs
     flash_region_base_addr = (descriptor_map0 >> 12) & 0x00000FF0
     print(f"flash_region_base_addr=0x{flash_region_base_addr:X}")
-    flash_descriptor_regs: List[int] = []
+    flash_descriptor_regs: list[int] = []
     for region in range(num_regions):
         flash_descriptor_regs.append(
             struct.unpack_from(
@@ -84,7 +83,7 @@ def _read_partitions(f: io.BufferedReader) -> bytearray:
         print(f"flash_descriptor_reg{region}=0x{flash_descriptor_regs[region]:X}")
 
     # parse each partition
-    fregs: List[IfdPartition] = []
+    fregs: list[IfdPartition] = []
     for i in range(num_regions):
         freg_base: int = (flash_descriptor_regs[i] << 12) & 0x07FFF000
         freg_limit: int = ((flash_descriptor_regs[i] >> 4) & 0x07FFF000) | 0x00000FFF
@@ -100,8 +99,7 @@ def _read_partitions(f: io.BufferedReader) -> bytearray:
     # create a binary blob big enough
     image_size: int = 0
     for freg in fregs:
-        if freg.offset + freg.size > image_size:
-            image_size = freg.offset + freg.size
+        image_size = max(image_size, freg.offset + freg.size)
     print(f"image_size=0x{image_size:x}")
     blob: bytearray = bytearray(image_size)
 
@@ -121,7 +119,7 @@ def _read_partitions(f: io.BufferedReader) -> bytearray:
     return blob
 
 
-def _read_device_to_file(devname: str, filename: Optional[str]) -> None:
+def _read_device_to_file(devname: str, filename: str | None) -> None:
     # grab system info from sysfs
     if not filename:
         filename = ""

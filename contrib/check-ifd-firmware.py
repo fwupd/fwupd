@@ -6,19 +6,19 @@
 #
 # pylint: disable=invalid-name,missing-docstring,too-few-public-methods
 
-from typing import Dict
-import os
-import glob
-import sys
-import subprocess
-import json
 import argparse
+import glob
+import json
+import os
+import subprocess
+import sys
 from collections import defaultdict
+
 from termcolor import colored
 
 
-def _scan_file(fn: str) -> Dict[str, int]:
-    new_map: Dict[str, int] = defaultdict(int)
+def _scan_file(fn: str) -> dict[str, int]:
+    new_map: dict[str, int] = defaultdict(int)
     try:
         print(f"loading {fn}…")
         args = [
@@ -53,7 +53,7 @@ def _scan_dir(path: str, force_save: bool = False) -> bool:
     all_okay: bool = True
     needs_save: bool = False
 
-    results: Dict[str, Dict[str, int]] = {}
+    results: dict[str, dict[str, int]] = {}
 
     # support folders or paths
     if os.path.isdir(path):

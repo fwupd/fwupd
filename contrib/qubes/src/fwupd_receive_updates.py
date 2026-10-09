@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+
 from qubes_fwupd_common import create_dirs
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"

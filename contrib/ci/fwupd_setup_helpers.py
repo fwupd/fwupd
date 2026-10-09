@@ -6,10 +6,10 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 
 ENDC = "\033[0m"
 LEVEL_COLORS = {
@@ -155,7 +155,7 @@ def _version_tuple(ver):
 
 
 def test_meson():
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError, version
 
     minimum = get_minimum_meson_version()
     try:

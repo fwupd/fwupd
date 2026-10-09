@@ -9,14 +9,14 @@
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements
 # pylint: disable=too-few-public-methods,too-many-branches,protected-access
 
-import glob
-import sys
-import os
 import argparse
+import glob
 import multiprocessing
+import os
+import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
-from ctokenizer import Tokenizer, Node, NodeHint, Token, TokenHint
+
+from ctokenizer import Node, NodeHint, Token, TokenHint, Tokenizer
 
 
 # convert a CamelCase name into snake_case
@@ -47,22 +47,22 @@ def _value_relaxed(data: str) -> str:
 
 @dataclass
 class SourceFailure:
-    fn: Optional[str] = None
-    linecnt: Optional[int] = None
-    message: Optional[str] = None
-    nocheck: Optional[str] = None
+    fn: str | None = None
+    linecnt: int | None = None
+    message: str | None = None
+    nocheck: str | None = None
     expected: bool = False
 
 
 @dataclass
 class Checker:
     verbose: bool = False
-    failures: List[SourceFailure] = field(default_factory=list)
-    _current_fn: Optional[str] = field(default=None, init=False)
-    _current_nocheck: Optional[str] = field(default=None, init=False)
-    _gtype_parents: Dict[str, str] = field(default_factory=dict)
-    _klass_funcs: List[str] = field(default_factory=list, init=False)
-    _expected_failure_prefixes: List[str] = field(default_factory=list, init=False)
+    failures: list[SourceFailure] = field(default_factory=list)
+    _current_fn: str | None = field(default=None, init=False)
+    _current_nocheck: str | None = field(default=None, init=False)
+    _gtype_parents: dict[str, str] = field(default_factory=dict)
+    _klass_funcs: list[str] = field(default_factory=list, init=False)
+    _expected_failure_prefixes: list[str] = field(default_factory=list, init=False)
 
     def add_expected_failure(self, message_prefix: str) -> None:
         self._expected_failure_prefixes.append(message_prefix)
@@ -75,7 +75,7 @@ class Checker:
                 return False
         return True
 
-    def add_failure(self, message, linecnt: Optional[int] = None) -> None:
+    def add_failure(self, message, linecnt: int | None = None) -> None:
         # we were expecting this
         expected: bool = False
         for message_prefix in self._expected_failure_prefixes:
@@ -149,8 +149,7 @@ class Checker:
             "_sync",
             "_windows",
         ]:
-            if prefix.endswith(suffix):
-                prefix = prefix[: -len(suffix)]
+            prefix = prefix.removesuffix(suffix)
 
         # allowed truncations
         valid_prefixes = []
@@ -534,7 +533,7 @@ class Checker:
             return
 
         # only consider the last token
-        name: Optional[str] = None
+        name: str | None = None
         if node.hint == NodeHint.STRUCT_TYPEDEF:
             name = node.tokens_pre[-1].data
         else:
@@ -545,8 +544,7 @@ class Checker:
                 name = node.tokens_pre[idx].data
         if not name:
             return
-        if name.startswith("_"):
-            name = name[1:]
+        name = name.removeprefix("_")
         if self.verbose:
             print("struct_name", name)
 
@@ -917,7 +915,7 @@ class Checker:
                             linecnt=token.linecnt,
                         )
 
-    def _test_magic_numbers_defined(self, nodes: List[Node]) -> None:
+    def _test_magic_numbers_defined(self, nodes: list[Node]) -> None:
         cnt: int = 0
         limit: int = 15
         linecnt: int = 0
@@ -939,7 +937,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_magic_numbers_inline(self, nodes: List[Node]) -> None:
+    def _test_magic_numbers_inline(self, nodes: list[Node]) -> None:
         cnt: int = 0
         limit: int = 80
         linecnt: int = 0
@@ -963,7 +961,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_gerror_false_returns(self, nodes: List[Node]) -> None:
+    def _test_gerror_false_returns(self, nodes: list[Node]) -> None:
         for node in nodes:
             if node.depth == 0:
                 continue
@@ -982,7 +980,7 @@ class Checker:
                     )
                     break
 
-    def _test_gerror_not_set(self, nodes: List[Node]) -> None:
+    def _test_gerror_not_set(self, nodes: list[Node]) -> None:
         limit: int = 10
         for node in nodes:
             if node.depth == 0:
@@ -995,7 +993,7 @@ class Checker:
                 if self.verbose:
                     print(f"GError required @{linecnt}")
 
-                found_linecnt: List[int] = []
+                found_linecnt: list[int] = []
 
                 # set error inner
                 idx_found = node.tokens.find_fuzzy(
@@ -1060,7 +1058,7 @@ class Checker:
             "dereferences GError; use error_local instead", linecnt=token.linecnt
         )
 
-    def _test_switch(self, nodes: List[Node]) -> None:
+    def _test_switch(self, nodes: list[Node]) -> None:
         limit: int = 2
         cnt: int = 0
         for node in nodes:
@@ -1077,7 +1075,7 @@ class Checker:
                     )
                     break
 
-    def _test_null_false_returns(self, nodes: List[Node]) -> None:
+    def _test_null_false_returns(self, nodes: list[Node]) -> None:
         # allowed values from g_return_val_if_fail()
         types_rvif = {
             "*": ["NULL"],
@@ -1206,7 +1204,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_firmware_convert_version(self, nodes: List[Node]) -> None:
+    def _test_firmware_convert_version(self, nodes: list[Node]) -> None:
         # contains fu_firmware_set_version_raw()
         _set_version_raw: bool = False
         for node in nodes:
@@ -1232,7 +1230,7 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
-    def _test_device_convert_version(self, nodes: List[Node]) -> None:
+    def _test_device_convert_version(self, nodes: list[Node]) -> None:
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-engine-test.c",
         ]:
@@ -1301,7 +1299,7 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
-    def _test_small_conditionals_with_braces(self, nodes: List[Node]) -> None:
+    def _test_small_conditionals_with_braces(self, nodes: list[Node]) -> None:
         # we need to parse the nodes in order
         for idx, node in enumerate(nodes):
             next_node_depth: int = 0
@@ -1398,7 +1396,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_gobject_parents(self, nodes: List[Node]) -> None:
+    def _test_gobject_parents(self, nodes: list[Node]) -> None:
         gtype: str = ""
         gtypeparent: str = ""
         for node in nodes:
@@ -1449,7 +1447,7 @@ class Checker:
                         linecnt=node.linecnt,
                     )
 
-    def _test_nodes(self, nodes: List[Node]) -> None:
+    def _test_nodes(self, nodes: list[Node]) -> None:
         # preroll
         self._klass_funcs.clear()
         for node in nodes:
@@ -1607,9 +1605,9 @@ class Checker:
         self._test_nodes(nodes)
 
 
-def _build_gtype_parents(fns: List[str]) -> Dict[str, str]:
+def _build_gtype_parents(fns: list[str]) -> dict[str, str]:
     """Pre-scan header files to build the GType parent map."""
-    gtype_parents: Dict[str, str] = {}
+    gtype_parents: dict[str, str] = {}
     for fn in fns:
         if not fn.endswith(".h"):
             continue
@@ -1632,8 +1630,8 @@ def _build_gtype_parents(fns: List[str]) -> Dict[str, str]:
 
 
 def _check_file(
-    args: Tuple[str, Dict[str, str], bool],
-) -> List[SourceFailure]:
+    args: tuple[str, dict[str, str], bool],
+) -> list[SourceFailure]:
     """Check a single file -- top-level function for multiprocessing."""
     fn, gtype_parents, verbose = args
     print(f"checking {fn}…", file=sys.stderr)
@@ -1642,11 +1640,11 @@ def _check_file(
     return checker.failures
 
 
-def test_files(fns_optional: List[str], verbose: bool = False) -> int:
+def test_files(fns_optional: list[str], verbose: bool = False) -> int:
     # test all C and H files
 
     # use any file specified in argv, falling back to scanning the entire tree
-    fns: List[str] = []
+    fns: list[str] = []
     if fns_optional:
         for fn in fns_optional:
             if fn.startswith("contrib/ci/tests"):
@@ -1669,7 +1667,7 @@ def test_files(fns_optional: List[str], verbose: bool = False) -> int:
     gtype_parents = _build_gtype_parents(fns)
 
     # check files in parallel (fall back to serial for verbose or small batches)
-    failures: List[SourceFailure] = []
+    failures: list[SourceFailure] = []
     if verbose or len(fns) < 4:
         checker = Checker(verbose=verbose, _gtype_parents=gtype_parents)
         for fn in fns:

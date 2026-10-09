@@ -7,25 +7,24 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
 import unittest
-from typing import List
 
-from ctokenizer import Tokenizer, Token, TokenList
+from ctokenizer import Token, Tokenizer, TokenList
 
 
 class TestCTokenize(unittest.TestCase):
-    def _compare_tokens(self, data: str, tokens_wanted: List[str]) -> None:
+    def _compare_tokens(self, data: str, tokens_wanted: list[str]) -> None:
         tokens = Tokenizer(data).tokens
         print(tokens)
         tokens_data = [token.data for token in tokens]
         self.assertEqual(tokens_data, tokens_wanted)
 
-    def _compare_tokens_full(self, data: str, tokens_wanted: List[str]) -> None:
+    def _compare_tokens_full(self, data: str, tokens_wanted: list[str]) -> None:
         tokens = Tokenizer(data).tokens
         print(tokens)
         tokens_data = [str(token) for token in tokens]
         self.assertEqual(tokens_data, tokens_wanted)
 
-    def _compare_nodes(self, data: str, nodes_wanted: List[str]) -> None:
+    def _compare_nodes(self, data: str, nodes_wanted: list[str]) -> None:
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
         print(nodes)

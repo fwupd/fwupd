@@ -6,8 +6,8 @@
 #
 
 # import os
-import sys
 import glob
+import sys
 
 if __name__ == "__main__":
     fns = []
