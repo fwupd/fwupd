@@ -149,14 +149,7 @@ def main():
         "--stamp",
         metavar="FILE",
         type=relative_path,
-        help="Touch FILE as a stamp file",
-    )
-    build_sp.add_argument(
-        "--copy",
-        dest="copydir",
-        metavar="DIR",
-        type=relative_path,
-        help="Also copy the artifact into DIR (relative to $MESON_BUILD_ROOT)",
+        help="Touch FILE as a stamp file, ignore --output if given",
     )
     build_sp.add_argument("cargo_args", nargs="*")
 
@@ -166,9 +159,8 @@ def main():
         dest="copydir",
         metavar="DIR",
         type=relative_path,
-        help="Copy OUTPUT into DIR (relative to $MESON_BUILD_ROOT)",
+        help="Copy documentation output into DIR (relative to $MESON_BUILD_ROOT)",
     )
-    doc_sp.add_argument("--output", metavar="PATH", default="doc")
     doc_sp.add_argument("cargo_args", nargs="*")
 
     test_sp = subparsers.add_parser("test")
@@ -179,15 +171,6 @@ def main():
     if not args.meson_build_root:
         parser.error("--meson-build-root or $MESON_BUILD_ROOT must be set")
     meson_build_root = Path(args.meson_build_root)
-
-    meson_buildtype = args.meson_buildtype or ""
-    match meson_buildtype:
-        case "release" | "plain":
-            cargo_profile = "release"
-            cargo_profile_dir = "release"
-        case _:
-            cargo_profile = "dev"
-            cargo_profile_dir = "debug"
 
     cargo = args.cargo_bin
     if not cargo:
@@ -200,10 +183,31 @@ def main():
     ):
         die(f"cargo binary '{cargo}' failed to run")
 
+    meson_buildtype = args.meson_buildtype or ""
+    match meson_buildtype:
+        case "release" | "plain":
+            cargo_profile = "release"
+            cargo_profile_dir = "release"
+        case _:
+            cargo_profile = "dev"
+            cargo_profile_dir = "debug"
+
+    match args.subcommand:
+        # cargo test uses [profile.test] by default; passing --profile overrides that
+        # and activates [profile.dev] (panic=abort), breaking the test harness's catch_unwind.
+        case "test":
+            cargo_profile = None
+        # cargo doc always builds into target/doc
+        case "doc":
+            cargo_profile_dir = "doc"
+
     cargo_target_dir = Path(
         os.environ.get("CARGO_TARGET_DIR") or meson_build_root / "rust-target"
     )
 
+    # When cross-compiling, pass the Rust target triple to cargo.
+    # Cargo then places artifacts under target/<triple>/<profile>/ instead
+    # of target/<profile>/, so we track that extra path component separately.
     meson_rust_target = args.meson_rust_target or ""
     cargo_target_args = []
     cargo_target_subdir = ""
@@ -211,33 +215,40 @@ def main():
         cargo_target_args = ["--target", meson_rust_target]
         cargo_target_subdir = meson_rust_target
 
+    output_src_base = cargo_target_dir
+    if cargo_target_subdir:
+        output_src_base = output_src_base / cargo_target_subdir
+    if cargo_profile_dir:
+        output_src_base = output_src_base / cargo_profile_dir
+    match args.subcommand:
+        case "build":
+            # Meson's @OUTPUT@ which we likely get passed includes the full path
+            # but cargo doesn't honor that. So our --output arg may be
+            # src/something.so but cargo compiles this into debug/something.so.
+            output_dest = args.stamp or args.output
+            output_src = output_src_base / Path(output_dest).name
+        case "doc":
+            output_src = output_src_base
+            output_dest = args.copydir
+        case _:
+            output_src = None
+            output_dest = None
+
     meson_build_root_abs = meson_build_root.resolve()
-    copydir = getattr(args, "copydir", None)
-
-    if copydir is not None and not (
-        meson_build_root_abs / copydir
+    if output_dest is not None and not (
+        meson_build_root_abs / output_dest
     ).resolve().is_relative_to(meson_build_root_abs):
-        die("--copy DIR not inside --meson-build-root ")
-
-    output = getattr(args, "stamp", None) or getattr(args, "output", None)
-    cargo_extra_args = []
-
-    if args.subcommand == "build":
-        if (
-            not (meson_build_root_abs / output)
-            .resolve()
-            .is_relative_to(meson_build_root_abs)
-        ):
-            die("output path not inside $MESON_BUILD_ROOT")
-    elif args.subcommand == "doc":
-        cargo_profile_dir = ""
+        die(f"{output_dest} must be inside $MESON_BUILD_ROOT")
 
     crate_args = ["-p", args.crate] if args.crate else []
     cargo_args = getattr(args, "cargo_args", [])
 
+    # Unset the CFLAGS from the environment because they mess with our -sys crates
+    # ABI tests
     env = os.environ.copy()
     env.pop("CFLAGS", None)
 
+    # We need to pick up our own *-uninstalled.pc files
     uninstalled = meson_build_root / "meson-uninstalled"
     pkg_config_path = env.get("PKG_CONFIG_PATH", "")
     env["PKG_CONFIG_PATH"] = (
@@ -246,9 +257,7 @@ def main():
 
     workspace_cargo_toml = args.workspace_cargo_toml
 
-    # cargo test uses [profile.test] by default; passing --profile overrides that
-    # and activates [profile.dev] (panic=abort), breaking the test harness's catch_unwind.
-    profile_args = [f"--profile={cargo_profile}"] if args.subcommand != "test" else []
+    profile_args = [f"--profile={cargo_profile}"] if cargo_profile else []
 
     cmd = [
         cargo,
@@ -258,10 +267,10 @@ def main():
         *profile_args,
         *cargo_target_args,
         *crate_args,
-        *cargo_extra_args,
         *cargo_args,
         *unknown_args,
     ]
+    print(f"Running {' '.join(cmd)}")
     result = subprocess.run(cmd, env=env, check=False)
     if result.returncode != 0:
         sys.exit(result.returncode)
@@ -273,30 +282,15 @@ def main():
         (meson_build_root / stampfile).touch()
         return
 
-    src = cargo_target_dir
-    if cargo_target_subdir:
-        src = src / cargo_target_subdir
-    if cargo_profile_dir:
-        src = src / cargo_profile_dir
-    src = src / Path(output).name
+    if output_src is None or output_dest is None:
+        return
 
-    dest = meson_build_root / output
-    if src.is_dir():
+    dest = meson_build_root / output_dest
+    if output_src.is_dir():
         shutil.rmtree(dest, ignore_errors=True)
-        shutil.copytree(src, dest, symlinks=True)
+        shutil.copytree(output_src, dest, symlinks=True)
     else:
-        shutil.copy2(src, dest)
-
-    if copydir is not None:
-        copydir_full = meson_build_root / copydir
-        copydir_full.mkdir(parents=True, exist_ok=True)
-        dest_in_copydir = copydir_full / src.name
-        if src.is_dir():
-            if dest_in_copydir.exists():
-                shutil.rmtree(dest_in_copydir)
-            shutil.copytree(src, dest_in_copydir, symlinks=True)
-        else:
-            shutil.copy2(src, dest_in_copydir)
+        shutil.copy2(output_src, dest)
 
 
 if __name__ == "__main__":
