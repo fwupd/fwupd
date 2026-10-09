@@ -4,7 +4,7 @@ plugins += {
 }
 
 plugin_quirks += files('dell-dock.quirk')
-plugin_builtins += static_library(
+plugin_builtin_dell_dock = static_library(
   'fu_plugin_dell_dock',
   rustgen.process('fu-dell-dock.rs'),
   sources: [
@@ -22,3 +22,33 @@ plugin_builtins += static_library(
   c_args: cargs,
   dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_dell_dock
+
+if get_option('tests')
+  e = executable(
+    'dell-dock-self-test',
+    rustgen.process('fu-dell-dock.rs'),
+    sources: [
+      'fu-self-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
+    link_with: [
+      plugin_libs,
+      plugin_builtin_dell_dock,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_tag: 'tests',
+    install_dir: installed_test_bindir,
+    c_args: cargs,
+  )
+  test(
+    'dell-dock-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
+endif
