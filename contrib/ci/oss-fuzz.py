@@ -11,9 +11,29 @@ import os
 import sys
 import subprocess
 import glob
+import struct
 from typing import Dict, Optional, List, Union
 
 DEFAULT_BUILDDIR = ".ossfuzz"
+
+
+def dfuse_corpus_variants(blob: bytes) -> Dict[str, bytes]:
+    header = struct.Struct("<5sBIB")
+    image = struct.Struct("<6sBI255sII")
+    element = struct.Struct("<II")
+    image_values = list(image.unpack_from(blob, header.size))
+    image_values[-1] = 0
+    zero_chunks = bytearray(blob)
+    image.pack_into(zero_chunks, header.size, *image_values)
+    short_element = bytearray(blob)
+    element_offset = header.size + image.size
+    address, _ = element.unpack_from(blob, element_offset)
+    element.pack_into(short_element, element_offset, address, len(blob))
+    return {
+        "truncated-footer": blob[:-1],
+        "zero-chunks": bytes(zero_chunks),
+        "short-element": bytes(short_element),
+    }
 
 
 class Builder:
@@ -545,6 +565,15 @@ def _build(bld: Builder) -> None:
                 f"{fzr.name}*.builder.xml",
             ),
         )
+        if fzr.name == "dfuse":
+            filename = next(path for path in corpus if os.path.basename(path) == "dfuse.bin")
+            with open(filename, "rb") as source:
+                variants = dfuse_corpus_variants(source.read())
+            for name, blob in variants.items():
+                filename_variant = os.path.splitext(filename)[0] + f"-{name}.bin"
+                with open(filename_variant, "wb") as output:
+                    output.write(blob)
+                corpus.append(filename_variant)
         bld.makezip(
             f"{fzr.name}_fuzzer_seed_corpus.zip",
             corpus,
