@@ -1,0 +1,33 @@
+<firmware gtype="FuFitFirmware">
+  <firmware gtype="FuFdtImage">
+    <metadata key="timestamp" format="uint32">0x629d4abd</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>images</id>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-1</id>
+        <metadata key="type" format="str">firmware</metadata>
+        <metadata key="description" format="str">first image</metadata>
+        <metadata key="data" format="data">YWJj</metadata>
+      </firmware>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-2</id>
+        <metadata key="type" format="str">firmware</metadata>
+        <metadata key="description" format="str">second image</metadata>
+        <metadata key="data" format="data">aGVsbG8gd29ybGQ=</metadata>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuFdtImage">
+      <id>configurations</id>
+      <firmware gtype="FuFdtImage">
+        <id>conf-1</id>
+        <metadata key="compatible" format="strlist">fwupd:first</metadata>
+        <metadata key="firmware" format="str">firmware-1</metadata>
+      </firmware>
+      <firmware gtype="FuFdtImage">
+        <id>conf-2</id>
+        <metadata key="compatible" format="strlist">fwupd:second:fwupd:alternate</metadata>
+        <metadata key="firmware" format="str">firmware-2</metadata>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>
