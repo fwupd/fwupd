@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-vli-pd-common.h"
+#include "fu-vli-usbhub-i2c-common.h"
 
 static void
 fu_test_vli_pd_common_func(void)
@@ -35,10 +36,33 @@ fu_test_vli_pd_common_func(void)
 	}
 }
 
+static void
+fu_test_vli_usbhub_i2c_common_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+
+	/* success */
+	ret = fu_vli_usbhub_i2c_check_status(FU_VLI_USBHUB_I2C_STATUS_OK, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* various failures all map to an internal error */
+	ret = fu_vli_usbhub_i2c_check_status(FU_VLI_USBHUB_I2C_STATUS_HEADER, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	ret = fu_vli_usbhub_i2c_check_status(FU_VLI_USBHUB_I2C_STATUS_CHECKSUM, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/vli/pd-common", fu_test_vli_pd_common_func);
+	g_test_add_func("/vli/usbhub-i2c-common", fu_test_vli_usbhub_i2c_common_func);
 	return g_test_run();
 }
