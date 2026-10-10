@@ -89,6 +89,44 @@ fu_context_esp_write_func(void)
 }
 
 static void
+fu_context_esp_location_func(void)
+{
+	g_autofree gchar *esp_path = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) volume_expected = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up a valid ESP */
+	tmpdir = fu_temporary_directory_new("context-esp-location", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp_path = g_build_filename(fu_temporary_directory_get_path(tmpdir), "EFI", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(esp_path, 0700), ==, 0);
+	volume_expected = fu_volume_new_from_mount_path(fu_temporary_directory_get_path(tmpdir));
+	fu_volume_set_partition_kind(volume_expected, FU_VOLUME_KIND_ESP);
+	fu_context_add_esp_volume(ctx, volume_expected);
+
+	/* use the preferred ESP when it matches */
+	fu_context_set_esp_location(ctx, fu_temporary_directory_get_path(tmpdir));
+	volume = fu_context_get_default_esp(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(volume == volume_expected);
+
+	/* fall back to automatic selection when the preferred path is not an ESP */
+	g_clear_object(&volume);
+	fu_context_set_esp_location(ctx, "/does/not/exist");
+	g_test_expect_message("FuContext",
+			      G_LOG_LEVEL_WARNING,
+			      "user specified ESP * not found, falling back to *");
+	volume = fu_context_get_default_esp(ctx, &error);
+	g_test_assert_expected_messages();
+	g_assert_no_error(error);
+	g_assert_true(volume == volume_expected);
+}
+
+static void
 fu_context_backends_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -401,6 +439,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context/host-bkc", fu_context_host_bkc_func);
 	g_test_add_func("/fwupd/context/flags", fu_context_flags_func);
 	g_test_add_func("/fwupd/context/backends", fu_context_backends_func);
+	g_test_add_func("/fwupd/context/esp-location", fu_context_esp_location_func);
 	g_test_add_func("/fwupd/context/esp-write", fu_context_esp_write_func);
 	g_test_add_func("/fwupd/context/efivars", fu_context_efivars_func);
 	g_test_add_func("/fwupd/context/hwids-dmi", fu_context_hwids_dmi_func);
