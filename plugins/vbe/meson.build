@@ -7,8 +7,10 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginVbe"']
 
 plugin_builtin_vbe = static_library(
   'fu_plugin_vbe',
+  rustgen.process('fu-vbe-abrec.rs'),
   sources: [
     'fu-vbe-plugin.c',
+    'fu-vbe-abrec-device.c',
     'fu-vbe-device.c',
     'fu-vbe-simple-device.c',
     'fu-vbe-simple-firmware.c',
