@@ -9,10 +9,10 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_VBE_DEVICE (fu_vbe_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuVbeDevice, fu_vbe_device, FU, VBE_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE(FuVbeDevice, fu_vbe_device, FU, VBE_DEVICE, FuUdevDevice)
 
 struct _FuVbeDeviceClass {
-	FuDeviceClass parent_class;
+	FuUdevDeviceClass parent_class;
 };
 
 FuFdtImage *
