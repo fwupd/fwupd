@@ -16,9 +16,10 @@ typedef struct {
 	FuFdtImage *fdt_root;
 	FuFdtImage *fdt_node;
 	gchar **compatible;
+	gchar *storage; /* e.g. "mmc1" */
 } FuVbeDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuVbeDevice, fu_vbe_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuVbeDevice, fu_vbe_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_vbe_device_get_instance_private(o))
 
 static void
@@ -31,6 +32,7 @@ fu_vbe_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_autofree gchar *tmp = g_strjoinv(":", priv->compatible);
 		fwupd_codec_string_append(str, idt, "Compatible", tmp);
 	}
+	fwupd_codec_string_append(str, idt, "Storage", priv->storage);
 }
 
 FuFdtImage *
@@ -49,6 +51,60 @@ fu_vbe_device_get_compatible(FuVbeDevice *self)
 	return priv->compatible;
 }
 
+static gboolean
+fu_vbe_device_parse_devnum(const gchar *str, guint *value, GError **error)
+{
+	guint64 val64 = 0;
+
+	/* skip non-numeric part */
+	while (*str != '\0' && !g_ascii_isdigit(*str))
+		str++;
+
+	/* convert to uint */
+	if (!fu_strtoull(str, &val64, 0x0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+	if (value != NULL)
+		*value = val64;
+	return TRUE;
+}
+
+static gboolean
+fu_vbe_device_parse_storage(FuVbeDevice *self, GError **error)
+{
+	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
+	guint devnum = 0;
+	g_autofree gchar *devname = NULL;
+
+	g_clear_pointer(&priv->storage, g_free);
+	if (!fu_fdt_image_get_attr_str(priv->fdt_node, "storage", &priv->storage, error))
+		return FALSE;
+
+	/* if this is an absolute path, use it */
+	if (g_str_has_prefix(priv->storage, "/")) {
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), priv->storage);
+		return TRUE;
+	}
+
+	/* obtain the 1 from "mmc1" */
+	if (!fu_vbe_device_parse_devnum(priv->storage, &devnum, error)) {
+		g_prefix_error(error, "cannot parse storage property %s: ", priv->storage);
+		return FALSE;
+	}
+	if (!g_str_has_prefix(priv->storage, "mmc")) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported 'storage' media '%s'",
+			    priv->storage);
+		return FALSE;
+	}
+	devname = g_strdup_printf("/dev/mmcblk%u", devnum);
+	fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devname);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_vbe_device_init(FuVbeDevice *self)
 {
@@ -64,6 +120,10 @@ fu_vbe_device_init(FuVbeDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "vbe");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
+	/* the devicetree properties are not saved, so the device cannot be emulated */
+	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static gboolean
@@ -76,6 +136,11 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 
 	g_return_val_if_fail(FU_IS_VBE_DEVICE(device), FALSE);
 
+	/*
+	 * the device comes from the devicetree rather than from udev, so there is
+	 * no sysfs node for FuUdevDevice to probe; this sets the device file itself
+	 */
+
 	/* sanity check */
 	if (priv->fdt_root == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no FDT root");
@@ -87,6 +152,7 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 		fu_device_set_logical_id(device, fu_firmware_get_id(FU_FIRMWARE(priv->fdt_node)));
 
 	/* get a list of compatible strings, which not all firmware provides */
+	g_clear_pointer(&priv->compatible, g_strfreev);
 	if (!fu_fdt_image_get_attr_strlist(priv->fdt_root,
 					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
 					   &priv->compatible,
@@ -107,6 +173,10 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 	fu_fdt_image_get_attr_str(priv->fdt_node, "bootloader-version", &version_bootloader, NULL);
 	if (version_bootloader != NULL)
 		fu_device_set_version_bootloader(device, version_bootloader);
+
+	/* all methods so far use a block device */
+	if (!fu_vbe_device_parse_storage(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -154,6 +224,7 @@ fu_vbe_device_finalize(GObject *obj)
 	FuVbeDevice *self = FU_VBE_DEVICE(obj);
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
 	g_strfreev(priv->compatible);
+	g_free(priv->storage);
 	if (priv->fdt_root != NULL)
 		g_object_unref(priv->fdt_root);
 	if (priv->fdt_node != NULL)
