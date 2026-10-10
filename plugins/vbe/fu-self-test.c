@@ -145,6 +145,66 @@ fu_vbe_plugin_coldplug_invalid_compatible_func(void)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
 
+static void
+fu_vbe_simple_device_probe_storage_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuFirmware) fdt = NULL;
+	g_autoptr(FuFdtImage) fdt_root = NULL;
+	g_autoptr(FuFdtImage) fdt_node = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_firmware_gtypes(ctx);
+	fdt = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>chosen</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>fwupd</id>\n"
+	    "        <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">mmc1</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt);
+	fdt_root = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/chosen/fwupd", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt_root);
+	fdt_node = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt),
+						     "/chosen/fwupd/firmware",
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt_node);
+
+	/* the device number follows the media name */
+	dev = g_object_new(FU_TYPE_VBE_SIMPLE_DEVICE,
+			   "context",
+			   ctx,
+			   "fdt-root",
+			   fdt_root,
+			   "fdt-node",
+			   fdt_node,
+			   NULL);
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_device_to_string(dev);
+	g_assert_nonnull(g_strstr_len(str, -1, "/dev/mmcblk1"));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -154,5 +214,6 @@ main(int argc, char **argv)
 	g_test_add_func("/vbe/coldplug/no-fdt", fu_vbe_plugin_coldplug_no_fdt_func);
 	g_test_add_func("/vbe/coldplug/invalid-compatible",
 			fu_vbe_plugin_coldplug_invalid_compatible_func);
+	g_test_add_func("/vbe/simple/probe-storage", fu_vbe_simple_device_probe_storage_func);
 	return g_test_run();
 }

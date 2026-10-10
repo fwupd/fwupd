@@ -54,7 +54,7 @@ fu_vbe_simple_device_parse_devnum(const gchar *str, guint *value, GError **error
 	guint64 val64 = 0;
 
 	/* skip non-numeric part */
-	while (*str != '\0' && g_ascii_isdigit(*str))
+	while (*str != '\0' && !g_ascii_isdigit(*str))
 		str++;
 
 	/* convert to uint */
@@ -156,8 +156,8 @@ fu_vbe_simple_device_open(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot open %s",
 			    self->devname);
-		return FALSE;
 #endif
+		return FALSE;
 	}
 
 	/* success */
