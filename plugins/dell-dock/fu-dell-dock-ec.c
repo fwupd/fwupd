@@ -769,7 +769,7 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 	const guint8 *data;
 	gsize write_size = 0;
 	gsize nwritten = 0;
-	guint32 address = 0 | 0xff << 24;
+	guint32 address = 0 | 0xffu << 24;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
