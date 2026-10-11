@@ -197,6 +197,13 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 
 	/* look for a configuration with the device compatible strings in priority order */
 	device_compatible = fu_vbe_device_get_compatible(FU_VBE_DEVICE(self));
+	if (device_compatible == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no compatible strings for the board");
+		return NULL;
+	}
 	for (guint j = 0; device_compatible[j] != NULL; j++) {
 		for (guint i = 0; i < img_configurations->len; i++) {
 			FuFdtImage *img = g_ptr_array_index(img_configurations, i);
