@@ -1039,6 +1039,7 @@ fu_pixart_tp_haptic_device_init(FuPixartTpHapticDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Touchpad Haptic");
 	fu_device_set_summary(FU_DEVICE(self), "Force/haptic controller for touchpad");
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_DEVICE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_SECTION);
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 }
 

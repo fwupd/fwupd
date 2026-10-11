@@ -31,7 +31,8 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
-	g_autoptr(GBytes) data = g_bytes_new(NULL, 0);
+	g_autoptr(GBytes) data = g_bytes_new_static((const guint8 *)"x", 1);
+	g_autoptr(GBytes) data_dump = NULL;
 	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(data);
 
 	g_debug("loading %s", g_type_name(gtype));
@@ -114,15 +115,24 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 		if (firmware_gtype != G_TYPE_INVALID)
 			firmware = g_object_new(firmware_gtype, NULL);
 	}
-	if (firmware != NULL) {
-		if (fu_device_write_firmware(device,
-					     firmware,
-					     progress_tmp,
-					     FWUPD_INSTALL_FLAG_FORCE,
-					     NULL)) {
-			g_debug("did ->write_firmware()!");
-		}
+	if (firmware == NULL)
+		firmware = fu_firmware_new_from_bytes(data);
+
+	/* ->write_firmware() */
+	if (fu_device_write_firmware(device,
+				     firmware,
+				     progress_tmp,
+				     FWUPD_INSTALL_FLAG_FORCE,
+				     NULL)) {
+		g_debug("did ->write_firmware()!");
 	}
+
+	/* ->dump_firmware() */
+	if (fu_device_get_firmware_size_max(device) == 0)
+		fu_device_set_firmware_size_max(device, 1);
+	data_dump = fu_device_dump_firmware(device, progress_tmp, NULL);
+	if (data_dump != NULL)
+		g_debug("did ->dump_firmware()");
 
 	/* incorporate */
 	device2 = g_object_new(gtype, "context", ctx, NULL);
