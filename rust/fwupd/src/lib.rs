@@ -8,6 +8,7 @@
 
 mod bitflags;
 pub mod compressor;
+pub mod endian;
 pub mod json;
 pub mod streams;
 pub mod units;
