@@ -1074,6 +1074,15 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* sanity check */
+	if (bufsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no device size set");
+		return NULL;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);

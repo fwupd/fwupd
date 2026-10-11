@@ -235,6 +235,7 @@ static void
 fu_wacom_usb_module_sub_cpu_init(FuWacomUsbModuleSubCpu *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SREC_FIRMWARE);
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 }
 
