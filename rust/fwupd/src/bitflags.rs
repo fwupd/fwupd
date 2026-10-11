@@ -314,6 +314,7 @@ macro_rules! declare_bitflags {
             /// assert!(!mask.contains(MyFlag::Write));
             /// ```
             #[inline]
+            #[allow(dead_code)]
             $vis const fn as_mask(self) -> $Mask {
                 $Mask(self.bits())
             }
