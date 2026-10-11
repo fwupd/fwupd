@@ -43,16 +43,27 @@ fu_vbe_plugin_coldplug_func(void)
 	gboolean ret;
 	GPtrArray *devices;
 	FuDevice *dev;
+	g_autofree gchar *storage = NULL;
+	g_autofree gchar *xml = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir_storage = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_firmware_gtypes(ctx);
 
-	tmpdir = fu_vbe_test_write_fdt(
-	    ctx,
+	/* the device is opened when it is added */
+	tmpdir_storage = fu_temporary_directory_new("vbe-storage", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir_storage);
+	storage = fu_temporary_directory_build(tmpdir_storage, "testfw", NULL);
+	ret = g_file_set_contents(storage, "", 0, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	xml = g_strdup_printf(
 	    "<firmware gtype=\"FuFdtFirmware\">\n"
 	    "  <firmware gtype=\"FuFdtImage\">\n"
 	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
@@ -65,7 +76,7 @@ fu_vbe_plugin_coldplug_func(void)
 	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
 	    "          <metadata key=\"cur-version\" format=\"str\">1.2.3</metadata>\n"
 	    "          <metadata key=\"bootloader-version\" format=\"str\">2022.01</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">/tmp/testfw</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
 	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
 	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
 	    "        </firmware>\n"
@@ -73,7 +84,8 @@ fu_vbe_plugin_coldplug_func(void)
 	    "    </firmware>\n"
 	    "  </firmware>\n"
 	    "</firmware>\n",
-	    &error);
+	    storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 
@@ -86,6 +98,9 @@ fu_vbe_plugin_coldplug_func(void)
 
 	dev = g_ptr_array_index(devices, 0);
 	g_assert_true(FU_IS_VBE_SIMPLE_DEVICE(dev));
+
+	/* the device has been probed, so it knows its version */
+	g_assert_cmpstr(fu_device_get_version(dev), ==, "1.2.3");
 }
 
 static void
