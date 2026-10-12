@@ -59,6 +59,11 @@ echo " ● Exporting hwids"
 run export-hwids ${TMPDIR}/hwids.ini
 expect_rc 0
 
+# ---
+echo " ● Importing hwids"
+run import-hwids ${TMPDIR}/hwids.ini
+expect_rc 0
+
 UNAME=$(uname -m)
 if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "i686" ]; then
     EXPECTED=0
