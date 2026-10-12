@@ -51,6 +51,7 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 	g_autoptr(FuStructDellKestrelHidFwUpdatePkg) st_fwbuf =
 	    fu_struct_dell_kestrel_hid_fw_update_pkg_new();
 	gsize chk_datasz = fu_chunk_get_data_sz(chk);
+	g_autoptr(GBytes) chk_data = fu_chunk_get_bytes(chk);
 
 	/* header */
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_cmd(st_fwbuf,
@@ -69,7 +70,7 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_fw_sz(st_fwbuf, fw_size);
 
 	/* data */
-	fu_byte_array_append_bytes(st_fwbuf->buf, fu_chunk_get_bytes(chk));
+	fu_byte_array_append_bytes(st_fwbuf->buf, chk_data);
 
 	return fu_struct_dell_kestrel_hid_fw_update_pkg_to_bytes(st_fwbuf);
 }
