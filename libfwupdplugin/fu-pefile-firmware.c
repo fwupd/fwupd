@@ -15,6 +15,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
+#include "fu-json-firmware.h"
 #include "fu-linear-firmware.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pefile-firmware.h"
@@ -176,6 +177,8 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 		fu_csv_firmware_set_write_column_ids(FU_CSV_FIRMWARE(img), FALSE);
 	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
 		img = fu_sbatlevel_section_new();
+	} else if (g_strcmp0(sect_id, ".pkgnote") == 0) {
+		img = fu_json_firmware_new();
 	} else {
 		img = fu_firmware_new();
 	}
@@ -647,6 +650,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_SBATLEVEL_SECTION);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_JSON_FIRMWARE);
 	fu_firmware_set_images_max(firmware_class, 100);
 	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }

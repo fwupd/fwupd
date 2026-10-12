@@ -26,6 +26,28 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuJsonFirmware, fu_json_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_json_firmware_get_instance_private(o))
 
+/**
+ * fu_json_firmware_get_root: (skip):
+ * @self: a #FuJsonFirmware
+ *
+ * Gets the root JSON node for the firmware image.
+ *
+ * If the directory does not exist it is ignored
+ *
+ * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
+ *
+ * Since: 2.2.1
+ **/
+FwupdJsonNode *
+fu_json_firmware_get_root(FuJsonFirmware *self)
+{
+	FuJsonFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_JSON_FIRMWARE(self), NULL);
+	if (priv->json_node == NULL)
+		return NULL;
+	return fwupd_json_node_ref(priv->json_node);
+}
+
 static gboolean
 fu_json_firmware_parse(FuFirmware *firmware,
 		       FuInputStream *stream,
@@ -144,4 +166,19 @@ fu_json_firmware_class_init(FuJsonFirmwareClass *klass)
 	firmware_class->write = fu_json_firmware_write;
 	firmware_class->build = fu_json_firmware_build;
 	firmware_class->export = fu_json_firmware_export;
+}
+
+/**
+ * fu_json_firmware_new:
+ *
+ * Creates a generic JSON firmware.
+ *
+ * Returns: a #FuFirmware
+ *
+ * Since: 2.2.1
+ **/
+FuFirmware *
+fu_json_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_JSON_FIRMWARE, NULL));
 }

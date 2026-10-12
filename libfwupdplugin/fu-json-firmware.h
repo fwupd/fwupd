@@ -17,4 +17,9 @@ struct _FuJsonFirmwareClass {
 	FuFirmwareClass parent_class;
 };
 
+FuFirmware *
+fu_json_firmware_new(void) G_GNUC_WARN_UNUSED_RESULT;
+FwupdJsonNode *
+fu_json_firmware_get_root(FuJsonFirmware *self) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
 G_END_DECLS
