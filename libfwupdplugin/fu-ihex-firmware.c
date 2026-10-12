@@ -230,7 +230,6 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
 	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
 	gboolean got_eof = FALSE;
-	gboolean got_sig = FALSE;
 	guint32 abs_addr = 0x0;
 	guint32 addr_last = 0x0;
 	guint32 img_addr = G_MAXUINT32;
@@ -405,14 +404,6 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 			g_debug("seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
-			if (got_sig) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_FILE,
-						    "duplicate signature, perhaps "
-						    "corrupt file");
-				return FALSE;
-			}
 			if (rcd->data->len > 0) {
 				g_autoptr(GBytes) data_sig =
 				    g_bytes_new(rcd->data->data, rcd->data->len);
@@ -422,7 +413,6 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 				if (!fu_firmware_add_image(firmware, img_sig, error))
 					return FALSE;
 			}
-			got_sig = TRUE;
 			break;
 		default:
 			/* vendors sneak in nonstandard sections past the EOF */
