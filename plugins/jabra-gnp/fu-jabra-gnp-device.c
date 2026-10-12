@@ -118,7 +118,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					    FU_USB_REQUEST_TYPE_CLASS,
 					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
-					    0x0200 | FU_JABRA_GNP_IFACE,
+					    0x0200 | FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
 					    self->iface_hid,
 					    tx_data->buf->data,
 					    tx_data->buf->len,
@@ -135,11 +135,11 @@ gboolean
 fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] =
-	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x0A, 0x12, 0x02};
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
 	FuUsbDevice *target = FU_USB_DEVICE(self);
+	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
+
 	if (!fu_usb_device_interrupt_transfer(target,
 					      self->epin,
 					      rx_data->rxbuf,
@@ -150,9 +150,14 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
-	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[5] == match_buf[5] &&
-	    rx_data->rxbuf[6] == match_buf[6]) {
-		/* battery report, ignore and rx again */
+
+	/* battery report, ignore and rx again */
+	st_pkt =
+	    fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf, sizeof(rx_data->rxbuf), 0x0, error);
+	if (st_pkt == NULL)
+		return FALSE;
+	if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
+	    FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) {
 		if (!fu_usb_device_interrupt_transfer(target,
 						      self->epin,
 						      rx_data->rxbuf,
@@ -223,8 +228,7 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 	/* set up request */
 	fu_struct_jabra_gnp_packet_set_dst(st, FU_JABRA_GNP_ADDRESS_OTA_CHILD);
 	fu_struct_jabra_gnp_packet_set_sequence_number(st, self->sequence_number);
-	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
-	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x13);
+	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_NAME);
 	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(FU_DEVICE(self),

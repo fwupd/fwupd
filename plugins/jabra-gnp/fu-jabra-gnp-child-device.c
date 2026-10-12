@@ -11,6 +11,7 @@
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
+#include "fu-jabra-gnp-struct.h"
 
 struct _FuJabraGnpChildDevice {
 	FuDevice parent_instance;
@@ -55,7 +56,7 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 		FU_USB_REQUEST_TYPE_CLASS,
 		FU_USB_RECIPIENT_INTERFACE,
 		0x09,
-		0x0200 | FU_JABRA_GNP_IFACE,
+		0x0200 | FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
 		fu_jabra_gnp_device_get_iface_hid(FU_JABRA_GNP_DEVICE(proxy)),
 		tx_data->buf->data,
 		tx_data->buf->len,
@@ -71,19 +72,10 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 gboolean
 fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
-	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] = {
-	    FU_JABRA_GNP_IFACE,
-	    0x00,
-	    self->address,
-	    0x00,
-	    0x0A,
-	    0x12,
-	    0x02,
-	};
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
 	FuDevice *proxy;
+	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
 
 	proxy = fu_device_get_proxy(device, error);
 	if (proxy == NULL)
@@ -99,16 +91,21 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
-	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[3] == match_buf[3] &&
-	    rx_data->rxbuf[5] == match_buf[5] && rx_data->rxbuf[6] == match_buf[6]) {
-		/* battery report, ignpre and rx again */
-		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(proxy),
-						      0x81,
-						      rx_data->rxbuf,
-						      FU_JABRA_GNP_BUF_SIZE,
-						      NULL,
-						      rx_data->timeout,
-						      error)) {
+
+	st_pkt =
+	    fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf, sizeof(rx_data->rxbuf), 0x0, error);
+	if (st_pkt == NULL)
+		return FALSE;
+	if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
+	    FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) {
+		if (!fu_usb_device_interrupt_transfer(
+			FU_USB_DEVICE(proxy),
+			fu_jabra_gnp_device_get_epin(FU_JABRA_GNP_DEVICE(proxy)),
+			rx_data->rxbuf,
+			FU_JABRA_GNP_BUF_SIZE,
+			NULL,
+			rx_data->timeout,
+			error)) {
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
