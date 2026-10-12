@@ -255,6 +255,14 @@ fu_ioctl_execute(FuIoctl *self,
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self->udev_device),
+				       FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		if (rc != NULL)
+			*rc = 0;
+		return TRUE;
+	}
+
 	/* need event ID */
 	if (emulated || save_events) {
 		event_id = g_string_new(self->event_id->str);
