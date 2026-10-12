@@ -50,6 +50,8 @@ fu_binder_cli_bridge_update_metadata(AIBinder *binder,
 gboolean
 fu_binder_cli_bridge_activate(AIBinder *binder, const char *device_id, GError **error);
 gboolean
+fu_binder_cli_bridge_quit(AIBinder *binder, GError **error);
+gboolean
 fu_binder_cli_bridge_unlock(AIBinder *binder, const char *device_id, GError **error);
 gboolean
 fu_binder_cli_bridge_verify(AIBinder *binder, const char *device_id, GError **error);

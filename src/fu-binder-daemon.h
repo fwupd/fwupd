@@ -38,6 +38,9 @@ gboolean
 fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, GError **error);
 
 gboolean
+fu_binder_daemon_quit_bridge(void *daemon_instance, GError **error);
+
+gboolean
 fu_binder_daemon_verify_bridge(void *daemon_instance, const gchar *device_id, GError **error);
 
 gboolean

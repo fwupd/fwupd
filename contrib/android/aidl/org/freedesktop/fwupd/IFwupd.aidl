@@ -44,4 +44,5 @@ interface IFwupd {
         void setBiosSettings(in FwupdKeyValue[] settings);
         FwupdSecurityAttr[] getHostSecurityAttrs();
         FwupdSecurityAttr[] getHostSecurityEvents(in int limit);
+        void quit();
 }
