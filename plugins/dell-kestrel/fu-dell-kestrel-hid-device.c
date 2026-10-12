@@ -318,16 +318,17 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 	gsize fw_sz = 0;
 	gsize chunk_sz = fu_dell_kestrel_hid_device_get_chunk_size(self, dev_type);
 	guint chunk_delay = fu_dell_kestrel_hid_device_get_chunk_delaytime(dev_type);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* payload size */
-	fw_sz = g_bytes_get_size(fw);
+	if (!fu_input_stream_size(stream, &fw_sz, error))
+		return FALSE;
 
 	if (fu_firmware_get_version(firmware) != 0x0) {
 		g_debug("writing %s firmware %s -> %s",
@@ -337,11 +338,11 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 	}
 
 	/* maximum buffer size */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       chunk_sz,
-					       error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						chunk_sz,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 
