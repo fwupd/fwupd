@@ -29,8 +29,8 @@ fu_daemon_new(void);
 
 void
 fu_daemon_schedule_housekeeping(FuDaemon *self) G_GNUC_NON_NULL(1);
-void
-fu_daemon_schedule_process_quit(FuDaemon *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_daemon_schedule_process_quit(FuDaemon *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error) G_GNUC_NON_NULL(1);
 gboolean

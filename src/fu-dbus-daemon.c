@@ -1110,7 +1110,10 @@ fu_dbus_daemon_authorize_quit_cb(GObject *source, GAsyncResult *res, gpointer us
 	}
 
 	/* success */
-	fu_daemon_schedule_process_quit(FU_DAEMON(helper->self));
+	if (!fu_daemon_schedule_process_quit(FU_DAEMON(helper->self), &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -1124,7 +1127,11 @@ fu_dbus_daemon_method_quit(FuDbusDaemon *self,
 
 	/* is root */
 	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
-		fu_daemon_schedule_process_quit(FU_DAEMON(self));
+		g_autoptr(GError) error = NULL;
+		if (!fu_daemon_schedule_process_quit(FU_DAEMON(self), &error)) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}

@@ -213,21 +213,25 @@ fu_daemon_schedule_process_quit_cb(gpointer user_data)
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
 
-void
-fu_daemon_schedule_process_quit(FuDaemon *self)
+gboolean
+fu_daemon_schedule_process_quit(FuDaemon *self, GError **error)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 
 	/* busy? */
 	if (priv->update_in_progress) {
-		g_warning("asked to quit during a firmware update, ignoring");
-		return;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
+				    "asked to quit during a firmware update, ignoring");
+		return FALSE;
 	}
 
 	/* allow the daemon to respond to the request, then quit */
 	if (priv->process_quit_id != 0)
 		g_source_remove(priv->process_quit_id);
 	priv->process_quit_id = g_idle_add_once(fu_daemon_schedule_process_quit_cb, self);
+	return TRUE;
 }
 
 static gboolean
