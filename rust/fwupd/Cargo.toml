@@ -8,3 +8,4 @@ rust-version.workspace = true
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
+unreadable_literal = "allow"
