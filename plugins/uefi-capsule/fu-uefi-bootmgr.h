@@ -14,6 +14,10 @@
 gboolean
 fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error);
 gboolean
+fu_uefi_bootmgr_shim_get_hive_supported(const gchar *shim_filename,
+					gboolean *hive_supported,
+					GError **error);
+gboolean
 fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 			 const gchar *description,
 			 GError **error);
