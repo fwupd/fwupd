@@ -696,6 +696,16 @@ fu_binder_cli_bridge_activate(AIBinder *binder, const char *device_id, GError **
 }
 
 gboolean
+fu_binder_cli_bridge_quit(AIBinder *binder, GError **error)
+{
+	std::shared_ptr<aidl_fwupd::IFwupd> service =
+	    fu_binder_cli_bridge_get_service(binder, error);
+	if (service == NULL)
+		return FALSE;
+	return fu_binder_cli_bridge_propagate_status(service->quit(), error);
+}
+
+gboolean
 fu_binder_cli_bridge_unlock(AIBinder *binder, const char *device_id, GError **error)
 {
 	std::shared_ptr<aidl_fwupd::IFwupd> service =

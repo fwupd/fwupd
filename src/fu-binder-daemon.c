@@ -356,6 +356,16 @@ fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, 
 }
 
 gboolean
+fu_binder_daemon_quit_bridge(void *daemon_instance, GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.quit", error))
+		return FALSE;
+	fu_daemon_schedule_process_quit(FU_DAEMON(self));
+	return TRUE;
+}
+
+gboolean
 fu_binder_daemon_verify_bridge(void *daemon_instance, const gchar *device_id, GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);

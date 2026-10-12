@@ -551,6 +551,18 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	quit() override
+	{
+		g_autoptr(GError) error = NULL;
+		if (!fu_binder_daemon_quit_bridge(m_daemon, &error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	unlock(const std::string &in_id) override
 	{
 		g_autoptr(GError) error = NULL;

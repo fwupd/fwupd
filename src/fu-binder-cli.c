@@ -303,6 +303,16 @@ fu_binder_cli_sync_impl_activate(FwupdClient *client,
 }
 
 static gboolean
+fu_binder_cli_sync_impl_quit(FwupdClient *client,
+			     gpointer user_data,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_quit(self->fwupd_binder, error);
+}
+
+static gboolean
 fu_binder_cli_sync_impl_unlock(FwupdClient *client,
 			       const gchar *device_id,
 			       gpointer user_data,
@@ -506,6 +516,7 @@ fu_binder_cli_init(FuBinderCli *self)
 	    .modify_config = fu_binder_cli_sync_impl_modify_config,
 	    .modify_device = fu_binder_cli_sync_impl_modify_device,
 	    .modify_remote = fu_binder_cli_sync_impl_modify_remote,
+	    .quit = fu_binder_cli_sync_impl_quit,
 	    .reset_config = fu_binder_cli_sync_impl_reset_config,
 	    .set_feature_flags = fu_binder_cli_sync_impl_set_feature_flags,
 	    .unlock = fu_binder_cli_sync_impl_unlock,
