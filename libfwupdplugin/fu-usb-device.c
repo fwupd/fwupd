@@ -1473,6 +1473,15 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		if (data != NULL)
+			memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
+	}
+
 	/* build event key either for load or save */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
@@ -1511,14 +1520,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 		if (rc_tmp != G_MAXINT64)
 			return fu_usb_device_libusb_status_to_gerror(rc_tmp, error);
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
-	}
-
-	/* for fuzzing */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
-		memset(data, 0x0, length);
-		if (actual_length != NULL)
-			*actual_length = length;
-		return TRUE;
 	}
 
 	/* sanity check */
@@ -1603,6 +1604,15 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		if (data != NULL)
+			memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
+	}
+
 	/* build event key either for load or save */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
@@ -1631,14 +1641,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 		if (rc_tmp != G_MAXINT64)
 			return fu_usb_device_libusb_status_to_gerror(rc_tmp, error);
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
-	}
-
-	/* for fuzzing */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
-		memset(data, 0x0, length);
-		if (actual_length != NULL)
-			*actual_length = length;
-		return TRUE;
 	}
 
 	/* sanity check */
@@ -1705,6 +1707,15 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		if (data != NULL)
+			memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
+	}
+
 	/* build event key either for load or save */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
@@ -1733,14 +1744,6 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 		if (rc_tmp != G_MAXINT64)
 			return fu_usb_device_libusb_status_to_gerror(rc_tmp, error);
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
-	}
-
-	/* for fuzzing */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
-		memset(data, 0x0, length);
-		if (actual_length != NULL)
-			*actual_length = length;
-		return TRUE;
 	}
 
 	/* sanity check */
@@ -1796,6 +1799,10 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* emulating? */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
