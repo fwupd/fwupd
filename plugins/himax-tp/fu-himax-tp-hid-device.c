@@ -761,6 +761,15 @@ fu_himax_tp_hid_device_main_update(FuHimaxTpHidDevice *self,
 	g_autoptr(GPtrArray) st_units =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_himax_tp_hid_fw_unit_unref);
 
+	/* sanity check */
+	if (self->st_info == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no FuStructHimaxTpHidInfo");
+		return FALSE;
+	}
+
 	/* update all with nonzero size */
 	for (guint i = 0; i < FU_STRUCT_HIMAX_TP_HID_INFO_N_ELEMENTS_MAIN_MAPPING; i++) {
 		g_autoptr(FuStructHimaxTpHidFwUnit) st_unit = NULL;
