@@ -222,6 +222,13 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 							 &data_len,
 							 error))
 		return FALSE;
+	if (data_len < 0x01) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "initiate query packet was too small");
+		return FALSE;
+	}
 	if (data_len > XU_INPUT_DATA_LEN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
