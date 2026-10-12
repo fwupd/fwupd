@@ -1543,6 +1543,92 @@ fu_engine_cli_enable_test_devices(FuCli *cli, gchar **values, GError **error)
 }
 
 static gboolean
+fu_engine_cli_import_hwids(FuCli *cli, gchar **values, GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(cli);
+	FuConsole *console = fu_cli_get_console(cli);
+	FuContext *ctx = fu_engine_get_context(self->engine);
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
+	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	/* sanity check */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected HWIDS-FILE");
+		return FALSE;
+	}
+
+	/* a keyfile with overrides */
+	if (!g_key_file_load_from_file(kf, values[0], G_KEY_FILE_NONE, error))
+		return FALSE;
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
+		g_autofree gchar *tmp = NULL;
+		tmp = g_key_file_get_string(kf, "fwupd", hwid_key, NULL);
+		fu_hwids_add_value(hwids, hwid_key, tmp);
+	}
+
+	/* setup default hwids */
+	if (!fu_engine_load(self->engine,
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_HWINFO,
+			    self->progress,
+			    error))
+		return FALSE;
+
+	/* show debug output */
+	fu_console_print_literal(console, "Computer Information");
+	fu_console_print_literal(console, "--------------------");
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
+		const gchar *value = fu_hwids_get_value(hwids, hwid_key);
+		if (value == NULL)
+			continue;
+		if (g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
+		    g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
+			guint64 val = 0;
+			if (!fu_strtoull(value, &val, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+				return FALSE;
+			fu_console_print(console, "%s: %" G_GUINT64_FORMAT, hwid_key, val);
+		} else {
+			fu_console_print(console, "%s: %s", hwid_key, value);
+		}
+	}
+
+	/* show GUIDs */
+	fu_console_print_literal(console, "Hardware IDs");
+	fu_console_print_literal(console, "------------");
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+		g_autofree gchar *keys_str = NULL;
+		g_auto(GStrv) keysv = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get the GUID */
+		keys = fu_hwids_get_replace_keys(hwids, key);
+		guid = fu_hwids_get_guid(hwids, key, &error_local);
+		if (guid == NULL) {
+			fu_console_print_literal(console, error_local->message);
+			continue;
+		}
+
+		/* show what makes up the GUID */
+		keysv = g_strsplit(keys, "&", -1);
+		keys_str = g_strjoinv(" + ", keysv);
+		fu_console_print(console, "{%s}   <- %s", guid, keys_str);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_cli_export_hwids(FuCli *cli, gchar **values, GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(cli);
@@ -4632,6 +4718,13 @@ main(int argc, char *argv[])
 			     /* TRANSLATORS: command description */
 			     _("Save a file that allows generation of hardware IDs"),
 			     fu_engine_cli_export_hwids);
+	fu_cli_cmd_array_add(FU_CLI(self),
+			     "import-hwids",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("HWIDS-FILE"),
+			     /* TRANSLATORS: command description */
+			     _("Load a file that allows generation of hardware IDs"),
+			     fu_engine_cli_import_hwids);
 	fu_cli_cmd_array_add(FU_CLI(self),
 			     "self-sign",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
