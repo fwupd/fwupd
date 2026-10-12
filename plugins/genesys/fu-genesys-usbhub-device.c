@@ -2480,7 +2480,9 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	}
 
 	/* progress */
-	fu_progress_set_id(progress, fu_firmware_get_id(firmware));
+	fu_progress_set_id(progress, G_STRLOC);
+	if (fu_firmware_get_id(firmware) != NULL)
+		fu_progress_set_name(progress, fu_firmware_get_id(firmware));
 	if (skip_erase) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, NULL);
