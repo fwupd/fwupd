@@ -90,6 +90,12 @@ fu_amd_kria_device_write_firmware(FuDevice *device,
 	g_autofree gchar *cod_path = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
+	/* sanity check */
+	if (priv->esp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP");
+		return FALSE;
+	}
+
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
