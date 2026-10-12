@@ -350,7 +350,8 @@ fu_egis_moc_device_write_packets(FuEgisMocDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (i == fu_chunk_array_length(chunks) - 1) {
+		if (fu_chunk_get_data_sz(chk) > FU_EGIS_MOC_HMAC_SHA256_SIZE &&
+		    i == fu_chunk_array_length(chunks) - 1) {
 			g_byte_array_append(req,
 					    fu_chunk_get_data(chk),
 					    fu_chunk_get_data_sz(chk) -
