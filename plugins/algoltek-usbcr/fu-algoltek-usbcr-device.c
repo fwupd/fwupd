@@ -547,6 +547,12 @@ fu_algoltek_usbcr_device_verify_chunks(FuAlgoltekUsbcrDevice *self,
 							  fu_chunk_get_data_sz(chk),
 							  error))
 			return FALSE;
+
+		/* for fuzzing */
+		if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+			fu_progress_step_done(progress);
+			continue;
+		}
 		if (!fu_memcmp_safe(fu_chunk_get_data(chk),
 				    fu_chunk_get_data_sz(chk),
 				    0,
