@@ -37,25 +37,25 @@ pub struct ByteCount(usize);
 
 impl ByteCount {
     #[must_use]
-    pub fn count(self) -> usize {
+    pub const fn count(self) -> usize {
         self.0
     }
 
     /// Initialize a `ByteCount` from a number of kilobytes
     #[must_use]
-    pub fn from_kb(kb: usize) -> Self {
+    pub const fn from_kb(kb: usize) -> Self {
         Self(kb * KB_BYTES)
     }
 
     /// Initialize a `ByteCount` from a number of megabytes
     #[must_use]
-    pub fn from_mb(mb: usize) -> Self {
+    pub const fn from_mb(mb: usize) -> Self {
         Self(mb * MB_BYTES)
     }
 
     /// Initialize a `ByteCount` from a number of gigabytes
     #[must_use]
-    pub fn from_gb(gb: usize) -> Self {
+    pub const fn from_gb(gb: usize) -> Self {
         Self(gb * GB_BYTES)
     }
 
@@ -63,7 +63,7 @@ impl ByteCount {
     /// rounded up so that the number of bytes will fit, e.g. 1025 bytes require
     /// 2 KB space.
     #[must_use]
-    pub fn in_kb(&self) -> usize {
+    pub const fn in_kb(&self) -> usize {
         self.count().div_ceil(KB_BYTES)
     }
 
@@ -71,7 +71,7 @@ impl ByteCount {
     /// rounded up so that the number of bytes will fit, e.g. 1025 kilobytes require
     /// 2 MB space.
     #[must_use]
-    pub fn in_mb(&self) -> usize {
+    pub const fn in_mb(&self) -> usize {
         self.count().div_ceil(MB_BYTES)
     }
 
@@ -79,7 +79,7 @@ impl ByteCount {
     /// rounded up so that the number of bytes will fit, e.g. 1025 megabytes require
     /// 2 GB space.
     #[must_use]
-    pub fn in_gb(&self) -> usize {
+    pub const fn in_gb(&self) -> usize {
         self.count().div_ceil(GB_BYTES)
     }
 }
