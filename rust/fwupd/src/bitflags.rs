@@ -284,6 +284,7 @@ macro_rules! declare_bitflags {
         // -- Flag enum --
         #[doc = concat!("Individual flags for [`", stringify!($Mask), "`].")]
         #[allow(non_camel_case_types)]
+        #[allow(clippy::enum_variant_names)]
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         $vis enum $Flag {
             $(
