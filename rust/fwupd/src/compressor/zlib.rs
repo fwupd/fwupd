@@ -94,6 +94,17 @@ extern "C" {
     #[link_name = "inflate"]
     fn zlib_inflate(strm: *mut ZStreamRaw, flush: c_int) -> c_int;
     fn inflateEnd(strm: *mut ZStreamRaw) -> c_int;
+    fn inflateReset(strm: *mut ZStreamRaw) -> c_int;
+    fn inflateSetDictionary(
+        strm: *mut ZStreamRaw,
+        dictionary: *const u8,
+        dictLength: c_uint,
+    ) -> c_int;
+    fn deflateSetDictionary(
+        strm: *mut ZStreamRaw,
+        dictionary: *const u8,
+        dictLength: c_uint,
+    ) -> c_int;
 }
 
 #[repr(i32)]
@@ -303,6 +314,39 @@ impl ZStream<Inflate> {
             }
         }
     }
+
+    /// Reset the inflate stream to its initial state (keeps the same `window_bits`).
+    pub fn reset(self: Pin<&mut Self>) -> Result<(), Error> {
+        // SAFETY: we only pass self as a pointer to zlib; no move.
+        let this = unsafe { self.pinned_mut() };
+        unsafe {
+            match inflateReset((this as *mut Self).cast::<ZStreamRaw>()) {
+                Z_OK => Ok(()),
+                e => Err(Error::Zlib(format!("inflateReset failed with {e}"))),
+            }
+        }
+    }
+
+    /// Set a preset dictionary for the inflate stream.
+    ///
+    /// For raw inflate streams this can be called immediately after
+    /// `inflator()` or `reset()` to prime the sliding window with data
+    /// from the previous block (MSZIP cross-block dictionary support).
+    pub fn set_dictionary(self: Pin<&mut Self>, dict: &[u8]) -> Result<(), Error> {
+        // SAFETY: we only pass self and dict as pointers to zlib; no move.
+        let this = unsafe { self.pinned_mut() };
+        let dict_len = c_uint::try_from(dict.len()).map_err(|_| Error::SizeExceeded(dict.len()))?;
+        unsafe {
+            match inflateSetDictionary(
+                (this as *mut Self).cast::<ZStreamRaw>(),
+                dict.as_ptr(),
+                dict_len,
+            ) {
+                Z_OK => Ok(()),
+                e => Err(Error::Zlib(format!("inflateSetDictionary failed with {e}"))),
+            }
+        }
+    }
 }
 
 impl ZStream<Deflate> {
@@ -339,6 +383,28 @@ impl ZStream<Deflate> {
                 Z_OK => Ok(()),
                 Z_STREAM_END => Err(Error::StreamEnd),
                 e => Err(Error::Zlib(format!("deflateInit2 failed with {e}"))),
+            }
+        }
+    }
+
+    /// Set a preset dictionary for the deflate stream.
+    ///
+    /// Must be called immediately after [`ZStream::deflator`], before any
+    /// data is fed in.  The decompressor must be primed with the same bytes
+    /// via [`ZStream::set_dictionary`] (inflate side) so back-references
+    /// resolve correctly.
+    pub fn set_dictionary(self: Pin<&mut Self>, dict: &[u8]) -> Result<(), Error> {
+        // SAFETY: we only pass self and dict as pointers to zlib; no move.
+        let this = unsafe { self.pinned_mut() };
+        let dict_len = c_uint::try_from(dict.len()).map_err(|_| Error::SizeExceeded(dict.len()))?;
+        unsafe {
+            match deflateSetDictionary(
+                (this as *mut Self).cast::<ZStreamRaw>(),
+                dict.as_ptr(),
+                dict_len,
+            ) {
+                Z_OK => Ok(()),
+                e => Err(Error::Zlib(format!("deflateSetDictionary failed with {e}"))),
             }
         }
     }

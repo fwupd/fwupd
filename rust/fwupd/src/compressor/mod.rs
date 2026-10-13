@@ -14,7 +14,10 @@
 use std::io::Read;
 use std::pin::Pin;
 
+pub mod mszip;
 mod zlib;
+
+pub use mszip::{mszip_compress_block, MszipBlock, MszipCompressor, MszipDecompressor};
 
 use zlib::{Deflate, Inflate, ZStream};
 
