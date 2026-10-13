@@ -14,10 +14,11 @@ def test_files() -> int:
 
     for fn in (
         glob.glob("libfwupd/*.[c|h|py|rs]")
-        + glob.glob("libfwupdplugin/.[c|h|py|rs]")
-        + glob.glob("plugins/*/.[c|h|py|rs]")
-        + glob.glob("src/.[c|h|py|rs]")
+        + glob.glob("libfwupdplugin/*.[c|h|py|rs]")
+        + glob.glob("plugins/**/*.[c|h|py|rs]")
+        + glob.glob("src/*.[c|h|py|rs]")
     ):
+        print(fn)
         if fn.endswith("check-license.py"):
             continue
         lic: str = ""

@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2025 Colin Kinloch <colin.kinloch@collabora.com>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2025 Colin Kinloch <colin.kinloch@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
