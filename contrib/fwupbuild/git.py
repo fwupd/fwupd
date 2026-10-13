@@ -85,6 +85,15 @@ class GitRepo:
         RunCmd(["git", "clone", str(self.root)] + git_args, cwd=destdir, check=True)
         return GitRepo(root=destdir / self.root.name)
 
+    @property
+    def files(self) -> list[Path]:
+        """
+        Returns the list of files in this git repo as paths relative
+        to the repository root.
+        """
+        cmd = RunCmd(["git", "ls-files", "-z"], cwd=self.root, check=True)
+        return [Path(p) for p in cmd.stdout.split("\0")]
+
     @contextmanager
     def checkout(self, sha: GitSha):
         """
