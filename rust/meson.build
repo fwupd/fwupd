@@ -42,6 +42,7 @@ fwupd_rust_src = [
   'fwupd/Cargo.toml',
   'fwupd/src/bitflags.rs',
   'fwupd/src/compressor/mod.rs',
+  'fwupd/src/compressor/mszip.rs',
   'fwupd/src/compressor/zlib.rs',
   'fwupd/src/json/array.rs',
   'fwupd/src/json/error.rs',
