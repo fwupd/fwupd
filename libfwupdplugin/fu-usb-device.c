@@ -2773,13 +2773,6 @@ fu_usb_device_ensure_hid_descriptors(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
-
-	if (priv->handle == NULL) {
-		fu_usb_device_not_open_error(self, error);
-		return FALSE;
-	}
 	if (!fu_usb_device_ensure_interfaces(self, error))
 		return FALSE;
 	for (guint i = 0; i < priv->hid_descriptors->len; i++) {
@@ -2794,6 +2787,8 @@ fu_usb_device_ensure_hid_descriptors(FuUsbDevice *self, GError **error)
 			}
 		}
 	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2987,10 +2982,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) interfaces = NULL;
-	g_autoptr(GError) error_bos = NULL;
-	g_autoptr(GError) error_hid = NULL;
-	g_autoptr(GError) error_interfaces = NULL;
 
 	/* optional properties */
 	fwupd_json_object_add_string(json_obj, "GType", "FuUsbDevice");
@@ -3029,8 +3020,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_integer(json_obj, "SerialNumber", priv->desc.iSerialNumber);
 
 	/* array of BOS descriptors */
-	if (!fu_usb_device_ensure_bos_descriptors(self, &error_bos))
-		g_debug("%s", error_bos->message);
 	if (priv->bos_descriptors->len > 0) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->bos_descriptors->len; i++) {
@@ -3057,9 +3046,7 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 	}
 
 	/* array of HID descriptors */
-	if (!fu_usb_device_ensure_hid_descriptors(self, &error_hid)) {
-		g_debug("%s", error_hid->message);
-	} else if (priv->hid_descriptors->len > 0) {
+	if (priv->hid_descriptors->len > 0) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->hid_descriptors->len; i++) {
 			FuUsbHidDescriptor *hid_descriptor =
@@ -3077,13 +3064,10 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 	}
 
 	/* array of interfaces */
-	interfaces = fu_usb_device_get_interfaces(self, &error_interfaces);
-	if (interfaces == NULL) {
-		g_debug("%s", error_interfaces->message);
-	} else if (interfaces->len > 0) {
+	if (priv->interfaces->len > 0) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < interfaces->len; i++) {
-			FuUsbInterface *iface = g_ptr_array_index(interfaces, i);
+		for (guint i = 0; i < priv->interfaces->len; i++) {
+			FuUsbInterface *iface = g_ptr_array_index(priv->interfaces, i);
 			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			fwupd_codec_to_json(FWUPD_CODEC(iface), json_obj_tmp, flags);
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
