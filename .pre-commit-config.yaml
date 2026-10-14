@@ -81,8 +81,9 @@ repos:
           )$
       - id: check-potfiles
         name: check for missing translated files from potfiles
-        language: script
-        entry: ./contrib/ci/check-potfiles.py
+        language: system
+        entry: ./fwupbuild check-potfiles
+        pass_filenames: false
       - id: check-headers
         name: check for superfluous includes
         language: system
