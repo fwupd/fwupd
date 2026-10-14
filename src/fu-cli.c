@@ -1579,7 +1579,15 @@ fu_cli_device_test_step(FuCli *self,
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	const gchar *url_tmp;
+	gboolean broken = FALSE;
 	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
+	/* known broken */
+	if (!fwupd_json_object_get_boolean_with_default(json_obj, "broken", &broken, FALSE, error))
+		return FALSE;
+	fwupd_json_object_add_boolean(json_object_result, "broken", broken);
+	if (broken)
+		return TRUE;
 
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
