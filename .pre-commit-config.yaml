@@ -130,9 +130,10 @@ repos:
         entry: ./contrib/ci/check-hsi-tests.py
       - id: check-license
         name: Check license header
-        types_or: [shell, c, python]
-        language: script
-        entry: ./contrib/ci/check-license.py
+        types_or: [c, python, rust]
+        pass_filenames: false
+        language: system
+        entry: ./fwupbuild check-license
       - id: check-meson-install-tags
         name: Check meson install tags
         language: script
