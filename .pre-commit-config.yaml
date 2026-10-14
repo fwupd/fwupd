@@ -94,8 +94,9 @@ repos:
         entry: ./contrib/ci/check-source.py
       - id: check-quirks
         name: check quirk style
-        language: script
-        entry: ./contrib/ci/check-quirks.py
+        language: system
+        entry: ./fwupbuild check-quirks
+        files: \.quirk$
       - id: shellcheck
         name: check shellscript style
         language: system
