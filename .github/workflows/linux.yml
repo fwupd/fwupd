@@ -53,7 +53,7 @@ jobs:
         run: |
           echo "version=$(meson introspect "${MESON_BUILDDIR}" --projectinfo | jq -r .version)" >>"$GITHUB_OUTPUT"
       - name: Save tarball
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tarball
           path: "${{ env.MESON_BUILDDIR }}/meson-dist/*xz"
@@ -129,7 +129,7 @@ jobs:
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-build.sh"
       - name: Save any applicable artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ join(matrix.env.*, '-') }}
           path: |
@@ -172,7 +172,7 @@ jobs:
           path: ${{ runner.temp }}/lvfs-firmware-cache
           key: lvfs-firmware-${{ hashFiles('plugins/**/*test*/*.json') }}
       - name: Save any coverage data
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
