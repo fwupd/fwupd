@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
 from fwupbuild.git import GitRepo, GitSha
+from fwupbuild.logger import printer
 
 
 class TestGitSha:
@@ -293,3 +294,366 @@ class TestRepo:
         assert checkout_calls[0] == call(
             ["git", "checkout", resolved], cwd=Path("/repo"), check=True
         )
+
+
+class TestFindFiles:
+    """
+    Tests for GitRepo.find_files().
+
+    The function is supposed to return files that:
+      - have one of the given suffixes
+      - are NOT in any of the exclude_directories
+      - ARE in one of the include_directories (when specified)
+    """
+
+    @pytest.fixture
+    def repo(self, tmp_path):
+        root = tmp_path / "repo"
+        root.mkdir()
+        return GitRepo(root=root)
+
+    def test_suffix_filter_returns_matching(self, repo):
+        """Only files whose suffix is in the list are returned."""
+        files = [Path("src/foo.c"), Path("src/bar.h"), Path("README.md")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"])
+        assert result == [Path("src/foo.c")]
+
+    def test_no_suffix_argument_returns_all_files(self, repo):
+        """Omitting suffixes entirely returns all tracked files."""
+        files = [Path("src/foo.c"), Path("src/bar.h"), Path("README.md")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files()
+        assert sorted(result) == [
+            Path("README.md"),
+            Path("src/bar.h"),
+            Path("src/foo.c"),
+        ]
+
+    def test_multiple_suffixes_all_match(self, repo):
+        """Files matching any one of several suffixes are all returned."""
+        files = [Path("src/foo.c"), Path("src/bar.h"), Path("tests/test.py")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c", ".h"])
+        assert sorted(result) == [Path("src/bar.h"), Path("src/foo.c")]
+
+    def test_suffix_no_match_returns_empty(self, repo):
+        """Returns empty list when no files match the suffix."""
+        files = [Path("src/foo.c"), Path("src/bar.h")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".py"])
+        assert result == []
+
+    def test_empty_repo_returns_empty(self, repo):
+        """Returns empty list when there are no tracked files."""
+        with patch.object(GitRepo, "files", new_callable=PropertyMock, return_value=[]):
+            result = repo.find_files(suffixes=[".c"])
+        assert result == []
+
+    def test_exclude_directories_none_does_not_raise(self, repo):
+        """exclude_directories=None must not raise TypeError."""
+        files = [Path("src/foo.c")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"], exclude_directories=None)
+        assert result == [Path("src/foo.c")]
+
+    def test_include_directories_none_returns_all_suffix_matches(self, repo):
+        """include_directories=None imposes no directory restriction."""
+        files = [Path("src/foo.c"), Path("lib/bar.c")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"], include_directories=None)
+        assert sorted(result) == [Path("lib/bar.c"), Path("src/foo.c")]
+
+    def test_both_dir_args_none_returns_all_suffix_matches(self, repo):
+        """With both directory args None, all suffix-matching files are returned."""
+        files = [Path("a/foo.c"), Path("b/bar.c"), Path("c/baz.h")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"])
+        assert sorted(result) == [Path("a/foo.c"), Path("b/bar.c")]
+
+    def test_exclude_directory_removes_files_inside_it(self, repo):
+        """Files inside an excluded directory are omitted from results."""
+        root = repo.root
+        # Use absolute paths so f.resolve() gives the right answer
+        files = [root / "src/foo.c", root / "vendor/ext.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], exclude_directories=[root / "vendor"]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_exclude_relative_directory_resolved_against_repo_root(self, repo):
+        """A relative exclude path is resolved against the repo root."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "vendor/ext.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], exclude_directories=[Path("vendor")]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_exclude_nested_subdirectory(self, repo):
+        """Files nested under an excluded directory are also excluded."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "src/generated/auto.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], exclude_directories=[root / "src/generated"]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_exclude_does_not_affect_files_outside_it(self, repo):
+        """Files outside the excluded directory are unaffected."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "src/bar.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], exclude_directories=[root / "vendor"]
+            )
+        assert sorted(result) == [root / "src/bar.c", root / "src/foo.c"]
+
+    def test_multiple_exclude_directories(self, repo):
+        """Files inside any one of several excluded directories are omitted."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "vendor/a.c", root / "third_party/b.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"],
+                exclude_directories=[root / "vendor", root / "third_party"],
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_include_directory_limits_results(self, repo):
+        """Only files inside an included directory are returned."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "lib/bar.c", root / "tests/test.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], include_directories=[root / "src"]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_include_relative_directory_resolved_against_repo_root(self, repo):
+        """A relative include path is resolved against the repo root."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "lib/bar.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"], include_directories=[Path("src")])
+        assert result == [root / "src/foo.c"]
+
+    def test_multiple_include_directories(self, repo):
+        """Files in any of several include directories are all returned."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "lib/bar.c", root / "tests/test.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"],
+                include_directories=[root / "src", root / "lib"],
+            )
+        assert sorted(result) == [root / "lib/bar.c", root / "src/foo.c"]
+
+    def test_file_outside_all_include_directories_is_excluded(self, repo):
+        """When include_directories is set, files outside it are not returned."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "other/bar.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], include_directories=[root / "src"]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_exclude_takes_priority_over_include(self, repo):
+        """A file that is in both an include and an exclude directory is excluded."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "src/vendor/lib.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"],
+                include_directories=[root / "src"],
+                exclude_directories=[root / "src/vendor"],
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_suffix_and_include_combined(self, repo):
+        """Only files with the right suffix AND inside an include directory are returned."""
+        root = repo.root
+        files = [root / "src/foo.c", root / "src/bar.h", root / "lib/baz.c"]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(
+                suffixes=[".c"], include_directories=[root / "src"]
+            )
+        assert result == [root / "src/foo.c"]
+
+    def test_suffixes_none_returns_all_files(self, repo):
+        """suffixes=None imposes no suffix restriction."""
+        files = [Path("src/foo.c"), Path("src/bar.h"), Path("README.md")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=None)
+        assert sorted(result) == [
+            Path("README.md"),
+            Path("src/bar.h"),
+            Path("src/foo.c"),
+        ]
+
+    def test_as_absolute_paths_converts_relative(self, repo):
+        """as_absolute_paths=True returns paths rooted at repo.root, not CWD."""
+        root = repo.root
+        files = [Path("src/foo.c"), Path("lib/bar.c")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"], as_absolute_paths=True)
+        assert result == [root / "src/foo.c", root / "lib/bar.c"]
+
+    def test_as_absolute_paths_false_keeps_relative(self, repo):
+        """as_absolute_paths=False (default) leaves relative paths unchanged."""
+        files = [Path("src/foo.c"), Path("lib/bar.c")]
+        with patch.object(
+            GitRepo, "files", new_callable=PropertyMock, return_value=files
+        ):
+            result = repo.find_files(suffixes=[".c"])
+        assert result == [Path("src/foo.c"), Path("lib/bar.c")]
+
+
+class TestResolveFiles:
+    @pytest.fixture
+    def repo(self, tmp_path):
+        root = tmp_path / "repo"
+        root.mkdir()
+        return GitRepo(root=root)
+
+    def test_relative_str_returns_relative_path(self, repo):
+        """A relative string input is returned as a relative Path."""
+        (repo.root / "plugins" / "foo").mkdir(parents=True)
+        (repo.root / "plugins" / "foo" / "bar.c").touch()
+        with patch.object(
+            GitRepo,
+            "files",
+            new_callable=PropertyMock,
+            return_value=[Path("plugins/foo/bar.c")],
+        ):
+            assert repo.resolve_files(["plugins/foo/bar.c"]) == [
+                Path("plugins/foo/bar.c")
+            ]
+
+    def test_absolute_input_inside_root(self, repo):
+        """An absolute path inside the root is returned as a relative Path."""
+        abs_path = repo.root / "plugins" / "foo" / "bar.c"
+        abs_path.parent.mkdir(parents=True)
+        abs_path.touch()
+        with patch.object(
+            GitRepo,
+            "files",
+            new_callable=PropertyMock,
+            return_value=[Path("plugins/foo/bar.c")],
+        ):
+            assert repo.resolve_files([abs_path]) == [Path("plugins/foo/bar.c")]
+
+    def test_as_absolute_paths(self, repo):
+        """as_absolute_paths=True returns absolute paths."""
+        (repo.root / "plugins" / "foo").mkdir(parents=True)
+        (repo.root / "plugins" / "foo" / "bar.c").touch()
+        with patch.object(
+            GitRepo,
+            "files",
+            new_callable=PropertyMock,
+            return_value=[Path("plugins/foo/bar.c")],
+        ):
+            result = repo.resolve_files(["plugins/foo/bar.c"], as_absolute_paths=True)
+        assert result == [repo.root / "plugins" / "foo" / "bar.c"]
+
+    def test_multiple_files(self, repo):
+        """Multiple files are all resolved and returned in order."""
+        (repo.root / "a").mkdir()
+        (repo.root / "d").mkdir()
+        (repo.root / "a" / "b.c").touch()
+        (repo.root / "d" / "e.c").touch()
+        with patch.object(
+            GitRepo,
+            "files",
+            new_callable=PropertyMock,
+            return_value=[Path("a/b.c"), Path("d/e.c")],
+        ):
+            assert repo.resolve_files(["a/b.c", "d/e.c"]) == [
+                Path("a/b.c"),
+                Path("d/e.c"),
+            ]
+
+    def test_empty_list(self, repo):
+        """An empty input returns an empty list."""
+        with patch.object(GitRepo, "files", new_callable=PropertyMock, return_value=[]):
+            assert repo.resolve_files([]) == []
+
+    def test_outside_root_raises(self, repo, tmp_path):
+        """A path outside the repo root raises FileNotFoundError."""
+        outside = tmp_path / "other" / "file.c"
+        with patch.object(GitRepo, "files", new_callable=PropertyMock, return_value=[]):
+            with pytest.raises(FileNotFoundError, match="is not inside"):
+                repo.resolve_files([outside])
+
+    def test_path_traversal_raises(self, repo):
+        """A traversal path that escapes the repo root raises FileNotFoundError."""
+        with patch.object(GitRepo, "files", new_callable=PropertyMock, return_value=[]):
+            with pytest.raises(FileNotFoundError, match="is not inside"):
+                repo.resolve_files(["../escape/file.c"])
+
+    def test_untracked_file_emits_warning(self, repo):
+        """A file not in git's tracked list causes a warning."""
+        (repo.root / "src").mkdir()
+        (repo.root / "src" / "new.c").touch()
+        with patch.object(GitRepo, "files", new_callable=PropertyMock, return_value=[]):
+            with patch.object(printer, "warning") as mock_warning:
+                repo.resolve_files(["src/new.c"])
+                mock_warning.assert_called_once_with("src/new.c is not tracked by git")
+
+    def test_tracked_file_emits_no_warning(self, repo):
+        """A file in git's tracked list causes no warning."""
+        (repo.root / "src").mkdir()
+        (repo.root / "src" / "foo.c").touch()
+        with patch.object(
+            GitRepo,
+            "files",
+            new_callable=PropertyMock,
+            return_value=[Path("src/foo.c")],
+        ):
+            with patch.object(printer, "warning") as mock_warning:
+                repo.resolve_files(["src/foo.c"])
+                mock_warning.assert_not_called()
