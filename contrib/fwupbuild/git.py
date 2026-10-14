@@ -4,6 +4,7 @@
 
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import Self
 
@@ -85,14 +86,14 @@ class GitRepo:
         RunCmd(["git", "clone", str(self.root)] + git_args, cwd=destdir, check=True)
         return GitRepo(root=destdir / self.root.name)
 
-    @property
+    @cached_property
     def files(self) -> list[Path]:
         """
         Returns the list of files in this git repo as paths relative
         to the repository root.
         """
         cmd = RunCmd(["git", "ls-files", "-z"], cwd=self.root, check=True)
-        return [Path(p) for p in cmd.stdout.split("\0")]
+        return [Path(p) for p in cmd.stdout.split("\0") if p]
 
     @contextmanager
     def checkout(self, sha: GitSha):
@@ -103,6 +104,8 @@ class GitRepo:
         current_ref = self.current_ref or self.current_sha
         try:
             RunCmd(["git", "checkout", sha.sha], cwd=self.root, check=True)
+            # invalidate cache
+            self.__dict__.pop("files", None)
             assert self.current_sha == sha
             yield
         finally:
