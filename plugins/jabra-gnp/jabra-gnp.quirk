@@ -255,31 +255,14 @@ Plugin = jabra_gnp
 [USB\VID_0B0E&PID_2525]
 Plugin = jabra_gnp
 
-# Jabra Link 390 [runtime]
-[USB\VID_0B0E&PID_2E50]
-Plugin = jabra_gnp
-JabraGnpAddress = 0x01
-
-# Jabra Link 390 [runtime]
-[USB\VID_0B0E&PID_2E51]
-Plugin = jabra_gnp
-JabraGnpAddress = 0x01
-
-# Jabra Link 390 [runtime]
-[USB\VID_0B0E&PID_2E56]
-Plugin = jabra_gnp
-JabraGnpAddress = 0x01
-
-# Jabra Link 390 [runtime]
-[USB\VID_0B0E&PID_2E57]
-Plugin = jabra_gnp
-JabraGnpAddress = 0x01
-
+# Jabra Evolve3 85 [runtime]
 [USB\VID_0B0E&PID_253D]
 Plugin = jabra_gnp
 
-[USB\VID_0B0E&PID_253F]
+# Jabra Evolve3 85 [runtime]
+[USB\VID_0B0E&PID_253E]
 Plugin = jabra_gnp
 
-[USB\VID_0B0E&PID_253E]
+# Jabra Evolve3 85 [runtime]
+[USB\VID_0B0E&PID_253F]
 Plugin = jabra_gnp
