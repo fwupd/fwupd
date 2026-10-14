@@ -6,10 +6,12 @@
 # 'check-headers' subcommand — check headers for correctness
 
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 from .directories import directories
+from .git import GitRepo
 from .logger import logger, printer
 
 
@@ -114,19 +116,26 @@ def get_includes(file: Path) -> list[str]:
     return sorted(includes)
 
 
+def pathify(paths: list[str]) -> list[Path]:
+    return [Path(p) for p in paths]
+
+
 def run(args):
-    repo_root = directories.repository_root()
+    os.chdir(directories.repository_root())
+    repo = GitRepo(directories.repository_root())
 
-    def find_headers(dir: Path, exclude: list[str]) -> list[str]:
-        headers = [str(h.relative_to(repo_root)) for h in repo_root.glob(f"{dir}/*.h")]
-        return [h for h in headers if h not in exclude]
+    libfwupd_public_headers = pathify(["libfwupd/fwupd.h"])
+    libfwupd_headers = repo.find_files(
+        suffixes=[".h"],
+        include_directories=["libfwupd"],
+        file_filter=lambda f: f not in libfwupd_public_headers,
+    )
 
-    libfwupd_public_headers = ["libfwupd/fwupd.h"]
-    libfwupd_headers = find_headers("libfwupd", exclude=libfwupd_public_headers)
-
-    libfwupdplugin_public_headers = ["libfwupdplugin/fwupdplugin.h"]
-    libfwupdplugin_headers = find_headers(
-        "libfwupdplugin", exclude=libfwupdplugin_public_headers
+    libfwupdplugin_public_headers = pathify(["libfwupdplugin/fwupdplugin.h"])
+    libfwupdplugin_headers = repo.find_files(
+        suffixes=[".h"],
+        include_directories=["libfwupdplugin"],
+        file_filter=lambda f: f not in libfwupdplugin_public_headers,
     )
 
     toplevel_headers = libfwupd_public_headers + libfwupdplugin_public_headers
@@ -135,34 +144,41 @@ def run(args):
     internal_headers = libfwupd_headers + libfwupdplugin_headers
     internal_headers_filenames_only = [Path(f).name for f in internal_headers]
 
-    ignore_files = [
-        repo_root / "libfwupd/fwupd-context-test.c",
-        repo_root / "libfwupd/fwupd-thread-test.c",
-        repo_root / "libfwupdplugin/fu-fuzzer-main.c",
-    ]
+    ignore_files = pathify(
+        [
+            "libfwupd/fwupd-context-test.c",
+            "libfwupd/fwupd-thread-test.c",
+            "libfwupdplugin/fu-fuzzer-main.c",
+        ]
+    )
 
-    ignore_dirs = [
-        repo_root / "contrib",
-    ]
+    ignore_dirs = pathify(
+        [
+            "contrib",
+        ]
+    )
 
     if args.files:
-        files_to_check: list[Path] = [repo_root / f for f in args.files]
-    else:
-        globs = [
-            repo_root.glob("libfwupd/*.[c|h]"),
-            repo_root.glob("libfwupdplugin/*.[c|h]"),
-            repo_root.glob("plugins/*/*.[c|h]"),
-            repo_root.glob("src/*.[c|h]"),
+        try:
+            resolved = repo.resolve_files(args.files)
+        except FileNotFoundError as e:
+            printer.error(str(e))
+            return 1
+        files_to_check = [
+            f
+            for f in resolved
+            if f not in ignore_files
+            and not any(f.is_relative_to(d) for d in ignore_dirs)
         ]
-        files_to_check: list[Path] = [f for glob in globs for f in glob]
+    else:
+        files_to_check = repo.find_files(
+            suffixes=[".c", ".h"],
+            include_directories=["libfwupd", "libfwupdplugin", "plugins", "src"],
+            file_filter=lambda f: f not in ignore_files,
+        )
 
-    errors = []
-    for file in filter(
-        lambda f: (
-            f not in ignore_files and not any(f.is_relative_to(d) for d in ignore_dirs)
-        ),
-        files_to_check,
-    ):
+    errors: list[IncludeError] = []
+    for file in files_to_check:
         logger.debug(f"Checking {file}")
 
         try:
@@ -172,7 +188,7 @@ def run(args):
             continue
 
         if (
-            file.is_relative_to(repo_root / "plugins")
+            file.is_relative_to("plugins")
             and not file.name.endswith("-test.c")
             and not file.name.endswith("tool.c")
         ):
@@ -185,7 +201,7 @@ def run(args):
                     errors.append(InternalHeaderInclude(file, internal_header=include))
 
         for toplevel_header in toplevel_headers:
-            toplevel_includes = get_includes(repo_root / toplevel_header)
+            toplevel_includes = get_includes(toplevel_header)
             toplevel_includes_nopath = [Path(f).name for f in toplevel_includes]
 
             # we do not need both toplevel headers
@@ -249,7 +265,6 @@ def run(args):
                     )
 
     for e in errors:
-        fn = e.file.relative_to(repo_root)
-        printer.error(f"{fn}: {e}")
+        printer.error(f"{e.file}: {e}")
 
     return 1 if errors else 0
