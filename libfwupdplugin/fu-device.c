@@ -5482,7 +5482,9 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		}
 	}
 	if (priv->proxy != NULL) {
-		fwupd_codec_string_append(str, idt, "Proxy", "");
+		g_autofree gchar *title =
+		    g_strdup_printf("%s (as proxy)", G_OBJECT_TYPE_NAME(priv->proxy));
+		fwupd_codec_string_append(str, idt, title, "");
 		fu_device_to_string_impl(priv->proxy, idt + 1, str);
 	}
 }
