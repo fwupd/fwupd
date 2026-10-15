@@ -390,7 +390,7 @@ gchar *
 fu_jcat_libcrypto_x509_get_issuer_name(X509 *crt, GError **error)
 {
 	g_autoptr(BIO) issuer_bio = BIO_new(BIO_s_mem());
-	X509_NAME *issuer_name = X509_get_issuer_name(crt);
+	const X509_NAME *issuer_name = X509_get_issuer_name(crt);
 	gchar *issuer_string = NULL;
 	gsize issuer_string_length;
 
