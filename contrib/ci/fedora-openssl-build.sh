@@ -19,4 +19,4 @@ ninja -C "$BUILD" -v
 meson test -C "$BUILD" --print-errorlogs --verbose
 
 # generate coverage report
-./contrib/ci/coverage.sh
+./contrib/ci/coverage.py

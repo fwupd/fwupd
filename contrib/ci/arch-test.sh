@@ -89,4 +89,4 @@ endgroup
 WORKSPACE="$PWD"
 (cd build/src/fwupd &&
     GCOVR_SEARCH=../build GCOVR_OUTPUT="$WORKSPACE/coverage.xml" \
-        "$WORKSPACE/contrib/ci/coverage.sh")
+        "$WORKSPACE/contrib/ci/coverage.py")

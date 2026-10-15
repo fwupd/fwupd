@@ -132,7 +132,7 @@ jobs:
           CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
         run: |
           # merge the .gcda pulled off the device next to the matching .gcno, then
-          # run coverage.sh inside the android container (NDK llvm-cov + gcovr) with
+          # run coverage.py inside the android container (NDK llvm-cov + gcovr) with
           # the workspace mounted at /github/workspace so the compile-time paths line up
           gcda_build=$(find emulator-gcov -type d -name build 2>/dev/null | head -1)
           if [ -z "${gcda_build}" ]; then
@@ -150,7 +150,7 @@ jobs:
               -v "$GITHUB_WORKSPACE:/github/workspace" \
               -w /github/workspace \
               "${CONTAINER_URI}" \
-              ./contrib/ci/coverage.sh
+              ./contrib/ci/coverage.py
       - name: Upload to codecov
         if: ${{ !cancelled() && hashFiles('coverage.xml') != '' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1

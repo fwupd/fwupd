@@ -107,7 +107,7 @@ def main() -> None:
 
     # generate coverage report using llvm-cov from the NDK
     env["GCOV"] = f"{NDK_PREBUILT}/bin/llvm-cov gcov"
-    run(os.path.join(root, "contrib", "ci", "coverage.sh"), env=env)
+    run(os.path.join(root, "contrib", "ci", "coverage.py"), env=env)
 
 
 if __name__ == "__main__":
