@@ -126,11 +126,8 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 	}
 
 	/* set vendor ID */
-	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("%04X", vid);
-		fu_device_build_vendor_id(FU_DEVICE(self), "BLUETOOTH", vendor_id); /* compat */
-		fu_device_build_vendor_id_u16(FU_DEVICE(self), "BLUETOOTH", vid);
-	}
+	if (vid != 0x0)
+		fu_device_build_vendor_id_u16(FU_DEVICE(self), is_usb ? "USB" : "BLUETOOTH", vid);
 
 	/* set version if the revision has been set */
 	if (rev != 0x0 &&
