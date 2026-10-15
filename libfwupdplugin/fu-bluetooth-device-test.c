@@ -44,7 +44,7 @@ fu_bluetooth_device_modalias_func(void)
 	fu_bluetooth_device_set_modalias(dev_usb, "usb:v0461p4EEFd0001");
 	g_assert_cmpint(fu_device_get_vid(FU_DEVICE(dev_usb)), ==, 0x0461);
 	g_assert_cmpint(fu_device_get_pid(FU_DEVICE(dev_usb)), ==, 0x4EEF);
-	g_assert_true(fu_device_has_vendor_id(FU_DEVICE(dev_usb), "BLUETOOTH:0x0461"));
+	g_assert_true(fu_device_has_vendor_id(FU_DEVICE(dev_usb), "USB:0x0461"));
 	g_assert_cmpstr(fu_device_get_version(FU_DEVICE(dev_usb)), ==, "0.1");
 
 	/* the modalias is serialized to the daemon string */

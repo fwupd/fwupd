@@ -51,6 +51,7 @@ void
 fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 {
 	FuBluetoothDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *subsystem = "BLUETOOTH";
 	gsize modaliaslen;
 	guint16 vid = 0x0;
 	guint16 pid = 0x0;
@@ -59,14 +60,13 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 	g_return_if_fail(FU_IS_BLUETOOTH_DEVICE(self));
 	g_return_if_fail(modalias != NULL);
 
-	/* usb:v0461p4EEFd0001 */
+	/* usb:v0461p4EEFd0001 or bluetooth:v000ApFFFFdFFFF */
 	modaliaslen = strlen(modalias);
 	if (g_str_has_prefix(modalias, "usb:")) {
+		subsystem = "USB";
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 5, &vid, NULL);
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 10, &pid, NULL);
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 15, &rev, NULL);
-
-		/* bluetooth:v000ApFFFFdFFFF */
 	} else if (g_str_has_prefix(modalias, "bluetooth:")) {
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 11, &vid, NULL);
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 16, &pid, NULL);
@@ -87,7 +87,7 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
-					 "BLUETOOTH",
+					 subsystem,
 					 "VID",
 					 NULL);
 	fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -114,11 +114,8 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 	}
 
 	/* set vendor ID */
-	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("%04X", vid);
-		fu_device_build_vendor_id(FU_DEVICE(self), "BLUETOOTH", vendor_id); /* compat */
-		fu_device_build_vendor_id_u16(FU_DEVICE(self), "BLUETOOTH", vid);
-	}
+	if (vid != 0x0)
+		fu_device_build_vendor_id_u16(FU_DEVICE(self), subsystem, vid);
 
 	/* set version if the revision has been set */
 	if (rev != 0x0 &&
