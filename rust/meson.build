@@ -57,7 +57,7 @@ fwupd_ffi_src = [
 fwupd_rust_lib = custom_target(
   'fwupd-rust',
   output: 'fwupd-rust.stamp',
-  command: [cargo_wrapper, '-p', 'fwupd', 'build', '--stamp', '@OUTPUT@'],
+  command: [cargo_wrapper, '--quiet', '-p', 'fwupd', 'build', '--stamp', '@OUTPUT@'],
   env: cargo_env,
   console: true,
   install: false,
@@ -69,7 +69,7 @@ fwupd_rust_lib = custom_target(
 fwupd_ffi_lib = custom_target(
   'fwupd-ffi',
   output: 'libfwupd_ffi.a',
-  command: [cargo_wrapper, '-p', 'fwupd-ffi', 'build', '--output', '@OUTPUT@'],
+  command: [cargo_wrapper, '--quiet', '-p', 'fwupd-ffi', 'build', '--output', '@OUTPUT@'],
   env: cargo_env,
   console: true,
   install: host_machine.system() == 'android',
@@ -104,7 +104,7 @@ if build_docs
   custom_target(
     'rust-doc',
     output: 'doc',
-    command: [cargo_wrapper, 'doc', '--copy', '@OUTPUT@', '--no-deps'],
+    command: [cargo_wrapper, 'doc', '--quiet', '--copy', '@OUTPUT@', '--no-deps'],
     env: cargo_env,
     console: true,
     install: false,
