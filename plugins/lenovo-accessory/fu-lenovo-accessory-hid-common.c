@@ -280,6 +280,7 @@ fu_lenovo_accessory_hid_process(FuLenovoAccessoryImpl *impl, GByteArray *buf, GE
 
 	if (!fu_lenovo_accessory_hid_write(impl, buf, error))
 		return NULL;
+	fu_device_sleep(FU_DEVICE(impl), 10);
 	if (!fu_device_retry_full(FU_DEVICE(impl),
 				  fu_lenovo_accessory_hid_poll_cb,
 				  500, /* count */
