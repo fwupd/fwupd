@@ -15,10 +15,10 @@ GType = FuSynapticsRmiPs2Device
 
 [12f80028-b4b7-4b2d-aca8-46e0ff65814c]
 Plugin = intel_me
-GType = FuIntelMeAmtDevice
+GType = FuIntelMeDevice
 
 [ACME]
-BatteryThreshold=99
+BatteryThreshold = 99
 
 [aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee]
 VersionLowest = 1.2.3
