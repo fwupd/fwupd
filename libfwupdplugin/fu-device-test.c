@@ -692,6 +692,41 @@ fu_device_children_func(void)
 }
 
 static void
+fu_device_children_instance_ids_func(void)
+{
+	const gchar *guid_generic = "88e57a95-5647-5d9d-a363-604f22a0bb26";
+	const gchar *guid_config = "3b55d37a-0636-53a0-84db-a92ba3f6302c";
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) parent = fu_device_new(ctx);
+	g_autoptr(FuDevice) child = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_physical_id(parent, "dummy");
+	fu_device_set_logical_id(child, "cfg");
+	fu_device_add_instance_id(child, "USB\\VID_06CB&PID_00F0-cfg");
+	fu_device_add_child(parent, child);
+	g_assert_true(fu_device_has_guid(child, guid_generic));
+
+	/* the Synaptics IOTA setup adds a configuration ID after add_child has
+	 * already converted the generic instance ID */
+	fu_device_add_instance_id(child, "USB\\VID_06CB&PID_00F0&CFG1_3633&CFG2_0");
+	g_assert_false(fu_device_has_guid(child, guid_config));
+	ret = fu_device_setup(parent, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_guid(child, guid_generic));
+	g_assert_true(fu_device_has_guid(child, guid_config));
+	g_assert_cmpuint(fu_device_get_guids(child)->len, ==, 2);
+	g_assert_cmpuint(fu_device_get_instance_ids(child)->len, ==, 2);
+
+	/* repeated conversion must not duplicate either identifier */
+	fu_device_convert_instance_ids(child);
+	g_assert_cmpuint(fu_device_get_guids(child)->len, ==, 2);
+	g_assert_cmpuint(fu_device_get_instance_ids(child)->len, ==, 2);
+}
+
+static void
 fu_device_parent_func(void)
 {
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
@@ -1070,6 +1105,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/inhibit-updateable", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device/parent", fu_device_parent_func);
 	g_test_add_func("/fwupd/device/children", fu_device_children_func);
+	g_test_add_func("/fwupd/device/children-instance-ids",
+			fu_device_children_instance_ids_func);
 	g_test_add_func("/fwupd/device/incorporate", fu_device_incorporate_func);
 	g_test_add_func("/fwupd/device/incorporate-flag", fu_device_incorporate_flag_func);
 	g_test_add_func("/fwupd/device/incorporate-non-generic",
