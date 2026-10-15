@@ -29,6 +29,10 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_0955&PID_CF0A`
 
+That ID does not identify the system the device is in, so its quirk entry sets
+`enforce-requires`: a release must also carry a CHID, parent, child or sibling requirement, such as
+the CHIDs of the systems it was built for.
+
 ## Update Behavior
 
 The internal flash holds the boot image in bank 0 at `0x00000` and a staging image in bank 1
