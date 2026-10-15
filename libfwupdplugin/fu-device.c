@@ -6437,10 +6437,6 @@ fu_device_convert_instance_ids(FuDevice *self)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	/* already set */
-	if (fu_device_get_guids(self)->len > 0)
-		return;
-
 	/* convert the FuDevice IDs to FwupdDevice IDs */
 	no_generic_guids = fu_device_has_private_flag_quark(self, quarks[QUARK_NO_GENERIC_GUIDS]);
 	if (priv->instance_ids != NULL) {
