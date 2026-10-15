@@ -232,18 +232,18 @@ struct FuStructLenovoAccessoryPairListReq {
     target_slot: u8,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 #[repr(C, packed)]
 struct FuStructLenovoAccessoryPairSupportInfoRsp {
-    op_code: FuLenovoAccessoryPairListOpCode,
+    op_code: FuLenovoAccessoryPairListOpCode == GetSupportInfo,
     max_slot_num: u8,
     slot_status: [u8; 8],
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 #[repr(C, packed)]
 struct FuStructLenovoAccessoryPairSlotInfoV2Rsp {
-    op_code: FuLenovoAccessoryPairListOpCode,
+    op_code: FuLenovoAccessoryPairListOpCode == GetSlotInfoV2,
     target_slot: u8,
     pid: u16be,
     mac_addr: [u8; 6],
