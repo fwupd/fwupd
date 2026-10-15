@@ -270,7 +270,7 @@ fu_jcat_libcrypto_pkcs7_engine_verify(FuJcatEngine *engine,
 		time_t signing_time = 0;
 		int stime_loc = CMS_signed_get_attr_by_NID(info, NID_pkcs9_signingTime, -1);
 		X509_ATTRIBUTE *stime_attr = NULL;
-		ASN1_TYPE *stime = NULL;
+		const ASN1_TYPE *stime = NULL;
 		ASN1_TIME *t = NULL;
 		g_autoptr(BIO) issuer_bio = BIO_new(BIO_s_mem());
 
