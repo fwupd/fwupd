@@ -49,4 +49,4 @@ mkdir -p "${root}/dist/share"
 mv "${root}/target/share/doc" "${root}/dist/share"
 
 # generate coverage report
-./contrib/ci/coverage.sh
+./contrib/ci/coverage.py

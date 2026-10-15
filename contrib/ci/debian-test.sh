@@ -39,7 +39,7 @@ gnome-desktop-testing-runner --timeout=2400 fwupd
 endgroup
 
 # generate coverage report
-./contrib/ci/coverage.sh
+./contrib/ci/coverage.py
 
 group "Clean up"
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev
