@@ -21,6 +21,29 @@
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
 
+class MainContextAcquire
+{
+	GMainContext *m_ctx = nullptr;
+	gboolean m_acquired = FALSE;
+
+      public:
+	explicit MainContextAcquire(FwupdClient *client)
+	{
+		m_ctx = fwupd_client_get_main_context(client);
+		if (m_ctx != nullptr)
+			m_acquired = g_main_context_acquire(m_ctx);
+	}
+	~MainContextAcquire()
+	{
+		if (m_ctx != nullptr) {
+			while (g_main_context_iteration(m_ctx, FALSE)) {
+			}
+			if (m_acquired)
+				g_main_context_release(m_ctx);
+		}
+	}
+};
+
 /* define the listener object: converts incoming Binder events back into
  * FwupdClient signals so they flow through the same event path as the D-Bus
  * client (device-added, device-removed, device-changed, device-request) */
@@ -45,6 +68,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onDeviceAdded(const aidl_fwupd::FwupdDevice &device) override
 	{
+		MainContextAcquire guard(m_client);
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FwupdDevice) dev = fu_binder_device_from_aidl(device, &error);
 		if (dev == NULL) {
@@ -58,6 +82,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onDeviceRemoved(const aidl_fwupd::FwupdDevice &device) override
 	{
+		MainContextAcquire guard(m_client);
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FwupdDevice) dev = fu_binder_device_from_aidl(device, &error);
 		if (dev == NULL) {
@@ -71,6 +96,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onDeviceChanged(const aidl_fwupd::FwupdDevice &device) override
 	{
+		MainContextAcquire guard(m_client);
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FwupdDevice) dev = fu_binder_device_from_aidl(device, &error);
 		if (dev == NULL) {
@@ -84,6 +110,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onDeviceRequest(const aidl_fwupd::FwupdRequest &request) override
 	{
+		MainContextAcquire guard(m_client);
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FwupdRequest) req = fu_binder_request_from_aidl(request, &error);
 		if (req == NULL) {
@@ -97,6 +124,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 	::ndk::ScopedAStatus
 	onPropertiesChanged(const aidl_fwupd::FwupdProperties &properties) override
 	{
+		MainContextAcquire guard(m_client);
 		fwupd_client_set_status(m_client, (FwupdStatus)properties.status);
 		fwupd_client_set_percentage(m_client, properties.percentage);
 		fwupd_client_set_pending_reboot(m_client, properties.pendingReboot);

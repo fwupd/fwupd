@@ -175,8 +175,9 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 	    "org.freedesktop.fwupd.get-host-security-attrs",
 	    "org.freedesktop.fwupd.get-host-security-events",
 	    "org.freedesktop.fwupd.update-hotplug-trusted",
-	    "org.freedesktop.fwupd.update-internal-trusted",
+	    "org.freedesktop.fwupd.device-activate",
 	    "org.freedesktop.fwupd.refresh-remote",
+	    "org.freedesktop.fwupd.clear-results",
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(public_action_ids); i++) {
 		if (g_strcmp0(action_id, public_action_ids[i]) == 0)
@@ -221,6 +222,9 @@ fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper, GErro
 		    fu_engine_installer_pop_action_id(helper->engine_installer);
 		if (action_id == NULL)
 			break;
+		if (!fu_context_get_config_bool(fu_engine_get_context(engine), "OnlyTrusted") &&
+		    g_strcmp0(action_id, "org.freedesktop.fwupd.update-hotplug") == 0)
+			continue;
 		if (!fu_binder_daemon_authorize(action_id, error))
 			return FALSE;
 	}
