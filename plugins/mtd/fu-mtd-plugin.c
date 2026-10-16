@@ -30,6 +30,19 @@ fu_mtd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 }
 
 static void
+fu_mtd_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	GPtrArray *devices = fu_plugin_get_devices(plugin);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+
+		if (FU_IS_MTD_DEVICE(device))
+			fu_mtd_device_add_security_attrs_wp_ro(FU_MTD_DEVICE(device), attrs);
+	}
+}
+
+static void
 fu_mtd_plugin_init(FuMtdPlugin *self)
 {
 }
@@ -46,6 +59,7 @@ fu_mtd_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_udev_subsystem(plugin, "mtd");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_MTD_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_IFD_DEVICE); /* coverage */
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "tpm");
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_mtd_plugin_parent_class)->constructed(obj);
@@ -57,4 +71,5 @@ fu_mtd_plugin_class_init(FuMtdPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_mtd_plugin_constructed;
 	plugin_class->startup = fu_mtd_plugin_startup;
+	plugin_class->add_security_attrs = fu_mtd_plugin_add_security_attrs;
 }
