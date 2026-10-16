@@ -13,6 +13,7 @@
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -25,12 +26,17 @@ struct _FuRedfishBackend {
 	gchar *bearer_token;
 	gchar *session_key_file;
 	gchar *session_key;
+	gchar *session_key_file_value; /* last good value read from session_key_file */
+	GFileMonitor *session_key_monitor;
 	gchar *session_uri;
 	guint port;
 	gchar *vendor;
 	gchar *version;
 	gchar *uuid;
 	gchar *update_uri_path;
+	gchar *uploaded_checksum; /* of the last bundle sent, so an archive sends it once */
+	FuDevice *written_device; /* uploaded a bundle in this composite install */
+	gboolean composite;	  /* between composite_prepare() and composite_cleanup() */
 	gchar *push_uri_path;
 	gchar *path_prefix;
 	gboolean use_https;
@@ -66,6 +72,51 @@ fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 	return self->uuid;
 }
 
+const gchar *
+fu_redfish_backend_get_uploaded_checksum(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->uploaded_checksum;
+}
+
+void
+fu_redfish_backend_set_uploaded_checksum(FuRedfishBackend *self, const gchar *checksum)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	if (g_strcmp0(self->uploaded_checksum, checksum) == 0)
+		return;
+	g_free(self->uploaded_checksum);
+	self->uploaded_checksum = g_strdup(checksum);
+}
+
+void
+fu_redfish_backend_set_composite(FuRedfishBackend *self, gboolean composite)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	self->composite = composite;
+}
+
+gboolean
+fu_redfish_backend_get_composite(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
+	return self->composite;
+}
+
+void
+fu_redfish_backend_set_written_device(FuRedfishBackend *self, FuDevice *device)
+{
+	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+	g_set_object(&self->written_device, device);
+}
+
+FuDevice *
+fu_redfish_backend_get_written_device(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->written_device;
+}
+
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
@@ -78,6 +129,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *session_key =
+	    self->session_key_file != NULL ? fu_redfish_backend_get_session_key(self, NULL) : NULL;
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -100,15 +153,22 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
-		/* Some custom implementation require special authentication through bearer token.
-		 * Let's use that if configured to do so. */
+	if (session_key != NULL) {
+		/* X-Auth-Token session authentication per Redfish DSP0266 §12.3, used
+		 * only when SessionKeyFile named a session created out of band, so that
+		 * no password needs to be stored on disk.  A key obtained from
+		 * fu_redfish_backend_create_session() deliberately does not land here:
+		 * those callers authenticate normally and use the key themselves.
+		 * a file monitor keeps the key current, so a session replaced out of
+		 * band is picked up without restarting the daemon. */
+		g_autofree gchar *auth_header = g_strdup_printf("X-Auth-Token: %s", session_key);
+		fu_redfish_request_add_header(request, auth_header);
+	} else if (self->bearer_token != NULL) {
+		/* Some custom implementations require OAuth2 bearer token auth. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
 		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
 	} else {
-		/* Here is the common auth scenario, when no specific bearer token is configured.
-		 * since DSP0266 makes Basic Authorization a requirement,
-		 * it is safe to use Basic Auth for all implementations */
+		/* Common scenario: Basic Auth per DSP0266 §12.1. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
 		(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
 		(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
@@ -474,8 +534,11 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 		const gchar *tmp =
 		    fwupd_json_object_get_string(json_obj, "MultipartHttpPushUri", NULL);
 		if (tmp != NULL) {
-			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
-			    fu_redfish_backend_has_smc_update_path(json_obj)) {
+			if (fu_context_has_hwid_flag(fu_backend_get_context(FU_BACKEND(self)),
+						     "nvidia-oob")) {
+				self->device_gtype = FU_TYPE_REDFISH_NVIDIA_DEVICE;
+			} else if (g_strcmp0(self->vendor, "SMCI") == 0 &&
+				   fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
@@ -657,8 +720,12 @@ fu_redfish_backend_setup(FuBackend *backend,
 	if (fwupd_json_object_has_node(json_obj, "Vendor"))
 		g_set_str(&self->vendor, fwupd_json_object_get_string(json_obj, "Vendor", NULL));
 	if (g_strcmp0(self->vendor, "Dell") == 0) {
-		if (!fu_redfish_backend_setup_dell(self, error))
-			return FALSE;
+		g_autoptr(GError) error_dell = NULL;
+		/* an OEM-branded station can report this vendor without its OEM
+		 * extensions, and must still be set up: the system ID only refines the
+		 * instance IDs */
+		if (!fu_redfish_backend_setup_dell(self, &error_dell))
+			g_debug("ignoring Dell system ID: %s", error_dell->message);
 	}
 	json_update_service = fwupd_json_object_get_object(json_obj, "UpdateService", error);
 	if (json_update_service == NULL)
@@ -756,11 +823,77 @@ fu_redfish_backend_has_bearer_token(FuRedfishBackend *self)
 	return self->bearer_token != NULL;
 }
 
+static gboolean
+fu_redfish_backend_read_session_key_file(FuRedfishBackend *self, GError **error)
+{
+	g_autofree gchar *session_key = NULL;
+
+	if (!g_file_get_contents(self->session_key_file, &session_key, NULL, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	g_strstrip(session_key);
+	if (session_key[0] == '\0') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get session key");
+		return FALSE;
+	}
+	g_set_str(&self->session_key_file_value, session_key);
+	return TRUE;
+}
+
+static void
+fu_redfish_backend_session_key_file_changed_cb(GFileMonitor *monitor,
+					       GFile *file,
+					       GFile *other_file,
+					       GFileMonitorEvent event_type,
+					       gpointer user_data)
+{
+	FuRedfishBackend *self = FU_REDFISH_BACKEND(user_data);
+	g_autoptr(GError) error_local = NULL;
+
+	/* also sent after a file is renamed into place, so one event per change */
+	if (event_type != G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT)
+		return;
+
+	/* a failed or empty read leaves the previous key in place */
+	if (!fu_redfish_backend_read_session_key_file(self, &error_local)) {
+		g_debug("keeping the previous session key: %s", error_local->message);
+		return;
+	}
+	g_debug("reloaded the session key from %s", self->session_key_file);
+}
+
 void
 fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file)
 {
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GError) error_local = NULL;
+
 	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
+
 	g_set_str(&self->session_key_file, session_key_file);
+	g_clear_pointer(&self->session_key_file_value, g_free);
+	g_clear_object(&self->session_key_monitor);
+	if (session_key_file == NULL)
+		return;
+
+	file = g_file_new_for_path(session_key_file);
+	self->session_key_monitor =
+	    g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, &error_local);
+	if (self->session_key_monitor == NULL) {
+		g_warning("cannot watch %s, so it is read on every request: %s",
+			  session_key_file,
+			  error_local->message);
+		return;
+	}
+	g_signal_connect_object(self->session_key_monitor,
+				"changed",
+				G_CALLBACK(fu_redfish_backend_session_key_file_changed_cb),
+				self,
+				0);
 }
 
 const gchar *
@@ -779,11 +912,12 @@ fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error)
 	if (self->session_key != NULL) {
 		session_key = g_strdup(self->session_key);
 	} else if (self->session_key_file != NULL) {
-		if (!g_file_get_contents(self->session_key_file, &session_key, NULL, error)) {
-			fwupd_error_convert(error);
+		/* the monitor keeps the value current once it has been read; without
+		 * one every request has to read it again */
+		if ((self->session_key_file_value == NULL || self->session_key_monitor == NULL) &&
+		    !fu_redfish_backend_read_session_key_file(self, error))
 			return NULL;
-		}
-		g_strstrip(session_key);
+		session_key = g_strdup(self->session_key_file_value);
 	}
 
 	/* sanity check */
@@ -807,6 +941,7 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
 	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
+	/* only ever the path: the key itself is a bearer-equivalent token */
 	fwupd_codec_string_append(str, idt, "SessionKeyFile", self->session_key_file);
 	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
@@ -829,6 +964,9 @@ fu_redfish_backend_finalize(GObject *object)
 	g_hash_table_unref(self->request_cache);
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
+	g_free(self->uploaded_checksum);
+	if (self->written_device != NULL)
+		g_object_unref(self->written_device);
 	g_free(self->push_uri_path);
 	g_free(self->path_prefix);
 	g_free(self->hostname);
@@ -836,7 +974,9 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->password);
 	g_free(self->bearer_token);
 	g_free(self->session_key_file);
+	g_free(self->session_key_file_value);
 	g_free(self->session_key);
+	g_clear_object(&self->session_key_monitor);
 	g_free(self->session_uri);
 	g_free(self->vendor);
 	g_free(self->version);

@@ -16,12 +16,14 @@ HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
 HARDCODED_DELL_USERNAME = "dell_username"
+HARDCODED_NVIDIA_USERNAME = "nvidia_username"
 HARDCODED_USERNAMES = {
     HARDCODED_USERNAME,
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
     HARDCODED_DELL_USERNAME,
+    HARDCODED_NVIDIA_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
 HARDCODED_BEARER_TOKEN = "token2"
@@ -30,6 +32,9 @@ app._percentage545: int = 0
 app._percentage546: int = 0
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
+app._nvidia_auxpowerreset: int = 0
+app._nvidia_upload: int = 0
+app._poll_nvidia_oob: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -41,6 +46,29 @@ def _failure(msg: str, status=400):
     )
 
 
+def _username() -> str:
+    try:
+        return request.authorization["username"]
+    except (KeyError, TypeError):
+        return ""
+
+
+def _is_nvidia() -> bool:
+    return _username() == HARDCODED_NVIDIA_USERNAME
+
+
+def _not_found(uri: str):
+    # a real Redfish service always sets error.code; _failure() omits it, and an
+    # absent code makes the plugin's error mapping dereference NULL
+    res = {
+        "error": {
+            "code": "Base.1.8.ResourceMissingAtURI",
+            "message": f"The resource at {uri} was not found.",
+        }
+    }
+    return Response(response=json.dumps(res), status=404, mimetype="application/json")
+
+
 @app.route("/redfish/v1/")
 def index():
     # reset counter
@@ -48,6 +76,8 @@ def index():
     app._percentage546 = 0
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
+    app._nvidia_upload = 0
+    app._poll_nvidia_oob = 0
 
     # a bearer token is used instead of a username and password, e.g. when talking
     # to a proxy that injects the real BMC credentials
@@ -159,14 +189,253 @@ def update_service():
         if app._hpeupdateresult is not None:
             res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
         res["HttpPushUri"] = "/FWUpdate-hpe"
+    elif _is_nvidia():
+        res["MultipartHttpPushUri"] = "/FWUpdate-nvidia"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
 
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
+# ── NVIDIA DGX Station GB300 ──────────────────────────────────────────────────
+# The plugin recognises a GB300 from the host's hardware IDs, not from anything
+# the BMC reports, so the self test gives this persona its own hardware ID.
+
+
+# The aux-rail reset is advertised by BMC_0 -- the plugin has to read the action
+# target from here.
+@app.route("/redfish/v1/Chassis/BMC_0")
+def chassis_bmc_0():
+    if not _is_nvidia():
+        return _not_found("/redfish/v1/Chassis/BMC_0")
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/BMC_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "BMC_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "BMC",
+        "Actions": {
+            "Oem": {
+                "#NvidiaChassis.AuxPowerReset": {
+                    "@Redfish.ActionInfo": "/redfish/v1/Chassis/BMC_0/Oem/Nvidia/AuxPowerResetActionInfo",
+                    "target": "/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset",
+                }
+            }
+        },
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route(
+    "/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset",
+    methods=["POST"],
+)
+def chassis_bmc_0_auxpowerreset():
+    if not _is_nvidia():
+        return _not_found("/redfish/v1/Chassis/BMC_0")
+    try:
+        reset_type = request.get_json(force=True)["ResetType"]
+    except (TypeError, KeyError):
+        return _failure("no ResetType")
+    if reset_type != "AuxPowerCycleForce":
+        return _failure(f"unsupported ResetType {reset_type}")
+    # a real BMC drops the rail here and the connection dies; the mock has to
+    # answer so the test can assert the request was well formed
+    app._nvidia_auxpowerreset += 1
+    return Response(status=204)
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0")
+def firmware_inventory_nvidia_bmc():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0",
+        "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
+        "Id": "FW_BMC_0",
+        "Manufacturer": "NVIDIA",
+        # every GB300 inventory entry is named this, which is why the device
+        # renames itself after the URI basename
+        "Name": "Software Inventory",
+        "SoftwareId": "0xFF00",
+        "Updateable": True,
+        "Version": "GB300-1.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+# The GPU comes in board variants that take different images; the PCIe function
+# listed under its chassis carries the IDs that tell them apart.
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0")
+def firmware_inventory_nvidia_gpu():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0",
+        "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
+        "Id": "FW_GPU_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "RelatedItem": [{"@odata.id": "/redfish/v1/Chassis/GPU_0"}],
+        "SoftwareId": "0xC000",
+        "Updateable": True,
+        "Version": "97.10.77.00.0D",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0")
+def chassis_gpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "GPU_0",
+        "Name": "GPU_0",
+        "PCIeDevices": {"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices"},
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices")
+def chassis_gpu_0_pcie_devices():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices",
+        "Members": [{"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0"}],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0")
+def chassis_gpu_0_pcie_device():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0",
+        "Id": "PCIe_GPU_0",
+        "PCIeFunctions": {
+            "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0/PCIeFunctions"
+        },
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0/PCIeFunctions")
+def chassis_gpu_0_pcie_functions():
+    res = {
+        "Members": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0/PCIeFunctions/0"
+            }
+        ],
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/PCIe_GPU_0/PCIeFunctions/0")
+def chassis_gpu_0_pcie_function():
+    res = {
+        "DeviceId": "0x31C2",
+        "SubsystemId": "0x20E5",
+        "SubsystemVendorId": "0x10DE",
+        "VendorId": "0x10DE",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/FWUpdate-nvidia", methods=["POST"])
+def fwupdate_nvidia():
+    data = json.loads(request.form["UpdateParameters"])
+    # the GB300 BMC rejects a populated Targets array, needs ForceUpdate, and
+    # accepts only Immediate -- assert the plugin honours all three
+    if data.get("Targets") != []:
+        return _failure("Targets must be empty")
+    if data.get("ForceUpdate") is not True:
+        return _failure("ForceUpdate must be true")
+    if data.get("@Redfish.OperationApplyTime") != "Immediate":
+        return _failure("apply time invalid")
+    fileitem = request.files["UpdateFile"]
+    # each upload in the test is its own payload, as the plugin sends a given
+    # payload only once per archive
+    if not fileitem.read().decode().startswith("hello"):
+        return _failure("payload invalid")
+    # successive uploads exercise the three ways the task monitor can come back;
+    # the plugin has to derive the persistent /Tasks/<id> resource from all of
+    # them, or reject the response outright
+    app._nvidia_upload += 1
+    app._poll_nvidia_oob = 0
+
+    # 1: the Location header, which is what the shipping BMC firmware sends
+    if app._nvidia_upload == 1:
+        return Response(
+            json.dumps({"Accepted": {"code": "Base.v1_4_0.Accepted"}}),
+            status=202,
+            mimetype="application/json",
+            headers={
+                "Location": "/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor"
+            },
+        )
+
+    # 2: no Location header at all, so the monitor URI has to be taken from
+    # @odata.id in the response body instead
+    if app._nvidia_upload == 2:
+        return Response(
+            json.dumps(
+                {"@odata.id": "/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor"}
+            ),
+            status=202,
+            mimetype="application/json",
+        )
+
+    # 3: no Location header, and @odata.id is a number rather than a string.
+    # Testing the node's presence rather than its parsed value accepts this and
+    # leaves the location NULL, so the plugin has to reject the response rather
+    # than poll a NULL task
+    return Response(
+        json.dumps({"@odata.id": 12345}),
+        status=202,
+        mimetype="application/json",
+    )
+
+
+@app.route("/redfish/v1/TaskService/Tasks/nvidia-oob-update")
+def task_status_nvidia_oob():
+    app._poll_nvidia_oob += 1
+
+    # the first poll has to return a live task: the plugin only treats a reaped
+    # pair as success once it has seen the persistent task at least once, which
+    # is what stops a monitor-only response being read as completion
+    if app._poll_nvidia_oob == 1:
+        res = {
+            "@odata.id": "/redfish/v1/TaskService/Tasks/nvidia-oob-update",
+            "@odata.type": "#Task.v1_4_3.Task",
+            "Id": "nvidia-oob-update",
+            "Name": "NVIDIA OOB update",
+            "PercentComplete": 50,
+            "TaskState": "Running",
+            "TaskStatus": "OK",
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
+
+    # afterwards the BMC reaps the persistent task, so the plugin falls back to
+    # the monitor, which answers with the GB300 empty-200 quirk below
+    return _not_found("/redfish/v1/TaskService/Tasks/nvidia-oob-update")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/nvidia-oob-update/Monitor")
+def task_monitor_nvidia_oob():
+    # the GB300 quirk: once the task is done the monitor answers 200 with an
+    # empty body rather than the canonical 404
+    return Response(status=200)
+
+
 @app.route("/redfish/v1/UpdateService/FirmwareInventory")
 def firmware_inventory():
+    if _is_nvidia():
+        res = {
+            "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
+            "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
+            "Members": [
+                {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"},
+                {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0"},
+            ],
+            "Members@odata.count": 2,
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
         "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
