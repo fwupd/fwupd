@@ -1676,7 +1676,10 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 
 	/* copy from proxy */
 	if (proxy != NULL) {
-		fu_device_incorporate(self, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+		fu_device_incorporate(self,
+				      proxy,
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID |
+					  FU_DEVICE_INCORPORATE_FLAG_LOGICAL_ID);
 		priv->notify_flags_proxy_id =
 		    g_signal_connect(FWUPD_DEVICE(proxy),
 				     "notify::flags",
