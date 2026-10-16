@@ -390,17 +390,38 @@ static gboolean
 fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
 {
 	const gchar *tmp;
+	g_autofree gchar *device_class = NULL;
 	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "DeviceClass", NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fu_device_add_instance_id(FU_DEVICE(self), tmp);
+		device_class = g_ascii_strdown(tmp, -1);
+	}
 	json_arr = fwupd_json_object_get_array(json_obj, "Targets", NULL);
 	if (json_arr != NULL) {
 		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 			tmp = fwupd_json_array_get_string(json_arr, i, NULL);
-			if (tmp != NULL)
-				fu_device_add_instance_id(FU_DEVICE(self), tmp);
+			if (tmp == NULL)
+				continue;
+			fu_device_add_instance_id(FU_DEVICE(self), tmp);
+
+			/* neither is unique on its own: the target is shared with other devices
+			 * of the board and the class with other platforms, so also add the pair */
+			if (device_class != NULL) {
+				g_autofree gchar *target = g_ascii_strdown(tmp, -1);
+				fu_device_add_instance_str(FU_DEVICE(self), "VENDOR", "HPE");
+				fu_device_add_instance_str(FU_DEVICE(self), "CLASS", device_class);
+				fu_device_add_instance_str(FU_DEVICE(self), "TARGET", target);
+				if (!fu_device_build_instance_id(FU_DEVICE(self),
+								 error,
+								 "REDFISH",
+								 "VENDOR",
+								 "CLASS",
+								 "TARGET",
+								 NULL))
+					return FALSE;
+			}
 		}
 	}
 	return TRUE;

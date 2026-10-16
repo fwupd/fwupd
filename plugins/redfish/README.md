@@ -23,7 +23,12 @@ This plugin supports the following protocol ID:
 
 These devices use the provided GUID provided in the `SoftwareId` property without modification if
 it is a valid GUID. On HPE machines the `Hpe/DeviceClass` and `Hpe/Targets[]` GUIDs are also added
-if provided.
+if provided, along with one instance ID for each class and target pair:
+
+* `REDFISH\VENDOR_HPE&CLASS_${HpeDeviceClass}&TARGET_${HpeTarget}`
+
+Both are lower case. A target can be shared with other devices of the same board and a class with
+other platforms, so only the pair identifies a device.
 
 If the `SoftwareId` property is not a GUID then the vendor instance ID is used instead:
 
