@@ -479,6 +479,39 @@ fu_redfish_dell_devices_func(gconstpointer user_data)
 }
 
 static void
+fu_redfish_hpe_devices_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+
+	devices = fu_plugin_get_devices(self->hpe_plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	/* the class and each target on their own, and every pair of the two */
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(fu_device_has_guid(dev, "aa148d2e-6e09-453e-bc6f-63baa5f5ccc4"));
+	g_assert_true(fu_device_has_guid(dev, "00000000-0000-0000-0000-000000000229"));
+	g_assert_true(fu_device_has_guid(dev, "00000000-0000-0000-0000-000001413436"));
+	g_assert_true(
+	    fu_device_has_guid(dev,
+			       "REDFISH\\VENDOR_HPE&CLASS_aa148d2e-6e09-453e-bc6f-63baa5f5ccc4"
+			       "&TARGET_00000000-0000-0000-0000-000000000229"));
+	g_assert_true(
+	    fu_device_has_guid(dev,
+			       "REDFISH\\VENDOR_HPE&CLASS_aa148d2e-6e09-453e-bc6f-63baa5f5ccc4"
+			       "&TARGET_00000000-0000-0000-0000-000001413436"));
+
+	/* what a firmware provides to match the pair, as computed by the metadata generators */
+	g_assert_true(fu_device_has_guid(dev, "1de03887-13fd-5d0a-9c3f-eb4fc4453857"));
+}
+
+static void
 fu_redfish_hpe_update_func(gconstpointer user_data)
 {
 	FuDevice *dev;
@@ -694,6 +727,7 @@ main(int argc, char **argv)
 			     fu_redfish_unlicensed_devices_func);
 	g_test_add_data_func("/redfish/smc_plugin/devices", self, fu_redfish_smc_devices_func);
 	g_test_add_data_func("/redfish/smc-plugin/update", self, fu_redfish_smc_update_func);
+	g_test_add_data_func("/redfish/hpe-plugin/devices", self, fu_redfish_hpe_devices_func);
 	g_test_add_data_func("/redfish/hpe-plugin/update", self, fu_redfish_hpe_update_func);
 	g_test_add_data_func("/redfish/plugin/devices", self, fu_redfish_devices_func);
 	g_test_add_data_func("/redfish/dell/devices", self, fu_redfish_dell_devices_func);
