@@ -29,6 +29,9 @@
 #include <winerror.h>
 #include <winreg.h>
 #endif
+#ifdef __ANDROID__
+#include <sys/system_properties.h>
+#endif
 
 #include <fwupdplugin.h>
 
@@ -2032,6 +2035,20 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 		}
 	}
 	g_hash_table_insert(hash, g_strdup(FWUPD_RESULT_KEY_DISTRO_ID), g_strdup("macos"));
+#elif defined(__ANDROID__)
+	char prop_val[PROP_VALUE_MAX] = {0};
+	g_hash_table_insert(hash, g_strdup(FWUPD_RESULT_KEY_DISTRO_ID), g_strdup("android"));
+	g_hash_table_insert(hash, g_strdup("DistroName"), g_strdup("Android"));
+	if (__system_property_get("ro.build.version.release", prop_val) > 0) {
+		g_hash_table_insert(hash,
+				    g_strdup(FWUPD_RESULT_KEY_DISTRO_VERSION),
+				    fu_strsafe(prop_val, sizeof(prop_val)));
+	}
+	if (__system_property_get("ro.build.type", prop_val) > 0) {
+		g_hash_table_insert(hash,
+				    g_strdup(FWUPD_RESULT_KEY_DISTRO_VARIANT),
+				    fu_strsafe(prop_val, sizeof(prop_val)));
+	}
 #else
 	struct {
 		const gchar *key;
