@@ -268,26 +268,17 @@ fu_binder_cli_sync_impl_install(FwupdClient *client,
 static gboolean
 fu_binder_cli_sync_impl_update_metadata(FwupdClient *client,
 					const gchar *remote_id,
-					const gchar *metadata_fn,
-					const gchar *signature_fn,
+					GInputStream *stream,
+					GInputStream *stream_sig,
 					gpointer user_data,
 					GCancellable *cancellable,
 					GError **error)
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
-	g_autoptr(GUnixInputStream) metadata_stream = NULL;
-	g_autoptr(GUnixInputStream) signature_stream = NULL;
-
-	metadata_stream = fwupd_unix_input_stream_from_fn(metadata_fn, error);
-	if (metadata_stream == NULL)
-		return FALSE;
-	signature_stream = fwupd_unix_input_stream_from_fn(signature_fn, error);
-	if (signature_stream == NULL)
-		return FALSE;
 	return fu_binder_cli_bridge_update_metadata(self->fwupd_binder,
 						    remote_id,
-						    g_unix_input_stream_get_fd(metadata_stream),
-						    g_unix_input_stream_get_fd(signature_stream),
+						    g_unix_input_stream_get_fd(stream),
+						    g_unix_input_stream_get_fd(stream_sig),
 						    error);
 }
 

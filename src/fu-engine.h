@@ -106,11 +106,11 @@ fu_engine_update_metadata(FuEngine *self,
 			  gint fd_sig,
 			  GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_update_metadata_bytes(FuEngine *self,
-				const gchar *remote_id,
-				GBytes *bytes_raw,
-				GBytes *bytes_sig,
-				GError **error) G_GNUC_NON_NULL(1, 2, 3);
+fu_engine_update_metadata_stream(FuEngine *self,
+				 const gchar *remote_id,
+				 FuInputStream *stream,
+				 FuInputStream *stream_sig,
+				 GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_engine_unlock(FuEngine *self, const gchar *device_id, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean

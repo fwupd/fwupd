@@ -4970,11 +4970,11 @@ fu_engine_validate_result_timestamp(FuJcatResult *jcat_result,
 }
 
 /**
- * fu_engine_update_metadata_bytes:
+ * fu_engine_update_metadata_stream:
  * @self: a #FuEngine
  * @remote_id: a remote ID, e.g. `lvfs`
- * @bytes_raw: Blob of metadata
- * @bytes_sig: Blob of metadata signature, typically Jcat binary format
+ * @stream: a #FuInputStream of metadata
+ * @stream_sig: a #FuInputStream of metadata signature, typically Jcat binary format
  * @error: (nullable): optional return location for an error
  *
  * Updates the metadata for a specific remote.
@@ -4982,11 +4982,11 @@ fu_engine_validate_result_timestamp(FuJcatResult *jcat_result,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_update_metadata_bytes(FuEngine *self,
-				const gchar *remote_id,
-				GBytes *bytes_raw,
-				GBytes *bytes_sig,
-				GError **error)
+fu_engine_update_metadata_stream(FuEngine *self,
+				 const gchar *remote_id,
+				 FuInputStream *stream,
+				 FuInputStream *stream_sig,
+				 GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -4996,13 +4996,15 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 	g_autoptr(FuJcatResult) jcat_result = NULL;
 	g_autoptr(FuJcatResult) jcat_result_old = NULL;
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
 	FuJcatVerifyFlags jcat_flags =
 	    FU_JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM | FU_JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
-	g_return_val_if_fail(bytes_raw != NULL, FALSE);
-	g_return_val_if_fail(bytes_sig != NULL, FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream_sig), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* check remote is valid */
@@ -5019,6 +5021,10 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
+	bytes_sig =
+	    fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
 	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
 	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
 						fu_input_stream_get_stream_impl(istream),
@@ -5032,6 +5038,11 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	/* this should only be signing one thing */
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
+		return FALSE;
+
+	/* read both streams into memory */
+	bytes_raw = fu_input_stream_read_bytes(stream, 0, FU_ENGINE_MAX_METADATA_SIZE, NULL, error);
+	if (bytes_raw == NULL)
 		return FALSE;
 	results = fu_jcat_context_verify_item(self->jcat_context,
 					      bytes_raw,
@@ -5134,9 +5145,7 @@ fu_engine_update_metadata(FuEngine *self,
 			  GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	g_autoptr(GBytes) bytes_raw = NULL;
-	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(FuInputStream) stream_fd = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuInputStream) stream_sig = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -5146,27 +5155,15 @@ fu_engine_update_metadata(FuEngine *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ensures the fd's are closed on error */
-	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
-	if (stream_fd == NULL)
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	if (stream == NULL)
 		return FALSE;
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
 	if (stream_sig == NULL)
 		return FALSE;
 
-	/* read the entire file into memory */
-	bytes_raw =
-	    fu_input_stream_read_bytes(stream_fd, 0, FU_ENGINE_MAX_METADATA_SIZE, NULL, error);
-	if (bytes_raw == NULL)
-		return FALSE;
-
-	/* read signature */
-	bytes_sig =
-	    fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, NULL, error);
-	if (bytes_sig == NULL)
-		return FALSE;
-
 	/* update with blobs */
-	return fu_engine_update_metadata_bytes(self, remote_id, bytes_raw, bytes_sig, error);
+	return fu_engine_update_metadata_stream(self, remote_id, stream, stream_sig, error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

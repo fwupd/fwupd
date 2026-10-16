@@ -168,12 +168,6 @@ struct FwupdClientSyncImpl {
 			 gpointer user_data,
 			 GCancellable *cancellable,
 			 GError **error);
-	gboolean (*refresh_remote)(FwupdClient *self,
-				   FwupdRemote *remote,
-				   FwupdClientDownloadFlags download_flags,
-				   gpointer user_data,
-				   GCancellable *cancellable,
-				   GError **error);
 	gboolean (*reset_config)(FwupdClient *self,
 				 const gchar *section,
 				 gpointer user_data,
@@ -207,8 +201,8 @@ struct FwupdClientSyncImpl {
 			   GError **error);
 	gboolean (*update_metadata)(FwupdClient *self,
 				    const gchar *remote_id,
-				    const gchar *metadata_fn,
-				    const gchar *signature_fn,
+				    GUnixInputStream *stream,
+				    GUnixInputStream *stream_sig,
 				    gpointer user_data,
 				    GCancellable *cancellable,
 				    GError **error);
