@@ -118,7 +118,11 @@ fu_binder_remote_from_aidl(const aidl_fwupd::FwupdRemote &r, GError **error)
 		fwupd_remote_set_remotes_dir(remote, r.remotesDir.value().c_str());
 	fwupd_remote_set_flags(remote, (FwupdRemoteFlags)r.flags);
 	fwupd_remote_set_priority(remote, r.priority);
-	if (r.mtime < 0) {
+	if (r.mtime == -1) {
+		fwupd_remote_set_mtime(remote, G_MAXUINT64);
+	} else if (r.mtime >= 0) {
+		fwupd_remote_set_mtime(remote, (guint64)r.mtime);
+	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -126,7 +130,6 @@ fu_binder_remote_from_aidl(const aidl_fwupd::FwupdRemote &r, GError **error)
 			    r.mtime);
 		return NULL;
 	}
-	fwupd_remote_set_mtime(remote, r.mtime);
 	if (r.refreshIntervalSec < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
