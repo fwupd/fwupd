@@ -52,7 +52,7 @@ fwupd_client_sync_impl_get_bios_settings(FwupdClient *self,
 					 GError **error);
 GPtrArray *
 fwupd_client_sync_impl_get_details(FwupdClient *self,
-				   const gchar *filename,
+				   FwupdInputStream *stream,
 				   gpointer user_data,
 				   GCancellable *cancellable,
 				   GError **error);
@@ -143,7 +143,8 @@ fwupd_client_sync_impl_inhibit(FwupdClient *self,
 gboolean
 fwupd_client_sync_impl_install(FwupdClient *self,
 			       const gchar *device_id,
-			       const gchar *filename,
+			       FwupdInputStream *stream,
+			       const gchar *filename_hint,
 			       FwupdInstallFlags install_flags,
 			       gpointer user_data,
 			       GCancellable *cancellable,
@@ -193,13 +194,6 @@ fwupd_client_sync_impl_quit(FwupdClient *self,
 			    GCancellable *cancellable,
 			    GError **error);
 gboolean
-fwupd_client_sync_impl_refresh_remote(FwupdClient *self,
-				      FwupdRemote *remote,
-				      FwupdClientDownloadFlags download_flags,
-				      gpointer user_data,
-				      GCancellable *cancellable,
-				      GError **error);
-gboolean
 fwupd_client_sync_impl_reset_config(FwupdClient *self,
 				    const gchar *section,
 				    gpointer user_data,
@@ -232,8 +226,8 @@ fwupd_client_sync_impl_unlock(FwupdClient *self,
 gboolean
 fwupd_client_sync_impl_update_metadata(FwupdClient *self,
 				       const gchar *remote_id,
-				       const gchar *metadata_fn,
-				       const gchar *signature_fn,
+				       FwupdInputStream *stream,
+				       FwupdInputStream *stream_sig,
 				       gpointer user_data,
 				       GCancellable *cancellable,
 				       GError **error);

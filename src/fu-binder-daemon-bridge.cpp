@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "FuBinder"
+
 #include "config.h"
 
 #include <aidl/org/freedesktop/fwupd/BnFwupd.h>
@@ -525,10 +527,27 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	updateMetadata(const aidl_fwupd::FwupdMetadata &in_metadata) override
 	{
 		g_autoptr(GError) error = NULL;
+		g_autoptr(FwupdUnixInputStream) stream = NULL;
+		g_autoptr(FwupdUnixInputStream) stream_sig = NULL;
+
+		/* the ScopedFileDescriptor owns the fds */
+		stream = fwupd_unix_input_stream_new(in_metadata.dataFd.get(), FALSE, &error);
+		if (stream == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		stream_sig =
+		    fwupd_unix_input_stream_new(in_metadata.signatureFd.get(), FALSE, &error);
+		if (stream_sig == NULL) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
 		if (!fu_binder_daemon_update_metadata_bridge(m_daemon,
 							     in_metadata.remoteId.c_str(),
-							     in_metadata.dataFd.get(),
-							     in_metadata.signatureFd.get(),
+							     FWUPD_INPUT_STREAM(stream),
+							     FWUPD_INPUT_STREAM(stream_sig),
 							     &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -710,8 +729,8 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			    "invalid file descriptor received");
 		}
 
-		/* the daemon takes ownership of a dup so the caller's fd is untouched */
-		stream = fwupd_unix_input_stream_new(dup(fd), TRUE, &error);
+		/* the ScopedFileDescriptor owns the fd */
+		stream = fwupd_unix_input_stream_new(fd, FALSE, &error);
 		if (stream == NULL) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
