@@ -12,6 +12,22 @@
 #include "fu-test.h"
 
 static void
+fu_binder_remote_missing_func(void)
+{
+	aidl_fwupd::FwupdRemote r;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fwupd_remote_set_mtime(remote, G_MAXUINT64);
+	r = fu_binder_remote_to_aidl(remote);
+	remote2 = fu_binder_remote_from_aidl(r, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote2);
+	g_assert_cmpint(fwupd_remote_get_mtime(remote2), ==, G_MAXUINT64);
+}
+
+static void
 fu_binder_remote_func(void)
 {
 	aidl_fwupd::FwupdRemote r;
@@ -437,7 +453,7 @@ fu_binder_remote_error_func(void)
 	g_assert_true(rejected([](aidl_fwupd::FwupdRemote &r) { r.kind = -1; }));
 	g_assert_true(
 	    rejected([](aidl_fwupd::FwupdRemote &r) { r.kind = FWUPD_REMOTE_KIND_LAST; }));
-	g_assert_true(rejected([](aidl_fwupd::FwupdRemote &r) { r.mtime = -1; }));
+	g_assert_true(rejected([](aidl_fwupd::FwupdRemote &r) { r.mtime = -2; }));
 	g_assert_true(rejected([](aidl_fwupd::FwupdRemote &r) { r.refreshIntervalSec = -1; }));
 }
 
@@ -547,6 +563,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/binder/remote", fu_binder_remote_func);
+	g_test_add_func("/fwupd/binder/remote/missing", fu_binder_remote_missing_func);
 	g_test_add_func("/fwupd/binder/remote/error", fu_binder_remote_error_func);
 	g_test_add_func("/fwupd/binder/release", fu_binder_release_func);
 	g_test_add_func("/fwupd/binder/release/error", fu_binder_release_error_func);
