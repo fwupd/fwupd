@@ -46,35 +46,76 @@ fu_engine_error_array_func(void)
 }
 
 static void
-fu_engine_machine_hash_func(void)
+fu_engine_machine_hash_create_func(void)
 {
-	gsize sz = 0;
-	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = NULL;
 	g_autofree gchar *mhash1 = NULL;
 	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
 
-	if (!g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
-		g_test_skip("Missing /etc/machine-id");
-		return;
-	}
-	if (!g_file_get_contents("/etc/machine-id", &buf, &sz, &error)) {
-		g_test_skip("/etc/machine-id is unreadable");
-		return;
-	}
+	tmpdir = fu_temporary_directory_new("machine-hash-create", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_path_store_set_tmpdir(pstore, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
-	if (sz == 0) {
-		g_test_skip("Empty /etc/machine-id");
-		return;
-	}
-
-	mhash1 = fu_engine_build_machine_id("salt1", &error);
+	mhash1 = fu_engine_build_machine_id(pstore, "salt1", FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(mhash1, !=, NULL);
-	mhash2 = fu_engine_build_machine_id("salt2", &error);
+	mhash2 = fu_engine_build_machine_id(pstore, "salt1", FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(mhash2, !=, NULL);
-	g_assert_cmpstr(mhash2, !=, mhash1);
+	g_assert_cmpstr(mhash2, ==, mhash1);
+
+	fn = fu_path_store_build_filename(pstore,
+					  &error,
+					  FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					  "machine-id",
+					  NULL);
+	g_assert_no_error(error);
+	g_assert_nonnull(fn);
+	g_assert_true(g_file_test(fn, G_FILE_TEST_EXISTS));
+}
+
+static void
+fu_engine_machine_hash_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *mhash1 = NULL;
+	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("machine-hash", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_path_store_set_tmpdir(pstore, FU_PATH_KIND_SYSCONFDIR, tmpdir);
+
+	fn = fu_path_store_build_filename(pstore,
+					  &error,
+					  FU_PATH_KIND_SYSCONFDIR,
+					  "machine-id",
+					  NULL);
+	g_assert_no_error(error);
+	g_assert_nonnull(fn);
+	ret = g_file_set_contents(fn, "foo", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	mhash1 = fu_engine_build_machine_id(pstore, "salt1", FALSE, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash1,
+			==,
+			"217f16116ee4509402fe2092af364a1b4a6f6ddf67ae789479babadec11fda96");
+	mhash2 = fu_engine_build_machine_id(pstore, "salt2", FALSE, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash2,
+			==,
+			"088d09b0da24c9924f0c6de2e37060551b892897ba4dde3e6102e983be459b18");
 }
 
 static void
@@ -105,6 +146,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/engine/error-array", fu_engine_error_array_func);
 	g_test_add_func("/fwupd/engine/machine-hash", fu_engine_machine_hash_func);
+	g_test_add_func("/fwupd/engine/machine-hash/create", fu_engine_machine_hash_create_func);
 	g_test_add_func("/fwupd/engine/integrity", fu_engine_integrity_func);
 	return g_test_run();
 }

@@ -478,65 +478,93 @@ fu_engine_error_array_get_best(GPtrArray *errors)
 
 /**
  * fu_engine_build_machine_id:
+ * @pstore: a #FuPathStore
  * @salt: (nullable): optional salt
+ * @host_fallback: %TRUE is we should fallback to host paths (disregarding DESTDIR)
  * @error: (nullable): optional return location for an error
  *
  * Gets a salted hash of the /etc/machine-id contents. This can be used to
  * identify a specific machine. It is not possible to recover the original
  * machine-id from the machine-hash.
  *
+ * If no machine ID can be found then one is automatically created in `/var/lib/fwupd/machine-id`
+ *
  * Returns: the SHA256 machine hash, or %NULL if the ID is not present
  **/
 gchar *
-fu_engine_build_machine_id(const gchar *salt, GError **error)
+fu_engine_build_machine_id(FuPathStore *pstore,
+			   const gchar *salt,
+			   gboolean host_fallback,
+			   GError **error)
 {
-	const gchar *machine_id;
 	gsize bufsz = 0;
+	const gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GChecksum) csum = NULL;
+	g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* in test mode */
-	machine_id = g_getenv("FWUPD_MACHINE_ID");
-	if (machine_id != NULL) {
-		buf = g_strdup(machine_id);
-		bufsz = strlen(buf);
-	} else {
-		const gchar *fn = NULL;
-		g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
+	/* one of these has to exist */
 
-		/* one of these has to exist */
-		g_ptr_array_add(fns, g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL));
-		g_ptr_array_add(
-		    fns,
-		    g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL));
+	g_ptr_array_add(fns,
+			fu_path_store_build_filename(pstore,
+						     NULL,
+						     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						     "machine-id",
+						     NULL));
+	g_ptr_array_add(fns,
+			fu_path_store_build_filename(pstore,
+						     NULL,
+						     FU_PATH_KIND_SYSCONFDIR,
+						     "machine-id",
+						     NULL));
+	g_ptr_array_add(fns,
+			fu_path_store_build_filename(pstore,
+						     NULL,
+						     FU_PATH_KIND_LOCALSTATEDIR,
+						     "lib",
+						     "dbus",
+						     "machine-id",
+						     NULL));
+	if (host_fallback) {
 		g_ptr_array_add(fns, g_strdup("/etc/machine-id"));
 		g_ptr_array_add(fns, g_strdup("/var/lib/dbus/machine-id"));
 		g_ptr_array_add(fns, g_strdup("/var/db/dbus/machine-id"));
-		/* this is the hardcoded path for homebrew, e.g. `sudo dbus-uuidgen --ensure` */
 		g_ptr_array_add(fns, g_strdup("/usr/local/var/lib/dbus/machine-id"));
-		for (guint i = 0; i < fns->len; i++) {
-			const gchar *fn_tmp = g_ptr_array_index(fns, i);
-			if (g_file_test(fn_tmp, G_FILE_TEST_EXISTS)) {
-				fn = fn_tmp;
-				break;
-			}
+	}
+	for (guint i = 0; i < fns->len; i++) {
+		const gchar *fn_tmp = g_ptr_array_index(fns, i);
+		if (fn_tmp == NULL)
+			continue;
+		if (g_file_test(fn_tmp, G_FILE_TEST_EXISTS)) {
+			fn = fn_tmp;
+			break;
 		}
+	}
+	if (fn == NULL) {
+		fn = g_ptr_array_index(fns, 0);
 		if (fn == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
-					    "The machine-id is not present");
+					    "machine-id is not defined");
 			return NULL;
 		}
+		buf = g_uuid_string_random();
+		bufsz = strlen(buf);
+		if (!fu_path_mkdir_parent(fn, error))
+			return NULL;
+		if (!g_file_set_contents(fn, buf, bufsz, error))
+			return NULL;
+	} else {
 		if (!g_file_get_contents(fn, &buf, &bufsz, error))
 			return NULL;
 		if (bufsz == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
-					    "The machine-id is present but unset");
+					    "machine-id present but unset");
 			return NULL;
 		}
 	}
