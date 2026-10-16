@@ -174,12 +174,22 @@ def run_tests(args: argparse.Namespace, prefix: str) -> int:
 
         # exercise the client -> daemon binder path; exit code 2 is "nothing to do"
         rc = 0
-        for cmd in ["get-plugins", "get-devices"]:
+        for cmd in [
+            "get-plugins",
+            "get-devices",
+            "get-remotes",
+            "security",
+            "get-bios-setting",
+            "get-remotes",
+            "get-upgrades",
+            "get-history",
+        ]:
             print(f"=== fwupdmgr {cmd} ===", flush=True)
             cmd_rc = adb_shell(f"{env_common} {fwupdmgr} {cmd}", check=False)
             print(f"fwupdmgr {cmd} exit={cmd_rc}", flush=True)
             if cmd_rc not in [0, 2]:
                 rc = cmd_rc
+            adb_shell(f"{env_common} {fwupdmgr} refresh", check=False)
 
         # stop the daemon so it flushes the coverage data
         print("collecting coverage...", flush=True)
