@@ -1239,6 +1239,10 @@ LIBFWUPD_2.2.1 {
     fwupd_bios_setting_get_parent;
     fwupd_bios_setting_set_parent;
     fwupd_client_get_pending_reboot;
+    fwupd_client_set_host_bkc;
+    fwupd_client_set_host_machine_id;
+    fwupd_client_set_host_product;
+    fwupd_client_set_host_vendor;
     fwupd_client_set_pending_reboot;
   local: *;
 } LIBFWUPD_2.1.8;

@@ -447,7 +447,16 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 	priv->user_agent = g_string_free_and_steal(g_steal_pointer(&str));
 }
 
-static void
+/**
+ * fwupd_client_set_host_vendor:
+ * @self: a #FwupdClient
+ * @host_vendor: A string, e.g. "ACME"
+ *
+ * Sets the string that represents the host vendor.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -455,7 +464,16 @@ fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
 		fwupd_client_object_notify(self, "host-vendor");
 }
 
-static void
+/**
+ * fwupd_client_set_host_product:
+ * @self: a #FwupdClient
+ * @host_product: A string, e.g. "Server2013"
+ *
+ * Sets the string that represents the host product.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -463,7 +481,16 @@ fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
 		fwupd_client_object_notify(self, "host-product");
 }
 
-static void
+/**
+ * fwupd_client_set_host_machine_id:
+ * @self: a #FwupdClient
+ * @host_machine_id: A string, e.g. "12345abcde"
+ *
+ * Sets the string that represents the host machine ID.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -524,7 +551,16 @@ fwupd_client_download_set_retries(FwupdClient *self, guint retries)
 	priv->download_retries = retries;
 }
 
-static void
+/**
+ * fwupd_client_set_host_bkc:
+ * @self: a #FwupdClient
+ * @host_bkc: A string, e.g. "lenovo2013"
+ *
+ * Sets the string that represents the host BKC.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
