@@ -442,6 +442,40 @@ fu_binder_cli_bridge_connect_client(AIBinder *binder, FwupdClient *client, GErro
 	for (const auto &hwid : aidl_hwids)
 		fwupd_client_add_hwid(client, hwid.key.c_str(), hwid.value.c_str());
 
+	aidl_fwupd::FwupdProperties props;
+	status = proxy->getProperties(&props);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "getProperties AIDL call failed: %s",
+			    status.getDescription().c_str());
+		return FALSE;
+	}
+	if (props.daemonVersion.has_value())
+		fwupd_client_set_daemon_version(client, props.daemonVersion.value().c_str());
+	if (props.hostBkc.has_value())
+		fwupd_client_set_host_bkc(client, props.hostBkc.value().c_str());
+	if (props.hostVendor.has_value())
+		fwupd_client_set_host_vendor(client, props.hostVendor.value().c_str());
+	if (props.hostProduct.has_value())
+		fwupd_client_set_host_product(client, props.hostProduct.value().c_str());
+	if (props.hostMachineId.has_value())
+		fwupd_client_set_host_machine_id(client, props.hostMachineId.value().c_str());
+	if (props.hostSecurityId.has_value())
+		fwupd_client_set_host_security_id(client, props.hostSecurityId.value().c_str());
+	fwupd_client_set_status(client, (FwupdStatus)props.status);
+	fwupd_client_set_percentage(client, props.percentage);
+	fwupd_client_set_pending_reboot(client, props.pendingReboot);
+
 	/* success */
 	return TRUE;
 }
