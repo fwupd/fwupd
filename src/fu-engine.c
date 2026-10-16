@@ -8960,6 +8960,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					FU_CONTEXT_LOAD_FLAG_WATCH_FILES |
 					FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV;
 	FuPlugin *plugin_uefi;
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
@@ -9064,7 +9065,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 						"MachineGuid",
 						&error_local);
 #else
-	self->host_machine_id = fu_engine_build_machine_id("fwupd", &error_local);
+	self->host_machine_id = fu_engine_build_machine_id(pstore, "fwupd", TRUE, &error_local);
 #endif
 	if (self->host_machine_id == NULL)
 		g_info("failed to build machine-id: %s", error_local->message);
