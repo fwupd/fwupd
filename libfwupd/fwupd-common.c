@@ -8,6 +8,8 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-error.h"
+#include "fwupd-memory-input-stream.h"
+#include "fwupd-unix-input-stream.h"
 
 #ifdef HAVE_GIO_UNIX
 #include <errno.h>
@@ -446,10 +448,26 @@ fwupd_guid_hash_string(const gchar *str)
 }
 
 #ifdef HAVE_GIO_UNIX
+
+/**
+ * fwupd_unix_input_stream_from_stream: (skip):
+ **/
+FwupdUnixInputStream *
+fwupd_unix_input_stream_from_stream(FwupdInputStream *stream, GError **error)
+{
+	if (FWUPD_IS_UNIX_INPUT_STREAM(stream))
+		return FWUPD_UNIX_INPUT_STREAM(g_object_ref(stream));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not a FwupdUnixInputStream");
+	return NULL;
+}
+
 /**
  * fwupd_unix_input_stream_from_bytes: (skip):
  **/
-GUnixInputStream *
+FwupdUnixInputStream *
 fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 {
 	g_autofd gint fd = -1;
@@ -509,26 +527,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 		return NULL;
 	}
 #endif
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
-}
-
-/**
- * fwupd_unix_input_stream_from_fn: (skip):
- **/
-GUnixInputStream *
-fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
-{
-	g_autofd gint fd = open(fn, O_RDONLY);
-	if (fd < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to open %s: %s",
-			    fn,
-			    fwupd_strerror(errno));
-		return NULL;
-	}
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
+	return fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, error);
 }
 
 /**
@@ -550,6 +549,32 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(g_steal_fd(&fd), TRUE));
 }
 #endif
+
+/**
+ * fwupd_input_stream_from_fn: (skip):
+ **/
+FwupdInputStream *
+fwupd_input_stream_from_fn(const gchar *filename, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	return FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new_from_filename(filename, error));
+#else
+	return FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_filename(filename, error));
+#endif
+}
+
+/**
+ * fwupd_input_stream_from_bytes: (skip):
+ **/
+FwupdInputStream *
+fwupd_input_stream_from_bytes(GBytes *bytes, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	return FWUPD_INPUT_STREAM(fwupd_unix_input_stream_from_bytes(bytes, error));
+#else
+	return FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes));
+#endif
+}
 
 /**
  * fwupd_percentage_is_valid:

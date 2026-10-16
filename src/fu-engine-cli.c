@@ -3990,23 +3990,13 @@ fu_engine_cli_sync_impl_get_bios_settings(FwupdClient *client,
 
 static GPtrArray *
 fu_engine_cli_sync_impl_get_details(FwupdClient *client,
-				    const gchar *filename,
+				    FuInputStream *stream,
 				    gpointer user_data,
 				    GCancellable *cancellable,
 				    GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(FwupdFileInputStream) stream = NULL;
-
-	stream = fwupd_file_input_stream_new(filename, error);
-	if (stream == NULL) {
-		fu_engine_cli_maybe_prefix_sandbox_error(filename, error);
-		return NULL;
-	}
-	return fu_engine_get_details(self->engine,
-				     self->request,
-				     FWUPD_INPUT_STREAM(stream),
-				     error);
+	return fu_engine_get_details(self->engine, self->request, stream, error);
 }
 
 static GPtrArray *
@@ -4179,14 +4169,14 @@ fu_engine_cli_sync_impl_get_report_metadata(FwupdClient *client,
 static gboolean
 fu_engine_cli_sync_impl_install(FwupdClient *client,
 				const gchar *device_id,
-				const gchar *filename,
+				FuInputStream *stream,
+				const gchar *filename_hint,
 				FwupdInstallFlags install_flags,
 				gpointer user_data,
 				GCancellable *cancellable,
 				GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 
@@ -4207,12 +4197,7 @@ fu_engine_cli_sync_impl_install(FwupdClient *client,
 			return FALSE;
 	}
 
-	/* download if required */
-	stream = fwupd_file_input_stream_new(filename, error);
-	if (stream == NULL) {
-		fu_engine_cli_maybe_prefix_sandbox_error(filename, error);
-		return FALSE;
-	}
+	/* proxy */
 	if (!fu_engine_cli_install_stream(self,
 					  FWUPD_INPUT_STREAM(stream),
 					  devices_possible,
@@ -4315,65 +4300,6 @@ fu_engine_cli_sync_impl_modify_remote(FwupdClient *client,
 }
 
 static gboolean
-fu_engine_cli_sync_impl_refresh_remote(FwupdClient *client,
-				       FwupdRemote *remote,
-				       FwupdClientDownloadFlags download_flags,
-				       gpointer user_data,
-				       GCancellable *cancellable,
-				       GError **error)
-{
-	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autofree gchar *uri_raw = NULL;
-	g_autofree gchar *uri_sig = NULL;
-	g_autoptr(GBytes) bytes_raw = NULL;
-	g_autoptr(GBytes) bytes_sig = NULL;
-
-	/* signature */
-	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "no metadata signature URI available for %s",
-			    fwupd_remote_get_id(remote));
-		return FALSE;
-	}
-	uri_sig = fwupd_remote_build_metadata_sig_uri(remote, error);
-	if (uri_sig == NULL)
-		return FALSE;
-	bytes_sig =
-	    fwupd_client_download_bytes(client, uri_sig, download_flags, cancellable, error);
-	if (bytes_sig == NULL)
-		return FALSE;
-	if (!fwupd_remote_load_signature_bytes(remote, bytes_sig, error))
-		return FALSE;
-
-	/* payload */
-	if (fwupd_remote_get_metadata_uri(remote) == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "no metadata URI available for %s",
-			    fwupd_remote_get_id(remote));
-		return FALSE;
-	}
-	uri_raw = fwupd_remote_build_metadata_uri(remote, error);
-	if (uri_raw == NULL)
-		return FALSE;
-	bytes_raw =
-	    fwupd_client_download_bytes(client, uri_raw, download_flags, cancellable, error);
-	if (bytes_raw == NULL)
-		return FALSE;
-
-	/* send to daemon */
-	g_info("updating %s", fwupd_remote_get_id(remote));
-	return fu_engine_update_metadata_bytes(self->engine,
-					       fwupd_remote_get_id(remote),
-					       bytes_raw,
-					       bytes_sig,
-					       error);
-}
-
-static gboolean
 fu_engine_cli_sync_impl_reset_config(FwupdClient *client,
 				     const gchar *section,
 				     gpointer user_data,
@@ -4438,27 +4364,14 @@ fu_engine_cli_sync_impl_unlock(FwupdClient *client,
 static gboolean
 fu_engine_cli_sync_impl_update_metadata(FwupdClient *client,
 					const gchar *remote_id,
-					const gchar *metadata_fn,
-					const gchar *signature_fn,
+					FuInputStream *stream,
+					FuInputStream *stream_sig,
 					gpointer user_data,
 					GCancellable *cancellable,
 					GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(GBytes) metadata_blob = NULL;
-	g_autoptr(GBytes) signature_blob = NULL;
-
-	metadata_blob = fu_bytes_get_contents(metadata_fn, error);
-	if (metadata_blob == NULL)
-		return FALSE;
-	signature_blob = fu_bytes_get_contents(signature_fn, error);
-	if (signature_blob == NULL)
-		return FALSE;
-	return fu_engine_update_metadata_bytes(self->engine,
-					       remote_id,
-					       metadata_blob,
-					       signature_blob,
-					       error);
+	return fu_engine_update_metadata(self->engine, remote_id, stream, stream_sig, error);
 }
 
 static gboolean
@@ -4515,7 +4428,6 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .modify_config = fu_engine_cli_sync_impl_modify_config,
 	    .modify_device = fu_engine_cli_sync_impl_modify_device,
 	    .modify_remote = fu_engine_cli_sync_impl_modify_remote,
-	    .refresh_remote = fu_engine_cli_sync_impl_refresh_remote,
 	    .reset_config = fu_engine_cli_sync_impl_reset_config,
 	    .search = fu_engine_cli_sync_impl_search,
 	    .set_feature_flags = fu_engine_cli_sync_impl_set_feature_flags,

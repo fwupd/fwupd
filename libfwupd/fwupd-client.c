@@ -3794,7 +3794,7 @@ fwupd_client_install_stream_cb(GObject *source, GAsyncResult *res, gpointer user
 void
 fwupd_client_install_stream_async(FwupdClient *self,
 				  const gchar *device_id,
-				  GUnixInputStream *istr,
+				  FwupdUnixInputStream *ustream,
 				  const gchar *filename_hint,
 				  FwupdInstallFlags install_flags,
 				  GCancellable *cancellable,
@@ -3827,7 +3827,7 @@ fwupd_client_install_stream_async(FwupdClient *self,
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
-	g_unix_fd_list_append(fd_list, g_unix_input_stream_get_fd(istr), NULL);
+	g_unix_fd_list_append(fd_list, fwupd_unix_input_stream_get_fd(ustream), NULL);
 	request = g_dbus_message_new_method_call(FWUPD_DBUS_SERVICE,
 						 FWUPD_DBUS_PATH,
 						 FWUPD_DBUS_INTERFACE,
@@ -3835,9 +3835,11 @@ fwupd_client_install_stream_async(FwupdClient *self,
 	g_dbus_message_set_unix_fd_list(request, fd_list);
 
 	/* call into daemon */
-	g_dbus_message_set_body(
-	    request,
-	    g_variant_new("(sha{sv})", device_id, g_unix_input_stream_get_fd(istr), &builder));
+	g_dbus_message_set_body(request,
+				g_variant_new("(sha{sv})",
+					      device_id,
+					      fwupd_unix_input_stream_get_fd(ustream),
+					      &builder));
 	g_dbus_connection_send_message_with_reply(g_dbus_proxy_get_connection(priv->proxy),
 						  request,
 						  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
@@ -3878,14 +3880,14 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_from_bytes(bytes, &error);
+	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_install_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -3895,7 +3897,7 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 	/* call into daemon */
 	fwupd_client_install_stream_async(self,
 					  device_id,
-					  istr,
+					  ustream,
 					  NULL,
 					  install_flags,
 					  cancellable,
@@ -3961,7 +3963,7 @@ fwupd_client_install_async(FwupdClient *self,
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(device_id != NULL);
@@ -3969,8 +3971,8 @@ fwupd_client_install_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_fn(filename, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_new_from_filename(filename, &error);
+	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_install_async);
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -3980,7 +3982,7 @@ fwupd_client_install_async(FwupdClient *self,
 	/* call into daemon */
 	fwupd_client_install_stream_async(self,
 					  device_id,
-					  istr,
+					  ustream,
 					  filename, /* a hint */
 					  install_flags,
 					  cancellable,
@@ -4400,13 +4402,13 @@ fwupd_client_get_details_stream_cb(GObject *source, GAsyncResult *res, gpointer 
 
 void
 fwupd_client_get_details_stream_async(FwupdClient *self,
-				      GUnixInputStream *istr,
+				      FwupdUnixInputStream *ustream,
 				      GCancellable *cancellable,
 				      GAsyncReadyCallback callback,
 				      gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	gint fd = g_unix_input_stream_get_fd(istr);
+	gint fd = fwupd_unix_input_stream_get_fd(ustream);
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
@@ -4457,14 +4459,14 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_from_bytes(bytes, &error);
+	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_get_details_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -4472,7 +4474,7 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	}
 
 	/* call into daemon */
-	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
+	fwupd_client_get_details_stream_async(self, ustream, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_details_bytes_async);
@@ -4525,15 +4527,15 @@ fwupd_client_get_details_async(FwupdClient *self,
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_fn(filename, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_new_from_filename(filename, &error);
+	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_get_details_async);
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -4541,7 +4543,7 @@ fwupd_client_get_details_async(FwupdClient *self,
 	}
 
 	/* call into daemon */
-	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
+	fwupd_client_get_details_stream_async(self, ustream, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 	g_task_set_source_tag(task, fwupd_client_get_details_async);
@@ -4925,8 +4927,8 @@ fwupd_client_update_metadata_stream_cb(GObject *source, GAsyncResult *res, gpoin
 void
 fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  const gchar *remote_id,
-					  GUnixInputStream *istr,
-					  GUnixInputStream *istr_sig,
+					  FwupdUnixInputStream *ustream,
+					  FwupdUnixInputStream *ustream_sig,
 					  GCancellable *cancellable,
 					  GAsyncReadyCallback callback,
 					  gpointer callback_data)
@@ -4941,8 +4943,8 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
-	g_unix_fd_list_append(fd_list, g_unix_input_stream_get_fd(istr), NULL);
-	g_unix_fd_list_append(fd_list, g_unix_input_stream_get_fd(istr_sig), NULL);
+	g_unix_fd_list_append(fd_list, fwupd_unix_input_stream_get_fd(ustream), NULL);
+	g_unix_fd_list_append(fd_list, fwupd_unix_input_stream_get_fd(ustream_sig), NULL);
 	request = g_dbus_message_new_method_call(FWUPD_DBUS_SERVICE,
 						 FWUPD_DBUS_PATH,
 						 FWUPD_DBUS_INTERFACE,
@@ -4953,8 +4955,8 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 	g_dbus_message_set_body(request,
 				g_variant_new("(shh)",
 					      remote_id,
-					      g_unix_input_stream_get_fd(istr),
-					      g_unix_input_stream_get_fd(istr_sig)));
+					      fwupd_unix_input_stream_get_fd(ustream),
+					      fwupd_unix_input_stream_get_fd(ustream_sig)));
 	g_dbus_connection_send_message_with_reply(g_dbus_proxy_get_connection(priv->proxy),
 						  request,
 						  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
@@ -5000,8 +5002,8 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
-	g_autoptr(GUnixInputStream) istr_sig = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream_sig = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(remote_id != NULL);
@@ -5010,15 +5012,15 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	/* move to a thread if this ever takes more than a few ms */
-	istr = fwupd_unix_input_stream_from_bytes(metadata, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_from_bytes(metadata, &error);
+	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_update_metadata_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
-	istr_sig = fwupd_unix_input_stream_from_bytes(signature, &error);
-	if (istr_sig == NULL) {
+	ustream_sig = fwupd_unix_input_stream_from_bytes(signature, &error);
+	if (ustream_sig == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 		g_task_set_source_tag(task, fwupd_client_update_metadata_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -5028,8 +5030,8 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 	/* call into daemon */
 	fwupd_client_update_metadata_stream_async(self,
 						  remote_id,
-						  istr,
-						  istr_sig,
+						  ustream,
+						  ustream_sig,
 						  cancellable,
 						  callback,
 						  callback_data);
@@ -7443,7 +7445,7 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 	g_autoptr(GUnixFDList) fd_list = NULL;
-	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(filename != NULL);
@@ -7452,8 +7454,8 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	/* tag for debugging */
 	g_task_set_source_tag(task, fwupd_client_emulation_load_async);
 
-	istr = fwupd_unix_input_stream_from_fn(filename, &error);
-	if (istr == NULL) {
+	ustream = fwupd_unix_input_stream_new_from_filename(filename, &error);
+	if (ustream == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -7469,7 +7471,7 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
-	g_unix_fd_list_append(fd_list, g_unix_input_stream_get_fd(istr), NULL);
+	g_unix_fd_list_append(fd_list, fwupd_unix_input_stream_get_fd(ustream), NULL);
 	request = g_dbus_message_new_method_call(FWUPD_DBUS_SERVICE,
 						 FWUPD_DBUS_PATH,
 						 FWUPD_DBUS_INTERFACE,
@@ -7477,7 +7479,8 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	g_dbus_message_set_unix_fd_list(request, fd_list);
 
 	/* call into daemon */
-	g_dbus_message_set_body(request, g_variant_new("(h)", g_unix_input_stream_get_fd(istr)));
+	g_dbus_message_set_body(request,
+				g_variant_new("(h)", fwupd_unix_input_stream_get_fd(ustream)));
 	g_dbus_connection_send_message_with_reply(g_dbus_proxy_get_connection(priv->proxy),
 						  request,
 						  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
@@ -8740,7 +8743,6 @@ fwupd_client_init(FwupdClient *self)
 	    .modify_device = fwupd_client_sync_impl_modify_device,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
 	    .quit = fwupd_client_sync_impl_quit,
-	    .refresh_remote = fwupd_client_sync_impl_refresh_remote,
 	    .reset_config = fwupd_client_sync_impl_reset_config,
 	    .search = fwupd_client_sync_impl_search,
 	    .set_feature_flags = fwupd_client_sync_impl_set_feature_flags,

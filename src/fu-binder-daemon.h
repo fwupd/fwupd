@@ -86,8 +86,8 @@ fu_binder_daemon_reset_config_bridge(void *daemon_instance, const gchar *section
 gboolean
 fu_binder_daemon_update_metadata_bridge(void *daemon_instance,
 					const gchar *remote_id,
-					int data_fd,
-					int signature_fd,
+					FuInputStream *stream,
+					FuInputStream *stream_sig,
 					GError **error);
 
 gboolean

@@ -1697,6 +1697,8 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	GUnixFDList *fd_list;
 	g_autofd gint fd_data = -1;
 	g_autofd gint fd_sig = -1;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream_sig = NULL;
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
@@ -1735,11 +1737,23 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 		return;
 	}
 
+	/* ensures the fd's are closed on error */
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd_data), TRUE, &error);
+	if (stream == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	stream_sig = fwupd_unix_input_stream_new(g_steal_fd(&fd_sig), TRUE, &error);
+	if (stream_sig == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
 	/* store new metadata (will close the fds when done) */
 	if (!fu_engine_update_metadata(engine,
 				       helper->remote_id,
-				       g_steal_fd(&fd_data),
-				       g_steal_fd(&fd_sig),
+				       FWUPD_INPUT_STREAM(stream),
+				       FWUPD_INPUT_STREAM(stream_sig),
 				       &error)) {
 		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
 		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
