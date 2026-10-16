@@ -132,9 +132,9 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	g_test_add_func("/fwupd/daemon/codec", fu_daemon_codec_func);
-	g_test_add_func("/fwupd/daemon/filename-hint{symlink}",
+	g_test_add_func("/fwupd/daemon/filename-hint/symlink",
 			fu_daemon_filename_hint_symlink_func);
-	g_test_add_func("/fwupd/daemon/filename-hint{directory}",
+	g_test_add_func("/fwupd/daemon/filename-hint/directory",
 			fu_daemon_filename_hint_directory_func);
 	return g_test_run();
 }

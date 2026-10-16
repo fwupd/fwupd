@@ -130,9 +130,9 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fastboot/rolling-device", fu_fastboot_rolling_device_func);
-	g_test_add_func("/fastboot/rolling-device/attach{rebind-fail}",
+	g_test_add_func("/fastboot/rolling-device/attach/rebind-fail",
 			fu_fastboot_rolling_device_attach_rebind_fail_func);
-	g_test_add_func("/fastboot/rolling-device/attach{rebind}",
+	g_test_add_func("/fastboot/rolling-device/attach/rebind",
 			fu_fastboot_rolling_device_attach_rebind_func);
 	return g_test_run();
 }

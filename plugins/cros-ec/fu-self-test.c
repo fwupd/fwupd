@@ -57,7 +57,7 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/cros-ec/common{version}", fu_cros_ec_common_version_func);
-	g_test_add_func("/cros-ec/common{version-invalid}", fu_cros_ec_common_version_invalid_func);
+	g_test_add_func("/cros-ec/common/version", fu_cros_ec_common_version_func);
+	g_test_add_func("/cros-ec/common/version-invalid", fu_cros_ec_common_version_invalid_func);
 	return g_test_run();
 }

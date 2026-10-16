@@ -547,16 +547,16 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/binder/remote", fu_binder_remote_func);
-	g_test_add_func("/fwupd/binder/remote{error}", fu_binder_remote_error_func);
+	g_test_add_func("/fwupd/binder/remote/error", fu_binder_remote_error_func);
 	g_test_add_func("/fwupd/binder/release", fu_binder_release_func);
-	g_test_add_func("/fwupd/binder/release{error}", fu_binder_release_error_func);
+	g_test_add_func("/fwupd/binder/release/error", fu_binder_release_error_func);
 	g_test_add_func("/fwupd/binder/device", fu_binder_device_func);
-	g_test_add_func("/fwupd/binder/device{error}", fu_binder_device_error_func);
+	g_test_add_func("/fwupd/binder/device/error", fu_binder_device_error_func);
 	g_test_add_func("/fwupd/binder/request", fu_binder_request_func);
-	g_test_add_func("/fwupd/binder/request{error}", fu_binder_request_error_func);
+	g_test_add_func("/fwupd/binder/request/error", fu_binder_request_error_func);
 	g_test_add_func("/fwupd/binder/plugin", fu_binder_plugin_func);
 	g_test_add_func("/fwupd/binder/bios-setting", fu_binder_bios_setting_func);
-	g_test_add_func("/fwupd/binder/bios-setting{error}", fu_binder_bios_setting_error_func);
+	g_test_add_func("/fwupd/binder/bios-setting/error", fu_binder_bios_setting_error_func);
 	g_test_add_func("/fwupd/binder/security-attr", fu_binder_security_attr_func);
 	return g_test_run();
 }

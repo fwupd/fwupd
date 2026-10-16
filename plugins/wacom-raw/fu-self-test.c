@@ -123,9 +123,9 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/wacom-raw/common{block-is-empty}",
+	g_test_add_func("/wacom-raw/common/block-is-empty",
 			fu_wacom_raw_common_block_is_empty_func);
-	g_test_add_func("/wacom-raw/common{check-reply}", fu_wacom_raw_common_check_reply_func);
-	g_test_add_func("/wacom-raw/common{rc-set-error}", fu_wacom_raw_common_rc_set_error_func);
+	g_test_add_func("/wacom-raw/common/check-reply", fu_wacom_raw_common_check_reply_func);
+	g_test_add_func("/wacom-raw/common/rc-set-error", fu_wacom_raw_common_rc_set_error_func);
 	return g_test_run();
 }

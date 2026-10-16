@@ -100,7 +100,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/acpi-table/setters", fu_acpi_table_setters_func);
-	g_test_add_func("/fwupd/acpi-table/setters{overwrite}",
+	g_test_add_func("/fwupd/acpi-table/setters/overwrite",
 			fu_acpi_table_setters_overwrite_func);
 	g_test_add_func("/fwupd/acpi-table/payload", fu_acpi_table_payload_func);
 	return g_test_run();
