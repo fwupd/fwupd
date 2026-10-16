@@ -43,6 +43,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/ti-tps6598x/common{nonzero}", fu_ti_tps6598x_common_nonzero_func);
+	g_test_add_func("/ti-tps6598x/common/nonzero", fu_ti_tps6598x_common_nonzero_func);
 	return g_test_run();
 }

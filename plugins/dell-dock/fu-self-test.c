@@ -44,6 +44,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/dell-dock/hub{instance}", fu_dell_dock_hub_instance_func);
+	g_test_add_func("/dell-dock/hub/instance", fu_dell_dock_hub_instance_func);
 	return g_test_run();
 }

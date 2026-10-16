@@ -148,7 +148,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/uefi-device/read-default", fu_uefi_device_read_default_func);
-	g_test_add_func("/fwupd/uefi-device/read-default{missing}",
+	g_test_add_func("/fwupd/uefi-device/read-default/missing",
 			fu_uefi_device_read_default_missing_func);
 	g_test_add_func("/fwupd/uefi-device/auth", fu_uefi_device_auth_func);
 	g_test_add_func("/fwupd/uefi-device/no-auth", fu_uefi_device_no_auth_func);

@@ -139,6 +139,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/hpi-cfu/device{short-block}", fu_hpi_cfu_device_short_block_func);
+	g_test_add_func("/hpi-cfu/device/short-block", fu_hpi_cfu_device_short_block_func);
 	return g_test_run();
 }
