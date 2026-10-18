@@ -7,6 +7,7 @@
 # Install the Android NDK, SDK build-tools, system image and the Bionic runtime
 # needed to cross-build fwupd and run the result on the host.
 
+import glob
 import os
 import shlex
 import shutil
@@ -109,12 +110,15 @@ def install_lpunpack() -> None:
 
 
 def install_bionic_runtime() -> None:
-    if os.path.exists("/system/bin/linker64"):
+    if os.path.exists("/system/bin/linker64") and os.path.isdir(
+        "/system/etc/security/cacerts"
+    ):
         print("Android Bionic runtime already installed")
         return
 
     # system.img is GPT containing a super.img with logical partitions;
-    # linker64, libc, libm and libdl are inside the com.android.runtime APEX
+    # linker64, libc, libm and libdl are inside the com.android.runtime APEX,
+    # and the CA certificates are used by libcurl
     with tempfile.TemporaryDirectory(prefix="android-extract-") as tmpdir:
 
         def extract(archive: str, *members: str) -> None:
@@ -127,6 +131,7 @@ def install_bionic_runtime() -> None:
             "system/apex/com.android.runtime.apex",
             "system/lib64/liblog.so",
             "system/lib64/libz.so",
+            "system/etc/security/cacerts",
         )
         extract(f"{tmpdir}/com.android.runtime.apex", "apex_payload.img")
         extract(
@@ -142,6 +147,9 @@ def install_bionic_runtime() -> None:
         os.chmod("/system/bin/linker64", 0o755)
         for lib in ["libc.so", "libm.so", "libdl.so", "liblog.so", "libz.so"]:
             shutil.move(f"{tmpdir}/{lib}", f"/system/lib64/{lib}")
+        os.makedirs("/system/etc/security/cacerts", exist_ok=True)
+        for fn in glob.glob(f"{tmpdir}/*.0"):
+            shutil.move(fn, "/system/etc/security/cacerts")
 
 
 def install_ndk_runtime() -> None:

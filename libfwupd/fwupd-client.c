@@ -1053,6 +1053,55 @@ fwupd_client_curl_helper_set_proxy(FwupdClient *self,
 	return TRUE;
 }
 
+#ifdef __ANDROID__
+static gboolean
+fwupd_client_curl_helper_set_android_ca(FwupdCurlHelper *helper, GError **error)
+{
+	const gchar *dirnames[] = {
+	    "/apex/com.android.conscrypt/cacerts",
+	    "/system/etc/security/cacerts",
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(dirnames); i++) {
+		CURLcode rc;
+		const gchar *fn;
+		struct curl_blob blob = {0};
+		g_autoptr(GDir) dir = NULL;
+		g_autoptr(GString) str = g_string_new(NULL);
+
+		dir = g_dir_open(dirnames[i], 0, NULL);
+		if (dir == NULL)
+			continue;
+		while ((fn = g_dir_read_name(dir)) != NULL) {
+			g_autofree gchar *buf = NULL;
+			g_autofree gchar *filename = g_build_filename(dirnames[i], fn, NULL);
+			if (!g_file_get_contents(filename, &buf, NULL, NULL))
+				continue;
+			g_string_append(str, buf);
+			g_string_append_c(str, '\n');
+		}
+		if (str->len == 0)
+			continue;
+		blob.data = str->str;
+		blob.len = str->len;
+		blob.flags = CURL_BLOB_COPY;
+		rc = curl_easy_setopt(helper->curl, CURLOPT_CAINFO_BLOB, &blob);
+		if (rc != CURLE_OK) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    curl_easy_strerror(rc));
+			return FALSE;
+		}
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no system CA certificates found");
+	return FALSE;
+}
+#endif
+
 static FwupdCurlHelper *
 fwupd_client_curl_new(FwupdClient *self, GError **error)
 {
@@ -1096,6 +1145,10 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 #endif
 #ifdef _WIN32
 	(void)curl_easy_setopt(helper->curl, CURLOPT_CAINFO, "ca-bundle.crt");
+#endif
+#ifdef __ANDROID__
+	if (!fwupd_client_curl_helper_set_android_ca(helper, error))
+		return NULL;
 #endif
 #if CURL_AT_LEAST_VERSION(7, 71, 0)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_OPTIONS, (glong)CURLSSLOPT_NATIVE_CA);
