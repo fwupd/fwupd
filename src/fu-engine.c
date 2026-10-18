@@ -6040,11 +6040,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 			}
 		}
 		g_debug("%s matched %u releases", guid, releases->len);
-
-		/* if we're only checking for SUPPORTED then *any* release is good enough */
-		if (fu_engine_request_has_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE) &&
-		    releases->len > 0)
-			break;
 	}
 
 	/* are there multiple branches available */
