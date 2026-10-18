@@ -36,6 +36,7 @@ SHEBANG_GLOB=	*.py
 MESON_ARGS=	-Dpolkit=disabled \
 		-Dsystemd=disabled \
 		-Dtests=false \
-		-Ddocs=enabled
+		-Ddocs=enabled \
+		-Db_lundef=false
 
 .include <bsd.port.mk>
