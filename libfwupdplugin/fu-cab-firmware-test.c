@@ -76,7 +76,7 @@ fu_cab_firmware_compressed_size_func(void)
 				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_true(g_str_has_prefix(error->message, "decompressed size mismatch"));
+	g_assert_true(g_str_has_prefix(error->message, "failed to parse CAB archive"));
 	g_assert_false(ret);
 }
 

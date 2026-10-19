@@ -1131,7 +1131,7 @@ fu_firmware_builder_round_trip_func(void)
 	    },
 	    {
 		"cab.builder.xml",
-		"a708f47b1a46377f1ea420597641ffe9a40abd75",
+		"c819b8a99111dcc5141d14c6d23bdf385b47a411",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
