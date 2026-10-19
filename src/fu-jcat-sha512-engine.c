@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "FuJcat"
+
 #include "config.h"
 
 #include "fu-jcat-sha512-engine.h"
