@@ -243,3 +243,9 @@ option(
   value: false,
   description: 'install OS vendor provided metadata',
 )
+option(
+  'cabtool',
+  type: 'boolean',
+  value: true,
+  description: 'Build the CAB debugging tool',
+)
