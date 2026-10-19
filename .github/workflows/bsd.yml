@@ -25,4 +25,4 @@ jobs:
             ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
             ./contrib/ci/fwupd_setup_helpers.py test-meson
             ./fwupbuild -vv --yes init builddir
-            bash -c "source ./builddir/bin/activate && fwupbuild -vv -C builddir build"
+            bash -c "source ./builddir/bin/activate && fwupbuild -vv -C builddir build -Db_lundef=false"
