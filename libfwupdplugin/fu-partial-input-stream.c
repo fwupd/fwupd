@@ -43,7 +43,7 @@ fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 			fu_partial_input_stream,
-			FU_TYPE_INPUT_STREAM,
+			FWUPD_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
 					      fu_partial_input_stream_codec_iface_init))
 
@@ -132,7 +132,7 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 	g_autoptr(FuPartialInputStream) self = g_object_new(FU_TYPE_PARTIAL_INPUT_STREAM, NULL);
 	FuRsStreamImpl *impl;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	self->base_stream = g_object_ref(stream);
@@ -168,7 +168,7 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 		}
 	}
 
-	impl = fu_input_stream_get_stream_impl(stream);
+	impl = fwupd_input_stream_get_stream_impl(stream);
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -179,7 +179,7 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 	self->rust = fu_rs_partial_input_stream_new(impl, offset, size);
 
 	/* success */
-	return FU_INPUT_STREAM(g_steal_pointer(&self));
+	return FWUPD_INPUT_STREAM(g_steal_pointer(&self));
 }
 
 /**
@@ -260,7 +260,7 @@ fu_partial_input_stream_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_partial_input_stream_parent_class)->finalize(object);
 }
 
-static FuRsStreamImpl *
+static FwupdStreamImpl
 fu_partial_input_stream_get_stream_impl(FuInputStream *stream)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
@@ -271,7 +271,7 @@ static void
 fu_partial_input_stream_class_init(FuPartialInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
+	FwupdInputStreamClass *istream_class = FWUPD_INPUT_STREAM_CLASS(klass);
 	istream_class->read_fn = fu_partial_input_stream_read_fn;
 	istream_class->tell = fu_partial_input_stream_tell;
 	istream_class->can_seek = fu_partial_input_stream_can_seek;

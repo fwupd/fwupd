@@ -116,11 +116,11 @@ fu_engine_emulator_load_json_from_stream(FuEngineEmulator *self,
 	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 
 	/* parse */
-	json_node = fwupd_json_parser_load_from_stream_impl(json_parser,
-							    fu_input_stream_get_stream_impl(stream),
-							    FWUPD_JSON_LOAD_FLAG_TRUSTED |
-								FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
-							    error);
+	json_node = fwupd_json_parser_load_from_stream_impl(
+	    json_parser,
+	    fwupd_input_stream_get_stream_impl(stream),
+	    FWUPD_JSON_LOAD_FLAG_TRUSTED | FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
+	    error);
 	if (json_node == NULL)
 		return FALSE;
 	json_obj = fwupd_json_node_get_object(json_node, error);
@@ -156,7 +156,7 @@ fu_engine_emulator_load_phase(FuEngineEmulator *self,
 		return TRUE;
 	}
 
-	stream = fu_memory_input_stream_new_from_bytes(json_blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(json_blob));
 	g_debug("emulator loading %s", fn);
 	return fu_engine_emulator_load_json_from_stream(self, stream, error);
 }
@@ -266,7 +266,7 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 		if (composite_cnt == 0 && write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT &&
 		    phase == FU_ENGINE_EMULATOR_PHASE_SETUP) {
 			g_autoptr(FuInputStream) stream = NULL;
-			stream = fu_memory_input_stream_new_from_bytes(blob);
+			stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 			if (!fu_engine_emulator_load_json_from_stream(self, stream, error))
 				return FALSE;
 		} else {
@@ -291,11 +291,12 @@ fu_engine_emulator_load(FuEngineEmulator *self, FuInputStream *stream, GError **
 	g_autoptr(GError) error_archive = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* unload any existing devices */
-	stream_empty = fu_memory_input_stream_new_from_data(json_empty, strlen(json_empty), NULL);
+	stream_empty = FWUPD_INPUT_STREAM(
+	    fwupd_memory_input_stream_new_from_data(json_empty, strlen(json_empty), NULL));
 	if (!fu_engine_emulator_load_json_from_stream(self, stream_empty, error))
 		return FALSE;
 	g_hash_table_remove_all(self->phase_blobs);

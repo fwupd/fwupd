@@ -64,7 +64,6 @@ if libcrypto.found()
 endif
 
 if giounix.found()
-  fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
   fwupd_engine_src += 'fu-engine-installer.c'
 endif
 if host_machine.system() in ['linux', 'android']
@@ -602,9 +601,6 @@ if get_option('tests')
   endif
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
-  endif
-  if giounix.found()
-    test_names += 'unix-seekable-input-stream'
   endif
   foreach test_name : test_names
     e = executable(

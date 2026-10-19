@@ -77,9 +77,11 @@ install_headers(
     'fwupd-device.h',
     'fwupd-enums.h',
     'fwupd-error.h',
+    'fwupd-file-input-stream.h',
     'fwupd-remote.h',
     'fwupd-report.h',
     'fwupd-request.h',
+    'fwupd-input-stream.h',
     'fwupd-jcat-blob.h',
     'fwupd-jcat-file.h',
     'fwupd-jcat-item.h',
@@ -88,10 +90,12 @@ install_headers(
     'fwupd-json-node.h',
     'fwupd-json-object.h',
     'fwupd-json-parser.h',
+    'fwupd-memory-input-stream.h',
     'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
     'fwupd-plugin.h',
+    'fwupd-unix-input-stream.h',
     'fwupd-variant.h',
     fwupd_version_h,
   ],
@@ -107,6 +111,10 @@ libfwupd_src = [
   'fwupd-codec.c', # fuzzing
   'fwupd-device.c', # fuzzing
   'fwupd-error.c', # fuzzing
+  'fwupd-file-input-stream.c', # fuzzing
+  'fwupd-input-stream.c', # fuzzing
+  'fwupd-memory-input-stream.c', # fuzzing
+  'fwupd-stream-input-stream.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
   'fwupd-jcat-blob.c', # fuzzing
   'fwupd-jcat-file.c', # fuzzing
@@ -125,6 +133,9 @@ libfwupd_src = [
   'fwupd-variant.c', # fuzzing
   'fwupd-version.c',
 ]
+if giounix.found()
+  libfwupd_src += 'fwupd-unix-input-stream.c'
+endif
 
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
@@ -192,6 +203,15 @@ if introspection.allowed()
       'fwupd-enums-private.h',
       'fwupd-error.c',
       'fwupd-error.h',
+      'fwupd-file-input-stream.c',
+      'fwupd-file-input-stream.h',
+      'fwupd-input-stream.c',
+      'fwupd-input-stream.h',
+      'fwupd-input-stream-private.h',
+      'fwupd-memory-input-stream.c',
+      'fwupd-memory-input-stream.h',
+      'fwupd-stream-input-stream.c',
+      'fwupd-stream-input-stream-private.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
       'fwupd-jcat-blob.c',
@@ -226,6 +246,8 @@ if introspection.allowed()
       'fwupd-request.h',
       'fwupd-request-private.h',
       'fwupd-variant.c',
+      'fwupd-unix-input-stream.c',
+      'fwupd-unix-input-stream.h',
       'fwupd-variant.h',
       'fwupd-version.c',
       fwupd_version_h,
@@ -272,7 +294,7 @@ if get_option('tests')
     dependencies: [libfwupd_deps],
     link_with: [fwupd_ffi_lib],
   )
-  foreach test_name : [
+  fwupd_test_names = [
     'bios-setting',
     'client',
     'codec',
@@ -286,14 +308,20 @@ if get_option('tests')
     'json-node',
     'json-object',
     'json-parser',
+    'memory-input-stream',
     'plugin',
     'release',
     'remote',
     'report',
     'request',
     'security-attr',
+    'stream-input-stream',
     'variant',
   ]
+  if giounix.found()
+    fwupd_test_names += 'unix-input-stream'
+  endif
+  foreach test_name : fwupd_test_names
     e = executable(
       'fwupd-' + test_name + '-test',
       fwupd_rs_targets,

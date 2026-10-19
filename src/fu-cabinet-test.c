@@ -69,18 +69,18 @@ fu_cabinet_func(void)
 	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
 	filename = g_test_build_filename(G_TEST_BUILT,
 					 "tests",
 					 "multiple-rels",
 					 "multiple-rels-1.2.4.cab",
 					 NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
-				       stream,
+				       FWUPD_INPUT_STREAM(stream),
 				       0x0,
 				       FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				       &error);

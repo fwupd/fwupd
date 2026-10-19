@@ -36,7 +36,8 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autoptr(GHashTable) metadata_pre = NULL;
 	g_autoptr(GBytes) data = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GBytes) data_dump = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(data);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(data));
 
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", ctx, "physical-id", "/sys", NULL);

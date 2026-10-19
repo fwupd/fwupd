@@ -901,7 +901,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	stream = fu_memory_input_stream_new_from_bytes(blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	if (!fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local)) {
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),

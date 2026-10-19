@@ -160,7 +160,7 @@ fu_focal_moc_signed_device_get_firmware_stream(FuFocalMocDevice *device,
 	blob = fu_firmware_write(firmware, error);
 	if (blob == NULL)
 		return NULL;
-	return fu_memory_input_stream_new_from_bytes(blob);
+	return FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 }
 
 static gboolean

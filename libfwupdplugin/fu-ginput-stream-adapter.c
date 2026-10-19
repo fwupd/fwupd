@@ -139,7 +139,7 @@ fu_input_stream_as_g_input_stream(FuInputStream *stream) /* nocheck:name */
 {
 	FuGInputStreamAdapter *self;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 
 	self = g_object_new(fu_ginput_stream_adapter_get_type(), NULL);
 	self->fu_stream = g_object_ref(stream);

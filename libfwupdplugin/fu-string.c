@@ -522,7 +522,7 @@ fu_strsplit_stream(FuInputStream *stream,
 	    .token_idx = 0,
 	};
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(delimiter != NULL && delimiter[0] != '\0', FALSE);
 	g_return_val_if_fail(callback != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);

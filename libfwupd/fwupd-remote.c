@@ -12,6 +12,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-file-input-stream.h"
 #include "fwupd-jcat-blob.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"

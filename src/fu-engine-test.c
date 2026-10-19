@@ -834,7 +834,7 @@ fu_engine_require_hwid_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -853,10 +853,10 @@ fu_engine_require_hwid_func(void)
 	/* get generated file as a blob */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -905,7 +905,7 @@ fu_engine_get_details_added_func(void)
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -932,13 +932,14 @@ fu_engine_get_details_added_func(void)
 	/* get details */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	checksum_sha256 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, &error);
+	checksum_sha256 =
+	    fu_input_stream_compute_checksum(FWUPD_INPUT_STREAM(stream), G_CHECKSUM_SHA256, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(checksum_sha256);
-	devices = fu_engine_get_details(engine, request, stream, &error);
+	devices = fu_engine_get_details(engine, request, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
@@ -961,7 +962,7 @@ fu_engine_get_details_missing_func(void)
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -977,10 +978,10 @@ fu_engine_get_details_missing_func(void)
 	/* get details */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	devices = fu_engine_get_details(engine, request, stream, &error);
+	devices = fu_engine_get_details(engine, request, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
@@ -1002,7 +1003,7 @@ fu_engine_get_details_refcount_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -1018,10 +1019,10 @@ fu_engine_get_details_refcount_func(void)
 	/* get details */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	devices = fu_engine_get_details(engine, request, stream, &error);
+	devices = fu_engine_get_details(engine, request, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
@@ -1907,7 +1908,7 @@ fu_engine_history_func(void)
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -1958,10 +1959,10 @@ fu_engine_history_func(void)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -1995,7 +1996,8 @@ fu_engine_history_func(void)
 	fu_device_set_modified_usec(device2, 1514338000ull * G_USEC_PER_SEC);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
-	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
+	checksum =
+	    fu_input_stream_compute_checksum(FWUPD_INPUT_STREAM(stream), G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(checksum);
 	device_str_expected =
@@ -2148,7 +2150,8 @@ fu_engine_install_loop_restart_func(void)
 	fu_device_set_metadata_integer(device, "nr-update", 0);
 	fu_device_set_metadata_integer(device, "nr-attach", 0);
 
-	stream_fw = fu_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL);
+	stream_fw = FWUPD_INPUT_STREAM(
+	    fwupd_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL));
 	fu_release_set_stream(release, stream_fw);
 	ret = fu_engine_install_blob(engine,
 				     device,
@@ -2181,7 +2184,7 @@ fu_engine_multiple_rels_func(void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
@@ -2226,10 +2229,10 @@ fu_engine_multiple_rels_func(void)
 					 "multiple-rels",
 					 "multiple-rels-1.2.4.cab",
 					 NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2300,7 +2303,7 @@ fu_engine_history_inherit(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2350,10 +2353,10 @@ fu_engine_history_inherit(void)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2447,7 +2450,7 @@ fu_engine_install_needs_reboot(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2497,10 +2500,10 @@ fu_engine_install_needs_reboot(void)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2565,7 +2568,7 @@ fu_engine_install_request(void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2609,10 +2612,10 @@ fu_engine_install_request(void)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2665,7 +2668,7 @@ fu_engine_history_error_func(void)
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2716,10 +2719,10 @@ fu_engine_history_error_func(void)
 	/* install the wrong thing */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	stream = fu_input_stream_from_path(filename, &error);
+	stream = fwupd_file_input_stream_new(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, FWUPD_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
@@ -2747,7 +2750,8 @@ fu_engine_history_error_func(void)
 	fu_device_set_modified_usec(device2, 1514338000ull * G_USEC_PER_SEC);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
-	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
+	checksum =
+	    fu_input_stream_compute_checksum(FWUPD_INPUT_STREAM(stream), G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(checksum);
 	device_str_expected = g_strdup_printf(

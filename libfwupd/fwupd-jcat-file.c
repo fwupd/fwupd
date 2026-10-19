@@ -8,9 +8,11 @@
 
 #include "fwupd-codec.h"
 #include "fwupd-error.h"
+#include "fwupd-input-stream-private.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-parser.h"
+#include "fwupd-memory-input-stream.h"
 #include "fwupd-rust-compressor-stream.h"
 
 struct _FwupdJcatFile {

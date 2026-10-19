@@ -73,7 +73,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 	FuDeviceEvent *event = NULL;
 	const gchar *fn;
 	g_autofree gchar *event_id = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
 	/* need event ID */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -91,7 +91,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
 			return NULL;
-		return fu_memory_input_stream_new_from_bytes(blob);
+		return FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	}
 
 	/* save */
@@ -107,7 +107,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 				    "Not supported as no device file");
 		return NULL;
 	}
-	stream = fu_input_stream_from_path(fn, error);
+	stream = fwupd_file_input_stream_new(fn, error);
 	if (stream == NULL) {
 		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
@@ -116,14 +116,18 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 	/* save response */
 	if (event != NULL) {
 		g_autoptr(GBytes) blob = NULL;
-		blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, progress, error);
+		blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(stream),
+						  0x0,
+						  G_MAXSIZE,
+						  progress,
+						  error);
 		if (blob == NULL)
 			return NULL;
 		fu_device_event_set_bytes(event, "Data", blob);
 	}
 
 	/* success */
-	return g_steal_pointer(&stream);
+	return FWUPD_INPUT_STREAM(g_steal_pointer(&stream));
 }
 
 static FuFirmware *

@@ -17,7 +17,7 @@ fu_acpi_ivrs_dma_remap_func(void)
 	const gchar *oem_id;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "IVRS-REMAP", NULL);
@@ -25,11 +25,11 @@ fu_acpi_ivrs_dma_remap_func(void)
 		g_test_skip("Missing IVRS-REMAP");
 		return;
 	}
-	stream = fu_input_stream_from_path(fn, &error);
+	stream = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(ivrs),
-				       stream,
+				       FWUPD_INPUT_STREAM(stream),
 				       0x0,
 				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
@@ -58,7 +58,7 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 	const gchar *oem_id;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "IVRS-NOREMAP", NULL);
@@ -66,11 +66,11 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 		g_test_skip("Missing IVRS-NOREMAP");
 		return;
 	}
-	stream = fu_input_stream_from_path(fn, &error);
+	stream = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(ivrs),
-				       stream,
+				       FWUPD_INPUT_STREAM(stream),
 				       0x0,
 				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);

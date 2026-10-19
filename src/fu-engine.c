@@ -40,6 +40,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-stream-input-stream-private.h"
 
 #include "fu-config-private.h"
 #include "fu-context-private.h"
@@ -65,9 +66,6 @@
 #include "fu-uefi-backend.h"
 #include "fu-usb-backend.h"
 
-#ifdef HAVE_GIO_UNIX
-#include "fu-unix-seekable-input-stream.h"
-#endif
 #ifdef HAVE_UDEV
 #include "fu-udev-backend.h"
 #endif
@@ -970,7 +968,7 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, FuInputStream *stream)
 	};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 
 	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *csum = NULL;
@@ -3161,7 +3159,7 @@ fu_engine_emulation_load(FuEngine *self, FuInputStream *stream, GError **error)
 	gsize streamsz = 0;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
@@ -4403,7 +4401,8 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 {
 	FuEngine *self = FU_ENGINE(user_data);
 	GInputStream *stream = xb_builder_source_ctx_get_stream(ctx); /* nocheck:blocked */
-	g_autoptr(FuInputStream) fustream = fu_stream_input_stream_from_stream(stream);
+	g_autoptr(FuInputStream) fustream =
+	    FWUPD_INPUT_STREAM(fwupd_stream_input_stream_new(stream));
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
@@ -4425,7 +4424,7 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	sz = strlen(xml);
 	bytes = g_bytes_new_take(g_steal_pointer(&xml), sz);
 
-	memstream = fu_memory_input_stream_new_from_bytes(bytes);
+	memstream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes));
 	return fu_input_stream_as_g_input_stream(memstream);
 }
 
@@ -4885,7 +4884,7 @@ static FuJcatResult *
 fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuInputStream) istream = NULL;
+	g_autoptr(FwupdFileInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
@@ -4896,12 +4895,13 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	blob = fu_bytes_get_contents(fwupd_remote_get_filename_cache(remote), error);
 	if (blob == NULL)
 		return NULL;
-	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
+	istream = fwupd_file_input_stream_new(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
-						fu_input_stream_get_stream_impl(istream),
-						error))
+	if (!fwupd_jcat_file_import_stream_impl(
+		jcat_file,
+		fu_input_stream_get_stream_impl(FWUPD_INPUT_STREAM(istream)),
+		error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -5019,7 +5019,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
-	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
+	istream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes_sig));
 	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
 						fu_input_stream_get_stream_impl(istream),
 						error))
@@ -5136,8 +5136,8 @@ fu_engine_update_metadata(FuEngine *self,
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(FuInputStream) stream_fd = NULL;
-	g_autoptr(FuInputStream) stream_sig = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream_sig = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -5146,22 +5146,28 @@ fu_engine_update_metadata(FuEngine *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ensures the fd's are closed on error */
-	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
-	if (stream_fd == NULL)
+	stream = fwupd_unix_input_stream_new(fd, TRUE, error);
+	if (stream == NULL)
 		return FALSE;
-	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
+	stream_sig = fwupd_unix_input_stream_new(fd_sig, TRUE, error);
 	if (stream_sig == NULL)
 		return FALSE;
 
 	/* read the entire file into memory */
-	bytes_raw =
-	    fu_input_stream_read_bytes(stream_fd, 0, FU_ENGINE_MAX_METADATA_SIZE, NULL, error);
+	bytes_raw = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(stream),
+					       0,
+					       FU_ENGINE_MAX_METADATA_SIZE,
+					       NULL,
+					       error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
 	/* read signature */
-	bytes_sig =
-	    fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, NULL, error);
+	bytes_sig = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(stream_sig),
+					       0,
+					       FU_ENGINE_MAX_SIGNATURE_SIZE,
+					       NULL,
+					       error);
 	if (bytes_sig == NULL)
 		return FALSE;
 
@@ -5193,7 +5199,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, FuInputStream *stream, GErro
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* distrusting RSA? */
@@ -5364,7 +5370,7 @@ fu_engine_get_details(FuEngine *self,
 	g_autoptr(GPtrArray) rels_by_csum = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	cabinet = fu_engine_build_cabinet_from_stream(self, stream, error);
@@ -7781,7 +7787,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FuInputStream) istream_json = NULL;
-	g_autoptr(FuInputStream) istream_raw = NULL;
+	g_autoptr(FwupdFileInputStream) istream_raw = NULL;
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* set appropriate limits */
@@ -7797,17 +7803,17 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	fu_security_attrs_append(self->host_security_attrs, attr);
 
 	/* add from file */
-	istream_raw = fu_input_stream_from_path(fn, error);
+	istream_raw = fwupd_file_input_stream_new(fn, error);
 	if (istream_raw == NULL)
 		return FALSE;
 	if (g_str_has_suffix(fn, ".gz")) {
-		istream_json = fu_compressor_stream_new_decompress(istream_raw,
+		istream_json = fu_compressor_stream_new_decompress(FWUPD_INPUT_STREAM(istream_raw),
 								   FWUPD_COMPRESSOR_FORMAT_GZIP,
 								   error);
 		if (istream_json == NULL)
 			return FALSE;
 	} else {
-		istream_json = g_object_ref(istream_raw);
+		istream_json = g_object_ref(FWUPD_INPUT_STREAM(istream_raw));
 	}
 	json_node = fu_json_parser_load_from_stream(json_parser,
 						    istream_json,

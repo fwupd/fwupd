@@ -18,7 +18,7 @@ G_DECLARE_FINAL_TYPE(FuPartialInputStream,
 		     fu_partial_input_stream,
 		     FU,
 		     PARTIAL_INPUT_STREAM,
-		     FuInputStream)
+		     FwupdInputStream)
 
 FuInputStream *
 fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GError **error)

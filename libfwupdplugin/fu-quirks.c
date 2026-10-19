@@ -21,7 +21,6 @@
 
 #include "fu-context-private.h"
 #include "fu-input-stream.h"
-#include "fu-memory-input-stream.h"
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-quirks.h"
@@ -271,7 +270,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	FuQuirks *self = FU_QUIRKS(user_data);
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GBytes) bytes_xml = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdMemoryInputStream) stream = NULL;
 
 	bytes = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
 	if (bytes == NULL)
@@ -279,8 +278,8 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	bytes_xml = fu_quirks_convert_keyfile_to_xml(self, bytes, error);
 	if (bytes_xml == NULL)
 		return NULL;
-	stream = fu_memory_input_stream_new_from_bytes(bytes_xml);
-	return fu_input_stream_as_g_input_stream(stream);
+	stream = fwupd_memory_input_stream_new_from_bytes(bytes_xml);
+	return fu_input_stream_as_g_input_stream(FWUPD_INPUT_STREAM(stream));
 }
 
 static gint
@@ -957,7 +956,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 		g_autofree gchar *fn = NULL;
 		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
 		g_autoptr(GFile) file = NULL;
-		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(FwupdFileInputStream) stream = NULL;
 
 		fn = fu_context_build_filename(self->ctx,
 					       NULL,
@@ -974,7 +973,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 			continue;
 		}
 		g_debug("indexing vendor IDs from %s", fn);
-		stream = fu_input_stream_from_path(fn, error);
+		stream = fwupd_file_input_stream_new(fn, error);
 		if (stream == NULL)
 			return FALSE;
 		helper->self = self;
@@ -983,7 +982,12 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 		helper->title_pid = item->title_pid;
 		helper->stmt = stmt_insert;
 		helper->vid = g_string_new(NULL);
-		if (!fu_strsplit_stream(stream, 0x0, "\n", item->func, helper, error))
+		if (!fu_strsplit_stream(FWUPD_INPUT_STREAM(stream),
+					0x0,
+					"\n",
+					item->func,
+					helper,
+					error))
 			return FALSE;
 	}
 

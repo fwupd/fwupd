@@ -284,7 +284,7 @@ FuMsgpackItem *
 fu_msgpack_item_new_binary_stream(FuInputStream *stream)
 {
 	g_autoptr(FuMsgpackItem) self = g_object_new(FU_TYPE_MSGPACK_ITEM, NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	self->kind = FU_MSGPACK_ITEM_KIND_BINARY;
 	self->stream = g_object_ref(stream);
 	return g_steal_pointer(&self);
