@@ -9,6 +9,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 fwupd = { path = "../fwupd" }
+libc = "0.2"
 
 [lints]
 workspace = true
