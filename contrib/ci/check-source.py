@@ -848,12 +848,12 @@ class Checker:
                 self.add_failure(
                     f"contains blocked token {token.data}: {msg}", linecnt=token.linecnt
                 )
-        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        # only enforce FuInputStream/FwupdMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
             for token, msg in {
-                "~g_memory_input_stream_new*": "Use fu_memory_input_stream_new*() instead",
-                "g_file_read": "Use fu_file_input_stream_from_file() instead",
-                "~g_file_input_stream_*": "Use fu_file_input_stream_*() instead",
+                "~g_memory_input_stream_new*": "Use fwupd_memory_input_stream_new*() instead",
+                "g_file_read": "Use fwupd_file_input_stream_new_from_file() instead",
+                "~g_file_input_stream_*": "Use fwupd_file_input_stream_*() instead",
                 "g_zlib_compressor_new": "Use fu_compressor_stream_new_compress() instead",
                 "g_zlib_decompressor_new": "Use fu_compressor_stream_new_decompress() instead",
                 "g_input_stream_read_all": "Use fu_input_stream_read_all() instead",
@@ -902,12 +902,12 @@ class Checker:
                         linecnt=token.linecnt,
                     )
 
-        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        # only enforce FuInputStream/FwupdMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
             for search, msg in {
                 "GInputStream": "Use FuInputStream instead",
-                "GMemoryInputStream": "Use FuMemoryInputStream instead",
-                "GFileInputStream": "Use FuFileInputStream instead",
+                "GMemoryInputStream": "Use FwupdMemoryInputStream instead",
+                "GFileInputStream": "Use FwupdFileInputStream instead",
             }.items():
                 for token in node.tokens:
                     if token.data == search:

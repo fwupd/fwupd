@@ -17,7 +17,7 @@ G_DECLARE_FINAL_TYPE(FuCompositeInputStream,
 		     fu_composite_input_stream,
 		     FU,
 		     COMPOSITE_INPUT_STREAM,
-		     FuInputStream)
+		     FwupdInputStream)
 
 FuInputStream *
 fu_composite_input_stream_new(void);

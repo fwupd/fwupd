@@ -12,7 +12,6 @@
 #include "fu-common.h"
 #include "fu-compressor-stream.h"
 #include "fu-input-stream.h"
-#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"
@@ -455,12 +454,14 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 		if (compression == FU_ZIP_COMPRESSION_NONE) {
 			blob_compressed = g_bytes_ref(blob);
 		} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
-			g_autoptr(FuInputStream) istream_raw = NULL;
+			g_autoptr(FwupdMemoryInputStream) istream_raw = NULL;
 			g_autoptr(FuInputStream) istream_out = NULL;
-			istream_raw = fu_memory_input_stream_new_from_bytes(blob);
-			istream_out = fu_compressor_stream_new_compress(istream_raw,
-									FWUPD_COMPRESSOR_FORMAT_RAW,
-									error);
+
+			istream_raw = fwupd_memory_input_stream_new_from_bytes(blob);
+			istream_out =
+			    fu_compressor_stream_new_compress(FWUPD_INPUT_STREAM(istream_raw),
+							      FWUPD_COMPRESSOR_FORMAT_RAW,
+							      error);
 			if (istream_out == NULL)
 				return NULL;
 			blob_compressed =

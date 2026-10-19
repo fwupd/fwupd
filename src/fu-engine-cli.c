@@ -484,7 +484,7 @@ fu_engine_cli_install_blob(FuCli *cli, gchar **values, GError **error)
 	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(FuInputStream) stream_fw = NULL;
+	g_autoptr(FwupdFileInputStream) stream_fw = NULL;
 
 	/* progress */
 	fu_progress_set_id(self->progress, G_STRLOC);
@@ -503,12 +503,12 @@ fu_engine_cli_install_blob(FuCli *cli, gchar **values, GError **error)
 	}
 
 	/* parse blob */
-	stream_fw = fu_input_stream_from_path(values[0], error);
+	stream_fw = fwupd_file_input_stream_new(values[0], error);
 	if (stream_fw == NULL) {
 		fu_engine_cli_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
 	}
-	fu_release_set_stream(release, stream_fw);
+	fu_release_set_stream(release, FWUPD_INPUT_STREAM(stream_fw));
 	fu_progress_step_done(self->progress);
 
 	/* some plugins need the firmware name */
@@ -1337,7 +1337,7 @@ fu_engine_cli_tpm_eventlog(FuCli *cli, gchar **values, GError **error)
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
-	stream = fu_memory_input_stream_new_from_bytes(blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	eventlog = fu_firmware_new_from_gtypes(stream,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NONE,
@@ -1819,7 +1819,7 @@ fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 	FuContext *ctx = fu_engine_get_context(self->engine);
 	GType gtype;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -1833,7 +1833,7 @@ fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 	}
 
 	/* load file */
-	stream = fu_input_stream_from_path(values[0], error);
+	stream = fwupd_file_input_stream_new(values[0], error);
 	if (stream == NULL)
 		return FALSE;
 
@@ -1878,7 +1878,7 @@ fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 			if (fu_firmware_has_flag(firmware_tmp, FU_FIRMWARE_FLAG_NO_AUTO_DETECTION))
 				continue;
 			if (!fu_firmware_parse_stream(firmware_tmp,
-						      stream,
+						      FWUPD_INPUT_STREAM(stream),
 						      0x0,
 						      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 						      &error_local)) {
@@ -1917,7 +1917,7 @@ fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
 		g_autoptr(GPtrArray) imgs = NULL;
 		if (!fu_firmware_parse_stream(firmware_linear,
-					      stream,
+					      FWUPD_INPUT_STREAM(stream),
 					      0x0,
 					      self->parse_flags,
 					      error))
@@ -1929,7 +1929,11 @@ fu_engine_cli_firmware_parse(FuCli *cli, gchar **values, GError **error)
 			g_set_object(&firmware, firmware_linear);
 		}
 	} else {
-		if (!fu_firmware_parse_stream(firmware, stream, 0x0, self->parse_flags, error))
+		if (!fu_firmware_parse_stream(firmware,
+					      FWUPD_INPUT_STREAM(stream),
+					      0x0,
+					      self->parse_flags,
+					      error))
 			return FALSE;
 	}
 
@@ -3166,13 +3170,13 @@ fu_engine_cli_jcat_load_filename(FuEngineCli *self, const gchar *filename, GErro
 	g_autoptr(GFile) gfile = g_file_new_for_path(filename);
 
 	if (g_file_query_exists(gfile, fu_cli_get_cancellable(FU_CLI(self)))) {
-		g_autoptr(FuFileInputStream) istream = NULL;
-		istream = fu_file_input_stream_from_file(gfile, error);
+		g_autoptr(FwupdFileInputStream) istream = NULL;
+		istream = fwupd_file_input_stream_new_from_file(gfile, error);
 		if (istream == NULL)
 			return NULL;
 		if (!fwupd_jcat_file_import_stream_impl(
 			file,
-			fu_input_stream_get_stream_impl(FU_INPUT_STREAM(istream)),
+			fu_input_stream_get_stream_impl(FWUPD_INPUT_STREAM(istream)),
 			error))
 			return NULL;
 	}
@@ -3950,12 +3954,12 @@ fu_engine_cli_sync_impl_emulation_load(FwupdClient *client,
 				       GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
-	stream = fu_input_stream_from_path(filename, error);
+	stream = fwupd_file_input_stream_new(filename, error);
 	if (stream == NULL)
 		return FALSE;
-	return fu_engine_emulation_load(self->engine, stream, error);
+	return fu_engine_emulation_load(self->engine, FWUPD_INPUT_STREAM(stream), error);
 }
 
 static gboolean
@@ -3996,14 +4000,17 @@ fu_engine_cli_sync_impl_get_details(FwupdClient *client,
 				    GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
-	stream = fu_input_stream_from_path(filename, error);
+	stream = fwupd_file_input_stream_new(filename, error);
 	if (stream == NULL) {
 		fu_engine_cli_maybe_prefix_sandbox_error(filename, error);
 		return NULL;
 	}
-	return fu_engine_get_details(self->engine, self->request, stream, error);
+	return fu_engine_get_details(self->engine,
+				     self->request,
+				     FWUPD_INPUT_STREAM(stream),
+				     error);
 }
 
 static GPtrArray *
@@ -4183,7 +4190,7 @@ fu_engine_cli_sync_impl_install(FwupdClient *client,
 				GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(FwupdDevice) device = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 
@@ -4205,12 +4212,16 @@ fu_engine_cli_sync_impl_install(FwupdClient *client,
 	}
 
 	/* download if required */
-	stream = fu_input_stream_from_path(filename, error);
+	stream = fwupd_file_input_stream_new(filename, error);
 	if (stream == NULL) {
 		fu_engine_cli_maybe_prefix_sandbox_error(filename, error);
 		return FALSE;
 	}
-	if (!fu_engine_cli_install_stream(self, stream, devices_possible, self->progress, error))
+	if (!fu_engine_cli_install_stream(self,
+					  FWUPD_INPUT_STREAM(stream),
+					  devices_possible,
+					  self->progress,
+					  error))
 		return FALSE;
 	fu_cli_display_current_message(FU_CLI(self));
 
@@ -4248,7 +4259,7 @@ fu_engine_cli_sync_impl_install_release(FwupdClient *client,
 					    error);
 	if (blob == NULL)
 		return FALSE;
-	stream = fu_memory_input_stream_new_from_bytes(blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	fu_release_set_stream(FU_RELEASE(release), stream);
 
 	/* install */

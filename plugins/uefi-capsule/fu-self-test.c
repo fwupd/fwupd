@@ -31,7 +31,8 @@ fu_uefi_update_esp_valid_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
 	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(blob_padded);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob_padded));
 
 	/* enough to fit the firmware */
 	fu_volume_set_filesystem_free(volume_esp, 10 * FU_MB);
@@ -58,7 +59,8 @@ fu_uefi_update_esp_invalid_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
 	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(blob_padded);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob_padded));
 
 	/* enough to fit the firmware */
 	fu_volume_set_filesystem_free(volume_esp, FU_MB);
@@ -85,7 +87,8 @@ fu_uefi_update_esp_no_backup_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
 	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(blob_padded);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob_padded));
 
 	/* enough to fit the firmware */
 	fu_volume_set_filesystem_free(volume_esp, 6 * FU_MB);
@@ -154,14 +157,14 @@ fu_uefi_bitmap_func(void)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "test.bmp", NULL);
-	stream = fu_input_stream_from_path(fn, &error);
+	stream = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(bmp_image),
-				       stream,
+				       FWUPD_INPUT_STREAM(stream),
 				       0x0,
 				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);

@@ -331,7 +331,7 @@ fu_uefi_capsule_plugin_get_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
-	g_autoptr(FuInputStream) stream_archive = NULL;
+	g_autoptr(FwupdFileInputStream) stream_archive = NULL;
 
 	/* load archive */
 	filename_archive = fu_context_build_filename(ctx,
@@ -341,11 +341,11 @@ fu_uefi_capsule_plugin_get_splash_data(FuUefiCapsulePlugin *self,
 						     NULL);
 	if (filename_archive == NULL)
 		return NULL;
-	stream_archive = fu_input_stream_from_path(filename_archive, error);
+	stream_archive = fwupd_file_input_stream_new(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
 	if (!fu_firmware_parse_stream(archive,
-				      stream_archive,
+				      FWUPD_INPUT_STREAM(stream_archive),
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      error))

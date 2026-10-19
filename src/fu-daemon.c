@@ -392,7 +392,7 @@ fu_daemon_input_stream_from_filename_hint(FuDaemon *self, const gchar *filename,
 		if (!g_file_has_prefix(file, file_cache))
 			continue;
 		g_debug("load from %s as AllowFilenameHintForLocal enabled", filename_abs);
-		return fu_input_stream_from_path(filename_abs, error);
+		return FWUPD_INPUT_STREAM(fwupd_file_input_stream_new(filename_abs, error));
 	}
 
 	/* not found */

@@ -10,127 +10,9 @@
 
 #include "fu-chunk-array.h"
 #include "fu-crc-private.h"
-#include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-sum.h"
-
-static void
-fu_input_stream_seekable_iface_init(GSeekableIface *iface);
-
-G_DEFINE_TYPE_WITH_CODE(FuInputStream,
-			fu_input_stream,
-			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE, fu_input_stream_seekable_iface_init))
-
-static goffset
-fu_input_stream_default_tell(FuInputStream *stream)
-{
-	return 0;
-}
-
-static gboolean
-fu_input_stream_default_can_seek(FuInputStream *stream)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_input_stream_default_seek(FuInputStream *stream,
-			     goffset offset,
-			     GSeekType type,
-			     GCancellable *cancellable,
-			     GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "stream is not seekable");
-	return FALSE;
-}
-
-static goffset
-fu_input_stream_seekable_tell(GSeekable *seekable)
-{
-	FuInputStream *self = FU_INPUT_STREAM(seekable);
-	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
-	return klass->tell(self);
-}
-
-static gboolean
-fu_input_stream_seekable_can_seek(GSeekable *seekable)
-{
-	FuInputStream *self = FU_INPUT_STREAM(seekable);
-	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
-	return klass->can_seek(self);
-}
-
-static gboolean
-fu_input_stream_seekable_seek(GSeekable *seekable,
-			      goffset offset,
-			      GSeekType type,
-			      GCancellable *cancellable,
-			      GError **error)
-{
-	FuInputStream *self = FU_INPUT_STREAM(seekable);
-	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(self);
-	return klass->seek(self, offset, type, cancellable, error);
-}
-
-static gboolean
-fu_input_stream_seekable_can_truncate(GSeekable *seekable)
-{
-	return FALSE;
-}
-
-static gboolean
-fu_input_stream_seekable_truncate(GSeekable *seekable,
-				  goffset offset,
-				  GCancellable *cancellable,
-				  GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot truncate FuInputStream");
-	return FALSE;
-}
-
-static void
-fu_input_stream_seekable_iface_init(GSeekableIface *iface)
-{
-	iface->tell = fu_input_stream_seekable_tell;
-	iface->can_seek = fu_input_stream_seekable_can_seek;
-	iface->seek = fu_input_stream_seekable_seek;
-	iface->can_truncate = fu_input_stream_seekable_can_truncate;
-	iface->truncate_fn = fu_input_stream_seekable_truncate;
-}
-
-static void
-fu_input_stream_constructed(GObject *object)
-{
-	FuInputStreamClass *klass = FU_INPUT_STREAM_GET_CLASS(object);
-
-	G_OBJECT_CLASS(fu_input_stream_parent_class)->constructed(object);
-
-	/* every FuInputStream subclass must implement read_fn */
-	g_assert(klass->read_fn != NULL); /* nocheck:blocked */
-}
-
-static void
-fu_input_stream_class_init(FuInputStreamClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_input_stream_constructed;
-	klass->tell = fu_input_stream_default_tell;
-	klass->can_seek = fu_input_stream_default_can_seek;
-	klass->seek = fu_input_stream_default_seek;
-}
-
-static void
-fu_input_stream_init(FuInputStream *self)
-{
-}
 
 /**
  * fu_input_stream_read:
@@ -153,14 +35,7 @@ fu_input_stream_read(FuInputStream *stream,
 		     GCancellable *cancellable,
 		     GError **error)
 {
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), -1);
-	g_return_val_if_fail(buffer != NULL, -1);
-	g_return_val_if_fail(error == NULL || *error == NULL, -1);
-	return FU_INPUT_STREAM_GET_CLASS(stream)->read_fn(stream,
-							  buffer,
-							  count,
-							  cancellable,
-							  error);
+	return fwupd_input_stream_read(stream, buffer, count, cancellable, error);
 }
 
 /**
@@ -190,64 +65,7 @@ fu_input_stream_read_all(FuInputStream *stream,
 			 GCancellable *cancellable,
 			 GError **error)
 {
-	gsize total = 0;
-	guint8 *buf = buffer;
-
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
-	g_return_val_if_fail(buffer != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	while (total < count) {
-		gssize rc;
-
-		if (cancellable && g_cancellable_set_error_if_cancelled(cancellable, error)) {
-			if (bytes_read != NULL)
-				*bytes_read = total;
-			return FALSE;
-		}
-
-		rc = fu_input_stream_read(stream, buf + total, count - total, cancellable, error);
-		if (rc == -1) {
-			if (bytes_read != NULL)
-				*bytes_read = total;
-			return FALSE;
-		}
-		if (rc == 0)
-			break;
-		total += rc;
-	}
-	if (bytes_read != NULL)
-		*bytes_read = total;
-	return TRUE;
-}
-
-/**
- * fu_input_stream_from_path:
- * @path: a filename
- * @error: (nullable): optional return location for an error
- *
- * Opens the file as n input stream.
- *
- * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.0.0
- **/
-FuInputStream *
-fu_input_stream_from_path(const gchar *path, GError **error)
-{
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(FuFileInputStream) stream = NULL;
-
-	g_return_val_if_fail(path != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	file = g_file_new_for_path(path);
-	stream = fu_file_input_stream_from_file(file, error);
-	if (stream == NULL) {
-		fwupd_error_convert(error);
-		return NULL;
-	}
-	return FU_INPUT_STREAM(g_steal_pointer(&stream));
+	return fwupd_input_stream_read_all(stream, buffer, count, bytes_read, cancellable, error);
 }
 
 /**
@@ -277,7 +95,7 @@ fu_input_stream_read_safe(FuInputStream *stream,
 {
 	gssize rc;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -321,7 +139,7 @@ gboolean
 fu_input_stream_read_u8(FuInputStream *stream, gsize offset, guint8 *value, GError **error)
 {
 	guint8 buf = 0;
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, &buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
@@ -352,7 +170,7 @@ fu_input_stream_read_u16(FuInputStream *stream,
 			 GError **error)
 {
 	guint8 buf[2] = {0};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
@@ -383,7 +201,7 @@ fu_input_stream_read_u24(FuInputStream *stream,
 			 GError **error)
 {
 	guint8 buf[3] = {0};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
@@ -414,7 +232,7 @@ fu_input_stream_read_u32(FuInputStream *stream,
 			 GError **error)
 {
 	guint8 buf[4] = {0};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
@@ -445,7 +263,7 @@ fu_input_stream_read_u64(FuInputStream *stream,
 			 GError **error)
 {
 	guint8 buf[8] = {0};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
@@ -481,7 +299,7 @@ fu_input_stream_read_byte_array(FuInputStream *stream,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -564,7 +382,7 @@ fu_input_stream_read_bytes(FuInputStream *stream,
 			   GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	buf = fu_input_stream_read_byte_array(stream, offset, count, progress, error);
@@ -591,7 +409,7 @@ fu_input_stream_read_string(FuInputStream *stream, gsize offset, gsize count, GE
 {
 	g_autoptr(GByteArray) buf = NULL;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	buf = fu_input_stream_read_byte_array(stream, offset, count, NULL, error);
@@ -626,7 +444,7 @@ fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error)
 {
 	goffset current;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* streaming from unseekable stream */
@@ -675,7 +493,7 @@ fu_input_stream_compute_checksum(FuInputStream *stream, GChecksumType checksum_t
 {
 	g_autoptr(GChecksum) csum = g_checksum_new(checksum_type);
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_checksum_cb, csum, error))
@@ -706,7 +524,7 @@ fu_input_stream_compute_sum8_cb(const guint8 *buf, gsize bufsz, gpointer user_da
 gboolean
 fu_input_stream_compute_sum8(FuInputStream *stream, guint8 *value, GError **error)
 {
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum8_cb, value, error);
@@ -744,7 +562,7 @@ fu_input_stream_compute_sum16_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 gboolean
 fu_input_stream_compute_sum16(FuInputStream *stream, guint16 *value, GError **error)
 {
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum16_cb, value, error);
@@ -782,7 +600,7 @@ fu_input_stream_compute_sum32_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 gboolean
 fu_input_stream_compute_sum32(FuInputStream *stream, guint32 *value, GError **error)
 {
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum32_cb, value, error);
@@ -832,7 +650,7 @@ gboolean
 fu_input_stream_compute_crc32(FuInputStream *stream, FuCrcKind kind, guint32 *crc, GError **error)
 {
 	FuInputStreamComputeCrc32Helper helper = {.crc = *crc, .kind = kind};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -883,7 +701,7 @@ gboolean
 fu_input_stream_compute_crc16(FuInputStream *stream, FuCrcKind kind, guint16 *crc, GError **error)
 {
 	FuInputStreamComputeCrc16Helper helper = {.crc = *crc, .kind = kind};
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc16_cb, &helper, error))
@@ -913,7 +731,7 @@ fu_input_stream_chunkify(FuInputStream *stream,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(func_cb != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -963,7 +781,7 @@ fu_input_stream_find(FuInputStream *stream,
 	gsize offset_add = 0;
 	gsize offset_cur = offset;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(bufsz != 0, FALSE);
 	g_return_val_if_fail(bufsz < blocksz, FALSE);
@@ -1009,27 +827,4 @@ fu_input_stream_find(FuInputStream *stream,
 		    "failed to find buffer of size 0x%x",
 		    (guint)bufsz);
 	return FALSE;
-}
-
-/**
- * fu_input_stream_get_stream_impl: (skip):
- * @stream: a #FuInputStream
- *
- * Returns the Rust-side stream implementation handle for the given stream.
- *
- * Returns: (transfer full): an opaque #FuRsStreamImpl, free with fu_stream_impl_free()
- *
- * Since: 2.1.8
- */
-FuRsStreamImpl *
-fu_input_stream_get_stream_impl(FuInputStream *stream)
-{
-	FuInputStreamClass *klass;
-
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
-
-	klass = FU_INPUT_STREAM_GET_CLASS(stream);
-	g_return_val_if_fail(klass->get_stream_impl != NULL, NULL);
-
-	return klass->get_stream_impl(stream);
 }

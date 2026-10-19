@@ -17,6 +17,8 @@
 #include <libfwupd/fwupd-device.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
+#include <libfwupd/fwupd-file-input-stream.h>
+#include <libfwupd/fwupd-input-stream.h>
 #include <libfwupd/fwupd-jcat-blob.h>
 #include <libfwupd/fwupd-jcat-file.h>
 #include <libfwupd/fwupd-jcat-item.h>
@@ -24,12 +26,14 @@
 #include <libfwupd/fwupd-json-node.h>
 #include <libfwupd/fwupd-json-object.h>
 #include <libfwupd/fwupd-json-parser.h>
+#include <libfwupd/fwupd-memory-input-stream.h>
 #include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-release.h>
 #include <libfwupd/fwupd-remote.h>
 #include <libfwupd/fwupd-report.h>
 #include <libfwupd/fwupd-request.h>
 #include <libfwupd/fwupd-security-attr.h>
+#include <libfwupd/fwupd-unix-input-stream.h>
 #include <libfwupd/fwupd-variant.h>
 #include <libfwupd/fwupd-version.h>
 

@@ -30,7 +30,6 @@
 #include "fu-binder-daemon.h"
 #include "fu-context-private.h"
 #include "fu-security-attrs-private.h"
-#include "fu-unix-seekable-input-stream.h"
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
 
@@ -694,8 +693,8 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	{
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		g_autoptr(FuEngineRequest) request = fu_binder_daemon_create_request(m_daemon);
+		g_autoptr(FwupdUnixInputStream) stream = NULL;
 		g_autoptr(GError) error = NULL;
-		g_autoptr(FuInputStream) stream = NULL;
 		g_autoptr(GPtrArray) details = NULL;
 
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-details", &error)) {
@@ -712,13 +711,14 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		}
 
 		/* the daemon takes ownership of a dup so the caller's fd is untouched */
-		stream = fu_unix_seekable_input_stream_new(dup(fd), TRUE, &error);
+		stream = fwupd_unix_input_stream_new(dup(fd), TRUE, &error);
 		if (stream == NULL) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
 		}
-		details = fu_engine_get_details(engine, request, stream, &error);
+		details =
+		    fu_engine_get_details(engine, request, FWUPD_INPUT_STREAM(stream), &error);
 		if (details == NULL) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,

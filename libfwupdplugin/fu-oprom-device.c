@@ -74,7 +74,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 	g_autoptr(FuDeviceLocker) locker_enable = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
 	/* sanity check */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
@@ -87,7 +87,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 
 	/* open file */
 	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "rom", NULL);
-	stream = fu_input_stream_from_path(rom_fn, &error_local);
+	stream = fwupd_file_input_stream_new(rom_fn, &error_local);
 	if (stream == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -108,7 +108,8 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 	while (TRUE) {
 		gssize sz;
 		guint8 tmp[32 * FU_KB] = {0x0};
-		sz = fu_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
+		sz =
+		    fu_input_stream_read(FWUPD_INPUT_STREAM(stream), tmp, sizeof(tmp), NULL, error);
 		if (sz == 0)
 			break;
 		g_debug("ROM returned 0x%04x bytes", (guint)sz);

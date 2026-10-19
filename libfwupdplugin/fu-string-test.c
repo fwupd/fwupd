@@ -243,19 +243,22 @@ fu_strsplit_stream_func(void)
 	/* check includes NUL */
 	g_assert_cmpint(sizeof(str1), ==, 14);
 
-	stream1 = FU_INPUT_STREAM(fu_memory_input_stream_new_from_data(str1, strlen(str1), NULL));
+	stream1 =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_data(str1, strlen(str1), NULL));
 	ret = fu_strsplit_stream(stream1, 0x0, " ", fu_strsplit_stream_cb, &cnt1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(cnt1, ==, 2);
 
-	stream2 = FU_INPUT_STREAM(fu_memory_input_stream_new_from_data(str2, strlen(str2), NULL));
+	stream2 =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_data(str2, strlen(str2), NULL));
 	ret = fu_strsplit_stream(stream2, 0x0, "123", fu_strsplit_stream_cb, &cnt2, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(cnt2, ==, 6);
 
-	stream3 = FU_INPUT_STREAM(fu_memory_input_stream_new_from_data(str3, sizeof(str3), NULL));
+	stream3 =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_data(str3, sizeof(str3), NULL));
 	ret = fu_strsplit_stream(stream3, 0x0, "|", fu_strsplit_stream_cb, &cnt3, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

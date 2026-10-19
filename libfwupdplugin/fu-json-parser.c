@@ -30,10 +30,10 @@ fu_json_parser_load_from_stream(FwupdJsonParser *self,
 	FuRsStreamImpl *impl;
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	impl = fu_input_stream_get_stream_impl(stream);
+	impl = fwupd_input_stream_get_stream_impl(stream);
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -26,7 +26,6 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-installer.h"
 #include "fu-engine-requirements.h"
-#include "fu-unix-seekable-input-stream.h"
 
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
@@ -282,7 +281,7 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 
 	/* get stream */
 	if (fd >= 0) {
-		stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+		stream = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new(fd, TRUE, error));
 		if (stream == NULL) {
 			g_prefix_error_literal(error, "invalid stream: ");
 			return FALSE;

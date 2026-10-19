@@ -28,10 +28,6 @@
 #include "fu-release.h"
 #include "fu-security-attrs-private.h"
 
-#ifdef HAVE_GIO_UNIX
-#include "fu-unix-seekable-input-stream.h"
-#endif
-
 struct _FuDbusDaemon {
 	FuDaemon parent_instance;
 	GDBusConnection *connection;
@@ -827,8 +823,8 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
-	g_autoptr(FuInputStream) stream = NULL;
-	g_autoptr(FuInputStream) stream_safe = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdInputStream) stream_safe = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the fd */
@@ -854,19 +850,22 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, error);
 	if (stream == NULL)
 		return NULL;
-	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							&error_local)) {
+	if (!fwupd_unix_input_stream_require_seal(stream, &error_local)) {
 		g_autoptr(GBytes) blob = NULL;
 		g_debug("fd not sealed, falling back to copy: %s", error_local->message);
-		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(stream),
+						  0,
+						  G_MAXSIZE,
+						  NULL,
+						  error);
 		if (blob == NULL)
 			return NULL;
-		stream_safe = fu_memory_input_stream_new_from_bytes(blob);
+		stream_safe = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	} else {
-		stream_safe = g_object_ref(stream);
+		stream_safe = g_object_ref(FWUPD_INPUT_STREAM(stream));
 	}
 
 	/* success */
