@@ -37,3 +37,6 @@ fu_lenovo_accessory_hid_process(FuLenovoAccessoryImpl *impl, GByteArray *buf, GE
 gboolean
 fu_lenovo_accessory_hid_add_children(FuLenovoAccessoryImpl *self, GError **error)
     G_GNUC_NON_NULL(1);
+gboolean
+fu_lenovo_accessory_hid_poll_children(FuLenovoAccessoryImpl *self, GError **error)
+    G_GNUC_NON_NULL(1);

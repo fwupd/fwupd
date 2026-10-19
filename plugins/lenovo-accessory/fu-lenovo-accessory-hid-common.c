@@ -96,6 +96,83 @@ fu_lenovo_accessory_hid_add_children(FuLenovoAccessoryImpl *self, GError **error
 	return TRUE;
 }
 
+gboolean
+fu_lenovo_accessory_hid_poll_children(FuLenovoAccessoryImpl *self, GError **error)
+{
+	guint8 max_slot_num = 0;
+	guint8 slot_status[FU_LENOVO_ACCESSORY_MAX_PAIR_SLOTS] = {0};
+	GPtrArray *children = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_return_val_if_fail(FU_IS_LENOVO_ACCESSORY_IMPL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* query current pairing status */
+	if (!fu_lenovo_accessory_impl_get_pair_support_info(self,
+							    &max_slot_num,
+							    slot_status,
+							    G_N_ELEMENTS(slot_status),
+							    &error_local)) {
+		g_debug("failed to poll pairing status: %s", error_local->message);
+		return TRUE; /* best-effort, don't fail the poll */
+	}
+
+	if (max_slot_num == 0)
+		return TRUE;
+
+	max_slot_num = MIN(max_slot_num, (guint8)G_N_ELEMENTS(slot_status));
+	children = fu_device_get_children(FU_DEVICE(self)); /* transfer none */
+
+	/* check each slot for connection status changes */
+	for (guint8 i = 0; i < max_slot_num; i++) {
+		guint8 target_slot = i + 1;
+		gboolean slot_connected =
+		    (slot_status[i] == FU_LENOVO_ACCESSORY_PAIR_SLOT_STATUS_CONNECTED);
+		gboolean child_exists = FALSE;
+		g_autoptr(GError) error_slot = NULL;
+
+		/* check if we already have a child for this slot */
+		for (guint j = 0; j < children->len; j++) {
+			FuDevice *child = g_ptr_array_index(children, j);
+			g_autofree gchar *expected_id =
+			    g_strdup_printf("slot%u", (guint)target_slot);
+			const gchar *logical_id = fu_device_get_logical_id(child);
+
+			if (g_strcmp0(logical_id, expected_id) == 0) {
+				child_exists = TRUE;
+				break;
+			}
+		}
+
+		/* add newly connected device */
+		if (slot_connected && !child_exists) {
+			g_debug("slot %u newly connected, adding child device", (guint)target_slot);
+			if (!fu_lenovo_accessory_hid_add_child(self, target_slot, &error_slot))
+				g_debug("failed to add child for slot %u: %s",
+					(guint)target_slot,
+					error_slot->message);
+		}
+
+		/* remove disconnected device */
+		if (!slot_connected && child_exists) {
+			for (guint j = 0; j < children->len; j++) {
+				FuDevice *child = g_ptr_array_index(children, j);
+				g_autofree gchar *expected_id =
+				    g_strdup_printf("slot%u", (guint)target_slot);
+				const gchar *logical_id = fu_device_get_logical_id(child);
+
+				if (g_strcmp0(logical_id, expected_id) == 0) {
+					g_debug("slot %u disconnected, removing child device",
+						(guint)target_slot);
+					fu_device_remove_child(FU_DEVICE(self), child);
+					break;
+				}
+			}
+		}
+	}
+
+	return TRUE;
+}
+
 GByteArray *
 fu_lenovo_accessory_hid_read(FuLenovoAccessoryImpl *impl, GError **error)
 {
