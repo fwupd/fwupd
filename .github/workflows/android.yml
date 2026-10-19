@@ -56,19 +56,19 @@ jobs:
               "${CONTAINER_URI}" \
               ./contrib/ci/ubuntu-android-build.py
       - name: Save Android install tree
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist-android
           path: ${{ github.workspace }}/dist-android.tar.gz
           if-no-files-found: error
       - name: Save Android coverage tree
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-tree-android
           path: ${{ github.workspace }}/coverage-tree-android.tar.gz
           if-no-files-found: error
       - name: Save any coverage data
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-ubuntu-amd64-android
           path: ${{ github.workspace }}/coverage.xml
