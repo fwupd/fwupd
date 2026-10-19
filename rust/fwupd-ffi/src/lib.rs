@@ -18,6 +18,7 @@
 #[macro_use]
 #[allow(unused)]
 pub(crate) mod glib;
+pub mod cab;
 pub mod compressor;
 pub mod cstream;
 pub mod json;

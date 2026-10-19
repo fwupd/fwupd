@@ -58,6 +58,7 @@ fwupd_ffi_src = [
   join_paths(meson.project_source_root(), 'Cargo.toml'),
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd-ffi/Cargo.toml',
+  'fwupd-ffi/src/cab.rs',
   'fwupd-ffi/src/compressor.rs',
   'fwupd-ffi/src/cstream.rs',
   'fwupd-ffi/src/glib/gbytes.rs',
