@@ -301,6 +301,14 @@ fu_vbe_simple_device_probe_storage_func(void)
 	g_assert_true(ret);
 	str = fu_device_to_string(dev);
 	g_assert_nonnull(g_strstr_len(str, -1, "/dev/mmcblk1"));
+
+	/* updates can be for every vbe-simple board, or just this one */
+	g_assert_true(fu_device_has_instance_id(dev,
+						"bb3b05a8-ebef-11ec-be98-d3a15278be95",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"VBE\\COMPATIBLE_pine64-rockpro64-v2.1",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
 /* build a FIT with firmware for two boards, the second being the test board */
