@@ -226,24 +226,24 @@ fwupd_input_stream_read_all(FwupdInputStream *stream,
 }
 
 /**
- * fwupd_input_stream_get_stream_impl: (skip):
+ * fwupd_input_stream_get_impl: (skip):
  * @stream: a #FwupdInputStream
  *
  * Returns the Rust-side stream implementation handle for the given stream.
  *
- * Returns: (transfer full): an opaque #FwupdStreamImpl, free with fu_stream_impl_free()
+ * Returns: (transfer full): an opaque #FwupdInputStreamImpl, free with fu_stream_impl_free()
  *
  * Since: 2.2.1
  **/
-FwupdStreamImpl
-fwupd_input_stream_get_stream_impl(FwupdInputStream *stream)
+FwupdInputStreamImpl
+fwupd_input_stream_get_impl(FwupdInputStream *stream)
 {
 	FwupdInputStreamClass *klass;
 
 	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 
 	klass = FWUPD_INPUT_STREAM_GET_CLASS(stream);
-	g_return_val_if_fail(klass->get_stream_impl != NULL, NULL);
+	g_return_val_if_fail(klass->get_impl != NULL, NULL);
 
-	return klass->get_stream_impl(stream);
+	return klass->get_impl(stream);
 }

@@ -112,11 +112,11 @@ fwupd_file_input_stream_finalize(GObject *object)
 	G_OBJECT_CLASS(fwupd_file_input_stream_parent_class)->finalize(object);
 }
 
-static FwupdStreamImpl
-fwupd_file_input_stream_get_stream_impl(FwupdInputStream *stream)
+static FwupdInputStreamImpl
+fwupd_file_input_stream_get_impl(FwupdInputStream *stream)
 {
 	FwupdFileInputStream *self = FWUPD_FILE_INPUT_STREAM(stream);
-	return fu_rs_file_input_stream_get_stream_impl(self->rust);
+	return fu_rs_file_input_stream_get_impl(self->rust);
 }
 
 static void
@@ -129,7 +129,7 @@ fwupd_file_input_stream_class_init(FwupdFileInputStreamClass *klass)
 	istream_class->tell = fwupd_file_input_stream_tell;
 	istream_class->can_seek = fwupd_file_input_stream_can_seek;
 	istream_class->seek = fwupd_file_input_stream_seek;
-	istream_class->get_stream_impl = fwupd_file_input_stream_get_stream_impl;
+	istream_class->get_impl = fwupd_file_input_stream_get_impl;
 }
 
 static void

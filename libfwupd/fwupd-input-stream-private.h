@@ -10,7 +10,7 @@
 
 G_BEGIN_DECLS
 
-FwupdStreamImpl
-fwupd_input_stream_get_stream_impl(FwupdInputStream *stream) G_GNUC_NON_NULL(1);
+FwupdInputStreamImpl
+fwupd_input_stream_get_impl(FwupdInputStream *stream) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

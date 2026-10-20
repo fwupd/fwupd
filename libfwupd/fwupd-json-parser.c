@@ -260,7 +260,7 @@ fwupd_json_parser_load_from_stream2(FwupdJsonParser *self,
 	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	impl = fwupd_input_stream_get_stream_impl(stream);
+	impl = fwupd_input_stream_get_impl(stream);
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -289,7 +289,7 @@ fwupd_json_parser_load_from_stream2(FwupdJsonParser *self,
  **/
 FwupdJsonNode *
 fwupd_json_parser_load_from_stream_impl(FwupdJsonParser *self,
-					FwupdStreamImpl stream_impl,
+					FwupdInputStreamImpl stream_impl,
 					FwupdJsonLoadFlags flags,
 					GError **error)
 {

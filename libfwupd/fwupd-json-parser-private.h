@@ -10,7 +10,7 @@
 
 FwupdJsonNode *
 fwupd_json_parser_load_from_stream_impl(FwupdJsonParser *self,
-					FwupdStreamImpl stream_impl,
+					FwupdInputStreamImpl stream_impl,
 					FwupdJsonLoadFlags flags,
 					GError **error)
     G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;

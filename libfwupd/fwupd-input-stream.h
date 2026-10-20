@@ -16,13 +16,13 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE(FwupdInputStream, fwupd_input_stream, FWUPD, INPUT_STREAM, GObject)
 
 /**
- * FwupdStreamImpl:
+ * FwupdInputStreamImpl:
  *
  * An opaque pointer to an underlying stream implementation.
  *
  * Since: 2.2.1
  */
-typedef gpointer FwupdStreamImpl;
+typedef gpointer FwupdInputStreamImpl;
 
 struct _FwupdInputStreamClass {
 	GObjectClass parent_class;
@@ -38,7 +38,7 @@ struct _FwupdInputStreamClass {
 			 GSeekType type,
 			 GCancellable *cancellable,
 			 GError **error);
-	FwupdStreamImpl (*get_stream_impl)(FwupdInputStream *stream);
+	FwupdInputStreamImpl (*get_impl)(FwupdInputStream *stream);
 };
 
 gssize

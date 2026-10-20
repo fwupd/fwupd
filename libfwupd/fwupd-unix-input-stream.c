@@ -289,11 +289,11 @@ fwupd_unix_input_stream_require_seal(FwupdUnixInputStream *stream, GError **erro
 #endif
 }
 
-static FwupdStreamImpl
-fwupd_unix_input_stream_get_stream_impl(FwupdInputStream *stream)
+static FwupdInputStreamImpl
+fwupd_unix_input_stream_get_impl(FwupdInputStream *stream)
 {
 	FwupdUnixInputStream *self = FWUPD_UNIX_INPUT_STREAM(stream);
-	return fu_rs_file_input_stream_get_stream_impl(self->rust);
+	return fu_rs_file_input_stream_get_impl(self->rust);
 }
 
 static void
@@ -314,7 +314,7 @@ fwupd_unix_input_stream_class_init(FwupdUnixInputStreamClass *klass)
 	istream_class->tell = fwupd_unix_input_stream_tell;
 	istream_class->can_seek = fwupd_unix_input_stream_can_seek;
 	istream_class->seek = fwupd_unix_input_stream_seek;
-	istream_class->get_stream_impl = fwupd_unix_input_stream_get_stream_impl;
+	istream_class->get_impl = fwupd_unix_input_stream_get_impl;
 }
 
 static void
