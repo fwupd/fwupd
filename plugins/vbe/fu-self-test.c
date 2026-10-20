@@ -104,6 +104,72 @@ fu_vbe_plugin_coldplug_func(void)
 }
 
 static void
+fu_vbe_plugin_coldplug_two_func(void)
+{
+	gboolean ret;
+	GPtrArray *devices;
+	g_autofree gchar *storage = NULL;
+	g_autofree gchar *xml = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir_storage = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_firmware_gtypes(ctx);
+	tmpdir_storage = fu_temporary_directory_new("vbe-storage", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir_storage);
+	storage = fu_temporary_directory_build(tmpdir_storage, "testfw", NULL);
+	ret = g_file_set_contents(storage, "", 0, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* two methods, each with its own node */
+	xml = g_strdup_printf(
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>chosen</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>fwupd</id>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware0</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
+	    "        </firmware>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware1</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x300000</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x400000</metadata>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    storage,
+	    storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* both are kept, rather than one replacing the other */
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 2);
+	g_assert_cmpstr(fu_device_get_id(g_ptr_array_index(devices, 0)),
+			!=,
+			fu_device_get_id(g_ptr_array_index(devices, 1)));
+}
+
+static void
 fu_vbe_plugin_coldplug_no_fdt_func(void)
 {
 	gboolean ret;
@@ -331,6 +397,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/vbe/coldplug", fu_vbe_plugin_coldplug_func);
+	g_test_add_func("/vbe/coldplug/two", fu_vbe_plugin_coldplug_two_func);
 	g_test_add_func("/vbe/coldplug/no-fdt", fu_vbe_plugin_coldplug_no_fdt_func);
 	g_test_add_func("/vbe/coldplug/invalid-compatible",
 			fu_vbe_plugin_coldplug_invalid_compatible_func);
