@@ -93,6 +93,13 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 					   NULL))
 		g_debug("no compatible strings for the board");
 
+	/* the board's compatible string selects the firmware for it */
+	if (priv->compatible != NULL && priv->compatible[0] != NULL) {
+		fu_device_add_instance_strsafe(device, "COMPATIBLE", priv->compatible[0]);
+		if (!fu_device_build_instance_id(device, error, "VBE", "COMPATIBLE", NULL))
+			return FALSE;
+	}
+
 	/* get baseclass shared attributes */
 	fu_fdt_image_get_attr_str(priv->fdt_node, "cur-version", &version, NULL);
 	if (version != NULL)

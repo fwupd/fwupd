@@ -95,7 +95,9 @@ VBE requires the board firmware to provide information about the firmware within
 the device tree passed to the Operating System.
 
 For systems without device tree, currently the only option is to install a file
-for use by fwupd, typically in `/var/lib/fwupd/system.dtb`.
+for use by fwupd, typically in `/var/lib/fwupd/system.dtb`. Since the board's
+instance ID comes from the `compatible` property of the `/chosen/fwupd` node,
+the file should provide it.
 
 In either case, there must be one or more nodes with the required information.
 The format depends on which VBE method is used, but the information must be in
@@ -162,7 +164,13 @@ At present only one method is available:
 
 With this, only a single copy of the firmware is available so if the write
 fails, the board may not boot. This is implemented in the `vbe-simple.c` file and
-has the device GUID `ea1b96eb-a430-4033-8708-498b6d98178b` within fwupd.
+has the device GUID `bb3b05a8-ebef-11ec-be98-d3a15278be95` within fwupd, which
+matches every board using this method. It also has an instance ID of the form
+`VBE\COMPATIBLE_xxx`, using the first compatible string of the `/chosen/fwupd`
+node, so that an update can be targeted at one board. fwupd's hardware IDs
+(HWIDs) are another way to do this: fwupd makes them from the compatible strings
+of the root node on a devicetree system, or from the SMBIOS information on other
+systems, so an update can instead require the HWID of a particular board.
 
 Properties for this method are:
 
@@ -258,12 +266,8 @@ update state. The update happens in two passes, the first installing firmware
 in the 'B' slot and the second writing it to the 'A' slot, to avoid bricking the
 device in the event of a write failure or non-functional firmware.
 
-Figure out how to select the right update for a board out of many that might be
-on LVFS. At present the selection mechanism only works within the FIT
-configuration. This probably needs to use the `<firmware type="flashed">` piece
-of the xml file to specify an identifier for the family of boards supported by
-the update.
-
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.8.2`.
+The `VBE\COMPATIBLE_xxx` instance ID for each board has been available since
+fwupd version `2.2.1`.
