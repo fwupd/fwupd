@@ -24,25 +24,14 @@ use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::raw::c_char;
 use std::ptr;
 
-use std::sync::{Arc, Mutex};
-
 use crate::cstream::{CStream, CStreamCallbacks, CStreamHandle};
 use crate::glib::{
     GBoolean, GError, GOffset, GSeekType, GFALSE, GTRUE, G_SEEK_CUR, G_SEEK_END, G_SEEK_SET,
 };
 use fwupd::streams::{
-    CompositeInputStream, CompressorStream, DecompressorStream, FileInputStream, IsSeekable,
-    MemoryInputStream, PartialInputStream, ReadSeek,
+    CompositeInputStream, CompressorStream, DecompressorStream, FileInputStream, IntoStream,
+    IsSeekable, MemoryInputStream, PartialInputStream, Stream, StreamImpl,
 };
-
-/// The type of our underlying Rust stream implementation, wrapped
-/// into an `Arc<Mutex>` so we can have multiple references to it,
-/// e.g. in the case of Partial or Composite streams.
-///
-/// The `ReadSeek` is implemented by each stream, Send is just
-/// there to shut clippy up, we don't really need it since fwupd
-/// is single-threaded.
-pub(crate) type StreamImpl = Arc<Mutex<dyn ReadSeek + Send>>;
 
 /// EINVAL — same value (22) on Linux, BSD, and macOS.
 /// Only ever used as emergency fallback so should be good enough.
@@ -81,7 +70,7 @@ macro_rules! ffi_stream_impl_free {
         /// `stream` must be a valid pointer previously returned by the
         /// corresponding `_new` constructor, or NULL (no-op).
         #[no_mangle]
-        pub unsafe extern "C" fn $func(stream: *mut Arc<Mutex<$type>>) {
+        pub unsafe extern "C" fn $func(stream: *mut Stream<$type>) {
             if !stream.is_null() {
                 drop(unsafe { Box::from_raw(stream) });
             }
@@ -103,7 +92,7 @@ macro_rules! ffi_stream_impl_read {
         /// at least `count` writable bytes and must not be NULL if `count > 0`.
         #[no_mangle]
         pub unsafe extern "C" fn $func(
-            stream: *mut Arc<Mutex<$type>>,
+            stream: *mut Stream<$type>,
             buf: *mut u8,
             count: usize,
         ) -> isize {
@@ -133,7 +122,7 @@ macro_rules! ffi_stream_impl_seek {
         /// `stream` must be a valid, non-NULL pointer.
         #[no_mangle]
         pub unsafe extern "C" fn $func(
-            stream: *mut Arc<Mutex<$type>>,
+            stream: *mut Stream<$type>,
             offset: GOffset,
             seek_type: GSeekType,
         ) -> GBoolean {
@@ -165,7 +154,7 @@ macro_rules! ffi_stream_impl_can_seek {
         /// # Safety
         /// `stream` must be a valid, non-NULL pointer.
         #[no_mangle]
-        pub unsafe extern "C" fn $func(stream: *const Arc<Mutex<$type>>) -> GBoolean {
+        pub unsafe extern "C" fn $func(stream: *const Stream<$type>) -> GBoolean {
             if stream.is_null() {
                 return GFALSE;
             }
@@ -191,7 +180,7 @@ macro_rules! ffi_stream_impl_tell {
         /// # Safety
         /// `stream` must be a valid, non-NULL pointer.
         #[no_mangle]
-        pub unsafe extern "C" fn $func(stream: *const Arc<Mutex<$type>>) -> GOffset {
+        pub unsafe extern "C" fn $func(stream: *const Stream<$type>) -> GOffset {
             if stream.is_null() {
                 return 0;
             }
@@ -216,7 +205,7 @@ macro_rules! ffi_stream_impl_size {
         /// # Safety
         /// `stream` must be a valid, non-NULL pointer.
         #[no_mangle]
-        pub unsafe extern "C" fn $func(stream: *const Arc<Mutex<$type>>) -> usize {
+        pub unsafe extern "C" fn $func(stream: *const Stream<$type>) -> usize {
             if stream.is_null() {
                 return 0;
             }
@@ -229,7 +218,7 @@ macro_rules! ffi_stream_impl_size {
 
 macro_rules! ffi_stream_impl_stream_impl {
     ($type:ty, $func:ident) => {
-        /// Return a type-erased `StreamImpl` handle from the given stream.
+        /// Return a type-erased `Stream<StreamImpl>` handle from the given stream.
         ///
         /// The returned handle can be passed to functions that accept any
         /// stream type (e.g. `fu_rs_partial_input_stream_new` or
@@ -240,13 +229,13 @@ macro_rules! ffi_stream_impl_stream_impl {
         /// `stream` must be a valid, non-NULL pointer previously returned
         /// by the corresponding `_new` constructor.
         #[no_mangle]
-        pub unsafe extern "C" fn $func(stream: *const Arc<Mutex<$type>>) -> *mut StreamImpl {
+        pub unsafe extern "C" fn $func(stream: *const Stream<$type>) -> *mut Stream<StreamImpl> {
             if stream.is_null() {
                 return ptr::null_mut();
             }
             let arc = unsafe { &*stream };
-            let stream_impl: StreamImpl = arc.clone();
-            Box::into_raw(Box::new(stream_impl))
+            let erased: Stream<StreamImpl> = arc.clone();
+            Box::into_raw(Box::new(erased))
         }
     };
 }
@@ -264,7 +253,7 @@ macro_rules! ffi_stream_impl_stream_impl {
 pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_new_from_data(
     data: *const u8,
     len: usize,
-) -> *mut Arc<Mutex<MemoryInputStream<&'static [u8]>>> {
+) -> *mut Stream<MemoryInputStream<&'static [u8]>> {
     if data.is_null() && len != 0 {
         return ptr::null_mut();
     }
@@ -273,9 +262,7 @@ pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_new_from_data(
     } else {
         unsafe { std::slice::from_raw_parts(data, len) }
     };
-    Box::into_raw(Box::new(Arc::new(Mutex::new(
-        MemoryInputStream::from_data(data),
-    ))))
+    Box::into_raw(Box::new(MemoryInputStream::from_data(data).into_stream()))
 }
 
 ffi_stream_impl_free!(
@@ -302,27 +289,10 @@ ffi_stream_impl_size!(
     MemoryInputStream<&'static [u8]>,
     fu_rs_borrowed_memory_input_stream_size
 );
-
-/// Return a type-erased `StreamImpl` handle from the given
-/// borrowed memory input stream.
-///
-/// The returned handle can be passed to functions that accept any
-/// stream type.  The caller must free it with `fu_stream_impl_free`.
-///
-/// # Safety
-/// `stream` must be a valid, non-NULL pointer previously returned
-/// by [`fu_rs_borrowed_memory_input_stream_new_from_data`].
-#[no_mangle]
-pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_impl(
-    stream: *const Arc<Mutex<MemoryInputStream<&'static [u8]>>>,
-) -> *mut StreamImpl {
-    if stream.is_null() {
-        return ptr::null_mut();
-    }
-    let arc = unsafe { &*stream };
-    let shared: StreamImpl = arc.clone();
-    Box::into_raw(Box::new(shared))
-}
+ffi_stream_impl_stream_impl!(
+    MemoryInputStream<&'static [u8]>,
+    fu_rs_borrowed_memory_input_stream_get_impl
+);
 
 /// Create a [`MemoryInputStream`] from a copy
 /// of the given data.
@@ -334,15 +304,13 @@ pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_impl(
 pub unsafe extern "C" fn fu_rs_memory_input_stream_new_from_data(
     data: *const u8,
     len: usize,
-) -> *mut Arc<Mutex<MemoryInputStream<Vec<u8>>>> {
+) -> *mut Stream<MemoryInputStream<Vec<u8>>> {
     let vec = if data.is_null() || len == 0 {
         Vec::new()
     } else {
         unsafe { std::slice::from_raw_parts(data, len) }.to_vec()
     };
-    Box::into_raw(Box::new(Arc::new(Mutex::new(
-        MemoryInputStream::from_data(vec),
-    ))))
+    Box::into_raw(Box::new(MemoryInputStream::from_data(vec).into_stream()))
 }
 
 ffi_stream_impl_free!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_free);
@@ -368,7 +336,7 @@ ffi_stream_impl_stream_impl!(
 pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_path(
     path: *const c_char,
     error: *mut *mut GError,
-) -> *mut Arc<Mutex<FileInputStream>> {
+) -> *mut Stream<FileInputStream> {
     if path.is_null() {
         let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "file path is NULL");
         GError::convert(error, &e);
@@ -386,7 +354,7 @@ pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_path(
     let os_str = OsStr::new(lossy.as_ref());
 
     match FileInputStream::open(os_str) {
-        Ok(stream) => Box::into_raw(Box::new(Arc::new(Mutex::new(stream)))),
+        Ok(stream) => Box::into_raw(Box::new(stream.into_stream())),
         Err(e) => {
             GError::convert(error, &e.into());
             ptr::null_mut()
@@ -405,7 +373,7 @@ pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_path(
 pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_fd(
     fd: i32,
     error: *mut *mut GError,
-) -> *mut Arc<Mutex<FileInputStream>> {
+) -> *mut Stream<FileInputStream> {
     if fd < 0 {
         let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "invalid fd");
         GError::convert(error, &e);
@@ -413,9 +381,7 @@ pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_fd(
     }
     let owned: OwnedFd = unsafe { OwnedFd::from_raw_fd(fd) };
     let file = std::fs::File::from(owned);
-    Box::into_raw(Box::new(Arc::new(Mutex::new(FileInputStream::from_file(
-        file,
-    )))))
+    Box::into_raw(Box::new(FileInputStream::from_file(file).into_stream()))
 }
 
 /// Return the underlying file descriptor.
@@ -430,7 +396,7 @@ pub unsafe extern "C" fn fu_rs_file_input_stream_new_from_fd(
 #[cfg(unix)]
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_file_input_stream_get_fd(
-    stream: *const Arc<Mutex<FileInputStream>>,
+    stream: *const Stream<FileInputStream>,
 ) -> i32 {
     if stream.is_null() {
         return -1;
@@ -452,21 +418,21 @@ ffi_stream_impl_stream_impl!(FileInputStream, fu_rs_file_input_stream_get_impl);
 /// from the given stream.
 ///
 /// # Safety
-/// `base_stream` must be a valid `StreamImpl` handle previously returned
-/// by an `_as_shared` function. Ownership is transferred to the new stream.
+/// `base_stream` must be a valid `Stream<StreamImpl>` handle previously returned
+/// by an `_get_stream_impl` function. Ownership is transferred to the new stream.
 #[no_mangle]
 #[allow(clippy::arc_with_non_send_sync)]
 pub unsafe extern "C" fn fu_rs_partial_input_stream_new(
-    base_stream: *mut StreamImpl,
+    base_stream: *mut Stream<StreamImpl>,
     offset: usize,
     size: usize,
-) -> *mut Arc<Mutex<PartialInputStream>> {
+) -> *mut Stream<PartialInputStream> {
     if base_stream.is_null() {
         return ptr::null_mut();
     }
     let stream_impl = unsafe { *Box::from_raw(base_stream) };
     let partial = PartialInputStream::from_stream(stream_impl, offset, size);
-    Box::into_raw(Box::new(Arc::new(Mutex::new(partial))))
+    Box::into_raw(Box::new(partial.into_stream()))
 }
 
 ffi_stream_impl_free!(PartialInputStream, fu_rs_partial_input_stream_free);
@@ -487,7 +453,7 @@ ffi_stream_impl_stream_impl!(PartialInputStream, fu_rs_partial_input_stream_get_
 /// `stream` must be valid.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_partial_input_stream_offset(
-    stream: *const Arc<Mutex<PartialInputStream>>,
+    stream: *const Stream<PartialInputStream>,
 ) -> usize {
     if stream.is_null() {
         return 0;
@@ -499,8 +465,8 @@ pub unsafe extern "C" fn fu_rs_partial_input_stream_offset(
 
 /// Create a new empty [`CompositeInputStream`].
 #[no_mangle]
-pub extern "C" fn fu_rs_composite_input_stream_new() -> *mut Arc<Mutex<CompositeInputStream>> {
-    Box::into_raw(Box::new(Arc::new(Mutex::new(CompositeInputStream::new()))))
+pub extern "C" fn fu_rs_composite_input_stream_new() -> *mut Stream<CompositeInputStream> {
+    Box::into_raw(Box::new(CompositeInputStream::new().into_stream()))
 }
 
 /// Add a sub-stream to the composite.
@@ -510,14 +476,14 @@ pub extern "C" fn fu_rs_composite_input_stream_new() -> *mut Arc<Mutex<Composite
 /// Panics if the stream mutex is poisoned.
 ///
 /// # Safety
-/// `stream` must be valid. `sub_stream` must be a valid `StreamImpl` handle
-/// previously returned by an `_as_shared` function. Ownership of `sub_stream`
+/// `stream` must be valid. `sub_stream` must be a valid `Stream<StreamImpl>` handle
+/// previously returned by an `_get_stream_impl` function. Ownership of `sub_stream`
 /// is transferred.
 #[no_mangle]
 #[allow(clippy::arc_with_non_send_sync)]
 pub unsafe extern "C" fn fu_rs_composite_input_stream_add_stream(
-    stream: *mut Arc<Mutex<CompositeInputStream>>,
-    sub_stream: *mut StreamImpl,
+    stream: *mut Stream<CompositeInputStream>,
+    sub_stream: *mut Stream<StreamImpl>,
     size: usize,
 ) {
     if sub_stream.is_null() {
@@ -553,13 +519,11 @@ ffi_stream_impl_stream_impl!(CompositeInputStream, fu_rs_composite_input_stream_
 pub unsafe extern "C" fn fu_rs_cstream_new(
     handle: CStreamHandle,
     callbacks: CStreamCallbacks,
-) -> *mut Arc<Mutex<CStream>> {
+) -> *mut Stream<CStream> {
     if handle.is_null() {
         return ptr::null_mut();
     }
-    Box::into_raw(Box::new(Arc::new(Mutex::new(CStream::new(
-        handle, callbacks,
-    )))))
+    Box::into_raw(Box::new(CStream::new(handle, callbacks).into_stream()))
 }
 
 ffi_stream_impl_free!(CStream, fu_rs_cstream_free);
@@ -580,7 +544,7 @@ ffi_stream_impl_can_seek!(CStream, fu_rs_cstream_can_seek);
 /// at least `count` writable bytes and must not be NULL if `count > 0`.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_cstream_read(
-    stream: *mut Arc<Mutex<CStream>>,
+    stream: *mut Stream<CStream>,
     buf: *mut u8,
     count: usize,
     gerror: *mut *mut GError,
@@ -604,7 +568,7 @@ pub unsafe extern "C" fn fu_rs_cstream_read(
 /// `stream` must be a valid, non-NULL pointer.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_cstream_seek(
-    stream: *mut Arc<Mutex<CStream>>,
+    stream: *mut Stream<CStream>,
     offset: GOffset,
     seek_type: GSeekType,
     gerror: *mut *mut GError,
@@ -629,7 +593,7 @@ pub unsafe extern "C" fn fu_rs_cstream_seek(
 /// # Safety
 /// `stream` must be a valid, non-NULL pointer.
 #[no_mangle]
-pub unsafe extern "C" fn fu_rs_cstream_size(stream: *mut Arc<Mutex<CStream>>) -> usize {
+pub unsafe extern "C" fn fu_rs_cstream_size(stream: *mut Stream<CStream>) -> usize {
     if stream.is_null() {
         return 0;
     }
@@ -643,14 +607,14 @@ pub unsafe extern "C" fn fu_rs_cstream_size(stream: *mut Arc<Mutex<CStream>>) ->
 /// Returns a heap-allocated handle, or NULL on error
 ///
 /// # Safety
-/// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
+/// `base_stream` must be a valid, non-NULL `Stream<StreamImpl>` handle previously
 /// returned by an `_get_impl` function. Ownership is transferred.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_compressor_stream_new_compress(
-    base_stream: *mut StreamImpl,
+    base_stream: *mut Stream<StreamImpl>,
     format: i32,
     error: *mut *mut GError,
-) -> *mut Arc<Mutex<CompressorStream>> {
+) -> *mut Stream<CompressorStream> {
     if base_stream.is_null() {
         let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "base_stream is NULL");
         GError::convert(error, &e);
@@ -665,7 +629,7 @@ pub unsafe extern "C" fn fu_rs_compressor_stream_new_compress(
     };
 
     match CompressorStream::new(stream_impl, fmt) {
-        Ok(c) => Box::into_raw(Box::new(Arc::new(Mutex::new(c)))),
+        Ok(c) => Box::into_raw(Box::new(c.into_stream())),
         Err(e) => {
             let e = fwupd::Error::new(
                 fwupd::ErrorKind::InvalidData,
@@ -689,14 +653,14 @@ ffi_stream_impl_stream_impl!(CompressorStream, fu_rs_compressor_stream_get_impl)
 /// Returns a heap-allocated handle, or NULL on error
 ///
 /// # Safety
-/// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
+/// `base_stream` must be a valid, non-NULL `Stream<StreamImpl>` handle previously
 /// returned by an `_get_impl` function. Ownership is transferred.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_compressor_stream_new_decompress(
-    base_stream: *mut StreamImpl,
+    base_stream: *mut Stream<StreamImpl>,
     format: i32,
     error: *mut *mut GError,
-) -> *mut Arc<Mutex<DecompressorStream>> {
+) -> *mut Stream<DecompressorStream> {
     if base_stream.is_null() {
         let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "base_stream is NULL");
         GError::convert(error, &e);
@@ -711,7 +675,7 @@ pub unsafe extern "C" fn fu_rs_compressor_stream_new_decompress(
     };
 
     match DecompressorStream::new(stream_impl, fmt) {
-        Ok(c) => Box::into_raw(Box::new(Arc::new(Mutex::new(c)))),
+        Ok(c) => Box::into_raw(Box::new(c.into_stream())),
         Err(e) => {
             let e = fwupd::Error::new(
                 fwupd::ErrorKind::InvalidData,
@@ -736,7 +700,7 @@ ffi_stream_impl_stream_impl!(DecompressorStream, fu_rs_decompressor_stream_get_i
 /// `stream` must be a valid pointer previously returned by an `_get_impl`
 /// function, or NULL (no-op).
 #[no_mangle]
-pub unsafe extern "C" fn fu_stream_impl_free(stream: *mut StreamImpl) {
+pub unsafe extern "C" fn fu_stream_impl_free(stream: *mut Stream<StreamImpl>) {
     if !stream.is_null() {
         drop(unsafe { Box::from_raw(stream) });
     }

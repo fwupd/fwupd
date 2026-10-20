@@ -10,10 +10,9 @@
 //! stream. All reads and seeks are translated relative to the slice offset and
 //! clamped to the slice bounds.
 
-use crate::streams::{IsSeekable, ReadSeek, StreamError};
+use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
-use std::sync::{Arc, Mutex};
 
 /// A slice/view over another stream.
 ///
@@ -21,7 +20,7 @@ use std::sync::{Arc, Mutex};
 /// a base stream and translates all seek/read operations by adding the
 /// slice offset, clamping reads to the slice bounds.
 pub struct PartialInputStream {
-    base: Arc<Mutex<dyn ReadSeek + Send>>,
+    base: Stream<StreamImpl>,
     offset: usize,
     size: usize,
 }
@@ -39,7 +38,7 @@ impl PartialInputStream {
     /// underlying base stream.
     ///
     /// </div>
-    pub fn from_stream(base: Arc<Mutex<dyn ReadSeek + Send>>, offset: usize, size: usize) -> Self {
+    pub fn from_stream(base: Stream<StreamImpl>, offset: usize, size: usize) -> Self {
         Self { base, offset, size }
     }
 
@@ -154,13 +153,12 @@ impl IsSeekable for PartialInputStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::streams::MemoryInputStream;
+    use crate::streams::{IntoStream, MemoryInputStream};
 
     #[test]
     fn partial_from_rust_stream() {
-        let backing = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![
-            10, 20, 30, 40, 50, 60, 70, 80,
-        ])));
+        let backing =
+            MemoryInputStream::from_data(vec![10, 20, 30, 40, 50, 60, 70, 80]).into_stream();
         let mut partial = PartialInputStream::from_stream(backing, 2, 4);
 
         assert_eq!(partial.size().unwrap(), 4);
@@ -180,9 +178,7 @@ mod tests {
 
     #[test]
     fn partial_from_rust_stream_seek() {
-        let backing = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![
-            0, 1, 2, 3, 4, 5, 6, 7,
-        ])));
+        let backing = MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5, 6, 7]).into_stream();
         let mut partial = PartialInputStream::from_stream(backing, 2, 4);
 
         // SeekFrom::Start
@@ -206,9 +202,7 @@ mod tests {
 
     #[test]
     fn partial_clamps_read() {
-        let backing = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![
-            0, 1, 2, 3, 4, 5,
-        ])));
+        let backing = MemoryInputStream::from_data(vec![0, 1, 2, 3, 4, 5]).into_stream();
         let mut partial = PartialInputStream::from_stream(backing, 1, 3);
 
         partial.seek(SeekFrom::Start(0)).unwrap();
