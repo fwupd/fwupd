@@ -12,8 +12,10 @@
 #include "fu-vbe-simple-device.h"
 
 /* vbe-simple treats area-size as the end of its area, not its size */
+#define FU_VBE_SIMPLE_TEST_DISK_SIZE  0x4000
 #define FU_VBE_SIMPLE_TEST_AREA_START 0x1000
 #define FU_VBE_SIMPLE_TEST_AREA_SIZE  0x3000
+#define FU_VBE_SIMPLE_TEST_STORE      (FU_VBE_SIMPLE_TEST_AREA_START + 0x200)
 
 static FuTemporaryDirectory *
 fu_vbe_test_write_fdt(FuContext *ctx, const gchar *xml, GError **error)
@@ -399,6 +401,90 @@ fu_vbe_simple_device_prepare_func(void)
 	g_assert_cmpstr(fu_firmware_get_id(img), ==, "firmware-2");
 }
 
+static void
+fu_vbe_simple_device_storage_func(void)
+{
+	gboolean ret;
+	const guint8 *buf;
+	gsize len = 0;
+	g_autofree gchar *disk = NULL;
+	g_autofree gchar *str = NULL;
+	g_autofree guint8 *orig = g_malloc(FU_VBE_SIMPLE_TEST_DISK_SIZE);
+	g_autofree gchar *contents = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDevice) dev_bad = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) fit_blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a file standing in for the storage device, with a pattern in it */
+	tmpdir = fu_temporary_directory_new("vbe-simple", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	disk = fu_temporary_directory_build(tmpdir, "disk.img", NULL);
+	for (guint i = 0; i < FU_VBE_SIMPLE_TEST_DISK_SIZE; i++)
+		orig[i] = i & 0xff;
+	ret = g_file_set_contents(disk, (const gchar *)orig, FU_VBE_SIMPLE_TEST_DISK_SIZE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* an absolute path is used as it is */
+	dev = fu_vbe_simple_test_device_new(ctx, disk);
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_device_to_string(dev);
+	g_assert_nonnull(g_strstr_len(str, -1, disk));
+	ret = fu_device_open(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* reading gives the firmware area */
+	blob = fu_device_dump_firmware(dev, progress, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	buf = g_bytes_get_data(blob, &len);
+	g_assert_cmpmem(buf,
+			len,
+			orig + FU_VBE_SIMPLE_TEST_AREA_START,
+			FU_VBE_SIMPLE_TEST_AREA_SIZE - FU_VBE_SIMPLE_TEST_AREA_START);
+
+	/* writing puts the image for this board at its store offset */
+	fit_blob = fu_vbe_simple_test_fit_new();
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(fit_blob));
+	firmware =
+	    fu_device_prepare_firmware(dev, stream, progress, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	ret = fu_device_write_firmware(dev, firmware, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_close(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_get_contents(disk, &contents, &len, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(len, ==, FU_VBE_SIMPLE_TEST_DISK_SIZE);
+	g_assert_cmpmem(contents, FU_VBE_SIMPLE_TEST_STORE, orig, FU_VBE_SIMPLE_TEST_STORE);
+	g_assert_cmpmem(contents + FU_VBE_SIMPLE_TEST_STORE, 4, "rock", 4);
+	g_assert_cmpmem(contents + FU_VBE_SIMPLE_TEST_STORE + 4,
+			FU_VBE_SIMPLE_TEST_DISK_SIZE - FU_VBE_SIMPLE_TEST_STORE - 4,
+			orig + FU_VBE_SIMPLE_TEST_STORE + 4,
+			FU_VBE_SIMPLE_TEST_DISK_SIZE - FU_VBE_SIMPLE_TEST_STORE - 4);
+
+	/* only MMC is supported */
+	dev_bad = fu_vbe_simple_test_device_new(ctx, "usb0");
+	ret = fu_device_probe(dev_bad, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -411,5 +497,6 @@ main(int argc, char **argv)
 			fu_vbe_plugin_coldplug_invalid_compatible_func);
 	g_test_add_func("/vbe/simple/probe-storage", fu_vbe_simple_device_probe_storage_func);
 	g_test_add_func("/vbe/simple/prepare", fu_vbe_simple_device_prepare_func);
+	g_test_add_func("/vbe/simple/storage", fu_vbe_simple_device_storage_func);
 	return g_test_run();
 }
