@@ -82,6 +82,10 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* each method has its own node, e.g. firmware0, so use it to tell them apart */
+	if (priv->fdt_node != NULL)
+		fu_device_set_logical_id(device, fu_firmware_get_id(FU_FIRMWARE(priv->fdt_node)));
+
 	/* get a list of compatible strings, which not all firmware provides */
 	if (!fu_fdt_image_get_attr_strlist(priv->fdt_root,
 					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
