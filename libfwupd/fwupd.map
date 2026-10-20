@@ -1228,8 +1228,6 @@ LIBFWUPD_2.1.8 {
     fwupd_client_run_connect_funcs;
     fwupd_client_set_percentage;
     fwupd_client_set_status;
-    fwupd_jcat_file_import_stream_impl;
-    fwupd_json_parser_load_from_stream_impl;
     fwupd_security_attr_incorporate;
   local: *;
 } LIBFWUPD_2.1.7;
@@ -1251,6 +1249,8 @@ LIBFWUPD_2.2.1 {
     fwupd_input_stream_get_type;
     fwupd_input_stream_read;
     fwupd_input_stream_read_all;
+    fwupd_jcat_file_import_stream2;
+    fwupd_json_parser_load_from_stream_impl;
     fwupd_memory_input_stream_get_type;
     fwupd_memory_input_stream_new_from_bytes;
     fwupd_memory_input_stream_new_from_data;

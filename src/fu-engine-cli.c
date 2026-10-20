@@ -22,7 +22,6 @@
 
 #include "fwupd-client-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-cabinet.h"
@@ -3174,10 +3173,7 @@ fu_engine_cli_jcat_load_filename(FuEngineCli *self, const gchar *filename, GErro
 		istream = fwupd_file_input_stream_new_from_file(gfile, error);
 		if (istream == NULL)
 			return NULL;
-		if (!fwupd_jcat_file_import_stream_impl(
-			file,
-			fu_input_stream_get_stream_impl(FWUPD_INPUT_STREAM(istream)),
-			error))
+		if (!fwupd_jcat_file_import_stream2(file, FWUPD_INPUT_STREAM(istream), error))
 			return NULL;
 	}
 

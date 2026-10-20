@@ -11,9 +11,11 @@
 #include "fwupd-input-stream-private.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-json-array.h"
+#include "fwupd-json-parser-private.h"
 #include "fwupd-json-parser.h"
 #include "fwupd-memory-input-stream.h"
 #include "fwupd-rust-compressor-stream.h"
+#include "fwupd-stream-input-stream-private.h"
 
 struct _FwupdJcatFile {
 	GObject parent_instance;
@@ -176,45 +178,32 @@ fwupd_jcat_file_import_json(FwupdJcatFile *self, const gchar *json, GError **err
 gboolean
 fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError **error)
 {
-	g_autoptr(FwupdJsonNode) json_node = NULL;
-	g_autoptr(FwupdJsonParser) json_parser = fwupd_jcat_file_json_parser_new();
-	g_autoptr(GConverter) conv = NULL;
-	g_autoptr(GInputStream) istream_uncompressed = NULL;
+	g_autoptr(FwupdStreamInputStream) istream2 = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_JCAT_FILE(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(istream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-	istream_uncompressed = g_converter_input_stream_new(istream, conv);
-	g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(istream_uncompressed),
-						    FALSE);
-	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       istream_uncompressed,
-						       FWUPD_JSON_LOAD_FLAG_NONE,
-						       error);
-	if (json_node == NULL)
-		return FALSE;
-	return fwupd_jcat_file_import_node(self, json_node, error);
+	istream2 = fwupd_stream_input_stream_new(istream);
+	return fwupd_jcat_file_import_stream2(self, FWUPD_INPUT_STREAM(istream2), error);
 }
 
 /**
- * fwupd_jcat_file_import_stream_impl: (skip):
+ * fwupd_jcat_file_import_stream2: (skip):
  * @self: #FwupdJcatFile
- * @stream_impl: (transfer full): a #FuRsStreamImpl
+ * @istream: a #FwupdInputStream
  * @error: #GError, or %NULL
  *
- * Imports a compressed FwupdJcat file from a Rust stream implementation.
+ * Imports a compressed FwupdJcat file from a stream.
  *
- * The stream is decompressed (gzip) and parsed as JSON. Ownership of
- * @stream_impl is transferred to this function.
+ * The stream is decompressed (gzip) and parsed as JSON.
  *
  * Returns: %TRUE for success
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 gboolean
-fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, FwupdStreamImpl stream_impl, GError **error)
+fwupd_jcat_file_import_stream2(FwupdJcatFile *self, FwupdInputStream *istream, GError **error)
 {
 	FuRsDecompressorStream *dstream;
 	FuRsStreamImpl *dstream_impl;
@@ -222,13 +211,14 @@ fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, FwupdStreamImpl stream_i
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_jcat_file_json_parser_new();
 
 	g_return_val_if_fail(FWUPD_IS_JCAT_FILE(self), FALSE);
-	g_return_val_if_fail(stream_impl != NULL, FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(istream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ownership of stream_impl is transferred to the decompressor */
-	dstream = fu_rs_compressor_stream_new_decompress(stream_impl,
-							 FWUPD_COMPRESSOR_FORMAT_GZIP,
-							 error);
+	dstream =
+	    fu_rs_compressor_stream_new_decompress(fwupd_input_stream_get_stream_impl(istream),
+						   FWUPD_COMPRESSOR_FORMAT_GZIP,
+						   error);
 	if (dstream == NULL)
 		return FALSE;
 
@@ -268,14 +258,14 @@ fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, FwupdStreamImpl stream_i
 gboolean
 fwupd_jcat_file_import_bytes(FwupdJcatFile *self, GBytes *blob, GError **error)
 {
-	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FwupdMemoryInputStream) istream = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_JCAT_FILE(self), FALSE);
 	g_return_val_if_fail(blob != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	istream = g_memory_input_stream_new_from_bytes(blob);
-	return fwupd_jcat_file_import_stream(self, istream, error);
+	istream = fwupd_memory_input_stream_new_from_bytes(blob);
+	return fwupd_jcat_file_import_stream2(self, FWUPD_INPUT_STREAM(istream), error);
 }
 
 /**

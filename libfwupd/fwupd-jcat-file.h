@@ -10,6 +10,7 @@
 
 #include "fwupd-codec.h"
 #include "fwupd-common.h"
+#include "fwupd-input-stream.h"
 #include "fwupd-jcat-item.h"
 
 G_BEGIN_DECLS
@@ -24,7 +25,7 @@ gboolean
 fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_jcat_file_import_stream_impl(FwupdJcatFile *self, FwupdStreamImpl stream_impl, GError **error)
+fwupd_jcat_file_import_stream2(FwupdJcatFile *self, FwupdInputStream *istream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_jcat_file_import_bytes(FwupdJcatFile *self, GBytes *blob, GError **error)
