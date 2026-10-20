@@ -193,7 +193,7 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 					      error);
 	if (fdt_configurations == NULL)
 		return NULL;
-	img_configurations = fu_firmware_get_images(firmware);
+	img_configurations = fu_firmware_get_images(FU_FIRMWARE(fdt_configurations));
 
 	/* look for a configuration with the device compatible strings in priority order */
 	device_compatible = fu_vbe_device_get_compatible(FU_VBE_DEVICE(self));
