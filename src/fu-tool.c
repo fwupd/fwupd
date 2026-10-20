@@ -3894,6 +3894,7 @@ fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* both arguments are optional */
+	self->filter_device_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length(values) >= 1) {
 		device = fu_engine_get_device(priv->engine, values[1], error);
 		if (device == NULL)
