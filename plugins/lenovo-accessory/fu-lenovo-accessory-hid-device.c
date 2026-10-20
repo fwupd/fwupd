@@ -88,6 +88,23 @@ fu_lenovo_accessory_hid_device_find_notify_hidraw(FuUsbDevice *usb_device, GErro
 	return NULL;
 }
 
+#define FU_LENOVO_ACCESSORY_NOTIFY_ADD_RETRY_COUNT 3
+#define FU_LENOVO_ACCESSORY_NOTIFY_ADD_RETRY_DELAY 100 /* ms */
+
+static gboolean
+fu_lenovo_accessory_hid_device_add_child_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	guint8 slot = *((guint8 *)user_data);
+	g_autofree gchar *logical_id = g_strdup_printf("slot%u", slot);
+	g_autoptr(FuDevice) child = NULL;
+
+	/* a repeated connect notification must not create a duplicate child */
+	child = fu_device_get_child_by_logical_id(device, logical_id, NULL);
+	if (child != NULL)
+		return TRUE;
+	return fu_lenovo_accessory_hid_add_child(FU_LENOVO_ACCESSORY_IMPL(device), slot, error);
+}
+
 static gboolean
 fu_lenovo_accessory_hid_device_notify_cb(GIOChannel *channel,
 					 GIOCondition condition,
@@ -138,16 +155,34 @@ fu_lenovo_accessory_hid_device_notify_cb(GIOChannel *channel,
 		      ? "connected"
 		      : "disconnected");
 
-	/* the USB device is closed after setup, so reopen it for the commands */
+	/* handle disconnection without querying device: the notification already
+	 * tells us which slot disconnected, so we can remove the child directly */
+	if (status_val == FU_LENOVO_ACCESSORY_NOTIFY_CONNECT_STATUS_DISCONNECTED) {
+		g_autofree gchar *logical_id = g_strdup_printf("slot%u", slot);
+		g_autoptr(FuDevice) child =
+		    fu_device_get_child_by_logical_id(FU_DEVICE(self), logical_id, NULL);
+		if (child != NULL) {
+			g_debug("removing disconnected child at slot %u", slot);
+			fu_device_remove_child(FU_DEVICE(self), child);
+		}
+		return G_SOURCE_CONTINUE;
+	}
+
+	/* the USB device is closed after setup, so reopen it to query PID and name */
 	locker = fu_device_locker_new(FU_DEVICE(self), &error_local);
 	if (locker == NULL) {
 		g_warning("failed to open device after notify: %s", error_local->message);
 		return G_SOURCE_CONTINUE;
 	}
 
-	/* re-read the pairing list and add/remove children to match */
-	if (!fu_lenovo_accessory_hid_poll_children(FU_LENOVO_ACCESSORY_IMPL(self), &error_local))
-		g_warning("failed to update children after notify: %s", error_local->message);
+	/* the peripheral may not answer the slot query straight after connecting */
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_lenovo_accessory_hid_device_add_child_cb,
+				  FU_LENOVO_ACCESSORY_NOTIFY_ADD_RETRY_COUNT,
+				  FU_LENOVO_ACCESSORY_NOTIFY_ADD_RETRY_DELAY,
+				  &slot,
+				  &error_local))
+		g_warning("failed to add child for slot %u: %s", slot, error_local->message);
 
 	return G_SOURCE_CONTINUE;
 }
@@ -283,11 +318,14 @@ fu_lenovo_accessory_hid_device_finalize(GObject *object)
 		self->notify_watch_id = 0;
 	}
 	if (self->notify_channel != NULL) {
+		/* g_io_channel_shutdown closes the underlying fd, so we must not
+		 * close(notify_fd) again afterward to avoid a double-close */
 		g_io_channel_shutdown(self->notify_channel, FALSE, NULL);
 		g_io_channel_unref(self->notify_channel);
 		self->notify_channel = NULL;
-	}
-	if (self->notify_fd >= 0) {
+		self->notify_fd = -1;
+	} else if (self->notify_fd >= 0) {
+		/* only close directly if no channel was created */
 		close(self->notify_fd);
 		self->notify_fd = -1;
 	}
