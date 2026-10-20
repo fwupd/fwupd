@@ -2611,6 +2611,7 @@ fu_engine_cli_reboot_cleanup(FuCli *cli, gchar **values, GError **error)
 		return FALSE;
 
 	/* both arguments are optional */
+	fu_cli_add_filter_device_include(cli, FWUPD_DEVICE_FLAG_UPDATABLE);
 	if (g_strv_length(values) >= 1) {
 		device = fu_engine_cli_get_device(self, values[0], error);
 		if (device == NULL)
