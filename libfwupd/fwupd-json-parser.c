@@ -246,7 +246,7 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
  *
  * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 FwupdJsonNode *
 fwupd_json_parser_load_from_stream_impl(FwupdJsonParser *self,

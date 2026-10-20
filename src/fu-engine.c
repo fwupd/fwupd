@@ -36,7 +36,6 @@
 #include <fwupdplugin.h>
 
 #include "fwupd-enums-private.h"
-#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
@@ -4898,10 +4897,7 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fwupd_file_input_stream_new(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!fwupd_jcat_file_import_stream_impl(
-		jcat_file,
-		fu_input_stream_get_stream_impl(FWUPD_INPUT_STREAM(istream)),
-		error))
+	if (!fwupd_jcat_file_import_stream2(jcat_file, FWUPD_INPUT_STREAM(istream), error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -4990,7 +4986,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuInputStream) istream = NULL;
+	g_autoptr(FwupdMemoryInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 	g_autoptr(FwupdJcatItem) jcat_item = NULL;
@@ -5019,10 +5015,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
-	istream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes_sig));
-	if (!fwupd_jcat_file_import_stream_impl(jcat_file,
-						fu_input_stream_get_stream_impl(istream),
-						error))
+	istream = fwupd_memory_input_stream_new_from_bytes(bytes_sig);
+	if (!fwupd_jcat_file_import_stream2(jcat_file, FWUPD_INPUT_STREAM(istream), error))
 		return FALSE;
 
 	/* distrusting RSA? */

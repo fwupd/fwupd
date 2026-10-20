@@ -1439,8 +1439,7 @@ fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **err
 gboolean
 fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **error)
 {
-	g_autoptr(GFile) gfile = NULL;
-	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FwupdFileInputStream) istream = NULL;
 	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
@@ -1448,13 +1447,10 @@ fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **e
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* load JCat file */
-	gfile = g_file_new_for_path(filename);
-	istream = G_INPUT_STREAM(g_file_read(gfile, NULL, error));
-	if (istream == NULL) {
-		fwupd_error_convert(error);
+	istream = fwupd_file_input_stream_new(filename, error);
+	if (istream == NULL)
 		return FALSE;
-	}
-	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+	if (!fwupd_jcat_file_import_stream2(jcat_file, FWUPD_INPUT_STREAM(istream), error))
 		return FALSE;
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
