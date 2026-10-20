@@ -116,11 +116,11 @@ fu_engine_emulator_load_json_from_stream(FuEngineEmulator *self,
 	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 
 	/* parse */
-	json_node = fwupd_json_parser_load_from_stream_impl(
-	    json_parser,
-	    fwupd_input_stream_get_stream_impl(stream),
-	    FWUPD_JSON_LOAD_FLAG_TRUSTED | FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
-	    error);
+	json_node = fwupd_json_parser_load_from_stream2(json_parser,
+							stream,
+							FWUPD_JSON_LOAD_FLAG_TRUSTED |
+							    FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
+							error);
 	if (json_node == NULL)
 		return FALSE;
 	json_obj = fwupd_json_node_get_object(json_node, error);

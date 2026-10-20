@@ -7,8 +7,9 @@
 #include "config.h"
 
 #include "fwupd-error.h"
+#include "fwupd-input-stream-private.h"
 #include "fwupd-json-node-private.h"
-#include "fwupd-json-parser.h"
+#include "fwupd-json-parser-private.h"
 
 /**
  * FwupdJsonParser:
@@ -232,6 +233,44 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 	if (rs == NULL)
 		return NULL;
 	return fwupd_json_node_new_from_rust(rs);
+}
+
+/**
+ * fwupd_json_parser_load_from_stream2: (skip):
+ * @self: a #FwupdJsonParser
+ * @stream: a #FwupdInputStream
+ * @flags: a #FwupdJsonLoadFlags
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads JSON from a stream.
+ *
+ * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
+ *
+ * Since: 2.2.1
+ **/
+FwupdJsonNode *
+fwupd_json_parser_load_from_stream2(FwupdJsonParser *self,
+				    FwupdInputStream *stream,
+				    FwupdJsonLoadFlags flags,
+				    GError **error)
+{
+	FuRsStreamImpl *impl;
+
+	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	impl = fwupd_input_stream_get_stream_impl(stream);
+	if (impl == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "stream does not have a Rust implementation");
+		return NULL;
+	}
+
+	/* ownership of impl is transferred */
+	return fwupd_json_parser_load_from_stream_impl(self, impl, flags, error);
 }
 
 /**
