@@ -118,7 +118,7 @@ fwupdcli = library(
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
-  dependencies: [client_dep],
+  dependencies: [client_dep, giounix],
   link_with: [fwupd, fwupdplugin],
 )
 

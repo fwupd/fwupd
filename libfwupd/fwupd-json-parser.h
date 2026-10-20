@@ -9,6 +9,7 @@
 #include <gio/gio.h>
 
 #include "fwupd-common.h"
+#include "fwupd-input-stream.h"
 #include "fwupd-json-node.h"
 
 G_BEGIN_DECLS
@@ -32,6 +33,11 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 				   FwupdJsonLoadFlags flags,
 				   GError **error) G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *
+fwupd_json_parser_load_from_stream2(FwupdJsonParser *self,
+				    FwupdInputStream *stream,
+				    FwupdJsonLoadFlags flags,
+				    GError **error) G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
+FwupdJsonNode *
 fwupd_json_parser_load_from_bytes(FwupdJsonParser *self,
 				  GBytes *blob,
 				  FwupdJsonLoadFlags flags,
@@ -41,11 +47,5 @@ fwupd_json_parser_load_from_data(FwupdJsonParser *self,
 				 const gchar *text,
 				 FwupdJsonLoadFlags flags,
 				 GError **error) G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
-FwupdJsonNode *
-fwupd_json_parser_load_from_stream_impl(FwupdJsonParser *self,
-					FwupdStreamImpl stream_impl,
-					FwupdJsonLoadFlags flags,
-					GError **error)
-    G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
