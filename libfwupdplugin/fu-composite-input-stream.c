@@ -136,7 +136,7 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 	psize = fu_partial_input_stream_get_size(partial_stream);
 
 	/* tell the Rust side about this sub-stream */
-	impl = fwupd_input_stream_get_stream_impl(FWUPD_INPUT_STREAM(partial_stream));
+	impl = fwupd_input_stream_get_impl(FWUPD_INPUT_STREAM(partial_stream));
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -297,11 +297,11 @@ fu_composite_input_stream_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_composite_input_stream_parent_class)->finalize(object);
 }
 
-static FwupdStreamImpl
-fu_composite_input_stream_get_stream_impl(FuInputStream *stream)
+static FwupdInputStreamImpl
+fu_composite_input_stream_get_impl(FuInputStream *stream)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
-	return fu_rs_composite_input_stream_get_stream_impl(self->rust);
+	return fu_rs_composite_input_stream_get_impl(self->rust);
 }
 
 static void
@@ -313,7 +313,7 @@ fu_composite_input_stream_class_init(FuCompositeInputStreamClass *klass)
 	istream_class->tell = fu_composite_input_stream_tell;
 	istream_class->can_seek = fu_composite_input_stream_can_seek;
 	istream_class->seek = fu_composite_input_stream_seek;
-	istream_class->get_stream_impl = fu_composite_input_stream_get_stream_impl;
+	istream_class->get_impl = fu_composite_input_stream_get_impl;
 	object_class->finalize = fu_composite_input_stream_finalize;
 }
 

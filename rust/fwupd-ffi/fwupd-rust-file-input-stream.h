@@ -36,6 +36,6 @@ fu_rs_file_input_stream_tell(FuRsFileInputStream *stream);
 gsize
 fu_rs_file_input_stream_size(const FuRsFileInputStream *stream);
 FuRsStreamImpl *
-fu_rs_file_input_stream_get_stream_impl(const FuRsFileInputStream *stream);
+fu_rs_file_input_stream_get_impl(const FuRsFileInputStream *stream);
 
 G_END_DECLS

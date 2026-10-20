@@ -313,7 +313,7 @@ ffi_stream_impl_size!(
 /// `stream` must be a valid, non-NULL pointer previously returned
 /// by [`fu_rs_borrowed_memory_input_stream_new_from_data`].
 #[no_mangle]
-pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_stream_impl(
+pub unsafe extern "C" fn fu_rs_borrowed_memory_input_stream_get_impl(
     stream: *const Arc<Mutex<MemoryInputStream<&'static [u8]>>>,
 ) -> *mut StreamImpl {
     if stream.is_null() {
@@ -356,7 +356,7 @@ ffi_stream_impl_tell!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_tell
 ffi_stream_impl_size!(MemoryInputStream<Vec<u8>>, fu_rs_memory_input_stream_size);
 ffi_stream_impl_stream_impl!(
     MemoryInputStream<Vec<u8>>,
-    fu_rs_memory_input_stream_get_stream_impl
+    fu_rs_memory_input_stream_get_impl
 );
 
 /// Create a [`FileInputStream`] from
@@ -446,7 +446,7 @@ ffi_stream_impl_seek!(FileInputStream, fu_rs_file_input_stream_seek);
 ffi_stream_impl_can_seek!(FileInputStream, fu_rs_file_input_stream_can_seek);
 ffi_stream_impl_tell!(FileInputStream, fu_rs_file_input_stream_tell);
 ffi_stream_impl_size!(FileInputStream, fu_rs_file_input_stream_size);
-ffi_stream_impl_stream_impl!(FileInputStream, fu_rs_file_input_stream_get_stream_impl);
+ffi_stream_impl_stream_impl!(FileInputStream, fu_rs_file_input_stream_get_impl);
 
 /// Create a new [`PartialInputStream`]
 /// from the given stream.
@@ -475,10 +475,7 @@ ffi_stream_impl_seek!(PartialInputStream, fu_rs_partial_input_stream_seek);
 ffi_stream_impl_can_seek!(PartialInputStream, fu_rs_partial_input_stream_can_seek);
 ffi_stream_impl_tell!(PartialInputStream, fu_rs_partial_input_stream_tell);
 ffi_stream_impl_size!(PartialInputStream, fu_rs_partial_input_stream_size);
-ffi_stream_impl_stream_impl!(
-    PartialInputStream,
-    fu_rs_partial_input_stream_get_stream_impl
-);
+ffi_stream_impl_stream_impl!(PartialInputStream, fu_rs_partial_input_stream_get_impl);
 
 /// Return the offset of the partial stream within the base stream.
 ///
@@ -541,10 +538,7 @@ ffi_stream_impl_seek!(CompositeInputStream, fu_rs_composite_input_stream_seek);
 ffi_stream_impl_can_seek!(CompositeInputStream, fu_rs_composite_input_stream_can_seek);
 ffi_stream_impl_tell!(CompositeInputStream, fu_rs_composite_input_stream_tell);
 ffi_stream_impl_size!(CompositeInputStream, fu_rs_composite_input_stream_size);
-ffi_stream_impl_stream_impl!(
-    CompositeInputStream,
-    fu_rs_composite_input_stream_get_stream_impl
-);
+ffi_stream_impl_stream_impl!(CompositeInputStream, fu_rs_composite_input_stream_get_impl);
 
 /// Create a new [`CStream`] from the given handle
 /// and callbacks.
@@ -570,7 +564,7 @@ pub unsafe extern "C" fn fu_rs_cstream_new(
 
 ffi_stream_impl_free!(CStream, fu_rs_cstream_free);
 ffi_stream_impl_tell!(CStream, fu_rs_cstream_tell);
-ffi_stream_impl_stream_impl!(CStream, fu_rs_cstream_get_stream_impl);
+ffi_stream_impl_stream_impl!(CStream, fu_rs_cstream_get_impl);
 ffi_stream_impl_can_seek!(CStream, fu_rs_cstream_can_seek);
 // read, seek and size are different for CStream
 
@@ -650,7 +644,7 @@ pub unsafe extern "C" fn fu_rs_cstream_size(stream: *mut Arc<Mutex<CStream>>) ->
 ///
 /// # Safety
 /// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
-/// returned by an `_get_stream_impl` function. Ownership is transferred.
+/// returned by an `_get_impl` function. Ownership is transferred.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_compressor_stream_new_compress(
     base_stream: *mut StreamImpl,
@@ -688,7 +682,7 @@ ffi_stream_impl_read!(CompressorStream, fu_rs_compressor_stream_read);
 ffi_stream_impl_seek!(CompressorStream, fu_rs_compressor_stream_seek);
 ffi_stream_impl_can_seek!(CompressorStream, fu_rs_compressor_stream_can_seek);
 ffi_stream_impl_tell!(CompressorStream, fu_rs_compressor_stream_tell);
-ffi_stream_impl_stream_impl!(CompressorStream, fu_rs_compressor_stream_get_stream_impl);
+ffi_stream_impl_stream_impl!(CompressorStream, fu_rs_compressor_stream_get_impl);
 
 /// Create a streaming decompressor that reads compressed data from a C source.
 ///
@@ -696,7 +690,7 @@ ffi_stream_impl_stream_impl!(CompressorStream, fu_rs_compressor_stream_get_strea
 ///
 /// # Safety
 /// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
-/// returned by an `_get_stream_impl` function. Ownership is transferred.
+/// returned by an `_get_impl` function. Ownership is transferred.
 #[no_mangle]
 pub unsafe extern "C" fn fu_rs_compressor_stream_new_decompress(
     base_stream: *mut StreamImpl,
@@ -734,15 +728,12 @@ ffi_stream_impl_read!(DecompressorStream, fu_rs_decompressor_stream_read);
 ffi_stream_impl_seek!(DecompressorStream, fu_rs_decompressor_stream_seek);
 ffi_stream_impl_can_seek!(DecompressorStream, fu_rs_decompressor_stream_can_seek);
 ffi_stream_impl_tell!(DecompressorStream, fu_rs_decompressor_stream_tell);
-ffi_stream_impl_stream_impl!(
-    DecompressorStream,
-    fu_rs_decompressor_stream_get_stream_impl
-);
+ffi_stream_impl_stream_impl!(DecompressorStream, fu_rs_decompressor_stream_get_impl);
 
 /// Free a shared stream handle.
 ///
 /// # Safety
-/// `stream` must be a valid pointer previously returned by an `_get_stream_impl`
+/// `stream` must be a valid pointer previously returned by an `_get_impl`
 /// function, or NULL (no-op).
 #[no_mangle]
 pub unsafe extern "C" fn fu_stream_impl_free(stream: *mut StreamImpl) {

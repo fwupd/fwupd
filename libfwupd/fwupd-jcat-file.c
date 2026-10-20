@@ -215,14 +215,13 @@ fwupd_jcat_file_import_stream2(FwupdJcatFile *self, FwupdInputStream *istream, G
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ownership of stream_impl is transferred to the decompressor */
-	dstream =
-	    fu_rs_compressor_stream_new_decompress(fwupd_input_stream_get_stream_impl(istream),
-						   FWUPD_COMPRESSOR_FORMAT_GZIP,
-						   error);
+	dstream = fu_rs_compressor_stream_new_decompress(fwupd_input_stream_get_impl(istream),
+							 FWUPD_COMPRESSOR_FORMAT_GZIP,
+							 error);
 	if (dstream == NULL)
 		return FALSE;
 
-	dstream_impl = fu_rs_decompressor_stream_get_stream_impl(dstream);
+	dstream_impl = fu_rs_decompressor_stream_get_impl(dstream);
 	fu_rs_decompressor_stream_free(dstream);
 
 	if (dstream_impl == NULL) {

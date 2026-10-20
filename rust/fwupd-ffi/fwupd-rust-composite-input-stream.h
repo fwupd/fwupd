@@ -38,6 +38,6 @@ fu_rs_composite_input_stream_tell(FuRsCompositeInputStream *stream);
 gsize
 fu_rs_composite_input_stream_size(const FuRsCompositeInputStream *stream);
 FuRsStreamImpl *
-fu_rs_composite_input_stream_get_stream_impl(const FuRsCompositeInputStream *stream);
+fu_rs_composite_input_stream_get_impl(const FuRsCompositeInputStream *stream);
 
 G_END_DECLS

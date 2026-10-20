@@ -55,6 +55,6 @@ fu_rs_cstream_tell(FuRsCStream *stream);
 gsize
 fu_rs_cstream_size(FuRsCStream *stream);
 FuRsStreamImpl *
-fu_rs_cstream_get_stream_impl(const FuRsCStream *stream);
+fu_rs_cstream_get_impl(const FuRsCStream *stream);
 
 G_END_DECLS

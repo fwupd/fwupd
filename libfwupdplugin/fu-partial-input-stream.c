@@ -168,7 +168,7 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
 		}
 	}
 
-	impl = fwupd_input_stream_get_stream_impl(stream);
+	impl = fwupd_input_stream_get_impl(stream);
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -260,11 +260,11 @@ fu_partial_input_stream_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_partial_input_stream_parent_class)->finalize(object);
 }
 
-static FwupdStreamImpl
-fu_partial_input_stream_get_stream_impl(FuInputStream *stream)
+static FwupdInputStreamImpl
+fu_partial_input_stream_get_impl(FuInputStream *stream)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
-	return fu_rs_partial_input_stream_get_stream_impl(self->rust);
+	return fu_rs_partial_input_stream_get_impl(self->rust);
 }
 
 static void
@@ -276,7 +276,7 @@ fu_partial_input_stream_class_init(FuPartialInputStreamClass *klass)
 	istream_class->tell = fu_partial_input_stream_tell;
 	istream_class->can_seek = fu_partial_input_stream_can_seek;
 	istream_class->seek = fu_partial_input_stream_seek;
-	istream_class->get_stream_impl = fu_partial_input_stream_get_stream_impl;
+	istream_class->get_impl = fu_partial_input_stream_get_impl;
 	object_class->finalize = fu_partial_input_stream_finalize;
 }
 
