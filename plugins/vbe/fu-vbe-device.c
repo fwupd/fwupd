@@ -51,7 +51,17 @@ fu_vbe_device_get_compatible(FuVbeDevice *self)
 	return priv->compatible;
 }
 
-static gboolean
+/**
+ * fu_vbe_device_parse_devnum:
+ * @str: storage name, e.g. "mmc1"
+ * @value: (out): device number, e.g. 1
+ * @error: (nullable): optional return location for an error
+ *
+ * Obtains the device number from the end of a storage name.
+ *
+ * Returns: %TRUE on success
+ **/
+gboolean
 fu_vbe_device_parse_devnum(const gchar *str, guint *value, GError **error)
 {
 	guint64 val64 = 0;
@@ -59,6 +69,13 @@ fu_vbe_device_parse_devnum(const gchar *str, guint *value, GError **error)
 	/* skip non-numeric part */
 	while (*str != '\0' && !g_ascii_isdigit(*str))
 		str++;
+	if (*str == '\0') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no device number");
+		return FALSE;
+	}
 
 	/* convert to uint */
 	if (!fu_strtoull(str, &val64, 0x0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))

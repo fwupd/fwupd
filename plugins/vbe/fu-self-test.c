@@ -8,6 +8,7 @@
 
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
+#include "fu-vbe-device.h"
 #include "fu-vbe-plugin.h"
 #include "fu-vbe-simple-device.h"
 
@@ -103,6 +104,22 @@ fu_vbe_plugin_coldplug_func(void)
 
 	/* the device has been probed, so it knows its version */
 	g_assert_cmpstr(fu_device_get_version(dev), ==, "1.2.3");
+}
+
+static void
+fu_vbe_device_parse_devnum_func(void)
+{
+	guint devnum = 0;
+	g_autoptr(GError) error = NULL;
+
+	g_assert_true(fu_vbe_device_parse_devnum("mmc1", &devnum, &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(devnum, ==, 1);
+	g_assert_true(fu_vbe_device_parse_devnum("mmc12", &devnum, &error));
+	g_assert_no_error(error);
+	g_assert_cmpint(devnum, ==, 12);
+	g_assert_false(fu_vbe_device_parse_devnum("mmc", &devnum, &error));
+	g_assert_nonnull(error);
 }
 
 static void
@@ -490,6 +507,7 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+	g_test_add_func("/vbe/device/parse-devnum", fu_vbe_device_parse_devnum_func);
 	g_test_add_func("/vbe/coldplug", fu_vbe_plugin_coldplug_func);
 	g_test_add_func("/vbe/coldplug/two", fu_vbe_plugin_coldplug_two_func);
 	g_test_add_func("/vbe/coldplug/no-fdt", fu_vbe_plugin_coldplug_no_fdt_func);
