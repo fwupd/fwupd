@@ -3299,7 +3299,7 @@ fwupd_client_download_bytes2_cb(GObject *source, GAsyncResult *res, gpointer use
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 GBytes *
 fwupd_client_download_bytes2(FwupdClient *self,

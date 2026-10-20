@@ -1215,8 +1215,10 @@ LIBFWUPD_2.1.7 {
   local: *;
 } LIBFWUPD_2.1.6;
 
-LIBFWUPD_2.1.8 {
+LIBFWUPD_2.2.1 {
   global:
+    fwupd_bios_setting_get_parent;
+    fwupd_bios_setting_set_parent;
     fwupd_client_add_connect_func;
     fwupd_client_download_bytes2;
     fwupd_client_download_bytes2_async;
@@ -1225,23 +1227,15 @@ LIBFWUPD_2.1.8 {
     fwupd_client_emit_device_changed;
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
-    fwupd_client_run_connect_funcs;
-    fwupd_client_set_percentage;
-    fwupd_client_set_status;
-    fwupd_security_attr_incorporate;
-  local: *;
-} LIBFWUPD_2.1.7;
-
-LIBFWUPD_2.2.1 {
-  global:
-    fwupd_bios_setting_get_parent;
-    fwupd_bios_setting_set_parent;
     fwupd_client_get_pending_reboot;
+    fwupd_client_run_connect_funcs;
     fwupd_client_set_host_bkc;
     fwupd_client_set_host_machine_id;
     fwupd_client_set_host_product;
     fwupd_client_set_host_vendor;
     fwupd_client_set_pending_reboot;
+    fwupd_client_set_percentage;
+    fwupd_client_set_status;
     fwupd_file_input_stream_get_type;
     fwupd_file_input_stream_new;
     fwupd_file_input_stream_new_from_file;
@@ -1255,6 +1249,7 @@ LIBFWUPD_2.2.1 {
     fwupd_memory_input_stream_new_from_bytes;
     fwupd_memory_input_stream_new_from_data;
     fwupd_memory_input_stream_new_from_filename;
+    fwupd_security_attr_incorporate;
     fwupd_stream_input_stream_get_type;
     fwupd_stream_input_stream_new;
     fwupd_unix_input_stream_get_fd;
@@ -1263,4 +1258,4 @@ LIBFWUPD_2.2.1 {
     fwupd_unix_input_stream_new_from_filename;
     fwupd_unix_input_stream_require_seal;
   local: *;
-} LIBFWUPD_2.1.8;
+} LIBFWUPD_2.1.7;
