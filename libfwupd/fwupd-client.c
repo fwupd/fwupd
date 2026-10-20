@@ -580,7 +580,7 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
  *
  * Sets the client status. This is thread-safe and can be called from any thread.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
@@ -600,7 +600,7 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
  *
  * Sets the client percentage. This is thread-safe and can be called from any thread.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
@@ -779,7 +779,7 @@ fwupd_client_name_owner_changed_cb(GDBusProxy *proxy, GParamSpec *pspec, FwupdCl
  *
  * Emits a `::device-request` signal into the assigned mainloop.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
@@ -810,7 +810,7 @@ fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
  *
  * Emits a `::device-added` signal into the assigned mainloop.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
@@ -829,7 +829,7 @@ fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-removed` signal into the assigned mainloop.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
@@ -848,7 +848,7 @@ fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-changed` signal into the assigned mainloop.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev)
@@ -1170,7 +1170,7 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 gboolean
 fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
@@ -6747,7 +6747,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
@@ -6800,7 +6800,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 GBytes *
 fwupd_client_download_bytes2_finish(FwupdClient *self, GAsyncResult *res, GError **error)
@@ -8185,7 +8185,7 @@ fwupd_client_build_report_security(FwupdClient *self,
  * Adds a function to run after the connection has been completed. For example, checking that
  * the client version matches the daemon version.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_client_add_connect_func(FwupdClient *self,
