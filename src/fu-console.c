@@ -112,7 +112,7 @@ fu_console_erase_line(FuConsole *self)
 {
 	if (!self->interactive)
 		return;
-	g_print("\033[G");
+	g_print("\033[G\033[K");
 }
 
 static void
