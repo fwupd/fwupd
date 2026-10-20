@@ -1216,7 +1216,6 @@ static gboolean
 fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *esp_path = NULL;
-	g_autofree gchar *pattern = NULL;
 	g_autoptr(FuDeviceLocker) esp_locker = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
@@ -1235,10 +1234,10 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	files = fu_path_get_files(esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	pattern = g_build_filename("*", "fw", "fwupd*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		if (g_pattern_match_simple(pattern, fn)) {
+		if (g_pattern_match_simple("*/fw/fwupd*.cap", fn) ||
+		    g_pattern_match_simple("*/fwupd*.efi", fn)) {
 			g_autoptr(GFile) file = g_file_new_for_path(fn);
 			g_debug("deleting %s", fn);
 			if (!g_file_delete(file, NULL, error))
