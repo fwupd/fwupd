@@ -259,6 +259,16 @@ def main():
 
     profile_args = [f"--profile={cargo_profile}"] if cargo_profile else []
 
+    # Only build with --all-targets during native builds,
+    # skip for cross-compilation: test binaries link against target-only
+    # runtime libraries (e.g. -llog/-lunwind on Android) that are unavailable on the
+    # host, and cross-compiled tests cannot run on the host anyway.
+    all_targets_args = (
+        ["--all-targets"]
+        if args.subcommand == "build" and not meson_rust_target
+        else []
+    )
+
     cmd = [
         cargo,
         args.subcommand,
@@ -267,6 +277,7 @@ def main():
         *profile_args,
         *cargo_target_args,
         *crate_args,
+        *all_targets_args,
         *cargo_args,
         *unknown_args,
     ]
