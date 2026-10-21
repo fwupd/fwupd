@@ -52,6 +52,7 @@ fwupd_ffi_src = [
   'fwupd-ffi/Cargo.toml',
   'fwupd-ffi/src/compressor.rs',
   'fwupd-ffi/src/cstream.rs',
+  'fwupd-ffi/src/glib/gbytes.rs',
   'fwupd-ffi/src/glib/gerror.rs',
   'fwupd-ffi/src/glib/grefstring.rs',
   'fwupd-ffi/src/glib/gstring.rs',
