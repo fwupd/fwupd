@@ -190,8 +190,8 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 	guint32 store_offset = 0;
 	g_autoptr(GBytes) blob = NULL;
 
-	/* get data */
-	blob = fu_fdt_image_get_attr(img, FU_FIT_FIRMWARE_ATTR_DATA, error);
+	/* get data, which may be outside the FIT */
+	blob = fu_firmware_get_bytes(FU_FIRMWARE(img), error);
 	if (blob == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(blob, &bufsz);
