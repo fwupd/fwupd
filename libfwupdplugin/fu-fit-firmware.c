@@ -307,11 +307,14 @@ fu_fit_firmware_verify_configuration(FuFitFirmware *self,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
-	/* sanity check */
-	if (!fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(img),
-					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
-					   NULL,
-					   error))
+	g_autoptr(GBytes) blob = NULL;
+
+	/* the compatible strings are optional, but must be valid if present */
+	blob = fu_fdt_image_get_attr(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_COMPATIBLE, NULL);
+	if (blob != NULL && !fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(img),
+							   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
+							   NULL,
+							   error))
 		return FALSE;
 
 	/* success */

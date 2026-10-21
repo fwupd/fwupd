@@ -120,6 +120,49 @@ fu_firmware_fit_func(void)
 	g_assert_cmpstr(val[3], ==, NULL);
 }
 
+static void
+fu_firmware_fit_no_compatible_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_fit_firmware_new();
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a configuration does not need compatible strings */
+	fit = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">any board</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">YWJj</metadata>\n" /* abc */
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	blob = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 /* data well after the FIT, for an image which uses data-position */
 #define FU_FIRMWARE_FIT_TEST_POSITION 0x1000
 
@@ -1363,6 +1406,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/fdt", fu_firmware_fdt_func);
 	g_test_add_func("/fwupd/firmware/fit", fu_firmware_fit_func);
 	g_test_add_func("/fwupd/firmware/fit/external", fu_firmware_fit_external_func);
+	g_test_add_func("/fwupd/firmware/fit/no-compatible", fu_firmware_fit_no_compatible_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd-manifest-overflow",
 			fu_firmware_ifwi_cpd_manifest_overflow_func);
