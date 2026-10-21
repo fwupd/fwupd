@@ -242,6 +242,11 @@ To build the example:
    ./build.sh
 ```
 
+The update provides the GUID of the `VBE\COMPATIBLE_pine64-rockpro64-v2.1`
+instance ID, so it only applies to that board. Note that characters such as `,`
+in the compatible string become `-` in the instance ID. Use
+`fwupdmgr get-devices --show-all` to see the GUID for each instance ID.
+
 To install the cab on your development computer:
 
 ```bash
@@ -249,14 +254,14 @@ To install the cab on your development computer:
    dd if=/dev/zero of=/tmp/testfw bs=1M count=3
 
    sudo build/src/fwupdtool install plugins/vbe/example/simple/Vbe-Board-1.2.4.cab \
-      bb3b05a8-ebef-11ec-be98-d3a15278be95
+      e2363f2d-d877-5d0a-8fb6-725bed478132
 ```
 
 To dump out the firmware:
 
 ```bash
    sudo rm fw.bin; sudo build/src/fwupdtool firmware-dump fw.bin \
-      bb3b05a8-ebef-11ec-be98-d3a15278be95
+      e2363f2d-d877-5d0a-8fb6-725bed478132
 ```
 
 ## To do
