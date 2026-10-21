@@ -12,7 +12,7 @@ pub mod json;
 pub mod streams;
 pub mod units;
 
-pub use crate::bitflags::{BitflagIter, Bitflags};
+pub use crate::bitflags::{BitflagIter, Bitflags, InvalidBitflag};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
