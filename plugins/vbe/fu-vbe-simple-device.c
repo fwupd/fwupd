@@ -100,6 +100,15 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 		return NULL;
 	img_configurations = fu_firmware_get_images(FU_FIRMWARE(fdt_configurations));
 
+	/* a single configuration with no compatible strings applies to every board */
+	if (img_configurations->len == 1) {
+		FuFdtImage *img = g_ptr_array_index(img_configurations, 0);
+		g_autoptr(GBytes) blob =
+		    fu_fdt_image_get_attr(img, FU_FIT_FIRMWARE_ATTR_COMPATIBLE, NULL);
+		if (blob == NULL)
+			return g_object_ref(img);
+	}
+
 	/* look for a configuration with the device compatible strings in priority order */
 	device_compatible = fu_vbe_device_get_compatible(FU_VBE_DEVICE(self));
 	if (device_compatible == NULL) {
@@ -113,11 +122,13 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 		for (guint i = 0; i < img_configurations->len; i++) {
 			FuFdtImage *img = g_ptr_array_index(img_configurations, i);
 			g_auto(GStrv) img_compatible = NULL;
+
+			/* a configuration with no compatible strings is not for any board */
 			if (!fu_fdt_image_get_attr_strlist(img,
 							   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
 							   &img_compatible,
-							   error))
-				return NULL;
+							   NULL))
+				continue;
 			if (g_strv_contains((const gchar *const *)img_compatible,
 					    device_compatible[j]))
 				return g_object_ref(img);
