@@ -62,6 +62,15 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
 #define FU_FIT_FIRMWARE_ATTR_DATA_OFFSET "data-offset"
 
 /**
+ * FU_FIT_FIRMWARE_ATTR_DATA_POSITION:
+ *
+ * The external data position from the start of the file, typically a uint32.
+ *
+ * Since: 2.2.1
+ **/
+#define FU_FIT_FIRMWARE_ATTR_DATA_POSITION "data-position"
+
+/**
  * FU_FIT_FIRMWARE_ATTR_DATA_SIZE:
  *
  * The data size of the external image, typically a uint32.

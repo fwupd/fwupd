@@ -49,6 +49,7 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 			      {"compression", FU_FDT_IMAGE_FORMAT_STR},
 			      {"creator", FU_FDT_IMAGE_FORMAT_STR},
 			      {"data-offset", FU_FDT_IMAGE_FORMAT_UINT32},
+			      {"data-position", FU_FDT_IMAGE_FORMAT_UINT32},
 			      {"data-size", FU_FDT_IMAGE_FORMAT_UINT32},
 			      {"default", FU_FDT_IMAGE_FORMAT_STR},
 			      {"description", FU_FDT_IMAGE_FORMAT_STR},
