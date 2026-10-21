@@ -9,10 +9,12 @@
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 
+mod gbytes;
 mod gerror;
 mod grefstring;
 mod gstring;
 
+pub use gbytes::*;
 pub use gerror::*;
 pub use grefstring::*;
 pub use gstring::*;
