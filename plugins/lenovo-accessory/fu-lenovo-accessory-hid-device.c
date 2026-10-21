@@ -7,17 +7,21 @@
 
 #include "config.h"
 
+#ifndef _WIN32
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 
 #include "fu-lenovo-accessory-hid-common.h"
 #include "fu-lenovo-accessory-hid-device.h"
 
 struct _FuLenovoAccessoryHidDevice {
 	FuHidDevice parent_instance;
+#ifndef _WIN32
 	gint notify_fd;
 	GIOChannel *notify_channel;
 	guint notify_watch_id;
+#endif
 };
 
 static void
@@ -32,6 +36,7 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidDevice,
 /* Interface 2 carries keyboard input + wireless device notifications (Report ID 0x04) */
 #define FU_LENOVO_ACCESSORY_IFACE_NOTIFY 0x02
 
+#ifndef _WIN32
 static gchar *
 fu_lenovo_accessory_hid_device_find_notify_hidraw(FuUsbDevice *usb_device, GError **error)
 {
@@ -186,6 +191,7 @@ fu_lenovo_accessory_hid_device_notify_cb(GIOChannel *channel,
 
 	return G_SOURCE_CONTINUE;
 }
+#endif /* !_WIN32 */
 
 static gboolean
 fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
@@ -195,10 +201,12 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 	guint8 minor = 0;
 	guint8 micro = 0;
 	g_autofree gchar *version = NULL;
-	g_autofree gchar *hidraw_path = NULL;
 	g_autoptr(GPtrArray) descriptors = NULL;
-	g_autoptr(GError) error_notify = NULL;
 	gboolean found_report = FALSE;
+#ifndef _WIN32
+	g_autofree gchar *hidraw_path = NULL;
+	g_autoptr(GError) error_notify = NULL;
+#endif
 
 	/* the command interface is a vendor HID collection (UsagePage 0xFF00,
 	 * Usage 0x02) carrying a 64-byte report; confirm it is present so we
@@ -243,6 +251,7 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_lenovo_accessory_hid_add_children(FU_LENOVO_ACCESSORY_IMPL(device), error))
 		return FALSE;
 
+#ifndef _WIN32
 	/* try to open Interface 2 hidraw for wireless notifications (best-effort) */
 	hidraw_path =
 	    fu_lenovo_accessory_hid_device_find_notify_hidraw(FU_USB_DEVICE(device), &error_notify);
@@ -271,6 +280,7 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 					       self);
 
 	g_info("hotplug notification listening started on %s", hidraw_path);
+#endif /* !_WIN32 */
 
 	return TRUE;
 }
@@ -312,6 +322,7 @@ fu_lenovo_accessory_hid_device_finalize(GObject *object)
 {
 	FuLenovoAccessoryHidDevice *self = FU_LENOVO_ACCESSORY_HID_DEVICE(object);
 
+#ifndef _WIN32
 	/* cleanup notification monitoring */
 	if (self->notify_watch_id != 0) {
 		g_source_remove(self->notify_watch_id);
@@ -329,6 +340,7 @@ fu_lenovo_accessory_hid_device_finalize(GObject *object)
 		close(self->notify_fd);
 		self->notify_fd = -1;
 	}
+#endif /* !_WIN32 */
 
 	G_OBJECT_CLASS(fu_lenovo_accessory_hid_device_parent_class)->finalize(object);
 }
