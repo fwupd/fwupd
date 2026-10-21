@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware">
+  <id>com.Vbe.AbrecBoard.firmware</id>
+  <name>VBE A/B Board Firmware</name>
+  <summary>System firmware for a board, for use with VBE A/B/recovery</summary>
+  <description>
+    <p>
+      The board can be updated using Verified Boot for Embedded (VBE), which
+      tries an update in its B slot before using it.
+    </p>
+  </description>
+  <provides>
+    <!-- the GUID of the VBE\COMPATIBLE_pine64-rockpro64-v2.1 instance ID, so
+         that this update only applies to that board -->
+    <firmware type="flashed">e2363f2d-d877-5d0a-8fb6-725bed478132</firmware>
+  </provides>
+  <url type="homepage">http://www.TBD.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Proprietary</project_license>
+  <developer_name>Vbe</developer_name>
+  <releases>
+    <release urgency="high" version="1.2.4" date="2026-10-21">
+      <checksum filename="slot.fit" target="content"/>
+      <description>
+        <p>
+          This release updates firmware to version 1.2.4 which includes support
+          for a mythical new feature.
+        </p>
+      </description>
+    </release>
+  </releases>
+
+  <!-- older versions of fwupd do not support vbe-abrec -->
+  <requires>
+    <id compare="ge" version="2.2.1">org.freedesktop.fwupd</id>
+  </requires>
+
+</component>
