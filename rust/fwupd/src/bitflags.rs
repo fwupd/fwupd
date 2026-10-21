@@ -105,12 +105,17 @@ where
     const FLAGS: &'static [Self::Flag];
 
     /// Returns the raw bits as the underlying type (e.g. [`u8`], [`u16`], [`u32`]).
+    ///
+    /// This is also implemented as [`From`].
     fn bits(self) -> Self::Bits;
 
     /// Creates a bitmask from raw bits of the underlying type (e.g. [`u8`], [`u16`], [`u32`]).
     ///
     /// <div class="warning">
     /// Bits that do not correspond to any defined flag are silently cleared.
+    ///
+    /// Where error-checking is required, use the `TryFrom<T>`
+    /// implementation instead.
     /// </div>
     fn from_bits(bits: Self::Bits) -> Self;
 
@@ -211,6 +216,18 @@ where
             source: self,
             index: 0,
         }
+    }
+}
+
+/// Error used by `TryFrom`
+#[derive(Copy, Clone, Debug)]
+pub struct InvalidBitflag<T> {
+    pub invalid_bits: T,
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for InvalidBitflag<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "invalid bits: {}", self.invalid_bits)
     }
 }
 
@@ -404,6 +421,30 @@ macro_rules! declare_bitflags {
             fn bitor_assign(&mut self, rhs: Self) {
                 use $crate::Bitflags;
                 *self = Self::from_bits(self.bits() | rhs.bits());
+            }
+        }
+
+        impl ::core::convert::TryFrom<$T> for $Mask {
+            type Error = $crate::bitflags::InvalidBitflag<$T>;
+
+            fn try_from(v: $T) -> Result<$Mask, Self::Error> {
+                use $crate::Bitflags;
+
+                let mask = $Mask::from_bits(v);
+                let invalid = mask.0 ^ v;
+                if invalid == 0 {
+                    Ok(mask)
+                } else {
+                    Err($crate::bitflags::InvalidBitflag { invalid_bits: invalid })
+                }
+            }
+        }
+
+        impl ::core::convert::From<$Mask> for $T {
+            fn from(mask: $Mask) -> $T {
+                use $crate::Bitflags;
+
+                mask.bits()
             }
         }
     };
