@@ -350,7 +350,10 @@ The following documents may help in understanding VBE:
 
 ## Useful information
 
-For development you may find the following useful.
+For development you may find the following useful. There is an example for
+each method, in `plugins/vbe/example/simple` and `plugins/vbe/example/abrec`.
+
+### vbe-simple example
 
 To install the example devicetree:
 
@@ -389,6 +392,39 @@ To dump out the firmware:
    sudo rm fw.bin; sudo build/src/fwupdtool firmware-dump fw.bin \
       e2363f2d-d877-5d0a-8fb6-725bed478132
 ```
+
+### vbe-abrec example
+
+To set up the storage and devicetree, then build and install the example:
+
+```bash
+   cd /path/to/fwupd/plugins/vbe/example/abrec
+   dd if=/dev/zero of=/tmp/testfw bs=1M count=4
+   sudo dtc test.dts -o /var/lib/fwupd/system.dtb
+   dd if=/dev/zero of=update.bin bs=64K count=1
+   ./build.sh
+
+   cd /path/to/fwupd
+   sudo build/src/fwupdtool install plugins/vbe/example/abrec/Vbe-Abrec-1.2.4.cab \
+      e2363f2d-d877-5d0a-8fb6-725bed478132
+```
+
+The update is now in B, waiting to be tried, so `fwupdtool get-devices` shows
+that the device is waiting for the update to be applied. On a board, the
+firmware tries B on the next boot. Here, `try-b.py` updates the state as the
+firmware does, and the devicetree then says that B was booted:
+
+```bash
+   cd /path/to/fwupd/plugins/vbe/example/abrec
+   ./try-b.py
+   sed 's/booted-slot = "a"/booted-slot = "b"/' test.dts | \
+      sudo dtc -o /var/lib/fwupd/system.dtb
+   cd /path/to/fwupd
+   sudo build/src/fwupdtool get-devices
+```
+
+fwupd sees that the OS started from B, so it copies B to A and the device shows
+version 1.2.4.
 
 ## Version Considerations
 
