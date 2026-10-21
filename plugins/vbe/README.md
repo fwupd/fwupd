@@ -95,7 +95,7 @@ VBE requires the board firmware to provide information about the firmware within
 the device tree passed to the Operating System.
 
 For systems without device tree, currently the only option is to install a file
-for use by fwupd, typically in `/var/lib/fwupd/vbe/system.dtb`.
+for use by fwupd, typically in `/var/lib/fwupd/system.dtb`.
 
 In either case, there must be one or more nodes with the required information.
 The format depends on which VBE method is used, but the information must be in
@@ -144,9 +144,9 @@ common to all:
 
 ## Important files
 
-* `/var/lib/fwupd/vbe/system.dtb` - this file holds the system
+* `/var/lib/fwupd/system.dtb` - this file holds the system
   information. It overrides the system device tree if any, meaning that the
-  system device tree is ignored if this file is preset. For systems that don't
+  system device tree is ignored if this file is present. For systems that don't
   support device tree (e.g ACPI systems), this file is needed for VBE to work
 
 ## Available VBE methods
@@ -218,13 +218,11 @@ The following documents may help in understanding VBE:
 
 For development you may find the following useful.
 
-To set up the vbe directory:
+To install the example devicetree:
 
 ```bash
-    mkdir /var/lib/fwupd/vbe
-    chmod a+rwx /var/lib/fwupd/vbe
     dtc /path/to/fwupd/plugins/vbe/example/test.dts -o \
-       /var/lib/fwupd/vbe/system.dtb
+       /var/lib/fwupd/system.dtb
 ```
 
 To build the example:
