@@ -129,6 +129,13 @@ fu_lenovo_accessory_hid_device_notify_cb(GIOChannel *channel,
 	status =
 	    g_io_channel_read_chars(channel, (gchar *)buf, sizeof(buf), &bytes_read, &error_local);
 	if (status != G_IO_STATUS_NORMAL) {
+		/* EOF or error means device was removed, stop watching */
+		if (status == G_IO_STATUS_EOF || status == G_IO_STATUS_ERROR) {
+			g_debug("hidraw descriptor closed, stopping notification watch");
+			self->notify_watch_id = 0;
+			return G_SOURCE_REMOVE;
+		}
+		/* G_IO_STATUS_AGAIN is not an error, just retry */
 		if (status != G_IO_STATUS_AGAIN)
 			g_warning("failed to read notify: %s", error_local->message);
 		return G_SOURCE_CONTINUE;
