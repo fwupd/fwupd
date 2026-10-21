@@ -419,6 +419,101 @@ fu_vbe_simple_device_prepare_func(void)
 }
 
 static void
+fu_vbe_simple_device_external_func(void)
+{
+	gboolean ret;
+	gsize len = 0;
+	g_autofree gchar *contents = NULL;
+	g_autofree gchar *disk = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) fdt = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a file standing in for the storage device */
+	tmpdir = fu_temporary_directory_new("vbe-simple", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	disk = fu_temporary_directory_build(tmpdir, "disk.img", NULL);
+	contents = g_malloc0(FU_VBE_SIMPLE_TEST_DISK_SIZE);
+	ret = g_file_set_contents(disk, contents, FU_VBE_SIMPLE_TEST_DISK_SIZE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_clear_pointer(&contents, g_free);
+	dev = fu_vbe_simple_test_device_new(ctx, disk);
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_open(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* an update with its data after the FIT, as written by 'mkimage -E' */
+	fit = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
+	    "        <metadata key=\"data-offset\" format=\"uint32\">0x0</metadata>\n"
+	    "        <metadata key=\"data-size\" format=\"uint32\">0x4</metadata>\n"
+	    "        <metadata key=\"store-offset\" format=\"uint32\">0x200</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"compatible\" "
+	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	fdt = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt);
+	fu_byte_array_append_bytes(buf, fdt);
+	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	g_byte_array_append(buf, (const guint8 *)"rock", 4);
+	blob = g_bytes_new(buf->data, buf->len);
+
+	/* the data is written at the store offset */
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
+	firmware =
+	    fu_device_prepare_firmware(dev, stream, progress, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	ret = fu_device_write_firmware(dev, firmware, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_close(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_get_contents(disk, &contents, &len, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(len, ==, FU_VBE_SIMPLE_TEST_DISK_SIZE);
+	g_assert_cmpmem(contents + FU_VBE_SIMPLE_TEST_STORE, 4, "rock", 4);
+}
+
+static void
 fu_vbe_simple_device_storage_func(void)
 {
 	gboolean ret;
@@ -516,5 +611,6 @@ main(int argc, char **argv)
 	g_test_add_func("/vbe/simple/probe-storage", fu_vbe_simple_device_probe_storage_func);
 	g_test_add_func("/vbe/simple/prepare", fu_vbe_simple_device_prepare_func);
 	g_test_add_func("/vbe/simple/storage", fu_vbe_simple_device_storage_func);
+	g_test_add_func("/vbe/simple/external", fu_vbe_simple_device_external_func);
 	return g_test_run();
 }
