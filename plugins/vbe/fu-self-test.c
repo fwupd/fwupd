@@ -418,6 +418,140 @@ fu_vbe_simple_device_prepare_func(void)
 	g_assert_cmpstr(fu_firmware_get_id(img), ==, "firmware-2");
 }
 
+static GBytes *
+fu_vbe_test_fit_new_cfgs(const gchar *cfgs)
+{
+	g_autofree gchar *xml = NULL;
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	xml = g_strdup_printf(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">any</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">YW55</metadata>\n" /* any */
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-2</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">cm9jaw==</metadata>\n" /* rock */
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "%s"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    cfgs);
+	fit = fu_firmware_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	blob = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	return g_steal_pointer(&blob);
+}
+
+/* get the ID of the image which vbe-simple picks from a FIT with these configurations */
+static gchar *
+fu_vbe_test_pick_image(const gchar *cfgs, FuDevice *device, GError **error)
+{
+	FuFirmware *img;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob = fu_vbe_test_fit_new_cfgs(cfgs);
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      error);
+	if (firmware == NULL)
+		return NULL;
+	imgs = fu_firmware_get_images(firmware);
+	g_assert_cmpint(imgs->len, ==, 1);
+	img = g_ptr_array_index(imgs, 0);
+	return g_strdup(fu_firmware_get_id(img));
+}
+
+static void
+fu_vbe_simple_device_no_compatible_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *id_any = NULL;
+	g_autofree gchar *id_skip = NULL;
+	g_autofree gchar *id_none = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	dev = fu_vbe_simple_test_device_new(ctx, "mmc1");
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* a single configuration with no compatible strings applies to every board */
+	id_any = fu_vbe_test_pick_image(
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n",
+	    dev,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(id_any, ==, "firmware-1");
+
+	/* with more than one, a configuration with no compatible strings is skipped */
+	id_skip = fu_vbe_test_pick_image(
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-2</id>\n"
+	    "        <metadata key=\"compatible\" "
+	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
+	    "      </firmware>\n",
+	    dev,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(id_skip, ==, "firmware-2");
+
+	/* ...so if none of the others match, there is nothing for this board */
+	id_none = fu_vbe_test_pick_image(
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-2</id>\n"
+	    "        <metadata key=\"compatible\" format=\"strlist\">other,board</metadata>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
+	    "      </firmware>\n",
+	    dev,
+	    &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(id_none);
+}
+
 static void
 fu_vbe_simple_device_external_func(void)
 {
@@ -612,5 +746,6 @@ main(int argc, char **argv)
 	g_test_add_func("/vbe/simple/prepare", fu_vbe_simple_device_prepare_func);
 	g_test_add_func("/vbe/simple/storage", fu_vbe_simple_device_storage_func);
 	g_test_add_func("/vbe/simple/external", fu_vbe_simple_device_external_func);
+	g_test_add_func("/vbe/simple/no-compatible", fu_vbe_simple_device_no_compatible_func);
 	return g_test_run();
 }
