@@ -76,8 +76,8 @@ case `data-offset` and `data-size` allow the data to be relocated. The data is
 stored started at the next 32-bit aligned file position after the FIT. The
 `mkimage` tool allows converting a FIT to an external FIT, with the `-E` flag.
 
-See the `plugins/vbe/example` directory for an example of building a firmware
-update.
+See the `plugins/vbe/example/simple` directory for an example of building a
+firmware update.
 
 ## Operation
 
@@ -229,7 +229,7 @@ For development you may find the following useful.
 To install the example devicetree:
 
 ```bash
-    dtc /path/to/fwupd/plugins/vbe/example/test.dts -o \
+    dtc /path/to/fwupd/plugins/vbe/example/simple/test.dts -o \
        /var/lib/fwupd/system.dtb
 ```
 
@@ -237,7 +237,7 @@ To build the example:
 
 ```bash
    sudo apt install appstream-util u-boot-tools
-   cd /path/to/fwupd/plugins/vbe/example
+   cd /path/to/fwupd/plugins/vbe/example/simple
    dd if=/dev/zero of=update.bin bs=1M count=1
    ./build.sh
 ```
@@ -248,7 +248,7 @@ To install the cab on your development computer:
    # Set up the test file
    dd if=/dev/zero of=/tmp/testfw bs=1M count=3
 
-   sudo build/src/fwupdtool install plugins/vbe/example/Vbe-Board-1.2.4.cab \
+   sudo build/src/fwupdtool install plugins/vbe/example/simple/Vbe-Board-1.2.4.cab \
       bb3b05a8-ebef-11ec-be98-d3a15278be95
 ```
 
