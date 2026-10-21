@@ -18,6 +18,7 @@ gboolean
 fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 			 XbNode *n,
 			 FuFirmware *firmware_archive,
-			 GError **error);
+			 GError **error,
+			 guint8 fwu_protocol);
 guint32
 fu_jabra_gnp_image_get_crc32(FuJabraGnpImage *self);

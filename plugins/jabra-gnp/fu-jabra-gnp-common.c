@@ -330,11 +330,15 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 				  error))
 		return FALSE;
 	if (rx_data.rxbuf[7] != FU_JABRA_GNP_PROTOCOL_OTA &&
-	    rx_data.rxbuf[7] != FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA) {
+	    rx_data.rxbuf[7] != FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA &&
+	    rx_data.rxbuf[7] != FU_JABRA_GNP_PROTOCOL_SPLIT_OTA) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "unrecognized protocol: expected 7 or 16, got %d",
+			    "unrecognized protocol: expected %d, %d or %d, got %d",
+			    FU_JABRA_GNP_PROTOCOL_OTA,
+			    FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA,
+			    FU_JABRA_GNP_PROTOCOL_SPLIT_OTA,
 			    rx_data.rxbuf[7]);
 		return FALSE;
 	}
@@ -863,4 +867,213 @@ fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, 
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/* nocheck:name */
+gboolean
+fu_jabra_gnp_trigger_reboot(FuDevice *self, guint8 address, guint8 seq, GError **error)
+{
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
+	FuJabraGnpTxData tx_data = {
+	    .buf = st->buf,
+	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
+	};
+	FuJabraGnpRxData rx_data = {
+	    .rxbuf = {0x00},
+	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
+	};
+
+	/* verify that config-mode exit is permitted */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_CONFIG_MODE_PERMISSION);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	if (!fu_device_retry_full(self,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_tx_cb
+				      : fu_jabra_gnp_device_tx_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &tx_data,
+				  error))
+		return FALSE;
+	if (!fu_device_retry_full(self,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
+				      : fu_jabra_gnp_device_rx_with_sequence_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &rx_data,
+				  error))
+		return FALSE;
+	if (rx_data.rxbuf[7] != 0x01) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device denied config-mode exit, permission was 0x%02x",
+			    rx_data.rxbuf[7]);
+		return FALSE;
+	}
+
+	/* leaving config mode activates the staged image and restarts the device */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, (guint8)(seq + 1));
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
+	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_END_CONFIG_MODE);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	if (!fu_device_retry_full(self,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_tx_cb
+				      : fu_jabra_gnp_device_tx_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &tx_data,
+				  error))
+		return FALSE;
+	if (!fu_device_retry_full(self,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
+				      : fu_jabra_gnp_device_rx_with_sequence_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &rx_data,
+				  error))
+		return FALSE;
+	if (rx_data.rxbuf[5] != 0xFF) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "device rejected end-config-mode command 0x0D 0x12: "
+			    "got 0x%02x 0x%02x, expected 0xFF",
+			    rx_data.rxbuf[5],
+			    rx_data.rxbuf[6]);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/* nocheck:name */
+gchar *
+fu_jabra_gnp_get_tunes_pack_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
+{
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
+	FuJabraGnpTxData tx_data = {
+	    .buf = st->buf,
+	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
+	};
+	FuJabraGnpRxData rx_data = {
+	    .rxbuf = {0x00},
+	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
+	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_TUNES_PACK_VERSION);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_tx_cb
+				      : fu_jabra_gnp_device_tx_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &tx_data,
+				  error))
+		return NULL;
+	if (!fu_device_retry_full(device,
+				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
+				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
+				      : fu_jabra_gnp_device_rx_with_sequence_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &rx_data,
+				  error))
+		return NULL;
+
+	return fu_memstrsafe(rx_data.rxbuf, sizeof(rx_data.rxbuf), 0x8, 5, error);
+}
+
+/* nocheck:name */
+GPtrArray *
+fu_jabra_gnp_get_split_images(FuDevice *device,
+			      FuFirmware *firmware,
+			      const gchar *tunes_pack_version,
+			      gboolean *another_write_required,
+			      GError **error)
+{
+	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
+	g_autoptr(GPtrArray) language_images = g_ptr_array_new();
+	g_autoptr(GPtrArray) firmware_images = g_ptr_array_new();
+	g_autoptr(GPtrArray) selected_images = g_ptr_array_new();
+	const gchar *current_version = fu_device_get_version(device);
+	const gchar *target_version = fu_firmware_get_version(firmware);
+	gboolean language_needs_update = FALSE;
+	gboolean firmware_needs_update = FALSE;
+
+	*another_write_required = FALSE;
+
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(images, i);
+		const gchar *content = fu_firmware_get_id(img);
+
+		if (g_strcmp0(content, "tunepack") == 0) {
+			const gchar *target_tunes_version = fu_firmware_get_version(img);
+
+			g_ptr_array_add(language_images, img);
+			if (target_tunes_version == NULL || tunes_pack_version == NULL) {
+				language_needs_update = TRUE;
+			} else if (fu_version_compare(tunes_pack_version,
+						      target_tunes_version,
+						      FWUPD_VERSION_FORMAT_TRIPLET) != 0) {
+				language_needs_update = TRUE;
+			}
+		} else {
+			g_ptr_array_add(firmware_images, img);
+		}
+	}
+
+	if (firmware_images->len > 0) {
+		if (current_version == NULL || target_version == NULL) {
+			firmware_needs_update = TRUE;
+		} else {
+			firmware_needs_update =
+			    fu_version_compare(current_version,
+					       target_version,
+					       FWUPD_VERSION_FORMAT_TRIPLET) != 0;
+		}
+	}
+
+	if (language_needs_update && firmware_needs_update) {
+		for (guint i = 0; i < language_images->len; i++)
+			g_ptr_array_add(selected_images, g_ptr_array_index(language_images, i));
+		*another_write_required = TRUE;
+		g_debug("protocol %d: firmware also needs update, another write required",
+			FU_JABRA_GNP_PROTOCOL_SPLIT_OTA);
+	} else if (language_needs_update) {
+		for (guint i = 0; i < language_images->len; i++)
+			g_ptr_array_add(selected_images, g_ptr_array_index(language_images, i));
+		g_debug("protocol %d: language pack needs update, another write may be required",
+			FU_JABRA_GNP_PROTOCOL_SPLIT_OTA);
+	} else if (firmware_needs_update) {
+		for (guint i = 0; i < firmware_images->len; i++)
+			g_ptr_array_add(selected_images, g_ptr_array_index(firmware_images, i));
+		g_debug("protocol %d: firmware needs update, another write may be required",
+			FU_JABRA_GNP_PROTOCOL_SPLIT_OTA);
+	} else {
+		for (guint i = 0; i < language_images->len; i++)
+			g_ptr_array_add(selected_images, g_ptr_array_index(language_images, i));
+		for (guint i = 0; i < firmware_images->len; i++)
+			g_ptr_array_add(selected_images, g_ptr_array_index(firmware_images, i));
+		g_debug("protocol %d: no version change detected, updating all images",
+			FU_JABRA_GNP_PROTOCOL_SPLIT_OTA);
+	}
+	if (selected_images->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware contains no images for the device");
+		return NULL;
+	}
+	return g_steal_pointer(&selected_images);
 }

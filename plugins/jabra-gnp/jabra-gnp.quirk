@@ -255,6 +255,30 @@ Plugin = jabra_gnp
 [USB\VID_0B0E&PID_2525]
 Plugin = jabra_gnp
 
+# Jabra Evolve3 45 Mono [runtime]
+[USB\VID_0B0E&PID_2552]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 45 Mono [runtime]
+[USB\VID_0B0E&PID_2553]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 45 Mono [runtime]
+[USB\VID_0B0E&PID_2554]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 45 Stereo [runtime]
+[USB\VID_0B0E&PID_254F]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 45 Stereo [runtime]
+[USB\VID_0B0E&PID_2550]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 45 Stereo [runtime]
+[USB\VID_0B0E&PID_2551]
+Plugin = jabra_gnp
+
 # Jabra Evolve3 65 Flex [runtime]
 [USB\VID_0B0E&PID_2555]
 Plugin = jabra_gnp
@@ -265,6 +289,30 @@ Plugin = jabra_gnp
 
 # Jabra Evolve3 65 Flex [runtime]
 [USB\VID_0B0E&PID_2557]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Mono [runtime]
+[USB\VID_0B0E&PID_254C]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Mono [runtime]
+[USB\VID_0B0E&PID_254D]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Mono [runtime]
+[USB\VID_0B0E&PID_254E]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Stereo [runtime]
+[USB\VID_0B0E&PID_2549]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Stereo [runtime]
+[USB\VID_0B0E&PID_254A]
+Plugin = jabra_gnp
+
+# Jabra Evolve3 65 Stereo [runtime]
+[USB\VID_0B0E&PID_254B]
 Plugin = jabra_gnp
 
 # Jabra Evolve3 75 [runtime]

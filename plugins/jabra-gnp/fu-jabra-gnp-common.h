@@ -22,6 +22,7 @@
 
 #define FU_JABRA_GNP_PROTOCOL_OTA	   7
 #define FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA 16
+#define FU_JABRA_GNP_PROTOCOL_SPLIT_OTA	   17
 
 typedef struct {
 	GByteArray *buf;
@@ -111,3 +112,15 @@ fu_jabra_gnp_write_version(FuDevice *device,
 gboolean
 fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
+gboolean
+fu_jabra_gnp_trigger_reboot(FuDevice *device, guint8 address, guint8 seq, GError **error)
+    G_GNUC_NON_NULL(1);
+gchar *
+fu_jabra_gnp_get_tunes_pack_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
+    G_GNUC_NON_NULL(1, 4);
+GPtrArray *
+fu_jabra_gnp_get_split_images(FuDevice *device,
+			      FuFirmware *firmware,
+			      const gchar *tunes_pack_version,
+			      gboolean *another_write_required,
+			      GError **error) G_GNUC_NON_NULL(1, 2, 5);
