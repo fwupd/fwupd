@@ -127,6 +127,7 @@ jobs:
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
+              -e "CARGO_HOME=/github/workspace/cargo-home" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \

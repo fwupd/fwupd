@@ -26,6 +26,11 @@ cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
+if [ -n "$CARGO_HOME" ]; then
+    mkdir -p "$CARGO_HOME"
+    chown -R nobody "$CARGO_HOME"
+fi
+
 # build the package
 sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm --nocheck
 

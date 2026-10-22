@@ -16,19 +16,26 @@ eval "$(dpkg-buildflags --export=sh)"
 LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
 export LDFLAGS
 
+if [ -n "$CARGO_HOME" ]; then
+    SUDO_ENV="CARGO_HOME=$CARGO_HOME"
+    mkdir -p "$CARGO_HOME"
+    chown -R nobody "$CARGO_HOME"
+fi
+
 root=$(pwd)
 export BUILD="${root}/build"
 rm -rf "${BUILD}"
 chown -R nobody "${root}"
-sudo -u nobody meson setup "${BUILD}" \
+sudo -u nobody ${SUDO_ENV:-} \
+    meson setup "${BUILD}" \
     -Db_coverage=true \
     -Dman=false \
     -Ddocs=enabled \
     -Dlibxmlb:gtkdoc=false \
     --prefix="${root}/target"
 #build with clang
-sudo -u nobody ninja -C "${BUILD}" -v
-sudo -u nobody meson test -C "${BUILD}" --print-errorlogs --verbose
+sudo -u nobody ${SUDO_ENV:-} ninja -C "${BUILD}" -v
+sudo -u nobody ${SUDO_ENV:-} meson test -C "${BUILD}" --print-errorlogs --verbose
 
 # check meson install tags look fine
 ./contrib/ci/check-meson-install-tags.py -C "$BUILD" check
