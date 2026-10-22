@@ -415,6 +415,7 @@ fu_engine_config_reload(FuEngine *self)
 	g_auto(GStrv) report_specs = NULL;
 	g_auto(GStrv) uids = NULL;
 	g_autofree gchar *domains = NULL;
+	g_autofree gchar *esp_location = NULL;
 
 	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
 	if (fu_context_get_config_bool(self->ctx, "IgnoreEfivarsFreeSpace"))
@@ -425,6 +426,10 @@ fu_engine_config_reload(FuEngine *self)
 		fu_idle_set_timeout(self->idle,
 				    fu_context_get_config_u64(self->ctx, "IdleTimeout"));
 	}
+
+	/* allow changing the hardcoded ESP location */
+	esp_location = fu_engine_config_get_esp_location(self);
+	fu_context_set_esp_location(self->ctx, esp_location);
 
 	/* get disabled devices */
 	g_ptr_array_set_size(self->disabled_devices, 0);
