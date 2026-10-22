@@ -109,6 +109,7 @@ plugins = {
   'mtd': false,
   'nordic-hid': false,
   'novatek-ts': false,
+  'nvidia-oob': false,
   'nvme': false,
   'parade-lspcon': false,
   'parade-usbhub': false,
