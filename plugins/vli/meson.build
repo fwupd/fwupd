@@ -4,7 +4,6 @@ plugins += {
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 plugin_quirks += files(
-  'vli.quirk',
   'vli-bizlink.quirk',
   'vli-cablematters.quirk',
   'vli-dell.quirk',
@@ -14,6 +13,7 @@ plugin_quirks += files(
   'vli-lenovo.quirk',
   'vli-luxshare.quirk',
   'vli-samsung.quirk',
+  'vli.quirk',
 )
 plugin_builtin_vli = static_library(
   'fu_plugin_vli',

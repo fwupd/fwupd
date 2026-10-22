@@ -25,9 +25,9 @@ plugin_builtin_pixart_tp = static_library(
 plugin_builtins += plugin_builtin_pixart_tp
 
 device_tests += files(
-  'tests/pixart-tp.json',
-  'tests/pixart-tp-plp239.json',
   'tests/pixart-tp-pjp274.json',
+  'tests/pixart-tp-plp239.json',
+  'tests/pixart-tp.json',
 )
 
 if get_option('tests')

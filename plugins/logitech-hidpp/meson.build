@@ -37,10 +37,10 @@ device_tests += files(
   'tests/logitech-m750.json',
   'tests/logitech-mr0077.json',
   'tests/logitech-pollux.json',
-  'tests/logitech-rqr12.json',
   'tests/logitech-rqr12-signed.json',
-  'tests/logitech-rqr24.json',
+  'tests/logitech-rqr12.json',
   'tests/logitech-rqr24-signed.json',
+  'tests/logitech-rqr24.json',
 )
 
 if get_option('tests')

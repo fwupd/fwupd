@@ -38,6 +38,6 @@ device_tests += files(
   'tests/steelseries-nova3p.json',
   'tests/steelseries-nova5.json',
   'tests/steelseries-rival-3-wireless.json',
-  'tests/steelseries-stratus-duo.json',
   'tests/steelseries-stratus-duo-rx.json',
+  'tests/steelseries-stratus-duo.json',
 )

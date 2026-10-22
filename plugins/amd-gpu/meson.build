@@ -35,8 +35,8 @@ enumeration_data += files(
 device_tests += files(
   'tests/amd-apu-rembrandt.json',
   'tests/amd-apu-strix.json',
-  'tests/amd-dgpu.json',
   'tests/amd-dgpu-navi3x.json',
+  'tests/amd-dgpu.json',
 )
 
 if get_option('tests')
