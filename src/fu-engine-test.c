@@ -222,6 +222,30 @@ fu_engine_test_plugin_mutable_enumeration(void)
 }
 
 static void
+fu_engine_esp_location_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the configured ESP is used when choosing between volumes */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "fwupd", "EspLocation", "/boot");
+	g_signal_emit_by_name(fu_context_get_config(ctx), "changed");
+	g_assert_cmpstr(fu_context_get_esp_location(ctx), ==, "/boot");
+
+	/* removing the setting goes back to automatic selection */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "fwupd", "EspLocation", NULL);
+	g_signal_emit_by_name(fu_context_get_config(ctx), "changed");
+	g_assert_null(fu_context_get_esp_location(ctx));
+}
+
+static void
 fu_engine_device_parent_guid_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -3649,6 +3673,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/generate-md", fu_engine_generate_md_func);
 	g_test_add_func("/fwupd/engine/better-than", fu_engine_device_better_than_func);
 	g_test_add_func("/fwupd/engine/plugin/mutable", fu_engine_test_plugin_mutable_enumeration);
+	g_test_add_func("/fwupd/engine/esp-location", fu_engine_esp_location_func);
 	g_test_add_func("/fwupd/engine/plugin/composite", fu_engine_plugin_composite_func);
 	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
 			fu_engine_plugin_composite_multistep_func);
