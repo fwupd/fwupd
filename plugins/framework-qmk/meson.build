@@ -17,7 +17,7 @@ plugin_builtins += static_library(
   dependencies: plugin_deps,
 )
 enumeration_data += files(
-  'tests/framework16-macropad-setup.json',
   'tests/framework16-ansi-setup.json',
+  'tests/framework16-macropad-setup.json',
 )
 device_tests += files('tests/framework-qmk.json')

@@ -62,8 +62,8 @@ shared_module(
 )
 
 device_tests += files(
-  'tests/lenovo-em061kgl-mbim.json',
   'tests/foxconn-t99w373-mbim.json',
+  'tests/lenovo-em061kgl-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
   'tests/qc-rw101r-fastboot.json',
 )

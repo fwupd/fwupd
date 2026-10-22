@@ -32,9 +32,9 @@ plugin_builtins += plugin_builtin_elantp
 
 enumeration_data += files('tests/lenovo-nano-g1-setup.json')
 device_tests += files(
-  'tests/lenovo-nano-g1.json',
   'tests/elan-haptic-mcu.json',
   'tests/elan-i2c-tp.json',
+  'tests/lenovo-nano-g1.json',
 )
 
 if get_option('tests')

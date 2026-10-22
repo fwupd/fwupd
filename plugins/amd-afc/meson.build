@@ -16,11 +16,11 @@ amd_afc_sources = files(
   'fu-amd-afc-config-entry.c', # fuzzing
   'fu-amd-afc-config.c', # fuzzing
   'fu-amd-afc-form.c', # fuzzing
-  'fu-amd-afc-varstore.c', # fuzzing
   'fu-amd-afc-option.c', # fuzzing
   'fu-amd-afc-pending.c', # fuzzing
   'fu-amd-afc-setting.c', # fuzzing
   'fu-amd-afc-state.c', # fuzzing
+  'fu-amd-afc-varstore.c', # fuzzing
 )
 
 plugin_builtin_amd_afc = static_library(
