@@ -3,7 +3,10 @@ plugins += {
   meson.current_source_dir().split('/')[-1]: true,
 }
 
-plugin_quirks += files('genesys.quirk', 'genesys-usbhub-fwbank.quirk')
+plugin_quirks += files(
+  'genesys-usbhub-fwbank.quirk',
+  'genesys.quirk',
+)
 plugin_builtins += static_library(
   'fu_plugin_genesys',
   rustgen.process(

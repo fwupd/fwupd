@@ -20,8 +20,8 @@ plugin_builtins += static_library(
 )
 
 device_tests += files(
-  'tests/corsair-katar-pro-xt.json',
   'tests/corsair-katar-pro-wireless.json',
+  'tests/corsair-katar-pro-xt.json',
   'tests/corsair-sabre-pro.json',
   'tests/corsair-sabre-rgb-pro.json',
 )

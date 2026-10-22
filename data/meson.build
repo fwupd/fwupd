@@ -35,10 +35,10 @@ if build_standalone
   plugin_quirks += files(
     'bios-settings.quirk',
     'cfi.quirk',
+    'context.quirk',
     'ds20.quirk',
     'power.quirk',
     'vendors.quirk',
-    'context.quirk',
   )
 endif
 

@@ -121,6 +121,163 @@ fu_firmware_fit_func(void)
 }
 
 static void
+fu_firmware_fit_no_compatible_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_fit_firmware_new();
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a configuration does not need compatible strings */
+	fit = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">any board</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">YWJj</metadata>\n" /* abc */
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	blob = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+/* data well after the FIT, for an image which uses data-position */
+#define FU_FIRMWARE_FIT_TEST_POSITION 0x1000
+
+static void
+fu_firmware_fit_external_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_fit_firmware_new();
+	g_autoptr(FuFirmware) firmware_short = fu_fit_firmware_new();
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(FuFdtImage) img_offset = NULL;
+	g_autoptr(FuFdtImage) img_position = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_short = NULL;
+	g_autoptr(GBytes) data_offset = NULL;
+	g_autoptr(GBytes) data_position = NULL;
+	g_autoptr(GBytes) fdt = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* one image with its data at an offset from the end of the FIT, as written by
+	 * 'mkimage -E', and one with its data at an absolute position */
+	fit = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">offset</metadata>\n"
+	    "        <metadata key=\"data-offset\" format=\"uint32\">0x4</metadata>\n"
+	    "        <metadata key=\"data-size\" format=\"uint32\">0x3</metadata>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>hash-1</id>\n"
+	    "          <metadata key=\"algo\" format=\"str\">crc32</metadata>\n"
+	    "          <metadata key=\"value\" format=\"uint32\">0x352441C2</metadata>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-2</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">position</metadata>\n"
+	    "        <metadata key=\"data-position\" format=\"uint32\">0x1000</metadata>\n"
+	    "        <metadata key=\"data-size\" format=\"uint32\">0x3</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"compatible\" format=\"strlist\">alice</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	fdt = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt);
+	g_assert_cmpint(g_bytes_get_size(fdt), <, FU_FIRMWARE_FIT_TEST_POSITION);
+
+	/* the data follows the FIT, which is padded to 4 bytes */
+	fu_byte_array_append_bytes(buf, fdt);
+	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	g_byte_array_append(buf, (const guint8 *)"xxxxabc", 7);
+	fu_byte_array_set_size(buf, FU_FIRMWARE_FIT_TEST_POSITION, 0x0);
+	g_byte_array_append(buf, (const guint8 *)"def", 3);
+	blob = g_bytes_new(buf->data, buf->len);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* each image has its own data */
+	img_offset = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware),
+						       "/images/firmware-1",
+						       &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img_offset);
+	data_offset = fu_firmware_get_bytes(FU_FIRMWARE(img_offset), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_offset);
+	g_assert_cmpmem(g_bytes_get_data(data_offset, NULL),
+			g_bytes_get_size(data_offset),
+			"abc",
+			3);
+	img_position = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware),
+							 "/images/firmware-2",
+							 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img_position);
+	data_position = fu_firmware_get_bytes(FU_FIRMWARE(img_position), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_position);
+	g_assert_cmpmem(g_bytes_get_data(data_position, NULL),
+			g_bytes_get_size(data_position),
+			"def",
+			3);
+
+	/* data which runs past the end of the file is rejected */
+	blob_short = g_bytes_new(buf->data, buf->len - 1);
+	ret = fu_firmware_parse_bytes(firmware_short,
+				      blob_short,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
+static void
 fu_firmware_build_func(void)
 {
 	gboolean ret;
@@ -1248,6 +1405,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/raw-aligned", fu_firmware_raw_aligned_func);
 	g_test_add_func("/fwupd/firmware/fdt", fu_firmware_fdt_func);
 	g_test_add_func("/fwupd/firmware/fit", fu_firmware_fit_func);
+	g_test_add_func("/fwupd/firmware/fit/external", fu_firmware_fit_external_func);
+	g_test_add_func("/fwupd/firmware/fit/no-compatible", fu_firmware_fit_no_compatible_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd-manifest-overflow",
 			fu_firmware_ifwi_cpd_manifest_overflow_func);

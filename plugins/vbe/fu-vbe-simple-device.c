@@ -54,7 +54,7 @@ fu_vbe_simple_device_parse_devnum(const gchar *str, guint *value, GError **error
 	guint64 val64 = 0;
 
 	/* skip non-numeric part */
-	while (*str != '\0' && g_ascii_isdigit(*str))
+	while (*str != '\0' && !g_ascii_isdigit(*str))
 		str++;
 
 	/* convert to uint */
@@ -156,8 +156,8 @@ fu_vbe_simple_device_open(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot open %s",
 			    self->devname);
-		return FALSE;
 #endif
+		return FALSE;
 	}
 
 	/* success */
@@ -193,10 +193,17 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 					      error);
 	if (fdt_configurations == NULL)
 		return NULL;
-	img_configurations = fu_firmware_get_images(firmware);
+	img_configurations = fu_firmware_get_images(FU_FIRMWARE(fdt_configurations));
 
 	/* look for a configuration with the device compatible strings in priority order */
 	device_compatible = fu_vbe_device_get_compatible(FU_VBE_DEVICE(self));
+	if (device_compatible == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no compatible strings for the board");
+		return NULL;
+	}
 	for (guint j = 0; device_compatible[j] != NULL; j++) {
 		for (guint i = 0; i < img_configurations->len; i++) {
 			FuFdtImage *img = g_ptr_array_index(img_configurations, i);

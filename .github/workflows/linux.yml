@@ -18,6 +18,7 @@ permissions:
 
 env:
   MESON_BUILDDIR: "${{ github.workspace }}/builddir"
+  CARGO_HOME: "${{ github.workspace }}/cargo-home"
 
 jobs:
   library:

@@ -21,6 +21,6 @@ plugin_builtins += static_library(
 
 enumeration_data += files('tests/huddly-s1-basic-setup.json')
 device_tests += files(
-  'tests/huddly-s1.json',
   'tests/huddly-s1-basic.json',
+  'tests/huddly-s1.json',
 )

@@ -24,6 +24,6 @@ plugin_builtins += static_library(
 )
 
 device_tests += files(
-  'tests/nordic-hid-nrf52840-mcuboot.json',
   'tests/nordic-hid-nrf52840-b0.json',
+  'tests/nordic-hid-nrf52840-mcuboot.json',
 )
