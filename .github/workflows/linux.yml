@@ -126,6 +126,7 @@ jobs:
           fi
           docker run --privileged -t \
               -e "CI=$CI" \
+              -e "CARGO_HOME=$CARGO_HOME" \
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
