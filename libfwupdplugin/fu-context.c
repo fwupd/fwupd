@@ -2172,7 +2172,7 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 /**
  * fu_context_set_esp_location:
  * @self: A #FuContext object.
- * @location: The path to the preferred ESP.
+ * @location: (nullable): The path to the preferred ESP, or %NULL for automatic selection.
  *
  * Sets the user's desired ESP (EFI System Partition) location for the given #FuContext.
  */
@@ -2181,7 +2181,6 @@ fu_context_set_esp_location(FuContext *self, const gchar *location)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(location != NULL);
 	g_set_str(&priv->esp_location, location);
 }
 
