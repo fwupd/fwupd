@@ -236,7 +236,15 @@ fu_systemd_unit_stop_not_found_func(FuSystemdTestFixture *fix, gconstpointer use
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *argv0 = NULL;
+
 	g_test_init(&argc, &argv, NULL);
+
+	/* nocheck:blocked -- while building packages this may not be available */
+	argv0 = g_find_program_in_path("dbus-daemon");
+	if (argv0 == NULL)
+		return 0;
+
 	g_test_add("/fwupd/systemd/unit-stop/success",
 		   FuSystemdTestFixture,
 		   NULL,
