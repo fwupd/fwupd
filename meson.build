@@ -319,10 +319,13 @@ if build_standalone
   endif
   host_cpu = host_machine.cpu_family()
   hsi = get_option('hsi').require(host_machine.system() in ['linux', 'android']).require(
-    host_cpu in ['x86', 'x86_64']
+    host_cpu in ['x86', 'x86_64', 'aarch64', 'arm']
   ).allowed()
   if hsi
     conf.set('HAVE_HSI', '1')
+    if host_cpu in ['aarch64', 'arm']
+      conf.set('HSI_WITHOUT_NUMBER', '1')
+    endif
   endif
   libxmlb = dependency(
     'xmlb',

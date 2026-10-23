@@ -7328,6 +7328,13 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
 
 	fu_engine_ensure_security_attrs(self);
 
+#ifdef HSI_WITHOUT_NUMBER
+	return g_strdup_printf("HSI:INVALID:arch[arm] (v%d.%d.%d)",
+			       FWUPD_MAJOR_VERSION,
+			       FWUPD_MINOR_VERSION,
+			       FWUPD_MICRO_VERSION);
+#endif
+
 	/* if emulating, force the chassis type to be valid */
 	chassis_kind = fu_context_get_chassis_kind(self->ctx);
 	if (self->host_emulation && (chassis_kind == FU_SMBIOS_CHASSIS_KIND_OTHER ||
