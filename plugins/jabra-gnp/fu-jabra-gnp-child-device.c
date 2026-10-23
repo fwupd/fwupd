@@ -105,6 +105,8 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 		}
 		if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
 		    FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) {
+			if (rx_data->allow_battery_reports)
+				break;
 			/* battery report, ignore and rx again */
 			continue;
 		}
@@ -189,12 +191,8 @@ fu_jabra_gnp_child_device_setup(FuDevice *device, GError **error)
 				       &self->dfu_pid,
 				       error))
 		return FALSE;
-#if 0
-	/* FIXME: We cannot check the battery level for the child device since the responses
-	          have been filtered out in the fu_jabra_gnp_child_device_rx_cb function */
 	if (!fu_jabra_gnp_ensure_battery_level(device, self->address, self->sequence_number, error))
 		return FALSE;
-#endif
 	if (!fu_jabra_gnp_read_fwu_protocol(device,
 					    self->address,
 					    self->sequence_number,

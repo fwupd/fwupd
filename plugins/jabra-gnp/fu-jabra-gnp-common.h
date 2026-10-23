@@ -32,6 +32,7 @@ typedef struct {
 typedef struct {
 	guint8 rxbuf[FU_JABRA_GNP_BUF_SIZE];
 	const guint timeout;
+	gboolean allow_battery_reports;
 } FuJabraGnpRxData;
 
 typedef struct {

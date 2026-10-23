@@ -166,6 +166,8 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 		}
 		if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
 		    FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) {
+			if (rx_data->allow_battery_reports)
+				break;
 			/* battery report, ignore and rx again */
 			continue;
 		}
