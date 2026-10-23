@@ -136,7 +136,7 @@ custom_target(
   'installed-cab123',
   input: ['fakedevice123.bin', 'fakedevice123.jcat', 'fakedevice123.metainfo.xml'],
   output: 'fakedevice123.cab',
-  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
+  command: [cabtool, 'create', '@OUTPUT@', '@INPUT@'],
   install: true,
   install_dir: installed_test_datadir,
 )
@@ -144,7 +144,7 @@ custom_target(
   'installed-cab124',
   input: ['fakedevice124.bin', 'fakedevice124.jcat', 'fakedevice124.metainfo.xml'],
   output: 'fakedevice124.cab',
-  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
+  command: [cabtool, 'create', '@OUTPUT@', '@INPUT@'],
   install: true,
   install_dir: installed_test_datadir,
 )
