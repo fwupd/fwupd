@@ -162,7 +162,7 @@ fu_engine_generate_md_func(void)
 
 	/* verify checksums */
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='container']", NULL);
-	g_assert_cmpstr(tmp, ==, "71aefb2a9b412833d8c519d5816ef4c5668e5e76");
+	g_assert_cmpstr(tmp, ==, "8e290a290d22b3b5d64baf8e77e25018ba1fbdb7");
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr(tmp, ==, NULL);
 }

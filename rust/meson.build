@@ -26,8 +26,17 @@ fwupd_rust_src = [
   join_paths(meson.project_source_root(), 'Cargo.toml'),
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd/Cargo.toml',
+  'fwupd/src/argparse.rs',
   'fwupd/src/bitflags.rs',
+  'fwupd/src/cab/archive.rs',
+  'fwupd/src/cab/builder.rs',
+  'fwupd/src/cab/checksum.rs',
+  'fwupd/src/cab/mod.rs',
+  'fwupd/src/cab/msdos.rs',
+  'fwupd/src/cab/path.rs',
+  'fwupd/src/cab/wire.rs',
   'fwupd/src/compressor/mod.rs',
+  'fwupd/src/compressor/mszip.rs',
   'fwupd/src/compressor/zlib.rs',
   'fwupd/src/json/array.rs',
   'fwupd/src/json/error.rs',
@@ -50,8 +59,10 @@ fwupd_ffi_src = [
   join_paths(meson.project_source_root(), 'Cargo.toml'),
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd-ffi/Cargo.toml',
+  'fwupd-ffi/src/cab.rs',
   'fwupd-ffi/src/compressor.rs',
   'fwupd-ffi/src/cstream.rs',
+  'fwupd-ffi/src/glib/gbytes.rs',
   'fwupd-ffi/src/glib/gerror.rs',
   'fwupd-ffi/src/glib/grefstring.rs',
   'fwupd-ffi/src/glib/gstring.rs',
@@ -111,7 +122,6 @@ fwupd_rust_ffi_dep = declare_dependency(
   include_directories: [fwupd_rust_ffi_incdir],
   dependencies: [zlib] + rust_ffi_extra_deps,
 )
-
 if build_docs
   custom_target(
     'rust-doc',
@@ -122,6 +132,28 @@ if build_docs
     install: false,
     build_by_default: true,
     depend_files: [fwupd_rust_src, fwupd_ffi_src],
+  )
+endif
+
+
+if get_option('cabtool') and not meson.is_cross_build()
+  cabtool_src = [
+    join_paths(meson.project_source_root(), 'Cargo.toml'),
+    join_paths(meson.project_source_root(), 'Cargo.lock'),
+    'cabtool/Cargo.toml',
+    'cabtool/src/main.rs',
+  ]
+
+  cabtool = custom_target(
+    'cabtool',
+    output: 'cabtool',
+    command: [cargo_wrapper, '--quiet', '-p', 'cabtool', 'build', '--output', '@OUTPUT@'],
+    env: cargo_env,
+    console: true,
+    install: false,
+    build_by_default: true,
+    depend_files: cabtool_src,
+    depends: [fwupd_rust_lib],
   )
 endif
 

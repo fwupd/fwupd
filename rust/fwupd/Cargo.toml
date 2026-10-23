@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+zerocopy = { version = "0.8.63", features = ["derive"] }
 
 [lints]
 workspace = true

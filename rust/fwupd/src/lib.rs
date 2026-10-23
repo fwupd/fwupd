@@ -6,7 +6,9 @@
 
 //! Core components of fwupd
 
+pub mod argparse;
 mod bitflags;
+pub mod cab;
 pub mod compressor;
 pub mod json;
 pub mod streams;
