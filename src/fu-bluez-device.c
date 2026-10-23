@@ -439,10 +439,10 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 				    "No required BLE address");
 		return FALSE;
 	}
-	fu_device_set_logical_id(parent, fwupd_variant_get_string(val_address));
+	fu_device_set_logical_id(FU_DEVICE(self), fwupd_variant_get_string(val_address));
 	val_adapter = g_dbus_proxy_get_cached_property(self->proxy, "Adapter");
 	if (val_adapter != NULL)
-		fu_device_set_physical_id(parent, fwupd_variant_get_string(val_adapter));
+		fu_device_set_physical_id(FU_DEVICE(self), fwupd_variant_get_string(val_adapter));
 	val_name = g_dbus_proxy_get_cached_property(self->proxy, "Name");
 	if (val_name != NULL) {
 		fu_device_set_name(parent, fwupd_variant_get_string(val_name));

@@ -35,6 +35,22 @@ fu_block_device_probe(FuDevice *device, GError **error)
 {
 	g_autoptr(FuDevice) usb_device = NULL;
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_u16(device, "VEN", 0x1234);
+		fu_device_add_instance_u16(device, "DEV", 0x5678);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "BLOCK",
+						 "VEN",
+						 NULL);
+		fu_device_build_instance_id(device, NULL, "BLOCK", "VEN", "DEV", NULL);
+		if (fu_device_get_physical_id(device) == NULL)
+			fu_device_set_physical_id(device, "DEVPATH=/sys");
+		return TRUE;
+	}
+
 	/* block devices are weird in that the vendor and model are generic */
 	usb_device = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
 	if (usb_device != NULL) {
@@ -151,6 +167,11 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 			      FU_IOCTL_FLAG_RETRY,
 			      error))
 		return FALSE;
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	if (io_hdr.status) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -229,6 +250,11 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 			      FU_IOCTL_FLAG_RETRY,
 			      error))
 		return FALSE;
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	if (io_hdr.status) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -310,6 +336,11 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 			      FU_IOCTL_FLAG_RETRY,
 			      error))
 		return FALSE;
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	if (io_hdr.status) {
 		g_set_error(error,
 			    FWUPD_ERROR,

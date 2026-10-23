@@ -140,7 +140,6 @@ fwupdplugin_src = [
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
-  'fu-file-input-stream.c', # fuzzing
   'fu-firmware.c', # fuzzing
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
@@ -168,7 +167,6 @@ fwupdplugin_src = [
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-ihex-firmware.c', # fuzzing
   'fu-input-stream.c', # fuzzing
-  'fu-memory-input-stream.c', # fuzzing
   'fu-intel-me-device.c', # fuzzing
   'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-intel-thunderbolt-nvm.c', # fuzzing
@@ -207,7 +205,6 @@ fwupdplugin_src = [
   'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
-  'fu-stream-input-stream.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-temporary-directory.c', # fuzzing
@@ -317,7 +314,6 @@ fwupdplugin_headers = [
   'fu-endian.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
-  'fu-file-input-stream.h',
   'fu-firmware-common.h',
   'fu-firmware.h',
   'fu-fit-firmware.h',
@@ -337,7 +333,6 @@ fwupdplugin_headers = [
   'fu-ifwi-fpt-firmware.h',
   'fu-ihex-firmware.h',
   'fu-input-stream.h',
-  'fu-memory-input-stream.h',
   'fu-intel-me-device.h',
   'fu-intel-thunderbolt-firmware.h',
   'fu-intel-thunderbolt-nvm.h',
@@ -376,7 +371,6 @@ fwupdplugin_headers = [
   'fu-smbios.h',
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
-  'fu-stream-input-stream.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',
@@ -562,7 +556,6 @@ if get_option('tests')
     'security-attrs',
     'smbios',
     'srec-firmware',
-    'stream-input-stream',
     'string',
     'struct',
     'sum',

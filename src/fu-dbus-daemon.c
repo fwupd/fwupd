@@ -28,10 +28,6 @@
 #include "fu-release.h"
 #include "fu-security-attrs-private.h"
 
-#ifdef HAVE_GIO_UNIX
-#include "fu-unix-seekable-input-stream.h"
-#endif
-
 struct _FuDbusDaemon {
 	FuDaemon parent_instance;
 	GDBusConnection *connection;
@@ -827,8 +823,8 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
 	g_autofd gint fd = -1;
-	g_autoptr(FuInputStream) stream = NULL;
-	g_autoptr(FuInputStream) stream_safe = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdInputStream) stream_safe = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the fd */
@@ -854,19 +850,22 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, error);
 	if (stream == NULL)
 		return NULL;
-	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							&error_local)) {
+	if (!fwupd_unix_input_stream_require_seal(stream, &error_local)) {
 		g_autoptr(GBytes) blob = NULL;
 		g_debug("fd not sealed, falling back to copy: %s", error_local->message);
-		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(stream),
+						  0,
+						  G_MAXSIZE,
+						  NULL,
+						  error);
 		if (blob == NULL)
 			return NULL;
-		stream_safe = fu_memory_input_stream_new_from_bytes(blob);
+		stream_safe = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	} else {
-		stream_safe = g_object_ref(stream);
+		stream_safe = g_object_ref(FWUPD_INPUT_STREAM(stream));
 	}
 
 	/* success */
@@ -1110,7 +1109,10 @@ fu_dbus_daemon_authorize_quit_cb(GObject *source, GAsyncResult *res, gpointer us
 	}
 
 	/* success */
-	fu_daemon_schedule_process_quit(FU_DAEMON(helper->self));
+	if (!fu_daemon_schedule_process_quit(FU_DAEMON(helper->self), &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -1124,7 +1126,11 @@ fu_dbus_daemon_method_quit(FuDbusDaemon *self,
 
 	/* is root */
 	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
-		fu_daemon_schedule_process_quit(FU_DAEMON(self));
+		g_autoptr(GError) error = NULL;
+		if (!fu_daemon_schedule_process_quit(FU_DAEMON(self), &error)) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
@@ -1691,6 +1697,8 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	GUnixFDList *fd_list;
 	g_autofd gint fd_data = -1;
 	g_autofd gint fd_sig = -1;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream_sig = NULL;
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
@@ -1729,11 +1737,23 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 		return;
 	}
 
+	/* ensures the fd's are closed on error */
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd_data), TRUE, &error);
+	if (stream == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	stream_sig = fwupd_unix_input_stream_new(g_steal_fd(&fd_sig), TRUE, &error);
+	if (stream_sig == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
 	/* store new metadata (will close the fds when done) */
 	if (!fu_engine_update_metadata(engine,
 				       helper->remote_id,
-				       g_steal_fd(&fd_data),
-				       g_steal_fd(&fd_sig),
+				       FWUPD_INPUT_STREAM(stream),
+				       FWUPD_INPUT_STREAM(stream_sig),
 				       &error)) {
 		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
 		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);

@@ -143,9 +143,9 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/fwupd/hidraw-device{probe-hid-phys}",
+	g_test_add_func("/fwupd/hidraw-device/probe-hid-phys",
 			fu_hidraw_device_probe_hid_phys_func);
-	g_test_add_func("/fwupd/hidraw-device{probe-hid-phys-empty}",
+	g_test_add_func("/fwupd/hidraw-device/probe-hid-phys-empty",
 			fu_hidraw_device_probe_hid_phys_empty_func);
 	return g_test_run();
 }

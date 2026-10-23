@@ -23,9 +23,12 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
+	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress1 = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress2 = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress3 = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error = NULL;
@@ -33,7 +36,8 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autoptr(GHashTable) metadata_pre = NULL;
 	g_autoptr(GBytes) data = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GBytes) data_dump = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(data);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(data));
 
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", ctx, "physical-id", "/sys", NULL);
@@ -49,7 +53,7 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 		fu_device_set_version_raw(device, 0);
 
 	/* progress steps */
-	fu_device_set_progress(device, progress_tmp);
+	fu_device_set_progress(device, progress1);
 
 	/* report metadata */
 	metadata_pre = fu_device_report_metadata_pre(device);
@@ -93,44 +97,42 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 		g_debug("did ->probe() and ->setup()!");
 
 	/* ->prepare(), ->attach(), ->detach, ->cleanup */
-	if (fu_device_prepare(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+	if (fu_device_prepare(device, progress1, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->prepare()");
-	if (fu_device_attach_full(device, progress_tmp, NULL))
+	if (fu_device_attach_full(device, progress1, NULL))
 		g_debug("did ->attach()");
 	if (fu_device_poll(device, NULL))
 		g_debug("did ->poll()");
-	if (fu_device_detach_full(device, progress_tmp, NULL))
+	if (fu_device_detach_full(device, progress1, NULL))
 		g_debug("did ->detach()");
-	if (fu_device_cleanup(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+	if (fu_device_cleanup(device, progress1, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->cleanup()");
 
 	/* ->prepare_firmware() */
 	firmware = fu_device_prepare_firmware(device,
 					      stream,
-					      progress_tmp,
-					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      progress1,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+						  FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					      NULL);
 	if (firmware == NULL) {
 		GType firmware_gtype = fu_device_get_firmware_gtype(device);
-		if (firmware_gtype != G_TYPE_INVALID)
+		if (firmware_gtype != G_TYPE_INVALID) {
 			firmware = g_object_new(firmware_gtype, NULL);
+			fu_firmware_set_stream(firmware, stream, NULL);
+		}
 	}
 	if (firmware == NULL)
 		firmware = fu_firmware_new_from_bytes(data);
 
 	/* ->write_firmware() */
-	if (fu_device_write_firmware(device,
-				     firmware,
-				     progress_tmp,
-				     FWUPD_INSTALL_FLAG_FORCE,
-				     NULL)) {
+	if (fu_device_write_firmware(device, firmware, progress3, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->write_firmware()!");
-	}
 
 	/* ->dump_firmware() */
 	if (fu_device_get_firmware_size_max(device) == 0)
 		fu_device_set_firmware_size_max(device, 1);
-	data_dump = fu_device_dump_firmware(device, progress_tmp, NULL);
+	data_dump = fu_device_dump_firmware(device, progress2, NULL);
 	if (data_dump != NULL)
 		g_debug("did ->dump_firmware()");
 
@@ -139,8 +141,9 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	fu_device_incorporate(device2, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 
 	/* roundtrip to JSON */
+	device3 = g_object_new(gtype, "context", ctx, NULL);
 	fu_device_add_json(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-	if (fu_device_from_json(device2, json_obj, NULL))
+	if (fu_device_from_json(device3, json_obj, NULL))
 		g_debug("did ->from_json()");
 }
 

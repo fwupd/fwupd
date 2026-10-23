@@ -72,7 +72,7 @@ fu_acpi_table_payload_func(void)
 	g_clear_error(&error);
 
 	/* set then get */
-	payload = fu_memory_input_stream_new_from_bytes(blob);
+	payload = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	fu_acpi_table_set_payload(table, payload);
 	payload_out = fu_acpi_table_get_payload(table, &error);
 	g_assert_no_error(error);
@@ -100,7 +100,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/acpi-table/setters", fu_acpi_table_setters_func);
-	g_test_add_func("/fwupd/acpi-table/setters{overwrite}",
+	g_test_add_func("/fwupd/acpi-table/setters/overwrite",
 			fu_acpi_table_setters_overwrite_func);
 	g_test_add_func("/fwupd/acpi-table/payload", fu_acpi_table_payload_func);
 	return g_test_run();

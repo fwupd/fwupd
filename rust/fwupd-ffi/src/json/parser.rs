@@ -229,7 +229,7 @@ pub unsafe extern "C" fn fwupd_rs_json_parser_load_from_stream(
 /// # Safety
 /// - `ptr` must be a valid `FwupdRsJsonParser` pointer.
 /// - `stream_impl` must be a valid `StreamImpl` pointer previously returned
-///   by an `_get_stream_impl` function.
+///   by an `_get_impl` function.
 #[no_mangle]
 pub unsafe extern "C" fn fwupd_rs_json_parser_load_from_stream_impl(
     ptr: *const FwupdRsJsonParser,

@@ -27,6 +27,7 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 	g_autofree gchar *compatible = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* we expect 'fwupd,vbe-<driver>' */
 	if (!fu_fdt_image_get_attr_str(fdt_node,
@@ -83,6 +84,11 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 			   "fdt-node",
 			   fdt_node,
 			   NULL);
+
+	/* the device only knows its IDs, and can finish an update, once set up */
+	locker = fu_device_locker_new(dev, error);
+	if (locker == NULL)
+		return FALSE;
 	fu_plugin_add_device(plugin, dev);
 	return TRUE;
 }

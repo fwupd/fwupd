@@ -1704,7 +1704,7 @@ fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface)
  *
  * Copy all properties from the donor object if they have not already been set.
  *
- * Since: 2.1.8
+ * Since: 2.2.1
  **/
 void
 fwupd_security_attr_incorporate(FwupdSecurityAttr *self, FwupdSecurityAttr *donor)

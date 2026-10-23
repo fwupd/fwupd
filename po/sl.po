@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-10-05 08:51+0000\n"
+"PO-Revision-Date: 2026-10-10 05:25+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
 "Language: sl\n"
@@ -2445,11 +2445,11 @@ msgstr "Ta paket ni bil preverjen, morda ne bo deloval pravilno."
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were previously not updated correctly:"
-msgstr ""
+msgstr "Naprave, ki poprej niso bile pravilno posodobljene:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have previously been updated successfully:"
-msgstr ""
+msgstr "Naprave, ki poprej niso bile uspešno posodobljene:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

@@ -58,6 +58,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/telink-dfu/common{version}", fu_telink_dfu_common_version_func);
+	g_test_add_func("/telink-dfu/common/version", fu_telink_dfu_common_version_func);
 	return g_test_run();
 }

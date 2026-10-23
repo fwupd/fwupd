@@ -64,7 +64,6 @@ if libcrypto.found()
 endif
 
 if giounix.found()
-  fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
   fwupd_engine_src += 'fu-engine-installer.c'
 endif
 if host_machine.system() in ['linux', 'android']
@@ -119,7 +118,7 @@ fwupdcli = library(
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
-  dependencies: [client_dep],
+  dependencies: [client_dep, giounix],
   link_with: [fwupd, fwupdplugin],
 )
 
@@ -391,6 +390,12 @@ if build_daemon == 'binder'
     native: false,
   )
 
+  if get_option('binder_vintf_stability')
+    binder_stability_args = ['-DBINDER_STABILITY_SUPPORT']
+  else
+    binder_stability_args = []
+  endif
+
   aidl_prog = find_program(
     'aidl',
     required: true,
@@ -489,8 +494,8 @@ if build_daemon == 'binder'
     install: true,
     install_rpath: libdir_pkg,
     install_dir: daemon_dir,
-    c_args: ['-DBINDER_STABILITY_SUPPORT'],
-    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    c_args: binder_stability_args,
+    cpp_args: binder_stability_args,
     # needed for AIBinder_markVintfStability
     link_args: ['-Wl,--unresolved-symbols=ignore-in-object-files'],
   )
@@ -520,8 +525,8 @@ if build_daemon == 'binder'
       fwupdplugin,
       fwupdcli,
     ],
-    c_args: ['-DBINDER_STABILITY_SUPPORT'],
-    cpp_args: ['-DBINDER_STABILITY_SUPPORT'],
+    c_args: binder_stability_args,
+    cpp_args: binder_stability_args,
     link_language: 'cpp',
     install: true,
     install_rpath: libdir_pkg,
@@ -596,9 +601,6 @@ if get_option('tests')
   endif
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
-  endif
-  if giounix.found()
-    test_names += 'unix-seekable-input-stream'
   endif
   foreach test_name : test_names
     e = executable(

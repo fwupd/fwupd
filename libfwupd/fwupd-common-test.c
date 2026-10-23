@@ -83,26 +83,26 @@ static void
 fwupd_common_unix_stream_func(void)
 {
 	gboolean ret;
+	gsize bytes_read = 0;
+	gchar buf[5] = {0};
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *tmpdir = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("hello", 5);
-	g_autoptr(GBytes) blob2 = NULL;
-	g_autoptr(GBytes) blob3 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) istream = NULL;
-	g_autoptr(GInputStream) istream2 = NULL;
-	g_autoptr(GInputStream) istream_fail = NULL;
+	g_autoptr(FwupdInputStream) istream = NULL;
+	g_autoptr(FwupdInputStream) istream2 = NULL;
+	g_autoptr(FwupdInputStream) istream_fail = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* in-memory stream from a blob */
-	istream = G_INPUT_STREAM(fwupd_unix_input_stream_from_bytes(blob, &error));
+	istream = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_from_bytes(blob, &error));
 	g_assert_no_error(error);
 	g_assert_nonnull(istream);
-	blob2 = g_input_stream_read_bytes(istream, 5, NULL, &error);
+	ret = fwupd_input_stream_read_all(istream, buf, sizeof(buf), &bytes_read, NULL, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob2);
-	g_assert_cmpint(g_bytes_get_size(blob2), ==, 5);
-	g_assert_cmpint(memcmp(g_bytes_get_data(blob2, NULL), "hello", 5), ==, 0);
+	g_assert_true(ret);
+	g_assert_cmpint(bytes_read, ==, 5);
+	g_assert_cmpint(memcmp(buf, "hello", 5), ==, 0);
 
 	/* write to a file, then read it back */
 	tmpdir = g_dir_make_tmp("fwupd-common-self-test-XXXXXX", &error);
@@ -119,17 +119,19 @@ fwupd_common_unix_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	istream2 = G_INPUT_STREAM(fwupd_unix_input_stream_from_fn(fn, &error));
+	istream2 = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new_from_filename(fn, &error));
 	g_assert_no_error(error);
 	g_assert_nonnull(istream2);
-	blob3 = g_input_stream_read_bytes(istream2, 5, NULL, &error);
+	memset(buf, 0, sizeof(buf));
+	ret = fwupd_input_stream_read_all(istream2, buf, sizeof(buf), &bytes_read, NULL, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob3);
-	g_assert_cmpint(g_bytes_get_size(blob3), ==, 5);
+	g_assert_true(ret);
+	g_assert_cmpint(bytes_read, ==, 5);
+	g_assert_cmpint(memcmp(buf, "hello", 5), ==, 0);
 
 	/* a missing file is an error */
-	istream_fail =
-	    G_INPUT_STREAM(fwupd_unix_input_stream_from_fn("/this/does/not/exist.bin", &error));
+	istream_fail = FWUPD_INPUT_STREAM(
+	    fwupd_unix_input_stream_new_from_filename("/this/does/not/exist.bin", &error));
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(istream_fail);
 

@@ -23,7 +23,6 @@
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
 #include "fu-kernel-search-path-private.h"
-#include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
 #include "fu-progress-private.h"
 #include "fu-quirks.h"
@@ -846,7 +845,7 @@ fu_device_set_contents(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -942,7 +941,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdMemoryInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -950,8 +949,8 @@ fu_device_set_contents_bytes(FuDevice *self,
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = fu_memory_input_stream_new_from_bytes(blob);
-	return fu_device_set_contents(self, filename, stream, progress, error);
+	stream = fwupd_memory_input_stream_new_from_bytes(blob);
+	return fu_device_set_contents(self, filename, FWUPD_INPUT_STREAM(stream), progress, error);
 }
 
 /**
@@ -978,7 +977,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(FwupdFileInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1005,10 +1004,10 @@ fu_device_get_contents_bytes(FuDevice *self,
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* open for reading */
-	istr = fu_input_stream_from_path(filename, error);
+	istr = fwupd_file_input_stream_new(filename, error);
 	if (istr == NULL)
 		return NULL;
-	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
+	blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(istr), 0, count, progress, error);
 	if (blob == NULL)
 		return NULL;
 
@@ -1044,7 +1043,7 @@ fu_device_get_contents(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(FwupdFileInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1071,10 +1070,10 @@ fu_device_get_contents(FuDevice *self,
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* open for reading */
-	istr = fu_input_stream_from_path(filename, error);
+	istr = fwupd_file_input_stream_new(filename, error);
 	if (istr == NULL)
 		return NULL;
-	str = fu_input_stream_read_string(istr, 0, count, error);
+	str = fu_input_stream_read_string(FWUPD_INPUT_STREAM(istr), 0, count, error);
 	if (str == NULL)
 		return NULL;
 
@@ -1676,7 +1675,10 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 
 	/* copy from proxy */
 	if (proxy != NULL) {
-		fu_device_incorporate(self, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+		fu_device_incorporate(self,
+				      proxy,
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID |
+					  FU_DEVICE_INCORPORATE_FLAG_LOGICAL_ID);
 		priv->notify_flags_proxy_id =
 		    g_signal_connect(FWUPD_DEVICE(proxy),
 				     "notify::flags",
@@ -4199,10 +4201,11 @@ fu_device_set_logical_id(FuDevice *self, const gchar *logical_id)
 	/* not allowed after ->probe() and ->setup() have completed */
 	if (priv->done_setup) {
 		g_warning("cannot change %s logical ID from %s to %s as "
-			  "FuDevice->setup() has already completed",
+			  "%s->setup() has already completed",
 			  fu_device_get_id(self),
 			  priv->logical_id,
-			  logical_id);
+			  logical_id,
+			  G_OBJECT_TYPE_NAME(self));
 		return;
 	}
 
@@ -4706,10 +4709,11 @@ fu_device_set_physical_id(FuDevice *self, const gchar *physical_id)
 	/* not allowed after ->probe() and ->setup() have completed */
 	if (priv->done_setup) {
 		g_warning("cannot change %s physical ID from %s to %s as "
-			  "FuDevice->setup() has already completed",
+			  "%s->setup() has already completed",
 			  fu_device_get_id(self),
 			  priv->physical_id,
-			  physical_id);
+			  physical_id,
+			  G_OBJECT_TYPE_NAME(self));
 		return;
 	}
 
@@ -5767,7 +5771,7 @@ fu_device_prepare_firmware(FuDevice *self,
 	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -6449,10 +6453,6 @@ fu_device_convert_instance_ids(FuDevice *self)
 	gboolean no_generic_guids;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* already set */
-	if (fu_device_get_guids(self)->len > 0)
-		return;
 
 	/* convert the FuDevice IDs to FwupdDevice IDs */
 	no_generic_guids = fu_device_has_private_flag_quark(self, quarks[QUARK_NO_GENERIC_GUIDS]);

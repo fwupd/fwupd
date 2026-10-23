@@ -50,6 +50,8 @@ fu_binder_cli_bridge_update_metadata(AIBinder *binder,
 gboolean
 fu_binder_cli_bridge_activate(AIBinder *binder, const char *device_id, GError **error);
 gboolean
+fu_binder_cli_bridge_quit(AIBinder *binder, GError **error);
+gboolean
 fu_binder_cli_bridge_unlock(AIBinder *binder, const char *device_id, GError **error);
 gboolean
 fu_binder_cli_bridge_verify(AIBinder *binder, const char *device_id, GError **error);
@@ -91,5 +93,10 @@ GPtrArray *
 fu_binder_cli_bridge_get_host_security_attrs(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_host_security_events(AIBinder *binder, guint limit, GError **error);
+gchar *
+fu_binder_cli_bridge_self_sign(AIBinder *binder,
+			       const char *value,
+			       FwupdSelfSignFlags flags,
+			       GError **error);
 
 G_END_DECLS

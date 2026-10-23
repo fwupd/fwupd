@@ -36,6 +36,6 @@ fu_rs_borrowed_memory_input_stream_tell(FuRsBorrowedMemoryInputStream *stream);
 gsize
 fu_rs_borrowed_memory_input_stream_size(const FuRsBorrowedMemoryInputStream *stream);
 FuRsStreamImpl *
-fu_rs_borrowed_memory_input_stream_get_stream_impl(const FuRsBorrowedMemoryInputStream *stream);
+fu_rs_borrowed_memory_input_stream_get_impl(const FuRsBorrowedMemoryInputStream *stream);
 
 G_END_DECLS

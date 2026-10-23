@@ -23,7 +23,10 @@ fu_engine_integrity_to_string(GHashTable *self);
 GError *
 fu_engine_error_array_get_best(GPtrArray *errors);
 gchar *
-fu_engine_build_machine_id(const gchar *salt, GError **error);
+fu_engine_build_machine_id(FuPathStore *pstore,
+			   const gchar *salt,
+			   gboolean host_fallback,
+			   GError **error);
 
 void
 fu_engine_add_firmware_gtypes(FuEngine *self) G_GNUC_NON_NULL(1);

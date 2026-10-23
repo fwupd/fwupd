@@ -9,12 +9,12 @@
 #include "config.h"
 
 #include "fwupd-codec.h"
+#include "fwupd-memory-input-stream.h"
 #include "fwupd-rust-composite-input-stream.h"
 
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-input-stream.h"
-#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**
@@ -46,7 +46,7 @@ fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuCompositeInputStream,
 			fu_composite_input_stream,
-			FU_TYPE_INPUT_STREAM,
+			FWUPD_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
 					      fu_composite_input_stream_codec_iface_init))
 
@@ -89,15 +89,18 @@ fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface)
 gboolean
 fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
 {
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdMemoryInputStream) stream = NULL;
 	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = fu_memory_input_stream_new_from_bytes(bytes);
-	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), error);
+	stream = fwupd_memory_input_stream_new_from_bytes(bytes);
+	partial_stream = fu_partial_input_stream_new(FWUPD_INPUT_STREAM(stream),
+						     0x0,
+						     g_bytes_get_size(bytes),
+						     error);
 	if (partial_stream == NULL)
 		return FALSE;
 	return fu_composite_input_stream_add_partial_stream(self,
@@ -127,13 +130,13 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(partial_stream), FALSE);
-	g_return_val_if_fail(FU_INPUT_STREAM(self) != FU_INPUT_STREAM(partial_stream), FALSE);
+	g_return_val_if_fail(FWUPD_INPUT_STREAM(self) != FWUPD_INPUT_STREAM(partial_stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	psize = fu_partial_input_stream_get_size(partial_stream);
 
 	/* tell the Rust side about this sub-stream */
-	impl = fu_input_stream_get_stream_impl(FU_INPUT_STREAM(partial_stream));
+	impl = fwupd_input_stream_get_impl(FWUPD_INPUT_STREAM(partial_stream));
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -169,8 +172,8 @@ fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
-	g_return_val_if_fail(FU_INPUT_STREAM(self) != stream, FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_INPUT_STREAM(self) != stream, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* create a partial stream that is actually the size of the entire FuInputStream */
@@ -246,7 +249,7 @@ fu_composite_input_stream_seek(FuInputStream *stream,
 FuInputStream *
 fu_composite_input_stream_new(void)
 {
-	return FU_INPUT_STREAM(g_object_new(FU_TYPE_COMPOSITE_INPUT_STREAM, NULL));
+	return FWUPD_INPUT_STREAM(g_object_new(FU_TYPE_COMPOSITE_INPUT_STREAM, NULL));
 }
 
 static gssize
@@ -294,23 +297,23 @@ fu_composite_input_stream_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_composite_input_stream_parent_class)->finalize(object);
 }
 
-static FuRsStreamImpl *
-fu_composite_input_stream_get_stream_impl(FuInputStream *stream)
+static FwupdInputStreamImpl
+fu_composite_input_stream_get_impl(FuInputStream *stream)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
-	return fu_rs_composite_input_stream_get_stream_impl(self->rust);
+	return fu_rs_composite_input_stream_get_impl(self->rust);
 }
 
 static void
 fu_composite_input_stream_class_init(FuCompositeInputStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
+	FwupdInputStreamClass *istream_class = FWUPD_INPUT_STREAM_CLASS(klass);
 	istream_class->read_fn = fu_composite_input_stream_read_fn;
 	istream_class->tell = fu_composite_input_stream_tell;
 	istream_class->can_seek = fu_composite_input_stream_can_seek;
 	istream_class->seek = fu_composite_input_stream_seek;
-	istream_class->get_stream_impl = fu_composite_input_stream_get_stream_impl;
+	istream_class->get_impl = fu_composite_input_stream_get_impl;
 	object_class->finalize = fu_composite_input_stream_finalize;
 }
 

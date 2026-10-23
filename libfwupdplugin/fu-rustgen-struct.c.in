@@ -522,7 +522,7 @@ void
 {{obj.c_method('ValidateStream')}}(FuInputStream *stream, gsize offset, GError **error)
 {
     g_autoptr({{obj.name}}) st = {{obj.c_method('NewInternal')}}();
-    g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+    g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     st->buf = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);
     if (st->buf == NULL) {

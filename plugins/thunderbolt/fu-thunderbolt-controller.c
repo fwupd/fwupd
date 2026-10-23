@@ -147,7 +147,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 					    error);
 	if (blob == NULL)
 		return FALSE;
-	istr = fu_memory_input_stream_new_from_bytes(blob);
+	istr = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	firmware = fu_firmware_new_from_gtypes(istr,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,

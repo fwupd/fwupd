@@ -222,7 +222,7 @@ fu_acpi_table_set_payload(FuAcpiTable *self, FuInputStream *payload)
 {
 	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_ACPI_TABLE(self));
-	g_return_if_fail(payload == NULL || FU_IS_INPUT_STREAM(payload));
+	g_return_if_fail(payload == NULL || FWUPD_IS_INPUT_STREAM(payload));
 	g_set_object(&priv->payload, payload);
 }
 

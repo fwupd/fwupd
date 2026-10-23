@@ -62,7 +62,8 @@ fu_partial_input_stream_simple_func(void)
 	guint8 buf[2] = {0x0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base_stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuInputStream) stream2 = NULL;
 
@@ -100,16 +101,17 @@ fu_partial_input_stream_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	/*                                             \--/   */
 	g_autoptr(GBytes) blob2 = NULL;
-	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base_stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	g_autoptr(FuInputStream) stream_complete = NULL;
 	g_autoptr(FuInputStream) stream_error = NULL;
-	g_autoptr(FuInputStream) stream_file = NULL;
+	g_autoptr(FwupdFileInputStream) stream_file = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
 
-	/* check the behavior of FuFileInputStream */
+	/* check the behavior of FwupdFileInputStream */
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
 	g_assert_nonnull(fn);
-	stream_file = fu_input_stream_from_path(fn, &error);
+	stream_file = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream_file);
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), 0x0, G_SEEK_SET, NULL, &error);
@@ -120,7 +122,7 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
-	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
+	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	pos = g_seekable_tell(G_SEEKABLE(stream_file));
@@ -128,7 +130,7 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
+	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
@@ -138,19 +140,19 @@ fu_partial_input_stream_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 10216);
 	/* reads all return zero */
-	rc = fu_input_stream_read(stream_file, buf, 2, NULL, &error);
+	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	/* END offset is negative */
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), -0x1, G_SEEK_END, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = fu_input_stream_read(stream_file, buf, 1, NULL, &error);
+	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 10);
 
-	/* check the behavior of FuMemoryInputStream */
+	/* check the behavior of FwupdMemoryInputStream */
 	g_assert_no_error(error);
 	g_assert_nonnull(stream_file);
 	ret = g_seekable_seek(G_SEEKABLE(base_stream), 0x0, G_SEEK_SET, NULL, &error);
@@ -287,7 +289,8 @@ fu_partial_input_stream_shared_base_func(void)
 	/* create base stream and two partials, then drop the base */
 	{
 		g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
-		g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+		g_autoptr(FuInputStream) base =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 
 		partial1 = fu_partial_input_stream_new(base, 0, 4, &error);
 		g_assert_no_error(error);
@@ -334,7 +337,8 @@ fu_partial_input_stream_nested_func(void)
 	g_autoptr(FuInputStream) outer = NULL;
 
 	{
-		g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+		g_autoptr(FuInputStream) base =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 
 		/* create partial-of-partial, then drop the base and middle one */
 		{
@@ -375,8 +379,10 @@ fu_partial_input_stream_composite_lifetime_func(void)
 	{
 		g_autoptr(GBytes) blob1 = g_bytes_new_static("AAABBB", 6);
 		g_autoptr(GBytes) blob2 = g_bytes_new_static("CCCDDD", 6);
-		g_autoptr(FuInputStream) base1 = fu_memory_input_stream_new_from_bytes(blob1);
-		g_autoptr(FuInputStream) base2 = fu_memory_input_stream_new_from_bytes(blob2);
+		g_autoptr(FuInputStream) base1 =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob1));
+		g_autoptr(FuInputStream) base2 =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob2));
 		g_autoptr(FuInputStream) p1 = NULL;
 		g_autoptr(FuInputStream) p2 = NULL;
 
@@ -434,7 +440,8 @@ fu_partial_input_stream_same_base_composite_func(void)
 	guint8 buf[2] = {0};
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("0123456789", 10);
-	g_autoptr(FuInputStream) base = fu_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	g_autoptr(FuInputStream) composite = fu_composite_input_stream_new();
 	g_autoptr(FuInputStream) p1 = NULL;
 	g_autoptr(FuInputStream) p2 = NULL;

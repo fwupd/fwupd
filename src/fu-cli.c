@@ -1579,7 +1579,15 @@ fu_cli_device_test_step(FuCli *self,
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	const gchar *url_tmp;
+	gboolean broken = FALSE;
 	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
+	/* known broken */
+	if (!fwupd_json_object_get_boolean_with_default(json_obj, "broken", &broken, FALSE, error))
+		return FALSE;
+	fwupd_json_object_add_boolean(json_object_result, "broken", broken);
+	if (broken)
+		return TRUE;
 
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
@@ -1618,16 +1626,8 @@ fu_cli_device_test_step(FuCli *self,
 		if (!fwupd_client_emulation_load(priv->client,
 						 emulation_filename,
 						 priv->cancellable,
-						 &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug("ignoring: %s", error_local->message);
-				helper->nr_skipped++;
-				return TRUE;
-			}
-			g_propagate_prefixed_error(error,
-						   g_steal_pointer(&error_local),
-						   "failed to load %s: ",
-						   emulation_filename);
+						 error)) {
+			g_prefix_error(error, "failed to load %s: ", emulation_filename);
 			return FALSE;
 		}
 	}

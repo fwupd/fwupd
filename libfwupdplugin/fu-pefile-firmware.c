@@ -15,6 +15,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
+#include "fu-json-firmware.h"
 #include "fu-linear-firmware.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pefile-firmware.h"
@@ -176,6 +177,8 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 		fu_csv_firmware_set_write_column_ids(FU_CSV_FIRMWARE(img), FALSE);
 	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
 		img = fu_sbatlevel_section_new();
+	} else if (g_strcmp0(sect_id, ".pkgnote") == 0) {
+		img = fu_json_firmware_new();
 	} else {
 		img = fu_firmware_new();
 	}
@@ -466,17 +469,17 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 }
 
 typedef struct {
-	GBytes *blob;
+	GByteArray *buf;
 	gchar *id;
 	gsize offset;
-	gsize blobsz_aligned;
+	gsize bufsz_aligned;
 } FuPefileSection;
 
 static void
 fu_pefile_firmware_section_free(FuPefileSection *section)
 {
-	if (section->blob != NULL)
-		g_bytes_unref(section->blob);
+	if (section->buf != NULL)
+		g_byte_array_unref(section->buf);
 	g_free(section->id);
 	g_free(section);
 }
@@ -510,16 +513,19 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 
 		section->offset = offset;
-		section->blob = fu_firmware_write(img, error);
-		if (section->blob == NULL)
+		section->buf = fu_firmware_write_array(img, error);
+		if (section->buf == NULL)
 			return NULL;
-		if (g_bytes_get_size(section->blob) == 0) {
+		if (section->buf->len == 0) {
 			g_debug("skipping zero length section %u", i);
 			continue;
 		}
+		/* the spec explicitly requires a "NUL-terminated UTF-8 string" */
+		if (g_strcmp0(fu_firmware_get_id(img), ".pkgnote") == 0)
+			fu_byte_array_append_uint8(section->buf, 0);
 		section->id = g_strdup(fu_firmware_get_id(img));
-		section->blobsz_aligned = fu_common_align_up(g_bytes_get_size(section->blob), 4);
-		if (!fu_size_checked_inc(&offset, section->blobsz_aligned, error))
+		section->bufsz_aligned = fu_common_align_up(section->buf->len, 4);
+		if (!fu_size_checked_inc(&offset, section->bufsz_aligned, error))
 			return NULL;
 		g_ptr_array_add(sections, g_steal_pointer(&section));
 	}
@@ -539,10 +545,9 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		FuPefileSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(FuStructPeCoffSection) st_sect = fu_struct_pe_coff_section_new();
 
-		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect,
-							       g_bytes_get_size(section->blob));
+		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect, section->buf->len);
 		fu_struct_pe_coff_section_set_virtual_address(st_sect, 0x0);
-		fu_struct_pe_coff_section_set_virtual_size(st_sect, section->blobsz_aligned);
+		fu_struct_pe_coff_section_set_virtual_size(st_sect, section->bufsz_aligned);
 		fu_struct_pe_coff_section_set_pointer_to_raw_data(st_sect, section->offset);
 
 		/* set the name directly, or add to the string table */
@@ -585,9 +590,8 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	/* add the section data itself */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPefileSection *section = g_ptr_array_index(sections, i);
-		g_autoptr(GBytes) blob_aligned =
-		    fu_bytes_pad(section->blob, section->blobsz_aligned, 0xFF);
-		fu_byte_array_append_bytes(st->buf, blob_aligned);
+		fu_byte_array_set_size(section->buf, section->bufsz_aligned, 0xFF);
+		fu_byte_array_append_array(st->buf, section->buf);
 	}
 
 	/* string table comes last */
@@ -647,6 +651,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_SBATLEVEL_SECTION);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_JSON_FIRMWARE);
 	fu_firmware_set_images_max(firmware_class, 100);
 	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }

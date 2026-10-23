@@ -12,9 +12,10 @@ panic = "abort"
 [profile.release]
 panic = "abort"
 
-[profile.test]
-panic = "unwind"
-
 [workspace.package]
 edition = "2021"
 rust-version = "1.75"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unreadable_literal = "allow"

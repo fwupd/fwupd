@@ -26,7 +26,7 @@ RUN set -euxo pipefail; \
     apt-get clean
 RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
 {% if VARIANT=="android" %}
-RUN --mount=type=bind,source=contrib/ci/android.sh,target=android.sh \
-    sh android.sh
+RUN --mount=type=bind,source=contrib/ci/android.py,target=android.py \
+    python3 android.py
 {% endif %}
 WORKDIR /github/workspace

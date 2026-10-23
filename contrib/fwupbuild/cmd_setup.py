@@ -242,21 +242,23 @@ def setup_venv() -> int:
 
     shell_configs = {
         Shell.BASH: """
-echo "To build or rebuild fwupd within development environment run:"
-echo ""
-echo "# fwupbuild build"
-echo ""
-echo "To run the test suite run:"
-echo ""
-echo "# fwupbuild test"
-echo ""
-echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
-echo ""
-echo "# DEBUG=1 fwupdtool get-devices"
-echo ""
-echo "To leave fwupd development environment run:"
-echo ""
-echo "# deactivate"
+if [[ -z "${{PRE_COMMIT:-}}" ]]; then
+    echo "To build or rebuild fwupd within development environment run:"
+    echo ""
+    echo "# fwupbuild build"
+    echo ""
+    echo "To run the test suite run:"
+    echo ""
+    echo "# fwupbuild test"
+    echo ""
+    echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+    echo ""
+    echo "# DEBUG=1 fwupdtool get-devices"
+    echo ""
+    echo "To leave fwupd development environment run:"
+    echo ""
+    echo "# deactivate"
+fi
 
 if [ -n "$BASH_VERSION" ]; then
     . "{completion_dir}/fwupbuild.bash" 2>/dev/null || true

@@ -32,7 +32,7 @@ struct _FuCompressorStream {
 	} rust;
 };
 
-G_DEFINE_TYPE(FuCompressorStream, fu_compressor_stream, FU_TYPE_INPUT_STREAM)
+G_DEFINE_TYPE(FuCompressorStream, fu_compressor_stream, FWUPD_TYPE_INPUT_STREAM)
 
 static gssize
 fu_compressor_stream_read_fn(FuInputStream *stream,
@@ -65,16 +65,16 @@ fu_compressor_stream_read_fn(FuInputStream *stream,
 	return rc;
 }
 
-static FuRsStreamImpl *
-fu_compressor_stream_get_stream_impl(FuInputStream *stream)
+static FwupdInputStreamImpl
+fu_compressor_stream_get_impl(FuInputStream *stream)
 {
 	FuCompressorStream *self = FU_COMPRESSOR_STREAM(stream);
 	FuRsStreamImpl *impl;
 
 	if (self->compress)
-		impl = fu_rs_compressor_stream_get_stream_impl(self->rust.compressor);
+		impl = fu_rs_compressor_stream_get_impl(self->rust.compressor);
 	else
-		impl = fu_rs_decompressor_stream_get_stream_impl(self->rust.decompressor);
+		impl = fu_rs_decompressor_stream_get_impl(self->rust.decompressor);
 
 	return impl;
 }
@@ -88,11 +88,11 @@ fu_compressor_stream_new(FuInputStream *source,
 	g_autoptr(FuCompressorStream) self = g_object_new(FU_TYPE_COMPRESSOR_STREAM, NULL);
 	FuRsStreamImpl *impl;
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(source), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(source), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	self->source = g_object_ref(source);
-	impl = fu_input_stream_get_stream_impl(source);
+	impl = fwupd_input_stream_get_impl(source);
 	if (impl == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -113,7 +113,7 @@ fu_compressor_stream_new(FuInputStream *source,
 			return NULL;
 	}
 
-	return FU_INPUT_STREAM(g_steal_pointer(&self));
+	return FWUPD_INPUT_STREAM(g_steal_pointer(&self));
 }
 
 /**
@@ -176,9 +176,9 @@ static void
 fu_compressor_stream_class_init(FuCompressorStreamClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuInputStreamClass *istream_class = FU_INPUT_STREAM_CLASS(klass);
+	FwupdInputStreamClass *istream_class = FWUPD_INPUT_STREAM_CLASS(klass);
 	istream_class->read_fn = fu_compressor_stream_read_fn;
-	istream_class->get_stream_impl = fu_compressor_stream_get_stream_impl;
+	istream_class->get_impl = fu_compressor_stream_get_impl;
 	object_class->finalize = fu_compressor_stream_finalize;
 }
 

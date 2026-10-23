@@ -11,20 +11,21 @@
 # Marián Kyral <mkyral@email.cz>, 2026.
 # JakubRu13 <ruzicka.jakub@outlook.com>, 2026.
 # AsciiWolf <mail@asciiwolf.com>, 2026.
+# Pavel Borecki <pavelbo@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-21 17:51+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"PO-Revision-Date: 2026-10-13 09:30+0000\n"
+"Last-Translator: Pavel Borecki <pavelbo@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.11.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -172,7 +173,7 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Pro přepnutí na novou verzi firmwaru je vyžadováno ověření se"
 
 msgid "Clear stored firmware update results"
-msgstr "Vymazat uložené výsledny aktualizace firmwaru"
+msgstr "Vymazat uložené výsledky firmwarové aktualizace"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
@@ -193,7 +194,7 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "K aktualizaci uložených kontrolních součtů pro zařízení je vyžadováno ověření se"
 
 msgid "Get configured remotes"
-msgstr "Získat konfigurované ovladače"
+msgstr "Získat nastavené vzdálené"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
@@ -292,7 +293,7 @@ msgstr "Instalovat firmware na emulované zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr "K instalaci firmwaru na emulované zařízení je zapotřepí vaše heslo"
+msgstr "K instalaci firmwaru na emulované zařízení je zapotřebí vaše heslo"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1564,7 +1565,7 @@ msgstr "Je v režimu zavaděče firmware"
 
 #. TRANSLATORS: the hardware is waiting for the user to do something
 msgid "Device is waiting to be plugged back in"
-msgstr ""
+msgstr "Zařízení čeká na to, až bude připojeno nazpět"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -2109,16 +2110,16 @@ msgstr "Automatické odesílání hlášení"
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when %s has been unplugged and plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat až %s bude odpojeno a připojeno nazpět."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device has been unplugged and plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat až zařízení bude odpojeno a připojeno nazpět."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been unplugged."
-msgstr ""
+msgstr "Aktualizace bude pokračovat až USB kabel %s bude odpojen."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -2127,11 +2128,11 @@ msgstr "Aktualizace bude pokračovat po odpojení USB kabelu."
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the USB cable of %s has been plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat, až USB kabel %s bude připojen nazpět."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device USB cable has been plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat až USB kabel zařízení bude připojen nazpět."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2144,20 +2145,20 @@ msgstr "V průběhu aktualizace počítač nevypínejte ani ho neodpojujte od na
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "Unplug %s and replug it to continue the update process."
-msgstr ""
+msgstr "Pro pokračování v procesu aktualizace odpojte %s a znovu ho připojte."
 
 #. TRANSLATORS: message text
 msgid "Unplug the device and replug it to continue the update process."
-msgstr ""
+msgstr "Pro pokračování v procesu aktualizace odpojte zařízení a připojte nazpět."
 
 #. TRANSLATORS: message text, with %1 as the device name
 #, c-format
 msgid "The update will continue when the power cable of %s has been removed and plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat až bude odpojen napájecí kabel %s a připojen nazpět."
 
 #. TRANSLATORS: message text
 msgid "The update will continue when the device power cable has been removed and plugged back in."
-msgstr ""
+msgstr "Aktualizace bude pokračovat po odpojení napájecího kabelu zařízení a jeho opětovném připojení."
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -2245,11 +2246,11 @@ msgstr "UEFI úložiště certifikátů je nyní aktuální"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store no longer contains a test key"
-msgstr ""
+msgstr "UEFI úložiště certifikátů už neobsahuje testovací klíč"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store now contains a test key"
-msgstr ""
+msgstr "UEFI úložiště certifikátů nyní obsahuje testovací klíč"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
@@ -2451,11 +2452,11 @@ msgstr "Tento balíček nebyl ověřen – může se stát, že nebude fungovat 
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were previously not updated correctly:"
-msgstr ""
+msgstr "Zařízení, která předtím nebyla v pořádku zaktualizována:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have previously been updated successfully:"
-msgstr ""
+msgstr "Zařízení, která byla v pořádku zaktualizována:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -3035,11 +3036,11 @@ msgstr "Pro získání tokenu jděte na '%s' a klikněte na 'Generate Token'"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr "Zadejte váš token pro vzdálený server '%s'"
+msgstr "Zadejte váš token pro vzdálený server „%s“"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr "Vzdálený server byl povolen a obnoven úspěšně"
+msgstr "Vzdálený server povolen a úspěšně znovunačten"
 
 #. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
@@ -3570,7 +3571,7 @@ msgid "Manually enable specific plugins"
 msgstr "Ručně zapnout konkrétní zásuvné moduly"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr "Umístění veřejných adresářů použitých pro JCat ověření"
+msgstr "Umístění adresářů veřejných klíčů používaných pro JCat ověřování"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -3843,7 +3844,7 @@ msgstr "Zobrazit informace o JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr "SOUBOR ID ALIAS_D"
+msgstr "NÁZEV_SOUBORU ID ALIAS_ID"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
@@ -3855,7 +3856,7 @@ msgstr "Odebrat alias pro specifický JCat předmět"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr "SOUBOR [DRUH]"
+msgstr "NÁZEV_SOUBORU [DRUH]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
@@ -3863,7 +3864,7 @@ msgstr "Exportuje všechny zabudované podpisy do souborů"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr "SOUBOR DATA ODDĚLENÝ_KLÍČ"
+msgstr "NÁZEV_SOUBORU DATA ODDĚLENÝ_KLÍČ"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
@@ -3871,15 +3872,15 @@ msgstr "Importovat existující soubor do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr "SOUBOR ZDROJ [DRUH[:VARIANTA]] [CÍL]"
+msgstr "NÁZEV-SOUBORU ZDROJ [DRUH[:VARIANTA]] [CÍL]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr "Přidat self-signed podpis do JCat souboru"
+msgstr "Přidat samo-podepsaný podpis do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr "SOUBOR ZDROJ CERT PRIVKEY [DRUHĐ:VARIANTA]] [CÍL]"
+msgstr "NÁZEV_SOUBORU ZDROJ CERT PRIVKEY [DRUHĐ:VARIANTA]] [CÍL]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
@@ -3887,7 +3888,7 @@ msgstr "Přidat podpis do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr "SOUBOR [ZDROJ]"
+msgstr "NÁZEV-SOUBORU [ZDROJ]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
@@ -4198,7 +4199,7 @@ msgstr "Ochrana UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db (Microsoft UEFI)"
-msgstr ""
+msgstr "UEFI db (Microsoft UEFI)"
 
 #. TRANSLATORS: Title: is UEFI db does not have a test key
 #. TRANSLATORS: Title: is UEFI db up-to-date

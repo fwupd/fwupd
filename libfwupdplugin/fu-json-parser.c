@@ -27,21 +27,10 @@ fu_json_parser_load_from_stream(FwupdJsonParser *self,
 				FwupdJsonLoadFlags flags,
 				GError **error)
 {
-	FuRsStreamImpl *impl;
-
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	impl = fu_input_stream_get_stream_impl(stream);
-	if (impl == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "stream does not have a Rust implementation");
-		return NULL;
-	}
-
 	/* ownership of impl is transferred */
-	return fwupd_json_parser_load_from_stream_impl(self, impl, flags, error);
+	return fwupd_json_parser_load_from_stream2(self, stream, flags, error);
 }

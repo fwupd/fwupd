@@ -26,7 +26,6 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-installer.h"
 #include "fu-engine-requirements.h"
-#include "fu-unix-seekable-input-stream.h"
 
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
@@ -282,7 +281,8 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 
 	/* get stream */
 	if (fd >= 0) {
-		stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+		/* the caller owns the fd */
+		stream = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new(fd, FALSE, error));
 		if (stream == NULL) {
 			g_prefix_error_literal(error, "invalid stream: ");
 			return FALSE;
@@ -353,6 +353,15 @@ fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, 
 	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.device-activate", error))
 		return FALSE;
 	return fu_engine_activate(engine, device_id, progress, error);
+}
+
+gboolean
+fu_binder_daemon_quit_bridge(void *daemon_instance, GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.quit", error))
+		return FALSE;
+	return fu_daemon_schedule_process_quit(FU_DAEMON(self), error);
 }
 
 gboolean
@@ -463,15 +472,15 @@ fu_binder_daemon_reset_config_bridge(void *daemon_instance, const gchar *section
 gboolean
 fu_binder_daemon_update_metadata_bridge(void *daemon_instance,
 					const gchar *remote_id,
-					int data_fd,
-					int signature_fd,
+					FuInputStream *stream,
+					FuInputStream *stream_sig,
 					GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.refresh-remote", error))
 		return FALSE;
-	return fu_engine_update_metadata(engine, remote_id, data_fd, signature_fd, error);
+	return fu_engine_update_metadata(engine, remote_id, stream, stream_sig, error);
 }
 
 gboolean
@@ -484,6 +493,25 @@ fu_binder_daemon_set_bios_settings_bridge(void *daemon_instance,
 	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.set-bios-settings", error))
 		return FALSE;
 	return fu_engine_modify_bios_settings(engine, settings, FALSE, error);
+}
+
+gchar *
+fu_binder_daemon_self_sign_bridge(void *daemon_instance,
+				  const gchar *value,
+				  guint64 flags,
+				  GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuJcatSignFlags jcat_flags = FU_JCAT_SIGN_FLAG_NONE;
+
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.self-sign", error))
+		return NULL;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_CERT)
+		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
+	return fu_engine_self_sign(engine, value, jcat_flags, error);
 }
 
 static void
@@ -585,6 +613,7 @@ fu_binder_daemon_setup(FuDaemon *daemon, const gchar *address, FuProgress *progr
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
 				FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
 				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_HISTORY,
 			    fu_progress_get_child(progress),

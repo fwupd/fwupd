@@ -81,8 +81,9 @@ repos:
           )$
       - id: check-potfiles
         name: check for missing translated files from potfiles
-        language: script
-        entry: ./contrib/ci/check-potfiles.py
+        language: system
+        entry: ./fwupbuild check-potfiles
+        pass_filenames: false
       - id: check-headers
         name: check for superfluous includes
         language: system
@@ -94,8 +95,9 @@ repos:
         entry: ./contrib/ci/check-source.py
       - id: check-quirks
         name: check quirk style
-        language: script
-        entry: ./contrib/ci/check-quirks.py
+        language: system
+        entry: ./fwupbuild check-quirks
+        files: \.quirk$
       - id: shellcheck
         name: check shellscript style
         language: system
@@ -130,9 +132,10 @@ repos:
         entry: ./contrib/ci/check-hsi-tests.py
       - id: check-license
         name: Check license header
-        types_or: [shell, c, python]
-        language: script
-        entry: ./contrib/ci/check-license.py
+        types_or: [c, python, rust]
+        pass_filenames: false
+        language: system
+        entry: ./fwupbuild check-license
       - id: check-meson-install-tags
         name: Check meson install tags
         language: script

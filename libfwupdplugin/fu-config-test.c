@@ -139,6 +139,6 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/config", fu_config_func);
-	g_test_add_func("/fwupd/config{comment-no-keys}", fu_config_comment_no_keys_func);
+	g_test_add_func("/fwupd/config/comment-no-keys", fu_config_comment_no_keys_func);
 	return g_test_run();
 }

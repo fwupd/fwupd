@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2025 Colin Kinloch <colin.kinloch@collabora.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2025 Colin Kinloch <colin.kinloch@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+
+#define G_LOG_DOMAIN "FuJcat"
 
 #include "config.h"
 
@@ -391,7 +393,7 @@ gchar *
 fu_jcat_libcrypto_x509_get_issuer_name(X509 *crt, GError **error)
 {
 	g_autoptr(BIO) issuer_bio = BIO_new(BIO_s_mem());
-	X509_NAME *issuer_name = X509_get_issuer_name(crt);
+	const X509_NAME *issuer_name = X509_get_issuer_name(crt);
 	gchar *issuer_string = NULL;
 	gsize issuer_string_length;
 

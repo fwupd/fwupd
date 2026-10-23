@@ -15,7 +15,6 @@
 #include "fu-coswid-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
-#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-uswid-firmware.h"
 #include "fu-uswid-struct.h"
@@ -268,11 +267,12 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* compression format */
 	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
-		g_autoptr(FuInputStream) istream1 = NULL;
+		g_autoptr(FwupdMemoryInputStream) istream1 = NULL;
 		g_autoptr(FuInputStream) istream2 = NULL;
 
-		istream1 = fu_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
-		istream2 = fu_compressor_stream_new_compress(istream1,
+		istream1 =
+		    fwupd_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
+		istream2 = fu_compressor_stream_new_compress(FWUPD_INPUT_STREAM(istream1),
 							     FWUPD_COMPRESSOR_FORMAT_ZLIB,
 							     error);
 		if (istream2 == NULL)

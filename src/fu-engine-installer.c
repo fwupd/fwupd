@@ -254,7 +254,7 @@ fu_engine_installer_build(FuEngineInstaller *self,
 
 	g_return_val_if_fail(FU_IS_ENGINE_INSTALLER(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* cannot be reused */

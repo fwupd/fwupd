@@ -3,6 +3,18 @@ cargo_env.set('MESON_BUILDTYPE', get_option('buildtype'))
 cargo_env.set('MESON_BUILD_ROOT', meson.project_build_root())
 cargo_env.set('WORKSPACE_CARGO_TOML', join_paths(meson.project_source_root(), 'Cargo.toml'))
 cargo_env.set('CARGO', cargo.full_path())
+
+glib_libdir = glib.get_variable(
+  pkgconfig: 'libdir',
+  default_value: '',
+)
+if glib_libdir != ''
+  cargo_env.append(
+    'RUSTFLAGS',
+    '-L' + glib_libdir,
+    separator: ' ',
+  )
+endif
 if meson.is_cross_build()
   rust_target = meson.get_external_property('rust_target', '')
   if rust_target != ''
@@ -57,7 +69,7 @@ fwupd_ffi_src = [
 fwupd_rust_lib = custom_target(
   'fwupd-rust',
   output: 'fwupd-rust.stamp',
-  command: [cargo_wrapper, '-p', 'fwupd', 'build', '--stamp', '@OUTPUT@'],
+  command: [cargo_wrapper, '--quiet', '-p', 'fwupd', 'build', '--stamp', '@OUTPUT@'],
   env: cargo_env,
   console: true,
   install: false,
@@ -69,7 +81,7 @@ fwupd_rust_lib = custom_target(
 fwupd_ffi_lib = custom_target(
   'fwupd-ffi',
   output: 'libfwupd_ffi.a',
-  command: [cargo_wrapper, '-p', 'fwupd-ffi', 'build', '--output', '@OUTPUT@'],
+  command: [cargo_wrapper, '--quiet', '-p', 'fwupd-ffi', 'build', '--output', '@OUTPUT@'],
   env: cargo_env,
   console: true,
   install: host_machine.system() == 'android',
@@ -104,7 +116,7 @@ if build_docs
   custom_target(
     'rust-doc',
     output: 'doc',
-    command: [cargo_wrapper, 'doc', '--copy', '@OUTPUT@', '--no-deps'],
+    command: [cargo_wrapper, 'doc', '--quiet', '--copy', '@OUTPUT@', '--no-deps'],
     env: cargo_env,
     console: true,
     install: false,

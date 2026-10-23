@@ -851,7 +851,7 @@ fu_focal_moc_ymodem_frame_plan_func(void)
 		for (gsize j = 0; j < plans[i].firmware_sz; j++)
 			buf[j] = (guint8)(j * 7);
 		blob = g_bytes_new_take(g_steal_pointer(&buf), plans[i].firmware_sz);
-		stream = fu_memory_input_stream_new_from_bytes(blob);
+		stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 
 		/* the SOH advertises the same CRC the device computes over the image,
 		 * and the stream helper only matches fu_crc32() for this seed */
@@ -1260,7 +1260,8 @@ fu_focal_moc_firmware_func(void)
 	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
 	g_autoptr(GBytes) bytes_body = NULL;
 	g_autoptr(GBytes) bytes_written = NULL;
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes));
 	g_autoptr(GError) error = NULL;
 
 	g_assert_true(
@@ -1304,7 +1305,8 @@ fu_focal_moc_firmware_wrong_type_func(void)
 {
 	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
 	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(0x01);
-	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+	g_autoptr(FuInputStream) stream =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes));
 	g_autoptr(GError) error = NULL;
 
 	g_assert_false(
@@ -1336,7 +1338,8 @@ fu_focal_moc_firmware_invalid_func(void)
 		g_autoptr(GError) error = NULL;
 
 		fu_memwrite_uint32(buf->data + tests[i].offset, tests[i].value, G_LITTLE_ENDIAN);
-		stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+		stream = FWUPD_INPUT_STREAM(
+		    fwupd_memory_input_stream_new_from_data(buf->data, buf->len, NULL));
 		g_assert_false(fu_firmware_parse_stream(firmware,
 							stream,
 							0,
@@ -1364,7 +1367,8 @@ fu_focal_moc_firmware_size_max_func(void)
 		g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware_sized(
 		    FU_FOCAL_MOC_FIRMWARE_KIND_APP,
 		    (guint32)(tests[i].streamsz - FU_STRUCT_FOCAL_MOC_FIRMWARE_HEADER_SIZE));
-		g_autoptr(FuInputStream) stream = fu_memory_input_stream_new_from_bytes(bytes);
+		g_autoptr(FuInputStream) stream =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes));
 		g_autoptr(GError) error = NULL;
 
 		ret = fu_firmware_parse_stream(firmware,
@@ -1402,7 +1406,8 @@ fu_focal_moc_firmware_strict_func(void)
 		g_autoptr(GError) error = NULL;
 
 		buf->data[tests[i].offset] = tests[i].value;
-		stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+		stream = FWUPD_INPUT_STREAM(
+		    fwupd_memory_input_stream_new_from_data(buf->data, buf->len, NULL));
 		g_assert_false(fu_firmware_parse_stream(firmware,
 							stream,
 							0,
@@ -1417,8 +1422,8 @@ fu_focal_moc_firmware_truncated_func(void)
 {
 	g_autoptr(FuFirmware) firmware = fu_focal_moc_firmware_new();
 	g_autoptr(GBytes) bytes = fu_focal_moc_build_firmware(FU_FOCAL_MOC_FIRMWARE_KIND_APP);
-	g_autoptr(FuInputStream) stream =
-	    fu_memory_input_stream_new_from_data(g_bytes_get_data(bytes, NULL), 128, NULL);
+	g_autoptr(FuInputStream) stream = FWUPD_INPUT_STREAM(
+	    fwupd_memory_input_stream_new_from_data(g_bytes_get_data(bytes, NULL), 128, NULL));
 	g_autoptr(GError) error = NULL;
 
 	g_assert_false(
@@ -1440,7 +1445,7 @@ fu_focal_moc_firmware_entry_offset_func(void)
 	/* a nonzero entry offset must survive the parse-write cycle */
 	fu_memwrite_uint32(buf->data + 0x10, 0x2, G_LITTLE_ENDIAN);
 	bytes_patched = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
-	stream = fu_memory_input_stream_new_from_bytes(bytes_patched);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(bytes_patched));
 	g_assert_true(
 	    fu_firmware_parse_stream(firmware, stream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, &error));
 	g_assert_no_error(error);

@@ -108,13 +108,13 @@ main(int argc, char **argv)
 		       TRUE);
 
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/systemd-pcrlock/startup{not-pcrlock}",
+	g_test_add_func("/systemd-pcrlock/startup/not-pcrlock",
 			fu_systemd_pcrlock_plugin_startup_not_used_func);
-	g_test_add_func("/systemd-pcrlock/startup{no-service}",
+	g_test_add_func("/systemd-pcrlock/startup/no-service",
 			fu_systemd_pcrlock_plugin_startup_no_service_func);
-	g_test_add_func("/systemd-pcrlock/composite-prepare{no-affects-fde}",
+	g_test_add_func("/systemd-pcrlock/composite-prepare/no-affects-fde",
 			fu_systemd_pcrlock_plugin_no_affects_fde_func);
-	g_test_add_func("/systemd-pcrlock/composite-prepare{abort-on-error}",
+	g_test_add_func("/systemd-pcrlock/composite-prepare/abort-on-error",
 			fu_systemd_pcrlock_plugin_abort_on_error_func);
 	return g_test_run();
 }

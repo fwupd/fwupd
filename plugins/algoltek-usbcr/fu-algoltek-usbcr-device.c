@@ -420,6 +420,11 @@ fu_algoltek_usbcr_device_probe(FuDevice *device, GError **error)
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_algoltek_usbcr_device_parent_class)->probe(device, error))
 		return FALSE;
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	if (fu_device_get_vid(device) != FU_ALGOLTEK_USBCR_VENDOR_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -542,6 +547,12 @@ fu_algoltek_usbcr_device_verify_chunks(FuAlgoltekUsbcrDevice *self,
 							  fu_chunk_get_data_sz(chk),
 							  error))
 			return FALSE;
+
+		/* for fuzzing */
+		if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+			fu_progress_step_done(progress);
+			continue;
+		}
 		if (!fu_memcmp_safe(fu_chunk_get_data(chk),
 				    fu_chunk_get_data_sz(chk),
 				    0,

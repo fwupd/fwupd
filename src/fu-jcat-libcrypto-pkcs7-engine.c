@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2017-2020 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2025 Colin Kinloch <colin.kinloch@collabora.com>
+ * Copyright 2017-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2025 Colin Kinloch <colin.kinloch@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+
+#define G_LOG_DOMAIN "FuJcat"
 
 #include "config.h"
 
@@ -270,7 +272,7 @@ fu_jcat_libcrypto_pkcs7_engine_verify(FuJcatEngine *engine,
 		time_t signing_time = 0;
 		int stime_loc = CMS_signed_get_attr_by_NID(info, NID_pkcs9_signingTime, -1);
 		X509_ATTRIBUTE *stime_attr = NULL;
-		ASN1_TYPE *stime = NULL;
+		const ASN1_TYPE *stime = NULL;
 		ASN1_TIME *t = NULL;
 		g_autoptr(BIO) issuer_bio = BIO_new(BIO_s_mem());
 

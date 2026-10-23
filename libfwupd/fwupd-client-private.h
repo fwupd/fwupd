@@ -7,10 +7,8 @@
 #pragma once
 
 #include "fwupd-client.h"
-
-#ifdef HAVE_GIO_UNIX
-#include <gio/gunixinputstream.h>
-#endif
+#include "fwupd-input-stream-private.h"
+#include "fwupd-unix-input-stream.h"
 
 G_BEGIN_DECLS
 
@@ -50,7 +48,7 @@ struct FwupdClientSyncImpl {
 					GCancellable *cancellable,
 					GError **error);
 	GPtrArray *(*get_details)(FwupdClient *self,
-				  const gchar *filename,
+				  FwupdInputStream *stream,
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
@@ -125,7 +123,8 @@ struct FwupdClientSyncImpl {
 			  GError **error);
 	gboolean (*install)(FwupdClient *self,
 			    const gchar *device_id,
-			    const gchar *filename,
+			    FwupdInputStream *stream,
+			    const gchar *filename_hint,
 			    FwupdInstallFlags install_flags,
 			    gpointer user_data,
 			    GCancellable *cancellable,
@@ -168,12 +167,6 @@ struct FwupdClientSyncImpl {
 			 gpointer user_data,
 			 GCancellable *cancellable,
 			 GError **error);
-	gboolean (*refresh_remote)(FwupdClient *self,
-				   FwupdRemote *remote,
-				   FwupdClientDownloadFlags download_flags,
-				   gpointer user_data,
-				   GCancellable *cancellable,
-				   GError **error);
 	gboolean (*reset_config)(FwupdClient *self,
 				 const gchar *section,
 				 gpointer user_data,
@@ -184,6 +177,12 @@ struct FwupdClientSyncImpl {
 			     gpointer user_data,
 			     GCancellable *cancellable,
 			     GError **error);
+	gchar *(*self_sign)(FwupdClient *self,
+			    const gchar *value,
+			    FwupdSelfSignFlags flags,
+			    gpointer user_data,
+			    GCancellable *cancellable,
+			    GError **error);
 	gboolean (*set_feature_flags)(FwupdClient *self,
 				      FwupdFeatureFlags feature_flags,
 				      gpointer user_data,
@@ -201,8 +200,8 @@ struct FwupdClientSyncImpl {
 			   GError **error);
 	gboolean (*update_metadata)(FwupdClient *self,
 				    const gchar *remote_id,
-				    const gchar *metadata_fn,
-				    const gchar *signature_fn,
+				    FwupdInputStream *stream,
+				    FwupdInputStream *stream_sig,
 				    gpointer user_data,
 				    GCancellable *cancellable,
 				    GError **error);
@@ -221,17 +220,16 @@ struct FwupdClientSyncImpl {
 const FwupdClientSyncImpl *
 fwupd_client_get_sync_impl(FwupdClient *self, gpointer *impl_userdata) G_GNUC_NON_NULL(1);
 
-#ifdef HAVE_GIO_UNIX
 void
 fwupd_client_get_details_stream_async(FwupdClient *self,
-				      GUnixInputStream *istr,
+				      FwupdUnixInputStream *ustream,
 				      GCancellable *cancellable,
 				      GAsyncReadyCallback callback,
 				      gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_install_stream_async(FwupdClient *self,
 				  const gchar *device_id,
-				  GUnixInputStream *istr,
+				  FwupdUnixInputStream *ustream,
 				  const gchar *filename_hint,
 				  FwupdInstallFlags install_flags,
 				  GCancellable *cancellable,
@@ -240,11 +238,10 @@ fwupd_client_install_stream_async(FwupdClient *self,
 void
 fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  const gchar *remote_id,
-					  GUnixInputStream *istr,
-					  GUnixInputStream *istr_sig,
+					  FwupdUnixInputStream *ustream,
+					  FwupdUnixInputStream *ustream_sig,
 					  GCancellable *cancellable,
 					  GAsyncReadyCallback callback,
 					  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3, 4);
-#endif
 
 G_END_DECLS

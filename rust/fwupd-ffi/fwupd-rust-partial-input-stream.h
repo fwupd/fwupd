@@ -34,6 +34,6 @@ fu_rs_partial_input_stream_size(const FuRsPartialInputStream *stream);
 gsize
 fu_rs_partial_input_stream_offset(const FuRsPartialInputStream *stream);
 FuRsStreamImpl *
-fu_rs_partial_input_stream_get_stream_impl(const FuRsPartialInputStream *stream);
+fu_rs_partial_input_stream_get_impl(const FuRsPartialInputStream *stream);
 
 G_END_DECLS

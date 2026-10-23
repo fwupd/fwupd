@@ -340,6 +340,64 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_bootmgr_shim_get_hive_version(FwupdJsonNode *json_root,
+				      gint64 *hive_version,
+				      GError **error)
+{
+	g_autoptr(FwupdJsonObject) json_object = NULL;
+	g_autoptr(FwupdJsonObject) json_caps = NULL;
+
+	json_object = fwupd_json_node_get_object(json_root, error);
+	if (json_object == NULL)
+		return FALSE;
+	json_caps = fwupd_json_object_get_object(json_object, "capabilities", error);
+	if (json_caps == NULL)
+		return FALSE;
+	return fwupd_json_object_get_integer_with_default(json_caps,
+							  "shimHive",
+							  hive_version,
+							  0,
+							  error);
+}
+
+gboolean
+fu_uefi_bootmgr_shim_get_hive_supported(const gchar *shim_filename,
+					gboolean *hive_supported,
+					GError **error)
+{
+	gint64 hive_version = 0;
+	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
+	g_autoptr(FuFirmware) img_pkgnote = NULL;
+	g_autoptr(FwupdJsonNode) json_root = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file = g_file_new_for_path(shim_filename);
+
+	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return FALSE;
+	img_pkgnote = fu_firmware_get_image_by_id(firmware, ".pkgnote", NULL);
+	if (img_pkgnote == NULL) {
+		g_debug("no .pkgnote, so assuming no HIVE support");
+		return TRUE;
+	}
+	json_root = fu_json_firmware_get_root(FU_JSON_FIRMWARE(img_pkgnote));
+	if (json_root == NULL) {
+		g_debug("invalid .pkgnote, so assuming no HIVE support");
+		return TRUE;
+	}
+	if (!fu_uefi_bootmgr_shim_get_hive_version(json_root, &hive_version, &error_local)) {
+		g_debug("invalid .pkgnote JSON, so assuming no HIVE support: %s",
+			error_local->message);
+		return TRUE;
+	}
+	g_debug("shimHive version: %i", (gint)hive_version);
+	if (hive_supported != NULL)
+		*hive_supported = hive_version == 0x01;
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 			 const gchar *description,
@@ -378,6 +436,7 @@ fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 	if (fu_device_has_private_flag(FU_DEVICE(capsule_device),
 				       FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB) &&
 	    (secureboot_state & FU_EFI_SECURE_BOOT_STATE_ENABLED) > 0) {
+		gboolean hive_supported = FALSE;
 		g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 		g_autofree gchar *shim_basename = NULL;
 		g_autofree gchar *shim_src = NULL;
@@ -409,6 +468,12 @@ fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 				    shim_dst);
 			return FALSE;
 		}
+
+		/* parse the EFI binary here and see if shim HIVE is supported */
+		if (!fu_uefi_bootmgr_shim_get_hive_supported(shim_dst, &hive_supported, error))
+			return FALSE;
+		if (hive_supported)
+			fu_efi_load_option_set_kind(loadopt, FU_EFI_LOAD_OPTION_KIND_HIVE);
 
 		/* shim chainloads fwupd */
 		dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, shim_dst, error);

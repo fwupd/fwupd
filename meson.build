@@ -188,7 +188,12 @@ add_test_setup(
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
 global_link_args = []
-test_link_args = ['-Wl,-z,relro', '-Wl,-z,defs', '-Wl,-z,now', '-Wl,-z,ibt,-z,shstk']
+test_link_args = ['-Wl,-z,relro', '-Wl,-z,now', '-Wl,-z,ibt,-z,shstk']
+
+# environ is defined in crt1.o on FreeBSD, which the Rust std references
+if host_machine.system() != 'freebsd'
+  test_link_args += '-Wl,-z,defs'
+endif
 foreach arg : test_link_args
   if cc.has_link_argument(arg)
     global_link_args += arg
@@ -313,7 +318,7 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').require(host_machine.system() == 'linux').require(
+  hsi = get_option('hsi').require(host_machine.system() in ['linux', 'android']).require(
     host_cpu in ['x86', 'x86_64']
   ).allowed()
   if hsi

@@ -14,7 +14,11 @@ G_BEGIN_DECLS
 
 #define FU_TYPE_COMPRESSOR_STREAM (fu_compressor_stream_get_type())
 
-G_DECLARE_FINAL_TYPE(FuCompressorStream, fu_compressor_stream, FU, COMPRESSOR_STREAM, FuInputStream)
+G_DECLARE_FINAL_TYPE(FuCompressorStream,
+		     fu_compressor_stream,
+		     FU,
+		     COMPRESSOR_STREAM,
+		     FwupdInputStream)
 
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,

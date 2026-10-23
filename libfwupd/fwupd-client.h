@@ -481,12 +481,21 @@ void
 fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_bkc(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_vendor(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_product(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_machine_id(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
+    G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_host_security_id(FwupdClient *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void

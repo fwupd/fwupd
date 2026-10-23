@@ -901,7 +901,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	stream = fu_memory_input_stream_new_from_bytes(blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	if (!fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local)) {
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),
@@ -2480,7 +2480,9 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	}
 
 	/* progress */
-	fu_progress_set_id(progress, fu_firmware_get_id(firmware));
+	fu_progress_set_id(progress, G_STRLOC);
+	if (fu_firmware_get_id(firmware) != NULL)
+		fu_progress_set_name(progress, fu_firmware_get_id(firmware));
 	if (skip_erase) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, NULL);

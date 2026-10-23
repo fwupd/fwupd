@@ -56,10 +56,10 @@ if get_option('tests')
 endif
 
 device_tests += files(
-  'tests/lenovo-accessory-6202-receiver.json',
   'tests/lenovo-accessory-700-keyboard.json',
-  'tests/lenovo-accessory-700-mouse.json',
   'tests/lenovo-accessory-700-mouse-receiver.json',
+  'tests/lenovo-accessory-700-mouse.json',
+  'tests/lenovo-accessory-6202-receiver.json',
   'tests/lenovo-accessory-ai-mouse.json',
   'tests/lenovo-accessory-receiver.json',
 )

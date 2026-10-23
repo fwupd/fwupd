@@ -23,7 +23,7 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* only AMD */
@@ -42,14 +42,14 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	stream = fu_input_stream_from_path(fn, &error_local);
+	stream = fwupd_file_input_stream_new(fn, &error_local);
 	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(ivrs),
-				      stream,
+				      FWUPD_INPUT_STREAM(stream),
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error_local)) {

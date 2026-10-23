@@ -6,6 +6,5 @@ rust-version.workspace = true
 
 [dependencies]
 
-[lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-unreadable_literal = "allow"
+[lints]
+workspace = true
