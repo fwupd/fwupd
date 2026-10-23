@@ -53,6 +53,8 @@ fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
+		const struct nlattr *name_attr;
+		const struct nlattr *value_attr;
 		g_autofree gchar *name = NULL;
 		g_autofree gchar *value = NULL;
 
@@ -66,10 +68,14 @@ fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 		    ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE] == NULL)
 			continue;
 
-		name =
-		    fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]), G_MAXSIZE);
-		value = fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]),
-				   G_MAXSIZE);
+		/* the attribute is not guaranteed to be NUL-terminated, so bound the read */
+		name_attr = ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME];
+		value_attr = ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE];
+		name = fu_strsafe(mnl_attr_get_str(name_attr), mnl_attr_get_payload_len(name_attr));
+		value =
+		    fu_strsafe(mnl_attr_get_str(value_attr), mnl_attr_get_payload_len(value_attr));
+		if (name == NULL || value == NULL)
+			continue;
 		version_info = g_hash_table_lookup(version_table, name);
 		if (version_info == NULL) {
 			version_info = g_new0(FuDevlinkVersionInfo, 1);
