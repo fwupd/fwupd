@@ -20,3 +20,6 @@ struct _FuMtdDeviceClass {
 gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_mtd_device_add_security_attrs_wp_ro(FuMtdDevice *self, FuSecurityAttrs *attrs)
+    G_GNUC_NON_NULL(1, 2);
