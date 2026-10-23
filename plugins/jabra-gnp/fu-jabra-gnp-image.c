@@ -29,30 +29,43 @@ gboolean
 fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 			 XbNode *n,
 			 FuFirmware *firmware_archive,
-			 GError **error)
+			 GError **error,
+			 guint8 fwu_protocol)
 {
 	const gchar *crc_str = NULL;
+	const gchar *content;
 	const gchar *language;
 	const gchar *name;
 	const gchar *part_str = NULL;
+	const gchar *version;
 	guint64 crc_expected = 0;
 	guint64 partition = 0;
 	g_autoptr(FuFirmware) img_archive = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	/* only match on US English */
-	language = xb_node_query_text(n, "language", error);
-	if (language == NULL) {
+	content = xb_node_query_text(n, "content", error);
+	if (content == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	if (g_strcmp0(language, "English") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "language was not 'English', got '%s'",
-			    language);
-		return FALSE;
+	fu_firmware_set_id(FU_FIRMWARE(self), content);
+
+	if (fwu_protocol != FU_JABRA_GNP_PROTOCOL_SPLIT_OTA ||
+	    (g_strcmp0(content, "firmware") != 0)) {
+		/* only match on US English */
+		language = xb_node_query_text(n, "language", error);
+		if (language == NULL) {
+			fwupd_error_convert(error);
+			return FALSE;
+		}
+		if (g_strcmp0(language, "English") != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "language was not 'English', got '%s'",
+				    language);
+			return FALSE;
+		}
 	}
 
 	/* get the CRC */
@@ -87,13 +100,24 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	}
 	fu_firmware_set_idx(FU_FIRMWARE(self), partition);
 
+	/* get the version number */
+	version = xb_node_query_text(n, "version", NULL);
+	if (version == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "version missing");
+		return FALSE;
+	}
+	fu_firmware_set_version(FU_FIRMWARE(self), version);
+
 	/* get the file pointed to by 'name' */
 	name = xb_node_get_attr(n, "name");
 	if (name == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "name missing");
 		return FALSE;
 	}
-	fu_firmware_set_id(FU_FIRMWARE(self), name);
+	fu_firmware_set_filename(FU_FIRMWARE(self), name);
 	img_archive = fu_firmware_get_image_by_id(firmware_archive, name, error);
 	if (img_archive == NULL)
 		return FALSE;
