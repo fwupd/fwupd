@@ -40,6 +40,7 @@ fwupd_rust_src = [
   join_paths(meson.project_source_root(), 'Cargo.toml'),
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd/Cargo.toml',
+  'fwupd/src/argparse.rs',
   'fwupd/src/bitflags.rs',
   'fwupd/src/cab/archive.rs',
   'fwupd/src/cab/builder.rs',
