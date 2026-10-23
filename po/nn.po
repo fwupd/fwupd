@@ -2,20 +2,21 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fwupd package.
 # Roy-Magne Mo <rmo@sunnmore.net>, 2026.
+# Roy-Magne Mo <gaupe@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2026-09-30 23:51+0000\n"
-"Last-Translator: Roy-Magne Mo <rmo@sunnmore.net>\n"
+"PO-Revision-Date: 2026-10-23 09:49+0000\n"
+"Last-Translator: Roy-Magne Mo <gaupe@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Norwegian Nynorsk <https://hosted.weblate.org/projects/fwupd/fwupd/nn/>\n"
 "Language: nn\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.11.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fastvare)"
@@ -2428,11 +2429,11 @@ msgstr "Denne pakken er ikkje validert, og det kan hende at han ikkje fungerer s
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were previously not updated correctly:"
-msgstr ""
+msgstr "Einingar som ikkje vart oppdatert korrekt:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have previously been updated successfully:"
-msgstr ""
+msgstr "Einingar har vorte oppdatert:"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
