@@ -150,26 +150,24 @@ if build_docs
 endif
 
 
-if get_option('cabtool') and not meson.is_cross_build()
-  cabtool_src = [
-    join_paths(meson.project_source_root(), 'Cargo.toml'),
-    join_paths(meson.project_source_root(), 'Cargo.lock'),
-    'cabtool/Cargo.toml',
-    'cabtool/src/main.rs',
-  ]
+cabtool_src = [
+  join_paths(meson.project_source_root(), 'Cargo.toml'),
+  join_paths(meson.project_source_root(), 'Cargo.lock'),
+  'cabtool/Cargo.toml',
+  'cabtool/src/main.rs',
+]
 
-  cabtool = custom_target(
-    'cabtool',
-    output: 'cabtool',
-    command: [cargo_wrapper, '--quiet', '-p', 'cabtool', 'build', '--output', '@OUTPUT@'],
-    env: cargo_env,
-    console: true,
-    install: false,
-    build_by_default: true,
-    depend_files: cabtool_src,
-    depends: [fwupd_rust_lib],
-  )
-endif
+cabtool = custom_target(
+  'cabtool',
+  output: 'cabtool',
+  command: [cargo_wrapper, '--quiet', '-p', 'cabtool', 'build', '--output', '@OUTPUT@'],
+  env: cargo_env,
+  console: true,
+  install: false,
+  build_by_default: true,
+  depend_files: cabtool_src,
+  depends: [fwupd_rust_lib],
+)
 
 if get_option('tests') and not meson.is_cross_build()
   test(
