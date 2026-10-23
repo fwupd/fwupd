@@ -45,7 +45,7 @@ fu_realtek_scaler_device_write(FuRealtekScalerDevice *self,
 			       gsize bufsz,
 			       GError **error)
 {
-	FuI2cDevice *proxy;
+	FuDevice *proxy;
 	guint8 frame[REALTEK_SCALER_BLOCK_MAXSZ + 1] = {sub_addr};
 
 	if (bufsz == 0 || bufsz > REALTEK_SCALER_BLOCK_MAXSZ) {
@@ -55,15 +55,15 @@ fu_realtek_scaler_device_write(FuRealtekScalerDevice *self,
 				    "i2c write length out of range");
 		return FALSE;
 	}
-	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
 	if (!fu_memcpy_safe(frame, sizeof(frame), 0x1, buf, bufsz, 0x0, bufsz, error))
 		return FALSE;
-	if (!fu_i2c_device_set_address(proxy, target8 >> 1, FALSE, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(proxy), target8 >> 1, FALSE, error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "i2c-write", frame, bufsz + 1);
-	return fu_i2c_device_write(proxy, frame, bufsz + 1, error);
+	return fu_i2c_device_write(FU_I2C_DEVICE(proxy), frame, bufsz + 1, error);
 }
 
 /* write [sub_addr] and then read @bufsz bytes back, as two separate transfers */
@@ -75,16 +75,16 @@ fu_realtek_scaler_device_read(FuRealtekScalerDevice *self,
 			      gsize bufsz,
 			      GError **error)
 {
-	FuI2cDevice *proxy;
+	FuDevice *proxy;
 
-	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	if (!fu_i2c_device_set_address(proxy, target8 >> 1, FALSE, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(proxy), target8 >> 1, FALSE, error))
 		return FALSE;
-	if (!fu_i2c_device_write(proxy, &sub_addr, sizeof(sub_addr), error))
+	if (!fu_i2c_device_write(FU_I2C_DEVICE(proxy), &sub_addr, sizeof(sub_addr), error))
 		return FALSE;
-	if (!fu_i2c_device_read(proxy, buf, bufsz, error))
+	if (!fu_i2c_device_read(FU_I2C_DEVICE(proxy), buf, bufsz, error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "i2c-read", buf, bufsz);
 	return TRUE;
