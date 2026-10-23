@@ -1,0 +1,8 @@
+# Realtek Scaler (AIO or external display, updated over the DP AUX channel)
+#
+# The device is identified by the EDID of the panel, which fwupd
+# reads from the DRM device and turns into DRM\VEN_<PNP>&DEV_<product code>.
+# The update channel is the I2C-over-AUX bus linked from the DRM connector.
+[DRM\VEN_DEL&DEV_C927]
+Plugin = realtek_scaler
+Name = Realtek Scaler
