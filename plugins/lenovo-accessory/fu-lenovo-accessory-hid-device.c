@@ -327,9 +327,9 @@ fu_lenovo_accessory_hid_device_impl_iface_init(FuLenovoAccessoryImplInterface *i
 static void
 fu_lenovo_accessory_hid_device_finalize(GObject *object)
 {
+#ifndef _WIN32
 	FuLenovoAccessoryHidDevice *self = FU_LENOVO_ACCESSORY_HID_DEVICE(object);
 
-#ifndef _WIN32
 	/* cleanup notification monitoring */
 	if (self->notify_watch_id != 0) {
 		g_source_remove(self->notify_watch_id);
@@ -367,9 +367,11 @@ fu_lenovo_accessory_hid_device_class_init(FuLenovoAccessoryHidDeviceClass *klass
 static void
 fu_lenovo_accessory_hid_device_init(FuLenovoAccessoryHidDevice *self)
 {
+#ifndef _WIN32
 	self->notify_fd = -1;
 	self->notify_channel = NULL;
 	self->notify_watch_id = 0;
+#endif
 
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
