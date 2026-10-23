@@ -382,6 +382,13 @@ fu_jabra_gnp_child_device_attach(FuDevice *device, FuProgress *progress, GError 
 }
 
 static gboolean
+fu_jabra_gnp_child_device_reload(FuDevice *device, GError **error)
+{
+	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
+	return fu_jabra_gnp_ensure_version(device, self->address, self->sequence_number, error);
+}
+
+static gboolean
 fu_jabra_gnp_child_device_set_quirk_kv(FuDevice *device,
 				       const gchar *key,
 				       const gchar *value,
@@ -466,6 +473,7 @@ fu_jabra_gnp_child_device_class_init(FuJabraGnpChildDeviceClass *klass)
 	device_class->setup = fu_jabra_gnp_child_device_setup;
 	device_class->write_firmware = fu_jabra_gnp_child_device_write_firmware;
 	device_class->attach = fu_jabra_gnp_child_device_attach;
+	device_class->reload = fu_jabra_gnp_child_device_reload;
 	device_class->set_quirk_kv = fu_jabra_gnp_child_device_set_quirk_kv;
 	device_class->set_progress = fu_jabra_gnp_child_device_set_progress;
 }
