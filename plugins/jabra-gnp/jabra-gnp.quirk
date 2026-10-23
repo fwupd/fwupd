@@ -255,6 +255,18 @@ Plugin = jabra_gnp
 [USB\VID_0B0E&PID_2525]
 Plugin = jabra_gnp
 
+# [runtime]
+[USB\VID_0B0E&PID_2559]
+Plugin = jabra_gnp
+
+# [runtime]
+[USB\VID_0B0E&PID_255A]
+Plugin = jabra_gnp
+
+# [runtime]
+[USB\VID_0B0E&PID_255B]
+Plugin = jabra_gnp
+
 # Jabra Evolve3 45 Mono [runtime]
 [USB\VID_0B0E&PID_2552]
 Plugin = jabra_gnp
