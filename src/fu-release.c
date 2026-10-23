@@ -211,7 +211,7 @@ void
 fu_release_set_stream(FuRelease *self, FuInputStream *stream)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
-	g_return_if_fail(FU_IS_INPUT_STREAM(stream));
+	g_return_if_fail(FWUPD_IS_INPUT_STREAM(stream));
 	g_set_object(&self->stream, stream);
 }
 

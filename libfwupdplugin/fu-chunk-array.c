@@ -269,7 +269,7 @@ fu_chunk_array_new_from_stream(FuInputStream *stream,
 {
 	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
 

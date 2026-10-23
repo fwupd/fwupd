@@ -82,12 +82,23 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* get a list of compatible strings */
+	/* each method has its own node, e.g. firmware0, so use it to tell them apart */
+	if (priv->fdt_node != NULL)
+		fu_device_set_logical_id(device, fu_firmware_get_id(FU_FIRMWARE(priv->fdt_node)));
+
+	/* get a list of compatible strings, which not all firmware provides */
 	if (!fu_fdt_image_get_attr_strlist(priv->fdt_root,
 					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
 					   &priv->compatible,
-					   error))
-		return FALSE;
+					   NULL))
+		g_debug("no compatible strings for the board");
+
+	/* the board's compatible string selects the firmware for it */
+	if (priv->compatible != NULL && priv->compatible[0] != NULL) {
+		fu_device_add_instance_strsafe(device, "COMPATIBLE", priv->compatible[0]);
+		if (!fu_device_build_instance_id(device, error, "VBE", "COMPATIBLE", NULL))
+			return FALSE;
+	}
 
 	/* get baseclass shared attributes */
 	fu_fdt_image_get_attr_str(priv->fdt_node, "cur-version", &version, NULL);

@@ -2,7 +2,7 @@
 Description=Firmware update daemon
 Documentation=https://fwupd.org/
 Wants=modprobe@sd_mod.service
-After=modprobe@sd_mod.service dbus.service
+After=modprobe@sd_mod.service dbus.service local-fs.target
 Before=display-manager.service
 ConditionVirtualization=!container
 

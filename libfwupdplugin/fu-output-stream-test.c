@@ -19,7 +19,7 @@ fu_output_stream_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) istream = NULL;
+	g_autoptr(FwupdFileInputStream) istream = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 	const guint8 buf[] = {'h', 'e', 'l', 'l', 'o'};
 
@@ -42,15 +42,16 @@ fu_output_stream_func(void)
 	g_assert_true(ret);
 
 	/* read it back and verify the contents match */
-	istream = fu_input_stream_from_path(fn, &error);
+	istream = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(istream);
-	ret = fu_input_stream_size(istream, &streamsz, &error);
+	ret = fu_input_stream_size(FWUPD_INPUT_STREAM(istream), &streamsz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(streamsz, ==, sizeof(buf));
 
-	blob2 = fu_input_stream_read_bytes(istream, 0, sizeof(buf), NULL, &error);
+	blob2 =
+	    fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(istream), 0, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob2);
 	g_assert_true(fu_bytes_compare(blob, blob2, &error));

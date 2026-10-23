@@ -226,7 +226,8 @@ fu_acpi_sbom_entry_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuInputStream) istream1 = NULL;
 		g_autoptr(FuInputStream) istream2 = NULL;
 
-		istream1 = fu_memory_input_stream_new_from_bytes(blob_uncompressed);
+		istream1 =
+		    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob_uncompressed));
 		istream2 = fu_compressor_stream_new_compress(istream1,
 							     FWUPD_COMPRESSOR_FORMAT_ZLIB,
 							     error);

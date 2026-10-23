@@ -3,6 +3,18 @@ cargo_env.set('MESON_BUILDTYPE', get_option('buildtype'))
 cargo_env.set('MESON_BUILD_ROOT', meson.project_build_root())
 cargo_env.set('WORKSPACE_CARGO_TOML', join_paths(meson.project_source_root(), 'Cargo.toml'))
 cargo_env.set('CARGO', cargo.full_path())
+
+glib_libdir = glib.get_variable(
+  pkgconfig: 'libdir',
+  default_value: '',
+)
+if glib_libdir != ''
+  cargo_env.append(
+    'RUSTFLAGS',
+    '-L' + glib_libdir,
+    separator: ' ',
+  )
+endif
 if meson.is_cross_build()
   rust_target = meson.get_external_property('rust_target', '')
   if rust_target != ''

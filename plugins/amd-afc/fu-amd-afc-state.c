@@ -1681,7 +1681,8 @@ fu_amd_afc_state_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, varstores->data, varstores->len);
 
 	/* ACPI header */
-	table_payload = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	table_payload =
+	    FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_data(buf->data, buf->len, NULL));
 	fu_acpi_table_set_payload(FU_ACPI_TABLE(table), table_payload);
 	return fu_firmware_write_array(FU_FIRMWARE(table), error);
 }

@@ -25,7 +25,7 @@
 %endif
 
 # fwupd.efi is only available on these arches
-%ifarch x86_64 aarch64 riscv64
+%ifarch x86_64 aarch64 riscv64 loongarch64
 %global have_uefi 1
 %endif
 
@@ -149,7 +149,7 @@ Obsoletes: %{name}-plugin-flashrom < 2.1.4
 
 # optional, but a really good idea
 Recommends: udisks2
-Recommends: bluez
+Suggests: bluez
 Recommends: jq
 %if 0%{?have_passim}
 Recommends: passim

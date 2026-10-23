@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dump.h"
 #include "fu-fdt-image.h"
@@ -229,24 +230,53 @@ fu_fit_firmware_verify_image(FuFitFirmware *self,
 	blob = fu_fdt_image_get_attr(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_DATA, NULL);
 	if (blob == NULL) {
 		guint32 data_size = 0x0;
-		guint32 data_offset = 0x0;
+		guint32 data_position = 0x0;
+		gsize offset;
 
-		/* extra data outside of FIT image */
-		if (!fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(img),
-					       FU_FIT_FIRMWARE_ATTR_DATA_OFFSET,
-					       &data_offset,
-					       error))
-			return FALSE;
+		/* extra data outside of FIT image, either at an absolute position or at an
+		 * offset from the end of the FIT, which is aligned to 4 bytes */
+		if (fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(img),
+					      FU_FIT_FIRMWARE_ATTR_DATA_POSITION,
+					      &data_position,
+					      NULL)) {
+			offset = data_position;
+		} else {
+			guint32 data_offset = 0x0;
+
+			if (!fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(img),
+						       FU_FIT_FIRMWARE_ATTR_DATA_OFFSET,
+						       &data_offset,
+						       error))
+				return FALSE;
+
+			/* the size of the FIT is the totalsize from its header */
+			offset = fu_size_checked_add(
+			    fu_common_align_up(fu_firmware_get_size(FU_FIRMWARE(self)),
+					       FU_FIRMWARE_ALIGNMENT_4),
+			    data_offset);
+		}
 		if (!fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(img),
 					       FU_FIT_FIRMWARE_ATTR_DATA_SIZE,
 					       &data_size,
 					       error))
 			return FALSE;
-		blob = fu_input_stream_read_bytes(stream, data_offset, data_size, NULL, error);
+		blob = fu_input_stream_read_bytes(stream, offset, data_size, NULL, error);
 		if (blob == NULL)
 			return FALSE;
+		if (g_bytes_get_size(blob) != data_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "external data is truncated, got 0x%x bytes but expected 0x%x",
+				    (guint)g_bytes_get_size(blob),
+				    data_size);
+			return FALSE;
+		}
 	}
 	fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
+
+	/* keep the data, which may not be in the image */
+	fu_firmware_set_bytes(img, blob);
 
 	/* verify any hashes we recognize */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
@@ -277,11 +307,14 @@ fu_fit_firmware_verify_configuration(FuFitFirmware *self,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
-	/* sanity check */
-	if (!fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(img),
-					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
-					   NULL,
-					   error))
+	g_autoptr(GBytes) blob = NULL;
+
+	/* the compatible strings are optional, but must be valid if present */
+	blob = fu_fdt_image_get_attr(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_COMPATIBLE, NULL);
+	if (blob != NULL && !fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(img),
+							   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
+							   NULL,
+							   error))
 		return FALSE;
 
 	/* success */

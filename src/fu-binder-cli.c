@@ -243,51 +243,52 @@ fu_binder_cli_sync_impl_connect(FwupdClient *client,
 static gboolean
 fu_binder_cli_sync_impl_install(FwupdClient *client,
 				const gchar *device_id,
-				const gchar *filename,
+				FuInputStream *stream,
+				const gchar *filename_hint,
 				FwupdInstallFlags install_flags,
 				gpointer user_data,
 				GCancellable *cancellable,
 				GError **error)
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
-	gint fd;
-	g_autoptr(GUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
-	stream = fwupd_unix_input_stream_from_fn(filename, error);
-	if (stream == NULL)
+	/* convert the FuInputStream into a FuUnixInputStream */
+	ustream = fwupd_unix_input_stream_from_stream(stream, error);
+	if (ustream == NULL)
 		return FALSE;
-	fd = g_unix_input_stream_get_fd(stream);
 	return fu_binder_cli_bridge_install(self->fwupd_binder,
 					    device_id,
-					    fd,
+					    fwupd_unix_input_stream_get_fd(ustream),
 					    install_flags,
-					    filename,
+					    filename_hint,
 					    error);
 }
 
 static gboolean
 fu_binder_cli_sync_impl_update_metadata(FwupdClient *client,
 					const gchar *remote_id,
-					const gchar *metadata_fn,
-					const gchar *signature_fn,
+					FuInputStream *stream,
+					FuInputStream *stream_sig,
 					gpointer user_data,
 					GCancellable *cancellable,
 					GError **error)
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
-	g_autoptr(GUnixInputStream) metadata_stream = NULL;
-	g_autoptr(GUnixInputStream) signature_stream = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream_sig = NULL;
 
-	metadata_stream = fwupd_unix_input_stream_from_fn(metadata_fn, error);
-	if (metadata_stream == NULL)
+	/* convert the FuInputStream into a FuUnixInputStream */
+	ustream = fwupd_unix_input_stream_from_stream(stream, error);
+	if (ustream == NULL)
 		return FALSE;
-	signature_stream = fwupd_unix_input_stream_from_fn(signature_fn, error);
-	if (signature_stream == NULL)
+	ustream_sig = fwupd_unix_input_stream_from_stream(stream_sig, error);
+	if (ustream_sig == NULL)
 		return FALSE;
 	return fu_binder_cli_bridge_update_metadata(self->fwupd_binder,
 						    remote_id,
-						    g_unix_input_stream_get_fd(metadata_stream),
-						    g_unix_input_stream_get_fd(signature_stream),
+						    fwupd_unix_input_stream_get_fd(ustream),
+						    fwupd_unix_input_stream_get_fd(ustream_sig),
 						    error);
 }
 
@@ -419,19 +420,20 @@ fu_binder_cli_sync_impl_clear_results(FwupdClient *client,
 
 static GPtrArray *
 fu_binder_cli_sync_impl_get_details(FwupdClient *client,
-				    const gchar *filename,
+				    FuInputStream *stream,
 				    gpointer user_data,
 				    GCancellable *cancellable,
 				    GError **error)
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
-	g_autoptr(GUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
 
-	stream = fwupd_unix_input_stream_from_fn(filename, error);
-	if (stream == NULL)
+	/* convert the FuInputStream into a FuUnixInputStream */
+	ustream = fwupd_unix_input_stream_from_stream(stream, error);
+	if (ustream == NULL)
 		return NULL;
 	return fu_binder_cli_bridge_get_details(self->fwupd_binder,
-						g_unix_input_stream_get_fd(stream),
+						fwupd_unix_input_stream_get_fd(ustream),
 						error);
 }
 

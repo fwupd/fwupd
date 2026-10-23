@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+#include "fwupd-input-stream-private.h"
+
 #include "fu-crc.h"
 #include "fu-endian.h"
 #include "fu-progress.h"
@@ -16,29 +18,10 @@ G_BEGIN_DECLS
 
 typedef struct FuRsStreamImpl FuRsStreamImpl;
 
-#define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GObject)
+/* FuInputStream is a compatibility alias for the FwupdInputStream base class */
+typedef FwupdInputStream FuInputStream;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuInputStream, g_object_unref)
 
-struct _FuInputStreamClass {
-	GObjectClass parent_class;
-	gssize (*read_fn)(FuInputStream *stream,
-			  void *buffer,
-			  gsize count,
-			  GCancellable *cancellable,
-			  GError **error);
-	goffset (*tell)(FuInputStream *stream);
-	gboolean (*can_seek)(FuInputStream *stream);
-	gboolean (*seek)(FuInputStream *stream,
-			 goffset offset,
-			 GSeekType type,
-			 GCancellable *cancellable,
-			 GError **error);
-	FuRsStreamImpl *(*get_stream_impl)(FuInputStream *stream);
-};
-
-FuInputStream *
-fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
 gboolean
 fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error) G_GNUC_NON_NULL(1);
 gboolean
@@ -147,8 +130,5 @@ fu_input_stream_find(FuInputStream *stream,
 		     gsize offset,
 		     gsize *offset_found,
 		     GError **error) G_GNUC_NON_NULL(1, 2);
-
-FuRsStreamImpl *
-fu_input_stream_get_stream_impl(FuInputStream *stream) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

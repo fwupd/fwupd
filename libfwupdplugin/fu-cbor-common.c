@@ -493,7 +493,7 @@ fu_cbor_parse(FuInputStream *stream,
 	    .max_length = max_length,
 	};
 
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (offset != NULL)

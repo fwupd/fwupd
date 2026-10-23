@@ -10,8 +10,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-jcat-file.h"
-
 #include "fu-cabinet.h"
 #include "fu-jcat-context.h"
 #include "fu-jcat-engine.h"
@@ -621,9 +619,7 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 		/* TODO: move this to libjcat? */
 		if (!g_seekable_seek(G_SEEKABLE(istream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream_impl(self->jcat_file,
-							fu_input_stream_get_stream_impl(istream),
-							error)) {
+		if (!fwupd_jcat_file_import_stream2(self->jcat_file, istream, error)) {
 			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
@@ -937,9 +933,7 @@ fu_cabinet_sign(FuCabinet *self,
 			return FALSE;
 		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream_impl(jcat_file,
-							fu_input_stream_get_stream_impl(stream),
-							error))
+		if (!fwupd_jcat_file_import_stream2(jcat_file, stream, error))
 			return FALSE;
 	}
 

@@ -152,7 +152,7 @@ def run_tests(args: argparse.Namespace, prefix: str) -> int:
         # start the daemon detached; it keeps running after this adb shell returns
         print("starting fwupd daemon...", flush=True)
         adb_shell(
-            f"G_MESSAGES_DEBUG=all {env_common} nohup {daemon} "
+            f"G_MESSAGES_DEBUG=all {env_common} nohup {daemon} -vv "
             f">{DAEMON_LOG} 2>&1 </dev/null &"
         )
 
@@ -174,7 +174,16 @@ def run_tests(args: argparse.Namespace, prefix: str) -> int:
 
         # exercise the client -> daemon binder path; exit code 2 is "nothing to do"
         rc = 0
-        for cmd in ["get-plugins", "get-devices"]:
+        for cmd in [
+            "refresh",
+            "get-plugins",
+            "get-remotes",
+            "get-devices",
+            "get-upgrades",
+            "get-history",
+            "get-bios-setting",
+            "security",
+        ]:
             print(f"=== fwupdmgr {cmd} ===", flush=True)
             cmd_rc = adb_shell(f"{env_common} {fwupdmgr} {cmd}", check=False)
             print(f"fwupdmgr {cmd} exit={cmd_rc}", flush=True)

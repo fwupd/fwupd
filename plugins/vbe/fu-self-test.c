@@ -11,6 +11,10 @@
 #include "fu-vbe-plugin.h"
 #include "fu-vbe-simple-device.h"
 
+/* vbe-simple treats area-size as the end of its area, not its size */
+#define FU_VBE_SIMPLE_TEST_AREA_START 0x1000
+#define FU_VBE_SIMPLE_TEST_AREA_SIZE  0x3000
+
 static FuTemporaryDirectory *
 fu_vbe_test_write_fdt(FuContext *ctx, const gchar *xml, GError **error)
 {
@@ -39,16 +43,27 @@ fu_vbe_plugin_coldplug_func(void)
 	gboolean ret;
 	GPtrArray *devices;
 	FuDevice *dev;
+	g_autofree gchar *storage = NULL;
+	g_autofree gchar *xml = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir_storage = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_firmware_gtypes(ctx);
 
-	tmpdir = fu_vbe_test_write_fdt(
-	    ctx,
+	/* the device is opened when it is added */
+	tmpdir_storage = fu_temporary_directory_new("vbe-storage", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir_storage);
+	storage = fu_temporary_directory_build(tmpdir_storage, "testfw", NULL);
+	ret = g_file_set_contents(storage, "", 0, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	xml = g_strdup_printf(
 	    "<firmware gtype=\"FuFdtFirmware\">\n"
 	    "  <firmware gtype=\"FuFdtImage\">\n"
 	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
@@ -61,7 +76,7 @@ fu_vbe_plugin_coldplug_func(void)
 	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
 	    "          <metadata key=\"cur-version\" format=\"str\">1.2.3</metadata>\n"
 	    "          <metadata key=\"bootloader-version\" format=\"str\">2022.01</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">/tmp/testfw</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
 	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
 	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
 	    "        </firmware>\n"
@@ -69,7 +84,8 @@ fu_vbe_plugin_coldplug_func(void)
 	    "    </firmware>\n"
 	    "  </firmware>\n"
 	    "</firmware>\n",
-	    &error);
+	    storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 
@@ -82,6 +98,75 @@ fu_vbe_plugin_coldplug_func(void)
 
 	dev = g_ptr_array_index(devices, 0);
 	g_assert_true(FU_IS_VBE_SIMPLE_DEVICE(dev));
+
+	/* the device has been probed, so it knows its version */
+	g_assert_cmpstr(fu_device_get_version(dev), ==, "1.2.3");
+}
+
+static void
+fu_vbe_plugin_coldplug_two_func(void)
+{
+	gboolean ret;
+	GPtrArray *devices;
+	g_autofree gchar *storage = NULL;
+	g_autofree gchar *xml = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir_storage = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_firmware_gtypes(ctx);
+	tmpdir_storage = fu_temporary_directory_new("vbe-storage", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir_storage);
+	storage = fu_temporary_directory_build(tmpdir_storage, "testfw", NULL);
+	ret = g_file_set_contents(storage, "", 0, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* two methods, each with its own node */
+	xml = g_strdup_printf(
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>chosen</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>fwupd</id>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware0</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
+	    "        </firmware>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware1</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x300000</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x400000</metadata>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    storage,
+	    storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* both are kept, rather than one replacing the other */
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 2);
+	g_assert_cmpstr(fu_device_get_id(g_ptr_array_index(devices, 0)),
+			!=,
+			fu_device_get_id(g_ptr_array_index(devices, 1)));
 }
 
 static void
@@ -145,14 +230,186 @@ fu_vbe_plugin_coldplug_invalid_compatible_func(void)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
 
+/* create a vbe-simple device for a board, as the plugin does */
+static FuDevice *
+fu_vbe_simple_test_device_new(FuContext *ctx, const gchar *storage)
+{
+	g_autofree gchar *xml = NULL;
+	g_autoptr(FuFirmware) fdt = NULL;
+	g_autoptr(FuFdtImage) fdt_root = NULL;
+	g_autoptr(FuFdtImage) fdt_node = NULL;
+	g_autoptr(GError) error = NULL;
+
+	xml = g_strdup_printf(
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>chosen</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>fwupd</id>\n"
+	    "        <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>firmware</id>\n"
+	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
+	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
+	    "          <metadata key=\"area-start\" format=\"uint32\">0x%x</metadata>\n"
+	    "          <metadata key=\"area-size\" format=\"uint32\">0x%x</metadata>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    storage,
+	    (guint)FU_VBE_SIMPLE_TEST_AREA_START,
+	    (guint)FU_VBE_SIMPLE_TEST_AREA_SIZE);
+	fu_context_add_firmware_gtypes(ctx);
+	fdt = fu_firmware_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt);
+	fdt_root = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/chosen/fwupd", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt_root);
+	fdt_node = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt),
+						     "/chosen/fwupd/firmware",
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt_node);
+
+	return g_object_new(FU_TYPE_VBE_SIMPLE_DEVICE,
+			    "context",
+			    ctx,
+			    "fdt-root",
+			    fdt_root,
+			    "fdt-node",
+			    fdt_node,
+			    NULL);
+}
+
+static void
+fu_vbe_simple_device_probe_storage_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* the device number follows the media name */
+	dev = fu_vbe_simple_test_device_new(ctx, "mmc1");
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_device_to_string(dev);
+	g_assert_nonnull(g_strstr_len(str, -1, "/dev/mmcblk1"));
+
+	/* updates can be for every vbe-simple board, or just this one */
+	g_assert_true(fu_device_has_instance_id(dev,
+						"bb3b05a8-ebef-11ec-be98-d3a15278be95",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"VBE\\COMPATIBLE_pine64-rockpro64-v2.1",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+/* build a FIT with firmware for two boards, the second being the test board */
+static GBytes *
+fu_vbe_simple_test_fit_new(void)
+{
+	g_autoptr(FuFirmware) fit = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fit = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFitFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>images</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-1</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">other</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">b3RoZXI=</metadata>\n" /* other */
+	    "        <metadata key=\"store-offset\" format=\"uint32\">0x100</metadata>\n"
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>firmware-2</id>\n"
+	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
+	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
+	    "        <metadata key=\"data\" format=\"data\">cm9jaw==</metadata>\n" /* rock */
+	    "        <metadata key=\"store-offset\" format=\"uint32\">0x200</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>configurations</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-1</id>\n"
+	    "        <metadata key=\"compatible\" format=\"strlist\">other,board</metadata>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
+	    "      </firmware>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>conf-2</id>\n"
+	    "        <metadata key=\"compatible\" "
+	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
+	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fit);
+	blob = fu_firmware_write(fit, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	return g_steal_pointer(&blob);
+}
+
+static void
+fu_vbe_simple_device_prepare_func(void)
+{
+	FuFirmware *img;
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	dev = fu_vbe_simple_test_device_new(ctx, "mmc1");
+	ret = fu_device_probe(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* only the image in the configuration for this board is used */
+	blob = fu_vbe_simple_test_fit_new();
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
+	firmware =
+	    fu_device_prepare_firmware(dev, stream, progress, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	imgs = fu_firmware_get_images(firmware);
+	g_assert_cmpint(imgs->len, ==, 1);
+	img = g_ptr_array_index(imgs, 0);
+	g_assert_cmpstr(fu_firmware_get_id(img), ==, "firmware-2");
+}
+
 int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/vbe/coldplug", fu_vbe_plugin_coldplug_func);
+	g_test_add_func("/vbe/coldplug/two", fu_vbe_plugin_coldplug_two_func);
 	g_test_add_func("/vbe/coldplug/no-fdt", fu_vbe_plugin_coldplug_no_fdt_func);
 	g_test_add_func("/vbe/coldplug/invalid-compatible",
 			fu_vbe_plugin_coldplug_invalid_compatible_func);
+	g_test_add_func("/vbe/simple/probe-storage", fu_vbe_simple_device_probe_storage_func);
+	g_test_add_func("/vbe/simple/prepare", fu_vbe_simple_device_prepare_func);
 	return g_test_run();
 }

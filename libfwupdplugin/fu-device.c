@@ -23,7 +23,6 @@
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
 #include "fu-kernel-search-path-private.h"
-#include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
 #include "fu-progress-private.h"
 #include "fu-quirks.h"
@@ -846,7 +845,7 @@ fu_device_set_contents(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -942,7 +941,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdMemoryInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -950,8 +949,8 @@ fu_device_set_contents_bytes(FuDevice *self,
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = fu_memory_input_stream_new_from_bytes(blob);
-	return fu_device_set_contents(self, filename, stream, progress, error);
+	stream = fwupd_memory_input_stream_new_from_bytes(blob);
+	return fu_device_set_contents(self, filename, FWUPD_INPUT_STREAM(stream), progress, error);
 }
 
 /**
@@ -978,7 +977,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(FwupdFileInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1005,10 +1004,10 @@ fu_device_get_contents_bytes(FuDevice *self,
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* open for reading */
-	istr = fu_input_stream_from_path(filename, error);
+	istr = fwupd_file_input_stream_new(filename, error);
 	if (istr == NULL)
 		return NULL;
-	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
+	blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(istr), 0, count, progress, error);
 	if (blob == NULL)
 		return NULL;
 
@@ -1044,7 +1043,7 @@ fu_device_get_contents(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(FwupdFileInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1071,10 +1070,10 @@ fu_device_get_contents(FuDevice *self,
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* open for reading */
-	istr = fu_input_stream_from_path(filename, error);
+	istr = fwupd_file_input_stream_new(filename, error);
 	if (istr == NULL)
 		return NULL;
-	str = fu_input_stream_read_string(istr, 0, count, error);
+	str = fu_input_stream_read_string(FWUPD_INPUT_STREAM(istr), 0, count, error);
 	if (str == NULL)
 		return NULL;
 
@@ -5772,7 +5771,7 @@ fu_device_prepare_firmware(FuDevice *self,
 	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 

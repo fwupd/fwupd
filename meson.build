@@ -318,7 +318,7 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').require(host_machine.system() == 'linux').require(
+  hsi = get_option('hsi').require(host_machine.system() in ['linux', 'android']).require(
     host_cpu in ['x86', 'x86_64']
   ).allowed()
   if hsi

@@ -25,7 +25,6 @@
 #include "fwupd-error.h"
 
 #include "fu-efivars-private.h"
-#include "fu-file-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-linux-efivars.h"
 #include "fu-mem.h"
@@ -231,14 +230,14 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	gsize bufsz = 0;
 	guint32 attr_tmp = 0;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(FuInputStream) istr = NULL;
+	g_autoptr(FwupdFileInputStream) istr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* open file as stream */
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
 	if (fn == NULL)
 		return FALSE;
-	istr = fu_input_stream_from_path(fn, error);
+	istr = fwupd_file_input_stream_new(fn, error);
 	if (istr == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -246,7 +245,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 
 	/* the efivars file is not seekable, so we cannot query the size ahead of
 	 * time -- just read the whole variable until we hit EOF */
-	blob = fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, NULL, error);
+	blob = fu_input_stream_read_bytes(FWUPD_INPUT_STREAM(istr), 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;

@@ -26,7 +26,6 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-installer.h"
 #include "fu-engine-requirements.h"
-#include "fu-unix-seekable-input-stream.h"
 
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
@@ -282,7 +281,8 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 
 	/* get stream */
 	if (fd >= 0) {
-		stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+		/* the caller owns the fd */
+		stream = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new(fd, FALSE, error));
 		if (stream == NULL) {
 			g_prefix_error_literal(error, "invalid stream: ");
 			return FALSE;
@@ -472,15 +472,15 @@ fu_binder_daemon_reset_config_bridge(void *daemon_instance, const gchar *section
 gboolean
 fu_binder_daemon_update_metadata_bridge(void *daemon_instance,
 					const gchar *remote_id,
-					int data_fd,
-					int signature_fd,
+					FuInputStream *stream,
+					FuInputStream *stream_sig,
 					GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.refresh-remote", error))
 		return FALSE;
-	return fu_engine_update_metadata(engine, remote_id, data_fd, signature_fd, error);
+	return fu_engine_update_metadata(engine, remote_id, stream, stream_sig, error);
 }
 
 gboolean

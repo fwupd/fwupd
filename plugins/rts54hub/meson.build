@@ -22,6 +22,6 @@ plugin_builtins += static_library(
 )
 
 device_tests += files(
-  'tests/realtek-rts5423.json',
   'tests/realtek-br1u3aa.json',
+  'tests/realtek-rts5423.json',
 )

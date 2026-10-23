@@ -20,7 +20,6 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
-#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-usb-bos-descriptor-private.h"
 
@@ -94,15 +93,15 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
-		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(FwupdMemoryInputStream) stream = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GBytes) bytes = NULL;
 
 		bytes = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 		/* create child */
-		stream = fu_memory_input_stream_new_from_bytes(bytes);
+		stream = fwupd_memory_input_stream_new_from_bytes(bytes);
 		if (!fu_firmware_parse_stream(img,
-					      stream,
+					      FWUPD_INPUT_STREAM(stream),
 					      0x0,
 					      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					      error))

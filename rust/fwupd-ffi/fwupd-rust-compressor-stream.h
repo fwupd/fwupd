@@ -31,7 +31,7 @@ fu_rs_compressor_stream_can_seek(FuRsCompressorStream *stream);
 void
 fu_rs_compressor_stream_free(FuRsCompressorStream *stream);
 FuRsStreamImpl *
-fu_rs_compressor_stream_get_stream_impl(const FuRsCompressorStream *stream);
+fu_rs_compressor_stream_get_impl(const FuRsCompressorStream *stream);
 
 FuRsDecompressorStream *
 fu_rs_compressor_stream_new_decompress(FuRsStreamImpl *base_stream,
@@ -44,6 +44,6 @@ fu_rs_decompressor_stream_can_seek(FuRsDecompressorStream *stream);
 void
 fu_rs_decompressor_stream_free(FuRsDecompressorStream *stream);
 FuRsStreamImpl *
-fu_rs_decompressor_stream_get_stream_impl(const FuRsDecompressorStream *stream);
+fu_rs_decompressor_stream_get_impl(const FuRsDecompressorStream *stream);
 
 G_END_DECLS

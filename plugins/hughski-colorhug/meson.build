@@ -20,7 +20,7 @@ plugin_builtins += static_library(
 )
 
 device_tests += files(
-  'tests/hughski-colorhug.json',
   'tests/hughski-colorhug2.json',
   'tests/hughski-colorhug-plus.json',
+  'tests/hughski-colorhug.json',
 )

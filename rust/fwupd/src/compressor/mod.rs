@@ -150,7 +150,10 @@ impl Read for Decompressor {
                     return Ok(produced);
                 }
                 Err(e) => {
-                    return Err(std::io::Error::other(e.to_string()));
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        e.to_string(),
+                    ));
                 }
             }
         }

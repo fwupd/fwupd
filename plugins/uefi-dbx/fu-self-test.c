@@ -296,7 +296,7 @@ fu_uefi_dbx_prepare_firmware_func(void)
 	g_assert_nonnull(blob);
 
 	/* parse it back through the device */
-	stream = fu_memory_input_stream_new_from_bytes(blob);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
 	firmware = fu_device_prepare_firmware(device,
 					      stream,
 					      progress,

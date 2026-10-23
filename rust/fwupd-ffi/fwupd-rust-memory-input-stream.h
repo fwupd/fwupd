@@ -32,6 +32,6 @@ fu_rs_memory_input_stream_tell(FuRsMemoryInputStream *stream);
 gsize
 fu_rs_memory_input_stream_size(const FuRsMemoryInputStream *stream);
 FuRsStreamImpl *
-fu_rs_memory_input_stream_get_stream_impl(const FuRsMemoryInputStream *stream);
+fu_rs_memory_input_stream_get_impl(const FuRsMemoryInputStream *stream);
 
 G_END_DECLS

@@ -143,7 +143,7 @@ fu_pixart_tp_section_parse(FuFirmware *firmware,
 	g_autoptr(FuStructPixartTpFirmwareSectionHdr) st = NULL;
 
 	g_return_val_if_fail(FU_IS_PIXART_TP_SECTION(self), FALSE);
-	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
 
 	st = fu_struct_pixart_tp_firmware_section_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)

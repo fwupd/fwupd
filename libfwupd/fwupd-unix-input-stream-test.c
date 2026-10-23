@@ -12,13 +12,10 @@
 #include <sys/mman.h>
 #endif
 
-#include "fwupd-error.h"
-
-#include "fu-input-stream.h"
-#include "fu-unix-seekable-input-stream.h"
+#include <fwupd.h>
 
 static void
-fu_unix_seekable_input_stream_func(void)
+fwupd_unix_input_stream_func(void)
 {
 #ifdef HAVE_GIO_UNIX
 	gssize ret;
@@ -26,54 +23,58 @@ fu_unix_seekable_input_stream_func(void)
 	guint8 buf[6] = {0};
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
 
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "os-release", NULL);
 	g_assert_nonnull(fn);
 	fd = g_open(fn, O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
 
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
+	g_assert_cmpint(fwupd_unix_input_stream_get_fd(FWUPD_UNIX_INPUT_STREAM(stream)), >=, 0);
 
 	/* first chuck */
-	ret = fu_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret =
+	    fwupd_input_stream_read(FWUPD_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
+	g_assert_cmpstr((const gchar *)buf, ==, "NAME=");
 
 	/* second chuck */
-	ret = fu_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret =
+	    fwupd_input_stream_read(FWUPD_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, " vers");
+	g_assert_cmpstr((const gchar *)buf, ==, "\"Gene");
 
 	/* first chuck, again */
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 1);
-	ret = fu_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret =
+	    fwupd_input_stream_read(FWUPD_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
+	g_assert_cmpstr((const gchar *)buf, ==, "NAME=");
 #else
 	g_test_skip("No gio-unix-2.0 support, skipping");
 #endif
 }
 
 static void
-fu_unix_seekable_input_stream_non_regular_func(void)
+fwupd_unix_input_stream_non_regular_func(void)
 {
 #ifdef HAVE_GIO_UNIX
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
 
 	fd = g_open("/dev/zero", O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
 
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(stream);
 #else
@@ -82,13 +83,13 @@ fu_unix_seekable_input_stream_non_regular_func(void)
 }
 
 static void
-fu_unix_seekable_input_stream_sealed_memfd_func(void)
+fwupd_unix_input_stream_sealed_memfd_func(void)
 {
 #if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
 	gboolean ret;
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
 	const gchar data[] = "hello";
 
 	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
@@ -100,11 +101,10 @@ fu_unix_seekable_input_stream_sealed_memfd_func(void)
 	    ==,
 	    0);
 
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	ret = fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							 &error);
+	ret = fwupd_unix_input_stream_require_seal(FWUPD_UNIX_INPUT_STREAM(stream), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 #else
@@ -113,13 +113,13 @@ fu_unix_seekable_input_stream_sealed_memfd_func(void)
 }
 
 static void
-fu_unix_seekable_input_stream_unsealed_memfd_func(void)
+fwupd_unix_input_stream_unsealed_memfd_func(void)
 {
 #if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
 	gboolean ret;
 	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
 	const gchar data[] = "hello";
 
 	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
@@ -127,11 +127,10 @@ fu_unix_seekable_input_stream_unsealed_memfd_func(void)
 	g_assert_cmpint(write(fd, data, sizeof(data)), ==, sizeof(data));
 	g_assert_cmpint(lseek(fd, 0, SEEK_SET), ==, 0);
 
-	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	stream = fwupd_unix_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	ret = fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream),
-							 &error);
+	ret = fwupd_unix_input_stream_require_seal(FWUPD_UNIX_INPUT_STREAM(stream), &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 #else
@@ -139,17 +138,47 @@ fu_unix_seekable_input_stream_unsealed_memfd_func(void)
 #endif
 }
 
+static void
+fwupd_unix_input_stream_new_from_filename_func(void)
+{
+#ifdef HAVE_GIO_UNIX
+	gssize ret;
+	guint8 buf[6] = {0};
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdUnixInputStream) stream = NULL;
+	g_autoptr(FwupdUnixInputStream) stream_missing = NULL;
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "os-release", NULL);
+	stream = fwupd_unix_input_stream_new_from_filename(fn, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	ret =
+	    fwupd_input_stream_read(FWUPD_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(ret, ==, 5);
+	g_assert_cmpstr((const gchar *)buf, ==, "NAME=");
+
+	stream_missing = fwupd_unix_input_stream_new_from_filename("/nonexistent", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(stream_missing);
+#else
+	g_test_skip("No gio-unix-2.0 support, skipping");
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
-	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream", fwupd_unix_input_stream_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream/new-from-filename",
+			fwupd_unix_input_stream_new_from_filename_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/non-regular",
-			fu_unix_seekable_input_stream_non_regular_func);
+			fwupd_unix_input_stream_non_regular_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/sealed-memfd",
-			fu_unix_seekable_input_stream_sealed_memfd_func);
+			fwupd_unix_input_stream_sealed_memfd_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/unsealed-memfd",
-			fu_unix_seekable_input_stream_unsealed_memfd_func);
+			fwupd_unix_input_stream_unsealed_memfd_func);
 	return g_test_run();
 }
