@@ -10,7 +10,6 @@ doc = false
 
 [dependencies]
 fwupd = { path = "../fwupd" }
-clap = { version = "4", features = ["derive"] }
 
 [lints]
 workspace = true

@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+/// A simple tool to inspect and manipulate CAB archives.
 use std::fs::File;
 use std::io::{BufRead, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, UNIX_EPOCH};
 
-use clap::{Parser, Subcommand};
+use fwupd::argparse::Args;
 use fwupd::cab::wire::{
     CFData, CFFile, CFFolder, CFHeader, CFHeaderFlag, CFHeaderFlags, CFHeaderReserve, FixedSizeIO,
 };
@@ -22,69 +23,76 @@ use fwupd::streams::{FileInputStream, IntoStream, ReadSeek};
 use fwupd::units::ByteCount;
 use fwupd::Bitflags;
 
-#[derive(Parser)]
-#[command(name = "cabtool", about = "Inspect and extract CAB archives")]
-struct Cli {
-    #[command(subcommand)]
-    command: Command,
+fn usage() -> ! {
+    eprintln!(
+        "Usage: cabtool <COMMAND> [OPTIONS] <ARGS>
+
+Commands:
+  list     List files inside a CAB archive
+  extract  Extract files from a CAB archive
+  show     Show wire-level CAB structure
+  create   Create a new CAB archive from files
+
+Run `cabtool <COMMAND> --help` for command-specific options."
+    );
+    std::process::exit(1);
 }
 
-#[derive(Subcommand)]
-enum Command {
-    /// List files inside a CAB archive
-    List {
-        /// CAB archive to inspect
-        file: PathBuf,
+fn usage_list() -> ! {
+    eprintln!(
+        "Usage: cabtool list [OPTIONS] <FILE>
 
-        /// Long listing: show size, date, and time
-        #[arg(short = 'l', long)]
-        long: bool,
+Arguments:
+  <FILE>  CAB archive to inspect
 
-        /// With -l, show sizes in human-readable form (e.g. 2.9KB)
-        ///
-        // FIXME: can't use short -l here because it conflicts with --help
-        #[arg(long, requires = "long")]
-        human_readable: bool,
+Options:
+  -l, --long            Long listing: show size, date, and time
+      --human-readable  With -l, show sizes in human-readable form (e.g. 2.9KB)
+      --ignore-checksum Ignore checksums"
+    );
+    std::process::exit(1);
+}
 
-        /// Ignore checksums
-        #[arg(long)]
-        ignore_checksum: bool,
-    },
-    /// Extract files from a CAB archive
-    Extract {
-        /// CAB archive to extract
-        file: PathBuf,
+fn usage_extract() -> ! {
+    eprintln!(
+        "Usage: cabtool extract [OPTIONS] <FILE>
 
-        /// Directory to extract into (default: current directory)
-        #[arg(short, long, default_value = ".")]
-        output: PathBuf,
+Arguments:
+  <FILE>  CAB archive to extract
 
-        /// Ignore checksums
-        #[arg(long)]
-        ignore_checksum: bool,
+Options:
+  -o, --output <DIR>    Directory to extract into (default: .)
+      --ignore-checksum Ignore checksums
+      --only-basename   Strip directory components, use only the filename"
+    );
+    std::process::exit(1);
+}
 
-        /// Strip directory components, use only the filename
-        #[arg(long)]
-        only_basename: bool,
-    },
-    /// Show wire-level CAB structure
-    Show {
-        /// CAB archive to inspect
-        file: PathBuf,
+fn usage_show() -> ! {
+    eprintln!(
+        "Usage: cabtool show [OPTIONS] <FILE>
 
-        /// Decompress and print each file's payload (text for txt/json/xml, hex otherwise)
-        #[arg(long)]
-        show_payload: bool,
-    },
-    /// Create a new CAB archive from files
-    Create {
-        /// Output CAB archive path
-        output: PathBuf,
+Arguments:
+  <FILE>  CAB archive to inspect
 
-        /// Input files to pack into the archive
-        #[arg(required = true)]
-        files: Vec<PathBuf>,
-    },
+Options:
+      --show-payload  Decompress and print each file's payload"
+    );
+    std::process::exit(1);
+}
+
+fn usage_create() -> ! {
+    eprintln!(
+        "Usage: cabtool create [OPTIONS] <OUTPUT> <FILE>...
+
+Arguments:
+  <OUTPUT>   Output CAB archive path
+  <FILE>...  Input files to pack into the archive
+
+Options:
+      --compress  Compress files with MSZIP"
+    );
+    std::process::exit(1);
 }
 
 fn open_archive(path: &Path, flags: ParserFlags) -> Result<Archive, String> {
@@ -93,6 +101,7 @@ fn open_archive(path: &Path, flags: ParserFlags) -> Result<Archive, String> {
     Archive::new(src, 0, flags).map_err(|e| format!("{e}"))
 }
 
+/// List all files inside a CAB archive
 fn cmd_list(
     path: &Path,
     flags: ParserFlags,
@@ -144,7 +153,7 @@ fn cmd_list(
     Ok(())
 }
 
-fn open_input(path: &Path) -> Result<FileBuilder<Built>, String> {
+fn open_input(path: &Path, compress: bool) -> Result<FileBuilder<Built>, String> {
     let file = std::fs::File::open(path)
         .map_err(|e| format!("Failed to open '{}': {e}", path.display()))?;
     let meta = file
@@ -164,20 +173,25 @@ fn open_input(path: &Path) -> Result<FileBuilder<Built>, String> {
         system_time_to_msdos,
     );
 
-    Ok(FileBuilder::new(cab_path, stream, size)
+    let builder = FileBuilder::new(cab_path, stream, size)
         .date(date)
-        .time(time)
-        .build())
+        .time(time);
+    Ok(if compress {
+        builder.compress()
+    } else {
+        builder
+    }
+    .build())
 }
 
-fn cmd_create(output: &Path, inputs: &[PathBuf]) -> Result<(), String> {
+fn cmd_create(output: &Path, inputs: &[PathBuf], compress: bool) -> Result<(), String> {
     let (first, rest) = inputs.split_first().ok_or("no input files")?;
 
-    let file = open_input(first)?;
+    let file = open_input(first, compress)?;
     let mut builder = ArchiveBuilder::new().add_file(file);
 
     for input in rest {
-        let file = open_input(input)?;
+        let file = open_input(input, compress)?;
         builder = builder.add_file(file);
     }
 
@@ -237,6 +251,7 @@ fn system_time_to_msdos(t: std::time::SystemTime) -> (MsDosDate, MsDosTime) {
     )
 }
 
+/// Extract all files from a CAB archive
 fn cmd_extract(path: &Path, output: &Path, flags: ParserFlags) -> Result<(), String> {
     let mut archive = open_archive(path, flags)?;
     std::fs::create_dir_all(output).map_err(|e| format!("cannot create output directory: {e}"))?;
@@ -352,6 +367,7 @@ fn hexline(file_offset: usize, bytes: &[u8], name: &str, value: &str) {
     }
 }
 
+/// Show debugging information on a CAB archive
 #[allow(clippy::too_many_lines, clippy::range_plus_one)]
 fn cmd_show(path: &Path, show_payload: bool) -> Result<(), String> {
     let mut file = File::open(path).map_err(|e| format!("cannot open {}: {e}", path.display()))?;
@@ -719,39 +735,84 @@ fn cmd_show(path: &Path, show_payload: bool) -> Result<(), String> {
     Ok(())
 }
 
-fn main() {
-    let cli = Cli::parse();
+fn run_list(mut args: Args) -> Result<(), String> {
+    if args.help_requested() {
+        usage_list();
+    }
+    let long = args.option(&["-l", "--long"]);
+    let human_readable = args.option(&["--human-readable"]);
+    let ignore_checksum = args.option(&["--ignore-checksum"]);
+    let path = PathBuf::from(args.positional("FILE")?);
+    args.finish()?;
+    let mut flags = ParserFlags::empty();
+    if ignore_checksum {
+        flags |= ParserFlag::IgnoreChecksum.as_mask();
+    }
+    cmd_list(&path, flags, long, human_readable)
+}
 
-    let result = match &cli.command {
-        Command::List {
-            file,
-            long,
-            human_readable,
-            ignore_checksum,
-        } => {
-            let mut flags = ParserFlags::empty();
-            if *ignore_checksum {
-                flags |= ParserFlag::IgnoreChecksum.as_mask();
-            }
-            cmd_list(file, flags, *long, *human_readable)
+fn run_extract(mut args: Args) -> Result<(), String> {
+    if args.help_requested() {
+        usage_extract();
+    }
+    let output = PathBuf::from(
+        args.option_with_value(&["-o", "--output"])?
+            .unwrap_or_else(|| ".".to_string()),
+    );
+    let ignore_checksum = args.option(&["--ignore-checksum"]);
+    let only_basename = args.option(&["--only-basename"]);
+    let path = PathBuf::from(args.positional("FILE")?);
+    args.finish()?;
+    let mut flags = ParserFlags::empty();
+    if ignore_checksum {
+        flags |= ParserFlag::IgnoreChecksum.as_mask();
+    }
+    if only_basename {
+        flags |= ParserFlag::OnlyBasename.as_mask();
+    }
+    cmd_extract(&path, &output, flags)
+}
+
+fn run_show(mut args: Args) -> Result<(), String> {
+    if args.help_requested() {
+        usage_show();
+    }
+    let show_payload = args.option(&["--show-payload"]);
+    let path = PathBuf::from(args.positional("FILE")?);
+    args.finish()?;
+    cmd_show(&path, show_payload)
+}
+
+fn run_create(mut args: Args) -> Result<(), String> {
+    if args.help_requested() {
+        usage_create();
+    }
+    let compress = args.option(&["--compress"]);
+    let output = PathBuf::from(args.positional("OUTPUT")?);
+    let inputs: Vec<PathBuf> = args
+        .remaining_positionals()
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+    if inputs.is_empty() {
+        return Err("create requires at least one input <FILE>".to_string());
+    }
+    cmd_create(&output, &inputs, compress)
+}
+
+fn main() {
+    let mut args = Args::new(std::env::args().skip(1));
+
+    let result = match args.subcommand().as_deref() {
+        Some("list") => run_list(args),
+        Some("extract") => run_extract(args),
+        Some("show") => run_show(args),
+        Some("create") => run_create(args),
+        Some("--help" | "-h") | None => usage(),
+        Some(cmd) => {
+            eprintln!("error: unknown command '{cmd}'");
+            usage();
         }
-        Command::Extract {
-            file,
-            output,
-            ignore_checksum,
-            only_basename,
-        } => {
-            let mut flags = ParserFlags::empty();
-            if *ignore_checksum {
-                flags |= ParserFlag::IgnoreChecksum.as_mask();
-            }
-            if *only_basename {
-                flags |= ParserFlag::OnlyBasename.as_mask();
-            }
-            cmd_extract(file, output, flags)
-        }
-        Command::Show { file, show_payload } => cmd_show(file, *show_payload),
-        Command::Create { output, files } => cmd_create(output, files),
     };
 
     if let Err(e) = result {
