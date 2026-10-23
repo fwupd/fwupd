@@ -365,6 +365,57 @@ fu_realtek_scaler_device_attach(FuDevice *device, FuProgress *progress, GError *
 }
 
 static gboolean
+fu_realtek_scaler_device_write_chunk(FuRealtekScalerDevice *self, FuChunk *chk, GError **error)
+{
+	/* poll-then-write handshake for each data block: wait until the
+	 * device is ready for the next packet, then send it */
+	if (!fu_realtek_scaler_device_poll_status(self, error)) {
+		g_prefix_error(error,
+			       "failed to write @0x%04x: ",
+			       (guint)fu_chunk_get_address(chk));
+		return FALSE;
+	}
+	if (!fu_realtek_scaler_device_write(self,
+					    FU_REALTEK_SCALER_TARGET_ADDR_FG,
+					    FU_REALTEK_SCALER_FG_SUB_ADDR_DATA,
+					    fu_chunk_get_data(chk),
+					    fu_chunk_get_data_sz(chk),
+					    error)) {
+		g_prefix_error(error,
+			       "failed to write @0x%04x: ",
+			       (guint)fu_chunk_get_address(chk));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_realtek_scaler_device_write_chunks(FuRealtekScalerDevice *self,
+				      FuChunkArray *chunks,
+				      FuProgress *progress,
+				      GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		if (!fu_realtek_scaler_device_write_chunk(self, chk, error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_realtek_scaler_device_write_firmware(FuDevice *device,
 					FuFirmware *firmware,
 					FuProgress *progress,
@@ -506,34 +557,11 @@ fu_realtek_scaler_device_write_firmware(FuDevice *device,
 						error);
 	if (chunks == NULL)
 		return FALSE;
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-		/* poll-then-write handshake for each data block: wait until the
-		 * device is ready for the next packet, then send it */
-		if (!fu_realtek_scaler_device_poll_status(self, error)) {
-			g_prefix_error(error,
-				       "failed to write @0x%04x: ",
-				       (guint)fu_chunk_get_address(chk));
-			return FALSE;
-		}
-		if (!fu_realtek_scaler_device_write(self,
-						    FU_REALTEK_SCALER_TARGET_ADDR_FG,
-						    FU_REALTEK_SCALER_FG_SUB_ADDR_DATA,
-						    fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk),
-						    error)) {
-			g_prefix_error(error,
-				       "failed to write @0x%04x: ",
-				       (guint)fu_chunk_get_address(chk));
-			return FALSE;
-		}
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i + 1,
-						(gsize)fu_chunk_array_length(chunks));
-	}
+	if (!fu_realtek_scaler_device_write_chunks(self,
+						   chunks,
+						   fu_progress_get_child(progress),
+						   error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* finish: wait for the last data block to complete */
