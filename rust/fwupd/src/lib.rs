@@ -12,7 +12,7 @@ pub mod json;
 pub mod streams;
 pub mod units;
 
-pub use crate::bitflags::{BitflagIter, Bitflags};
+pub use crate::bitflags::{BitflagIter, Bitflags, InvalidBitflag};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -185,5 +185,68 @@ impl From<&std::io::Error> for Error {
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Error::from(&error)
+    }
+}
+
+/// Trait implementation around the [`unreachable`] macro.
+///
+/// This trait is implemented for [`Option`] and [`Result`] to allow
+/// for readable unwrapping of either in case of unreachable code.
+///
+/// **This panics if it ever fails; the caller is responsible for making
+/// sure it is used on unfailable paths only**.
+///
+/// Using this should typically avoided by converting to correct
+/// types so unreachable code cannot be triggered.
+/// For example, use [`NonZero`](std::num::NonZero) rather
+/// than [`SafeUnwrap`] for values that cannot be zero.
+///
+/// For cases where this would result in worse code, this trait can be used.
+///
+/// # Example
+///
+/// ```
+/// use fwupd::SafeUnwrap;
+/// let text = b"abcd";
+/// let s = std::str::from_utf8(text).safe_to_unwrap(); // it's utf8
+/// assert_eq!(s, "abcd");
+/// ```
+pub trait SafeUnwrap {
+    type Target;
+
+    fn safe_to_unwrap(self) -> Self::Target;
+}
+
+impl<T> SafeUnwrap for Option<T> {
+    type Target = T;
+
+    fn safe_to_unwrap(self) -> Self::Target {
+        match self {
+            Some(t) => t,
+            None => unreachable!("option cannot be None"),
+        }
+    }
+}
+
+impl<T, E: std::fmt::Debug> SafeUnwrap for std::result::Result<T, E> {
+    type Target = T;
+
+    fn safe_to_unwrap(self) -> Self::Target {
+        match self {
+            Ok(t) => t,
+            Err(e) => unreachable!("unreachable error: {e:?}"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SafeUnwrap;
+
+    #[test]
+    fn test_safe_to_unwrap() {
+        let text = b"abcd";
+        let s = std::str::from_utf8(text).safe_to_unwrap();
+        assert_eq!(s, "abcd");
     }
 }

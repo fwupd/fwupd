@@ -10,14 +10,13 @@
 //! into a single logical stream. Reads are dispatched to the appropriate
 //! sub-stream based on the current position.
 
-use crate::streams::{IsSeekable, ReadSeek, StreamError};
+use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
-use std::sync::{Arc, Mutex};
 
 /// A sub-stream within a composite input stream.
 struct SubStream {
-    stream: Arc<Mutex<dyn ReadSeek + Send>>,
+    stream: Stream<StreamImpl>,
     global_offset: usize,
     size: usize,
 }
@@ -26,7 +25,7 @@ struct SubStream {
 ///
 /// The composite input stream maintains its own position counter and
 /// dispatches reads to the appropriate sub-stream. Sub-streams can be
-/// any type implementing [`ReadSeek`]. Streams are shared via
+/// any type that is a [`StreamImpl`]. Streams are shared via
 /// `Arc<Mutex<..>>` so the caller can retain access to them.
 pub struct CompositeInputStream {
     items: Vec<SubStream>,
@@ -55,7 +54,7 @@ impl CompositeInputStream {
     /// in the added stream.
     ///
     /// </div>
-    pub fn add_stream(&mut self, stream: Arc<Mutex<dyn ReadSeek + Send>>, size: usize) {
+    pub fn add_stream(&mut self, stream: Stream<StreamImpl>, size: usize) {
         let global_offset = self.total_size;
         self.items.push(SubStream {
             stream,
@@ -186,7 +185,7 @@ impl Seek for CompositeInputStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::streams::MemoryInputStream;
+    use crate::streams::{IntoStream, MemoryInputStream};
     use std::io::ErrorKind;
 
     #[test]
@@ -200,7 +199,7 @@ mod tests {
 
     #[test]
     fn composite_single_stream() {
-        let stream = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![1, 2, 3])));
+        let stream = MemoryInputStream::from_data(vec![1, 2, 3]).into_stream();
         let mut composite = CompositeInputStream::new();
         composite.add_stream(stream, 3);
 
@@ -217,9 +216,9 @@ mod tests {
 
     #[test]
     fn composite_from_rust_streams() {
-        let stream1 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![1, 2, 3])));
-        let stream2 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![4, 5])));
-        let stream3 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![6, 7, 8, 9])));
+        let stream1 = MemoryInputStream::from_data(vec![1, 2, 3]).into_stream();
+        let stream2 = MemoryInputStream::from_data(vec![4, 5]).into_stream();
+        let stream3 = MemoryInputStream::from_data(vec![6, 7, 8, 9]).into_stream();
 
         let mut composite = CompositeInputStream::new();
         composite.add_stream(stream1, 3);
@@ -243,8 +242,8 @@ mod tests {
 
     #[test]
     fn composite_from_rust_streams_seek() {
-        let stream1 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![10, 20, 30])));
-        let stream2 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![40, 50, 60])));
+        let stream1 = MemoryInputStream::from_data(vec![10, 20, 30]).into_stream();
+        let stream2 = MemoryInputStream::from_data(vec![40, 50, 60]).into_stream();
 
         let mut composite = CompositeInputStream::new();
         composite.add_stream(stream1, 3);
@@ -274,8 +273,8 @@ mod tests {
     fn composite_short_substream_errors() {
         // Sub-stream has 2 bytes of real data but declares size=5.
         // A second sub-stream with 3 bytes follows it.
-        let stream1 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![0xaa, 0xbb])));
-        let stream2 = Arc::new(Mutex::new(MemoryInputStream::from_data(vec![1, 2, 3])));
+        let stream1 = MemoryInputStream::from_data(vec![0xaa, 0xbb]).into_stream();
+        let stream2 = MemoryInputStream::from_data(vec![1, 2, 3]).into_stream();
 
         let mut composite = CompositeInputStream::new();
         composite.add_stream(stream1, 5); // declared 5, actual 2

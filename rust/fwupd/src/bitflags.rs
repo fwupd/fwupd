@@ -105,13 +105,40 @@ where
     const FLAGS: &'static [Self::Flag];
 
     /// Returns the raw bits as the underlying type (e.g. [`u8`], [`u16`], [`u32`]).
+    ///
+    /// This is equivalent to calling [`From`].
+    /// ```ignore
+    /// declare_bitflags! {
+    ///     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    ///     pub struct MyFlags / MyFlag : u32 {
+    ///         Read = 0x1;
+    ///         Write = 0x2;
+    ///         Execute = 0x4;
+    ///     }
+    /// }
+    /// let mask = MyFlag::Read.as_mask();
+    /// assert_eq!(mask.bits(), u32::from(mask));
+    /// ```
     fn bits(self) -> Self::Bits;
 
     /// Creates a bitmask from raw bits of the underlying type (e.g. [`u8`], [`u16`], [`u32`]).
     ///
     /// <div class="warning">
     /// Bits that do not correspond to any defined flag are silently cleared.
+    ///
+    /// Where error-checking is required, use the `TryFrom<T>`
+    /// implementation instead.
     /// </div>
+    ///
+    /// ```ignore
+    /// // from_bits silently masks off unknown bits
+    /// let mask = MyFlags::from_bits(0xFF);
+    /// assert_eq!(mask.bits(), 0x7);
+    ///
+    /// // TryFrom returns an error if any bits are unknown
+    /// assert!(MyFlags::try_from(0xFF).is_err());
+    /// assert!(MyFlags::try_from(0x7).is_ok());
+    /// ```
     fn from_bits(bits: Self::Bits) -> Self;
 
     /// Returns the bits for a single flag value.
@@ -211,6 +238,24 @@ where
             source: self,
             index: 0,
         }
+    }
+}
+
+/// Error used when converting a [`Bitflags`] using `TryFrom`.
+///
+/// ```ignore
+/// let result = MyFlags::try_from(0xFF);
+/// assert!(result.is_err());
+/// assert_eq!(result.unwrap_err().invalid_bits, 0xF8);
+/// ```
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct InvalidBitflag<T> {
+    pub invalid_bits: T,
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for InvalidBitflag<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "invalid bits: {}", self.invalid_bits)
     }
 }
 
@@ -406,6 +451,30 @@ macro_rules! declare_bitflags {
                 *self = Self::from_bits(self.bits() | rhs.bits());
             }
         }
+
+        impl ::core::convert::TryFrom<$T> for $Mask {
+            type Error = $crate::InvalidBitflag<$T>;
+
+            fn try_from(v: $T) -> std::result::Result<$Mask, Self::Error> {
+                use $crate::Bitflags;
+
+                let mask = $Mask::from_bits(v);
+                let invalid = mask.0 ^ v;
+                if invalid == 0 {
+                    Ok(mask)
+                } else {
+                    Err($crate::bitflags::InvalidBitflag { invalid_bits: invalid })
+                }
+            }
+        }
+
+        impl ::core::convert::From<$Mask> for $T {
+            fn from(mask: $Mask) -> $T {
+                use $crate::Bitflags;
+
+                mask.bits()
+            }
+        }
     };
 }
 
@@ -592,5 +661,12 @@ mod tests {
         assert!(m1.contains(TestFlag::Read));
         assert!(m1.contains(TestFlag::Write));
         assert!(m1.contains(TestFlag::Execute));
+    }
+
+    #[test]
+    fn test_try_from() {
+        let result = TestFlags::try_from(0xf);
+        assert!(result.is_err());
+        assert_eq!(result.err().unwrap(), InvalidBitflag { invalid_bits: 0x8 });
     }
 }
