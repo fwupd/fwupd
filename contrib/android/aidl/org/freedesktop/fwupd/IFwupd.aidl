@@ -46,4 +46,5 @@ interface IFwupd {
         FwupdSecurityAttr[] getHostSecurityEvents(in int limit);
         void quit();
         String selfSign(in String data, in long flags);
+        void installBlob(in String id, in ParcelFileDescriptor fd, in @nullable String filenameHint, in @nullable String version);
 }

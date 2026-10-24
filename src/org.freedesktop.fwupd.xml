@@ -481,6 +481,50 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='InstallBlob'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Installs a firmware blob that is not in a cabinet archive.
+            As there is no metadata, no signature, requirement or version
+            checks are done, and so admin authentication is always required.
+            Only devices with the is-programmer-target flag are supported.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The device ID of the hardware to update.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='h' name='handle' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An index into the array of file descriptors that may have
+              been sent with the DBus message.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sv}' name='options' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Options to be used when installing, e.g.
+              <doc:tt>version=1.2.3</doc:tt> to set the version if the
+              firmware does not specify one.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Verify'>
       <doc:doc>
         <doc:description>

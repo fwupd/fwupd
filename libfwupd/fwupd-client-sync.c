@@ -2081,6 +2081,110 @@ fwupd_client_install(FwupdClient *self,
 			     error);
 }
 
+gboolean
+fwupd_client_sync_impl_install_blob(FwupdClient *self,
+				    const gchar *device_id,
+				    FwupdInputStream *stream,
+				    const gchar *filename_hint,
+				    const gchar *version,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
+
+	/* convert to something with a fd */
+	ustream = fwupd_unix_input_stream_from_stream(stream, error);
+	if (ustream == NULL)
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	fwupd_client_install_blob_stream_async(self,
+					       device_id,
+					       ustream,
+					       filename_hint,
+					       version,
+					       cancellable,
+					       fwupd_client_install_fd_cb,
+					       helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Install blob only supported on Linux");
+	return FALSE;
+#endif
+}
+
+/**
+ * fwupd_client_install_blob:
+ * @self: a #FwupdClient
+ * @device_id: (not nullable): the device ID
+ * @filename: (not nullable): the firmware blob to install
+ * @version: (nullable): the version to use if the firmware does not specify one
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Install a firmware blob that is not in a cabinet archive onto a specific programmer target.
+ *
+ * As there is no metadata, no signature, requirement or version checks are done, and the daemon
+ * always requires admin authentication.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fwupd_client_install_blob(FwupdClient *self,
+			  const gchar *device_id,
+			  const gchar *filename,
+			  const gchar *version,
+			  GCancellable *cancellable,
+			  GError **error)
+{
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
+	g_autoptr(FwupdInputStream) stream = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(device_id != NULL, FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	/* load as FwupdUnixInputStream, but fall back to FuMemoryInputStream */
+	stream = fwupd_input_stream_from_fn(filename, error);
+	if (stream == NULL)
+		return FALSE;
+	if (impl->install_blob == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->install_blob");
+		return FALSE;
+	}
+	return impl->install_blob(self,
+				  device_id,
+				  stream,
+				  filename,
+				  version,
+				  impl_userdata,
+				  cancellable,
+				  error);
+}
+
 static void
 fwupd_client_install_bytes_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {

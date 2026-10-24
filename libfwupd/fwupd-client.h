@@ -309,6 +309,18 @@ fwupd_client_install_finish(FwupdClient *self,
 			    GAsyncResult *res,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_install_blob_async(FwupdClient *self,
+				const gchar *device_id,
+				const gchar *filename,
+				const gchar *version,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fwupd_client_install_blob_finish(FwupdClient *self,
+				 GAsyncResult *res,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_install_bytes_async(FwupdClient *self,
 				 const gchar *device_id,
 				 GBytes *bytes,

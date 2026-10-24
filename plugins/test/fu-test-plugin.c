@@ -8,6 +8,7 @@
 
 #include "fu-test-device.h"
 #include "fu-test-plugin.h"
+#include "fu-test-target-device.h"
 
 struct _FuTestPlugin {
 	FuPlugin parent_instance;
@@ -20,6 +21,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDevice) device = fu_test_device_new(ctx);
+	g_autoptr(FuDevice) device_target = fu_test_target_device_new(ctx);
 
 	if (!fu_device_setup(device, error))
 		return FALSE;
@@ -34,6 +36,11 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		}
 	}
 	fu_plugin_add_device(plugin, device);
+
+	/* a raw device written using an external programmer, with no version */
+	if (!fu_device_setup(device_target, error))
+		return FALSE;
+	fu_plugin_add_device(plugin, device_target);
 
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		g_autoptr(FuDevice) child1 = NULL;
@@ -184,6 +191,10 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				    "device was not in supported mode");
 		return FALSE;
 	}
+
+	/* there is no version to update */
+	if (FU_IS_TEST_TARGET_DEVICE(device))
+		return TRUE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
 	decompress_delay_str = fu_plugin_get_config_value(plugin, "DecompressDelay");

@@ -85,8 +85,6 @@ _fwupdtool_opts=(
 	'--json'
 	'--show-all'
 	'--plugins'
-	'--prepare'
-	'--cleanup'
 	'--filter'
 	'--method'
 	'--disable-ssl-strict'

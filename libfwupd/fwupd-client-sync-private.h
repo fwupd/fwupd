@@ -150,6 +150,15 @@ fwupd_client_sync_impl_install(FwupdClient *self,
 			       GCancellable *cancellable,
 			       GError **error);
 gboolean
+fwupd_client_sync_impl_install_blob(FwupdClient *self,
+				    const gchar *device_id,
+				    FwupdInputStream *stream,
+				    const gchar *filename_hint,
+				    const gchar *version,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
+gboolean
 fwupd_client_sync_impl_install_release(FwupdClient *self,
 				       FwupdDevice *device,
 				       FwupdRelease *release,

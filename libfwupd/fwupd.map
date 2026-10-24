@@ -1228,6 +1228,9 @@ LIBFWUPD_2.2.1 {
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
     fwupd_client_get_pending_reboot;
+    fwupd_client_install_blob;
+    fwupd_client_install_blob_async;
+    fwupd_client_install_blob_finish;
     fwupd_client_run_connect_funcs;
     fwupd_client_set_host_bkc;
     fwupd_client_set_host_machine_id;
