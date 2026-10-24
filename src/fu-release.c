@@ -794,8 +794,8 @@ fu_release_check_version(FuRelease *self,
 		return TRUE;
 	}
 
-	/* allow using no-version-expected on emulated devices, or when not build as supported */
-	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED)) {
+	/* allow programmer targets on emulated devices, or when not build as supported */
+	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET)) {
 #ifdef SUPPORTED_BUILD
 		if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_EMULATED)) {
 			g_set_error_literal(error,

@@ -711,18 +711,6 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.18
  */
 #define FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT "lazy-verfmt"
-/**
- * FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED:
- *
- * Allow the device version to be unset.
- *
- * NOTE: This should only be used when writing to "raw" CFI devices, such as standalone SPI
- * programmers such as CH341A. CFI devices should be used as a proxy devices rather than
- * installable targets in most fwupd plugins.
- *
- * Since: 2.0.18
- */
-#define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:

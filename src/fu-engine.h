@@ -163,6 +163,16 @@ fu_engine_install_blob(FuEngine *self,
 		       FwupdFeatureFlags feature_flags,
 		       GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
+fu_engine_install_blob_for_device_id(FuEngine *self,
+				     const gchar *device_id,
+				     FuInputStream *stream,
+				     const gchar *filename_hint,
+				     const gchar *version,
+				     FuProgress *progress,
+				     FwupdInstallFlags flags,
+				     FwupdFeatureFlags feature_flags,
+				     GError **error) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,

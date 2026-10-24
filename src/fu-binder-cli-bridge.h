@@ -42,6 +42,13 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     const char *filename_hint,
 			     GError **error);
 gboolean
+fu_binder_cli_bridge_install_blob(AIBinder *binder_handle,
+				  const char *id,
+				  int fd,
+				  const char *filename_hint,
+				  const char *version,
+				  GError **error);
+gboolean
 fu_binder_cli_bridge_update_metadata(AIBinder *binder,
 				     const char *remote_id,
 				     int metadata_fd,
