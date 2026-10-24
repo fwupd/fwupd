@@ -1,0 +1,4 @@
+[HIDRAW\VEN_5859&DEV_0001]
+Plugin = xy_kbms
+Vendor = XY
+Name = KBMS

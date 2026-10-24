@@ -164,6 +164,7 @@ plugins = {
   'wch-ch341a': false,
   'wch-ch347': false,
   'wistron-dock': false,
+  'xy-kbms': false,
 }
 
 umockdev_tests = []
