@@ -1355,10 +1355,7 @@ class FwupdTui(App):
         self.push_screen(ConfirmAction(action, message, action), complete)
 
     def device_error(self, prefix: str, error: GLib.Error) -> None:
-        self.query_one("#device-status", Static).update(
-            # TRANSLATORS: error message format, "<operation>: <error text>"
-            _("{prefix}: {error}").format(prefix=prefix, error=error.message)
-        )
+        self.query_one("#device-status", Static).update(f"{prefix}: {error.message}")
 
     def run_device_operation(
         self,
@@ -1579,27 +1576,17 @@ class FwupdTui(App):
                 if created
                 else ""
             )
-            lines.append(
-                # TRANSLATORS: security event line "<time> <name>: <old> → <new>"
-                _("{time} {name}: {old} → {new}").format(
-                    time=timestamp, name=_(name), old=old, new=new
-                )
-            )
+            lines.append(f"{timestamp} {gettext.gettext(name)}: {old} → {new}")
         issues = []
         try:
             devices = list(self.client.get_devices() or [])
         except GLib.Error:
             devices = []
         for device in devices:
+            # TRANSLATORS: fallback name for a device with no name
+            device_name = device.get_name() or _("Unknown device")
             for issue in list(device.get_issues() or []):
-                issues.append(
-                    # TRANSLATORS: security issue line "<device>: <issue>"
-                    _("{device}: {issue}").format(
-                        # TRANSLATORS: fallback name for a device with no name
-                        device=device.get_name() or _("Unknown device"),
-                        issue=issue,
-                    )
-                )
+                issues.append(f"{device_name}: {issue}")
         if issues:
             # TRANSLATORS: heading for the list of per-device security issues
             lines.extend(("", f"[b]{escape(_('Device Security Issues'))}[/b]"))

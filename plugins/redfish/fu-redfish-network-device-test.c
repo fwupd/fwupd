@@ -63,7 +63,15 @@ fu_redfish_network_device_func(FuRedfishNetworkFixture *fix, gconstpointer user_
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *argv0 = NULL;
+
 	g_test_init(&argc, &argv, NULL);
+
+	/* nocheck:blocked -- while building packages this may not be available */
+	argv0 = g_find_program_in_path("dbus-daemon");
+	if (argv0 == NULL)
+		return 0;
+
 	g_test_add("/redfish/network-device",
 		   FuRedfishNetworkFixture,
 		   NULL,
