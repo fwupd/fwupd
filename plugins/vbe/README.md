@@ -76,8 +76,8 @@ case `data-offset` and `data-size` allow the data to be relocated. The data is
 stored started at the next 32-bit aligned file position after the FIT. The
 `mkimage` tool allows converting a FIT to an external FIT, with the `-E` flag.
 
-See the `plugins/vbe/example` directory for an example of building a firmware
-update.
+See the `plugins/vbe/example/simple` directory for an example of building a
+firmware update.
 
 ## Operation
 
@@ -229,7 +229,7 @@ For development you may find the following useful.
 To install the example devicetree:
 
 ```bash
-    dtc /path/to/fwupd/plugins/vbe/example/test.dts -o \
+    dtc /path/to/fwupd/plugins/vbe/example/simple/test.dts -o \
        /var/lib/fwupd/system.dtb
 ```
 
@@ -237,10 +237,15 @@ To build the example:
 
 ```bash
    sudo apt install appstream-util u-boot-tools
-   cd /path/to/fwupd/plugins/vbe/example
+   cd /path/to/fwupd/plugins/vbe/example/simple
    dd if=/dev/zero of=update.bin bs=1M count=1
    ./build.sh
 ```
+
+The update provides the GUID of the `VBE\COMPATIBLE_pine64-rockpro64-v2.1`
+instance ID, so it only applies to that board. Note that characters such as `,`
+in the compatible string become `-` in the instance ID. Use
+`fwupdmgr get-devices --show-all` to see the GUID for each instance ID.
 
 To install the cab on your development computer:
 
@@ -248,15 +253,15 @@ To install the cab on your development computer:
    # Set up the test file
    dd if=/dev/zero of=/tmp/testfw bs=1M count=3
 
-   sudo build/src/fwupdtool install plugins/vbe/example/Vbe-Board-1.2.4.cab \
-      bb3b05a8-ebef-11ec-be98-d3a15278be95
+   sudo build/src/fwupdtool install plugins/vbe/example/simple/Vbe-Board-1.2.4.cab \
+      e2363f2d-d877-5d0a-8fb6-725bed478132
 ```
 
 To dump out the firmware:
 
 ```bash
    sudo rm fw.bin; sudo build/src/fwupdtool firmware-dump fw.bin \
-      bb3b05a8-ebef-11ec-be98-d3a15278be95
+      e2363f2d-d877-5d0a-8fb6-725bed478132
 ```
 
 ## To do

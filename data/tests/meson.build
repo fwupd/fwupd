@@ -47,6 +47,23 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
+if plugins['vbe']
+  configure_file(
+    input: 'fwupdtool-vbe.test.in',
+    output: 'fwupdtool-vbe.test',
+    configuration: con2,
+    install: true,
+    install_dir: installed_test_datadir,
+  )
+  configure_file(
+    input: 'fwupdtool-vbe.sh',
+    output: 'fwupdtool-vbe.sh',
+    configuration: con2,
+    install: true,
+    install_dir: installed_test_datadir,
+  )
+endif
+
 if plugins['uefi-dbx'] and host_machine.system() == 'linux'
   configure_file(
     input: 'dbxtool.test.in',
