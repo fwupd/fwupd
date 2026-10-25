@@ -184,16 +184,17 @@ fu_bluez_backend_setup(FuBackend *backend,
 	helper->cancellable = g_cancellable_new();
 	helper->timeout_id =
 	    g_timeout_add(FU_BLUEZ_BACKEND_TIMEOUT, fu_bluez_backend_timeout_cb, helper);
-	g_dbus_object_manager_client_new_for_bus(G_BUS_TYPE_SYSTEM,
-						 G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
-						 "org.bluez",
-						 "/",
-						 NULL,
-						 NULL,
-						 NULL,
-						 helper->cancellable,
-						 fu_bluez_backend_connect_cb,
-						 helper);
+	g_dbus_object_manager_client_new_for_bus(
+	    G_BUS_TYPE_SYSTEM,
+	    G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START,
+	    "org.bluez",
+	    "/",
+	    NULL,
+	    NULL,
+	    NULL,
+	    helper->cancellable,
+	    fu_bluez_backend_connect_cb,
+	    helper);
 	g_main_loop_run(helper->loop);
 	if (helper->object_manager == NULL)
 		return FALSE;
