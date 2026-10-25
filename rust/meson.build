@@ -19,6 +19,20 @@ if meson.is_cross_build()
   rust_target = meson.get_external_property('rust_target', '')
   if rust_target != ''
     cargo_env.set('MESON_RUST_TARGET', rust_target)
+    cc = meson.get_compiler('c')
+    cargo_env.set(
+      'CARGO_TARGET_' + rust_target.underscorify().to_upper() + '_LINKER',
+      cc.cmd_array()[0],
+    )
+    # For any crates compiling C/C++ code
+    cargo_env.set('CC_' + rust_target.underscorify(), cc.cmd_array()[0])
+    ar = find_program(
+      'llvm-ar',
+      required: false,
+    )
+    if ar.found()
+      cargo_env.set('AR_' + rust_target.underscorify(), ar.full_path())
+    endif
   endif
 endif
 
