@@ -301,7 +301,14 @@ def main():
         shutil.rmtree(dest, ignore_errors=True)
         shutil.copytree(output_src, dest, symlinks=True)
     else:
-        shutil.copy2(output_src, dest)
+        try:
+            shutil.copy2(output_src, dest)
+        except FileNotFoundError as e:
+            try:
+                output_src = f"{output_src}.exe"
+                shutil.copy2(output_src, dest)
+            except FileNotFoundError:
+                raise e from None
 
 
 if __name__ == "__main__":
