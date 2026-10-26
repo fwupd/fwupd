@@ -1000,6 +1000,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_ICON_APPLICATION_CERTIFICATE "application-certificate"
 
+/**
+ * FU_DEVICE_ICON_PROCESSOR:
+ *
+ * A generic icon of a CPU processor.
+ *
+ * Since: 2.2.1
+ */
+#define FU_DEVICE_ICON_PROCESSOR "processor"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

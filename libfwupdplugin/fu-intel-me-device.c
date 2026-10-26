@@ -747,7 +747,7 @@ fu_intel_me_device_init(FuIntelMeDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "ME");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_physical_id(FU_DEVICE(self), "PCI_SLOT_NAME=0000:00:16.0");
-	fu_device_add_icon(FU_DEVICE(self), "cpu");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_PROCESSOR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	g_signal_connect(FWUPD_DEVICE(self),
