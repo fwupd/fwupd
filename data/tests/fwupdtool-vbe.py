@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-"""Install updates on a fake vbe-simple board using fwupdtool
+"""Install updates on fake vbe-simple and vbe-abrec boards using fwupdtool
 
 This fakes a VBE system, using a devicetree in place of /sys/firmware/fdt
 and a file for the storage, then checks that each update reaches the
@@ -30,6 +30,29 @@ SKIP_OFFSET = 0x10
 # where the firmware image goes in the area, as set by its store-offset
 STORE_OFFSET = 0x200
 
+# the layout for vbe-abrec: the state, then the A and B slots, each with its
+# slot info at the end
+ABREC_STORAGE_SIZE = 0x30000
+ABREC_STATE_OFFSET = 0x1000
+ABREC_STATE_SIZE = 0x40
+ABREC_SLOT_A = 0x10000
+ABREC_SLOT_B = 0x20000
+ABREC_SLOT_SIZE = 0x10000
+ABREC_SLOT_INFO_OFFSET = 0xF000
+ABREC_SLOT_INFO_SIZE = 0x1000
+
+# the flags in the vbe-abrec state, a 32-bit little-endian word whose low byte
+# holds the tries left for B, whether to try B, the result of the last try and
+# which firmware was picked
+ABREC_FLAGS_OFFSET = 8
+ABREC_TRY_COUNT = 3
+ABREC_FLAG_TRY_B = 1 << 2
+ABREC_RESULT_SHIFT = 4
+ABREC_RESULT_TRYING = 1
+ABREC_RESULT_OK = 2
+ABREC_PICK_SHIFT = 6
+ABREC_PICK_B = 1
+
 # how long to let fwupdtool run, in seconds; each run takes well under one
 TIMEOUT = 60
 
@@ -52,6 +75,37 @@ FDT_XML = """\
           <metadata key="area-start" format="uint32">{area_start:#x}</metadata>
           <metadata key="area-size" format="uint32">{area_size:#x}</metadata>
           <metadata key="skip-offset" format="uint32">{skip_offset:#x}</metadata>
+        </firmware>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>
+"""
+
+# the devicetree which the firmware passes to the OS, describing the
+# vbe-abrec method and the slot which booted
+ABREC_FDT_XML = """\
+<firmware gtype="FuFdtFirmware">
+  <firmware gtype="FuFdtImage">
+    <metadata key="compatible" format="str">vendor,board</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>chosen</id>
+      <firmware gtype="FuFdtImage">
+        <id>fwupd</id>
+        <metadata key="compatible" format="str">vendor,board</metadata>
+        <firmware gtype="FuFdtImage">
+          <id>firmware0</id>
+          <metadata key="compatible" format="str">fwupd,vbe-abrec</metadata>
+          <metadata key="storage" format="str">{storage}</metadata>
+          <metadata key="area-start" format="uint32">0x0</metadata>
+          <metadata key="state-offset" format="uint32">{state_offset:#x}</metadata>
+          <metadata key="state-size" format="uint32">{state_size:#x}</metadata>
+          <metadata key="slot-a-offset" format="uint32">{slot_a:#x}</metadata>
+          <metadata key="slot-b-offset" format="uint32">{slot_b:#x}</metadata>
+          <metadata key="slot-size" format="uint32">{slot_size:#x}</metadata>
+          <metadata key="slot-info-offset" format="uint32">{slot_info_offset:#x}</metadata>
+          <metadata key="slot-info-size" format="uint32">{slot_info_size:#x}</metadata>
+          <metadata key="booted-slot" format="str">{booted_slot}</metadata>
         </firmware>
       </firmware>
     </firmware>
@@ -169,12 +223,34 @@ def fwupdtool(*args, env):
     )
 
 
-class VbeSimpleTest(unittest.TestCase):
-    """Tests for updating a fake board which uses the vbe-simple method
+def crc8(data):
+    """Calculate the CRC8 of the vbe-abrec state, as the firmware does
+
+    Args:
+        data (bytes): the data to check
+
+    Returns:
+        int: the CRC8, using the polynomial 0x07
+    """
+    crc = 0
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x07 if crc & 0x80 else crc << 1) & 0xFF
+    return crc
+
+
+class VbeTest(unittest.TestCase):
+    """Common code for the tests, which update a fake board
 
     Each test has its own temporary directory holding fwupd's state, the
     devicetree and the storage, which starts off as zeroes.
+
+    Attributes:
+        storage_size (int): the size of the storage, set by each subclass
     """
+
+    storage_size = 0
 
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
@@ -185,7 +261,7 @@ class VbeSimpleTest(unittest.TestCase):
 
         self.storage = self.path("storage.img")
         with open(self.storage, "wb") as f:
-            f.write(bytes(STORAGE_SIZE))
+            f.write(bytes(self.storage_size))
 
     def path(self, name):
         """Get the path of a file in the test's temporary directory
@@ -229,22 +305,6 @@ class VbeSimpleTest(unittest.TestCase):
             f"fwupdtool {' '.join(args)} failed:\n{result.stdout}",
         )
         return result.stdout
-
-    def boot(self, version):
-        """Create the devicetree as the firmware provides it at boot
-
-        Args:
-            version (str): the version of the firmware which is running
-        """
-        xml = FDT_XML.format(
-            version=version,
-            storage=self.storage,
-            area_start=AREA_START,
-            area_size=AREA_SIZE,
-            skip_offset=SKIP_OFFSET,
-        )
-        fdt = os.path.join(self.env["FWUPD_SYSFSFWDIR"], "fdt")
-        self.run_ok("firmware-build", self.write("fdt.builder.xml", xml), fdt)
 
     def build_fit(self, version, data, external=False, compatible=True):
         """Build a FIT holding the given data
@@ -310,6 +370,28 @@ class VbeSimpleTest(unittest.TestCase):
         self.run_ok("build-cabinet", cab, fit_path, metainfo, "--force")
         self.run_ok("install", cab, GUID)
 
+
+class VbeSimpleTest(VbeTest):
+    """Tests for updating a fake board which uses the vbe-simple method"""
+
+    storage_size = STORAGE_SIZE
+
+    def boot(self, version):
+        """Create the devicetree as the firmware provides it at boot
+
+        Args:
+            version (str): the version of the firmware which is running
+        """
+        xml = FDT_XML.format(
+            version=version,
+            storage=self.storage,
+            area_start=AREA_START,
+            area_size=AREA_SIZE,
+            skip_offset=SKIP_OFFSET,
+        )
+        fdt = os.path.join(self.env["FWUPD_SYSFSFWDIR"], "fdt")
+        self.run_ok("firmware-build", self.write("fdt.builder.xml", xml), fdt)
+
     def check_storage(self, data):
         """Check that the image went into the area, and nothing else changed
 
@@ -347,6 +429,98 @@ class VbeSimpleTest(unittest.TestCase):
         fit = self.build_fit("1.2.5", data, external=True, compatible=False)
         self.install(fit, "1.2.5")
         self.check_storage(data)
+
+
+class VbeAbrecTest(VbeTest):
+    """Tests for updating a fake board which uses the vbe-abrec method
+
+    The board starts off running the firmware in A. An update goes to B,
+    which the firmware tries; once the OS starts from B, fwupd copies B to A.
+    """
+
+    storage_size = ABREC_STORAGE_SIZE
+
+    def boot(self, slot):
+        """Create the devicetree as the firmware provides it at boot
+
+        Args:
+            slot (str): the slot which the firmware booted from, e.g. "a"
+        """
+        xml = ABREC_FDT_XML.format(
+            storage=self.storage,
+            state_offset=ABREC_STATE_OFFSET,
+            state_size=ABREC_STATE_SIZE,
+            slot_a=ABREC_SLOT_A,
+            slot_b=ABREC_SLOT_B,
+            slot_size=ABREC_SLOT_SIZE,
+            slot_info_offset=ABREC_SLOT_INFO_OFFSET,
+            slot_info_size=ABREC_SLOT_INFO_SIZE,
+            booted_slot=slot,
+        )
+        fdt = os.path.join(self.env["FWUPD_SYSFSFWDIR"], "fdt")
+        self.run_ok("firmware-build", self.write("fdt.builder.xml", xml), fdt)
+
+    def get_flags(self):
+        """Read the flags from the state in the storage
+
+        Returns:
+            int: the low byte of the flags, which holds all those used here
+        """
+        with open(self.storage, "rb") as f:
+            f.seek(ABREC_STATE_OFFSET + ABREC_FLAGS_OFFSET)
+            return f.read(1)[0]
+
+    def try_b(self):
+        """Update the state as the firmware does when it tries B
+
+        This uses up a try, records that B is being tried and that B was
+        picked.
+        """
+        with open(self.storage, "r+b") as f:
+            f.seek(ABREC_STATE_OFFSET)
+            state = bytearray(f.read(ABREC_STATE_SIZE))
+            state[ABREC_FLAGS_OFFSET] = (
+                ABREC_FLAG_TRY_B
+                | (ABREC_TRY_COUNT - 1)
+                | ABREC_RESULT_TRYING << ABREC_RESULT_SHIFT
+                | ABREC_PICK_B << ABREC_PICK_SHIFT
+            )
+            state[0] = crc8(state[1:])
+            f.seek(ABREC_STATE_OFFSET)
+            f.write(state)
+
+    def check_slot(self, offset, fit):
+        """Check that a slot starts with the update
+
+        Args:
+            offset (int): the offset of the slot in the storage
+            fit (bytes): the contents of the FIT
+        """
+        with open(self.storage, "rb") as f:
+            f.seek(offset)
+            got = f.read(len(fit))
+        self.assertEqual(got, fit, f"slot at {offset:#x} differs")
+
+    def test_update(self):
+        """Install an update to B, try it, then commit it to A"""
+        fit = self.build_fit("1.2.4", b"0123456789abcdef0123456789abcdef")
+        self.boot("a")
+        self.install(fit, "1.2.4")
+        self.check_slot(ABREC_SLOT_B, fit)
+        self.assertEqual(self.get_flags(), ABREC_FLAG_TRY_B | ABREC_TRY_COUNT)
+        self.assertIn(
+            "waiting for the update to be applied", self.run_ok("get-devices")
+        )
+
+        # the firmware tries B, which boots, so fwupd completes the update
+        self.try_b()
+        self.boot("b")
+        self.assertRegex(self.run_ok("get-devices"), r"Current version: *1\.2\.4")
+        self.check_slot(ABREC_SLOT_A, fit)
+        self.assertEqual(
+            self.get_flags(),
+            ABREC_RESULT_OK << ABREC_RESULT_SHIFT | ABREC_PICK_B << ABREC_PICK_SHIFT,
+        )
 
 
 def main():
