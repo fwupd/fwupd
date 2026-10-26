@@ -140,7 +140,28 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 	FuUsbDevice *target = FU_USB_DEVICE(self);
 	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
 
-	for (;;) {
+	if (!fu_usb_device_interrupt_transfer(target,
+					      self->epin,
+					      rx_data->rxbuf,
+					      FU_JABRA_GNP_BUF_SIZE,
+					      NULL,
+					      rx_data->timeout,
+					      error)) {
+		g_prefix_error_literal(error, "failed to read from device: ");
+		return FALSE;
+	}
+
+	st_pkt =
+	    fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf, sizeof(rx_data->rxbuf), 0x0, error);
+	if (st_pkt == NULL)
+		return FALSE;
+
+	/* device status or battery report (when not allowed), ignore and rx again */
+	if ((fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
+	     FU_JABRA_GNP_PACKET_CMD_GET_DEVICE_STATUS) ||
+	    (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
+		 FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL &&
+	     !rx_data->allow_battery_reports)) {
 		if (!fu_usb_device_interrupt_transfer(target,
 						      self->epin,
 						      rx_data->rxbuf,
@@ -151,27 +172,6 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
-
-		st_pkt = fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf,
-							  sizeof(rx_data->rxbuf),
-							  0x0,
-							  error);
-		if (st_pkt == NULL)
-			return FALSE;
-
-		if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
-		    FU_JABRA_GNP_PACKET_CMD_GET_DEVICE_STATUS) {
-			/* device status, ignore and rx again */
-			continue;
-		}
-		if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
-		    FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) {
-			if (rx_data->allow_battery_reports)
-				break;
-			/* battery report, ignore and rx again */
-			continue;
-		}
-		break;
 	}
 	if (fu_memcmp_safe(rx_data->rxbuf,
 			   sizeof(rx_data->rxbuf),
