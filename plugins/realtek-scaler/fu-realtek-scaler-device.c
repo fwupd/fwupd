@@ -115,10 +115,9 @@ fu_realtek_scaler_device_ddcci_write(FuRealtekScalerDevice *self,
 	if (!fu_memcpy_safe(buf + 1, sizeof(buf) - 1, 0x0, cmds, cmdsz, 0x0, cmdsz, error))
 		return FALSE;
 	/* checksum over target ^ sub ^ [len|0x80] ^ cmds */
-	checksum = FU_REALTEK_SCALER_TARGET_ADDR_DDCCI ^ sub_addr;
-	for (gsize i = 0; i < cmdsz + 1; i++)
-		checksum ^= buf[i];
-	buf[cmdsz + 1] = checksum;
+	if (!fu_xor8_safe(buf, sizeof(buf), 0x0, cmdsz + 1, &checksum, error))
+		return FALSE;
+	buf[cmdsz + 1] = checksum ^ FU_REALTEK_SCALER_TARGET_ADDR_DDCCI ^ sub_addr;
 
 	return fu_realtek_scaler_device_write(self,
 					      FU_REALTEK_SCALER_TARGET_ADDR_DDCCI,
@@ -128,36 +127,42 @@ fu_realtek_scaler_device_ddcci_write(FuRealtekScalerDevice *self,
 					      error);
 }
 
+static gboolean
+fu_realtek_scaler_device_poll_status_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuRealtekScalerDevice *self = FU_REALTEK_SCALER_DEVICE(device);
+	guint8 *value = (guint8 *)user_data;
+
+	if (!fu_realtek_scaler_device_read(self,
+					   FU_REALTEK_SCALER_TARGET_ADDR_FG,
+					   FU_REALTEK_SCALER_FG_SUB_ADDR_STATUS,
+					   value,
+					   sizeof(*value),
+					   error))
+		return FALSE;
+	if (*value == FU_REALTEK_SCALER_STATUS_BUSY) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is still busy");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* poll the foreground status register until it leaves the busy state, then
  * require an idle-success terminal status -- an idle-fail means the scaler
- * rejected the command and must not be mistaken for success.
- * This is a plain loop rather than fu_device_retry(): a busy status is the
- * normal case and would otherwise log thousands of "failed on try" lines for
- * every update. The status register lives on the ISP target */
+ * rejected the command and must not be mistaken for success. The status
+ * register lives on the ISP target */
 static gboolean
 fu_realtek_scaler_device_poll_status(FuRealtekScalerDevice *self, GError **error)
 {
 	guint8 value = FU_REALTEK_SCALER_STATUS_BUSY;
 
-	for (guint i = 0; i < REALTEK_SCALER_STATUS_POLL_RETRY_COUNT; i++) {
-		if (!fu_realtek_scaler_device_read(self,
-						   FU_REALTEK_SCALER_TARGET_ADDR_FG,
-						   FU_REALTEK_SCALER_FG_SUB_ADDR_STATUS,
-						   &value,
-						   sizeof(value),
-						   error))
-			return FALSE;
-		if (value != FU_REALTEK_SCALER_STATUS_BUSY)
-			break;
-		fu_device_sleep(FU_DEVICE(self), REALTEK_SCALER_RETRY_DELAY_MS);
-	}
-	if (value == FU_REALTEK_SCALER_STATUS_BUSY) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
-				    "timed out waiting for the device to leave the busy state");
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_realtek_scaler_device_poll_status_cb,
+				  REALTEK_SCALER_STATUS_POLL_RETRY_COUNT,
+				  REALTEK_SCALER_RETRY_DELAY_MS,
+				  &value,
+				  error))
 		return FALSE;
-	}
 	g_debug("poll_status: read status=0x%02x (%s)",
 		value,
 		fu_realtek_scaler_status_to_string(value));
@@ -291,7 +296,7 @@ fu_realtek_scaler_device_fg_get_version(FuRealtekScalerDevice *self, GError **er
 /* the version can only be read in foreground mode: enter FG mode, read the
  * version, then leave FG mode again so the panel runs normally */
 static gboolean
-fu_realtek_scaler_device_fg_read_version(FuRealtekScalerDevice *self, GError **error)
+fu_realtek_scaler_device_ensure_version(FuRealtekScalerDevice *self, GError **error)
 {
 	if (!fu_realtek_scaler_device_fg_change_mode(self, error)) {
 		g_prefix_error_literal(error, "cannot enter foreground mode: ");
@@ -320,7 +325,7 @@ fu_realtek_scaler_device_setup(FuDevice *device, GError **error)
 	/* FuDrmDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_realtek_scaler_device_parent_class)->setup(device, error))
 		return FALSE;
-	return fu_realtek_scaler_device_fg_read_version(self, error);
+	return fu_realtek_scaler_device_ensure_version(self, error);
 }
 
 /* the DRM connector does not necessarily re-enumerate after the scaler resets,
@@ -329,7 +334,7 @@ static gboolean
 fu_realtek_scaler_device_reload(FuDevice *device, GError **error)
 {
 	FuRealtekScalerDevice *self = FU_REALTEK_SCALER_DEVICE(device);
-	return fu_realtek_scaler_device_fg_read_version(self, error);
+	return fu_realtek_scaler_device_ensure_version(self, error);
 }
 
 static gboolean
