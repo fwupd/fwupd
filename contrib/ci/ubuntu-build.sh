@@ -20,7 +20,7 @@ root=$(pwd)
 export BUILD="${root}/build"
 rm -rf "${BUILD}"
 chown -R nobody "${root}"
-sudo -u nobody meson "${BUILD}" \
+sudo -u nobody meson setup "${BUILD}" \
     -Db_coverage=true \
     -Dman=false \
     -Ddocs=enabled \
