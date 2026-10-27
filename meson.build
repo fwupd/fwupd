@@ -165,6 +165,15 @@ if not meson.is_cross_build()
   )
 endif
 
+# gcovr 8.7 can error with "maximum recursion depth exceeded" with
+# relative paths, so let's force abs paths instead, see #11271
+if get_option('b_coverage') and cc.has_argument('-fprofile-abs-path')
+  add_project_arguments(
+    '-fprofile-abs-path',
+    language: 'c',
+  )
+endif
+
 if cc.get_id() == 'msvc'
   error('MSVC is not supported as it does not support __attribute__((cleanup))')
 endif

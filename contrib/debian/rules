@@ -17,7 +17,6 @@ CONFARGS =
 
 ifneq ($(CI),)
 	CONFARGS += --werror -Db_coverage=true
-	export DEB_CFLAGS_MAINT_APPEND += -fprofile-abs-path
 else
 	CONFARGS += -Dsupported_build=enabled
 endif

@@ -8,7 +8,6 @@ root=$(pwd)
 export BUILD="${root}/build"
 
 rm -rf "$BUILD"
-export CFLAGS="${CFLAGS:+$CFLAGS }-fprofile-abs-path"
 meson "$BUILD" \
     -Db_coverage=true \
     -Dman=false \

@@ -9,7 +9,6 @@ set -x
 #evaluate using Debian/Ubuntu's buildflags
 #disable link time optimization, Ubuntu currently only sets it for GCC
 export DEB_BUILD_MAINT_OPTIONS="optimize=-lto"
-export DEB_CFLAGS_MAINT_APPEND="${DEB_CFLAGS_MAINT_APPEND:+$DEB_CFLAGS_MAINT_APPEND }-fprofile-abs-path"
 eval "$(dpkg-buildflags --export=sh)"
 #filter out -Bsymbolic-functions
 LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
