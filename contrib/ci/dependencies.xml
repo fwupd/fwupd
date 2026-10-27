@@ -90,6 +90,10 @@
       <package only-if="amd64" />
     </distro>
   </dependency>
+  <dependency id="ieee-data">
+    <distro id="debian" />
+    <distro id="ubuntu" />
+  </dependency>
   <dependency id="7zip">
     <distro id="debian">
       <control />
