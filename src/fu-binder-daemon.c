@@ -365,12 +365,12 @@ fu_binder_daemon_quit_bridge(void *daemon_instance, GError **error)
 }
 
 gboolean
-fu_binder_daemon_install_blob_bridge(void *daemon_instance,
-				     const gchar *device_id,
-				     int fd,
-				     const gchar *filename_hint,
-				     const gchar *version,
-				     GError **error)
+fu_binder_daemon_write_blob_bridge(void *daemon_instance,
+				   const gchar *device_id,
+				   int fd,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
@@ -404,7 +404,7 @@ fu_binder_daemon_install_blob_bridge(void *daemon_instance,
 	}
 
 	/* there are no signature, requirement or version checks, so always require root */
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.install-blob", error))
+	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.write-blob", error))
 		return FALSE;
 
 	/* the caller owns the fd */
@@ -422,15 +422,15 @@ fu_binder_daemon_install_blob_bridge(void *daemon_instance,
 	}
 
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), TRUE);
-	ret = fu_engine_install_blob_for_device_id(engine,
-						   device_id,
-						   stream,
-						   filename_hint,
-						   version,
-						   progress,
-						   FWUPD_INSTALL_FLAG_NONE,
-						   fu_engine_request_get_feature_flags(request),
-						   error);
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 device_id,
+						 stream,
+						 filename_hint,
+						 version,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 fu_engine_request_get_feature_flags(request),
+						 error);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
 	if (!ret)
 		return FALSE;

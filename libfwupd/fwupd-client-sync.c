@@ -2082,14 +2082,14 @@ fwupd_client_install(FwupdClient *self,
 }
 
 gboolean
-fwupd_client_sync_impl_install_blob(FwupdClient *self,
-				    const gchar *device_id,
-				    FwupdInputStream *stream,
-				    const gchar *filename_hint,
-				    const gchar *version,
-				    gpointer user_data,
-				    GCancellable *cancellable,
-				    GError **error)
+fwupd_client_sync_impl_write_blob(FwupdClient *self,
+				  const gchar *device_id,
+				  FwupdInputStream *stream,
+				  const gchar *filename_hint,
+				  const gchar *version,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error)
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
@@ -2101,14 +2101,14 @@ fwupd_client_sync_impl_install_blob(FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
-	fwupd_client_install_blob_stream_async(self,
-					       device_id,
-					       ustream,
-					       filename_hint,
-					       version,
-					       cancellable,
-					       fwupd_client_install_fd_cb,
-					       helper);
+	fwupd_client_write_blob_stream_async(self,
+					     device_id,
+					     ustream,
+					     filename_hint,
+					     version,
+					     cancellable,
+					     fwupd_client_install_fd_cb,
+					     helper);
 	g_main_loop_run(helper->loop);
 	if (!helper->ret) {
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -2125,7 +2125,7 @@ fwupd_client_sync_impl_install_blob(FwupdClient *self,
 }
 
 /**
- * fwupd_client_install_blob:
+ * fwupd_client_write_blob:
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @filename: (not nullable): the firmware blob to install
@@ -2133,7 +2133,7 @@ fwupd_client_sync_impl_install_blob(FwupdClient *self,
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Install a firmware blob that is not in a cabinet archive onto a specific programmer target.
+ * Write a firmware blob that is not in a cabinet archive onto a specific programmer target.
  *
  * As there is no metadata, no signature, requirement or version checks are done, and the daemon
  * always requires admin authentication.
@@ -2143,12 +2143,12 @@ fwupd_client_sync_impl_install_blob(FwupdClient *self,
  * Since: 2.2.1
  **/
 gboolean
-fwupd_client_install_blob(FwupdClient *self,
-			  const gchar *device_id,
-			  const gchar *filename,
-			  const gchar *version,
-			  GCancellable *cancellable,
-			  GError **error)
+fwupd_client_write_blob(FwupdClient *self,
+			const gchar *device_id,
+			const gchar *filename,
+			const gchar *version,
+			GCancellable *cancellable,
+			GError **error)
 {
 	gpointer impl_userdata = NULL;
 	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
@@ -2168,21 +2168,21 @@ fwupd_client_install_blob(FwupdClient *self,
 	stream = fwupd_input_stream_from_fn(filename, error);
 	if (stream == NULL)
 		return FALSE;
-	if (impl->install_blob == NULL) {
+	if (impl->write_blob == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no FwupdClientSyncImpl->install_blob");
+				    "no FwupdClientSyncImpl->write_blob");
 		return FALSE;
 	}
-	return impl->install_blob(self,
-				  device_id,
-				  stream,
-				  filename,
-				  version,
-				  impl_userdata,
-				  cancellable,
-				  error);
+	return impl->write_blob(self,
+				device_id,
+				stream,
+				filename,
+				version,
+				impl_userdata,
+				cancellable,
+				error);
 }
 
 static void

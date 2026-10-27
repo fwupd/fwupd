@@ -70,7 +70,7 @@ fwupdtool get-devices
 fwupdtool firmware-parse /path/to/firmware.bin
 
 # Install firmware blob to device
-fwupdtool --verbose --plugins PLUGIN install-blob /path/to/firmware.bin DEVICE_ID
+fwupdtool --verbose --plugins PLUGIN write-blob /path/to/firmware.bin DEVICE_ID
 ```
 
 ### End-to-End Testing (Two Terminals Required)
@@ -102,7 +102,7 @@ test-fwupd   # 15+ minutes, NEVER CANCEL
 Always test at least one complete end-to-end scenario:
 1. **Plugin Development**: Test with `fwupdtool --plugins YOURPLUGIN get-devices --verbose`
 2. **Daemon Changes**: Run daemon in terminal 1, use fwupdmgr in terminal 2
-3. **Firmware Installation**: Use `fwupdtool install-blob` for quick testing
+3. **Firmware Installation**: Use `fwupdtool write-blob` for quick testing
 
 ## Repository Structure
 
@@ -137,7 +137,7 @@ fwupdtool firmware-parse firmware.bin
 # Choose the appropriate parser from the list
 
 # Install plugin firmware
-fwupdtool --verbose --plugins YOUR_PLUGIN install-blob firmware.bin DEVICE_ID
+fwupdtool --verbose --plugins YOUR_PLUGIN write-blob firmware.bin DEVICE_ID
 ```
 
 ### Code Quality

@@ -317,7 +317,7 @@ expect_rc 0
 # ---
 echo " ● Installing blob…"
 echo " ● 0.0.0" >${TMPDIR}/blob.bin
-run install-blob ${TMPDIR}/blob.bin ${DEVICE}
+run write-blob ${TMPDIR}/blob.bin ${DEVICE}
 expect_rc 0
 
 # ---

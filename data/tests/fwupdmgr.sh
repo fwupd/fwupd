@@ -93,12 +93,12 @@ if [ -f ${CAB} ]; then
     echo " ● Installing blob…"
     BLOB="$(mktemp)"
     echo "1.2.3" >"${BLOB}"
-    fwupdmgr install-blob "${BLOB}" ${DEVICE_TARGET} --no-reboot-check
+    fwupdmgr write-blob "${BLOB}" ${DEVICE_TARGET} --no-reboot-check
     expect_rc 0
 
     # ---
     echo " ● Installing blob (not a programmer target)…"
-    fwupdmgr install-blob "${BLOB}" ${DEVICE} --no-reboot-check
+    fwupdmgr write-blob "${BLOB}" ${DEVICE} --no-reboot-check
     expect_rc 1
     rm -f "${BLOB}"
 fi

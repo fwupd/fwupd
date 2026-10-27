@@ -1,4 +1,4 @@
-// org.freedesktop.fwupd.install-blob is deliberately not listed here, as installing firmware
+// org.freedesktop.fwupd.write-blob is deliberately not listed here, as installing firmware
 // without metadata should always require authentication
 polkit.addRule(function(action, subject) {
     if (action.id == "org.freedesktop.fwupd.update-internal" &&

@@ -4035,14 +4035,14 @@ fu_engine_cli_sync_impl_get_report_metadata(FwupdClient *client,
 }
 
 static gboolean
-fu_engine_cli_sync_impl_install_blob(FwupdClient *client,
-				     const gchar *device_id,
-				     FuInputStream *stream,
-				     const gchar *filename_hint,
-				     const gchar *version,
-				     gpointer user_data,
-				     GCancellable *cancellable,
-				     GError **error)
+fu_engine_cli_sync_impl_write_blob(FwupdClient *client,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error)
 {
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 
@@ -4051,7 +4051,7 @@ fu_engine_cli_sync_impl_install_blob(FwupdClient *client,
 			 G_CALLBACK(fu_engine_cli_update_device_changed_cb),
 			 self);
 	fu_progress_reset(self->progress);
-	return fu_engine_install_blob_for_device_id(
+	return fu_engine_write_blob_for_device_id(
 	    self->engine,
 	    device_id,
 	    stream,
@@ -4320,7 +4320,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
 	    .install = fu_engine_cli_sync_impl_install,
-	    .install_blob = fu_engine_cli_sync_impl_install_blob,
+	    .write_blob = fu_engine_cli_sync_impl_write_blob,
 	    .install_release = fu_engine_cli_sync_impl_install_release,
 	    .modify_bios_setting = fu_engine_cli_sync_impl_modify_bios_setting,
 	    .modify_config = fu_engine_cli_sync_impl_modify_config,

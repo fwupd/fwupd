@@ -2213,7 +2213,7 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 
 #ifdef HAVE_GIO_UNIX
 static void
-fu_dbus_daemon_authorize_install_blob_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fu_dbus_daemon_authorize_write_blob_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	FuDbusDaemon *self = helper->self;
@@ -2246,16 +2246,16 @@ fu_dbus_daemon_authorize_install_blob_cb(GObject *source, GAsyncResult *res, gpo
 			 G_CALLBACK(fu_dbus_daemon_progress_status_changed_cb),
 			 helper->self);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), TRUE);
-	ret = fu_engine_install_blob_for_device_id(
-	    engine,
-	    helper->device_id,
-	    stream,
-	    helper->filename_hint,
-	    helper->version,
-	    helper->progress,
-	    FWUPD_INSTALL_FLAG_NONE,
-	    fu_engine_request_get_feature_flags(helper->request),
-	    &error);
+	ret =
+	    fu_engine_write_blob_for_device_id(engine,
+					       helper->device_id,
+					       stream,
+					       helper->filename_hint,
+					       helper->version,
+					       helper->progress,
+					       FWUPD_INSTALL_FLAG_NONE,
+					       fu_engine_request_get_feature_flags(helper->request),
+					       &error);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
 	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
 		g_set_error_literal(&error, /* nocheck:error-false-return */
@@ -2276,10 +2276,10 @@ fu_dbus_daemon_authorize_install_blob_cb(GObject *source, GAsyncResult *res, gpo
 #endif /* HAVE_GIO_UNIX */
 
 static void
-fu_dbus_daemon_method_install_blob(FuDbusDaemon *self,
-				   GVariant *parameters,
-				   FuEngineRequest *request,
-				   GDBusMethodInvocation *invocation)
+fu_dbus_daemon_method_write_blob(FuDbusDaemon *self,
+				 GVariant *parameters,
+				 FuEngineRequest *request,
+				 GDBusMethodInvocation *invocation)
 {
 #ifdef HAVE_GIO_UNIX
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
@@ -2352,10 +2352,10 @@ fu_dbus_daemon_method_install_blob(FuDbusDaemon *self,
 	fu_daemon_set_status(FU_DAEMON(self), FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
-				  "org.freedesktop.fwupd.install-blob",
+				  "org.freedesktop.fwupd.write-blob",
 				  FU_POLKIT_AUTHORITY_CHECK_FLAG_ALLOW_USER_INTERACTION,
 				  NULL,
-				  fu_dbus_daemon_authorize_install_blob_cb,
+				  fu_dbus_daemon_authorize_write_blob_cb,
 				  g_steal_pointer(&helper));
 #else
 	g_dbus_method_invocation_return_error_literal(invocation,
@@ -2754,7 +2754,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"Inhibit", fu_dbus_daemon_method_inhibit},
 	    {"Uninhibit", fu_dbus_daemon_method_uninhibit},
 	    {"Install", fu_dbus_daemon_method_install},
-	    {"InstallBlob", fu_dbus_daemon_method_install_blob},
+	    {"InstallBlob", fu_dbus_daemon_method_write_blob},
 	    {"GetDetails", fu_dbus_daemon_method_get_details},
 	    {"GetBiosSettings", fu_dbus_daemon_method_get_bios_settings},
 	    {"SetBiosSettings", fu_dbus_daemon_method_set_bios_settings},

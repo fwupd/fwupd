@@ -117,7 +117,7 @@
     <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.downgrade-hotplug-trusted</annotate>
   </action>
 
-  <action id="org.freedesktop.fwupd.install-blob">
+  <action id="org.freedesktop.fwupd.write-blob">
     <description>Install device firmware without metadata</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
     <message>Authentication is required to install firmware without metadata</message>

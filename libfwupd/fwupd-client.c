@@ -3851,14 +3851,14 @@ fwupd_client_install_stream_async(FwupdClient *self,
 }
 
 void
-fwupd_client_install_blob_stream_async(FwupdClient *self,
-				       const gchar *device_id,
-				       FwupdUnixInputStream *ustream,
-				       const gchar *filename_hint,
-				       const gchar *version,
-				       GCancellable *cancellable,
-				       GAsyncReadyCallback callback,
-				       gpointer callback_data)
+fwupd_client_write_blob_stream_async(FwupdClient *self,
+				     const gchar *device_id,
+				     FwupdUnixInputStream *ustream,
+				     const gchar *filename_hint,
+				     const gchar *version,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
@@ -3867,7 +3867,7 @@ fwupd_client_install_blob_stream_async(FwupdClient *self,
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 
 	/* tag for debugging */
-	g_task_set_source_tag(task, fwupd_client_install_blob_stream_async);
+	g_task_set_source_tag(task, fwupd_client_write_blob_stream_async);
 
 	/* sanity check before using proxy */
 	if (priv->proxy == NULL) {
@@ -4082,7 +4082,7 @@ fwupd_client_install_finish(FwupdClient *self, GAsyncResult *res, GError **error
 }
 
 /**
- * fwupd_client_install_blob_async:
+ * fwupd_client_write_blob_async:
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @filename: (not nullable): the firmware blob to install
@@ -4091,7 +4091,7 @@ fwupd_client_install_finish(FwupdClient *self, GAsyncResult *res, GError **error
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
- * Install a firmware blob that is not in a cabinet archive onto a specific specific programmer
+ * Write a firmware blob that is not in a cabinet archive onto a specific specific programmer
  * target.
  *
  * As there is no metadata, no signature, requirement or version checks are done, and the daemon
@@ -4104,13 +4104,13 @@ fwupd_client_install_finish(FwupdClient *self, GAsyncResult *res, GError **error
  * Since: 2.2.1
  **/
 void
-fwupd_client_install_blob_async(FwupdClient *self,
-				const gchar *device_id,
-				const gchar *filename,
-				const gchar *version,
-				GCancellable *cancellable,
-				GAsyncReadyCallback callback,
-				gpointer callback_data)
+fwupd_client_write_blob_async(FwupdClient *self,
+			      const gchar *device_id,
+			      const gchar *filename,
+			      const gchar *version,
+			      GCancellable *cancellable,
+			      GAsyncReadyCallback callback,
+			      gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GError) error = NULL;
@@ -4125,23 +4125,23 @@ fwupd_client_install_blob_async(FwupdClient *self,
 	ustream = fwupd_unix_input_stream_new_from_filename(filename, &error);
 	if (ustream == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-		g_task_set_source_tag(task, fwupd_client_install_blob_async);
+		g_task_set_source_tag(task, fwupd_client_write_blob_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
 
 	/* call into daemon */
-	fwupd_client_install_blob_stream_async(self,
-					       device_id,
-					       ustream,
-					       filename,
-					       version,
-					       cancellable,
-					       callback,
-					       callback_data);
+	fwupd_client_write_blob_stream_async(self,
+					     device_id,
+					     ustream,
+					     filename,
+					     version,
+					     cancellable,
+					     callback,
+					     callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_set_source_tag(task, fwupd_client_install_blob_async);
+	g_task_set_source_tag(task, fwupd_client_write_blob_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -4150,19 +4150,19 @@ fwupd_client_install_blob_async(FwupdClient *self,
 }
 
 /**
- * fwupd_client_install_blob_finish:
+ * fwupd_client_write_blob_finish:
  * @self: a #FwupdClient
  * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
- * Gets the result of [method@FwupdClient.install_blob_async].
+ * Gets the result of [method@FwupdClient.write_blob_async].
  *
  * Returns: %TRUE for success
  *
  * Since: 2.2.1
  **/
 gboolean
-fwupd_client_install_blob_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+fwupd_client_write_blob_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
@@ -8888,7 +8888,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
 	    .inhibit = fwupd_client_sync_impl_inhibit,
 	    .install = fwupd_client_sync_impl_install,
-	    .install_blob = fwupd_client_sync_impl_install_blob,
+	    .write_blob = fwupd_client_sync_impl_write_blob,
 	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,

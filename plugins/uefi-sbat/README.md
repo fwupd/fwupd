@@ -125,7 +125,7 @@ This plugin has been available since fwupd version `2.0.0`.
 
 ## Testing
 
-    $ sudo fwupdtool --plugins uefi-sbat  -vv install-blob revocations.efi.signed
+    $ sudo fwupdtool --plugins uefi-sbat  -vv write-blob revocations.efi.signed
     $ sudo fwupdtool --plugins uefi-sbat  -vv reboot-cleanup
     $ sudo fwupdtool firmware-build ../plugins/uefi-sbat/revocation.builder.xml revocation.efi
     Decompressing…           [************                           ]

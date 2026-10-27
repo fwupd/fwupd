@@ -3067,13 +3067,13 @@ fu_engine_install_release(FuEngine *self,
 	}
 
 	/* install firmware blob */
-	if (!fu_engine_install_blob(self,
-				    device,
-				    release,
-				    progress,
-				    flags,
-				    feature_flags,
-				    &error_local)) {
+	if (!fu_engine_write_blob(self,
+				  device,
+				  release,
+				  progress,
+				  flags,
+				  feature_flags,
+				  &error_local)) {
 		FwupdUpdateState state = fu_device_get_update_state(device);
 		if (state != FWUPD_UPDATE_STATE_FAILED &&
 		    state != FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
@@ -4073,13 +4073,13 @@ fu_engine_install_loop(FuEngine *self,
 }
 
 gboolean
-fu_engine_install_blob(FuEngine *self,
-		       FuDevice *device,
-		       FuRelease *release,
-		       FuProgress *progress,
-		       FwupdInstallFlags flags,
-		       FwupdFeatureFlags feature_flags,
-		       GError **error)
+fu_engine_write_blob(FuEngine *self,
+		     FuDevice *device,
+		     FuRelease *release,
+		     FuProgress *progress,
+		     FwupdInstallFlags flags,
+		     FwupdFeatureFlags feature_flags,
+		     GError **error)
 {
 	gboolean write_complete = FALSE;
 	g_autofree gchar *device_id = NULL;
@@ -4156,7 +4156,7 @@ fu_engine_install_blob(FuEngine *self,
 }
 
 /**
- * fu_engine_install_blob_for_device_id:
+ * fu_engine_write_blob_for_device_id:
  * @self: a #FuEngine
  * @device_id: a device ID
  * @stream: a #FuInputStream
@@ -4174,15 +4174,15 @@ fu_engine_install_blob(FuEngine *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_install_blob_for_device_id(FuEngine *self,
-				     const gchar *device_id,
-				     FuInputStream *stream,
-				     const gchar *filename_hint,
-				     const gchar *version,
-				     FuProgress *progress,
-				     FwupdInstallFlags flags,
-				     FwupdFeatureFlags feature_flags,
-				     GError **error)
+fu_engine_write_blob_for_device_id(FuEngine *self,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   FwupdFeatureFlags feature_flags,
+				   GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuIdleLocker) locker = NULL;
@@ -4236,13 +4236,13 @@ fu_engine_install_blob_for_device_id(FuEngine *self,
 	g_return_val_if_fail(locker != NULL, FALSE);
 
 	/* there is no metadata to record */
-	return fu_engine_install_blob(self,
-				      device,
-				      release,
-				      progress,
-				      flags | FWUPD_INSTALL_FLAG_NO_HISTORY,
-				      feature_flags,
-				      error);
+	return fu_engine_write_blob(self,
+				    device,
+				    release,
+				    progress,
+				    flags | FWUPD_INSTALL_FLAG_NO_HISTORY,
+				    feature_flags,
+				    error);
 }
 
 static FuDevice *

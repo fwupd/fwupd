@@ -95,14 +95,14 @@ fwupd_client_impl_set_feature_flags_cb(FwupdClient *self,
 }
 
 static gboolean
-fwupd_client_impl_install_blob_cb(FwupdClient *self,
-				  const gchar *device_id,
-				  FwupdInputStream *stream,
-				  const gchar *filename_hint,
-				  const gchar *version,
-				  gpointer user_data,
-				  GCancellable *cancellable,
-				  GError **error)
+fwupd_client_impl_write_blob_cb(FwupdClient *self,
+				const gchar *device_id,
+				FwupdInputStream *stream,
+				const gchar *filename_hint,
+				const gchar *version,
+				gpointer user_data,
+				GCancellable *cancellable,
+				GError **error)
 {
 	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
 	helper->install_device_id = g_strdup(device_id);
@@ -120,7 +120,7 @@ fwupd_client_sync_impl_func(void)
 	FwupdClientSyncImpl impl = {
 	    .connect = fwupd_client_impl_connect_cb,
 	    .set_feature_flags = fwupd_client_impl_set_feature_flags_cb,
-	    .install_blob = fwupd_client_impl_install_blob_cb,
+	    .write_blob = fwupd_client_impl_write_blob_cb,
 	};
 	FwupdClientImplHelper helper = {};
 
@@ -139,7 +139,7 @@ fwupd_client_sync_impl_func(void)
 	g_assert_true(helper.done_connect);
 	g_assert_true(helper.done_set_feature_flags);
 
-	ret = fwupd_client_install_blob(client, "abc", "/etc/os-release", "1.2.3", NULL, &error);
+	ret = fwupd_client_write_blob(client, "abc", "/etc/os-release", "1.2.3", NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(helper.install_device_id, ==, "abc");
