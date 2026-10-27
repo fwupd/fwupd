@@ -19,7 +19,7 @@ EOF
 
 group "Update system and install dependencies"
 apt update -qq
-apt install -qq -y gcovr ./dist/*.deb
+apt install -qq -y ./dist/*.deb
 endgroup
 
 group "Enable test devices"
