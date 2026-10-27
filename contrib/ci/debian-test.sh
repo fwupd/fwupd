@@ -29,7 +29,9 @@ endgroup
 fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 
 group "Get the test firmware"
-./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
+if [[ "${CI_NETWORK:-false}" = "true" ]]; then
+    ./fwupbuild download-test-firmware --tests installed-tests --dest /usr/share/installed-tests/fwupd/
+fi
 endgroup
 
 service dbus restart
