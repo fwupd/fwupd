@@ -17,7 +17,8 @@ cat >"$SYSTEMD_OVERRIDE/override.conf" <<EOF
 Environment="G_DEBUG=fatal-criticals"
 EOF
 
-group "Install our packages"
+group "Update system and install dependencies"
+apt update -qq
 apt install -qq -y ./dist/*.deb
 endgroup
 
