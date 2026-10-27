@@ -14,6 +14,7 @@ from .git import GitRepo
 from .logger import printer
 
 POTFILES_IN: Path = Path("po") / "POTFILES.in"
+POTFILES_SKIP: Path = Path("po") / "POTFILES.skip"
 TOKENS = ['_("', "TRANSLATORS"]
 
 
@@ -32,6 +33,12 @@ class DuplicateEntries(PotfileError):
 class MissingFromPotfiles(PotfileError):
     def __str__(self) -> str:
         return f"is missing from {POTFILES_IN}"
+
+
+@dataclass
+class ConflictingPotfiles(PotfileError):
+    def __str__(self) -> str:
+        return f"is in both {POTFILES_IN} and {POTFILES_SKIP}"
 
 
 def register(subparsers):
@@ -77,6 +84,23 @@ def run(args):
         printer.error(f"{potfiles_path}: file not found")
         return 1
 
+    try:
+        with open(POTFILES_SKIP, encoding="utf-8") as f:
+            entries: list[str] = sorted(
+                line
+                for line in f.read().split("\n")
+                if line and not line.startswith("#")
+            )
+            potfiles_skip = set(entries)
+            if len(potfiles_skip) != len(entries):
+                errors.append(DuplicateEntries(POTFILES_SKIP))
+    except FileNotFoundError:
+        potfiles_skip = set()
+
+    for file in potfiles:
+        if file in potfiles_skip:
+            errors.append(ConflictingPotfiles(file))
+
     if args.files:
         try:
             files_to_check: list[Path] = repo.resolve_files(args.files)
@@ -97,7 +121,7 @@ def run(args):
         )
 
     for file in files_to_check:
-        if str(file) not in potfiles:
+        if str(file) not in potfiles and str(file) not in potfiles_skip:
             with open(file, encoding="utf-8") as f:
                 content = f.read()
 
