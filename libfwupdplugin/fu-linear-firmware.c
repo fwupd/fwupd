@@ -60,6 +60,24 @@ fu_linear_firmware_get_image_gtype(FuLinearFirmware *self)
 	return priv->image_gtype;
 }
 
+/**
+ * fu_linear_firmware_set_image_gtype:
+ * @self: a #FuLinearFirmware
+ * @image_gtype: an image #GType
+ *
+ * Sets the image #GType to use when parsing a byte buffer.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_linear_firmware_set_image_gtype(FuLinearFirmware *self, GType image_gtype)
+{
+	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_LINEAR_FIRMWARE(self));
+	g_return_if_fail(image_gtype != G_TYPE_INVALID);
+	priv->image_gtype = image_gtype;
+}
+
 static gboolean
 fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {

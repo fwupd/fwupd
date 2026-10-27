@@ -103,6 +103,7 @@ fwupdplugin_src = [
   'fu-context-helper.c',
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
+  'fu-coswid-collection.c', # fuzzing
   'fu-crc.c', # fuzzing
   'fu-csv-entry.c', # fuzzing
   'fu-csv-firmware.c', # fuzzing
