@@ -46,6 +46,34 @@ class GitRepo:
         """
         return cls(directories.repository_root())
 
+    @classmethod
+    def clone(cls, url: str, /, depth: int = 0, cwd: Path | None = None) -> Self:
+        """
+        Clone the git repo from the given url into the given directory (or the
+        current working directory if missing).
+
+        The resulting git repo's root path will be cwd/<repo name>.
+        """
+        args = ["--quiet"]
+        if depth > 0:
+            args += ["--depth", str(depth)]
+
+        kwargs = {"check": True}
+        if cwd:
+            kwargs["cwd"] = str(cwd)
+
+        RunCmd(["git", "clone", *args, url], **kwargs)
+
+        repo_name = Path(url).name
+        if repo_name.endswith(".git"):
+            repo_name = repo_name.removesuffix(".git")
+
+        repo = Path(cwd) / repo_name if cwd else Path.cwd() / repo_name
+        if not repo.exists():
+            raise FileNotFoundError(f"{repo} not found after successful git clone")
+
+        return cls(root=repo)
+
     @property
     def current_ref(self) -> str | None:
         """
