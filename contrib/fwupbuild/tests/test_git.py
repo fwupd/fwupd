@@ -296,6 +296,123 @@ class TestRepo:
         )
 
 
+class TestClone:
+    """Tests for GitRepo.clone() class method."""
+
+    def test_basic_no_depth_no_cwd(self, tmp_path):
+        """clone() without depth or cwd calls git clone --quiet <url>."""
+        url = "https://example.com/myrepo.git"
+        (tmp_path / "myrepo").mkdir()
+
+        with (
+            patch("fwupbuild.git.RunCmd") as mock_runcmd,
+            patch("pathlib.Path.cwd", return_value=tmp_path),
+        ):
+            result = GitRepo.clone(url)
+            mock_runcmd.assert_called_once_with(
+                ["git", "clone", "--quiet", url], check=True
+            )
+        assert result.root == tmp_path / "myrepo"
+
+    def test_depth_zero_omits_depth_arg(self, tmp_path):
+        """clone() with depth=0 (the default) does not pass --depth to git."""
+        url = "https://example.com/myrepo.git"
+        (tmp_path / "myrepo").mkdir()
+
+        with (
+            patch("fwupbuild.git.RunCmd") as mock_runcmd,
+            patch("pathlib.Path.cwd", return_value=tmp_path),
+        ):
+            GitRepo.clone(url, depth=0)
+            mock_runcmd.assert_called_once_with(
+                ["git", "clone", "--quiet", url], check=True
+            )
+
+    @pytest.mark.parametrize(
+        "depth",
+        [1, 10],
+        ids=["depth-1", "depth-10"],
+    )
+    def test_depth_positive_adds_depth_arg(self, tmp_path, depth):
+        """clone() with depth > 0 appends --depth <n> to the git command."""
+        url = "https://example.com/myrepo.git"
+        (tmp_path / "myrepo").mkdir()
+
+        with (
+            patch("fwupbuild.git.RunCmd") as mock_runcmd,
+            patch("pathlib.Path.cwd", return_value=tmp_path),
+        ):
+            GitRepo.clone(url, depth=depth)
+            mock_runcmd.assert_called_once_with(
+                ["git", "clone", "--quiet", "--depth", str(depth), url], check=True
+            )
+
+    def test_cwd_passed_as_str_kwarg(self, tmp_path):
+        """clone() with cwd passes cwd=str(cwd) to RunCmd."""
+        url = "https://example.com/myrepo.git"
+        cwd = tmp_path / "dest"
+        cwd.mkdir()
+        (cwd / "myrepo").mkdir()
+
+        with patch("fwupbuild.git.RunCmd") as mock_runcmd:
+            result = GitRepo.clone(url, cwd=cwd)
+            mock_runcmd.assert_called_once_with(
+                ["git", "clone", "--quiet", url], check=True, cwd=str(cwd)
+            )
+        assert result.root == cwd / "myrepo"
+
+    def test_cwd_and_depth_combined(self, tmp_path):
+        """clone() passes both cwd and --depth when both are given."""
+        url = "https://example.com/myrepo.git"
+        cwd = tmp_path / "dest"
+        cwd.mkdir()
+        (cwd / "myrepo").mkdir()
+
+        with patch("fwupbuild.git.RunCmd") as mock_runcmd:
+            GitRepo.clone(url, depth=5, cwd=cwd)
+            mock_runcmd.assert_called_once_with(
+                ["git", "clone", "--quiet", "--depth", "5", url],
+                check=True,
+                cwd=str(cwd),
+            )
+
+    def test_strips_git_suffix_from_url(self, tmp_path):
+        """clone() strips a trailing .git to derive the local directory name."""
+        url = "https://example.com/fwupd.git"
+        (tmp_path / "fwupd").mkdir()
+
+        with patch("fwupbuild.git.RunCmd"):
+            result = GitRepo.clone(url, cwd=tmp_path)
+        assert result.root == tmp_path / "fwupd"
+
+    def test_url_without_git_suffix(self, tmp_path):
+        """clone() uses the bare URL path component when the URL has no .git suffix."""
+        url = "https://example.com/fwupd"
+        (tmp_path / "fwupd").mkdir()
+
+        with patch("fwupbuild.git.RunCmd"):
+            result = GitRepo.clone(url, cwd=tmp_path)
+        assert result.root == tmp_path / "fwupd"
+
+    def test_raises_if_repo_dir_absent_after_clone(self, tmp_path):
+        """clone() raises FileNotFoundError when the expected repo directory is missing."""
+        url = "https://example.com/myrepo.git"
+
+        with patch("fwupbuild.git.RunCmd"):
+            with pytest.raises(FileNotFoundError):
+                GitRepo.clone(url, cwd=tmp_path)
+
+    def test_returns_gitrepo_with_correct_root(self, tmp_path):
+        """clone() returns a GitRepo whose root points at the cloned directory."""
+        url = "https://example.com/myrepo.git"
+        (tmp_path / "myrepo").mkdir()
+
+        with patch("fwupbuild.git.RunCmd"):
+            result = GitRepo.clone(url, cwd=tmp_path)
+        assert isinstance(result, GitRepo)
+        assert result.root == tmp_path / "myrepo"
+
+
 class TestFindFiles:
     """
     Tests for GitRepo.find_files().
