@@ -17,6 +17,8 @@ CONFARGS =
 
 ifneq ($(CI),)
 	CONFARGS += --werror -Db_coverage=true
+	# -ffile-prefix-map makes gcov record relative source paths, which gcovr cannot resolve
+	DEB_BUILD_MAINT_OPTIONS += reproducible=-fixfilepath
 else
 	CONFARGS += -Dsupported_build=enabled
 endif
