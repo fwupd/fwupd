@@ -17,9 +17,8 @@ cat >"$SYSTEMD_OVERRIDE/override.conf" <<EOF
 Environment="G_DEBUG=fatal-criticals"
 EOF
 
-group "Update system and install dependencies"
-apt update -qq
-apt install -qq -y gcovr ./dist/*.deb
+group "Install our packages"
+apt install -qq -y ./dist/*.deb
 endgroup
 
 group "Enable test devices"
