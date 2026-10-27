@@ -111,6 +111,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			}
 
 			/* get the releases for this device */
+			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+				continue;
 			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 				continue;
 			rels =
@@ -132,6 +134,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 					continue;
 				}
 
+				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+					continue;
 				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 					continue;
 				rel = fu_engine_get_release_with_tag(self,
