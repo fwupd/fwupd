@@ -3,7 +3,9 @@ set -e
 set -x
 
 #clone test firmware if necessary
-. ./contrib/ci/get_test_firmware.sh
+if [ "${CI_NETWORK:-false}" = "true" ]; then
+    ./fwupbuild download-test-firmware --tests ci-tests --dest "$PWD"
+fi
 
 #evaluate using Ubuntu's buildflags
 #evaluate using Debian/Ubuntu's buildflags
