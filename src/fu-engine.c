@@ -4187,6 +4187,7 @@ fu_engine_write_blob_for_device_id(FuEngine *self,
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -4236,13 +4237,21 @@ fu_engine_write_blob_for_device_id(FuEngine *self,
 	g_return_val_if_fail(locker != NULL, FALSE);
 
 	/* there is no metadata to record */
-	return fu_engine_write_blob(self,
-				    device,
-				    release,
-				    progress,
-				    flags | FWUPD_INSTALL_FLAG_NO_HISTORY,
-				    feature_flags,
-				    error);
+	if (!fu_engine_write_blob(self,
+				  device,
+				  release,
+				  progress,
+				  flags | FWUPD_INSTALL_FLAG_NO_HISTORY,
+				  feature_flags,
+				  &error_local)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
+		fu_device_set_update_error(device, error_local->message);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static FuDevice *
