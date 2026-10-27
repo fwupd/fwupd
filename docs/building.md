@@ -125,7 +125,7 @@ Using fwupdtool raw firmware blob (i.e. not the cabinet archive with metadata) c
 
 ```shell
 fwupdtool --verbose --plugins vli \
- install-blob /home/u/the-firmware.bin 73ef80b60058b4f18549921520bfd94eaf18710a
+ write-blob /home/u/the-firmware.bin 73ef80b60058b4f18549921520bfd94eaf18710a
 ```
 
 ## Firmware Parsing

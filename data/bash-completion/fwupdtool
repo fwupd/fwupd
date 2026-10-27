@@ -46,7 +46,7 @@ _fwupdtool_cmd_list=(
 	'hwids'
 	'update'
 	'install'
-	'install-blob'
+	'write-blob'
 	'modify-config'
 	'modify-remote'
 	'monitor'
@@ -283,7 +283,7 @@ _fwupdtool()
 	esac
 
 	case $arg in
-	get-details|install|install-blob|firmware-dump|firmware-read)
+	get-details|install|write-blob|firmware-dump|firmware-read)
 		#find files
 		if [[ "$args" = "2" ]]; then
 			_filedir

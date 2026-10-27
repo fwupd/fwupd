@@ -2130,7 +2130,7 @@
           <li>Do not follow symlinks when searching for ESP devices</li>
           <li>Ensure the config file permission is correct for built-in plugins</li>
           <li>Fix a compile failure when compiling without efiboot</li>
-          <li>Fix a regression when using fwuptool install-blob with FMAP firmware</li>
+          <li>Fix a regression when using fwuptool write-blob with FMAP firmware</li>
           <li>Only count the Microsoft hashes when getting the dbx version</li>
           <li>Only use the IFD when the system is Intel-based</li>
           <li>Support loading CoSWID when only one role has been set</li>

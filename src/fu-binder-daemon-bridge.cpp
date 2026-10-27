@@ -363,7 +363,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 
 		g_info("received install blob request for device %s", in_id.c_str());
-		if (!fu_binder_daemon_install_blob_bridge(
+		if (!fu_binder_daemon_write_blob_bridge(
 			m_daemon,
 			in_id.c_str(),
 			in_fd.get(),

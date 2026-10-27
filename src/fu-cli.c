@@ -2217,7 +2217,7 @@ fu_cli_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck
 }
 
 static gboolean
-fu_cli_install_blob(FuCli *self, gchar **values, GError **error)
+fu_cli_write_blob(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	const gchar *version = NULL;
@@ -2275,12 +2275,12 @@ fu_cli_install_blob(FuCli *self, gchar **values, GError **error)
 	}
 
 	/* there is no metadata, so the daemon always asks for authentication */
-	if (!fwupd_client_install_blob(priv->client,
-				       fwupd_device_get_id(dev),
-				       filename,
-				       version,
-				       priv->cancellable,
-				       error)) {
+	if (!fwupd_client_write_blob(priv->client,
+				     fwupd_device_get_id(dev),
+				     filename,
+				     version,
+				     priv->cancellable,
+				     error)) {
 		fu_cli_maybe_prefix_sandbox_error(filename, error);
 		return FALSE;
 	}
@@ -7114,12 +7114,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     _("Install a firmware file in cabinet format on this hardware"),
 			     fu_cli_local_install);
 	fu_cli_cmd_array_add(self,
-			     "install-blob",
+			     "write-blob,install-blob",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			     _("FILENAME DEVICE-ID [VERSION]"),
 			     /* TRANSLATORS: command description */
-			     _("Install a raw firmware blob on a device"),
-			     fu_cli_install_blob);
+			     _("Write a raw firmware blob on a device"),
+			     fu_cli_write_blob);
 	fu_cli_cmd_array_add(self,
 			     "get-details",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
