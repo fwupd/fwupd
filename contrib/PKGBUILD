@@ -67,6 +67,7 @@ build() {
   cd ${pkgname}
   if [ -n "$CI" ]; then
     export CI="--wrap-mode=default -Db_coverage=true"
+    export CFLAGS="${CFLAGS:+$CFLAGS }-fprofile-abs-path"
   fi
   arch-meson -D b_lto=false $CI ../build \
     -Ddocs=enabled \

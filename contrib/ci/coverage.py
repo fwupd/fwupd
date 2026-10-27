@@ -18,13 +18,13 @@ import subprocess
 import sys
 
 FILTERS = [
-    "(^|/)libfwupd/",
-    "(^|/)libfwupdplugin/",
-    "(^|/)plugins/",
-    "(^|/)src/",
+    ".*/libfwupd/",
+    ".*/libfwupdplugin/",
+    ".*/plugins/",
+    ".*/src/",
 ]
 EXCLUDES = [
-    "(^|/)subprojects/",
+    ".*/subprojects/",
     ".*/fwupd-context-test\\.c",
     ".*/fwupd-thread-test\\.c",
 ]

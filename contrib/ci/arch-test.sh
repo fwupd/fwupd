@@ -43,7 +43,7 @@ tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15 0:sha256=722961af
 endgroup
 
 group "Run the CI tests for Qt5"
-meson qt5-thread-test contrib/ci/qt5-thread-test --werror -Db_coverage=true
+CFLAGS="${CFLAGS:+$CFLAGS }-fprofile-abs-path" meson qt5-thread-test contrib/ci/qt5-thread-test --werror -Db_coverage=true
 ninja -C qt5-thread-test test
 endgroup
 
