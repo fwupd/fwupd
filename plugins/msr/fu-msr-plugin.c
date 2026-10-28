@@ -203,7 +203,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL) {
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL)) {
 		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
 		if (((ecx >> 11) & 0x1) > 0)
@@ -220,7 +220,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* indicates support for SME and SEV */
-	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_AMD) {
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, NULL)) {
 		if (!fu_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
 			return FALSE;
 		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
@@ -437,7 +437,7 @@ fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 
 	/* create attr */
@@ -472,7 +472,7 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 	if (device == NULL)
 		return;
@@ -525,7 +525,7 @@ fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAt
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 
 	/* create attr (which should already have been created in the cpu plugin) */
@@ -572,7 +572,7 @@ fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *at
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 
 	/* create attr */
@@ -616,7 +616,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 	g_autoptr(GError) error_local = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, NULL))
 		return;
 
 	/* if pci_psp has already verified TSME is active, skip our check */
@@ -670,7 +670,7 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	g_autoptr(FuSecurityAttr) attr1 = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, NULL))
 		return;
 
 	/* check fields */

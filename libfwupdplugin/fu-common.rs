@@ -3,6 +3,7 @@
 
 // The CPU vendor.
 // Since: 1.5.5
+#[derive(ToString)]
 enum FuCpuVendor {
     Unknown,
     Intel,

@@ -25,6 +25,7 @@ enum FuContextFlags {
     DualBootWindows         = 1 << 18,
     FdeSystemdPcrlock       = 1 << 19, // full disk encryption
     PendingReboot           = 1 << 20, // system changes are pending a reboot
+    DummyCpuVendor          = 1 << 21, // always success from fu_context_check_cpu_vendor()
 }
 
 enum FuContextLoadFlags {

@@ -3009,6 +3009,45 @@ fu_context_set_cpu_vendor(FuContext *self, FuCpuVendor cpu_vendor)
 	priv->cpu_vendor = cpu_vendor;
 }
 
+/**
+ * fu_context_check_cpu_vendor:
+ * @self: a #FuContext
+ * @cpu_vendor: a #FuCpuVendor, e.g. %FU_CPU_VENDOR_AMD
+ * @error: (nullable): optional return location for an error
+ *
+ * Uses CPUID to check the CPU vendor.
+ *
+ * If %FU_CONTEXT_FLAG_DUMMY_CPU_VENDOR is set then this function always returns with success.
+ *
+ * Returns: %TRUE if the PU vendor matched.
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fu_context_check_cpu_vendor(FuContext *self, FuCpuVendor cpu_vendor, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(cpu_vendor != FU_CPU_VENDOR_UNKNOWN, FALSE);
+
+	if (fu_context_has_flag(self, FU_CONTEXT_FLAG_DUMMY_CPU_VENDOR))
+		return TRUE;
+	if (priv->cpu_vendor != cpu_vendor) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "CPU vendor was %s and requested %s",
+			    fu_cpu_vendor_to_string(priv->cpu_vendor),
+			    fu_cpu_vendor_to_string(cpu_vendor));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {

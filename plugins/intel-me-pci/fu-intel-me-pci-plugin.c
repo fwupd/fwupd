@@ -117,7 +117,7 @@ fu_intel_me_pci_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 	g_autoptr(FuSecurityAttr) attr_cpu = NULL;
 
 	/* only Intel */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 
 	/* CPU supported */
