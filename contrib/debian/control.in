@@ -4,8 +4,14 @@ Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <superm1@debian.org>
-Build-Depends: %%%DYNAMIC%%%
-Build-Depends-Indep: %%%DYNAMIC_INDEP%%%
+Build-Depends:
+{% for dep in DEPENDS %}
+	{{dep}},
+{% endfor %}
+Build-Depends-Indep:
+{% for dep in DEPENDS_INDEP %}
+	{{dep}},
+{% endfor %}
 Rules-Requires-Root: no
 Standards-Version: 4.7.2
 Section: admin
@@ -144,3 +150,10 @@ Description: GObject introspection data for libfwupd
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
+
+{% if QUBES %}
+Package: fwupd-qubes-vm-whonix
+Architecture: amd64
+Description: Whonix support for Qubes OS
+ This package is used to download firmware updates and metadata via TOR.
+{% endif %}
