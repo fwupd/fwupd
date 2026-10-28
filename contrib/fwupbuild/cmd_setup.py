@@ -19,6 +19,7 @@ from .osprofile import (
     PipPackageManager,
     RunCmd,
     Shell,
+    UnknownArchException,
     UnknownOsException,
 )
 
@@ -41,6 +42,12 @@ def register(subparsers):
         choices=list(OsName),
         default=None,
         help="OS profile to use",
+    )
+    deps_parser.add_argument(
+        "--filter",
+        dest="filter",
+        default=None,
+        help="Filter to use (default: machine arch)",
     )
     # We don't need --no here because why would you run a setup command if --no...
     deps_parser.set_defaults(func=run_deps)
@@ -97,7 +104,7 @@ def generate_fwupbuild_completions(completion_dir: Path, python: Path) -> None:
             logger.debug(f"Failed to generate {shell} completion")
 
 
-def setup_system_deps(osname: OsName) -> int:
+def setup_system_deps(osname: OsName, filter: str | None = None) -> int:
     """Install build dependencies."""
 
     if osname == OsName.NIXOS:
@@ -105,10 +112,15 @@ def setup_system_deps(osname: OsName) -> int:
         return 0
 
     dependencies = Dependencies.load()
-    filter = OsArch.detect().value
+    if not filter:
+        try:
+            filter = OsArch.detect().value
+        except UnknownArchException:
+            printer.error("Unknown arch, cannot continue")
+            return 1
     packages = dependencies.find_packages(osname, filter=filter)
     if not packages:
-        logger.warning(f"No packages found for {osname}")
+        logger.warning(f"No packages found for {osname}({filter})")
         return 0
 
     if not printer.ask_yn(
@@ -117,7 +129,8 @@ def setup_system_deps(osname: OsName) -> int:
         logger.info("Skipping package install")
         return 0
 
-    printer.message(f"Installing packages for {osname}")
+    printer.message(f"Installing packages for {osname}({filter})")
+    logger.debug(f"Packages: {', '.join(p.package_name for p in packages)}")
     try:
         pm = osname.package_manager()
         cmd = pm.install([p.package_name for p in packages])
@@ -162,14 +175,15 @@ def run_deps(args) -> int:
         )
         return 1
 
-    logger.info(f"Using OS name: '{osname}'")
+    filterstr = f" filter: {args.filter}" if args.filter else ""
+    logger.info(f"Using OS name: '{osname}'{filterstr}")
 
     if osname == OsName.NIXOS:
         printer.message("NixOS detected, using nix-shell for build dependencies")
         return 0
 
     printer.default_yn_answer = Yes.YES
-    return setup_system_deps(osname)
+    return setup_system_deps(osname, args.filter)
 
 
 def setup_venv() -> int:
