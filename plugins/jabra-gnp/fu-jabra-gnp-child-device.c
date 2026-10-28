@@ -222,8 +222,7 @@ fu_jabra_gnp_child_device_write_image(FuJabraGnpChildDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "write-partition");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, "start");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, "flash-erase-done");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 91, "write-chunks");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "read-verify-status");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write-chunks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "write-version");
 
 	/* write partition */
@@ -282,11 +281,6 @@ fu_jabra_gnp_child_device_write_image(FuJabraGnpChildDevice *self,
 				       chunks,
 				       fu_progress_get_child(progress),
 				       error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* verify */
-	if (!fu_jabra_gnp_read_verify_status(FU_DEVICE(self), self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

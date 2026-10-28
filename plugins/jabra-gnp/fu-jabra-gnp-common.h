@@ -8,14 +8,15 @@
 
 #include <fwupdplugin.h>
 
-#define FU_JABRA_GNP_BUF_SIZE			64
-#define FU_JABRA_GNP_MAX_RETRIES		3
-#define FU_JABRA_GNP_PRELOAD_COUNT		10
-#define FU_JABRA_GNP_RETRY_DELAY		100   /* ms */
-#define FU_JABRA_GNP_STANDARD_SEND_TIMEOUT	3000  /* ms */
-#define FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT	1000  /* ms */
-#define FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT	30000 /* ms */
-#define FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT 60000 /* ms */
+#define FU_JABRA_GNP_BUF_SIZE			 64
+#define FU_JABRA_GNP_MAX_RETRIES		 3
+#define FU_JABRA_GNP_PRELOAD_COUNT		 10
+#define FU_JABRA_GNP_RECEIVER_MAX_QUEUED_REPORTS 256
+#define FU_JABRA_GNP_RETRY_DELAY		 100   /* ms */
+#define FU_JABRA_GNP_STANDARD_SEND_TIMEOUT	 3000  /* ms */
+#define FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT	 1000  /* ms */
+#define FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT	 30000 /* ms */
+#define FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT	 60000 /* ms */
 
 #define FU_JABRA_GNP_ADDRESS_PARENT    0x01
 #define FU_JABRA_GNP_ADDRESS_OTA_CHILD 0x04
@@ -100,10 +101,7 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
 			  FuChunkArray *chunks,
 			  FuProgress *progress,
-			  GError **error) G_GNUC_NON_NULL(1, 3);
-gboolean
-fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
-    G_GNUC_NON_NULL(1);
+			  GError **error) G_GNUC_NON_NULL(1, 3, 4);
 gboolean
 fu_jabra_gnp_write_version(FuDevice *device,
 			   guint8 address,

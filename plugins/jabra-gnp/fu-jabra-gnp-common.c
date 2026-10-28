@@ -648,7 +648,235 @@ fu_jabra_gnp_write_chunk(FuDevice *device,
 				    error);
 }
 
-/* nocheck:name -- this should probably be implemented using an interface */
+typedef struct {
+	guint8 data[FU_JABRA_GNP_BUF_SIZE];
+	gsize length;
+	GError *error;
+} FuJabraGnpReport;
+
+typedef struct {
+	FuUsbDevice *usb_device;
+	GAsyncQueue *queue;
+	guint8 endpoint;
+	gint stop;
+} FuJabraGnpReceiver;
+
+static void
+fu_jabra_gnp_report_free(FuJabraGnpReport *report)
+{
+	g_clear_error(&report->error);
+	g_free(report);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuJabraGnpReport, fu_jabra_gnp_report_free)
+
+typedef struct {
+	FuJabraGnpReceiver *receiver;
+	guint8 address;
+	FuJabraGnpPacketCmd expected_cmd;
+	guint32 chunk;
+	GError *error;
+} FuJabraGnpReceiverReadData;
+
+static gpointer
+fu_jabra_gnp_receiver_thread(gpointer user_data)
+{
+	FuJabraGnpReceiver *receiver = user_data;
+
+	while (!g_atomic_int_get(&receiver->stop)) {
+		g_autoptr(FuJabraGnpReport) report = g_new0(FuJabraGnpReport, 1);
+		if (!fu_usb_device_interrupt_transfer(receiver->usb_device,
+						      receiver->endpoint,
+						      report->data,
+						      sizeof(report->data),
+						      &report->length,
+						      FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
+						      &report->error)) {
+			if (g_error_matches(report->error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
+				continue;
+
+			g_async_queue_push(receiver->queue, g_steal_pointer(&report));
+			break;
+		}
+		if (g_async_queue_length(receiver->queue) >=
+		    FU_JABRA_GNP_RECEIVER_MAX_QUEUED_REPORTS) {
+			g_debug("OTA receive queue full, dropping report of size %" G_GSIZE_FORMAT,
+				report->length);
+			continue;
+		}
+		g_async_queue_push(receiver->queue, g_steal_pointer(&report));
+	}
+	return NULL;
+}
+
+/* nocheck:name */
+static gboolean
+fu_jabra_gnp_receiver_read_report_cb(FuDevice *device G_GNUC_UNUSED,
+				     gpointer user_data,
+				     GError **error)
+{
+	FuJabraGnpReceiverReadData *data = user_data;
+	g_autoptr(FuJabraGnpReport) report = NULL;
+	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
+
+	report = g_async_queue_timeout_pop(data->receiver->queue, G_TIME_SPAN_SECOND);
+	if (report == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "timed out reading OTA response");
+		return FALSE;
+	}
+	if (report->error != NULL) {
+		data->error = g_steal_pointer(&report->error);
+		return TRUE;
+	}
+	if (report->length < 7 || report->data[0] != FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE) {
+		g_debug("ignoring non-GNP report of size %" G_GSIZE_FORMAT, report->length);
+	} else {
+		st_pkt = fu_struct_jabra_gnp_packet_parse(report->data,
+							  report->length,
+							  0x0,
+							  &data->error);
+		if (st_pkt == NULL)
+			return TRUE;
+		if (fu_struct_jabra_gnp_packet_get_src(st_pkt) == data->address &&
+		    (report->data[4] >> 6) == 0) {
+			FuJabraGnpPacketCmd received_cmd =
+			    fu_struct_jabra_gnp_packet_get_cmd(st_pkt);
+
+			if (received_cmd == FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS &&
+			    data->expected_cmd == FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS) {
+				gboolean extended = (report->data[4] & 0x3F) >= 10;
+				guint32 received_chunk;
+
+				if (report->length < (extended ? 11 : 9)) {
+					g_set_error_literal(&data->error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
+							    "truncated OTA preload event");
+					return TRUE;
+				}
+				received_chunk =
+				    extended ? fu_memread_uint32(report->data + 7, G_LITTLE_ENDIAN)
+					     : fu_memread_uint16(report->data + 7, G_LITTLE_ENDIAN);
+				g_debug("RX preload=%u, expected=%u", received_chunk, data->chunk);
+				if (received_chunk ==
+				    (extended ? data->chunk : (data->chunk & 0xFFFF)))
+					return TRUE;
+			} else if (received_cmd == FU_JABRA_GNP_PACKET_CMD_READ_VERIFY_STATUS &&
+				   data->expected_cmd ==
+				       FU_JABRA_GNP_PACKET_CMD_READ_VERIFY_STATUS) {
+				return TRUE;
+			}
+		}
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "received unrelated OTA response");
+	return FALSE;
+}
+
+/* nocheck:name */
+static gboolean
+fu_jabra_gnp_receiver_wait_event(FuDevice *device,
+				 FuJabraGnpReceiver *receiver,
+				 guint8 address,
+				 FuJabraGnpPacketCmd expected_cmd,
+				 guint32 chunk,
+				 GError **error)
+{
+	FuJabraGnpReceiverReadData read_data = {
+	    .receiver = receiver,
+	    .address = address,
+	    .expected_cmd = expected_cmd,
+	    .chunk = chunk,
+	};
+	if (!fu_device_retry_full(device,
+				  fu_jabra_gnp_receiver_read_report_cb,
+				  30,
+				  0,
+				  &read_data,
+				  error)) {
+		g_prefix_error(error,
+			       "waiting for %s at chunk %u: ",
+			       expected_cmd == FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS
+				   ? "preload"
+				   : "verify status",
+			       chunk);
+		return FALSE;
+	}
+	if (read_data.error != NULL) {
+		g_propagate_error(error, g_steal_pointer(&read_data.error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/* nocheck:name */
+static gboolean
+fu_jabra_gnp_receiver_wait_preload_event(FuDevice *device,
+					 FuJabraGnpReceiver *receiver,
+					 guint8 address,
+					 guint32 chunk,
+					 GError **error)
+{
+	return fu_jabra_gnp_receiver_wait_event(device,
+						receiver,
+						address,
+						FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS,
+						chunk,
+						error);
+}
+
+/* nocheck:name */
+static gboolean
+fu_jabra_gnp_receiver_wait_verify_status_event(FuDevice *device,
+					       FuJabraGnpReceiver *receiver,
+					       guint8 address,
+					       guint32 chunk,
+					       GError **error)
+{
+	return fu_jabra_gnp_receiver_wait_event(device,
+						receiver,
+						address,
+						FU_JABRA_GNP_PACKET_CMD_READ_VERIFY_STATUS,
+						chunk,
+						error);
+}
+
+/* nocheck:name */
+static gboolean
+fu_jabra_gnp_receiver_write(FuDevice *device,
+			    FuJabraGnpReceiver *receiver,
+			    guint8 address,
+			    FuChunkArray *chunks,
+			    FuProgress *progress,
+			    GError **error)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		if (!fu_jabra_gnp_write_chunk(device,
+					      address,
+					      i,
+					      fu_chunk_get_data(chk),
+					      fu_chunk_get_data_sz(chk),
+					      error))
+			return FALSE;
+		if (i % FU_JABRA_GNP_PRELOAD_COUNT == 0 &&
+		    !fu_jabra_gnp_receiver_wait_preload_event(device, receiver, address, i, error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+	return TRUE;
+}
+
+/* nocheck:name */
 gboolean
 fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
@@ -656,109 +884,45 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 			  FuProgress *progress,
 			  GError **error)
 {
-	gboolean failed_chunk = FALSE;
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
+	FuDevice *target = device;
+	FuJabraGnpReceiver receiver = {0};
+	GThread *thread;
+	gboolean ret = FALSE;
+	g_autoptr(GAsyncQueue) queue =
+	    g_async_queue_new_full((GDestroyNotify)fu_jabra_gnp_report_free);
 
-	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (gint chunk_number = 0; (guint)chunk_number < fu_chunk_array_length(chunks);
-	     chunk_number++) {
-		g_autoptr(FuChunk) chk = NULL;
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write-chunks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "read-verify-status");
 
-		/* prepare chunk */
-		chk = fu_chunk_array_index(chunks, chunk_number, error);
-		if (chk == NULL)
+	if (address == FU_JABRA_GNP_ADDRESS_OTA_CHILD) {
+		target = fu_device_get_proxy(device, error);
+		if (target == NULL)
 			return FALSE;
-		if (!fu_jabra_gnp_write_chunk(device,
-					      address,
-					      chunk_number,
-					      fu_chunk_get_data(chk),
-					      fu_chunk_get_data_sz(chk),
-					      error))
-			return FALSE;
-		if (((chunk_number % FU_JABRA_GNP_PRELOAD_COUNT) == 0) ||
-		    (guint)chunk_number == fu_chunk_array_length(chunks) - 1) {
-			g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
-			if (!fu_device_retry_full(device,
-						  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
-						      ? fu_jabra_gnp_child_device_rx_cb
-						      : fu_jabra_gnp_device_rx_cb,
-						  FU_JABRA_GNP_MAX_RETRIES,
-						  FU_JABRA_GNP_RETRY_DELAY,
-						  &rx_data,
-						  error))
-				return FALSE;
-			st_pkt = fu_struct_jabra_gnp_packet_parse(rx_data.rxbuf,
-								  sizeof(rx_data.rxbuf),
-								  0x0,
-								  error);
-			if (st_pkt == NULL)
-				return FALSE;
-			if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) !=
-			    FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "cmd was %s, but expected WriteChunks",
-					    fu_jabra_gnp_packet_cmd_to_string(
-						fu_struct_jabra_gnp_packet_get_cmd(st_pkt)));
-				return FALSE;
-			}
-			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) == chunk_number ||
-			    fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
-				(chunk_number % 0xFFFF) - 1) {
-				failed_chunk = FALSE;
-			} else {
-				chunk_number--;
-				failed_chunk = TRUE;
-			}
-		}
-		if (!failed_chunk)
+	}
+	receiver.usb_device = FU_USB_DEVICE(target);
+	receiver.endpoint = fu_jabra_gnp_device_get_epin(FU_JABRA_GNP_DEVICE(target));
+	receiver.queue = queue;
+	thread = g_thread_new("jabra-gnp-rx", fu_jabra_gnp_receiver_thread, &receiver);
+	ret = fu_jabra_gnp_receiver_write(device,
+					  &receiver,
+					  address,
+					  chunks,
+					  fu_progress_get_child(progress),
+					  error);
+	if (ret) {
+		fu_progress_step_done(progress);
+		ret = fu_jabra_gnp_receiver_wait_verify_status_event(device,
+								     &receiver,
+								     address,
+								     fu_chunk_array_length(chunks),
+								     error);
+		if (ret)
 			fu_progress_step_done(progress);
 	}
-
-	/* success */
-	return TRUE;
-}
-
-/* nocheck:name -- this should probably be implemented using an interface */
-gboolean
-fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
-{
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT,
-	};
-	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
-
-	if (!fu_device_retry_full(device,
-				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
-				      ? fu_jabra_gnp_child_device_rx_cb
-				      : fu_jabra_gnp_device_rx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  &rx_data,
-				  error))
-		return FALSE;
-
-	st_pkt = fu_struct_jabra_gnp_packet_parse(rx_data.rxbuf, sizeof(rx_data.rxbuf), 0x0, error);
-	if (st_pkt == NULL)
-		return FALSE;
-	if (fu_struct_jabra_gnp_packet_get_cmd(st_pkt) !=
-	    FU_JABRA_GNP_PACKET_CMD_READ_VERIFY_STATUS) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INTERNAL,
-		    "cmd was %s, but expected ReadVerifyStatus",
-		    fu_jabra_gnp_packet_cmd_to_string(fu_struct_jabra_gnp_packet_get_cmd(st_pkt)));
-		return FALSE;
-	}
-	return TRUE;
+	g_atomic_int_set(&receiver.stop, 1);
+	g_thread_join(thread);
+	return ret;
 }
 
 /* nocheck:name -- this should probably be implemented using an interface */
