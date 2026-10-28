@@ -24,8 +24,8 @@ cp -R !(build|dist|venv) build/
 pushd build
 mv contrib/debian .
 sed -i 's/quilt/native/' debian/source/format
-#generate control file
-./contrib/ci/generate_debian.py
+./fwupbuild generate-debian-packaging copyright --template ./debian/copyright.in -o ./debian/copyright
+./fwupbuild generate-debian-packaging control --template ./debian/control.in -o ./debian/control ${CROSS:+--arch $CROSS}
 
 dpkg --print-architecture
 dpkg --print-foreign-architectures
