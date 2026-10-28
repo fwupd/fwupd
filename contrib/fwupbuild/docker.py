@@ -9,7 +9,7 @@ from pathlib import Path
 import jinja2
 import jinja2.environment
 
-from .dependencies import Dependencies
+from .dependencies import Dependencies, PackageSource
 from .osprofile import OsArch, OsName
 
 
@@ -61,11 +61,23 @@ class Dockerfile:
         if self.cross_arch:
             filter = self.cross_arch
         deps = dependencies.find_packages(
-            self.distro, filter, cross_build_arch=self.cross_arch
+            self.distro,
+            filter,
+            cross_build_arch=self.cross_arch,
+            source=PackageSource.PACKAGES,
         )
         pkgnames = [p.package_name for p in deps]
 
         data["DEPENDENCIES"] = sorted(set(pkgnames))
+
+        pip_deps = dependencies.find_packages(
+            self.distro,
+            filter,
+            cross_build_arch=self.cross_arch,
+            source=PackageSource.PIP,
+        )
+        pips = [(p.package_name + p.version_requirement or "") for p in pip_deps]
+        data["PIP_DEPENDENCIES"] = sorted(set(pips))
 
         loader = jinja2.FileSystemLoader(template_file.parent)
         jinja_env = jinja2.Environment(

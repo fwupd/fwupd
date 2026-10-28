@@ -14,6 +14,13 @@ RUN dnf -y install \
     {{dep}}{{" &&" if loop.last}} \
 {% endfor %}
     dnf clean all
+{% if PIP_DEPENDENCIES %}
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+RUN pip install \
+{% for dep in PIP_DEPENDENCIES %}
+    {{dep}}{{" " if loop.last else "\\"}}
+{% endfor %}
+{% endif %}
 RUN wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
 RUN wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
 WORKDIR /github/workspace
