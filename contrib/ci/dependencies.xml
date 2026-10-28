@@ -1511,6 +1511,9 @@
       <package only-if="android" />
     </distro>
     <distro id="debian">
+      <control>
+        <profile>!nodoc</profile>
+      </control>
       <build-target mode="build-indep" />
     </distro>
     <distro id="freebsd">
