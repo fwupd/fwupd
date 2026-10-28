@@ -16,6 +16,7 @@
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"
+#include "fu-redfish-hpe-device.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
@@ -361,6 +362,115 @@ fu_redfish_backend_session_key_empty_func(void)
 	session_key = fu_redfish_backend_get_session_key(backend, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_null(session_key);
+}
+
+static void
+fu_redfish_backend_device_gtype_unmatched_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a _different_ system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-invalid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[2d2a4a8b-6a35-5b3a-9a4e-3c2f2c6e2b1a]\n"
+				  "RedfishDeviceGType = FuRedfishHpeDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_redfish_backend_get_device_gtype(backend), ==, FU_TYPE_REDFISH_DEVICE);
+}
+
+static void
+fu_redfish_backend_device_gtype_hpe_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a HPE system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-hpe", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuRedfishHpeDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_redfish_backend_get_device_gtype(backend),
+			==,
+			FU_TYPE_REDFISH_HPE_DEVICE);
+}
+
+static void
+fu_redfish_backend_device_gtype_invalid_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a HPE system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-invalid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
 }
 
 static void
@@ -1065,6 +1175,7 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+	g_type_ensure(FU_TYPE_REDFISH_HPE_DEVICE);
 
 	smbios_data_fn =
 	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
@@ -1082,6 +1193,12 @@ main(int argc, char **argv)
 			fu_redfish_backend_session_key_valid_func);
 	g_test_add_func("/redfish/backend/session-key/empty",
 			fu_redfish_backend_session_key_empty_func);
+	g_test_add_func("/redfish/backend/device-gtype/unmatched",
+			fu_redfish_backend_device_gtype_unmatched_func);
+	g_test_add_func("/redfish/backend/device-gtype/hpe",
+			fu_redfish_backend_device_gtype_hpe_func);
+	g_test_add_func("/redfish/backend/device-gtype/invalid",
+			fu_redfish_backend_device_gtype_invalid_func);
 	g_test_add_func("/redfish/bearer-token", fu_redfish_bearer_token_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);

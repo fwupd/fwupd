@@ -69,6 +69,14 @@ default 0ms.
 
 Since: 1.8.0
 
+### RedfishDeviceGType
+
+The device type to create for each inventory member on a system matched by a CHID, e.g.
+`FuRedfishHpeDevice`. It replaces the type the plugin would otherwise choose from the update
+service and the vendor, which allows a vendor-specific device to be used on an OEM-branded system.
+
+Since: 2.2.1
+
 ### `Flags=wildcard-targets`
 
 Do not specify the `odata.id` in the multipart update Targets array and allow the BMC to deploy the

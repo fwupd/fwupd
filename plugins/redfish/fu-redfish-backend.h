@@ -48,6 +48,10 @@ void
 fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix);
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
+GType
+fu_redfish_backend_get_device_gtype(FuRedfishBackend *self);
+gboolean
+fu_redfish_backend_ensure_device_gtype(FuRedfishBackend *self, GError **error);
 gchar *
 fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error);
 gboolean
