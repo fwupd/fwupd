@@ -31,10 +31,10 @@ env:
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
   ARCH_CONTAINER_TAG: "latest"  # 0002
-  CENTOS_CONTAINER_TAG: "2026-10-08.0"
-  DEBIAN_CONTAINER_TAG: "2026-10-08.0"
-  UBUNTU_CONTAINER_TAG: "2026-10-15.0"
-  FEDORA_CONTAINER_TAG: "2026-10-08.0"
+  CENTOS_CONTAINER_TAG: "2026-10-28.1"
+  DEBIAN_CONTAINER_TAG: "2026-10-28.1"
+  UBUNTU_CONTAINER_TAG: "2026-10-28.1"
+  FEDORA_CONTAINER_TAG: "2026-10-28.1"
 
 jobs:
   find_or_create_container:
