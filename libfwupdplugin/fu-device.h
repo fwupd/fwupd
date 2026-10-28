@@ -800,13 +800,13 @@ fu_device_new(FuContext *ctx);
 #define FU_DEVICE_ICON_THUNDERBOLT "thunderbolt"
 
 /**
- * FU_DEVICE_ICON_MEMORY:
+ * FU_DEVICE_ICON_MEDIA_FLASH:
  *
- * A generic icon of a memory card.
+ * A generic icon of a flash memory card.
  *
- * Since: 2.0.10
+ * Since: 2.2.1
  */
-#define FU_DEVICE_ICON_MEMORY "media-memory"
+#define FU_DEVICE_ICON_MEDIA_FLASH "media-flash"
 
 /**
  * FU_DEVICE_ICON_MODEM:

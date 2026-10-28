@@ -98,7 +98,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			g_autoptr(GPtrArray) rels = NULL;
 
 			/* check if device needs reboot to complete update */
-			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED) &&
+			    fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
 				reboot_count++;
 				continue;
 			}
@@ -111,6 +112,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			}
 
 			/* get the releases for this device */
+			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+				continue;
 			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 				continue;
 			rels =
@@ -132,6 +135,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 					continue;
 				}
 
+				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+					continue;
 				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 					continue;
 				rel = fu_engine_get_release_with_tag(self,
