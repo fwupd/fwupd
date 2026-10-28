@@ -12,7 +12,7 @@ endgroup() {
 # workaround dnf bug
 export FORCE_COLUMNS=100
 
-group "Install our packages"
+group "Update system and install dependencies"
 dnf install -y dist/*.rpm
 endgroup
 
