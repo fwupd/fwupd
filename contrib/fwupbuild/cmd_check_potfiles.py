@@ -13,8 +13,10 @@ from .directories import directories
 from .git import GitRepo
 from .logger import printer
 
-POTFILES_IN: Path = Path("po") / "POTFILES.in"
-POTFILES_SKIP: Path = Path("po") / "POTFILES.skip"
+PO_DIR: Path = Path("po")
+POTFILES_IN: Path = PO_DIR / "POTFILES.in"
+POTFILES_SKIP: Path = PO_DIR / "POTFILES.skip"
+LINGUAS: Path = PO_DIR / "LINGUAS"
 TOKENS = ['_("', "TRANSLATORS"]
 
 
@@ -39,6 +41,18 @@ class MissingFromPotfiles(PotfileError):
 class ConflictingPotfiles(PotfileError):
     def __str__(self) -> str:
         return f"is in both {POTFILES_IN} and {POTFILES_SKIP}"
+
+
+@dataclass
+class MissingFromLinguas(PotfileError):
+    def __str__(self) -> str:
+        return f"is missing from {LINGUAS}"
+
+
+@dataclass
+class MissingFromPofiles(PotfileError):
+    def __str__(self) -> str:
+        return f"is in {LINGUAS} but not present"
 
 
 def register(subparsers):
@@ -127,6 +141,21 @@ def run(args):
 
             if any(token in content for token in TOKENS):
                 errors.append(MissingFromPotfiles(file))
+
+    pofiles = [
+        f.stem for f in repo.find_files(suffixes=[".po"], include_directories=[PO_DIR])
+    ]
+
+    with open(repo_root / LINGUAS) as fd:
+        linguas = list(fd.read().splitlines())
+
+    for pofile in pofiles:
+        if pofile not in linguas:
+            errors.append(MissingFromLinguas(pofile.name))
+
+    for lingua in linguas:
+        if lingua not in pofiles:
+            errors.append(MissingFromPofiles(lingua))
 
     for e in errors:
         printer.error(f"{e.file}: {e}")
