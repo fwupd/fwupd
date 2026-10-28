@@ -1297,9 +1297,9 @@
     <distro id="freebsd">
       <package name="py312-pip" />
     </distro>
-    <distro id="ubuntu">
-      <package />
-    </distro>
+    <distro id="ubuntu" />
+    <distro id="debian" />
+    <distro id="fedora" />
   </dependency>
   <dependency id="python3-virtualenv">
     <distro id="debian" />
