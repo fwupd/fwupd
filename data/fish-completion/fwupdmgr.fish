@@ -44,6 +44,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         hwids 'Return all the hardware IDs for the machine' \
         inhibit 'Inhibit the system to prevent upgrades' \
         install 'Install a specific firmware file on all devices that match' \
+        write-blob 'Write a raw firmware blob on a device' \
         local-install 'Install a firmware file in cabinet format on this hardware' \
         modify-config 'Modifies a daemon configuration value' \
         modify-remote 'Modifies a given remote' \
@@ -108,7 +109,7 @@ set -l deviceid_consumers activate check-reboot-needed clear-results device-wait
 # complete device IDs
 complete -c fwupdmgr -n "__fish_seen_subcommand_from $deviceid_consumers" -x -a "(__fish_fwupdmgr_devices)"
 # complete files and device IDs
-complete -c fwupdmgr -n "__fish_seen_subcommand_from local-install" -r -a "(__fish_fwupdmgr_devices)"
+complete -c fwupdmgr -n "__fish_seen_subcommand_from write-blob local-install" -r -a "(__fish_fwupdmgr_devices)"
 
 # commands exclusively consuming remote IDs
 set -l remoteid_consumers disable-remote enable-remote modify-remote

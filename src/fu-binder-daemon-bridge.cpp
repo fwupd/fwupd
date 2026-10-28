@@ -355,6 +355,29 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	installBlob(const std::string &in_id,
+		    const ::ndk::ScopedFileDescriptor &in_fd,
+		    const std::optional<std::string> &in_filenameHint,
+		    const std::optional<std::string> &in_version) override
+	{
+		g_autoptr(GError) error = NULL;
+
+		g_info("received install blob request for device %s", in_id.c_str());
+		if (!fu_binder_daemon_write_blob_bridge(
+			m_daemon,
+			in_id.c_str(),
+			in_fd.get(),
+			in_filenameHint.has_value() ? in_filenameHint.value().c_str() : NULL,
+			in_version.has_value() ? in_version.value().c_str() : NULL,
+			&error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	addEventListener(
 	    const std::shared_ptr<aidl_fwupd::IFwupdEventListener> &in_listener) override
 	{

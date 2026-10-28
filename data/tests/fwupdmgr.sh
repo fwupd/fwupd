@@ -6,6 +6,7 @@ exec 0>/dev/null
 exec 2>&1
 
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
+DEVICE_TARGET=8b7dd6e0677ccb26dd2102d04b20df0fc2001400
 CAB="@installedtestsdir@/fakedevice123.cab"
 
 error() {
@@ -87,6 +88,19 @@ if [ -f ${CAB} ]; then
     echo " ● Installing ${CAB} cabinet…"
     fwupdmgr install ${CAB} --no-reboot-check --allow-reinstall --allow-older
     expect_rc 0
+
+    # ---
+    echo " ● Installing blob…"
+    BLOB="$(mktemp)"
+    echo "1.2.3" >"${BLOB}"
+    fwupdmgr write-blob "${BLOB}" ${DEVICE_TARGET} --no-reboot-check
+    expect_rc 0
+
+    # ---
+    echo " ● Installing blob (not a programmer target)…"
+    fwupdmgr write-blob "${BLOB}" ${DEVICE} --no-reboot-check
+    expect_rc 1
+    rm -f "${BLOB}"
 fi
 
 # ---

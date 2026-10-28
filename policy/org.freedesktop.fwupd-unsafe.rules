@@ -1,4 +1,8 @@
 polkit.addRule(function(action, subject) {
+    // installing firmware without metadata always requires authentication
+    if (action.id == "org.freedesktop.fwupd.write-blob") {
+        return polkit.Result.NOT_HANDLED;
+    }
     if (action.id.startsWith("org.freedesktop.fwupd.") &&
         subject.isInGroup("wheel")) {
             return polkit.Result.YES;

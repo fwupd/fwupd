@@ -711,18 +711,6 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.18
  */
 #define FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT "lazy-verfmt"
-/**
- * FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED:
- *
- * Allow the device version to be unset.
- *
- * NOTE: This should only be used when writing to "raw" CFI devices, such as standalone SPI
- * programmers such as CH341A. CFI devices should be used as a proxy devices rather than
- * installable targets in most fwupd plugins.
- *
- * Since: 2.0.18
- */
-#define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:
@@ -812,13 +800,13 @@ fu_device_new(FuContext *ctx);
 #define FU_DEVICE_ICON_THUNDERBOLT "thunderbolt"
 
 /**
- * FU_DEVICE_ICON_MEMORY:
+ * FU_DEVICE_ICON_MEDIA_FLASH:
  *
- * A generic icon of a memory card.
+ * A generic icon of a flash memory card.
  *
- * Since: 2.0.10
+ * Since: 2.2.1
  */
-#define FU_DEVICE_ICON_MEMORY "media-memory"
+#define FU_DEVICE_ICON_MEDIA_FLASH "media-flash"
 
 /**
  * FU_DEVICE_ICON_MODEM:
@@ -999,6 +987,15 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_APPLICATION_CERTIFICATE "application-certificate"
+
+/**
+ * FU_DEVICE_ICON_PROCESSOR:
+ *
+ * A generic icon of a CPU processor.
+ *
+ * Since: 2.2.1
+ */
+#define FU_DEVICE_ICON_PROCESSOR "processor"
 
 /* accessors */
 gchar *

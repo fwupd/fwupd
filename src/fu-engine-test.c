@@ -2128,6 +2128,88 @@ fu_engine_history_verfmt_func(void)
 }
 
 static void
+fu_engine_write_blob_for_device_id_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, plugin);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a device that does not currently allow updates */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.2");
+	fu_device_set_id(device, "test_device");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+	stream_fw = FWUPD_INPUT_STREAM(
+	    fwupd_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL));
+
+	/* unknown device */
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 "not_a_device",
+						 stream_fw,
+						 NULL,
+						 NULL,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* not updatable */
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 fu_device_get_id(device),
+						 stream_fw,
+						 NULL,
+						 NULL,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* now allowed */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_progress_reset(progress);
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 fu_device_get_id(device),
+						 stream_fw,
+						 "firmware.bin",
+						 "1.2.3",
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_engine_install_loop_restart_func(void)
 {
 	gboolean ret;
@@ -2177,14 +2259,14 @@ fu_engine_install_loop_restart_func(void)
 	stream_fw = FWUPD_INPUT_STREAM(
 	    fwupd_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL));
 	fu_release_set_stream(release, stream_fw);
-	ret = fu_engine_install_blob(engine,
-				     device,
-				     release,
-				     progress,
-				     FWUPD_INSTALL_FLAG_NO_HISTORY |
-					 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				     FWUPD_FEATURE_FLAG_NONE,
-				     &error);
+	ret = fu_engine_write_blob(engine,
+				   device,
+				   release,
+				   progress,
+				   FWUPD_INSTALL_FLAG_NO_HISTORY |
+				       FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				   FWUPD_FEATURE_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2873,6 +2955,10 @@ static void
 fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
+
+	/* only interested in the main test device */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET))
+		return;
 	*dev = g_object_ref(device);
 	fu_test_loop_quit();
 }
@@ -2977,6 +3063,10 @@ static void
 fu_test_plugin_composite_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray *devices = (GPtrArray *)user_data;
+
+	/* not part of the composite update */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET))
+		return;
 	g_ptr_array_add(devices, g_object_ref(device));
 }
 
@@ -3679,6 +3769,8 @@ main(int argc, char **argv)
 			fu_engine_device_md_checksum_set_version_wrong_proto_func);
 	g_test_add_func("/fwupd/engine/multiple-releases", fu_engine_multiple_rels_func);
 	g_test_add_func("/fwupd/engine/install-loop-restart", fu_engine_install_loop_restart_func);
+	g_test_add_func("/fwupd/engine/write-blob-for-device-id",
+			fu_engine_write_blob_for_device_id_func);
 	g_test_add_func("/fwupd/engine/install-request", fu_engine_install_request);
 	g_test_add_func("/fwupd/engine/history-success", fu_engine_history_func);
 	g_test_add_func("/fwupd/engine/history-verfmt", fu_engine_history_verfmt_func);

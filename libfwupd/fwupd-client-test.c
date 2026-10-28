@@ -65,6 +65,9 @@ typedef struct {
 	gboolean done_connect;
 	gboolean done_set_feature_flags;
 	FwupdFeatureFlags feature_flags;
+	gchar *install_device_id;
+	gchar *install_filename;
+	gchar *install_version;
 } FwupdClientImplHelper;
 
 static gboolean
@@ -91,6 +94,23 @@ fwupd_client_impl_set_feature_flags_cb(FwupdClient *self,
 	return TRUE;
 }
 
+static gboolean
+fwupd_client_impl_write_blob_cb(FwupdClient *self,
+				const gchar *device_id,
+				FwupdInputStream *stream,
+				const gchar *filename_hint,
+				const gchar *version,
+				gpointer user_data,
+				GCancellable *cancellable,
+				GError **error)
+{
+	FwupdClientImplHelper *helper = (FwupdClientImplHelper *)user_data;
+	helper->install_device_id = g_strdup(device_id);
+	helper->install_filename = g_strdup(filename_hint);
+	helper->install_version = g_strdup(version);
+	return TRUE;
+}
+
 static void
 fwupd_client_sync_impl_func(void)
 {
@@ -100,6 +120,7 @@ fwupd_client_sync_impl_func(void)
 	FwupdClientSyncImpl impl = {
 	    .connect = fwupd_client_impl_connect_cb,
 	    .set_feature_flags = fwupd_client_impl_set_feature_flags_cb,
+	    .write_blob = fwupd_client_impl_write_blob_cb,
 	};
 	FwupdClientImplHelper helper = {};
 
@@ -117,6 +138,16 @@ fwupd_client_sync_impl_func(void)
 	g_assert_cmpint(helper.feature_flags, ==, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	g_assert_true(helper.done_connect);
 	g_assert_true(helper.done_set_feature_flags);
+
+	ret = fwupd_client_write_blob(client, "abc", "/etc/os-release", "1.2.3", NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(helper.install_device_id, ==, "abc");
+	g_assert_cmpstr(helper.install_filename, ==, "/etc/os-release");
+	g_assert_cmpstr(helper.install_version, ==, "1.2.3");
+	g_free(helper.install_device_id);
+	g_free(helper.install_filename);
+	g_free(helper.install_version);
 
 	ret = fwupd_client_reset_config(client, "daemon", NULL, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);

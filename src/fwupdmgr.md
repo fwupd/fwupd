@@ -99,6 +99,9 @@ the exact same hardware, both available on the LVFS.
 
 **local-install**: Install a local firmware archive. The regular **install** will also fall back to this if the first argument is a local file that exists.
 
+**write-blob**: Write a raw firmware file that is not in a cabinet archive onto a specific device.
+There is no metadata, and so no signature, requirement or version checks are done, and the administrator password is always required.
+
 **activate**: Set the installed firmware version as running, which may mean the device becomes offline or unresponsive for a few moments.
 
 **sync**: Install all releases with a matching BKC tag if a "Best Known Configuration" has been set for the local machine.

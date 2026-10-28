@@ -1236,6 +1236,9 @@ LIBFWUPD_2.2.1 {
     fwupd_client_set_pending_reboot;
     fwupd_client_set_percentage;
     fwupd_client_set_status;
+    fwupd_client_write_blob;
+    fwupd_client_write_blob_async;
+    fwupd_client_write_blob_finish;
     fwupd_file_input_stream_get_type;
     fwupd_file_input_stream_new;
     fwupd_file_input_stream_new_from_file;

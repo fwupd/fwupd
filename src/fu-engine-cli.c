@@ -184,20 +184,6 @@ fu_engine_cli_start_engine(FuEngineCli *self,
 	return TRUE;
 }
 
-static void
-fu_engine_cli_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck:error */
-{
-	g_autofree gchar *path = g_path_get_dirname(value);
-	if (!g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
-		/* nocheck:error */
-		g_prefix_error(error,
-			       "Unable to access %s. You may need to copy %s to %s: ",
-			       path,
-			       value,
-			       g_getenv("HOME"));
-	}
-}
-
 static gboolean
 fu_engine_cli_smbios_dump(FuCli *cli, gchar **values, GError **error)
 {
@@ -474,125 +460,6 @@ static void
 fu_engine_cli_update_device_changed_cb(FuEngine *engine, FwupdDevice *device, FuEngineCli *self)
 {
 	fwupd_client_emit_device_changed(fu_cli_get_client(FU_CLI(self)), device);
-}
-
-static gboolean
-fu_engine_cli_install_blob(FuCli *cli, gchar **values, GError **error)
-{
-	FuEngineCli *self = FU_ENGINE_CLI(cli);
-	g_autofree gchar *firmware_basename = NULL;
-	g_autoptr(FwupdDevice) device = NULL;
-	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(FwupdFileInputStream) stream_fw = NULL;
-
-	/* progress */
-	fu_progress_set_id(self->progress, G_STRLOC);
-	fu_progress_add_flag(self->progress, FU_PROGRESS_FLAG_NO_PROFILE);
-	fu_progress_add_step(self->progress, FWUPD_STATUS_LOADING, 2, "parse");
-	fu_progress_add_step(self->progress, FWUPD_STATUS_LOADING, 30, "start-engine");
-	fu_progress_add_step(self->progress, FWUPD_STATUS_DEVICE_WRITE, 68, NULL);
-
-	/* invalid args */
-	if (g_strv_length(values) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
-	}
-
-	/* parse blob */
-	stream_fw = fwupd_file_input_stream_new(values[0], error);
-	if (stream_fw == NULL) {
-		fu_engine_cli_maybe_prefix_sandbox_error(values[0], error);
-		return FALSE;
-	}
-	fu_release_set_stream(release, FWUPD_INPUT_STREAM(stream_fw));
-	fu_progress_step_done(self->progress);
-
-	/* some plugins need the firmware name */
-	firmware_basename = g_path_get_basename(values[0]);
-	fu_release_set_firmware_basename(release, firmware_basename);
-
-	/* load engine */
-	if (!fu_engine_cli_start_engine(
-		self,
-		FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-		    FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
-		    FU_ENGINE_LOAD_FLAG_HISTORY,
-		fu_progress_get_child(self->progress),
-		error))
-		return FALSE;
-	fu_progress_step_done(self->progress);
-
-	/* get device */
-	fu_cli_add_filter_device_include(cli, FWUPD_DEVICE_FLAG_UPDATABLE);
-	if (g_strv_length(values) >= 2) {
-		device = fu_engine_cli_get_device(self, values[1], error);
-		if (device == NULL)
-			return FALSE;
-	} else {
-		device = fu_engine_cli_prompt_for_device(self, NULL, error);
-		if (device == NULL)
-			return FALSE;
-	}
-
-	/* optional version */
-	if (g_strv_length(values) >= 3)
-		fu_release_set_version(release, values[2]);
-
-	fu_cli_set_current_operation(FU_CLI(self), FU_CLI_OPERATION_INSTALL);
-	g_signal_connect(FU_ENGINE(self->engine),
-			 "device-changed",
-			 G_CALLBACK(fu_engine_cli_update_device_changed_cb),
-			 self);
-
-	/* write bare firmware */
-	if (self->prepare_blob) {
-		g_autoptr(GPtrArray) devices = NULL;
-		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-		g_ptr_array_add(devices, g_object_ref(device));
-		if (!fu_engine_composite_prepare(self->engine, devices, error)) {
-			g_prefix_error_literal(error, "failed to prepare composite action: ");
-			return FALSE;
-		}
-	}
-	if (!fu_engine_install_blob(self->engine,
-				    FU_DEVICE(device),
-				    release,
-				    fu_progress_get_child(self->progress),
-				    fu_cli_get_install_flags(FU_CLI(self)) |
-					FWUPD_INSTALL_FLAG_NO_HISTORY,
-				    fu_engine_request_get_feature_flags(self->request),
-				    error))
-		return FALSE;
-	fu_progress_step_done(self->progress);
-
-	/* cleanup */
-	if (self->cleanup_blob) {
-		g_autoptr(FwupdDevice) device_new = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* get the possibly new device from the old ID */
-		device_new = fu_engine_cli_get_device(self, fu_device_get_id(device), &error_local);
-		if (device_new == NULL) {
-			g_debug("failed to find new device: %s", error_local->message);
-		} else {
-			g_autoptr(GPtrArray) devices_new =
-			    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-			g_ptr_array_add(devices_new, g_steal_pointer(&device_new));
-			if (!fu_engine_composite_cleanup(self->engine, devices_new, error)) {
-				g_prefix_error_literal(error,
-						       "failed to cleanup composite action: ");
-				return FALSE;
-			}
-		}
-	}
-
-	fu_cli_display_current_message(FU_CLI(self));
-
-	/* success */
-	return fu_cli_prompt_complete(FU_CLI(self), TRUE, error);
 }
 
 static gboolean
@@ -4168,6 +4035,35 @@ fu_engine_cli_sync_impl_get_report_metadata(FwupdClient *client,
 }
 
 static gboolean
+fu_engine_cli_sync_impl_write_blob(FwupdClient *client,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+
+	g_signal_connect(FU_ENGINE(self->engine),
+			 "device-changed",
+			 G_CALLBACK(fu_engine_cli_update_device_changed_cb),
+			 self);
+	fu_progress_reset(self->progress);
+	return fu_engine_write_blob_for_device_id(
+	    self->engine,
+	    device_id,
+	    stream,
+	    filename_hint,
+	    version,
+	    self->progress,
+	    fu_cli_get_install_flags(FU_CLI(self)),
+	    fu_engine_request_get_feature_flags(self->request),
+	    error);
+}
+
+static gboolean
 fu_engine_cli_sync_impl_install(FwupdClient *client,
 				const gchar *device_id,
 				FuInputStream *stream,
@@ -4424,6 +4320,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
 	    .install = fu_engine_cli_sync_impl_install,
+	    .write_blob = fu_engine_cli_sync_impl_write_blob,
 	    .install_release = fu_engine_cli_sync_impl_install_release,
 	    .modify_bios_setting = fu_engine_cli_sync_impl_modify_bios_setting,
 	    .modify_config = fu_engine_cli_sync_impl_modify_config,
@@ -4538,22 +4435,6 @@ main(int argc, char *argv[])
 	     &public_keys,
 	     _("Location of public key directories used for JCat verification"),
 	     NULL},
-	    {"prepare",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &self->prepare_blob,
-	     /* TRANSLATORS: command line option */
-	     N_("Run the plugin composite prepare routine when using install-blob"),
-	     NULL},
-	    {"cleanup",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &self->cleanup_blob,
-	     /* TRANSLATORS: command line option */
-	     N_("Run the plugin composite cleanup routine when using install-blob"),
-	     NULL},
 	    {"destdir",
 	     '\0',
 	     0,
@@ -4590,13 +4471,6 @@ main(int argc, char *argv[])
 			     /* TRANSLATORS: command description */
 			     _("Get all device flags supported by fwupd"),
 			     fu_engine_cli_get_device_flags);
-	fu_cli_cmd_array_add(FU_CLI(self),
-			     "install-blob",
-			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			     _("FILENAME DEVICE-ID [VERSION]"),
-			     /* TRANSLATORS: command description */
-			     _("Install a raw firmware blob on a device"),
-			     fu_engine_cli_install_blob);
 	fu_cli_cmd_array_add(FU_CLI(self),
 			     "attach",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

@@ -2202,6 +2202,104 @@ fu_cli_download(FuCli *self, gchar **values, GError **error)
 				   error);
 }
 
+static void
+fu_cli_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck:error */
+{
+	g_autofree gchar *path = g_path_get_dirname(value);
+	if (!g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		/* nocheck:error */
+		g_prefix_error(error,
+			       "Unable to access %s. You may need to copy %s to %s: ",
+			       path,
+			       value,
+			       g_getenv("HOME"));
+	}
+}
+
+static gboolean
+fu_cli_write_blob(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	const gchar *version = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* invalid args */
+	if (g_strv_length(values) == 0 || g_strv_length(values) > 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	fu_cli_add_filter_device_include(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_USES_DAEMON))
+		fu_cli_add_filter_device_include(self, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET);
+	if (g_strv_length(values) >= 2) {
+		dev = fu_cli_get_device_by_id(self, values[1], error);
+		if (dev == NULL)
+			return FALSE;
+	} else {
+		g_autoptr(GPtrArray) devices = NULL;
+		if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "device ID required");
+			return FALSE;
+		}
+		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+		dev = fu_cli_prompt_for_device(self, devices, error);
+		if (dev == NULL)
+			return FALSE;
+	}
+
+	/* optional version */
+	if (g_strv_length(values) >= 3)
+		version = values[2];
+
+	fu_cli_set_current_operation(self, FU_CLI_OPERATION_INSTALL);
+	filename = fu_cli_download_if_required(self, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+
+	/* detect bitlocker */
+	if (!fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK) &&
+	    !fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_ASSUME_YES)) {
+		if (!fu_cli_prompt_warning_fde(self, dev, error))
+			return FALSE;
+	}
+
+	/* there is no metadata, so the daemon always asks for authentication */
+	if (!fwupd_client_write_blob(priv->client,
+				     fwupd_device_get_id(dev),
+				     filename,
+				     version,
+				     priv->cancellable,
+				     error)) {
+		fu_cli_maybe_prefix_sandbox_error(filename, error);
+		return FALSE;
+	}
+
+	/* TRANSLATORS: success message */
+	fu_console_print_literal(priv->console, _("Successfully installed firmware"));
+
+	fu_cli_display_current_message(self);
+
+	/* we don't want to ask anything */
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	/* show reboot if needed */
+	return fu_cli_prompt_complete(self, TRUE, error);
+}
+
 static gboolean
 fu_cli_local_install(FuCli *self, gchar **values, GError **error)
 {
@@ -7015,6 +7113,13 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: command description */
 			     _("Install a firmware file in cabinet format on this hardware"),
 			     fu_cli_local_install);
+	fu_cli_cmd_array_add(self,
+			     "write-blob,install-blob",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILENAME DEVICE-ID [VERSION]"),
+			     /* TRANSLATORS: command description */
+			     _("Write a raw firmware blob on a device"),
+			     fu_cli_write_blob);
 	fu_cli_cmd_array_add(self,
 			     "get-details",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

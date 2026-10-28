@@ -1403,7 +1403,12 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 			    id_display);
 		return FALSE;
 	}
-	return fu_io_channel_seek(priv->io_channel, offset, error);
+	if (!fu_io_channel_seek(priv->io_channel, offset, error))
+		return FALSE;
+
+	/* used for the event ID when saving */
+	priv->emulated_offset = offset;
+	return TRUE;
 }
 
 /**
@@ -1552,8 +1557,11 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		/* the created value is 2025-10-24T15:32:39.198922Z i.e. just bnr-dp-0.13.zip */
-		if (fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
+		/* the fwupd version is only set when loading emulation data, so always use the
+		 * newest format when saving -- the created value is 2025-10-24T15:32:39.198922Z
+		 * i.e. just bnr-dp-0.13.zip */
+		if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+		    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
 		    fu_device_get_created(FU_DEVICE(self)) == 0x68FB9C17) {
 			event_id = g_strdup_printf("Read:Length=0x%x,Offset=0x%x",
 						   (guint)bufsz,

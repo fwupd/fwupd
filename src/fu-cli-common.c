@@ -758,6 +758,10 @@ fu_cli_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we can save all device enumeration events for emulation */
 		return _("Can tag for emulation");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET) {
+		/* TRANSLATORS: a raw flash chip written using an external programmer */
+		return _("Programmer target");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return NULL;
 	return NULL;

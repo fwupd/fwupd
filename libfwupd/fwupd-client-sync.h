@@ -148,6 +148,13 @@ fwupd_client_install(FwupdClient *self,
 		     GCancellable *cancellable,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 3);
 gboolean
+fwupd_client_write_blob(FwupdClient *self,
+			const gchar *device_id,
+			const gchar *filename,
+			const gchar *version,
+			GCancellable *cancellable,
+			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+gboolean
 fwupd_client_install_bytes(FwupdClient *self,
 			   const gchar *device_id,
 			   GBytes *bytes,

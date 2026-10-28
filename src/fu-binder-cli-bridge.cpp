@@ -616,6 +616,68 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 }
 
 gboolean
+fu_binder_cli_bridge_write_blob(AIBinder *binder_handle,
+				const char *id,
+				int fd,
+				const char *filename_hint,
+				const char *version,
+				GError **error)
+{
+	AIBinder_incStrong(binder_handle);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder_handle);
+	std::shared_ptr<aidl_fwupd::IFwupd> service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+	std::optional<std::string> filename_hint_opt;
+	std::optional<std::string> version_opt;
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd");
+		return FALSE;
+	}
+
+	::ndk::ScopedFileDescriptor sfd(dup(fd));
+	if (sfd.get() < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to duplicate file descriptor for Binder");
+		return FALSE;
+	}
+
+	/* the daemon only needs the basename */
+	if (filename_hint != NULL) {
+		g_autofree gchar *basename = g_path_get_basename(filename_hint);
+		filename_hint_opt = std::string(basename);
+	}
+	if (version != NULL)
+		version_opt = std::string(version);
+
+	auto status = service->installBlob(std::string(id), sfd, filename_hint_opt, version_opt);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Install blob failed: %s",
+			    status.getDescription().c_str());
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
 fu_binder_cli_bridge_update_metadata(AIBinder *binder,
 				     const char *remote_id,
 				     int metadata_fd,

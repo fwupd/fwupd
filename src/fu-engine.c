@@ -3067,13 +3067,13 @@ fu_engine_install_release(FuEngine *self,
 	}
 
 	/* install firmware blob */
-	if (!fu_engine_install_blob(self,
-				    device,
-				    release,
-				    progress,
-				    flags,
-				    feature_flags,
-				    &error_local)) {
+	if (!fu_engine_write_blob(self,
+				  device,
+				  release,
+				  progress,
+				  flags,
+				  feature_flags,
+				  &error_local)) {
 		FwupdUpdateState state = fu_device_get_update_state(device);
 		if (state != FWUPD_UPDATE_STATE_FAILED &&
 		    state != FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
@@ -4073,13 +4073,13 @@ fu_engine_install_loop(FuEngine *self,
 }
 
 gboolean
-fu_engine_install_blob(FuEngine *self,
-		       FuDevice *device,
-		       FuRelease *release,
-		       FuProgress *progress,
-		       FwupdInstallFlags flags,
-		       FwupdFeatureFlags feature_flags,
-		       GError **error)
+fu_engine_write_blob(FuEngine *self,
+		     FuDevice *device,
+		     FuRelease *release,
+		     FuProgress *progress,
+		     FwupdInstallFlags flags,
+		     FwupdFeatureFlags feature_flags,
+		     GError **error)
 {
 	gboolean write_complete = FALSE;
 	g_autofree gchar *device_id = NULL;
@@ -4152,6 +4152,105 @@ fu_engine_install_blob(FuEngine *self,
 	/* make the UI update */
 	fu_engine_emit_device_changed(self, device_id);
 	g_info("updating %s took %f seconds", id_display, g_timer_elapsed(timer, NULL));
+	return TRUE;
+}
+
+/**
+ * fu_engine_write_blob_for_device_id:
+ * @self: a #FuEngine
+ * @device_id: a device ID
+ * @stream: a #FuInputStream
+ * @filename_hint: (nullable): a firmware basename, as required by some plugins
+ * @version: (nullable): a version to use if the firmware does not specify one
+ * @progress: a #FuProgress
+ * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @feature_flags: feature flags, e.g. %FWUPD_FEATURE_FLAG_NONE
+ * @error: (nullable): optional return location for an error
+ *
+ * Installs a firmware blob that is not in a cabinet archive to a specific device.
+ *
+ * NOTE: there is no metadata, and so no signature, requirement or version checks are done.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_write_blob_for_device_id(FuEngine *self,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   FwupdFeatureFlags feature_flags,
+				   GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuIdleLocker) locker = NULL;
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(device_id != NULL, FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* the device has to exist and allow updates */
+	device = fu_device_list_get_by_id(self->device_list, device_id, error);
+	if (device == NULL)
+		return FALSE;
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Device %s is locked",
+			    id_display);
+		return FALSE;
+	}
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_autoptr(GString) str = g_string_new(NULL);
+		g_string_append_printf(str,
+				       "Device %s does not currently allow updates",
+				       id_display);
+		if (fu_device_get_update_error(device) != NULL)
+			g_string_append_printf(str, ": %s", fu_device_get_update_error(device));
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, str->str);
+		return FALSE;
+	}
+
+	/* create a release without any metadata */
+	fu_release_set_stream(release, stream);
+	if (filename_hint != NULL) {
+		g_autofree gchar *firmware_basename = g_path_get_basename(filename_hint);
+		fu_release_set_firmware_basename(release, firmware_basename);
+	}
+	if (version != NULL)
+		fu_release_set_version(release, version);
+
+	/* do not allow auto-shutdown during this time */
+	locker = fu_idle_locker_new(self->idle,
+				    FU_IDLE_INHIBIT_TIMEOUT | FU_IDLE_INHIBIT_SIGNALS,
+				    "update");
+	g_return_val_if_fail(locker != NULL, FALSE);
+
+	/* there is no metadata to record */
+	if (!fu_engine_write_blob(self,
+				  device,
+				  release,
+				  progress,
+				  flags | FWUPD_INSTALL_FLAG_NO_HISTORY,
+				  feature_flags,
+				  &error_local)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
+		fu_device_set_update_error(device, error_local->message);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 

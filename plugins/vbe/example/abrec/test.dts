@@ -1,0 +1,38 @@
+/dts-v1/;
+
+/*
+ * This file is suitable for trying vbe-abrec on the host device as it uses a
+ * local file for the storage. To set it up:
+ *
+ *    dd if=/dev/zero of=/tmp/testfw bs=1M count=4
+ *    sudo dtc test.dts -o /var/lib/fwupd/system.dtb
+ *
+ * The storage holds the state at 0x1000, then the A, B and recovery slots of
+ * 1MiB each, with the slot info in the last 4KiB of each slot.
+ */
+
+/ {
+	compatible = "pine64,rockpro64-v2.1";
+
+	chosen {
+		fwupd {
+			compatible = "pine64,rockpro64-v2.1";
+
+			firmware0 {
+				compatible = "fwupd,vbe-abrec";
+				bootloader-version = "2026.10";
+				storage = "/tmp/testfw";
+				area-start = <0x0>;
+				state-offset = <0x1000>;
+				state-size = <0x40>;
+				slot-a-offset = <0x10000>;
+				slot-b-offset = <0x110000>;
+				slot-recovery-offset = <0x210000>;
+				slot-size = <0x100000>;
+				slot-info-offset = <0xff000>;
+				slot-info-size = <0x1000>;
+				booted-slot = "a";
+			};
+		};
+	};
+};
