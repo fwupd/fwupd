@@ -233,17 +233,6 @@
       <package only-if="amd64" />
     </distro>
   </dependency>
-  <dependency id="gcovr">
-    <distro id="debian">
-    </distro>
-    <distro id="ubuntu">
-      <package only-if="amd64" />
-      <package only-if="android" />
-    </distro>
-    <distro id="fedora">
-      <package name="gcovr" only-if="amd64" />
-    </distro>
-  </dependency>
   <dependency id="libcairo-dev">
     <distro id="centos">
       <package name="cairo-devel" only-if="amd64" />
@@ -1878,4 +1867,18 @@
     <distro id="debian" />
     <distro id="ubuntu" />
   </dependency>
+  <pip id="gcovr" version="==8.6">
+    <distro id="debian">
+      <package only-if="arm64" />
+      <package only-if="amd64" />
+      <package only-if="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package only-if="amd64" />
+      <package only-if="android" />
+    </distro>
+    <distro id="fedora">
+      <package only-if="amd64" />
+    </distro>
+  </pip>
 </dependencies>
