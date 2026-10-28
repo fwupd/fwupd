@@ -176,7 +176,12 @@ class GitRepo:
             return file_filter is None or file_filter(f)
 
         def use_file(f: Path) -> bool:
-            return has_suffix(f) and not ignore_path(f) and filter_allows_file(f)
+            return (
+                not f.is_dir()
+                and has_suffix(f)
+                and not ignore_path(f)
+                and filter_allows_file(f)
+            )
 
         files = [f for f in self.files if use_file(f)]
         if not as_absolute_paths:
