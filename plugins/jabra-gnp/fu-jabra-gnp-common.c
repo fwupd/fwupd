@@ -395,7 +395,7 @@ fu_jabra_gnp_write_partition(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "write partition failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
@@ -446,7 +446,7 @@ fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "start OTA failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
@@ -543,7 +543,7 @@ fu_jabra_gnp_write_crc(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "write CRC failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
@@ -604,7 +604,7 @@ fu_jabra_gnp_write_extended_crc(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "write extended CRC failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
@@ -978,7 +978,7 @@ fu_jabra_gnp_write_version(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "write firmware version failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
@@ -1029,7 +1029,7 @@ fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, 
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
+			    "write DFU from SQIF failed: expected 0xFF, got 0x%02x 0x%02x",
 			    rx_data.rxbuf[5],
 			    rx_data.rxbuf[6]);
 		return FALSE;
