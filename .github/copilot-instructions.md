@@ -8,7 +8,7 @@ fwupd is a Linux firmware update daemon built with Meson, written in C with GLib
 
 ### CRITICAL: Setup and Build Process
 - **CONTAINER REQUIRED**: Use pre-built container `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent development environment
-- Setup script: `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
+- Setup script: `./fwupbuild setup deps --os debian` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
 - Build command: `build-fwupd` (in venv) -- takes 45+ minutes. NEVER CANCEL. Set timeout to 60+ minutes.
 - Test command: `test-fwupd` (in venv) -- takes 15+ minutes. NEVER CANCEL. Set timeout to 30+ minutes.
 
@@ -25,7 +25,7 @@ docker run -it --privileged -v $(pwd):/workspace ghcr.io/fwupd/fwupd/fwupd-debia
 
 # Inside container - install dependencies first
 cd /workspace
-./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
+./fwupbuild setup deps --os debian
 
 # Create virtual environment
 python3 -m venv venv --system-site-packages --prompt fwupd
@@ -201,7 +201,7 @@ meson setup build -Dplugin_uefi_capsule=enabled # enable specific plugin
 
 ### Build Issues
 - **CONTAINER REQUIRED**: Use `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent Debian environment
-- **Dependency Installation**: Run `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` inside container
+- **Dependency Installation**: Run `./fwupbuild setup deps --os debian` inside container
 - **Git Ownership**: If you see "detected dubious ownership", run `git config --global --add safe.directory /workspace` inside container
 - Check Meson version: `./contrib/ci/fwupd_setup_helpers.py test-meson`
 - Verify venv setup: `source venv/bin/activate` should show `(fwupd)` prompt
