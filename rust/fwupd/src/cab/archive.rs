@@ -771,6 +771,7 @@ impl Archive {
         let mut folders = Vec::with_capacity(nfolders);
         let mut folder_off = off;
         let mut was_compressed = false;
+        let mut folder_ranges: Vec<std::ops::Range<usize>> = Vec::new();
         for _ in 0..nfolders {
             let mut folder_stream = CompositeInputStream::new();
             let (folder_header, nbytes) = {
@@ -820,6 +821,16 @@ impl Archive {
                 data_off += nbytes; // Eventually points to first byte after data
                 max_offset = std::cmp::max(data_off, max_offset);
             }
+
+            // Don't allow folders referring to the same data blocks, a malicious CAB
+            // file could use multiple folders using the same data block to trigger OOM.
+            let folder_range = offset + folder_header.offset_first_data_block..data_off;
+            for r in &folder_ranges {
+                if folder_range.start < r.end && r.start < folder_range.end {
+                    return Err(CabError::Limit("folder reuses data blocks".into()));
+                }
+            }
+            folder_ranges.push(folder_range);
 
             let folder_stream = match folder_header.compression_type {
                 // Uncompressed folders are easy: we create a new partial
@@ -1394,5 +1405,193 @@ mod tests {
         cab[offset_cffile + 8..offset_cffile + 10].copy_from_slice(&99u16.to_le_bytes());
         let src = Cursor::new(cab).into_stream();
         assert!(Archive::new(src, 0, ParserFlags::empty()).is_err());
+    }
+
+    /// Build an uncompressed CAB in which all folders point at the first folder's data block
+    fn build_uncompressed_cab_multi_shared_folder(files: &[(&str, &[u8])]) -> Vec<u8> {
+        let file_hdrs_sz: usize = files
+            .iter()
+            .map(|(name, _)| CFFILE_SIZE as usize + name.len() + 1)
+            .sum();
+        let offset_cffile = CFHEADER_SIZE + CFFOLDER_SIZE * u32::try_from(files.len()).unwrap();
+        let off_cfdata = offset_cffile + u32::try_from(file_hdrs_sz).unwrap();
+        // one data block shared between folders
+        let nblocks = 1;
+        let data_sz: usize = files[0].1.len();
+        let sz_cabinet = off_cfdata
+            + (CFDATA_SIZE * u32::try_from(nblocks).unwrap())
+            + u32::try_from(data_sz).unwrap();
+
+        let mut out = Vec::new();
+
+        let hdr = CFHeader {
+            signature: U32LE::new(CF_SIGNATURE),
+            reserved1: U32LE::new(0),
+            cbCabinet: U32LE::new(sz_cabinet),
+            reserved2: U32LE::new(0),
+            coffFiles: U32LE::new(offset_cffile),
+            reserved3: U32LE::new(0),
+            versionMinor: 3,
+            versionMajor: 1,
+            cFolders: U16LE::new(files.len().try_into().unwrap()),
+            cFiles: U16LE::new(files.len().try_into().unwrap()),
+            flags: U16LE::new(0),
+            setID: U16LE::new(0),
+            iCabinet: U16LE::new(0),
+        };
+        hdr.write(&mut out).unwrap();
+
+        for _ in 0..files.len() {
+            let folder = CFFolder {
+                coffCabStart: U32LE::new(off_cfdata),
+                cCFData: U16LE::new(1),
+                typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
+            };
+            folder.write(&mut out).unwrap();
+        }
+
+        for (i, (name, data)) in files.iter().enumerate() {
+            let fhdr = CFFile {
+                cbFile: U32LE::new(data.len().try_into().unwrap()),
+                uoffFolderStart: U32LE::new(0),
+                iFolder: U16LE::new(i.try_into().unwrap()),
+                date: 0x5921.into(),
+                time: 0x4800.into(),
+                attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
+            };
+            fhdr.write(&mut out).unwrap();
+            out.extend_from_slice(name.as_bytes());
+            out.push(0);
+        }
+
+        let dh = CFData {
+            csum: U32LE::new(0),
+            cbData: U16LE::new(files[0].1.len().try_into().unwrap()),
+            cbUncomp: U16LE::new(files[0].1.len().try_into().unwrap()),
+        };
+        dh.write(&mut out).unwrap();
+        out.extend_from_slice(files[0].1);
+
+        assert_eq!(out.len(), sz_cabinet as usize);
+        out
+    }
+
+    #[test]
+    fn parse_multi_folder_reuses_data_blocks() {
+        // Two folders pointing at the same data block: a malicious CAB
+        // could use this to inflate memory usage (OOM) since each folder
+        // allocates its own copy of the data.
+        let files: &[(&str, &[u8])] = &[("first.bin", &[0xCC; 256]), ("second.bin", &[0xCC; 256])];
+        let cab = build_uncompressed_cab_multi_shared_folder(files);
+        let src = Cursor::new(cab).into_stream();
+        let err = Archive::new(src, 0, ParserFlags::empty()).unwrap_err();
+        assert!(
+            matches!(&err, CabError::Limit(msg) if msg.contains("folder reuses data blocks")),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    /// Build an uncompressed CAB with multiple folders, each with its own
+    /// (disjoint) data block - i.e. a well-formed multi-folder archive.
+    fn build_uncompressed_cab_multi_disjoint_folder(files: &[(&str, &[u8])]) -> Vec<u8> {
+        let file_hdrs_sz: usize = files
+            .iter()
+            .map(|(name, _)| CFFILE_SIZE as usize + name.len() + 1)
+            .sum();
+        let offset_cffile = CFHEADER_SIZE + CFFOLDER_SIZE * u32::try_from(files.len()).unwrap();
+        let off_cfdata = offset_cffile + u32::try_from(file_hdrs_sz).unwrap();
+        // one data block per folder, each holding its file's data
+        let data_sz: usize = files
+            .iter()
+            .map(|(_, data)| CFDATA_SIZE as usize + data.len())
+            .sum();
+        let sz_cabinet = off_cfdata + u32::try_from(data_sz).unwrap();
+
+        let mut out = Vec::new();
+
+        let hdr = CFHeader {
+            signature: U32LE::new(CF_SIGNATURE),
+            reserved1: U32LE::new(0),
+            cbCabinet: U32LE::new(sz_cabinet),
+            reserved2: U32LE::new(0),
+            coffFiles: U32LE::new(offset_cffile),
+            reserved3: U32LE::new(0),
+            versionMinor: 3,
+            versionMajor: 1,
+            cFolders: U16LE::new(files.len().try_into().unwrap()),
+            cFiles: U16LE::new(files.len().try_into().unwrap()),
+            flags: U16LE::new(0),
+            setID: U16LE::new(0),
+            iCabinet: U16LE::new(0),
+        };
+        hdr.write(&mut out).unwrap();
+
+        // folder headers: each folder starts at its own data block
+        let mut block_off = off_cfdata;
+        for (_, data) in files {
+            let folder = CFFolder {
+                coffCabStart: U32LE::new(block_off),
+                cCFData: U16LE::new(1),
+                typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
+            };
+            folder.write(&mut out).unwrap();
+            block_off += u32::try_from(CFDATA_SIZE as usize + data.len()).unwrap();
+        }
+
+        for (i, (name, data)) in files.iter().enumerate() {
+            let fhdr = CFFile {
+                cbFile: U32LE::new(data.len().try_into().unwrap()),
+                uoffFolderStart: U32LE::new(0),
+                iFolder: U16LE::new(i.try_into().unwrap()),
+                date: 0x5921.into(),
+                time: 0x4800.into(),
+                attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
+            };
+            fhdr.write(&mut out).unwrap();
+            out.extend_from_slice(name.as_bytes());
+            out.push(0);
+        }
+
+        // one data block per file, consecutively
+        for (_, data) in files {
+            let dh = CFData {
+                csum: U32LE::new(0),
+                cbData: U16LE::new(data.len().try_into().unwrap()),
+                cbUncomp: U16LE::new(data.len().try_into().unwrap()),
+            };
+            dh.write(&mut out).unwrap();
+            out.extend_from_slice(data);
+        }
+
+        assert_eq!(out.len(), sz_cabinet as usize);
+        out
+    }
+
+    #[test]
+    fn parse_multi_folder_reuses_data_blocks_at_high_offset() {
+        // Same attack as above, but the shared data block sits at a file
+        // offset *larger* than the folder's uncompressed size. This catches
+        // range checks that mix up offsets and sizes.
+        let name = "x".repeat(600);
+        let files: &[(&str, &[u8])] = &[(&name, &[0xCC; 256]), (&name, &[0xCC; 256])];
+        let cab = build_uncompressed_cab_multi_shared_folder(files);
+        let src = Cursor::new(cab).into_stream();
+        let err = Archive::new(src, 0, ParserFlags::empty()).unwrap_err();
+        assert!(
+            matches!(&err, CabError::Limit(msg) if msg.contains("folder reuses data blocks")),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    #[test]
+    fn parse_multi_folder_disjoint_data_blocks() {
+        // Well-formed multi-folder archive: each folder has its own data
+        // block. This must parse successfully.
+        let files: &[(&str, &[u8])] = &[("first.bin", &[0xAA; 512]), ("second.bin", &[0xBB; 512])];
+        let cab = build_uncompressed_cab_multi_disjoint_folder(files);
+        let src = Cursor::new(cab).into_stream();
+        let archive =
+            Archive::new(src, 0, ParserFlags::empty()).expect("valid multi-folder CAB must parse");
+        assert_eq!(archive.files().len(), 2);
     }
 }
