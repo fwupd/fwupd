@@ -118,8 +118,7 @@ Always test at least one complete end-to-end scenario:
 ### Important Files
 - `meson.build` - Main build configuration
 - `meson_options.txt` - Build options (117 configurable options)
-- `contrib/setup` - Development environment setup script
-- `contrib/ci/fwupd_setup_helpers.py` - Dependency installation helper
+- `fwupbuild` - Development environment setup helpers
 - `.github/workflows/matrix.yml` - CI build matrix (Fedora, Debian, Arch, etc.)
 
 ### Build Dependencies (Ubuntu)
