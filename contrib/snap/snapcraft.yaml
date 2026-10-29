@@ -126,7 +126,6 @@ parts:
       pip install textual rich --break-system-packages
       craftctl set version=$(git describe HEAD --always)
     override-build: |
-      ${CRAFT_PART_SRC}/contrib/ci/fwupd_setup_helpers.py test-meson
       craftctl default
       # Install Python dependencies into the fwupd part's install directory
       PYTHONPATH= pip install --no-compile --break-system-packages \
