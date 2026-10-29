@@ -69,6 +69,7 @@ plugins/raydium-tp/ @Maker-Rad
 plugins/realtek-alc408x/ @vraghav8
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
+plugins/rts54hid/ @AnyProblem
 plugins/rts54hub/ @AnyProblem
 plugins/snapd-uefi/ @BAMF0 @bboozzoo
 plugins/starlabs-coreboot/ @Sean-StarLabs
