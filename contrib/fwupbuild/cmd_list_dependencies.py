@@ -5,7 +5,7 @@
 
 from .dependencies import Dependencies
 from .logger import printer
-from .osprofile import OsArch, OsName, UnknownOsException
+from .osprofile import OsArch, OsName, UnknownArchException, UnknownOsException
 
 
 def register(subparsers):
@@ -51,7 +51,11 @@ def run(args):
             return 1
 
     if not args.filter:
-        args.filter = str(OsArch.detect())
+        try:
+            args.filter = OsArch.detect().value
+        except UnknownArchException:
+            printer.error("Unknown arch, cannot continue")
+            return 1
 
     dependencies = Dependencies.load()
     deps = dependencies.find_packages(distro=args.os_name, filter=args.filter)
