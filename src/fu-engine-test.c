@@ -3262,10 +3262,19 @@ fu_engine_plugin_composite_func(void)
 	g_ptr_array_sort(releases, fu_plugin_composite_release_sort_cb);
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child1");
+	g_assert_cmpstr(fu_device_get_composite_id(dev_tmp),
+			==,
+			"08d460be0f1f9f128413f816022a6439e0078018");
+
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child2");
+	g_assert_cmpstr(fu_device_get_composite_id(dev_tmp),
+			==,
+			"08d460be0f1f9f128413f816022a6439e0078018");
+
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
+	g_assert_cmpstr(fu_device_get_id(dev_tmp), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 
 	/* install the cab */
 	ret = fu_engine_install_releases(engine,
@@ -3306,6 +3315,32 @@ fu_engine_plugin_composite_func(void)
 		metadata = fu_device_get_metadata(device, "frombulator");
 		g_assert_cmpstr(metadata, ==, "1");
 	}
+
+	/* retry this with composite-single-payload set */
+	for (guint i = 0; i < 3; i++) {
+		FuRelease *release = FU_RELEASE(g_ptr_array_index(releases, i));
+		dev_tmp = fu_release_get_device(release);
+		fu_device_add_flag(dev_tmp, FWUPD_DEVICE_FLAG_COMPOSITE_SINGLE_PAYLOAD);
+		fu_device_set_version(dev_tmp, "0.0.1");
+	}
+
+	/* install the cab */
+	ret = fu_engine_install_releases(engine,
+					 request,
+					 releases,
+					 progress,
+					 FWUPD_INSTALL_FLAG_NONE,
+					 &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify we only deployed this once */
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "1.2.3");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
 }
 
 static void
