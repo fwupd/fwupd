@@ -785,6 +785,7 @@ fu_jabra_gnp_receiver_wait_event(FuDevice *device,
 				 guint8 address,
 				 FuJabraGnpPacketCmd expected_cmd,
 				 guint32 chunk,
+				 guint retry_count,
 				 GError **error)
 {
 	FuJabraGnpReceiverReadData read_data = {
@@ -795,7 +796,7 @@ fu_jabra_gnp_receiver_wait_event(FuDevice *device,
 	};
 	if (!fu_device_retry_full(device,
 				  fu_jabra_gnp_receiver_read_report_cb,
-				  30,
+				  retry_count,
 				  0,
 				  &read_data,
 				  error)) {
@@ -827,6 +828,7 @@ fu_jabra_gnp_receiver_wait_preload_event(FuDevice *device,
 						address,
 						FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS,
 						chunk,
+						FU_JABRA_GNP_PRELOAD_RETRIES,
 						error);
 }
 
@@ -843,6 +845,7 @@ fu_jabra_gnp_receiver_wait_verify_status_event(FuDevice *device,
 						address,
 						FU_JABRA_GNP_PACKET_CMD_READ_VERIFY_STATUS,
 						chunk,
+						FU_JABRA_GNP_VERIFY_STATUS_RETRIES,
 						error);
 }
 
