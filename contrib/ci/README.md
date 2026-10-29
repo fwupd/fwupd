@@ -137,7 +137,7 @@ Each distribution will have `package` elements and `control` elements.
 * `inclusive` elements represent an inclusive list of architectures to be installed on
 * `exclusive` elements represent an exclusive list of architectures to not be installed on
 
-For convenience the `fwupbuild` dev helper tool has the `fwupbuild setup deps` command that uses
+For convenience the `fwupbuild` dev helper tool has the `fwupbuild install-dependencies` command that uses
 `dependencies.xml` to install all dependencies for the given (or auto-detected) arch.
 
 ### Dockerfile.in

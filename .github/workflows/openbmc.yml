@@ -48,7 +48,7 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: |
-          sudo ./contrib/ci/fwupd setup deps --os ubuntu
+          sudo ./contrib/ci/fwupd install-dependencies --os ubuntu
       - name: build
         run: |
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
