@@ -123,6 +123,13 @@ def setup_system_deps(osname: OsName, filter: str | None = None) -> int:
         logger.warning(f"No packages found for {osname}({filter})")
         return 0
 
+    logger.info(f"The following {len(packages)} packages  will be installed:")
+    longest_package_name = max(len(p.package_name) for p in packages) + 1
+    STEP = 4
+    for i in range(0, len(packages), STEP):
+        pkgs = packages[i : i + STEP]
+        logger.info("".join(p.package_name.ljust(longest_package_name) for p in pkgs))
+
     if not printer.ask_yn(
         f"Install {len(packages)} build dependencies for {osname}? (y/N) "
     ):
@@ -130,7 +137,6 @@ def setup_system_deps(osname: OsName, filter: str | None = None) -> int:
         return 0
 
     printer.message(f"Installing packages for {osname}({filter})")
-    logger.debug(f"Packages: {', '.join(p.package_name for p in packages)}")
     try:
         pm = osname.package_manager()
         cmd = pm.install([p.package_name for p in packages])
