@@ -19,6 +19,19 @@ PIP_PACKAGES: dict[str, tuple | None] = {
 }
 
 
+class PackageSource(enum.StrEnum):
+    PACKAGES = "packages"
+    PIP = "pip"
+
+    @property
+    def xml_tag(self) -> str:
+        match self:
+            case PackageSource.PACKAGES:
+                return "dependency"
+            case PackageSource.PIP:
+                return "pip"
+
+
 class BuildTarget(enum.StrEnum):
     ANY = enum.auto()
     NATIVE = "native"
@@ -34,6 +47,7 @@ class Dependency:
     profiles: list[str] = field(default_factory=list)
     version_requirement: str | None = None
     build_target: BuildTarget = BuildTarget.ANY
+    source: PackageSource = PackageSource.PACKAGES
 
 
 @dataclass
@@ -72,6 +86,14 @@ class _ParsedDependency:
     different name for this package though, use package_name() to
     access the installable package name at runtime.
     """
+    source: PackageSource
+    """
+    Where this package would be sourced from
+    """
+    version_requirement: str | None
+    """
+    The generic version requirement. Only set for source == PackageSource.PIP
+    """
     distro_map: dict[OsName, _ParsedDistroPackage] = field(default_factory=dict)
 
     def get_dependency(
@@ -79,7 +101,11 @@ class _ParsedDependency:
         distro: OsName,
         filter: str | None = None,
         cross_build_arch: OsName | None = None,
+        source: PackageSource | None = PackageSource.PACKAGES,
     ) -> Dependency | None:
+        if self.source != source:
+            return None
+
         if (distro_pkg := self.distro_map.get(distro)) is not None:
             pkgname = distro_pkg.package_name(filter)
             if pkgname is None:
@@ -109,10 +135,16 @@ class _ParsedDependency:
                 profiles=distro_pkg.profiles,
                 version_requirement=version_requirement,
                 build_target=distro_pkg.build_target,
+                source=self.source,
             )
         elif not self.distro_map:
-            # <dependency id="foo" />
-            return Dependency(package_name=self.name)
+            # <dependency id="foo" /> with optional
+            #   <pip version=">1.2.3">
+            return Dependency(
+                package_name=self.name,
+                source=self.source,
+                version_requirement=self.version_requirement,
+            )
         return None
 
 
@@ -138,13 +170,29 @@ class Dependencies:
         tree = etree.parse(file)
         root = tree.getroot()
 
+        deps = []
+        for source in PackageSource:
+            deps.extend(cls.parse_deps(root, source))
+        return cls(_dependencies=deps)
+
+    @classmethod
+    def parse_deps(cls, root, source=PackageSource) -> list[_ParsedDependency]:
         deps: list[_ParsedDependency] = []
-        for dependency_elem in root.findall("dependency"):
+        tag_name = source.xml_tag
+
+        for dependency_elem in root.findall(tag_name):
             if (dependency_name := dependency_elem.attrib.get("id")) is None:
                 logger.warning(
                     f"Element {dependency_elem.tag} without required attribute 'id'"
                 )
                 continue
+
+            pip_version = None
+            if (
+                dependency_elem.tag == "pip"
+                and (v := dependency_elem.attrib.get("version")) is not None
+            ):
+                pip_version = v
 
             distro_map = {}
             for distro_elem in dependency_elem.findall("distro"):
@@ -174,7 +222,10 @@ class Dependencies:
                 if not filters:
                     filters[None] = dependency_name
 
-                distro_dep = _ParsedDistroPackage(filters=filters)
+                distro_dep = _ParsedDistroPackage(
+                    filters=filters, version_requirement=pip_version
+                )
+
                 if (
                     bt := distro_elem.find("build-target")
                 ) is not None and "mode" in bt.attrib:
@@ -214,33 +265,47 @@ class Dependencies:
                     distro_dep.inclusive = incl
                     distro_dep.exclusive = excl
                     distro_dep.profiles = profiles
-                    distro_dep.version_requirement = version
+                    distro_dep.version_requirement = version or pip_version
 
                     # FIXME: not sure what the deal is with empty control/
 
                 distro_map[distro_name] = distro_dep
 
-            dep = _ParsedDependency(name=dependency_name, distro_map=distro_map)
+            dep = _ParsedDependency(
+                name=dependency_name,
+                source=source,
+                distro_map=distro_map,
+                version_requirement=pip_version,
+            )
             deps.append(dep)
-        return cls(_dependencies=deps)
+        return deps
 
     def find_packages(
         self,
         distro: OsName,
         filter: str | None = None,
         cross_build_arch: OsName | None = None,
+        source: PackageSource | None = PackageSource.PACKAGES,
     ) -> list[Dependency]:
         """
         Returns a list of package names for the given OS profile.
         """
-        logger.debug(f"Finding packages for {distro} with filter {filter}")
+        logger.debug(
+            f"Finding packages for {distro} with filter {filter} (source: {source})"
+        )
         deps = []
 
-        if cross_build_arch is not None and distro in [OsName.DEBIAN, OsName.UBUNTU]:
+        if (
+            source == PackageSource.PACKAGES
+            and cross_build_arch is not None
+            and distro in [OsName.DEBIAN, OsName.UBUNTU]
+        ):
             deps.append(Dependency(f"crossbuild-essential-{cross_build_arch}"))
 
         for dep in self._dependencies:
-            if dependency := dep.get_dependency(distro, filter, cross_build_arch):
+            if dependency := dep.get_dependency(
+                distro, filter, cross_build_arch, source
+            ):
                 deps.append(dependency)
 
         return deps

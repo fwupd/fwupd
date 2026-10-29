@@ -1,9 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE dependencies [
-  <!ELEMENT dependencies (dependency*)>
+  <!ELEMENT dependencies (dependency*, pip*)>
 
   <!ELEMENT dependency (distro*)>
   <!ATTLIST dependency id CDATA #REQUIRED>
+
+  <!ELEMENT pip (distro*)>
+  <!ATTLIST pip id CDATA #REQUIRED>
+  <!ATTLIST pip version CDATA #IMPLIED>
 
   <!ELEMENT distro (control?, build-target?, package*)>
   <!ATTLIST distro id (arch | centos | darwin | debian | fedora | freebsd | ubuntu) #REQUIRED>
@@ -63,6 +67,14 @@
   or "banana". The package is named "foo" on ubuntu
   and always required regardless of filters.
   Only arch and ubuntu require this package.
+
+  <pip id="foo" />
+  A dependency named "foo" (with optional version requirement) installed from pip.
+  A use of <distro> and its subfields are equivalent to normal sources.
+
+  <pip id="foo" version="==1.2.3" />
+  A dependency named "foo" with version requirement installed from pip.
+  A use of <distro> and its subfields are equivalent
 
 -->
 <dependencies>
@@ -219,17 +231,6 @@
     </distro>
     <distro id="fedora">
       <package only-if="amd64" />
-    </distro>
-  </dependency>
-  <dependency id="gcovr">
-    <distro id="debian">
-    </distro>
-    <distro id="ubuntu">
-      <package only-if="amd64" />
-      <package only-if="android" />
-    </distro>
-    <distro id="fedora">
-      <package name="gcovr" only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="libcairo-dev">
@@ -1297,9 +1298,9 @@
     <distro id="freebsd">
       <package name="py312-pip" />
     </distro>
-    <distro id="ubuntu">
-      <package />
-    </distro>
+    <distro id="ubuntu" />
+    <distro id="debian" />
+    <distro id="fedora" />
   </dependency>
   <dependency id="python3-virtualenv">
     <distro id="debian" />
@@ -1866,4 +1867,18 @@
     <distro id="debian" />
     <distro id="ubuntu" />
   </dependency>
+  <pip id="gcovr" version="==8.6">
+    <distro id="debian">
+      <package only-if="arm64" />
+      <package only-if="amd64" />
+      <package only-if="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package only-if="amd64" />
+      <package only-if="android" />
+    </distro>
+    <distro id="fedora">
+      <package only-if="amd64" />
+    </distro>
+  </pip>
 </dependencies>
