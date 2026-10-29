@@ -19,6 +19,7 @@ fwupdplugin_structs = [
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
+  'fu-fw-upload.rs', # fuzzing
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
@@ -179,6 +180,7 @@ fwupdplugin_src = [
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
   'fu-linear-firmware.c', # fuzzing
+  'fu-linux-fw-upload-device.c',
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
@@ -345,6 +347,7 @@ fwupdplugin_headers = [
   'fu-kernel.h',
   'fu-kernel-search-path.h',
   'fu-linear-firmware.h',
+  'fu-linux-fw-upload-device.h',
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-msgpack-item.h',
@@ -539,6 +542,7 @@ if get_option('tests')
     'io-channel',
     'kernel',
     'kernel-search-path',
+    'linux-fw-upload-device',
     'lzma',
     'mei-device',
     'mem',
