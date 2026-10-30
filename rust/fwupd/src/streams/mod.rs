@@ -158,10 +158,10 @@ pub trait Searchable: Read + Seek {
         offset: usize,
     ) -> std::io::Result<Option<usize>> {
         self.seek(std::io::SeekFrom::Start(offset as u64))?;
-        let mut buffer = VecDeque::<u8>::with_capacity(ByteCount::from_kb(16).count());
+        let mut buffer = VecDeque::<u8>::with_capacity(ByteCount::<usize>::from_kb(16).count());
         let mut buffer_offset = offset; // abs offset of buffer[0] in the stream
 
-        let mut readbuf = [0u8; ByteCount::from_kb(4).count()];
+        let mut readbuf = [0u8; ByteCount::<usize>::from_kb(4).count()];
         loop {
             while buffer.len() < bytes.len() {
                 let nbytes = self.read(&mut readbuf)?;
@@ -277,10 +277,10 @@ mod tests {
     fn searchable_find_across_read_chunk_boundary() {
         // The implementation reads in 4 KiB chunks, ensure we find
         // needles that cross the chunk boundary
-        let mut data = vec![0xAAu8; ByteCount::from_kb(8).count()];
+        let mut data = vec![0xAAu8; ByteCount::<usize>::from_kb(8).count()];
         // First match crosses the 4 KiB chunk boundary, second one is
         // fully in the second chunk.
-        let boundary = ByteCount::from_kb(4).count();
+        let boundary = ByteCount::<usize>::from_kb(4).count();
         data[boundary - 2..boundary + 2].copy_from_slice(&[0x01, 0x02, 0x03, 0x04]);
         data[boundary + 2..boundary + 6].copy_from_slice(&[0x01, 0x02, 0x03, 0x04]);
         assert_eq!(
@@ -300,8 +300,8 @@ mod tests {
     #[test]
     fn searchable_find_needle_spanning_chunk_boundary() {
         // Needle starts in one 4 KiB chunk and ends in the next one.
-        let mut data = vec![0u8; ByteCount::from_kb(4).count() + 8];
-        let boundary = ByteCount::from_kb(4).count();
+        let mut data = vec![0u8; ByteCount::<usize>::from_kb(4).count() + 8];
+        let boundary = ByteCount::<usize>::from_kb(4).count();
         data[boundary - 3..boundary + 3].copy_from_slice(&[1, 2, 3, 4, 5, 6]);
         assert_eq!(
             find(&data, &[1, 2, 3, 4, 5, 6], 0).unwrap(),
