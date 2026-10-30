@@ -788,27 +788,51 @@ fu_jabra_gnp_receiver_wait_event(FuDevice *device,
 				 guint retry_count,
 				 GError **error)
 {
+	FuDevice *usb_device = FU_DEVICE(receiver->usb_device);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id =
+	    g_strdup_printf("JabraGnpReceiver:Address=0x%02x,Command=0x%04x,Chunk=0x%x",
+			    address,
+			    expected_cmd,
+			    chunk);
+	g_autoptr(GError) error_local = NULL;
 	FuJabraGnpReceiverReadData read_data = {
 	    .receiver = receiver,
 	    .address = address,
 	    .expected_cmd = expected_cmd,
 	    .chunk = chunk,
 	};
+
+	if (fu_device_has_flag(usb_device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(usb_device, event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_check_error(event, error);
+	}
+	if (fu_context_has_flag(fu_device_get_context(usb_device), FU_CONTEXT_FLAG_SAVE_EVENTS))
+		event = fu_device_save_event(usb_device, event_id);
+
 	if (!fu_device_retry_full(device,
 				  fu_jabra_gnp_receiver_read_report_cb,
 				  retry_count,
 				  0,
 				  &read_data,
-				  error)) {
-		g_prefix_error(error,
+				  &error_local)) {
+		g_prefix_error(&error_local,
 			       "waiting for %s at chunk %u: ",
 			       expected_cmd == FU_JABRA_GNP_PACKET_CMD_WRITE_CHUNKS
 				   ? "preload"
 				   : "verify status",
 			       chunk);
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		g_clear_error(&read_data.error);
 		return FALSE;
 	}
 	if (read_data.error != NULL) {
+		if (event != NULL)
+			fu_device_event_set_error(event, read_data.error);
 		g_propagate_error(error, g_steal_pointer(&read_data.error));
 		return FALSE;
 	}
@@ -889,7 +913,7 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 {
 	FuDevice *target = device;
 	FuJabraGnpReceiver receiver = {0};
-	GThread *thread;
+	GThread *thread = NULL;
 	gboolean ret = FALSE;
 	g_autoptr(GAsyncQueue) queue =
 	    g_async_queue_new_full((GDestroyNotify)fu_jabra_gnp_report_free);
@@ -906,7 +930,9 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 	receiver.usb_device = FU_USB_DEVICE(target);
 	receiver.endpoint = fu_jabra_gnp_device_get_epin(FU_JABRA_GNP_DEVICE(target));
 	receiver.queue = queue;
-	thread = g_thread_new("jabra-gnp-rx", fu_jabra_gnp_receiver_thread, &receiver);
+	/* emulation shares one event cursor, so reading ahead would skip outgoing transfers */
+	if (!fu_device_has_flag(target, FWUPD_DEVICE_FLAG_EMULATED))
+		thread = g_thread_new("jabra-gnp-rx", fu_jabra_gnp_receiver_thread, &receiver);
 	ret = fu_jabra_gnp_receiver_write(device,
 					  &receiver,
 					  address,
@@ -923,8 +949,10 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 		if (ret)
 			fu_progress_step_done(progress);
 	}
-	g_atomic_int_set(&receiver.stop, 1);
-	g_thread_join(thread);
+	if (thread != NULL) {
+		g_atomic_int_set(&receiver.stop, 1);
+		g_thread_join(thread);
+	}
 	return ret;
 }
 
