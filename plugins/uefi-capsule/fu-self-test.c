@@ -1209,6 +1209,83 @@ fu_uefi_bootmgr_shim_hive_no_pkgnote_func(void)
 	g_assert_false(hive_supported);
 }
 
+static FuUefiCapsuleDevice *
+fu_uefi_capsule_test_device_from_esrt(const gchar *fw_version,
+				      const gchar *fw_version_lowest,
+				      guint warnings)
+{
+	gboolean ret;
+	g_autofree gchar *entry_path = NULL;
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	const struct {
+		const gchar *name;
+		const gchar *value;
+	} files[] = {{"fw_class", "ddc0ee61-e7f0-4e7d-acc5-c070a398838e\n"},
+		     {"fw_type", "1\n"},
+		     {"fw_version", fw_version},
+		     {"lowest_supported_fw_version", fw_version_lowest},
+		     {"capsule_flags", "0\n"},
+		     {"last_attempt_status", "0\n"},
+		     {"last_attempt_version", "0\n"}};
+
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esrt", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	entry_path = fu_temporary_directory_build(tmpdir, "efi", "esrt", "entries", "entry0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(entry_path, 0700), ==, 0);
+	for (guint i = 0; i < G_N_ELEMENTS(files); i++) {
+		g_autofree gchar *filename = g_build_filename(entry_path, files[i].name, NULL);
+		ret = g_file_set_contents(filename, files[i].value, -1, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+	backend = fu_uefi_capsule_backend_new(ctx);
+	for (guint i = 0; i < warnings; i++) {
+		g_test_expect_message(G_LOG_DOMAIN, G_LOG_LEVEL_WARNING, "*ignoring * ESRT value*");
+	}
+	ret = fu_backend_coldplug(backend, progress, &error);
+	if (warnings > 0)
+		g_test_assert_expected_messages();
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = fu_backend_get_devices(backend);
+	g_assert_cmpuint(devices->len, ==, 1);
+	return g_object_ref(g_ptr_array_index(devices, 0));
+}
+
+static void
+fu_uefi_capsule_esrt_version_parse_func(void)
+{
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+#ifndef __linux__
+	g_test_skip("ESRT data is mocked only on Linux");
+	return;
+#endif
+
+	dev = fu_uefi_capsule_test_device_from_esrt("invalid\n", "7\n", 1);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version(dev), ==, 0);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version_lowest(dev), ==, 7);
+	g_clear_object(&dev);
+
+	dev = fu_uefi_capsule_test_device_from_esrt("7\n", "invalid\n", 1);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version(dev), ==, 7);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version_lowest(dev), ==, 0);
+	g_clear_object(&dev);
+
+	dev = fu_uefi_capsule_test_device_from_esrt("4294967295\n", "4294967295\n", 0);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version(dev), ==, G_MAXUINT32);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version_lowest(dev), ==, G_MAXUINT32);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1241,5 +1318,7 @@ main(int argc, char **argv)
 			fu_uefi_bootmgr_shim_hive_unsupported_func);
 	g_test_add_func("/uefi-capsule/shim-hive/no-pkgnote",
 			fu_uefi_bootmgr_shim_hive_no_pkgnote_func);
+	g_test_add_func("/uefi-capsule/esrt-version-parse",
+			fu_uefi_capsule_esrt_version_parse_func);
 	return g_test_run();
 }
