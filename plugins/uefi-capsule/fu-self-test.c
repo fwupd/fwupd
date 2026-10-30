@@ -10,6 +10,7 @@
 #include "fu-context-private.h"
 #include "fu-efivars-private.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-capsule-backend.h"
@@ -1298,6 +1299,60 @@ fu_uefi_bootmgr_shim_hive_no_pkgnote_func(void)
 	g_assert_false(hive_supported);
 }
 
+typedef struct {
+	const gchar *name;
+	FuUefiCapsuleDeviceKind kind;
+	guint32 current;
+	guint32 minimum;
+	FwupdSecurityAttrResult result;
+	gboolean config_fw;
+} FuUefiCapsuleSecurityAttrTest;
+
+static void
+fu_uefi_capsule_security_attr_func(gconstpointer user_data)
+{
+	const FuUefiCapsuleSecurityAttrTest *test = user_data;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+	dev = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE,
+			   "context",
+			   ctx,
+			   "fw-class",
+			   "ddc0ee61-e7f0-4e7d-acc5-c070a398838e",
+			   "kind",
+			   test->kind,
+			   "fw-version",
+			   test->current,
+			   "fw-version-lowest",
+			   test->minimum,
+			   NULL);
+	fu_device_set_plugin(FU_DEVICE(dev), "uefi_capsule");
+	fu_device_add_security_attrs(FU_DEVICE(dev), attrs);
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						  NULL);
+	if (test->kind != FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		g_assert_null(attr);
+		return;
+	}
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, test->result);
+	g_assert_cmpint(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS),
+			==,
+			test->result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(
+	    fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM),
+	    ==,
+	    test->result != FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW),
+			==,
+			test->config_fw);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1332,5 +1387,50 @@ main(int argc, char **argv)
 			fu_uefi_bootmgr_shim_hive_unsupported_func);
 	g_test_add_func("/uefi-capsule/shim-hive/no-pkgnote",
 			fu_uefi_bootmgr_shim_hive_no_pkgnote_func);
+	{
+		static const FuUefiCapsuleSecurityAttrTest tests[] = {
+		    {"equal",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		     FALSE},
+		    {"minimum-below-current",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     65582,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     TRUE},
+		    {"minimum-above-current",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65582,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"current-zero",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     0,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"minimum-zero",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     0,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"non-system-firmware",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE,
+		     65586,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		     FALSE},
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+			g_autofree gchar *path =
+			    g_strdup_printf("/uefi-capsule/security-attrs/%s", tests[i].name);
+			g_test_add_data_func(path, &tests[i], fu_uefi_capsule_security_attr_func);
+		}
+	}
 	return g_test_run();
 }
