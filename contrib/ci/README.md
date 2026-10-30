@@ -137,7 +137,8 @@ Each distribution will have `package` elements and `control` elements.
 * `inclusive` elements represent an inclusive list of architectures to be installed on
 * `exclusive` elements represent an exclusive list of architectures to not be installed on
 
-For convenience there is also a helper script `./contrib/ci/fwupd_setup_helpers.py install-dependencies` that parses `dependencies.xml`.
+For convenience the `fwupbuild` dev helper tool has the `fwupbuild install-dependencies` command that uses
+`dependencies.xml` to install all dependencies for the given (or auto-detected) arch.
 
 ### Dockerfile.in
 

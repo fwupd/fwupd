@@ -3,7 +3,7 @@ set -e
 
 # install deps
 if [ ! -f /usr/share/mingw/toolchain-mingw64.meson ]; then
-    ./fwupbuild setup deps --filter mingw64
+    ./fwupbuild install-dependencies --filter mingw64
 fi
 
 root=$(pwd)

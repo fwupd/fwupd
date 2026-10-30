@@ -48,8 +48,7 @@ jobs:
           persist-credentials: false
       - name: install dependencies
         run: |
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
+          sudo ./contrib/ci/fwupd install-dependencies --os ubuntu
       - name: build
         run: |
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
