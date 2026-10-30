@@ -1339,6 +1339,31 @@ fu_dbus_daemon_method_get_history(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_method_get_host_security_report(FuDbusDaemon *self,
+					       GVariant *parameters,
+					       FuEngineRequest *request,
+					       GDBusMethodInvocation *invocation)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	guint schema;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) report = NULL;
+
+	if (!fu_dbus_daemon_hsi_supported(self, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+	g_variant_get(parameters, "(u)", &schema);
+	report = fu_engine_get_host_security_report(engine, schema, &error);
+	if (report == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+	g_dbus_method_invocation_return_value(invocation,
+					      g_variant_new("(@a{sv})", g_steal_pointer(&report)));
+}
+
+static void
 fu_dbus_daemon_method_get_host_security_attrs(FuDbusDaemon *self,
 					      GVariant *parameters,
 					      FuEngineRequest *request,
@@ -2733,6 +2758,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"GetRemotes", fu_dbus_daemon_method_get_remotes},
 	    {"GetHistory", fu_dbus_daemon_method_get_history},
 	    {"GetHostSecurityAttrs", fu_dbus_daemon_method_get_host_security_attrs},
+	    {"GetHostSecurityReport", fu_dbus_daemon_method_get_host_security_report},
 	    {"GetHostSecurityEvents", fu_dbus_daemon_method_get_host_security_events},
 	    {"ClearResults", fu_dbus_daemon_method_clear_results},
 	    {"EmulationLoad", fu_dbus_daemon_method_emulation_load},

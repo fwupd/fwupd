@@ -1675,6 +1675,81 @@ fwupd_client_get_bios_settings(FwupdClient *self, GCancellable *cancellable, GEr
 }
 
 static void
+fwupd_client_get_host_security_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = user_data;
+	helper->val =
+	    fwupd_client_get_host_security_report_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+GVariant *
+fwupd_client_sync_impl_get_host_security_report(FwupdClient *self,
+						guint schema,
+						gpointer user_data,
+						GCancellable *cancellable,
+						GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+	fwupd_client_get_host_security_report_async(self,
+						    schema,
+						    cancellable,
+						    fwupd_client_get_host_security_report_cb,
+						    helper);
+	g_main_loop_run(helper->loop);
+	if (helper->val == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->val);
+}
+
+/**
+ * fwupd_client_get_host_security_report:
+ * @self: a #FwupdClient
+ * @schema: report schema version
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the weighted host security report. Schema 1 returns the unsigned integer
+ * fields `Schema`, `Score`, `Level` and `Ceiling`, an `Attributes` array of
+ * security-attribute dictionaries, and a `Failed` string array of property IDs.
+ * Attributes that are not reported by the host are normally omitted. Required
+ * platform protections are failures when absent. Reported attributes with
+ * missing data receive no points and still apply their ceiling. Weights and
+ * thresholds remain fixed for a schema version.
+ *
+ * Returns: (transfer full): the report or %NULL
+ *
+ * Since: 2.2.1
+ */
+GVariant *
+fwupd_client_get_host_security_report(FwupdClient *self,
+				      guint schema,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+	if (impl->get_host_security_report == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->get_host_security_report");
+		return NULL;
+	}
+	return impl->get_host_security_report(self, schema, impl_userdata, cancellable, error);
+}
+
+static void
 fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

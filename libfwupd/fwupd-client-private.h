@@ -79,6 +79,11 @@ struct FwupdClientSyncImpl {
 					      gpointer user_data,
 					      GCancellable *cancellable,
 					      GError **error);
+	GVariant *(*get_host_security_report)(FwupdClient *self,
+					      guint schema,
+					      gpointer user_data,
+					      GCancellable *cancellable,
+					      GError **error);
 	GPtrArray *(*get_host_security_events)(FwupdClient *self,
 					       guint limit,
 					       gpointer user_data,

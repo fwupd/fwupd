@@ -1227,6 +1227,9 @@ LIBFWUPD_2.2.1 {
     fwupd_client_emit_device_changed;
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
+    fwupd_client_get_host_security_report;
+    fwupd_client_get_host_security_report_async;
+    fwupd_client_get_host_security_report_finish;
     fwupd_client_get_pending_reboot;
     fwupd_client_run_connect_funcs;
     fwupd_client_set_host_bkc;
