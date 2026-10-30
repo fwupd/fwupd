@@ -10,7 +10,7 @@
 //! stream. All reads and seeks are translated relative to the slice offset and
 //! clamped to the slice bounds.
 
-use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
+use crate::streams::{IsSeekable, Searchable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -150,10 +150,23 @@ impl IsSeekable for PartialInputStream {
     }
 }
 
+impl Searchable for PartialInputStream {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::slice::NonEmptySlice;
     use crate::streams::{IntoStream, MemoryInputStream};
+
+    #[test]
+    fn partial_searchable_find() {
+        // Partial view over bytes 2..7 of the backing stream
+        let backing = MemoryInputStream::from_data(vec![10, 20, 30, 40, 50, 60, 70]).into_stream();
+        let mut partial = PartialInputStream::from_stream(backing, 2, 5);
+        let needle = NonEmptySlice::new(&[50, 60]).unwrap();
+        // offset is relative to the partial stream, not the backing stream
+        assert_eq!(partial.find(needle).unwrap(), Some(2));
+    }
 
     #[test]
     fn partial_from_rust_stream() {

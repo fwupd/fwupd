@@ -9,7 +9,7 @@
 //! Provides [`MemoryInputStream`], an input stream backed by a `Vec<u8>` byte
 //! buffer.
 
-use crate::streams::{IsSeekable, StreamError};
+use crate::streams::{IsSeekable, Searchable, StreamError};
 
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -43,6 +43,8 @@ impl Default for MemoryInputStream<Vec<u8>> {
         Self::new()
     }
 }
+
+impl<T: AsRef<[u8]>> Searchable for MemoryInputStream<T> {}
 
 impl<T: AsRef<[u8]>> MemoryInputStream<T> {
     /// Return the total size of the stream in bytes.
@@ -103,6 +105,14 @@ impl<T: AsRef<[u8]>> Seek for MemoryInputStream<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::slice::NonEmptySlice;
+
+    #[test]
+    fn memory_searchable_find() {
+        let mut stream = MemoryInputStream::from_data(b"hello world".to_vec());
+        let needle = NonEmptySlice::new(b"world").unwrap();
+        assert_eq!(stream.find(needle).unwrap(), Some(6));
+    }
 
     #[test]
     fn memory_empty() {
