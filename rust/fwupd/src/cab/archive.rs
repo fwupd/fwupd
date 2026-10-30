@@ -42,6 +42,7 @@ pub(crate) const MAX_FILES: usize = 1024;
 const MAX_FOLDERS: usize = MAX_FILES; // our own builder puts each file in a folder
 const MAX_RESERVED: usize = ByteCount::<usize>::from_mb(1).count();
 const MAX_FOLDER_UNCOMP: usize = ByteCount::<usize>::from_mb(256).count();
+const MAX_ARCHIVE_UNCOMP: u64 = ByteCount::<u64>::from_gb(16).count();
 
 /// The id assigned to a set of cabinet files. Used
 /// if the cabinet file comprises multiple disks and/or files.
@@ -771,6 +772,7 @@ impl Archive {
         let mut folders = Vec::with_capacity(nfolders);
         let mut folder_off = off;
         let mut was_compressed = false;
+        let mut total_uncompressed_size: u64 = 0;
         let mut folder_ranges: Vec<std::ops::Range<usize>> = Vec::new();
         for _ in 0..nfolders {
             let mut folder_stream = CompositeInputStream::new();
@@ -804,6 +806,15 @@ impl Archive {
                         "uncompressed block size {sz_uncompressed} exceeds {MAX_BLOCK_UNCOMP}"
                     )));
                 }
+
+                total_uncompressed_size =
+                    total_uncompressed_size.saturating_add(sz_uncompressed as u64);
+                if total_uncompressed_size > MAX_ARCHIVE_UNCOMP {
+                    return Err(CabError::Limit(format!(
+                        "archive decompressed size exceeds {MAX_ARCHIVE_UNCOMP}"
+                    )));
+                }
+
                 uncompressed_folder_size += sz_uncompressed;
                 if uncompressed_folder_size > MAX_FOLDER_UNCOMP {
                     return Err(CabError::Limit(format!(
