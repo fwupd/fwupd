@@ -2375,6 +2375,46 @@ fu_cli_is_url(const gchar *perhaps_url)
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 }
 
+FwupdJsonObject *
+fu_cli_security_report_to_json(GVariant *report, GError **error)
+{
+	g_autoptr(FwupdJsonArray) failed_json = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GVariant) attrs_tuple = NULL;
+	g_autoptr(GVariant) attrs_variant = NULL;
+	g_auto(GStrv) failed = NULL;
+	guint schema, score, level, ceiling;
+
+	if (!g_variant_lookup(report, "Schema", "u", &schema) ||
+	    !g_variant_lookup(report, "Score", "u", &score) ||
+	    !g_variant_lookup(report, "Level", "u", &level) ||
+	    !g_variant_lookup(report, "Ceiling", "u", &ceiling) ||
+	    !g_variant_lookup(report, "Attributes", "@aa{sv}", &attrs_variant)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid weighted security report");
+		return NULL;
+	}
+	attrs_tuple = g_variant_new_tuple(&attrs_variant, 1);
+	attrs = fwupd_codec_array_from_variant(attrs_tuple, FWUPD_TYPE_SECURITY_ATTR, error);
+	if (attrs == NULL)
+		return NULL;
+
+	fwupd_json_object_add_integer(json_obj, "Schema", schema);
+	fwupd_json_object_add_integer(json_obj, "Score", score);
+	fwupd_json_object_add_integer(json_obj, "HsiLevel", level);
+	fwupd_json_object_add_integer(json_obj, "Ceiling", ceiling);
+	fwupd_codec_array_to_json(attrs, "SecurityAttributes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (g_variant_lookup(report, "Failed", "^as", &failed)) {
+		for (guint i = 0; failed[i] != NULL; i++)
+			fwupd_json_array_add_string(failed_json, failed[i]);
+		fwupd_json_object_add_array(json_obj, "FailedAttributes", failed_json);
+	}
+	return g_steal_pointer(&json_obj);
+}
+
 void
 fu_cli_print_json_object(FuConsole *console, FwupdJsonObject *json_obj)
 {
