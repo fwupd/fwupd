@@ -463,6 +463,66 @@ fu_security_attrs_obsolete_plugin_func(void)
 	    fu_security_attr_has_flag(attr_secureboot, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
 }
 
+static void
+fu_security_attrs_test_amd_rollback_aggregation(FwupdSecurityAttrResult bios_result,
+						FwupdSecurityAttrResult amd_result,
+						const gchar *expected_hsi)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	FuSecurityAttr *attr_amd = NULL;
+	FuSecurityAttr *attr_bios = NULL;
+
+	fu_security_attrs_test_add_attr(ctx,
+					attrs,
+					FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE,
+					"test",
+					FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+					TRUE);
+	attr_bios =
+	    fu_security_attrs_test_add_attr(ctx,
+					    attrs,
+					    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					    "uefi_capsule",
+					    bios_result,
+					    bios_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_test_add_attr(ctx,
+					attrs,
+					FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
+					"test",
+					FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+					TRUE);
+	attr_amd =
+	    fu_security_attrs_test_add_attr(ctx,
+					    attrs,
+					    FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+					    "pci_psp",
+					    amd_result,
+					    amd_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_depsolve(attrs);
+	g_assert_false(fu_security_attr_has_flag(attr_bios, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_false(fu_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, expected_hsi);
+}
+
+static void
+fu_security_attrs_amd_rollback_aggregation_bios_failure_func(void)
+{
+	fu_security_attrs_test_amd_rollback_aggregation(FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+							FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							"HSI:1");
+}
+
+static void
+fu_security_attrs_amd_rollback_aggregation_amd_failure_func(void)
+{
+	fu_security_attrs_test_amd_rollback_aggregation(FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+							"HSI:3");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -479,5 +539,9 @@ main(int argc, char **argv)
 			fu_security_attrs_scoped_obsolete_both_failure_func);
 	g_test_add_func("/fwupd/security-attrs/obsolete-plugin",
 			fu_security_attrs_obsolete_plugin_func);
+	g_test_add_func("/fwupd/security-attrs/aggregation/amd-rollback/bios-failure",
+			fu_security_attrs_amd_rollback_aggregation_bios_failure_func);
+	g_test_add_func("/fwupd/security-attrs/aggregation/amd-rollback/amd-failure",
+			fu_security_attrs_amd_rollback_aggregation_amd_failure_func);
 	return g_test_run();
 }

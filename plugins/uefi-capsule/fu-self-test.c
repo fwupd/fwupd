@@ -10,6 +10,7 @@
 #include "fu-context-private.h"
 #include "fu-efivars-private.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-capsule-backend.h"
@@ -1286,6 +1287,109 @@ fu_uefi_capsule_esrt_version_parse_func(void)
 	g_assert_cmpuint(fu_uefi_capsule_device_get_version_lowest(dev), ==, G_MAXUINT32);
 }
 
+typedef struct {
+	const gchar *name;
+	FuUefiCapsuleDeviceKind kind;
+	guint32 current;
+	guint32 minimum;
+	FwupdSecurityAttrResult result;
+	gboolean config_fw;
+} FuUefiCapsuleSecurityAttrTest;
+
+static FuSecurityAttr *
+fu_uefi_capsule_test_get_bios_rollback_attr(FuUefiCapsuleDevice *dev)
+{
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	fu_device_set_plugin(FU_DEVICE(dev), "uefi_capsule");
+	fu_device_add_security_attrs(FU_DEVICE(dev), attrs);
+	return fu_security_attrs_get_by_appstream_id(
+	    attrs,
+	    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+	    NULL);
+}
+
+static void
+fu_uefi_capsule_security_attr_func(gconstpointer user_data)
+{
+	const FuUefiCapsuleSecurityAttrTest *test = user_data;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+	dev = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE,
+			   "context",
+			   ctx,
+			   "fw-class",
+			   "ddc0ee61-e7f0-4e7d-acc5-c070a398838e",
+			   "kind",
+			   test->kind,
+			   "fw-version",
+			   test->current,
+			   "fw-version-lowest",
+			   test->minimum,
+			   NULL);
+	attr = fu_uefi_capsule_test_get_bios_rollback_attr(dev);
+	if (test->kind != FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		g_assert_null(attr);
+		return;
+	}
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr), ==, test->result);
+	g_assert_cmpint(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS),
+			==,
+			test->result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(
+	    fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM),
+	    ==,
+	    test->result != FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW),
+			==,
+			test->config_fw);
+}
+
+static void
+fu_uefi_capsule_security_attr_malformed_func(void)
+{
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+#ifndef __linux__
+	g_test_skip("ESRT data is mocked only on Linux");
+	return;
+#endif
+
+	dev = fu_uefi_capsule_test_device_from_esrt("invalid\n", "invalid\n", 2);
+	attr = fu_uefi_capsule_test_get_bios_rollback_attr(dev);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_uefi_capsule_security_attr_overflow_func(void)
+{
+	g_autoptr(FuSecurityAttr) attr = NULL;
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+
+#ifndef __linux__
+	g_test_skip("ESRT data is mocked only on Linux");
+	return;
+#endif
+
+	dev = fu_uefi_capsule_test_device_from_esrt("4294967303\n", "7\n", 1);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version(dev), ==, 0);
+	g_assert_cmpuint(fu_uefi_capsule_device_get_version_lowest(dev), ==, 7);
+	attr = fu_uefi_capsule_test_get_bios_rollback_attr(dev);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fu_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_false(fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1320,5 +1424,54 @@ main(int argc, char **argv)
 			fu_uefi_bootmgr_shim_hive_no_pkgnote_func);
 	g_test_add_func("/uefi-capsule/esrt-version-parse",
 			fu_uefi_capsule_esrt_version_parse_func);
+	{
+		static const FuUefiCapsuleSecurityAttrTest tests[] = {
+		    {"equal",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		     FALSE},
+		    {"minimum-below-current",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     65582,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     TRUE},
+		    {"minimum-above-current",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65582,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"current-zero",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     0,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"minimum-zero",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE,
+		     65586,
+		     0,
+		     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		     FALSE},
+		    {"non-system-firmware",
+		     FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE,
+		     65586,
+		     65586,
+		     FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		     FALSE},
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
+			g_autofree gchar *path =
+			    g_strdup_printf("/uefi-capsule/security-attrs/%s", tests[i].name);
+			g_test_add_data_func(path, &tests[i], fu_uefi_capsule_security_attr_func);
+		}
+	}
+	g_test_add_func("/uefi-capsule/security-attrs/malformed",
+			fu_uefi_capsule_security_attr_malformed_func);
+	g_test_add_func("/uefi-capsule/security-attrs/overflow",
+			fu_uefi_capsule_security_attr_overflow_func);
 	return g_test_run();
 }
