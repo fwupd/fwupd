@@ -10,7 +10,7 @@
 //! into a single logical stream. Reads are dispatched to the appropriate
 //! sub-stream based on the current position.
 
-use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
+use crate::streams::{IsSeekable, Searchable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -182,11 +182,30 @@ impl Seek for CompositeInputStream {
     }
 }
 
+impl Searchable for CompositeInputStream {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::slice::NonEmptySlice;
     use crate::streams::{IntoStream, MemoryInputStream};
     use std::io::ErrorKind;
+
+    #[test]
+    fn composite_searchable_find() {
+        let mut stream = CompositeInputStream::new();
+        stream.add_stream(
+            MemoryInputStream::from_data(b"hello ".to_vec()).into_stream(),
+            6,
+        );
+        stream.add_stream(
+            MemoryInputStream::from_data(b"world".to_vec()).into_stream(),
+            5,
+        );
+        // needle spanning both sub-streams
+        let needle = NonEmptySlice::new(b"lo wo").unwrap();
+        assert_eq!(stream.find(needle).unwrap(), Some(3));
+    }
 
     #[test]
     fn composite_empty() {
