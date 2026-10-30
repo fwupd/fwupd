@@ -162,9 +162,10 @@ def run_copyright(args):
     pattern = r"Copyright\s*[0-9]{4}(\s*-\s*[0-9]{4})?\s*(?P<author>[^<]*)"
 
     authors = []
-    # Need to use iterdir(), this is run from a tarball, not a git tree
-    for file in Path("po").iterdir():
-        if not file.is_file() or file.name == "COPYING":
+    # Need to walk the directory tree, this is run from a tarball, not a git
+    # tree
+    for file in Path(".").rglob("*"):
+        if file.is_relative_to("po") or not file.is_file() or file.name == "COPYING":
             continue
 
         try:

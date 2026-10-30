@@ -4,8 +4,10 @@ set -euxo pipefail
 # Set Qubes Os vars if -Dqubes=true is parameter
 if [ "${QUBES:-false}" = "true" ]; then
     QUBES_OPTION='-Dqubes=true'
+    QUBES_FWUPBUILD_ARG="--qubes"
 else
     QUBES_OPTION=
+    QUBES_FWUPBUILD_ARG=
 fi
 export QUBES_OPTION
 
@@ -25,7 +27,7 @@ pushd build
 mv contrib/debian .
 sed -i 's/quilt/native/' debian/source/format
 ./fwupbuild generate-debian-packaging copyright --template ./debian/copyright.in -o ./debian/copyright
-./fwupbuild generate-debian-packaging control --template ./debian/control.in -o ./debian/control ${CROSS:+--arch $CROSS}
+./fwupbuild generate-debian-packaging control --template ./debian/control.in -o ./debian/control ${CROSS:+--arch $CROSS} ${QUBES_FWUPBUILD_ARG}
 
 dpkg --print-architecture
 dpkg --print-foreign-architectures
