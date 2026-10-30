@@ -299,7 +299,7 @@ fu_processor_device_probe_extended_features(FuProcessorDevice *self, GError **er
 	if ((ecx >> 7) & 0x1)
 		self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_SHSTK;
 
-	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL) {
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL)) {
 		if ((ecx >> 13) & 0x1)
 			self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_TME;
 		if ((edx >> 20) & 0x1)
@@ -372,22 +372,18 @@ fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSe
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	fu_security_attrs_append(attrs, attr);
 
-	switch (fu_context_get_cpu_vendor(ctx)) {
-	case FU_CPU_VENDOR_INTEL:
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL)) {
 		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK) &&
 		    fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_IBT)) {
 			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
-		break;
-	case FU_CPU_VENDOR_AMD:
+	}
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, NULL)) {
 		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK)) {
 			fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
-		break;
-	default:
-		break;
 	}
 
 	fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
@@ -489,7 +485,7 @@ fu_processor_device_add_x86_64_security_attrs(FuProcessorDevice *self, FuSecurit
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 
 	/* only Intel */
-	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL)
+	if (fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		fu_processor_device_add_security_attrs_intel_tme(self, attrs);
 	fu_processor_device_add_security_attrs_cet_enabled(self, attrs);
 	fu_processor_device_add_security_attrs_cet_active(self, attrs);

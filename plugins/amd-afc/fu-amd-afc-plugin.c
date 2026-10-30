@@ -25,11 +25,8 @@ fu_amd_afc_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	g_autofree gchar *tables_dir = NULL;
 	g_autoptr(GDir) dir = NULL;
 
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "AFC requires an AMD platform");
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, error)) {
+		g_prefix_error_literal(error, "AFC requires an AMD platform: ");
 		return FALSE;
 	}
 	if (!fu_efivars_supported(fu_context_get_efivars(ctx), error))

@@ -27,7 +27,7 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* only AMD */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_AMD, NULL))
 		return;
 
 	/* create attr */

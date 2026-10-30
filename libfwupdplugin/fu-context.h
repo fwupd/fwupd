@@ -128,6 +128,10 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold) G_GNU
 
 FuCpuVendor
 fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+gboolean
+fu_context_check_cpu_vendor(FuContext *self,
+			    FuCpuVendor cpu_vendor,
+			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 GPtrArray *
 fu_context_get_bios_settings(FuContext *self) G_GNUC_NON_NULL(1);

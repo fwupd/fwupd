@@ -194,7 +194,7 @@ fu_pci_bcr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 
 	/* only Intel */
-	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
+	if (!fu_context_check_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL, NULL))
 		return;
 
 	/* add attrs */
