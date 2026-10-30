@@ -26,6 +26,9 @@ const GB_BYTES: usize = 1 << 30;
 
 /// Unit representing an exact number of bytes.
 ///
+/// This is only available for unsigned types at least 32-bits wide, i.e. `u32`,
+/// `u64` and `usize`.
+///
 /// The primary use of this struct is to improve readability, e.g. to allocate
 /// a 32 KB vector:
 /// ```
@@ -33,79 +36,103 @@ const GB_BYTES: usize = 1 << 30;
 /// let v = vec![0u8; ByteCount::from_kb(32).count()];
 /// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct ByteCount(usize);
+pub struct ByteCount<T>(T);
 
-impl ByteCount {
-    #[must_use]
-    pub const fn count(self) -> usize {
-        self.0
-    }
+/// Implement ByteCount for the given type
+macro_rules! impl_byte_count {
+    ($t:ty) => {
+        impl ByteCount<$t> {
+            const KB_BYTES: $t = 1 << 10;
+            const MB_BYTES: $t = 1 << 20;
+            const GB_BYTES: $t = 1 << 30;
 
-    /// Initialize a `ByteCount` from a number of kilobytes
-    #[must_use]
-    pub const fn from_kb(kb: usize) -> Self {
-        Self(kb * KB_BYTES)
-    }
+            #[must_use]
+            pub const fn count(self) -> $t {
+                self.0
+            }
 
-    /// Initialize a `ByteCount` from a number of megabytes
-    #[must_use]
-    pub const fn from_mb(mb: usize) -> Self {
-        Self(mb * MB_BYTES)
-    }
+            /// Initialize a `ByteCount` from a number of kilobytes
+            #[must_use]
+            pub const fn from_kb(kb: $t) -> Self {
+                Self(kb * Self::KB_BYTES)
+            }
 
-    /// Initialize a `ByteCount` from a number of gigabytes
-    #[must_use]
-    pub const fn from_gb(gb: usize) -> Self {
-        Self(gb * GB_BYTES)
-    }
+            /// Initialize a `ByteCount` from a number of megabytes
+            #[must_use]
+            pub const fn from_mb(mb: $t) -> Self {
+                Self(mb * Self::MB_BYTES)
+            }
 
-    /// Returns the minimum number of kilobytes represented by this `ByteCount`,
-    /// rounded up so that the number of bytes will fit, e.g. 1025 bytes require
-    /// 2 KB space.
-    #[must_use]
-    pub const fn in_kb(&self) -> usize {
-        self.count().div_ceil(KB_BYTES)
-    }
+            /// Initialize a `ByteCount` from a number of gigabytes
+            #[must_use]
+            pub const fn from_gb(gb: $t) -> Self {
+                Self(gb * Self::GB_BYTES)
+            }
 
-    /// Returns the minimum number of megabytes represented by this `ByteCount`,
-    /// rounded up so that the number of bytes will fit, e.g. 1025 kilobytes require
-    /// 2 MB space.
-    #[must_use]
-    pub const fn in_mb(&self) -> usize {
-        self.count().div_ceil(MB_BYTES)
-    }
+            /// Returns the minimum number of kilobytes represented by this `ByteCount`,
+            /// rounded up so that the number of bytes will fit, e.g. 1025 bytes require
+            /// 2 KB space.
+            #[must_use]
+            pub const fn in_kb(&self) -> $t {
+                self.count().div_ceil(Self::KB_BYTES)
+            }
 
-    /// Returns the minimum number of gigabytes represented by this `ByteCount`,
-    /// rounded up so that the number of bytes will fit, e.g. 1025 megabytes require
-    /// 2 GB space.
-    #[must_use]
-    pub const fn in_gb(&self) -> usize {
-        self.count().div_ceil(GB_BYTES)
-    }
+            /// Returns the minimum number of megabytes represented by this `ByteCount`,
+            /// rounded up so that the number of bytes will fit, e.g. 1025 kilobytes require
+            /// 2 MB space.
+            #[must_use]
+            pub const fn in_mb(&self) -> $t {
+                self.count().div_ceil(Self::MB_BYTES)
+            }
+
+            /// Returns the minimum number of gigabytes represented by this `ByteCount`,
+            /// rounded up so that the number of bytes will fit, e.g. 1025 megabytes require
+            /// 2 GB space.
+            #[must_use]
+            pub const fn in_gb(&self) -> $t {
+                self.count().div_ceil(Self::GB_BYTES)
+            }
+        }
+        impl From<$t> for ByteCount<$t> {
+            /// Convert to a `ByteCount`
+            fn from(bytes: $t) -> ByteCount<$t> {
+                ByteCount(bytes)
+            }
+        }
+
+        impl From<ByteCount<$t>> for f64 {
+            fn from(bytes: ByteCount<$t>) -> f64 {
+                bytes.0 as f64
+            }
+        }
+
+        impl std::fmt::Display for ByteCount<$t> {
+            #[allow(clippy::cast_precision_loss)]
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                match self.0 {
+                    gb if gb > Self::GB_BYTES => {
+                        write!(f, "{}GB", fmt_f64(self.0 as f64 / Self::GB_BYTES as f64))
+                    }
+                    mb if mb > Self::MB_BYTES => {
+                        write!(f, "{}MB", fmt_f64(self.0 as f64 / Self::MB_BYTES as f64))
+                    }
+                    kb if kb > Self::KB_BYTES => {
+                        write!(f, "{}KB", fmt_f64(self.0 as f64 / Self::KB_BYTES as f64))
+                    }
+                    _ => write!(f, "{}B", self.0),
+                }
+            }
+        }
+    };
 }
 
-impl From<usize> for ByteCount {
-    /// Convert to a `ByteCount`
-    fn from(bytes: usize) -> ByteCount {
-        ByteCount(bytes)
-    }
-}
+impl_byte_count!(u32);
+impl_byte_count!(usize);
+impl_byte_count!(u64);
 
 fn fmt_f64(value: f64) -> String {
     let s = format!("{value:.1}");
     s.trim_end_matches('0').trim_end_matches('.').to_string()
-}
-
-impl std::fmt::Display for ByteCount {
-    #[allow(clippy::cast_precision_loss)]
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self.0 {
-            gb if gb > GB_BYTES => write!(f, "{}GB", fmt_f64(self.0 as f64 / GB_BYTES as f64)),
-            mb if mb > MB_BYTES => write!(f, "{}MB", fmt_f64(self.0 as f64 / MB_BYTES as f64)),
-            kb if kb > KB_BYTES => write!(f, "{}KB", fmt_f64(self.0 as f64 / KB_BYTES as f64)),
-            _ => write!(f, "{}B", self.0),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -121,31 +148,31 @@ mod tests {
 
     #[test]
     fn test_from_kb() {
-        assert_eq!(ByteCount::from_kb(1).count(), 1024);
-        assert_eq!(ByteCount::from_kb(2).count(), 2048);
-        assert_eq!(ByteCount::from_kb(1024).count(), MB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_kb(1).count(), 1024);
+        assert_eq!(ByteCount::<usize>::from_kb(2).count(), 2048);
+        assert_eq!(ByteCount::<usize>::from_kb(1024).count(), MB_BYTES);
     }
 
     #[test]
     fn test_from_mb() {
-        assert_eq!(ByteCount::from_mb(1).count(), MB_BYTES);
-        assert_eq!(ByteCount::from_mb(2).count(), 2 * MB_BYTES);
-        assert_eq!(ByteCount::from_mb(1024).count(), GB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_mb(1).count(), MB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_mb(2).count(), 2 * MB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_mb(1024).count(), GB_BYTES);
     }
 
     #[test]
     fn test_from_gb() {
-        assert_eq!(ByteCount::from_gb(1).count(), GB_BYTES);
-        assert_eq!(ByteCount::from_gb(2).count(), 2 * GB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_gb(1).count(), GB_BYTES);
+        assert_eq!(ByteCount::<usize>::from_gb(2).count(), 2 * GB_BYTES);
     }
 
     #[test]
     fn test_in_kb() {
-        assert_eq!(ByteCount(0).in_kb(), 0);
-        assert_eq!(ByteCount(1024).in_kb(), 1);
-        assert_eq!(ByteCount(2048).in_kb(), 2);
-        assert_eq!(ByteCount(1025).in_kb(), 2); // rounds up
-        assert_eq!(ByteCount(1023).in_kb(), 1); // rounds up
+        assert_eq!(ByteCount(0usize).in_kb(), 0);
+        assert_eq!(ByteCount(1024usize).in_kb(), 1);
+        assert_eq!(ByteCount(2048usize).in_kb(), 2);
+        assert_eq!(ByteCount(1025usize).in_kb(), 2); // rounds up
+        assert_eq!(ByteCount(1023usize).in_kb(), 1); // rounds up
     }
 
     #[test]
@@ -171,8 +198,8 @@ mod tests {
 
     #[test]
     fn test_display() {
-        assert_eq!(format!("{}", ByteCount(0)), "0B");
-        assert_eq!(format!("{}", ByteCount(512)), "512B");
+        assert_eq!(format!("{}", ByteCount(0usize)), "0B");
+        assert_eq!(format!("{}", ByteCount(512usize)), "512B");
         assert_eq!(format!("{}", ByteCount(KB_BYTES)), "1024B");
 
         assert_eq!(format!("{}", ByteCount(KB_BYTES + 1)), "1KB");
