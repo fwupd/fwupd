@@ -138,7 +138,7 @@ fu_security_attrs_append(FuSecurityAttrs *self, FuSecurityAttr *attr)
  * @appstream_id: an ID, e.g. %FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM
  * @error: (nullable): optional return location for an error
  *
- * Gets a specific #FuSecurityAttr from the array.
+ * Gets a non-obsoleted #FuSecurityAttr from the array.
  *
  * Returns: (transfer full): a #FuSecurityAttr or %NULL
  *
@@ -159,6 +159,8 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 	}
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FuSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
 		if (g_strcmp0(fu_security_attr_get_appstream_id(attr), appstream_id) == 0)
 			return g_object_ref(attr);
 	}
@@ -573,6 +575,24 @@ fu_security_attrs_add_suspend_to_ram_obsoletes(FuSecurityAttrs *self)
 	}
 }
 
+static gboolean
+fu_security_attrs_obsoletes_attr(FuSecurityAttr *attr, FuSecurityAttr *attr_tmp)
+{
+	const gchar *attr_tmp_id = fu_security_attr_get_appstream_id(attr_tmp);
+	const gchar *attr_tmp_plugin = fu_security_attr_get_plugin(attr_tmp);
+	GPtrArray *obsoletes = fu_security_attr_get_obsoletes(attr);
+	g_autofree gchar *attr_tmp_key = g_strdup_printf("%s:%s", attr_tmp_plugin, attr_tmp_id);
+
+	for (guint i = 0; i < obsoletes->len; i++) {
+		const gchar *obsolete = g_ptr_array_index(obsoletes, i);
+		if (g_strcmp0(attr_tmp_id, obsolete) == 0 ||
+		    g_strcmp0(attr_tmp_key, obsolete) == 0 ||
+		    g_strcmp0(attr_tmp_plugin, obsolete) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
 /**
  * fu_security_attrs_depsolve:
  * @self: a #FuSecurityAttrs
@@ -630,7 +650,7 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 
 				if (fu_security_attr_has_obsolete(attr, attr_id))
 					continue;
-				if (fu_security_attr_has_obsolete(attr_tmp, attr_id))
+				if (fu_security_attrs_obsoletes_attr(attr_tmp, attr))
 					continue;
 				g_debug("duplicate security attr %s from plugin %s implicitly "
 					"obsoleted by plugin %s",
@@ -640,21 +660,14 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 				fu_security_attr_add_obsolete(attr, attr_id);
 			}
 
-			/* walk all the obsoletes for matches appstream ID or plugin */
-			for (guint k = 0; k < obsoletes->len; k++) {
-				const gchar *obsolete = g_ptr_array_index(obsoletes, k);
-
-				if (g_strcmp0(attr_tmp_id, obsolete) == 0 ||
-				    g_strcmp0(attr_tmp_plugin, obsolete) == 0) {
-					g_debug("security attr %s:%s obsoleted by %s:%s",
-						attr_tmp_id,
-						attr_tmp_plugin,
-						attr_id,
-						attr_plugin);
-					fu_security_attr_add_flag(
-					    attr_tmp,
-					    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
-				}
+			if (fu_security_attrs_obsoletes_attr(attr, attr_tmp)) {
+				g_debug("security attr %s:%s obsoleted by %s:%s",
+					attr_tmp_id,
+					attr_tmp_plugin,
+					attr_id,
+					attr_plugin);
+				fu_security_attr_add_flag(attr_tmp,
+							  FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
 			}
 		}
 	}

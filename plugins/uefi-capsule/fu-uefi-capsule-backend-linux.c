@@ -26,7 +26,20 @@ G_DEFINE_TYPE(FuUefiCapsuleBackendLinux,
 static guint
 fu_uefi_capsule_backend_linux_read(const gchar *path, const gchar *filename)
 {
-	return fu_uefi_read_file_as_uint64(path, filename);
+	guint64 value = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_uefi_read_file_as_uint64_full(path, filename, &value, &error_local)) {
+		if (error_local->domain == G_FILE_ERROR)
+			return 0;
+		g_warning("ignoring invalid ESRT value: %s", error_local->message);
+		return 0;
+	}
+	if (value > G_MAXUINT32) {
+		g_warning("ignoring out-of-range ESRT value %s/%s", path, filename);
+		return 0;
+	}
+	return value;
 }
 
 static FuUefiCapsuleDevice *
