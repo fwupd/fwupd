@@ -8,20 +8,24 @@
 
 #include <fwupdplugin.h>
 
-#define FU_JABRA_GNP_BUF_SIZE			64
-#define FU_JABRA_GNP_MAX_RETRIES		3
-#define FU_JABRA_GNP_PRELOAD_COUNT		10
-#define FU_JABRA_GNP_RETRY_DELAY		100   /* ms */
-#define FU_JABRA_GNP_STANDARD_SEND_TIMEOUT	3000  /* ms */
-#define FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT	1000  /* ms */
-#define FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT	30000 /* ms */
-#define FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT 60000 /* ms */
+#define FU_JABRA_GNP_BUF_SIZE			 64
+#define FU_JABRA_GNP_MAX_RETRIES		 3
+#define FU_JABRA_GNP_PRELOAD_RETRIES		 30
+#define FU_JABRA_GNP_VERIFY_STATUS_RETRIES	 90
+#define FU_JABRA_GNP_PRELOAD_COUNT		 10
+#define FU_JABRA_GNP_RECEIVER_MAX_QUEUED_REPORTS 256
+#define FU_JABRA_GNP_RETRY_DELAY		 100   /* ms */
+#define FU_JABRA_GNP_STANDARD_SEND_TIMEOUT	 3000  /* ms */
+#define FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT	 1000  /* ms */
+#define FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT	 30000 /* ms */
+#define FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT	 60000 /* ms */
 
 #define FU_JABRA_GNP_ADDRESS_PARENT    0x01
 #define FU_JABRA_GNP_ADDRESS_OTA_CHILD 0x04
 
 #define FU_JABRA_GNP_PROTOCOL_OTA	   7
 #define FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA 16
+#define FU_JABRA_GNP_PROTOCOL_SPLIT_OTA	   17
 
 typedef struct {
 	GByteArray *buf;
@@ -31,6 +35,7 @@ typedef struct {
 typedef struct {
 	guint8 rxbuf[FU_JABRA_GNP_BUF_SIZE];
 	const guint timeout;
+	gboolean allow_battery_reports;
 } FuJabraGnpRxData;
 
 typedef struct {
@@ -98,10 +103,7 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
 			  FuChunkArray *chunks,
 			  FuProgress *progress,
-			  GError **error) G_GNUC_NON_NULL(1, 3);
-gboolean
-fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
-    G_GNUC_NON_NULL(1);
+			  GError **error) G_GNUC_NON_NULL(1, 3, 4);
 gboolean
 fu_jabra_gnp_write_version(FuDevice *device,
 			   guint8 address,
@@ -111,3 +113,15 @@ fu_jabra_gnp_write_version(FuDevice *device,
 gboolean
 fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
+gboolean
+fu_jabra_gnp_trigger_reboot(FuDevice *device, guint8 address, guint8 seq, GError **error)
+    G_GNUC_NON_NULL(1);
+gchar *
+fu_jabra_gnp_get_tunes_pack_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
+    G_GNUC_NON_NULL(1, 4);
+GPtrArray *
+fu_jabra_gnp_get_split_images(FuDevice *device,
+			      FuFirmware *firmware,
+			      const gchar *tunes_pack_version,
+			      gboolean *another_write_required,
+			      GError **error) G_GNUC_NON_NULL(1, 2, 5);
