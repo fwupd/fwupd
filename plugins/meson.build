@@ -123,6 +123,7 @@ plugins = {
   'raydium-tp': false,
   'realtek-alc408x': false,
   'realtek-mst': false,
+  'realtek-scaler': false,
   'redfish': false,
   'rp-pico': false,
   'rts54hub': false,
