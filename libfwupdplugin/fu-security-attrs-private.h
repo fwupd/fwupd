@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-common-struct.h"
 #include "fu-security-attrs-struct.h"
 #include "fu-security-attrs.h"
 
@@ -13,10 +14,23 @@ G_BEGIN_DECLS
 
 FuSecurityAttrs *
 fu_security_attrs_new(void);
+/**
+ * fu_security_attrs_copy:
+ * @self: a #FuSecurityAttrs
+ *
+ * Returns: (transfer full): a copy of @self
+ **/
+FuSecurityAttrs *
+fu_security_attrs_copy(FuSecurityAttrs *self) G_GNUC_NON_NULL(1);
 gchar *
 fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 				const gchar *fwupd_version,
 				FuSecurityAttrsFlags flags) G_GNUC_NON_NULL(1);
+GVariant *
+fu_security_attrs_calculate_weighted(FuSecurityAttrs *self,
+				     guint schema,
+				     FuCpuVendor cpu_vendor,
+				     GError **error) G_GNUC_NON_NULL(1);
 void
 fu_security_attrs_depsolve(FuSecurityAttrs *self) G_GNUC_NON_NULL(1);
 GVariant *

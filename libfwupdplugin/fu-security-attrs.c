@@ -78,6 +78,19 @@ fu_security_attrs_append_internal(FuSecurityAttrs *self, FuSecurityAttr *attr)
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 }
 
+FuSecurityAttrs *
+fu_security_attrs_copy(FuSecurityAttrs *self)
+{
+	g_autoptr(FuSecurityAttrs) copy = fu_security_attrs_new();
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FuSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		g_autoptr(FuSecurityAttr) item = fu_security_attr_copy(attr);
+		fu_security_attrs_append_internal(copy, item);
+	}
+	return g_steal_pointer(&copy);
+}
+
 /**
  * fu_security_attrs_is_valid:
  * @self: a #FuSecurityAttrs
@@ -373,59 +386,434 @@ fu_security_attrs_sort_cb(gconstpointer item1, gconstpointer item2)
 	return g_strcmp0(sort1, sort2);
 }
 
-static const struct {
+/* a zero ceiling means that a failure does not cap the weighted level */
+typedef struct {
 	const gchar *appstream_id;
 	FwupdSecurityAttrLevel level;
-} appstream_id_level_map[] = {
-    {FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_CET_ACTIVE, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_CET_ENABLED, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_GDS, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_SMAP, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION},
-    {FWUPD_SECURITY_ATTR_ID_IOMMU, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_MEI_VERSION, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_SPI_BLE, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION},
-    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_PK, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
-    {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
+	const gchar *fwupd_version;
+	guint points;
+	guint ceiling;
+	FuCpuVendor required_vendor;
+} FuSecurityPolicy;
+
+static const FuSecurityPolicy security_policy[] = {
+    {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS, FWUPD_SECURITY_ATTR_LEVEL_NONE, NULL, 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES, FWUPD_SECURITY_ATTR_LEVEL_NONE, NULL, 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_HOST_EMULATION, FWUPD_SECURITY_ATTR_LEVEL_NONE, NULL, 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP, FWUPD_SECURITY_ATTR_LEVEL_NONE, NULL, 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "2.1.2", 30, 3, 0},
+    {FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "2.1.1",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION,
+     "1.8.0",
+     50,
+     3,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "2.0.2", 50, 3, 0},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "1.8.0",
+     30,
+     3,
+     FU_CPU_VENDOR_AMD},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.8.0",
+     120,
+     3,
+     FU_CPU_VENDOR_AMD},
+    {FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.9.6",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.8.8",
+     50,
+     3,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_CET_ACTIVE, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL, "2.0.0", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_CET_ENABLED, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL, "2.0.0", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "2.1.6", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM,
+     FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION,
+     "1.5.0",
+     20,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "2.1.1", 20, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+     FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION,
+     "2.1.7",
+     10,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_GDS, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "1.9.4", 20, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_IOMMU, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "1.5.0", 10, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN, FWUPD_SECURITY_ATTR_LEVEL_NONE, "1.5.0", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED, FWUPD_SECURITY_ATTR_LEVEL_NONE, "1.5.0", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.8.7",
+     20,
+     2,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     30,
+     2,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     30,
+     2,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_MEI_VERSION, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.5.0", 10, 2, 0},
+    {FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "2.1.7", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     50,
+     2,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.8.0",
+     30,
+     3,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.8.0", 30, 3, 0},
+    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "1.8.0",
+     30,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_SMAP, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION, "2.0.0", 20, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     20,
+     3,
+     FU_CPU_VENDOR_INTEL},
+    {FWUPD_SECURITY_ATTR_ID_SPI_BLE,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     20,
+     3,
+     FU_CPU_VENDOR_INTEL},
+    {FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.6.0",
+     20,
+     3,
+     FU_CPU_VENDOR_INTEL},
+    {FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     20,
+     3,
+     FU_CPU_VENDOR_INTEL},
+    {FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.8.0", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "1.5.0",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "1.5.0",
+     10,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.7.2", 15, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "1.5.0",
+     40,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.5.0", 1, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.9.3",
+     20,
+     3,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT, "2.0.8", 0, 0, 0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
+     FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT,
+     "2.1.8",
+     20,
+     2,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "2.0.7",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+     FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL,
+     "2.1.6",
+     0,
+     0,
+     0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_PK, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL, "1.5.0", 30, 2, 0},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
+     FWUPD_SECURITY_ATTR_LEVEL_CRITICAL,
+     "1.5.0",
+     100,
+     2,
+     0},
 };
+
+static const gchar *const boot_guard_requirements[] = {
+    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED,
+    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM,
+    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP,
+    FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE,
+};
+
+static const gchar *const coreboot_vboot_requirements[] = {
+    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+    FWUPD_SECURITY_ATTR_ID_MTD_LOCKED,
+};
+
+static const gchar *const amd_psb_requirements[] = {
+    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+};
+
+static const gchar *const cet_requirements[] = {
+    FWUPD_SECURITY_ATTR_ID_CET_ENABLED,
+    FWUPD_SECURITY_ATTR_ID_CET_ACTIVE,
+};
+
+static const gchar *const uefi_memory_protection_requirements[] = {
+    FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+    FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+};
+
+typedef struct {
+	const gchar *const *requirements;
+	gsize requirements_len;
+	guint points;
+} FuSecurityAward;
+
+static const FuSecurityAward combined_awards[] = {
+    {boot_guard_requirements, G_N_ELEMENTS(boot_guard_requirements), 120},
+    {coreboot_vboot_requirements, G_N_ELEMENTS(coreboot_vboot_requirements), 100},
+    {amd_psb_requirements, G_N_ELEMENTS(amd_psb_requirements), 120},
+    {cet_requirements, G_N_ELEMENTS(cet_requirements), 15},
+    {uefi_memory_protection_requirements, G_N_ELEMENTS(uefi_memory_protection_requirements), 30},
+};
+
+typedef enum {
+	FU_SECURITY_REQUIREMENT_INCOMPLETE,
+	FU_SECURITY_REQUIREMENT_SUCCESS,
+	FU_SECURITY_REQUIREMENT_FAILED,
+} FuSecurityRequirementResult;
+
+static gboolean
+fu_security_attrs_weighted_obsoletes_attr(FuSecurityAttr *attr, FuSecurityAttr *attr_tmp)
+{
+	const gchar *appstream_id = fu_security_attr_get_appstream_id(attr_tmp);
+	const gchar *plugin = fu_security_attr_get_plugin(attr_tmp);
+	GPtrArray *obsoletes = fu_security_attr_get_obsoletes(attr);
+
+	for (guint i = 0; i < obsoletes->len; i++) {
+		const gchar *obsolete = g_ptr_array_index(obsoletes, i);
+		if (g_strcmp0(appstream_id, obsolete) == 0 || g_strcmp0(plugin, obsolete) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_security_attrs_weighted_replaced(FuSecurityAttrs *self, FuSecurityAttr *attr)
+{
+	const gchar *appstream_id = fu_security_attr_get_appstream_id(attr);
+
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FuSecurityAttr *other = g_ptr_array_index(self->attrs, i);
+		if (other == attr ||
+		    g_strcmp0(appstream_id, fu_security_attr_get_appstream_id(other)) != 0 ||
+		    (g_strcmp0(fu_security_attr_get_plugin(attr),
+			       fu_security_attr_get_plugin(other)) == 0))
+			continue;
+		if (fu_security_attrs_weighted_obsoletes_attr(other, attr))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static FuSecurityRequirementResult
+fu_security_attrs_requirement_result(FuSecurityAttrs *self, const gchar *appstream_id)
+{
+	gboolean found = FALSE;
+	gboolean incomplete = FALSE;
+
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FuSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		FwupdSecurityAttrResult result;
+
+		if (g_strcmp0(appstream_id, fu_security_attr_get_appstream_id(attr)) != 0 ||
+		    fu_security_attrs_weighted_replaced(self, attr))
+			continue;
+		found = TRUE;
+		result = fu_security_attr_get_result(attr);
+		if (fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA) ||
+		    result == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN ||
+		    result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED) {
+			incomplete = TRUE;
+			continue;
+		}
+		if (!fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+			return FU_SECURITY_REQUIREMENT_FAILED;
+	}
+	if (!found || incomplete)
+		return FU_SECURITY_REQUIREMENT_INCOMPLETE;
+	return FU_SECURITY_REQUIREMENT_SUCCESS;
+}
+
+static FuSecurityRequirementResult
+fu_security_attrs_award_result(FuSecurityAttrs *self, const FuSecurityAward *award)
+{
+	FuSecurityRequirementResult result = FU_SECURITY_REQUIREMENT_SUCCESS;
+
+	for (guint i = 0; i < award->requirements_len; i++) {
+		FuSecurityRequirementResult requirement =
+		    fu_security_attrs_requirement_result(self, award->requirements[i]);
+		if (requirement == FU_SECURITY_REQUIREMENT_FAILED)
+			return requirement;
+		if (requirement == FU_SECURITY_REQUIREMENT_INCOMPLETE)
+			result = requirement;
+	}
+	return result;
+}
+
+GVariant *
+fu_security_attrs_calculate_weighted(FuSecurityAttrs *self,
+				     guint schema,
+				     FuCpuVendor cpu_vendor,
+				     GError **error)
+{
+	GVariantBuilder report;
+	GVariantBuilder attrs;
+	GVariantBuilder failures;
+	guint score = 0;
+	guint level = 0;
+	guint ceiling = 4;
+
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	if (schema != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported security report schema %u",
+			    schema);
+		return NULL;
+	}
+	g_variant_builder_init(&attrs, G_VARIANT_TYPE("aa{sv}"));
+	g_variant_builder_init(&failures, G_VARIANT_TYPE("as"));
+	for (guint i = 0; i < G_N_ELEMENTS(security_policy); i++) {
+		const FuSecurityPolicy *policy = &security_policy[i];
+		gboolean found = FALSE;
+		gboolean success = TRUE;
+		for (guint j = 0; j < self->attrs->len; j++) {
+			FuSecurityAttr *attr = g_ptr_array_index(self->attrs, j);
+			if (g_strcmp0(policy->appstream_id,
+				      fu_security_attr_get_appstream_id(attr)) != 0 ||
+			    fu_security_attrs_weighted_replaced(self, attr))
+				continue;
+			found = TRUE;
+			if (!fu_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+				success = FALSE;
+			g_variant_builder_add_value(
+			    &attrs,
+			    fwupd_codec_to_variant(FWUPD_CODEC(attr), FWUPD_CODEC_FLAG_NONE));
+		}
+		if (!found && policy->required_vendor != FU_CPU_VENDOR_UNKNOWN &&
+		    policy->required_vendor == cpu_vendor) {
+			g_variant_builder_add(&failures, "s", policy->appstream_id);
+			if (policy->ceiling != 0)
+				ceiling = MIN(ceiling, policy->ceiling);
+			continue;
+		}
+		if (!found)
+			continue;
+		if (success) {
+			score += policy->points;
+		} else {
+			g_variant_builder_add(&failures, "s", policy->appstream_id);
+			if (policy->ceiling != 0)
+				ceiling = MIN(ceiling, policy->ceiling);
+		}
+	}
+	for (guint i = 0; i < G_N_ELEMENTS(combined_awards); i++) {
+		const FuSecurityAward *award = &combined_awards[i];
+		if (fu_security_attrs_award_result(self, award) == FU_SECURITY_REQUIREMENT_SUCCESS)
+			score += award->points;
+	}
+	if (score >= 850)
+		level = 4;
+	else if (score >= 700)
+		level = 3;
+	else if (score >= 500)
+		level = 2;
+	else if (score >= 300)
+		level = 1;
+	g_variant_builder_init(&report, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_add(&report, "{sv}", "Schema", g_variant_new_uint32(schema));
+	g_variant_builder_add(&report, "{sv}", "Score", g_variant_new_uint32(score));
+	g_variant_builder_add(&report, "{sv}", "Level", g_variant_new_uint32(MIN(level, ceiling)));
+	g_variant_builder_add(&report, "{sv}", "Ceiling", g_variant_new_uint32(ceiling));
+	g_variant_builder_add(&report, "{sv}", "Attributes", g_variant_builder_end(&attrs));
+	g_variant_builder_add(&report, "{sv}", "Failed", g_variant_builder_end(&failures));
+	return g_variant_ref_sink(g_variant_builder_end(&report));
+}
 
 static void
 fu_security_attrs_ensure_level(FuSecurityAttr *attr)
@@ -441,9 +829,10 @@ fu_security_attrs_ensure_level(FuSecurityAttr *attr)
 		return;
 
 	/* map ID to level in one place */
-	for (guint i = 0; i < G_N_ELEMENTS(appstream_id_level_map); i++) {
-		if (g_strcmp0(appstream_id, appstream_id_level_map[i].appstream_id) == 0) {
-			fu_security_attr_set_level(attr, appstream_id_level_map[i].level);
+	for (guint i = 0; i < G_N_ELEMENTS(security_policy); i++) {
+		if (g_strcmp0(appstream_id, security_policy[i].appstream_id) == 0 &&
+		    security_policy[i].level != FWUPD_SECURITY_ATTR_LEVEL_NONE) {
+			fu_security_attr_set_level(attr, security_policy[i].level);
 			return;
 		}
 	}
@@ -452,62 +841,6 @@ fu_security_attrs_ensure_level(FuSecurityAttr *attr)
 	g_warning("cannot map %s to a HSI level, assuming critical", appstream_id);
 	fu_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 }
-
-static const struct {
-	const gchar *appstream_id;
-	const gchar *fwupd_version;
-} appstream_id_version_map[] = {
-    {FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, "2.0.2"},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES, "1.9.6"},
-    {FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION, "1.8.8"},
-    {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN, "2.1.2"},
-    {FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT, "2.1.1"},
-    {FWUPD_SECURITY_ATTR_ID_CET_ACTIVE, "2.0.0"},
-    {FWUPD_SECURITY_ATTR_ID_CET_ENABLED, "2.0.0"},
-    {FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT, "2.1.6"},
-    {FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_INTEL_GDS, "1.9.4"},
-    {FWUPD_SECURITY_ATTR_ID_IOMMU, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST, "1.8.7"},
-    {FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_MEI_VERSION, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_SMAP, "2.0.0"},
-    {FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_SPI_BLE, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR, "1.6.0"},
-    {FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, "2.1.7"},
-    {FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU, "1.8.0"},
-    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION, "2.1.7"},
-    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR, "1.7.2"},
-    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS, "1.9.3"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI, "2.0.8"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION, "2.1.8"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, "2.0.7"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_PK, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT, "1.5.0"},
-    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, "2.1.1"},
-    {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT, "2.1.6"},
-};
 
 static void
 fu_security_attrs_ensure_fwupd_version(FuSecurityAttr *attr)
@@ -523,11 +856,10 @@ fu_security_attrs_ensure_fwupd_version(FuSecurityAttr *attr)
 		return;
 
 	/* map ID to fwupd version in one place */
-	for (guint i = 0; i < G_N_ELEMENTS(appstream_id_version_map); i++) {
-		if (g_strcmp0(appstream_id, appstream_id_version_map[i].appstream_id) == 0) {
-			fu_security_attr_set_fwupd_version(
-			    attr,
-			    appstream_id_version_map[i].fwupd_version);
+	for (guint i = 0; i < G_N_ELEMENTS(security_policy); i++) {
+		if (g_strcmp0(appstream_id, security_policy[i].appstream_id) == 0 &&
+		    security_policy[i].fwupd_version != NULL) {
+			fu_security_attr_set_fwupd_version(attr, security_policy[i].fwupd_version);
 			return;
 		}
 	}
