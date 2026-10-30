@@ -2630,6 +2630,10 @@ fu_engine_install_releases(FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
+	g_autoptr(GPtrArray) releases_dedupe =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GHashTable) releases_dedupe_hash =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle,
@@ -2679,11 +2683,35 @@ fu_engine_install_releases(FuEngine *self,
 		return FALSE;
 	}
 
-	/* all authenticated, so install all the things */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, releases->len);
+	/* filter out any devices with a composite single payload */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
+		FuDevice *device = fu_release_get_device(release);
+
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_COMPOSITE_SINGLE_PAYLOAD)) {
+			g_autofree gchar *key =
+			    g_strdup_printf("%s-%s",
+					    fu_device_get_composite_id(device),
+					    fu_release_get_firmware_basename(release));
+			if (g_hash_table_contains(releases_dedupe_hash, key)) {
+				g_autofree gchar *str = fu_device_get_id_display(device);
+				g_debug("skipping composite-single-payload %s for %s",
+					fu_release_get_firmware_basename(release),
+					str);
+				continue;
+			}
+			g_hash_table_add(releases_dedupe_hash, g_steal_pointer(&key));
+		}
+
+		g_ptr_array_add(releases_dedupe, g_object_ref(release));
+	}
+
+	/* all authenticated, so install all the things */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, releases_dedupe->len);
+	for (guint i = 0; i < releases_dedupe->len; i++) {
+		FuRelease *release = g_ptr_array_index(releases_dedupe, i);
+
 		self->emulator_composite_cnt = i;
 		if (!fu_engine_install_release(self,
 					       release,

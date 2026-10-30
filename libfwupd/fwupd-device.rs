@@ -151,6 +151,9 @@ enum FwupdDeviceFlags {
     // connected to a CH341A, and so the device version is not expected to be known.
     // Since: 2.2.1
     IsProgrammerTarget = 1 << 54,
+    // Do not deploy the composite device firmware multiple times if the firmware basename matches.
+    // Since: 2.2.1
+    CompositeSinglePayload = 1 << 55,
     // This flag is not defined, this typically will happen from mismatched fwupd library and
     // clients.
     // Since: 0.7.3
