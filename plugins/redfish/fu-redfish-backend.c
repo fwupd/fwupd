@@ -149,10 +149,13 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self,
 	/* Dell specific currently */
 	if (self->system_id != NULL) {
 		fu_device_add_instance_str(dev, "SYSTEMID", self->system_id);
-		/* Ensure the reboot is not done immediately after installation, and only after a
-		 * wanted reboot */
-		fu_redfish_multipart_device_set_apply_time(FU_REDFISH_MULTIPART_DEVICE(dev),
-							   "OnReset");
+
+		/* ensure the reboot is not done immediately after installation */
+		if (self->device_gtype == FU_TYPE_REDFISH_MULTIPART_DEVICE &&
+		    self->system_id != NULL) {
+			fu_redfish_multipart_device_set_apply_time(FU_REDFISH_MULTIPART_DEVICE(dev),
+								   "OnReset");
+		}
 	}
 
 	/* some vendors do not specify the Targets array when updating */
@@ -410,6 +413,49 @@ fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_pre
 	g_set_str(&self->path_prefix, path_prefix);
 }
 
+GType
+fu_redfish_backend_get_device_gtype(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), G_TYPE_INVALID);
+	return self->device_gtype;
+}
+
+/* for tests */
+gboolean
+fu_redfish_backend_ensure_device_gtype(FuRedfishBackend *self, GError **error)
+{
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
+
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *hwid = g_ptr_array_index(hwids, i);
+		const gchar *tmp;
+		GType gtype;
+
+		tmp = fu_context_lookup_quirk_by_id(ctx, hwid, "RedfishDeviceGType");
+		if (tmp == NULL)
+			continue;
+		gtype = g_type_from_name(tmp);
+		if (gtype == FU_TYPE_REDFISH_DEVICE ||
+		    !g_type_is_a(gtype, FU_TYPE_REDFISH_DEVICE)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is not an updatable Redfish device type",
+				    tmp);
+			return FALSE;
+		}
+		self->device_gtype = gtype;
+		break;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 {
@@ -500,6 +546,11 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 				    "HttpPushUri and MultipartHttpPushUri are invalid");
 		return FALSE;
 	}
+
+	/* a system quirk can override the device type chosen above */
+	if (!fu_redfish_backend_ensure_device_gtype(self, error))
+		return FALSE;
+
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							"MaxImageSizeBytes",
 							&max_image_size,

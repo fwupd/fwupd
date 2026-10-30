@@ -26,14 +26,23 @@ class BuildTarget(enum.StrEnum):
     BUILD_INDEPENDENT = "build-indep"
 
 
-@dataclass
-class Dependency:
-    package_name: str
+@dataclass(frozen=True)
+class DebianControl:
     inclusive: list[OsArch] = field(default_factory=list)
     exclusive: list[OsArch] = field(default_factory=list)
     profiles: list[str] = field(default_factory=list)
     version_requirement: str | None = None
+
+
+@dataclass(frozen=True)
+class Dependency:
+    package_name: str
     build_target: BuildTarget = BuildTarget.ANY
+
+
+@dataclass(frozen=True)
+class DebianDependency(Dependency):
+    control: DebianControl | None = None
 
 
 @dataclass
@@ -46,10 +55,7 @@ class _ParsedDistroPackage:
     None key is set it applies to any filter.
     """
     build_target: BuildTarget = BuildTarget.ANY
-    inclusive: list[OsArch] = field(default_factory=list)
-    exclusive: list[OsArch] = field(default_factory=list)
-    profiles: list[str] = field(default_factory=list)
-    version_requirement: str | None = None
+    debian_control: DebianControl | None = None
 
     def package_name(self, filter: str | None) -> str | None:
         name = self.filters.get(filter)
@@ -98,16 +104,14 @@ class _ParsedDependency:
                         suffix = ""
                 pkgname = f"{pkgname}{suffix}"
 
-            version_requirement = None
-            inclusive = distro_pkg.inclusive
-            exclusive = distro_pkg.exclusive
-            version_requirement = distro_pkg.version_requirement
+            if distro in [OsName.DEBIAN, OsName.UBUNTU]:
+                return DebianDependency(
+                    package_name=pkgname,
+                    build_target=distro_pkg.build_target,
+                    control=distro_pkg.debian_control,
+                )
             return Dependency(
                 package_name=pkgname,
-                inclusive=inclusive,
-                exclusive=exclusive,
-                profiles=distro_pkg.profiles,
-                version_requirement=version_requirement,
                 build_target=distro_pkg.build_target,
             )
         elif not self.distro_map:
@@ -211,12 +215,14 @@ class Dependencies:
                         profile = (profile_elem.text or "").strip()
                         if profile:
                             profiles.append(profile)
-                    distro_dep.inclusive = incl
-                    distro_dep.exclusive = excl
-                    distro_dep.profiles = profiles
-                    distro_dep.version_requirement = version
 
-                    # FIXME: not sure what the deal is with empty control/
+                    control = DebianControl(
+                        inclusive=incl,
+                        exclusive=excl,
+                        profiles=profiles,
+                        version_requirement=version,
+                    )
+                    distro_dep.debian_control = control
 
                 distro_map[distro_name] = distro_dep
 

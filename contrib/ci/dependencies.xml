@@ -90,6 +90,10 @@
       <package only-if="amd64" />
     </distro>
   </dependency>
+  <dependency id="ieee-data">
+    <distro id="debian" />
+    <distro id="ubuntu" />
+  </dependency>
   <dependency id="7zip">
     <distro id="debian">
       <control />
@@ -1511,6 +1515,9 @@
       <package only-if="android" />
     </distro>
     <distro id="debian">
+      <control>
+        <profile>!nodoc</profile>
+      </control>
       <build-target mode="build-indep" />
     </distro>
     <distro id="freebsd">

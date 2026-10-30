@@ -151,7 +151,7 @@ def run(args):
 
     for pofile in pofiles:
         if pofile not in linguas:
-            errors.append(MissingFromLinguas(pofile.name))
+            errors.append(MissingFromLinguas(pofile))
 
     for lingua in linguas:
         if lingua not in pofiles:

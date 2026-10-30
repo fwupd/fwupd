@@ -62,7 +62,7 @@ class OsArch(enum.StrEnum):
     """Machine names in their Debian terms"""
 
     AMD64 = "amd64"
-    ARM = "arm"
+    ARM = "armhf"
     ARM64 = "arm64"
     I386 = "i386"
     S390X = "s390x"
@@ -90,8 +90,8 @@ class OsArch(enum.StrEnum):
             return cls(arch)
         except ValueError:
             DEPS_TO_ARCH_MAP = {
+                "arm": "armhf",
                 "x86_64": "amd64",
-                "armhf": "arm",
                 "aarch64": "arm64",
             }
             mapped = DEPS_TO_ARCH_MAP.get(arch)

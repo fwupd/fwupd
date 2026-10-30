@@ -1,15 +1,15 @@
 #!/bin/sh
 set -e
 
+# install deps
+if [ ! -f /usr/share/mingw/toolchain-mingw64.meson ]; then
+    ./fwupbuild setup deps --filter mingw64
+fi
+
 root=$(pwd)
 export DESTDIR=${root}/dist
 build=$root/build-win32
 mkdir -p "$build" && cd "$build"
-
-# install deps
-if [ ! -f /usr/share/mingw/toolchain-mingw64.meson ]; then
-    ./contrib/ci/fwupd_setup_helpers.py -v mingw64 install-dependencies
-fi
 
 # try to keep this and ../contrib/ci/windows-build.sh in sync as much as makes sense
 meson setup .. \
