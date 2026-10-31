@@ -1,0 +1,15 @@
+[package]
+name = "cabtool"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "cabtool"
+doc = false
+
+[dependencies]
+fwupd = { path = "../fwupd" }
+
+[lints]
+workspace = true
