@@ -14,6 +14,10 @@
 #include <glib/gstdio.h>
 #include <linux/netlink.h>
 #include <sys/socket.h>
+#ifdef HAVE_I2C_DEV_H
+#include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#endif
 
 #include "fu-context-private.h"
 #include "fu-engine-struct.h"
@@ -176,20 +180,36 @@ fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
 static gboolean
 fu_udev_backend_i2c_has_edid(FuUdevDevice *i2c_device, GError **error)
 {
+#ifdef HAVE_I2C_DEV_H
 	guint8 offset = 0x00;
 	guint8 buf[8] = {0x0};
 	const guint8 edid_hdr[] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+	struct i2c_msg msgs[] = {
+	    {.addr = 0x50, .flags = 0, .len = sizeof(offset), .buf = &offset},
+	    {.addr = 0x50, .flags = I2C_M_RD, .len = sizeof(buf), .buf = buf},
+	};
+	struct i2c_rdwr_ioctl_data data = {.msgs = msgs, .nmsgs = G_N_ELEMENTS(msgs)};
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	/* read the 8-byte EDID header at 0x50 as a single combined (repeated-start)
+	 * transfer, so a sink that rejects a separate offset-write then read is still
+	 * detected rather than wrongly falling back to the inert "ddc" bus */
 	locker = fu_device_locker_new(FU_DEVICE(i2c_device), error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(i2c_device), 0x50, FALSE, error))
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(i2c_device));
+	if (!fu_ioctl_execute(ioctl,
+			      I2C_RDWR,
+			      &data,
+			      sizeof(data),
+			      NULL,
+			      1000, /* ms */
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error_literal(error, "failed to read EDID: ");
 		return FALSE;
-	if (!fu_i2c_device_write(FU_I2C_DEVICE(i2c_device), &offset, sizeof(offset), error))
-		return FALSE;
-	if (!fu_i2c_device_read(FU_I2C_DEVICE(i2c_device), buf, sizeof(buf), error))
-		return FALSE;
+	}
 	if (!fu_memcmp_safe(buf,
 			    sizeof(buf),
 			    0x0,
@@ -202,6 +222,13 @@ fu_udev_backend_i2c_has_edid(FuUdevDevice *i2c_device, GError **error)
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/i2c-dev.h> is required to read the EDID");
+	return FALSE;
+#endif
 }
 
 static void
