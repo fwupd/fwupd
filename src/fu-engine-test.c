@@ -245,6 +245,33 @@ fu_engine_esp_location_func(void)
 	g_assert_null(fu_context_get_esp_location(ctx));
 }
 
+#ifdef HSI_WITHOUT_NUMBER
+static void
+fu_engine_host_security_id_no_number_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *hsi = NULL;
+	gboolean ret;
+
+	tmpdir = fu_temporary_directory_new("self-tests", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
+
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* no HSI number is calculated, whatever the chassis kind is */
+	hsi = fu_engine_get_host_security_id(engine, NULL);
+	g_assert_true(g_str_has_prefix(hsi, "HSI:INVALID:arch[arm] "));
+}
+#endif
+
 static void
 fu_engine_device_parent_guid_func(void)
 {
@@ -3708,5 +3735,9 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
 			fu_engine_plugin_composite_multistep_func);
 	g_test_add_func("/fwupd/engine/write-bios-attrs", fu_engine_modify_bios_settings_func);
+#ifdef HSI_WITHOUT_NUMBER
+	g_test_add_func("/fwupd/engine/host-security-id/no-number",
+			fu_engine_host_security_id_no_number_func);
+#endif
 	return g_test_run();
 }
