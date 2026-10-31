@@ -155,14 +155,15 @@ fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
 		g_autofree gchar *i2cdir = NULL;
 		g_autofree gchar *namefn = NULL;
 		g_autofree gchar *name = NULL;
+		g_autofree gchar *name_down = NULL;
 		if (!g_str_has_prefix(fn, "i2c-"))
 			continue;
 		i2cdir = g_build_filename(drm_sysfs_path, fn, NULL);
 		namefn = g_build_filename(i2cdir, "name", NULL);
 		if (!g_file_get_contents(namefn, &name, NULL, NULL))
 			continue;
-		if (g_strstr_len(name, -1, "aux") != NULL ||
-		    g_strstr_len(name, -1, "AUX") != NULL)
+		name_down = g_ascii_strdown(name, -1);
+		if (g_strstr_len(name_down, -1, "aux") != NULL)
 			return g_steal_pointer(&i2cdir);
 	}
 	return NULL;
@@ -189,11 +190,15 @@ fu_udev_backend_i2c_has_edid(FuUdevDevice *i2c_device, GError **error)
 		return FALSE;
 	if (!fu_i2c_device_read(FU_I2C_DEVICE(i2c_device), buf, sizeof(buf), error))
 		return FALSE;
-	if (memcmp(buf, edid_hdr, sizeof(edid_hdr)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no EDID on this i2c adapter");
+	if (!fu_memcmp_safe(buf,
+			    sizeof(buf),
+			    0x0,
+			    edid_hdr,
+			    sizeof(edid_hdr),
+			    0x0,
+			    sizeof(edid_hdr),
+			    error)) {
+		g_prefix_error_literal(error, "no EDID on this i2c adapter: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -214,7 +219,8 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 	 * while the native "ddc" bus is the working transport. Prefer AUX only when
 	 * it actually reaches the sink (EDID readable), otherwise fall back to "ddc". */
 	aux_sysfs = fu_udev_backend_find_dpaux_i2c(sysfs_path);
-	if (aux_sysfs != NULL) {
+	if (aux_sysfs != NULL &&
+	    fu_drm_device_get_state(FU_DRM_DEVICE(udev_device)) != FU_DISPLAY_STATE_DISCONNECTED) {
 		g_autoptr(FuUdevDevice) aux =
 		    fu_udev_backend_create_device(self, aux_sysfs, &error_local);
 		if (aux != NULL && FU_IS_I2C_DEVICE(aux) &&
