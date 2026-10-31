@@ -173,6 +173,22 @@ fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
 	return NULL;
 }
 
+/* rebind the EDID read buffer into the indirect i2c_msg so fwupd can record and
+ * restore it for device emulation/replay */
+#ifdef HAVE_I2C_DEV_H
+static gboolean
+fu_udev_backend_i2c_edid_fixup_cb(FuIoctl *self,
+				  gpointer ptr,
+				  guint8 *buf,
+				  gsize bufsz,
+				  GError **error)
+{
+	struct i2c_rdwr_ioctl_data *data = (struct i2c_rdwr_ioctl_data *)ptr;
+	data->msgs[1].buf = buf;
+	return TRUE;
+}
+#endif
+
 /* Confirm an i2c adapter actually reaches the sink by reading the 8-byte EDID
  * header at address 0x50. A DP++ connection with a passive HDMI/DVI adapter
  * exposes an AUX adapter that only returns zeroes, so this lets the caller fall
@@ -199,6 +215,12 @@ fu_udev_backend_i2c_has_edid(FuUdevDevice *i2c_device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(i2c_device));
+	fu_ioctl_add_key_as_u16(ioctl, "Request", I2C_RDWR);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    sizeof(buf),
+				    fu_udev_backend_i2c_edid_fixup_cb);
 	if (!fu_ioctl_execute(ioctl,
 			      I2C_RDWR,
 			      &data,
