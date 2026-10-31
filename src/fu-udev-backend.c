@@ -168,31 +168,79 @@ fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
 	return NULL;
 }
 
+/* Confirm an i2c adapter actually reaches the sink by reading the 8-byte EDID
+ * header at address 0x50. A DP++ connection with a passive HDMI/DVI adapter
+ * exposes an AUX adapter that only returns zeroes, so this lets the caller fall
+ * back to the native "ddc" i2c bus. */
+static gboolean
+fu_udev_backend_i2c_has_edid(FuUdevDevice *i2c_device, GError **error)
+{
+	guint8 offset = 0x00;
+	guint8 buf[8] = {0x0};
+	const guint8 edid_hdr[] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker = fu_device_locker_new(FU_DEVICE(i2c_device), error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(i2c_device), 0x50, FALSE, error))
+		return FALSE;
+	if (!fu_i2c_device_write(FU_I2C_DEVICE(i2c_device), &offset, sizeof(offset), error))
+		return FALSE;
+	if (!fu_i2c_device_read(FU_I2C_DEVICE(i2c_device), buf, sizeof(buf), error))
+		return FALSE;
+	if (memcmp(buf, edid_hdr, sizeof(edid_hdr)) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no EDID on this i2c adapter");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 {
-	g_autofree gchar *proxy_sysfs_path = NULL;
-	g_autofree gchar *proxy_sysfs_real = NULL;
+	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(udev_device);
+	g_autofree gchar *aux_sysfs = NULL;
+	g_autofree gchar *ddc_sysfs = NULL;
+	g_autofree gchar *ddc_real = NULL;
 	g_autoptr(FuUdevDevice) proxy = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	proxy_sysfs_real =
-	    fu_udev_backend_find_dpaux_i2c(fu_udev_device_get_sysfs_path(udev_device));
-	if (proxy_sysfs_real == NULL) {
-		proxy_sysfs_path =
-		    g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "ddc", NULL);
-		proxy_sysfs_real = fu_path_make_absolute(proxy_sysfs_path, &error_local);
-		if (proxy_sysfs_real == NULL) {
-			g_debug("failed to resolve %s: %s",
-				proxy_sysfs_path,
-				error_local->message);
-			return;
+	/* DisplayPort tunnels DDC/CI over the AUX channel, but a DP++ connection with
+	 * a passive HDMI/DVI adapter exposes an AUX i2c bus that only returns zeroes
+	 * while the native "ddc" bus is the working transport. Prefer AUX only when
+	 * it actually reaches the sink (EDID readable), otherwise fall back to "ddc". */
+	aux_sysfs = fu_udev_backend_find_dpaux_i2c(sysfs_path);
+	if (aux_sysfs != NULL) {
+		g_autoptr(FuUdevDevice) aux =
+		    fu_udev_backend_create_device(self, aux_sysfs, &error_local);
+		if (aux != NULL && FU_IS_I2C_DEVICE(aux) &&
+		    fu_udev_backend_i2c_has_edid(aux, &error_local)) {
+			proxy = g_steal_pointer(&aux);
+		} else {
+			g_debug("not using AUX i2c %s: %s",
+				aux_sysfs,
+				error_local != NULL ? error_local->message : "no EDID");
+			g_clear_error(&error_local);
 		}
 	}
-	proxy = fu_udev_backend_create_device(self, proxy_sysfs_real, &error_local);
+
+	/* fall back to the connector's "ddc" symlink (HDMI/DVI/DP++ passive) */
 	if (proxy == NULL) {
-		g_warning("failed to create DRM DDC device: %s", error_local->message);
-		return;
+		ddc_sysfs = g_build_filename(sysfs_path, "ddc", NULL);
+		ddc_real = fu_path_make_absolute(ddc_sysfs, &error_local);
+		if (ddc_real == NULL) {
+			g_debug("failed to resolve %s: %s", ddc_sysfs, error_local->message);
+			return;
+		}
+		proxy = fu_udev_backend_create_device(self, ddc_real, &error_local);
+		if (proxy == NULL) {
+			g_warning("failed to create DRM DDC device: %s", error_local->message);
+			return;
+		}
 	}
 	fu_device_add_private_flag(FU_DEVICE(proxy), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 	if (!fu_device_probe(FU_DEVICE(proxy), &error_local)) {
