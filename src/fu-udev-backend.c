@@ -139,6 +139,35 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 static FuUdevDevice *
 fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **error);
 
+/* DisplayPort tunnels DDC/CI over the AUX channel. The amdgpu/i915 aux-backed
+ * i2c adapter (a child of the drm connector, named "... aux ...") is the bus
+ * that actually reaches the sink, whereas the connector's "ddc" symlink can
+ * point at an inert physical i2c bus. Return the aux adapter's sysfs path when
+ * present, else NULL so the caller falls back to "ddc". */
+static gchar *
+fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
+{
+	const gchar *fn;
+	g_autoptr(GDir) dir = g_dir_open(drm_sysfs_path, 0, NULL);
+	if (dir == NULL)
+		return NULL;
+	while ((fn = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *i2cdir = NULL;
+		g_autofree gchar *namefn = NULL;
+		g_autofree gchar *name = NULL;
+		if (!g_str_has_prefix(fn, "i2c-"))
+			continue;
+		i2cdir = g_build_filename(drm_sysfs_path, fn, NULL);
+		namefn = g_build_filename(i2cdir, "name", NULL);
+		if (!g_file_get_contents(namefn, &name, NULL, NULL))
+			continue;
+		if (g_strstr_len(name, -1, "aux") != NULL ||
+		    g_strstr_len(name, -1, "AUX") != NULL)
+			return g_steal_pointer(&i2cdir);
+	}
+	return NULL;
+}
+
 static void
 fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 {
@@ -147,12 +176,18 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 	g_autoptr(FuUdevDevice) proxy = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	proxy_sysfs_path =
-	    g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "ddc", NULL);
-	proxy_sysfs_real = fu_path_make_absolute(proxy_sysfs_path, &error_local);
+	proxy_sysfs_real =
+	    fu_udev_backend_find_dpaux_i2c(fu_udev_device_get_sysfs_path(udev_device));
 	if (proxy_sysfs_real == NULL) {
-		g_debug("failed to resolve %s: %s", proxy_sysfs_path, error_local->message);
-		return;
+		proxy_sysfs_path =
+		    g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "ddc", NULL);
+		proxy_sysfs_real = fu_path_make_absolute(proxy_sysfs_path, &error_local);
+		if (proxy_sysfs_real == NULL) {
+			g_debug("failed to resolve %s: %s",
+				proxy_sysfs_path,
+				error_local->message);
+			return;
+		}
 	}
 	proxy = fu_udev_backend_create_device(self, proxy_sysfs_real, &error_local);
 	if (proxy == NULL) {
