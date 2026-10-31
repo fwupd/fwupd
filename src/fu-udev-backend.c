@@ -167,8 +167,15 @@ fu_udev_backend_find_dpaux_i2c(const gchar *drm_sysfs_path)
 		if (!g_file_get_contents(namefn, &name, NULL, NULL))
 			continue;
 		name_down = g_ascii_strdown(name, -1);
-		if (g_strstr_len(name_down, -1, "aux") != NULL)
-			return g_steal_pointer(&i2cdir);
+		if (g_strstr_len(name_down, -1, "aux") != NULL) {
+			g_autoptr(GError) error_local = NULL;
+			g_autofree gchar *i2creal = fu_path_make_absolute(i2cdir, &error_local);
+			if (i2creal == NULL) {
+				g_debug("failed to resolve %s: %s", i2cdir, error_local->message);
+				return g_steal_pointer(&i2cdir);
+			}
+			return g_steal_pointer(&i2creal);
+		}
 	}
 	return NULL;
 }
