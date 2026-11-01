@@ -601,7 +601,7 @@ fu_strsplit_full(const gchar *str,
 
 	/* cannot split */
 	if (delimiter_sz > str_sz) {
-		g_autoptr(GString) token = g_string_new(str);
+		g_autoptr(GString) token = g_string_new_len(str, str_sz);
 		return callback(token, token_idx, user_data, error);
 	}
 
@@ -611,7 +611,8 @@ fu_strsplit_full(const gchar *str,
 		g_autoptr(GString) token = g_string_new(NULL);
 
 		for (offset = offset_old; offset < str_sz; offset++) {
-			if (strncmp(str + offset, delimiter, delimiter_sz) == 0)
+			if (offset + delimiter_sz <= str_sz &&
+			    strncmp(str + offset, delimiter, delimiter_sz) == 0)
 				break;
 		}
 		g_string_append_len(token, str + offset_old, offset - offset_old);

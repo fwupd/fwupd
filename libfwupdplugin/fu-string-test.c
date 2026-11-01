@@ -127,6 +127,21 @@ fu_strsplit_func(void)
 	g_assert_true(ret);
 	/* we have an empty last section */
 	g_assert_cmpint(cnt, ==, bigsz + 1);
+
+	/* the size has to be respected, as the buffer may not be NUL terminated */
+	g_ptr_array_set_size(array, 0);
+	ret = fu_strsplit_full("abc", 1, "\r\n", fu_string_strnsplit_add_cb, array, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "a");
+
+	g_ptr_array_set_size(array, 0);
+	ret = fu_strsplit_full("a\r\n", 2, "\r\n", fu_string_strnsplit_add_cb, array, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "a\r");
 }
 
 static void
