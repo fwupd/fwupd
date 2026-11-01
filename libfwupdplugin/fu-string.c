@@ -276,7 +276,7 @@ fu_strstrip(const gchar *str)
 
 	/* find first non-space char */
 	for (guint i = 0; str[i] != '\0'; i++) {
-		if (str[i] != ' ') {
+		if (!g_ascii_isspace(str[i])) {
 			head = i;
 			break;
 		}

@@ -140,6 +140,9 @@ fu_strstrip_func(void)
 		   {"tailing ", "tailing"},
 		   {"  b  ", "b"},
 		   {"  ", ""},
+		   {"\tboth\n", "both"},
+		   {"\n", ""},
+		   {"  \n", ""},
 		   {NULL, NULL}};
 	for (guint i = 0; map[i].old != NULL; i++) {
 		g_autofree gchar *tmp = fu_strstrip(map[i].old);
