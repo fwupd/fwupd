@@ -107,17 +107,6 @@ jobs:
     with:
       container_lut: ${{ needs.containers.outputs.container_lut }}
 
-  snap:
-    permissions:
-      contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
-    uses: $/.github/workflows/snap.yml
-    with:
-      deploy: ${{ github.ref == 'refs/heads/main' }}
-    secrets:
-      STORE_LOGIN: ${{ secrets.STORE_LOGIN }}
-
   static-analysis:
     permissions:
       contents: read
