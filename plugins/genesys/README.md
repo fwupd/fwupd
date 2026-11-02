@@ -11,6 +11,11 @@ This plugin allows updating the Genesys Logic USB Hub devices.
 * GL3525
 * GL3590
 
+The Lenovo P34WD-40 Hubs are also supported. These Hubs are updated through a vendor HID
+that hangs below each Hub, see [HID Proxy](#hid-proxy) below.
+
+* Lenovo P34WD-40: `USB\VID_17EF&PID_1121`, `USB\VID_17EF&PID_1122` and `USB\VID_17EF&PID_1123`
+
 Additionally, this plugin allows updating the MStar Semiconductor Scaler connected via an I²C bus.
 
 * TSUM G
@@ -75,6 +80,40 @@ Since 1.7.6
 Use I2C ch0.
 
 Since 1.7.6
+
+### `Flags=hid-transport`
+
+The Hub only answers Genesys vendor commands through its HID, so the flash part of the setup
+(chip detection and bank versions) is finished once the HID proxy is bound.
+Combining this flag with a codesign firmware is not supported.
+
+### `Flags=require-hid-proxy`
+
+The Hub is only updatable when a HID of the model given by `GenesysHidProxyPid` hangs directly below it.
+Without such a verified HID the Hub is inhibited with `hid-proxy` and no entry that changes the device
+state (detach, prepare, write or dump) falls back to USB control transfers.
+
+### `Flags=single-hid-proxy`
+
+A second live HID of the proxy model below the same Hub makes the proxy ambiguous: the proxy is
+unbound and the Hub is inhibited with `hid-proxy-ambiguous` until it is replugged.
+A HID that was removed is replaced normally.
+
+### `Flags=strict-project-check`
+
+The `PROJECT` and IC type of the firmware must match the device exactly.
+
+### GenesysHidProxyPid
+
+USB product ID of the HID that must hang directly below the Hub to act as its proxy,
+for example `0xF00F`, `0x4C41` or `0x4C42` for the Lenovo P34WD-40 dock.
+A wrong value only keeps the Hub inhibited.
+
+### GenesysParentHubPid
+
+USB product ID of the Hub that must be the direct upstream parent of this Hub, for example `0x1121`
+for the Lenovo P34WD-40 `1122` Hub. The check is done before the first read in setup and before every
+entry that changes the device state. A Hub without this quirk has no fixed upstream parent.
 
 ### GenesysUsbhubSwitchRequest
 
@@ -213,9 +252,34 @@ Maximum count of firmware data.
 
 Since 2.0.17
 
+## HID Proxy
+
+The Lenovo P34WD-40 Hubs are not written with USB control transfers. Each Hub is written
+through the vendor HID that hangs below it (`FuGenesysHubhidDevice`, matched by the `GenesysHidProxyPid`
+quirk) and the two devices are bound as proxy and Hub in the plugin.
+
+The binding is checked, not assumed:
+
+* the HID must be a direct child of the Hub, not of a neighbouring Hub or a foreign model;
+* with `single-hid-proxy` a second HID below the same Hub blocks the Hub instead of guessing;
+* with `GenesysParentHubPid` the Hub must hang directly below the expected Genesys Hub, which keeps the
+  three cascaded Hubs (`1121` > `1122` > `1123`) from being mixed up;
+* a Hub that does not pass these checks is inhibited and its detach, prepare, write and dump entries
+  refuse before any command is sent.
+
 ## Update Behavior
 
 The devices are independently updated at runtime using USB control transfers.
+
+The Lenovo P34WD-40 Hubs are updated through their HID proxy instead, see [HID Proxy](#hid-proxy).
+The quirk file sets a `RemoveDelay` of 40 seconds for these Hubs, because the default of 5 seconds is too
+short for the Hub to reappear.
+
+With `dual-image` the bank to write is chosen from the bank versions that are read before the update:
+bank 1 is written unless it is newer than bank 2. On a Hub that runs its newest bank (the GL3525 `1121`),
+an image that is older than the other bank is refused before any write, because it would not become the
+running version, and the write is also refused when the bank versions could not be read.
+Every transfer to the flash is cut at the 64 KB window of the flash page.
 
 The firmware is deployed when the device is in normal runtime mode, and the device will reset when the new firmware has been written.
 
