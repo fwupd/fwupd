@@ -318,12 +318,7 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').require(host_machine.system() in ['linux', 'android']).require(
-    host_cpu in ['x86', 'x86_64']
-  ).allowed()
-  if hsi
-    conf.set('HAVE_HSI', '1')
-  endif
+  conf.set_quoted('HOST_CPU_FAMILY', host_cpu)
   libxmlb = dependency(
     'xmlb',
     version: '>= 0.3.19',
@@ -1055,7 +1050,6 @@ if build_daemon != 'none'
     {
       'bluez': bluez.allowed(),
       'libusb': libusb,
-      'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
       'crypto': jcat_crypto,

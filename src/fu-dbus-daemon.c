@@ -927,7 +927,6 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 static gboolean
 fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 {
-#ifdef HAVE_HSI
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FuContext *ctx = fu_engine_get_context(engine);
 
@@ -952,14 +951,6 @@ fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI support not enabled");
-
-	return FALSE;
-#endif
 }
 
 static void
@@ -1363,7 +1354,6 @@ fu_dbus_daemon_method_get_host_security_events(FuDbusDaemon *self,
 					       FuEngineRequest *request,
 					       GDBusMethodInvocation *invocation)
 {
-#ifdef HAVE_HSI
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	guint limit = 0;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
@@ -1376,12 +1366,6 @@ fu_dbus_daemon_method_get_host_security_events(FuDbusDaemon *self,
 		return;
 	}
 	g_dbus_method_invocation_return_value(invocation, fu_security_attrs_to_variant(attrs));
-#else
-	g_dbus_method_invocation_return_error_literal(invocation,
-						      FWUPD_ERROR,
-						      FWUPD_ERROR_NOT_SUPPORTED,
-						      "HSI support not enabled");
-#endif
 }
 
 static void
@@ -2894,7 +2878,6 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	}
 
 	if (g_strcmp0(property_name, "HostSecurityId") == 0) {
-#ifdef HAVE_HSI
 		g_autofree gchar *tmp = fu_engine_get_host_security_id(engine, NULL);
 		if (tmp == NULL) {
 			g_set_error(error, /* nocheck:error */
@@ -2905,14 +2888,6 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 			return NULL;
 		}
 		return g_variant_new_string(tmp);
-#else
-		g_set_error(error, /* nocheck:error */
-			    G_DBUS_ERROR,
-			    G_DBUS_ERROR_NOT_SUPPORTED,
-			    "failed to get daemon property %s",
-			    property_name);
-		return NULL;
-#endif
 	}
 
 	if (g_strcmp0(property_name, "Interactive") == 0)

@@ -1,4 +1,3 @@
-hsi or subdir_done()
 has_cpuid or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']

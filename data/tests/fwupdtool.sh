@@ -64,16 +64,10 @@ echo " ● Importing hwids"
 run import-hwids ${TMPDIR}/hwids.ini
 expect_rc 0
 
-UNAME=$(uname -m)
-if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "i686" ]; then
-    EXPECTED=0
-else
-    EXPECTED=1
-fi
 # ---
 echo " ● Showing security"
 run security
-expect_rc $EXPECTED
+expect_rc 0
 
 # ---
 echo " ● Showing plugins"

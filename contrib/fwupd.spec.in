@@ -307,11 +307,6 @@ cd -
 %if 0%{?qubes_packages}
     -Dqubes=true \
 %endif
-%ifarch i686 x86_64
-    -Dhsi=enabled \
-%else
-    -Dhsi=disabled \
-%endif
     -Dman=true \
     -Dbluez=enabled
 

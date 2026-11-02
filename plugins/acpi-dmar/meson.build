@@ -1,4 +1,3 @@
-hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 plugins += {
