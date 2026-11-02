@@ -7384,10 +7384,24 @@ fu_engine_ensure_security_attrs_supported_cpu(FuEngine *self)
 	fu_security_attrs_append(self->host_security_attrs, attr);
 }
 
+/* the plugin set has been restricted, e.g. with `fwupdtool --plugins`, so the attributes
+ * only represent a partial snapshot of the host */
+static gboolean
+fu_engine_security_attrs_plugins_filtered(FuEngine *self)
+{
+	if (self->plugin_filter->len > 0)
+		return TRUE;
+	for (guint i = 0; i < self->disabled_plugins->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index(self->disabled_plugins, i);
+		if (!g_str_has_prefix(name_tmp, "test"))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
-	gboolean disabled_plugins = FALSE;
 	g_autoptr(FuSecurityAttr) attr =
 	    fu_security_attr_new(self->ctx, FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fu_security_attr_set_plugin(attr, "core");
@@ -7395,14 +7409,7 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 
 	fu_security_attrs_append(self->host_security_attrs, attr);
-	for (guint i = 0; i < self->disabled_plugins->len; i++) {
-		const gchar *name_tmp = g_ptr_array_index(self->disabled_plugins, i);
-		if (!g_str_has_prefix(name_tmp, "test")) {
-			disabled_plugins = TRUE;
-			break;
-		}
-	}
-	if (self->plugin_filter->len > 0 || disabled_plugins) {
+	if (fu_engine_security_attrs_plugins_filtered(self)) {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
@@ -7885,7 +7892,6 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	g_autoptr(GPtrArray) vals = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* already valid */
 	if (fu_security_attrs_is_valid(self->host_security_attrs) || self->host_emulation)
@@ -7927,9 +7933,14 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* depsolve */
 	fu_engine_security_attrs_depsolve(self);
 
-	/* record into the database (best effort) */
-	if (!fu_engine_record_security_attrs(self, &error))
-		g_warning("failed to record HSI attributes: %s", error->message);
+	/* record into the database if not filtered (best effort) */
+	if (fu_engine_security_attrs_plugins_filtered(self)) {
+		g_debug("not recording filtered HSI attributes as host history");
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_record_security_attrs(self, &error_local))
+			g_warning("failed to record HSI attributes: %s", error_local->message);
+	}
 }
 
 FuSecurityAttrs *
