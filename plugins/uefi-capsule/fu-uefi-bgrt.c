@@ -24,8 +24,8 @@ G_DEFINE_TYPE(FuUefiBgrt, fu_uefi_bgrt, G_TYPE_OBJECT)
 gboolean
 fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 {
-	guint64 type;
-	guint64 version;
+	guint64 type = 0;
+	guint64 version = 0;
 	g_autofree gchar *bgrtdir = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GFile) file = NULL;
@@ -47,7 +47,8 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 				    "BGRT is not supported");
 		return FALSE;
 	}
-	type = fu_uefi_read_file_as_uint64(bgrtdir, "type");
+	if (!fu_uefi_read_file_as_uint64(bgrtdir, "type", &type, error))
+		return FALSE;
 	if (type != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -56,7 +57,8 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 			    type);
 		return FALSE;
 	}
-	version = fu_uefi_read_file_as_uint64(bgrtdir, "version");
+	if (!fu_uefi_read_file_as_uint64(bgrtdir, "version", &version, error))
+		return FALSE;
 	if (version != 1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -67,8 +69,10 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	}
 
 	/* load image */
-	self->xoffset = fu_uefi_read_file_as_uint64(bgrtdir, "xoffset");
-	self->yoffset = fu_uefi_read_file_as_uint64(bgrtdir, "yoffset");
+	if (!fu_uefi_read_file_as_uint32(bgrtdir, "xoffset", &self->xoffset, error))
+		return FALSE;
+	if (!fu_uefi_read_file_as_uint32(bgrtdir, "yoffset", &self->yoffset, error))
+		return FALSE;
 	file = g_file_new_build_filename(bgrtdir, "image", NULL);
 	if (!fu_firmware_parse_file(FU_FIRMWARE(bmp_image),
 				    file,

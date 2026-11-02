@@ -177,6 +177,48 @@ fu_uefi_capsule_device_get_status(FuUefiCapsuleDevice *self)
 }
 
 void
+fu_uefi_capsule_device_set_kind(FuUefiCapsuleDevice *self, FuUefiCapsuleDeviceKind kind)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
+	priv->kind = kind;
+}
+
+void
+fu_uefi_capsule_device_set_fw_version(FuUefiCapsuleDevice *self, guint32 fw_version)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
+	priv->fw_version = fw_version;
+}
+
+void
+fu_uefi_capsule_device_set_fw_version_lowest(FuUefiCapsuleDevice *self, guint32 fw_version_lowest)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
+	priv->fw_version_lowest = fw_version_lowest;
+}
+
+void
+fu_uefi_capsule_device_set_last_attempt_status(FuUefiCapsuleDevice *self,
+					       FuUefiCapsuleDeviceStatus last_attempt_status)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
+	priv->last_attempt_status = last_attempt_status;
+}
+
+void
+fu_uefi_capsule_device_set_last_attempt_version(FuUefiCapsuleDevice *self,
+						guint32 last_attempt_version)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
+	priv->last_attempt_version = last_attempt_version;
+}
+
+void
 fu_uefi_capsule_device_set_status(FuUefiCapsuleDevice *self, FuUefiCapsuleDeviceStatus status)
 {
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
@@ -229,10 +271,11 @@ fu_uefi_capsule_device_get_capsule_flags(FuUefiCapsuleDevice *self)
 	return priv->capsule_flags;
 }
 
-static void
+void
 fu_uefi_capsule_device_set_capsule_flags(FuUefiCapsuleDevice *self, guint32 capsule_flags)
 {
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self));
 
 #ifdef __x86_64__
 	if ((capsule_flags & (FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET |

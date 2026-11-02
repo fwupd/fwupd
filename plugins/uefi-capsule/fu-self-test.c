@@ -1101,6 +1101,95 @@ fu_uefi_update_info_func(void)
 			"/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
+static void
+fu_uefi_capsule_backend_write_esrt_entry(FuTemporaryDirectory *tmpdir,
+					 const gchar *entry,
+					 const gchar *fw_class,
+					 const gchar *fw_type,
+					 const gchar *fw_version)
+{
+	struct {
+		const gchar *fn;
+		const gchar *value;
+	} attrs[] = {{"capsule_flags", "0x0"},
+		     {"fw_class", fw_class},
+		     {"fw_type", fw_type},
+		     {"fw_version", fw_version},
+		     {"last_attempt_status", "0"},
+		     {"last_attempt_version", "0"},
+		     {"lowest_supported_fw_version", "1"}};
+	gboolean ret;
+	g_autofree gchar *path =
+	    fu_temporary_directory_build(tmpdir, "efi", "esrt", "entries", entry, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_path_mkdir(path, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	for (guint i = 0; i < G_N_ELEMENTS(attrs); i++) {
+		g_autofree gchar *fn = g_build_filename(path, attrs[i].fn, NULL);
+
+		ret = g_file_set_contents(fn, attrs[i].value, -1, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+}
+
+static void
+fu_uefi_capsule_backend_invalid_entries_func(void)
+{
+	FuUefiCapsuleDevice *dev;
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
+	g_autoptr(FuBackend) backend = fu_uefi_capsule_backend_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+#ifndef __linux__
+	g_test_skip("ESRT data is mocked only on Linux");
+	return;
+#endif
+
+	/* an unrecognized kind is kept, an invalid version is not */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esrt", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_uefi_capsule_backend_write_esrt_entry(tmpdir,
+						 "entry0",
+						 "ddc0ee61-e7f0-4e7d-acc5-c070a398838e",
+						 "99",
+						 "65586");
+	fu_uefi_capsule_backend_write_esrt_entry(tmpdir,
+						 "entry1",
+						 "671d19d0-d43c-4852-98d9-1ce16f9967e4",
+						 "1",
+						 "invalid");
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+
+	/* the invalid entry does not stop the other entry being added */
+	g_test_expect_message("FuPluginUefiCapsule",
+			      G_LOG_LEVEL_WARNING,
+			      "skipping ESRT entry entry1: *");
+	ret = fu_backend_coldplug(backend, progress, &error);
+	g_test_assert_expected_messages();
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	devices = fu_backend_get_devices(backend);
+	g_assert_cmpint(devices->len, ==, 1);
+	dev = g_ptr_array_index(devices, 0);
+	g_assert_cmpstr(fu_uefi_capsule_device_get_guid(dev),
+			==,
+			"ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	g_assert_cmpint(fu_uefi_capsule_device_get_kind(dev),
+			==,
+			FU_UEFI_CAPSULE_DEVICE_KIND_UNKNOWN);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev), ==, 65586);
+}
+
 static gchar *
 fu_uefi_capsule_build_shim_pefile(FuTemporaryDirectory *tmpdir,
 				  const gchar *pkgnote_json,
@@ -1229,6 +1318,8 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-capsule/cod-device/hex-idx", fu_uefi_cod_device_hex_idx_func);
 	g_test_add_func("/uefi-capsule/update-info", fu_uefi_update_info_func);
 	g_test_add_func("/uefi-capsule/update-info/xml", fu_uefi_update_info_xml_func);
+	g_test_add_func("/uefi-capsule/backend/invalid-entries",
+			fu_uefi_capsule_backend_invalid_entries_func);
 	g_test_add_func("/uefi-capsule/no-coalesce", fu_uefi_capsule_no_coalesce_func);
 	g_test_add_func("/uefi-capsule/no-flashes-left", fu_uefi_capsule_no_flashes_func);
 	g_test_add_func("/uefi-capsule/nvram", fu_uefi_capsule_nvram_func);
