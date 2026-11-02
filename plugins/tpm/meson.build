@@ -1,4 +1,3 @@
-hsi or subdir_done()
 tpm2tss_tpm = dependency(
   'tss2-esys',
   version: '>= 2.0',

@@ -3936,7 +3936,6 @@ fu_engine_cli_sync_impl_get_host_security_attrs(FwupdClient *client,
 						GCancellable *cancellable,
 						GError **error)
 {
-#ifdef HAVE_HSI
 	FuEngineCli *self = FU_ENGINE_CLI(user_data);
 	g_autofree gchar *host_security_id = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_engine_get_host_security_attrs(self->engine);
@@ -3944,14 +3943,6 @@ fu_engine_cli_sync_impl_get_host_security_attrs(FwupdClient *client,
 	host_security_id = fu_engine_get_host_security_id(self->engine, NULL);
 	fwupd_client_set_host_security_id(client, host_security_id);
 	return fu_security_attrs_get_all(attrs, NULL);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI support not enabled");
-
-	return NULL;
-#endif
 }
 
 static GPtrArray *

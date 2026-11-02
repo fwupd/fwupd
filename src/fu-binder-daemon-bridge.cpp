@@ -61,9 +61,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 		p.hostProduct = host_product;
 	if (host_machine_id != NULL)
 		p.hostMachineId = host_machine_id;
-#ifdef HAVE_HSI
 	host_security_id = fu_engine_get_host_security_id(engine, NULL);
-#endif
 	if (host_security_id != NULL)
 		p.hostSecurityId = host_security_id;
 	p.tainted = FALSE;
@@ -859,7 +857,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			    error->code,
 			    error->message);
 		}
-#ifdef HAVE_HSI
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		g_autoptr(FuSecurityAttrs) attrs = fu_engine_get_host_security_attrs(engine);
 		g_autoptr(GPtrArray) items = fu_security_attrs_get_all(attrs, NULL);
@@ -869,12 +866,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
 		}
 		return ::ndk::ScopedAStatus::ok();
-#else
-		(void)_aidl_return;
-		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "HSI support not enabled");
-#endif
 	}
 
 	::ndk::ScopedAStatus
@@ -888,7 +879,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			    error->code,
 			    error->message);
 		}
-#ifdef HAVE_HSI
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_autoptr(GPtrArray) items = NULL;
@@ -905,13 +895,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
 		}
 		return ::ndk::ScopedAStatus::ok();
-#else
-		(void)in_limit;
-		(void)_aidl_return;
-		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "HSI support not enabled");
-#endif
 	}
 
 	::ndk::ScopedAStatus

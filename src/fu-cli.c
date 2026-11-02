@@ -5151,15 +5151,6 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
 
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
-
 	/* the "why" */
 	attrs = fwupd_client_get_host_security_attrs(priv->client, priv->cancellable, error);
 	if (attrs == NULL)
@@ -6456,14 +6447,6 @@ static gboolean
 fu_cli_security_fix(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
 
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
@@ -6625,14 +6608,6 @@ static gboolean
 fu_cli_security_undo(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
 
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,

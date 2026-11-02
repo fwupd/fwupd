@@ -5602,7 +5602,6 @@ fu_engine_get_devices_by_composite_id(FuEngine *self, const gchar *composite_id,
 	return g_steal_pointer(&devices);
 }
 
-#ifdef HAVE_HSI
 static void
 fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 {
@@ -5624,7 +5623,6 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 	/* computed value */
 	fu_device_set_metadata(device, "HSI", host_security_id);
 }
-#endif
 
 static gboolean
 fu_engine_fixup_history_device_for_rel(FuEngine *self,
@@ -5768,14 +5766,12 @@ fu_engine_get_history(FuEngine *self, GError **error)
 		return NULL;
 	}
 
-#ifdef HAVE_HSI
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if (fu_device_has_private_flag_quark(dev, quarks[QUARK_HOST_FIRMWARE]))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
-#endif
 
 	/* try to set the remote ID for each device */
 	for (guint i = 0; i < devices->len; i++) {
@@ -7375,7 +7371,6 @@ fu_engine_get_host_machine_id(FuEngine *self)
 	return self->host_machine_id;
 }
 
-#ifdef HAVE_HSI
 static void
 fu_engine_ensure_security_attrs_supported_cpu(FuEngine *self)
 {
@@ -7426,6 +7421,15 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 
 	fu_engine_ensure_security_attrs(self);
+
+	/* only x86_64 has enough attributes for an aggregate *number* to make sense */
+	if (g_strcmp0(HOST_CPU_FAMILY, "x86_64") != 0) {
+		return g_strdup_printf("HSI:INVALID:arch[%s] (v%d.%d.%d)",
+				       HOST_CPU_FAMILY,
+				       FWUPD_MAJOR_VERSION,
+				       FWUPD_MINOR_VERSION,
+				       FWUPD_MICRO_VERSION);
+	}
 
 	/* if emulating, force the chassis type to be valid */
 	chassis_kind = fu_context_get_chassis_kind(self->ctx);
@@ -7543,7 +7547,6 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 		}
 	}
 }
-#endif
 
 /**
  * fu_history_get_previous_security_attr:
@@ -7869,10 +7872,8 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	if (!fu_engine_bios_settings_from_json(self, json_obj, error))
 		return FALSE;
 
-#ifdef HAVE_HSI
 	/* depsolve */
 	fu_engine_security_attrs_depsolve(self);
-#endif
 
 	/* success */
 	return TRUE;
@@ -7881,7 +7882,6 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
-#ifdef HAVE_HSI
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	g_autoptr(GPtrArray) vals = NULL;
@@ -7930,7 +7930,6 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* record into the database (best effort) */
 	if (!fu_engine_record_security_attrs(self, &error))
 		g_warning("failed to record HSI attributes: %s", error->message);
-#endif
 }
 
 FuSecurityAttrs *
@@ -8981,6 +8980,24 @@ fu_engine_ensure_devices_supported(FuEngine *self)
 	g_ptr_array_foreach(devices, fu_engine_ensure_devices_supported_cb, self);
 }
 
+static void
+fu_engine_ensure_host_machine_id(FuEngine *self)
+{
+	g_autoptr(GError) error_local = NULL;
+#ifdef _WIN32
+	self->host_machine_id =
+	    fu_engine_win32_registry_get_string(HKEY_LOCAL_MACHINE,
+						"SOFTWARE\\Microsoft\\Cryptography",
+						"MachineGuid",
+						&error_local);
+#else
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
+	self->host_machine_id = fu_engine_build_machine_id(pstore, "fwupd", TRUE, &error_local);
+#endif
+	if (self->host_machine_id == NULL)
+		g_info("failed to build machine-id: %s", error_local->message);
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -8999,7 +9016,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					FU_CONTEXT_LOAD_FLAG_WATCH_FILES |
 					FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV;
 	FuPlugin *plugin_uefi;
-	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
@@ -9007,7 +9023,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autofree gchar *pkidir_fw = NULL;
 	g_autofree gchar *pkidir_md = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_bios_policy = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -9097,17 +9112,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_md);
 
 	/* cache machine ID so we can use it from a sandboxed app */
-#ifdef _WIN32
-	self->host_machine_id =
-	    fu_engine_win32_registry_get_string(HKEY_LOCAL_MACHINE,
-						"SOFTWARE\\Microsoft\\Cryptography",
-						"MachineGuid",
-						&error_local);
-#else
-	self->host_machine_id = fu_engine_build_machine_id(pstore, "fwupd", TRUE, &error_local);
-#endif
-	if (self->host_machine_id == NULL)
-		g_info("failed to build machine-id: %s", error_local->message);
+	fu_engine_ensure_host_machine_id(self);
 	fu_engine_config_reload(self);
 	fu_progress_step_done(progress);
 

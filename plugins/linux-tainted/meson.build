@@ -1,5 +1,4 @@
 host_machine.system() == 'linux' or subdir_done()
-hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxTainted"']
 plugins += {
