@@ -33,7 +33,7 @@ env:
   ARCH_CONTAINER_TAG: "latest"  # 0002
   CENTOS_CONTAINER_TAG: "2026-10-08.0"
   DEBIAN_CONTAINER_TAG: "2026-10-08.1"
-  UBUNTU_CONTAINER_TAG: "2026-10-15.1"
+  UBUNTU_CONTAINER_TAG: "2026-11-02.0"
   FEDORA_CONTAINER_TAG: "2026-11-04.0"
 
 jobs:
@@ -56,6 +56,7 @@ jobs:
           - { DISTRO: fedora, VERSION: 44, ARCH: amd64 }
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64 }
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64, VARIANT: android }
+          - { DISTRO: ubuntu, VERSION: 24.04, ARCH: amd64, VARIANT: snap }
     steps:
       # We don't have matrix.* available at the jobs.if stage and
       # GitHub doesn't have an option to say "skip the rest of the jobs"

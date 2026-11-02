@@ -56,7 +56,7 @@ class Dockerfile:
 
         dependencies = Dependencies.load()
         filter = self.arch.value
-        if self.variant in ["android"]:
+        if self.variant in ["android", "snap"]:
             filter = self.variant
         if self.cross_arch:
             filter = self.cross_arch
