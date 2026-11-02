@@ -15,6 +15,8 @@ guint8
 fu_jabra_gnp_device_get_iface_hid(FuJabraGnpDevice *self) G_GNUC_NON_NULL(1);
 guint8
 fu_jabra_gnp_device_get_epin(FuJabraGnpDevice *self) G_GNUC_NON_NULL(1);
+guint32
+fu_jabra_gnp_device_get_report_size(FuJabraGnpDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error) G_GNUC_NON_NULL(1);
