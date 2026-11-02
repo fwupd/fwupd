@@ -44,29 +44,12 @@ fu_jabra_gnp_child_device_set_dfu_pid_and_seq(FuJabraGnpChildDevice *self, guint
 gboolean
 fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
 	FuDevice *proxy;
 
 	proxy = fu_device_get_proxy(device, error);
 	if (proxy == NULL)
 		return FALSE;
-	if (!fu_usb_device_control_transfer(
-		FU_USB_DEVICE(proxy),
-		FU_USB_DIRECTION_HOST_TO_DEVICE,
-		FU_USB_REQUEST_TYPE_CLASS,
-		FU_USB_RECIPIENT_INTERFACE,
-		0x09,
-		0x0200 | FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
-		fu_jabra_gnp_device_get_iface_hid(FU_JABRA_GNP_DEVICE(proxy)),
-		tx_data->buf->data,
-		tx_data->buf->len,
-		NULL,
-		tx_data->timeout,
-		error)) {
-		g_prefix_error_literal(error, "failed to write to device: ");
-		return FALSE;
-	}
-	return TRUE;
+	return fu_jabra_gnp_device_tx_cb(proxy, user_data, error);
 }
 
 gboolean

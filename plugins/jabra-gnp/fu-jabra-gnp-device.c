@@ -21,6 +21,7 @@ struct _FuJabraGnpDevice {
 	guint8 address;
 	guint8 epin;
 	guint16 dfu_pid;
+	guint32 report_size;
 };
 
 G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_USB_DEVICE)
@@ -48,6 +49,7 @@ fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "SequenceNumber", self->sequence_number);
 	fwupd_codec_string_append_hex(str, idt, "Address", self->address);
 	fwupd_codec_string_append_hex(str, idt, "DfuPid", self->dfu_pid);
+	fwupd_codec_string_append_hex(str, idt, "ReportSize", self->report_size);
 }
 
 static guint8
@@ -113,6 +115,15 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
 	FuUsbDevice *target = FU_USB_DEVICE(self);
+	if (self->report_size == 0 || self->report_size > tx_data->buf->len) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid GNP report size %u for buffer of size %u",
+			    self->report_size,
+			    tx_data->buf->len);
+		return FALSE;
+	}
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -121,7 +132,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					    0x0200 | FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
 					    self->iface_hid,
 					    tx_data->buf->data,
-					    tx_data->buf->len,
+					    self->report_size,
 					    NULL,
 					    tx_data->timeout,
 					    error)) {
@@ -327,10 +338,69 @@ fu_jabra_gnp_device_add_child(FuJabraGnpDevice *self, guint16 dfu_pid, GError **
 }
 
 static gboolean
+fu_jabra_gnp_device_ensure_report_size(FuJabraGnpDevice *self, GError **error)
+{
+	g_autoptr(GPtrArray) descriptors =
+	    fu_usb_device_get_hid_descriptors(FU_USB_DEVICE(self), error);
+
+	if (descriptors == NULL)
+		return FALSE;
+	for (guint i = 0; i < descriptors->len; i++) {
+		GBytes *blob = g_ptr_array_index(descriptors, i);
+		guint32 count;
+		g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+		g_autoptr(FuHidReport) report = NULL;
+		g_autoptr(FuFirmware) item = NULL;
+
+		if (!fu_firmware_parse_bytes(descriptor,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
+					     error))
+			return FALSE;
+		report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+						       NULL,
+						       "usage-page",
+						       0xFF00,
+						       "report-id",
+						       FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
+						       "report-size",
+						       8,
+						       "output",
+						       0x0102,
+						       NULL);
+		if (report == NULL)
+			continue;
+		item = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-count", error);
+		if (item == NULL)
+			return FALSE;
+		count = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item));
+		if (count >= FU_JABRA_GNP_BUF_SIZE) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported GNP report count %u",
+				    count);
+			return FALSE;
+		}
+		/* include the report ID byte */
+		self->report_size = count + 1;
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "GNP output report not found");
+	return FALSE;
+}
+
+static gboolean
 fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
+	if (!fu_jabra_gnp_device_ensure_report_size(self, error))
+		return FALSE;
 	if (!fu_jabra_gnp_ensure_name(device, self->address, self->sequence_number, error))
 		return FALSE;
 	if (!fu_jabra_gnp_ensure_version(device, self->address, self->sequence_number, error))
