@@ -66,9 +66,9 @@ fu_uefi_dbx_version_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* create a plausible dbx */
+	/* create a plausible dbx, 20260402 then 20250902 */
 	csum1 =
-	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
+	    fu_bytes_from_string("96275dfd6282a522b011177ee049296952ac794832091f937fbbf92869028629",
 				 &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(csum1);
@@ -77,7 +77,7 @@ fu_uefi_dbx_version_func(void)
 	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx1), NULL);
 
 	csum2 =
-	    fu_bytes_from_string("96275DFD6282A522B011177EE049296952AC794832091F937FBBF92869028629",
+	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
 				 &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(csum2);
