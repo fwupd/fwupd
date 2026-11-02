@@ -286,11 +286,14 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 
 	/* read EDID and parse it */
 	if (priv->display_state == FU_DISPLAY_STATE_CONNECTED) {
-		g_autofree gchar *edid_path = g_build_filename(sysfs_path, "edid", NULL);
 		g_autoptr(FuEdid) edid = fu_edid_new();
 		g_autoptr(GBytes) blob = NULL;
 
-		blob = fu_bytes_get_contents(edid_path, error);
+		blob = fu_udev_device_read_sysfs_bytes(FU_UDEV_DEVICE(self),
+						       "edid",
+						       -1,
+						       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						       error);
 		if (blob == NULL)
 			return FALSE;
 		if (!fu_firmware_parse_bytes(FU_FIRMWARE(edid),
