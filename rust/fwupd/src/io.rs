@@ -11,6 +11,7 @@ use std::{
     collections::VecDeque,
     io::{Read, Seek, SeekFrom},
 };
+use zerocopy::FromBytes;
 
 fn read_exact_or_remaining<R: Read + ?Sized>(r: &mut R, count: usize) -> std::io::Result<Vec<u8>> {
     let mut buf = vec![0u8; count];
@@ -110,6 +111,57 @@ pub trait ReadExt: Read {
         String::from_utf8(buf)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}")))
     }
+
+    /// Read a value of type `T` from the stream.
+    ///
+    /// This is just a convenience wrapper around [`zerocopy::FromBytes::read_from_io`].
+    ///
+    /// ## Reading primitive types
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::byteorder::little_endian::U16;
+    /// use fwupd::io::ReadExt;
+    ///
+    /// let mut stream = Cursor::new(vec![0x12, 0x34, 0x56, 0x78]);
+    /// let val: U16 = stream.read_type().unwrap();
+    /// assert_eq!(u16::from(val), 0x3412);
+    /// ```
+    /// ## Reading custom structs
+    ///
+    /// This also works for custom `#[derive(FromBytes)]` structs, e.g.
+    /// multi-field firmware headers, as long as they are `#[repr(C)]`
+    /// (or `#[repr(C, packed)]` combined with `Unaligned`):
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::{FromBytes, Unaligned};
+    /// use zerocopy::byteorder::little_endian::{U16, U32};
+    /// use fwupd::io::ReadExt;
+    ///
+    /// #[repr(C, packed)]
+    /// #[derive(Debug, FromBytes, Unaligned)]
+    /// struct Header {
+    ///     magic: U32,
+    ///     version: U16,
+    /// }
+    ///
+    /// let mut stream = Cursor::new(vec![0x46, 0x57, 0x00, 0x00, 0x01, 0x00]);
+    /// let header: Header = stream.read_type().unwrap();
+    /// assert_eq!(u32::from(header.magic), 0x5746); // "FW"
+    /// assert_eq!(u16::from(header.version), 1);
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`std::io::ErrorKind::UnexpectedEof`] if the stream ends
+    /// before `T` is fully read.
+    fn read_type<T>(&mut self) -> std::io::Result<T>
+    where
+        T: FromBytes,
+    {
+        T::read_from_io(&mut *self)
+    }
 }
 
 impl<R: Read + ?Sized> ReadExt for R {}
@@ -183,6 +235,59 @@ pub trait ReadSeekExt: Read + Seek {
         self.seek(SeekFrom::Start(offset as u64))?;
         self.read_string(count)
     }
+
+    /// Read a value of type `T` from the stream at `offset`, see
+    /// [`ReadExt::read_type`].
+    ///
+    /// This is just a convenience wrapper around [`zerocopy::FromBytes::read_from_io`].
+    ///
+    /// ## Reading primitive types
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::byteorder::little_endian::U16;
+    /// use fwupd::io::ReadSeekExt;
+    ///
+    /// let mut stream = Cursor::new(vec![0xff, 0xff, 0x12, 0x34]);
+    /// let val: U16 = stream.read_type_at(2).unwrap();
+    /// assert_eq!(u16::from(val), 0x3412);
+    /// ```
+    /// ## Reading custom structs
+    ///
+    /// This also works for custom `#[derive(FromBytes)]` structs, e.g.
+    /// multi-field firmware headers, as long as they are `#[repr(C)]`
+    /// (or `#[repr(C, packed)]` combined with `Unaligned`):
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::{FromBytes, Unaligned};
+    /// use zerocopy::byteorder::little_endian::{U16, U32};
+    /// use fwupd::io::ReadSeekExt;
+    ///
+    /// #[repr(C, packed)]
+    /// #[derive(Debug, FromBytes, Unaligned)]
+    /// struct Header {
+    ///     magic: U32,
+    ///     version: U16,
+    /// }
+    ///
+    /// let mut stream = Cursor::new(vec![0x00, 0x00, 0x46, 0x57, 0x00, 0x00, 0x01, 0x00]);
+    /// let header: Header = stream.read_type_at(2).unwrap();
+    /// assert_eq!(u32::from(header.magic), 0x5746); // "FW"
+    /// assert_eq!(u16::from(header.version), 1);
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// In addition to the errors of [`ReadExt::read_type`], this
+    /// returns an error if the seek to `offset` fails.
+    fn read_type_at<T>(&mut self, offset: usize) -> std::io::Result<T>
+    where
+        T: FromBytes,
+    {
+        self.seek(SeekFrom::Start(offset as u64))?;
+        self.read_type()
+    }
 }
 
 impl<T: Read + Seek> ReadSeekExt for T {}
@@ -254,6 +359,7 @@ pub trait Searchable: Read + Seek {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::{big_endian, little_endian};
     use crate::{slice::NonEmptySlice, streams::MemoryInputStream};
     use std::io::Cursor;
 
@@ -538,5 +644,76 @@ mod tests {
         let mut stream = Cursor::new(data.to_vec());
         let s = stream.read_nul_terminated_string_at(1, 100).unwrap();
         assert_eq!(s, "hello");
+    }
+
+    #[test]
+    fn u24_read_from_stream() {
+        // Little-endian: 0x123456, big-endian: 0x654321
+        let mut stream = Cursor::new(vec![0x56, 0x34, 0x12, 0x65, 0x43, 0x21]);
+        let le: little_endian::U24 = stream.read_type().unwrap();
+        let be: big_endian::U24 = stream.read_type().unwrap();
+        assert_eq!(u32::from(le), 0x123456);
+        assert_eq!(u32::from(be), 0x654321);
+    }
+
+    #[test]
+    fn u24_read_unaligned_from_stream() {
+        // 24-bit values are often preceded by a byte that breaks alignment;
+        // zerocopy's Unaligned impl must allow this.
+        let mut stream = Cursor::new(vec![0xAA, 0x78, 0x56, 0x34, 0xBB, 0x78, 0x56, 0x34]);
+        let _tag: u8 = stream.read_type().unwrap();
+        let le: little_endian::U24 = stream.read_type().unwrap();
+        assert_eq!(u32::from(le), 0x345678);
+
+        let _tag: u8 = stream.read_type().unwrap();
+        let be: big_endian::U24 = stream.read_type().unwrap();
+        assert_eq!(u32::from(be), 0x785634);
+    }
+
+    #[test]
+    fn u24_read_truncated_stream() {
+        let mut stream = Cursor::new(vec![0x56, 0x34]);
+        let result: std::io::Result<little_endian::U24> = stream.read_type();
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::UnexpectedEof);
+
+        let mut stream = Cursor::new(vec![0x56, 0x34]);
+        let result: std::io::Result<big_endian::U24> = stream.read_type();
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::UnexpectedEof);
+    }
+
+    #[test]
+    fn read_type_at_simple() {
+        let mut stream = Cursor::new(vec![0xff, 0xff, 0x34, 0x12]);
+        let val: little_endian::U24 = stream.read_type_at(0).unwrap();
+        // 0xff, 0xff, 0x34 -> LE = 0x34ffff
+        assert_eq!(u32::from(val), 0x34ffff);
+    }
+
+    #[test]
+    fn read_type_at_offset() {
+        let mut stream = Cursor::new(vec![0xff, 0xff, 0x56, 0x34, 0x12]);
+        let val: little_endian::U24 = stream.read_type_at(2).unwrap();
+        assert_eq!(u32::from(val), 0x123456);
+    }
+
+    #[test]
+    fn read_type_at_seek_beyond_eof() {
+        let mut stream = Cursor::new(vec![0x01, 0x02]);
+        // Cursor::seek past EOF succeeds; subsequent read returns UnexpectedEof
+        let result: std::io::Result<little_endian::U24> = stream.read_type_at(100);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn read_type_at_truncated_after_seek() {
+        let mut stream = Cursor::new(vec![0x01, 0x02, 0x03]);
+        // Only 1 byte remains after offset 2; reading a U24 (3 bytes) must fail
+        let result: std::io::Result<little_endian::U24> = stream.read_type_at(2);
+        assert_eq!(
+            result.unwrap_err().kind(),
+            std::io::ErrorKind::UnexpectedEof
+        );
     }
 }
