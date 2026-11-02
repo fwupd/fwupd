@@ -444,6 +444,14 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION "md-set-version"
 /**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW:
+ *
+ * Set the device integer version from the metadata if available.
+ *
+ * Since: 2.1.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW "md-set-version-raw"
+/**
  * FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM:
  *
  * Only use the metadata *checksum* to set device attributes.
