@@ -116,9 +116,9 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		return TRUE;
 	}
 
-	/* add the last checksum to the device */
-	for (guint i = sigs->len; i > 0; i--) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
+	/* find each checksum in the quirk database */
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
 		const gchar *owner = fu_efi_signature_get_owner(sig);
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
@@ -134,12 +134,8 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 			g_debug("skipping dbx entry %s as non-microsoft (%s)", csum, owner);
 			continue;
 		}
-
-		if (csum != NULL) {
-			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
-				return FALSE;
-			break;
-		}
+		if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -252,6 +248,12 @@ fu_uefi_dbx_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static void
+fu_uefi_dbx_device_set_version_raw(FuDevice *device, guint64 *version_raw)
+{
+	*version_raw = MAX(*version_raw, fu_device_get_version_raw(device));
+}
+
 static gchar *
 fu_uefi_dbx_device_convert_version(FuDevice *device, guint64 version_raw)
 {
@@ -303,4 +305,5 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->convert_version = fu_uefi_dbx_device_convert_version;
+	device_class->set_version_raw = fu_uefi_dbx_device_set_version_raw;
 }
