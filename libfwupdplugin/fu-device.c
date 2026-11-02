@@ -3733,6 +3733,8 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 
+	if (device_class->set_version_raw != NULL)
+		device_class->set_version_raw(self, &version_raw);
 	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
 	if (device_class->convert_version != NULL) {
 		g_autofree gchar *version = device_class->convert_version(self, version_raw);
