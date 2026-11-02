@@ -172,7 +172,7 @@ fu_mm_device_add_instance_id_vid(FuMmDevice *self, const gchar *value, GError **
 		fu_device_set_vid(FU_DEVICE(self), (guint16)value_u64);
 	}
 	if (fu_device_get_instance_str(FU_DEVICE(self), "VID") == NULL)
-		fu_device_add_instance_str(FU_DEVICE(self), "VID", value);
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "VID", value);
 	return TRUE;
 }
 
@@ -186,7 +186,7 @@ fu_mm_device_add_instance_id_pid(FuMmDevice *self, const gchar *value, GError **
 		fu_device_set_pid(FU_DEVICE(self), (guint16)value_u64);
 	}
 	if (fu_device_get_instance_str(FU_DEVICE(self), "PID") == NULL)
-		fu_device_add_instance_str(FU_DEVICE(self), "PID", value);
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "PID", value);
 	return TRUE;
 }
 
@@ -221,7 +221,7 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id, GError **
 				return FALSE;
 		} else if (g_strcmp0(kv[0], "REV") == 0 || g_strcmp0(kv[0], "NAME") == 0 ||
 			   g_strcmp0(kv[0], "CARRIER") == 0) {
-			fu_device_add_instance_str(FU_DEVICE(self), kv[0], kv[1]);
+			fu_device_add_instance_strsafe(FU_DEVICE(self), kv[0], kv[1]);
 		} else if (g_strcmp0(kv[0], "SSVID") == 0 && subsys_vid == NULL) {
 			subsys_vid = g_strdup(kv[1]);
 		} else if (g_strcmp0(kv[0], "SSPID") == 0 && subsys_pid == NULL) {
@@ -234,7 +234,7 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id, GError **
 	/* convert nonstandard SSVID+SSPID to SUBSYS */
 	if (subsys_vid != NULL && subsys_pid != NULL) {
 		g_autofree gchar *subsys = g_strdup_printf("%s%s", subsys_vid, subsys_pid);
-		fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "SUBSYS", subsys);
 	}
 
 	/* add all possible instance IDs */
