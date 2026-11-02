@@ -196,7 +196,8 @@ fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 		g_object_notify(G_OBJECT(self), "device-file");
 }
 
-static gchar *
+/* private */
+gchar *
 fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError **error)
 {
 	FuDeviceEvent *event = NULL;

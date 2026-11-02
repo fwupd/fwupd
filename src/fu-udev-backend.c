@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 
 #include "fu-context-private.h"
+#include "fu-device-private.h"
 #include "fu-engine-struct.h"
 #include "fu-udev-backend.h"
 #include "fu-udev-device-private.h"
@@ -137,38 +138,50 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 }
 
 static FuUdevDevice *
-fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **error);
+fu_udev_backend_create_device(FuUdevBackend *self,
+			      const gchar *fn,
+			      FuDevice *device_target,
+			      GError **error);
 
 static void
-fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
+fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *drm_device)
 {
 	g_autofree gchar *proxy_sysfs_path = NULL;
-	g_autofree gchar *proxy_sysfs_real = NULL;
-	g_autoptr(FuUdevDevice) proxy = NULL;
+	g_autofree gchar *symlink_target = NULL;
+	g_autoptr(FuUdevDevice) ddc_proxy = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	proxy_sysfs_path =
-	    g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "ddc", NULL);
-	proxy_sysfs_real = fu_path_make_absolute(proxy_sysfs_path, &error_local);
-	if (proxy_sysfs_real == NULL) {
-		g_debug("failed to resolve %s: %s", proxy_sysfs_path, error_local->message);
+	symlink_target = fu_udev_device_get_symlink_target(drm_device, "ddc", &error_local);
+	if (symlink_target == NULL) {
+		g_autofree gchar *path =
+		    g_build_filename(fu_udev_device_get_sysfs_path(drm_device), "ddc", NULL);
+		g_debug("failed to get symlink target for %s: %s", path, error_local->message);
 		return;
 	}
-	proxy = fu_udev_backend_create_device(self, proxy_sysfs_real, &error_local);
-	if (proxy == NULL) {
+	proxy_sysfs_path =
+	    g_canonicalize_filename(symlink_target, fu_udev_device_get_sysfs_path(drm_device));
+
+	/* collect the events from the ddc proxy creation on the DRM device */
+	ddc_proxy = fu_udev_backend_create_device(self,
+						  proxy_sysfs_path,
+						  FU_DEVICE(drm_device),
+						  &error_local);
+	if (ddc_proxy == NULL) {
 		g_warning("failed to create DRM DDC device: %s", error_local->message);
 		return;
 	}
-	fu_device_add_private_flag(FU_DEVICE(proxy), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
-	if (!fu_device_probe(FU_DEVICE(proxy), &error_local)) {
+	fu_device_add_private_flag(FU_DEVICE(ddc_proxy), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
+	if (!fu_device_probe(FU_DEVICE(ddc_proxy), &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 			return;
 		g_warning("failed to probe DRM DDC device: %s", error_local->message);
 		return;
 	}
-	fu_device_add_private_flag(FU_DEVICE(udev_device), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_set_proxy_gtype(FU_DEVICE(udev_device), FU_TYPE_I2C_DEVICE);
-	fu_device_set_proxy(FU_DEVICE(udev_device), FU_DEVICE(proxy));
+	fu_device_add_private_flag(FU_DEVICE(drm_device), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_proxy_gtype(FU_DEVICE(drm_device), FU_TYPE_I2C_DEVICE);
+
+	/* anything written to the proxy is also stored to the DRM device */
+	fu_device_set_proxy(FU_DEVICE(drm_device), FU_DEVICE(ddc_proxy));
 }
 
 static GType
@@ -270,7 +283,10 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 }
 
 static FuUdevDevice *
-fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **error)
+fu_udev_backend_create_device(FuUdevBackend *self,
+			      const gchar *fn,
+			      FuDevice *device_target,
+			      GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
@@ -287,12 +303,23 @@ fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **err
 					*error = g_error_copy(item->error);
 				return NULL;
 			}
+			if (device_target != NULL)
+				fu_device_set_target(FU_DEVICE(item->udev_device), device_target);
 			return g_object_ref(item->udev_device);
 		}
 	}
 
 	/* use a donor device to probe for the subsystem and devtype */
 	device_donor = fu_udev_device_new(ctx, fn);
+	if (device_target != NULL) {
+		fu_device_incorporate_flag(FU_DEVICE(device_donor),
+					   device_target,
+					   FWUPD_DEVICE_FLAG_EMULATED);
+		fu_device_incorporate_flag(FU_DEVICE(device_donor),
+					   device_target,
+					   FWUPD_DEVICE_FLAG_EMULATION_TAG);
+		fu_device_set_target(FU_DEVICE(device_donor), device_target);
+	}
 	if (!fu_device_probe(FU_DEVICE(device_donor), &error_local)) {
 		fu_udev_backend_coldplug_cache_add_error(self, fn, error_local);
 		g_propagate_prefixed_error(error,
@@ -409,7 +436,7 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 			g_debug("skipping duplicate %s", fn_real);
 			continue;
 		}
-		device = fu_udev_backend_create_device(self, fn_real, &error_local);
+		device = fu_udev_backend_create_device(self, fn_real, NULL, &error_local);
 		if (device == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				continue;
@@ -605,7 +632,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 	if (action == FU_UDEV_ACTION_ADD) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
 		g_autoptr(FuUdevDevice) device =
-		    fu_udev_backend_create_device(self, sysfspath, error);
+		    fu_udev_backend_create_device(self, sysfspath, NULL, error);
 		if (device == NULL)
 			return FALSE;
 		if (!fu_device_retry_full(FU_DEVICE(device),
@@ -876,7 +903,7 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 			break;
 
 		/* check has matching subsystem and devtype */
-		device_new = fu_udev_backend_create_device(self, dirname, &error_local);
+		device_new = fu_udev_backend_create_device(self, dirname, NULL, &error_local);
 		if (device_new != NULL) {
 			if (fu_udev_device_match_subsystem(device_new, subsystem)) {
 				if (subsystem != NULL) {
@@ -909,7 +936,7 @@ static FuDevice *
 fu_udev_backend_create_device_impl(FuBackend *backend, const gchar *backend_id, GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	return FU_DEVICE(fu_udev_backend_create_device(self, backend_id, error));
+	return FU_DEVICE(fu_udev_backend_create_device(self, backend_id, NULL, error));
 }
 
 static void
