@@ -120,11 +120,12 @@ parts:
         "-Dlibxmlb:gtkdoc=false",
       ]
     source: .
-    source-type: git
+    source-type: local
     override-pull: |
       craftctl default
-      pip install textual rich --break-system-packages
-      craftctl set version=$(git describe HEAD --always)
+      pip install textual --break-system-packages \
+        --target="${CRAFT_PART_SRC}/../.pip-deps"
+      craftctl set version="$(git -C "${CRAFT_PROJECT_DIR}" describe HEAD --always)"
     override-build: |
       craftctl default
       # Install Python dependencies into the fwupd part's install directory
@@ -277,7 +278,7 @@ parts:
       - -usr/lib/*/libdconf.so.1.0.0
     after: [build-introspection]
     build-environment:
-      - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages"
+      - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages:${CRAFT_PART_SRC}/../.pip-deps"
       - PIP_BREAK_SYSTEM_PACKAGES: "1"
   update-mime:
     plugin: make

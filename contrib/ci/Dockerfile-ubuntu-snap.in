@@ -1,0 +1,21 @@
+FROM ghcr.io/canonical/snapcraft:8_core24@sha256:0443273552768a3230c2ede3aa47e567da0242bfbb0a7bb1283093208c404a0c
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/usr/libexec/snapcraft:${PATH}"
+ENTRYPOINT []
+
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+{% for dep in DEPENDENCIES %}
+    {{dep}} \
+{% endfor %}
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu's GI scanner imports this compatibility module, which the rock's Python environment omits.
+RUN cp /usr/lib/python3/dist-packages/setuptools/_distutils/msvccompiler.py /lib/python3.12/site-packages/setuptools/_distutils/msvccompiler.py
+
+RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
+WORKDIR /github/workspace
