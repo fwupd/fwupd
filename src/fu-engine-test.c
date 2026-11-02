@@ -844,6 +844,223 @@ fu_engine_device_md_checksum_set_version_wrong_proto_func(void)
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_NUMBER);
 }
 
+static XbSilo *
+fu_engine_md_checksum_any_order_silo(GError **error)
+{
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <releases>\n"
+	    /* listed first, but does not match the device checksum */
+	    "      <release version=\"300\">\n"
+	    "        <location>https://test.org/foo-300.cab</location>\n"
+	    "        <checksum type=\"sha1\" filename=\"foo-300.cab\" "
+	    "target=\"container\">0000000000000000000000000000000000000300</checksum>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">1111111111111111111111111111111111111111111111111111111111111111</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    /* listed second, and matches the device checksum */
+	    "      <release version=\"200\">\n"
+	    "        <location>https://test.org/foo-200.cab</location>\n"
+	    "        <checksum type=\"sha1\" filename=\"foo-200.cab\" "
+	    "target=\"container\">0000000000000000000000000000000000000200</checksum>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    "    </releases>\n"
+	    "    <custom>\n"
+	    "      <value key=\"LVFS::UpdateProtocol\">com.acme</value>\n"
+	    "    </custom>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
+		return NULL;
+	xb_builder_import_source(builder, source);
+	return xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+}
+
+static void
+fu_engine_device_md_checksum_set_version_any_order_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	silo = fu_engine_md_checksum_any_order_silo(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* the device version is only known from the matching release */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* the version is resolved before the releases are classified */
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "200");
+	g_assert_cmpint(releases->len, ==, 2);
+	for (guint i = 0; i < releases->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(releases, i);
+		if (g_strcmp0(fwupd_release_get_version(rel), "300") == 0) {
+			g_assert_true(fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_UPGRADE));
+		} else {
+			g_assert_cmpstr(fwupd_release_get_version(rel), ==, "200");
+			g_assert_false(fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_UPGRADE));
+			g_assert_false(
+			    fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_DOWNGRADE));
+		}
+	}
+}
+
+static void
+fu_engine_device_md_checksum_set_version_client_req_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <requires>\n"
+	    "      <client>detach-action</client>\n"
+	    "    </requires>\n"
+	    "    <releases>\n"
+	    "      <release version=\"200\">\n"
+	    "        <location>https://test.org/foo-200.cab</location>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    "    </releases>\n"
+	    "    <custom>\n"
+	    "      <value key=\"LVFS::UpdateProtocol\">com.acme</value>\n"
+	    "    </custom>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* the trusted release has a hard client feature requirement */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* the client lacks the feature, so the release is hidden but the version is set */
+	fu_engine_request_set_feature_flags(request, FWUPD_FEATURE_FLAG_NONE);
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "200");
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_null(releases);
+}
+
+static void
+fu_engine_device_md_checksum_set_version_missing_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	silo = fu_engine_md_checksum_any_order_silo(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* no release matches the device checksum */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "2222222222222222222222222222222222222222222222222222222222222222");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* report the missing version rather than classifying against NULL */
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(releases);
+	g_assert_null(fu_device_get_version(device));
+}
+
 static void
 fu_engine_require_hwid_func(void)
 {
@@ -3802,6 +4019,12 @@ main(int argc, char **argv)
 			fu_engine_device_md_checksum_set_version_func);
 	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-wrong-proto",
 			fu_engine_device_md_checksum_set_version_wrong_proto_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-any-order",
+			fu_engine_device_md_checksum_set_version_any_order_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-client-req",
+			fu_engine_device_md_checksum_set_version_client_req_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-missing",
+			fu_engine_device_md_checksum_set_version_missing_func);
 	g_test_add_func("/fwupd/engine/multiple-releases", fu_engine_multiple_rels_func);
 	g_test_add_func("/fwupd/engine/install-loop-restart", fu_engine_install_loop_restart_func);
 	g_test_add_func("/fwupd/engine/write-blob-for-device-id",

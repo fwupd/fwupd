@@ -6050,6 +6050,134 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	return TRUE;
 }
 
+/* gets all the components that provide a specific GUID */
+static gboolean
+fu_engine_get_components_for_device_guid(FuEngine *self,
+					 const gchar *guid,
+					 GPtrArray *components,
+					 GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) components_tmp = NULL;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+	components_tmp = xb_silo_query_with_context(self->silo,
+						    self->query_component_by_guid,
+						    &context,
+						    &error_local);
+	if (components_tmp == NULL) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_debug("%s was not found: %s", guid, error_local->message);
+			return TRUE;
+		}
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to query components for %s: ",
+					   guid);
+		return FALSE;
+	}
+	g_debug("%s matched %u components", guid, components_tmp->len);
+	for (guint i = 0; i < components_tmp->len; i++) {
+		XbNode *component = g_ptr_array_index(components_tmp, i);
+		g_ptr_array_add(components, g_object_ref(component));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/* gets all the components that provide any of the device GUIDs */
+static gboolean
+fu_engine_get_components_for_device(FuEngine *self,
+				    FuDevice *device,
+				    GPtrArray *components,
+				    GError **error)
+{
+	GPtrArray *device_guids = fu_device_get_guids(device);
+
+	for (guint i = 0; i < device_guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(device_guids, i);
+		if (!fu_engine_get_components_for_device_guid(self, guid, components, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/* load every release of the component, which may set the device version from the metadata */
+static gboolean
+fu_engine_ensure_device_version_from_component(FuEngine *self,
+					       FuEngineRequest *request,
+					       FuDevice *device,
+					       XbNode *component,
+					       GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+
+	rels = xb_node_query(component, "releases/release", 0, &error_local);
+	if (rels == NULL) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			return TRUE;
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to query releases: ");
+		return FALSE;
+	}
+	for (guint i = 0; i < rels->len; i++) {
+		XbNode *rel = g_ptr_array_index(rels, i);
+		g_autoptr(FuRelease) release = fu_release_new();
+		g_autoptr(GError) error_loop = NULL;
+
+		/* this calls fu_device_ensure_from_release() if the metadata is trusted */
+		fu_release_set_request(release, request);
+		fu_release_set_device(release, device);
+		if (!fu_engine_load_release(self,
+					    release,
+					    NULL, /* cabinet */
+					    component,
+					    rel,
+					    FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					    &error_loop)) {
+			g_debug("ignoring release for version: %s", error_loop->message);
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/* the device version is set from the metadata, so look at *every* release before we use it */
+static gboolean
+fu_engine_ensure_device_version_from_components(FuEngine *self,
+						FuDevice *device,
+						GPtrArray *components,
+						GError **error)
+{
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+
+	/* all flags set, as client feature requirements must not hide the version */
+	fu_engine_request_add_flag(request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS);
+	fu_engine_request_set_feature_flags(request, ~0);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = g_ptr_array_index(components, i);
+		if (!fu_engine_ensure_device_version_from_component(self,
+								    request,
+								    device,
+								    component,
+								    error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static const gchar *
 fu_engine_get_branch_fallback(const gchar *nullable_branch)
 {
@@ -6064,8 +6192,8 @@ fu_engine_get_releases_for_device(FuEngine *self,
 				  FuDevice *device,
 				  GError **error)
 {
-	GPtrArray *device_guids;
 	g_autoptr(GPtrArray) branches = NULL;
+	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
 	/* no components in silo */
@@ -6077,18 +6205,29 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		return NULL;
 	}
 
-	/* get device version */
-	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION) &&
-	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW) &&
-	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS)) {
-		const gchar *version = fu_device_get_version(device);
-		if (version == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no version set");
+	/* get all the components that provide any of the device GUIDs */
+	components = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	if (!fu_engine_get_components_for_device(self, device, components, error))
+		return NULL;
+
+	/* resolve the device version from the metadata before classifying any releases */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION) ||
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW)) {
+		if (!fu_engine_ensure_device_version_from_components(self,
+								     device,
+								     components,
+								     error))
 			return NULL;
-		}
+	}
+
+	/* get device version */
+	if (fu_device_get_version(device) == NULL &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no version set");
+		return NULL;
 	}
 
 	/* only show devices that can be updated */
@@ -6111,43 +6250,22 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		return NULL;
 	}
 
-	/* get all the components that provide any of these GUIDs */
-	device_guids = fu_device_get_guids(device);
+	/* find all the releases that pass all the requirements */
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	for (guint j = 0; j < device_guids->len; j++) {
-		const gchar *guid = g_ptr_array_index(device_guids, j);
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) components = NULL;
-		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-
-		xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
-		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
-		components = xb_silo_query_with_context(self->silo,
-							self->query_component_by_guid,
-							&context,
-							&error_local);
-		if (components == NULL) {
-			g_debug("%s was not found: %s", guid, error_local->message);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = XB_NODE(g_ptr_array_index(components, i));
+		g_autoptr(GError) error_tmp = NULL;
+		if (!fu_engine_add_releases_for_device_component(self,
+								 request,
+								 device,
+								 component,
+								 releases,
+								 &error_tmp)) {
+			g_debug("%s", error_tmp->message);
 			continue;
 		}
-
-		/* find all the releases that pass all the requirements */
-		g_debug("%s matched %u components", guid, components->len);
-		for (guint i = 0; i < components->len; i++) {
-			XbNode *component = XB_NODE(g_ptr_array_index(components, i));
-			g_autoptr(GError) error_tmp = NULL;
-			if (!fu_engine_add_releases_for_device_component(self,
-									 request,
-									 device,
-									 component,
-									 releases,
-									 &error_tmp)) {
-				g_debug("%s", error_tmp->message);
-				continue;
-			}
-		}
-		g_debug("%s matched %u releases", guid, releases->len);
 	}
+	g_debug("matched %u releases", releases->len);
 
 	/* are there multiple branches available */
 	branches = g_ptr_array_new_with_free_func(g_free);
