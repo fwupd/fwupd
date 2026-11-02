@@ -12,6 +12,7 @@
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-engine-emulator.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
@@ -3747,6 +3748,292 @@ fu_engine_report_metadata_func(void)
 	}
 }
 
+#define FU_ENGINE_TEST_EMULATOR_CREATED_HUB G_GINT64_CONSTANT(1700000000)
+#define FU_ENGINE_TEST_EMULATOR_CREATED_HID G_GINT64_CONSTANT(1700000001)
+
+static FuDevice *
+fu_engine_test_emulator_add_device(FuEngine *engine,
+				   FuContext *ctx,
+				   const gchar *id,
+				   gint64 created)
+{
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	fu_device_set_id(device, id);
+	fu_device_add_instance_id(device, id);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_created_usec(device, created * G_USEC_PER_SEC);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	fu_engine_add_device(engine, device);
+	return g_steal_pointer(&device);
+}
+
+static void
+fu_engine_test_emulator_add_events(FuDevice *device, const gchar *first, ...) /* nocheck:name */
+{
+	va_list args;
+	va_start(args, first);
+	for (const gchar *id = first; id != NULL; id = va_arg(args, const gchar *)) {
+		FuDeviceEvent *event = fu_device_save_event(device, id);
+		fu_device_event_set_str(event, "Data", id);
+	}
+	va_end(args);
+}
+
+/* the events of a device exported to a phase, as a comma-separated list of event data */
+static gchar *
+fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, gint64 created)
+{
+	g_autofree gchar *created_str = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
+	g_autoptr(FwupdJsonArray) json_devices = NULL;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(GBytes) json_blob = NULL;
+	g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(created);
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+
+	created_str = g_date_time_format_iso8601(dt);
+	ret = fu_firmware_parse_bytes(archive, zip_blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	json_blob = fu_firmware_get_image_by_id_bytes(archive, phase_fn, NULL);
+	if (json_blob == NULL)
+		return NULL;
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
+						      json_blob,
+						      FWUPD_JSON_LOAD_FLAG_NONE,
+						      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json_node);
+	json_obj = fwupd_json_node_get_object(json_node, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json_obj);
+	json_devices = fwupd_json_object_get_array(json_obj, "UsbDevices", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json_devices);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_devices); i++) {
+		const gchar *tmp;
+		g_autoptr(FwupdJsonArray) json_events = NULL;
+		g_autoptr(FwupdJsonObject) json_device = NULL;
+		g_autoptr(GString) str = g_string_new(NULL);
+
+		json_device = fwupd_json_array_get_object(json_devices, i, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(json_device);
+		tmp = fwupd_json_object_get_string(json_device, "Created", NULL);
+		if (g_strcmp0(tmp, created_str) != 0)
+			continue;
+		json_events = fwupd_json_object_get_array(json_device, "Events", NULL);
+		if (json_events == NULL)
+			return g_strdup("");
+		for (guint j = 0; j < fwupd_json_array_get_size(json_events); j++) {
+			g_autoptr(FwupdJsonObject) json_event = NULL;
+			json_event = fwupd_json_array_get_object(json_events, j, &error);
+			g_assert_no_error(error);
+			g_assert_nonnull(json_event);
+			tmp = fwupd_json_object_get_string(json_event, "Data", NULL);
+			if (str->len > 0)
+				g_string_append_c(str, ',');
+			g_string_append(str, tmp != NULL ? tmp : "(null)");
+		}
+		return g_string_free(g_steal_pointer(&str), FALSE);
+	}
+	return NULL;
+}
+
+static GBytes *
+fu_engine_test_emulator_save(FuEngineEmulator *emulator)
+{
+	g_autoptr(GOutputStream) stream = g_memory_output_stream_new_resizable();
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+
+	ret = fu_engine_emulator_save(emulator, stream, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(g_output_stream_close(stream, NULL, &error));
+	return g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(stream));
+}
+
+static void
+fu_engine_test_emulator_save_phase(FuEngineEmulator *emulator, FuEngineEmulatorPhase phase)
+{
+	g_autoptr(GError) error = NULL;
+	gboolean ret = fu_engine_emulator_save_phase(emulator,
+						     FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
+						     phase,
+						     FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+/* 2023-11-14T22:13:20Z and 22:13:21Z */
+/* the hub and HID both produce events during one setup, with the HID added later and then
+ * set as the proxy of the hub; the same setup is snapshotted several times and a late
+ * ControlTransfer-like event is produced after the last automatic snapshot */
+static void
+fu_engine_emulator_setup_accumulate_func(void)
+{
+	g_autofree gchar *hid_ids = NULL;
+	g_autofree gchar *hub_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hid = NULL;
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* snapshot 1: hub only */
+	hub = fu_engine_test_emulator_add_device(engine,
+						 ctx,
+						 "hub",
+						 FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	fu_engine_test_emulator_add_events(hub, "hub-a", "hub-b", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* snapshot 2: HID added, which becomes the proxy of the hub */
+	hid = fu_engine_test_emulator_add_device(engine,
+						 ctx,
+						 "hid",
+						 FU_ENGINE_TEST_EMULATOR_CREATED_HID);
+	fu_engine_test_emulator_add_events(hid, "hid-a", "hid-b", NULL);
+	fu_device_set_proxy(hub, hid);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* snapshot 3: nothing new */
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* a later event, after the last snapshot */
+	fu_engine_test_emulator_add_events(hid, "hid-c", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* nothing may be lost, and the order must be kept */
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	hid_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							"setup.json",
+							FU_ENGINE_TEST_EMULATOR_CREATED_HID);
+	g_assert_cmpstr(hid_ids, ==, "hid-a,hid-b,hid-c");
+
+	/* the framework exports the events of the proxy for the proxied device, so the
+	 * hub gets its own early events followed by the ones of the HID */
+	hub_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							"setup.json",
+							FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(hub_ids, ==, "hub-a,hub-b,hid-a,hid-b,hid-c");
+}
+
+/* other phases stay isolated, repeated events keep their order, and a new setup after
+ * another phase replaces the old one */
+static void
+fu_engine_emulator_phase_isolation_func(void)
+{
+	g_autofree gchar *prepare_ids = NULL;
+	g_autofree gchar *setup_ids = NULL;
+	g_autofree gchar *setup2_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob1 = NULL;
+	g_autoptr(GBytes) zip_blob2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	gboolean ret;
+
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* repeated IDs across snapshots of the same setup */
+	hub = fu_engine_test_emulator_add_device(engine,
+						 ctx,
+						 "hub",
+						 FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	fu_engine_test_emulator_add_events(hub, "rep", "other", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_engine_test_emulator_add_events(hub, "rep", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* the next phase only gets the events produced since then */
+	fu_engine_test_emulator_add_events(hub, "p1", "rep", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_PREPARE);
+
+	/* the setup is no longer the last thing saved, so nothing is flushed into it */
+	fu_engine_test_emulator_add_events(hub, "after", NULL);
+	ret = fu_engine_emulator_save_setup_pending(emulator,
+						    FU_ENGINE_EMULATOR_COMPOSITE_CNT_DEFAULT,
+						    FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
+						    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	zip_blob1 = fu_engine_test_emulator_save(emulator);
+	setup_ids = fu_engine_test_emulator_get_event_ids(zip_blob1,
+							  "setup.json",
+							  FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(setup_ids, ==, "rep,other,rep");
+	prepare_ids = fu_engine_test_emulator_get_event_ids(zip_blob1,
+							    "prepare.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(prepare_ids, ==, "p1,rep");
+
+	/* a new setup after another phase replaces the old one, e.g. after an update */
+	fu_engine_test_emulator_add_events(hub, "s1", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_engine_test_emulator_add_events(hub, "s2", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	zip_blob2 = fu_engine_test_emulator_save(emulator);
+	setup2_ids = fu_engine_test_emulator_get_event_ids(zip_blob2,
+							   "setup.json",
+							   FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(setup2_ids, ==, "after,s1,s2");
+}
+
+/* the engine adds snapshots when tagged devices are added, and then must also keep the
+ * events produced after the last snapshot when the emulation is saved */
+static void
+fu_engine_emulator_save_late_events_func(void)
+{
+	g_autofree gchar *hub_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GOutputStream) stream = g_memory_output_stream_new_resizable();
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	gboolean ret;
+
+	fu_engine_set_silo(engine, silo_empty);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+
+	/* the snapshot is taken when the device is added */
+	hub = fu_device_new(ctx);
+	fu_device_set_id(hub, "hub");
+	fu_device_add_instance_id(hub, "hub");
+	fu_device_add_protocol(hub, "com.acme");
+	fu_device_set_created_usec(hub, FU_ENGINE_TEST_EMULATOR_CREATED_HUB * G_USEC_PER_SEC);
+	fu_device_add_flag(hub, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	fu_engine_test_emulator_add_events(hub, "early", NULL);
+	fu_engine_add_device(engine, hub);
+
+	/* this is only known after the snapshot */
+	fu_engine_test_emulator_add_events(hub, "late", NULL);
+
+	ret = fu_engine_emulation_save(engine, stream, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(g_output_stream_close(stream, NULL, &error));
+	zip_blob = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(stream));
+	hub_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							"setup.json",
+							FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(hub_ids, ==, "early,late");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3754,6 +4041,12 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	g_test_add_func("/fwupd/engine/codec", fu_engine_codec_func);
+	g_test_add_func("/fwupd/engine/emulator/setup-accumulate",
+			fu_engine_emulator_setup_accumulate_func);
+	g_test_add_func("/fwupd/engine/emulator/phase-isolation",
+			fu_engine_emulator_phase_isolation_func);
+	g_test_add_func("/fwupd/engine/emulator/save-late-events",
+			fu_engine_emulator_save_late_events_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);

@@ -3183,6 +3183,13 @@ fu_engine_emulation_load(FuEngine *self, FuInputStream *stream, GError **error)
 gboolean
 fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
 {
+	/* events produced after the last snapshot would otherwise be lost */
+	if (self->emulator_phase == FU_ENGINE_EMULATOR_PHASE_SETUP &&
+	    !fu_engine_emulator_save_setup_pending(self->emulation,
+						   self->emulator_composite_cnt,
+						   self->emulator_write_cnt,
+						   error))
+		return FALSE;
 	return fu_engine_emulator_save(self->emulation, stream, error);
 }
 
