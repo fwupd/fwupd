@@ -1,0 +1,546 @@
+{
+  "FwupdVersion": "2.2.1",
+  "UsbDevices": [
+    {
+      "Created": "2026-01-01T00:00:00.000002Z",
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-4.1.2.4",
+      "IdVendor": 6127,
+      "IdProduct": 19522,
+      "Device": 256,
+      "USB": 512,
+      "Product": 1,
+      "SerialNumber": 2,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbHidDescriptors": [],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 3,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 8,
+              "MaxPacketSize": 64
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 2,
+              "Interval": 8,
+              "MaxPacketSize": 64
+            }
+          ]
+        }
+      ],
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=108\nDEVNAME=bus/usb/001/109\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/4c42/100\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=109"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/109"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=108\nDEVNAME=bus/usb/001/109\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/4c42/100\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=109"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "109"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEAAgAAAEDvF0JMAAEAAQIBCQIpAAEBAIAyCQQAAAIDAAAACSEBAQABIjgABwWBA0AACAcFAgNAAAg="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors"
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=gAaAAwAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "gAaAAwAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "EANHAEwASQAgAEgASQBEAAoDNwA0ADYANgAFgAkBoQEJBaErCQYVACb/AHUIlUCSAgEJB4ICAcAFFAkBFQAlfw=="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x01",
+          "Data": "VVNCX0hJRF9ERVZJQ0UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "U0VSSUFMMDEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=(null)",
+          "GType": "FuUsbDevice",
+          "DeviceId": null,
+          "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/usb1/1-4/1-4.1/1-4.1.2",
+          "PhysicalId": "1-4.1.2",
+          "Vid": 6127,
+          "Pid": 4387
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/106"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "106"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEQAgkAAkDvFyMRF4gBAgABCQIpAAEBAOAACQQAAAEJAAEABwWBAwEADAkEAAEBCQACAAcFgQMBAAw="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors",
+          "Data": "BQ8qAAMHEAIGAAAAChADAA4AAQi+ABQQBAB/hIgwIb1B7Ko5oZJ7ABN7"
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=QIEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "QIEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICBQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICBQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICHQAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICHQAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIIBSwAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIIBSwAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "/zQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIIBkAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIIBkAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "yBEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICnwAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICnwAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "yEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ]
+    },
+    {
+      "Created": "2026-01-01T00:00:00.000000Z",
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-4.1.2",
+      "IdVendor": 6127,
+      "IdProduct": 4387,
+      "Device": 34839,
+      "USB": 528,
+      "Product": 2,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbHidDescriptors": [],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 9,
+          "InterfaceProtocol": 1,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 12,
+              "MaxPacketSize": 1
+            }
+          ]
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "AlternateSetting": 1,
+          "InterfaceClass": 9,
+          "InterfaceProtocol": 2,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 12,
+              "MaxPacketSize": 1
+            }
+          ]
+        }
+      ],
+      "Manufacturer": 1,
+      "DeviceClass": 9,
+      "DeviceProtocol": 2,
+      "UsbBosDescriptors": [
+        {
+          "DevCapabilityType": 42,
+          "ExtraData": "AAM="
+        },
+        {
+          "DevCapabilityType": 2,
+          "ExtraData": "BgAAAA=="
+        },
+        {
+          "DevCapabilityType": 3,
+          "ExtraData": "AA4AAQi+AA=="
+        },
+        {
+          "DevCapabilityType": 4,
+          "ExtraData": "AH+EiDAhvUHsqjmhknsAE3s="
+        }
+      ],
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/106"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "106"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEQAgkAAkDvFyMRF4gBAgABCQIpAAEBAOAACQQAAAEJAAEABwWBAwEADAkEAAEBCQACAAcFgQMBAAw="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors",
+          "Data": "BQ8qAAMHEAIGAAAAChADAA4AAQi+ABQQBAB/hIgwIb1B7Ko5oZJ7ABN7"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "VVNCMi4xIEh1YgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x00,Request=0x06,Value=0x2900,Idx=0x0000,Data=AAAAAAAAAAAAAAAA,Length=0xc",
+          "Data": "CSkE7QAyZBD/"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=(null)",
+          "GType": "FuUsbDevice",
+          "DeviceId": null,
+          "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/usb1/1-4/1-4.1",
+          "PhysicalId": "1-4.1",
+          "Vid": 6127,
+          "Pid": 4386
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=103\nDEVNAME=bus/usb/001/104\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1122/8716\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=104"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/104"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=103\nDEVNAME=bus/usb/001/104\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1122/8716\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=104"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "104"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEQAgkAAkDvFyIRFocBAgABCQIpAAEBAOAACQQAAAEJAAEABwWBAwEADAkEAAEBCQACAAcFgQMBAAw="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors",
+          "Data": "BQ8qAAMHEAIGAAAAChADAA4AAQi+ABQQBAAoSgSAxflA1KTqka6pE3lh"
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x80,Langid=0x0409,Length=0x40",
+          "Data": "FgNHAEwAIAAzAC4AMAAgAEgAdQBiAA=="
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x81,Langid=0x0409,Length=0x40",
+          "Data": "QAM4ADcANAA2ADYAMQAwADMAMwA1ADIAMwA1ADAANwA0ADYANgAxADAAMwAzADUAMgAzADUAMAA4ADgAMQA3AA=="
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x82,Langid=0x0409,Length=0x40",
+          "Data": "FgNDADMANAAwADgAMAAwADcAOABGAA=="
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x83,Langid=0x0409,Length=0x40",
+          "Data": "QAMtAC0ALQAtAC0ALQAtADAAMAAwADAAMAAwADAAMAAwADAAMAAwAC0ALQAtAC0ALQAtAC0ALQAtAC0ALQAtAA=="
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x86,Langid=0x0409,Length=0x40",
+          "Data": "QAMwADMAMAAwADEAMAAwADAAMAAwADAAMAAwADAAMAAxADAAMAAwAAAAMAAwADAAMAAwADAAMAAwADAAMAAwAA=="
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x8a,Langid=0x0409,Length=0x40",
+          "Data": "IANMAE4AVgBfAFAAMwA0AFcARAA0ADAAXwBMADMAMAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x01",
+          "Data": "R2VuZXN5c0xvZ2ljAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=(null)",
+          "GType": "FuUsbDevice",
+          "DeviceId": null,
+          "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/usb1/1-4/1-4.1/1-4.1.2",
+          "PhysicalId": "1-4.1.2",
+          "Vid": 6127,
+          "Pid": 4387
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/106"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=105\nDEVNAME=bus/usb/001/106\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=17ef/1123/8817\nTYPE=9/0/2\nBUSNUM=001\nDEVNUM=106"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "106"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEQAgkAAkDvFyMRF4gBAgABCQIpAAEBAOAACQQAAAEJAAEABwWBAwEADAkEAAEBCQACAAcFgQMBAAw="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors",
+          "Data": "BQ8qAAMHEAIGAAAAChADAA4AAQi+ABQQBAB/hIgwIb1B7Ko5oZJ7ABN7"
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=QIEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "QIEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICBQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICBQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICHQAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICHQAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIIBSwAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIIBSwAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "/zQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIIBkAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIIBkAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "yBEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x0300,Idx=0x0000,Data=wIICnwAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "wIICnwAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x0300,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "yEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ]
+    }
+  ]
+}

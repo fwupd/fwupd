@@ -30,9 +30,11 @@ plugin_builtin_genesys = static_library(
 )
 plugin_builtins += plugin_builtin_genesys
 
+enumeration_data += files('tests/genesys-lenovo-p34wd40-1123-setup.json')
 device_tests += files(
   'tests/genesys-evb-gl352510.json',
   'tests/genesys-evb-gl352530.json',
+  'tests/genesys-lenovo-p34wd40-1123.json',
   #  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
   'tests/genesys-servo-dock.json',
   'tests/genesys-zdn-chromebook.json',
