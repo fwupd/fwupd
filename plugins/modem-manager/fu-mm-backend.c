@@ -129,7 +129,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 	MMModemFirmwareUpdateMethod update_methods;
 	MMModemPortInfo *used_ports = NULL;
 	guint n_used_ports = 0;
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	MMModemPortInfo *ignored_ports = NULL;
 	guint n_ignored_ports = 0;
 #endif
@@ -215,7 +215,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		mm_modem_port_info_array_free(used_ports, n_used_ports);
 	}
 
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	if (mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
 		for (guint i = 0; i < n_ignored_ports; i++) {
 			g_debug("found port %s: %s",
