@@ -6057,6 +6057,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* get device version */
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION) &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW) &&
 	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS)) {
 		const gchar *version = fu_device_get_version(device);
 		if (version == NULL) {

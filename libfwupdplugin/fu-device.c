@@ -7487,6 +7487,11 @@ fu_device_ensure_from_release(FuDevice *self, XbNode *rel)
 	}
 
 	/* set the version */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW)) {
+		guint64 version_raw = xb_node_get_attr_as_uint(rel, "version");
+		if (version_raw != G_MAXUINT64)
+			fu_device_set_version_raw(self, version_raw);
+	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION)) {
 		const gchar *version = xb_node_get_attr(rel, "version");
 		if (version != NULL) {
@@ -8512,6 +8517,7 @@ fu_device_class_init(FuDeviceClass *klass)
 	    FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW,
 	    FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM,
 	    FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV,
 	    FU_DEVICE_PRIVATE_FLAG_UNCONNECTED,
