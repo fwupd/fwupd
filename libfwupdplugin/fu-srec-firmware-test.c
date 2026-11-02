@@ -60,6 +60,35 @@ fu_srec_firmware_tokenization_func(void)
 	g_assert_cmpint(rcd->buf->data[0], ==, 0x50);
 }
 
+static void
+fu_srec_firmware_addr24_func(void)
+{
+	FuSrecFirmwareRecord *rcd;
+	GPtrArray *records;
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new();
+	g_autoptr(GBytes) data_srec = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *buf = "S205123456AAB4\r\n"
+			   "S804000000FB\r\n";
+
+	/* S2 records have a 24 bit address */
+	data_srec = g_bytes_new_static(buf, strlen(buf));
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(data_srec));
+	ret = fu_firmware_tokenize(firmware, stream, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	records = fu_srec_firmware_get_records(FU_SREC_FIRMWARE(firmware));
+	g_assert_nonnull(records);
+	g_assert_cmpint(records->len, ==, 2);
+	rcd = g_ptr_array_index(records, 0);
+	g_assert_cmpint(rcd->kind, ==, 2);
+	g_assert_cmpint(rcd->addr, ==, 0x123456);
+	g_assert_cmpint(rcd->buf->len, ==, 0x1);
+	g_assert_cmpint(rcd->buf->data[0], ==, 0xAA);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -68,5 +97,6 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_SREC_FIRMWARE);
 	g_test_add_func("/fwupd/srec-firmware", fu_srec_firmware_func);
 	g_test_add_func("/fwupd/srec-firmware/tokenization", fu_srec_firmware_tokenization_func);
+	g_test_add_func("/fwupd/srec-firmware/addr24", fu_srec_firmware_addr24_func);
 	return g_test_run();
 }
