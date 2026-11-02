@@ -180,7 +180,7 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 		return FALSE;
 	}
 	if (value != NULL)
-		*value = (guint16)valuetmp;
+		*value = (guint32)valuetmp;
 	return TRUE;
 }
 
