@@ -30,3 +30,12 @@ jobs:
     uses: $/.github/workflows/windows.yml
     with:
       publish: true
+
+  snap:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/snap.yml
+    with:
+      deploy: true
+    secrets:
+      STORE_LOGIN: ${{ secrets.STORE_LOGIN }}
