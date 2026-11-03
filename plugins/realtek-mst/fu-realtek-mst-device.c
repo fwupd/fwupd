@@ -535,7 +535,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 							 error)) {
 			g_prefix_error(error,
 				       "timed out waiting for write at %#x to complete: ",
-				       address);
+				       chunk_address);
 			return FALSE;
 		}
 		fu_progress_set_percentage_full(progress, i + 1, fu_chunk_array_length(chunks));
