@@ -407,6 +407,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	gboolean got_hdr = FALSE;
 	guint16 data_cnt = 0;
+	gboolean got_data = FALSE;
 	guint32 addr32_last = 0;
 	guint32 img_address = 0;
 	g_autoptr(GBytes) img_bytes = NULL;
@@ -500,7 +501,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 				guint32 len_hole = rcd->addr - addr32_last;
 
 				/* fill any holes, but only up to 1Mb to avoid a DoS */
-				if (addr32_last > 0 && len_hole > 1 * FU_MB) {
+				if (got_data && len_hole > 1 * FU_MB) {
 					g_set_error(
 					    error,
 					    FWUPD_ERROR,
@@ -510,7 +511,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 					return FALSE;
 				}
-				if (addr32_last > 0x0 && len_hole > 0) {
+				if (got_data && len_hole > 0) {
 					g_debug("filling address 0x%08x to 0x%08x at line %u",
 						addr32_last,
 						addr32_last + len_hole - 1,
@@ -521,9 +522,10 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 
 				/* add data */
 				g_byte_array_append(outbuf, rcd->buf->data, rcd->buf->len);
-				if (img_address == 0x0)
+				if (!got_data)
 					img_address = rcd->addr;
 				addr32_last = rcd->addr + rcd->buf->len;
+				got_data = TRUE;
 				if (addr32_last < rcd->addr) {
 					g_set_error(error,
 						    FWUPD_ERROR,
