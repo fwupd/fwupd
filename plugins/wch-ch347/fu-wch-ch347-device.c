@@ -130,7 +130,7 @@ fu_wch_ch347_device_read(FuWchCh347Device *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "size invalid, got 0x%04x, expected 0x04%x",
+			    "size invalid, got 0x%04x, expected 0x%04x",
 			    size_rsp,
 			    (guint)bufsz);
 		return FALSE;
