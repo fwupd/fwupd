@@ -103,8 +103,15 @@ fu_aver_safeisp_device_support(FuAverSafeispDevice *self, GError **error)
 		return FALSE;
 	if (!fu_struct_aver_safeisp_res_validate(st_res->buf->data, st_res->buf->len, 0x0, error))
 		return FALSE;
-	if (fu_struct_aver_safeisp_res_get_custom_cmd(st_res) != FU_AVER_SAFEISP_ACK_STATUS_SUPPORT)
+	if (fu_struct_aver_safeisp_res_get_custom_cmd(st_res) !=
+	    FU_AVER_SAFEISP_ACK_STATUS_SUPPORT) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "safeisp not supported, got 0x%x",
+			    fu_struct_aver_safeisp_res_get_custom_cmd(st_res));
 		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -239,8 +246,15 @@ fu_aver_safeisp_device_upload_checksum(FuAverSafeispDevice *self,
 		return FALSE;
 	if (!fu_struct_aver_safeisp_res_validate(st_res->buf->data, st_res->buf->len, 0x0, error))
 		return FALSE;
-	if (fu_struct_aver_safeisp_res_get_custom_cmd(st_res) != FU_AVER_SAFEISP_ACK_STATUS_SUCCESS)
+	if (fu_struct_aver_safeisp_res_get_custom_cmd(st_res) !=
+	    FU_AVER_SAFEISP_ACK_STATUS_SUCCESS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "checksum compare failed, got 0x%x",
+			    fu_struct_aver_safeisp_res_get_custom_cmd(st_res));
 		return FALSE;
+	}
 	return TRUE;
 }
 
