@@ -89,6 +89,35 @@ fu_srec_firmware_addr24_func(void)
 	g_assert_cmpint(rcd->buf->data[0], ==, 0xAA);
 }
 
+static void
+fu_srec_firmware_hole_func(void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	const gchar *buf = "S0030000FC\r\n"
+			   "S30600000010AA3F\r\n"
+			   "S30600000012BB2C\r\n"
+			   "S70500000000FA\r\n";
+	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static(buf, strlen(buf));
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a one byte hole is padded */
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	data_fw = fu_firmware_get_bytes(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	data = g_bytes_get_data(data_fw, &len);
+	g_assert_cmpint(len, ==, 3);
+	g_assert_cmpint(data[0], ==, 0xAA);
+	g_assert_cmpint(data[1], ==, 0xFF);
+	g_assert_cmpint(data[2], ==, 0xBB);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -98,5 +127,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/srec-firmware", fu_srec_firmware_func);
 	g_test_add_func("/fwupd/srec-firmware/tokenization", fu_srec_firmware_tokenization_func);
 	g_test_add_func("/fwupd/srec-firmware/addr24", fu_srec_firmware_addr24_func);
+	g_test_add_func("/fwupd/srec-firmware/hole", fu_srec_firmware_hole_func);
 	return g_test_run();
 }
