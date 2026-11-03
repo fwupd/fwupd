@@ -171,6 +171,8 @@ fu_engine_cli_start_engine(FuEngineCli *self,
 
 	/* copy properties from engine to client */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+		g_autofree gchar *host_bkc = fu_context_get_host_bkcs_as_str(ctx);
+		fwupd_client_set_host_bkc(client, host_bkc);
 		fwupd_client_set_host_vendor(client, fu_engine_get_host_vendor(self->engine));
 		fwupd_client_set_host_product(client, fu_engine_get_host_product(self->engine));
 		fwupd_client_set_battery_level(client, fu_context_get_battery_level(ctx));
