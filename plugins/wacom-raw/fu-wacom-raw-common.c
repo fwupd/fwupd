@@ -21,7 +21,7 @@ fu_wacom_raw_common_check_reply(const FuStructWacomRawRequest *st_req,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "report ID failed, expected 0x%02x, got 0x%02x",
 			    (guint)FU_WACOM_RAW_BL_REPORT_ID_GET,
-			    fu_struct_wacom_raw_request_get_report_id(st_req));
+			    fu_struct_wacom_raw_response_get_report_id(st_rsp));
 		return FALSE;
 	}
 	if (fu_struct_wacom_raw_request_get_cmd(st_req) !=
