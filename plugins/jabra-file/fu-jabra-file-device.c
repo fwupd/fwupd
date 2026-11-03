@@ -630,6 +630,8 @@ fu_jabra_file_device_write_firmware(FuDevice *device,
 
 	/* check if firmware file already exists on device */
 	firmware_checksum = fu_firmware_get_checksum(firmware, G_CHECKSUM_MD5, error);
+	if (firmware_checksum == NULL)
+		return FALSE;
 	if (!fu_jabra_file_device_file_checksum(self, firmware_checksum, &match, error))
 		return FALSE;
 	if (!match) {
