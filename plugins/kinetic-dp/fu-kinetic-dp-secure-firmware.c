@@ -243,12 +243,12 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* figure out which chip App FW it is for */
-	if (!fu_kinetic_dp_secure_firmware_parse_chip_id(stream,
+	if (!fu_kinetic_dp_secure_firmware_parse_chip_id(app_fw_stream,
 							 &priv->chip_id,
 							 &priv->esm_xip_enabled,
 							 error))
 		return FALSE;
-	if (!fu_kinetic_dp_secure_firmware_parse_app_fw(self, stream, error)) {
+	if (!fu_kinetic_dp_secure_firmware_parse_app_fw(self, app_fw_stream, error)) {
 		g_prefix_error_literal(error, "failed to parse Jaguar or Mustang App firmware: ");
 		return FALSE;
 	}
