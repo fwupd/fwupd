@@ -41,7 +41,7 @@ fu_vli_pd_device_read_regs(FuVliPdDevice *self,
 					    NULL,
 					    1000,
 					    error)) {
-		g_prefix_error(error, "failed to write register @0x%x: ", addr);
+		g_prefix_error(error, "failed to read register @0x%x: ", addr);
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
