@@ -659,6 +659,8 @@ typedef struct {
 	GAsyncQueue *queue;
 	guint8 endpoint;
 	gint stop;
+	gboolean legacy_emulation;
+	guint8 legacy_rxbuf[FU_JABRA_GNP_BUF_SIZE];
 } FuJabraGnpReceiver;
 
 static void
@@ -719,7 +721,28 @@ fu_jabra_gnp_receiver_read_report_cb(FuDevice *device G_GNUC_UNUSED,
 	g_autoptr(FuJabraGnpReport) report = NULL;
 	g_autoptr(FuStructJabraGnpPacket) st_pkt = NULL;
 
-	report = g_async_queue_timeout_pop(data->receiver->queue, G_TIME_SPAN_SECOND);
+	if (data->receiver->legacy_emulation) {
+		report = g_new0(FuJabraGnpReport, 1);
+		if (!fu_usb_device_interrupt_transfer(data->receiver->usb_device,
+						      data->receiver->endpoint,
+						      data->receiver->legacy_rxbuf,
+						      sizeof(data->receiver->legacy_rxbuf),
+						      &report->length,
+						      FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
+						      error))
+			return FALSE;
+		if (!fu_memcpy_safe(report->data,
+				    sizeof(report->data),
+				    0,
+				    data->receiver->legacy_rxbuf,
+				    sizeof(data->receiver->legacy_rxbuf),
+				    0,
+				    report->length,
+				    error))
+			return FALSE;
+	} else {
+		report = g_async_queue_timeout_pop(data->receiver->queue, G_TIME_SPAN_SECOND);
+	}
 	if (report == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -803,7 +826,8 @@ fu_jabra_gnp_receiver_wait_event(FuDevice *device,
 	    .chunk = chunk,
 	};
 
-	if (fu_device_has_flag(usb_device, FWUPD_DEVICE_FLAG_EMULATED)) {
+	if (fu_device_has_flag(usb_device, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !receiver->legacy_emulation) {
 		event = fu_device_load_event(usb_device, event_id, error);
 		if (event == NULL)
 			return FALSE;
@@ -864,6 +888,8 @@ fu_jabra_gnp_receiver_wait_verify_status_event(FuDevice *device,
 					       guint32 chunk,
 					       GError **error)
 {
+	if (receiver->legacy_emulation)
+		memset(receiver->legacy_rxbuf, 0, sizeof(receiver->legacy_rxbuf));
 	return fu_jabra_gnp_receiver_wait_event(device,
 						receiver,
 						address,
@@ -930,6 +956,9 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 	receiver.usb_device = FU_USB_DEVICE(target);
 	receiver.endpoint = fu_jabra_gnp_device_get_epin(FU_JABRA_GNP_DEVICE(target));
 	receiver.queue = queue;
+	/* remain compatible with old emulations */
+	receiver.legacy_emulation = fu_device_has_flag(target, FWUPD_DEVICE_FLAG_EMULATED) &&
+				    !fu_device_check_fwupd_version(target, "2.2.1");
 	/* emulation shares one event cursor, so reading ahead would skip outgoing transfers */
 	if (!fu_device_has_flag(target, FWUPD_DEVICE_FLAG_EMULATED))
 		thread = g_thread_new("jabra-gnp-rx", fu_jabra_gnp_receiver_thread, &receiver);

@@ -345,12 +345,18 @@ fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 				       &self->dfu_pid,
 				       error))
 		return FALSE;
-	if (!fu_jabra_gnp_read_fwu_protocol(device,
-					    self->address,
-					    self->sequence_number,
-					    &self->fwu_protocol,
-					    error))
-		return FALSE;
+	/* remain compatible with old emulations */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(device, "2.2.1")) {
+		self->fwu_protocol = FU_JABRA_GNP_PROTOCOL_OTA;
+	} else {
+		if (!fu_jabra_gnp_read_fwu_protocol(device,
+						    self->address,
+						    self->sequence_number,
+						    &self->fwu_protocol,
+						    error))
+			return FALSE;
+	}
 	if (self->address == FU_JABRA_GNP_ADDRESS_PARENT) {
 		guint16 child_dfu_pid = 0;
 		if (!fu_jabra_gnp_device_read_child_dfu_pid(self, &child_dfu_pid, &error_local)) {
@@ -475,6 +481,17 @@ fu_jabra_gnp_device_write_firmware(FuDevice *device,
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	g_autoptr(GPtrArray) imgs = NULL;
 	gboolean another_write_required = FALSE;
+
+	/* remain compatible with old emulations */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(device, "2.2.1")) {
+		if (!fu_jabra_gnp_read_fwu_protocol(device,
+						    self->address,
+						    self->sequence_number,
+						    &self->fwu_protocol,
+						    error))
+			return FALSE;
+	}
 
 	if (self->fwu_protocol == FU_JABRA_GNP_PROTOCOL_SPLIT_OTA) {
 		g_autofree gchar *tunes_pack_version = NULL;
