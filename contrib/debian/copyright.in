@@ -2,7 +2,12 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: fwupd
 Source: https://github.com/fwupd/fwupd
 
-%%%DYNAMIC%%%
+Files: *
+Copyright: {% for c in COPYRIGHTS %}
+	{{c}}
+{% endfor-%}
+License: LGPL-2.1-or-later
+
 Files:  *.metainfo.xml
 Copyright: Richard Hughes <richard@hughsie.com>
 License: CC0-1.0

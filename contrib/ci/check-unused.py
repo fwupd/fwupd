@@ -5,17 +5,17 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import glob
 import fnmatch
+import glob
 import os
-import sys
 import subprocess
+import sys
 
 
 def test_files() -> int:
     fns = sys.argv[1:]
     if not fns:
-        build = os.environ["BUILD"] if "BUILD" in os.environ else ""
+        build = os.environ.get("BUILD", "")
         fns.append(os.path.join(".", build, "plugins"))
         fns.append(os.path.join(".", build, "src"))
 
@@ -23,9 +23,9 @@ def test_files() -> int:
 
     # find all .o files
     for fn in fns:
-        for fn in glob.glob(f"{fn}/**/*.o", recursive=True):
-            print(f"Analyzing {fn}...")
-            p = subprocess.run(["nm", fn], check=True, capture_output=True)
+        for obj in glob.glob(f"{fn}/**/*.o", recursive=True):
+            print(f"Analyzing {obj}...")
+            p = subprocess.run(["nm", obj], check=True, capture_output=True)
             # parse data
             for line in p.stdout.decode().split("\n"):
                 line = line.rstrip()

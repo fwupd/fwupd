@@ -295,7 +295,7 @@ cd -
 
 %if 0%{?enable_tests}
 %if 0%{?enable_ci}
-    ./contrib/ci/get_test_firmware.sh
+    ./fwupbuild download-test-firmware --tests=ci-tests --dest .
 %endif
 %check
 %meson_test

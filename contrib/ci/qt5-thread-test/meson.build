@@ -1,9 +1,17 @@
-project('qt5-thread-test', 'cpp',
+project(
+  'qt5-thread-test',
+  'cpp',
   license: 'LGPL-2.1-or-later',
 )
-add_project_arguments('-fPIC', language: 'cpp')
+add_project_arguments(
+  '-fPIC',
+  language: 'cpp',
+)
 # Prevent conflicts between Qt 'signals' define and GLib 'signals' identifiers
-add_project_arguments('-DQT_NO_KEYWORDS', language: 'cpp')
+add_project_arguments(
+  '-DQT_NO_KEYWORDS',
+  language: 'cpp',
+)
 qt5core = dependency('Qt5Core')
 qt5concurrent = dependency('Qt5Concurrent')
 glib2 = dependency('glib-2.0')
@@ -13,9 +21,7 @@ env = environment()
 env.set('G_DEBUG', 'fatal-criticals')
 e = executable(
   'qt-thread-test',
-  sources: [
-    'qt-thread-test.cpp'
-  ],
+  sources: ['qt-thread-test.cpp'],
   dependencies: [
     qt5core,
     qt5concurrent,
@@ -24,4 +30,9 @@ e = executable(
     fwupd,
   ],
 )
-test('qt-thread-test', e, timeout: 60, env: env)
+test(
+  'qt-thread-test',
+  e,
+  timeout: 60,
+  env: env,
+)

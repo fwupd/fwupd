@@ -4,11 +4,64 @@ on:
       publish:
         required: true
         type: boolean
+      container_lut:
+        required: true
+        type: string
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+      FWUPD_GITHUB_IO_SSH_KEY:
+        required: false
 
 permissions:
   contents: read
 
+env:
+  MESON_BUILDDIR: "${{ github.workspace }}/builddir"
+
 jobs:
+  library:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find container image
+        id: find_container
+        uses: ./.github/actions/find-container # zizmor: ignore[self-repository]
+        with:
+          distro: ubuntu
+          arch: amd64
+          container_lut: ${{ inputs.container_lut }}
+      - name: Build in container
+        env:
+          CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
+        run: |
+          docker run -t \
+              -e "CI=$CI" \
+              -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
+              -v "$GITHUB_WORKSPACE:/github/workspace" \
+              "${CONTAINER_URI}" \
+              ./contrib/ci/ubuntu-library-build.sh
+      - name: Save version
+        id: version
+        run: cat dist/versioninfo.txt >>"$GITHUB_OUTPUT"
+      - name: Save tarball
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tarball
+          path: dist/*.tar.xz
+
   build:
     runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     needs: library
@@ -20,11 +73,11 @@ jobs:
           - { DISTRO: arch, ARCH: amd64 }
           - { DISTRO: centos, ARCH: amd64 }
           - { DISTRO: debian, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, ARCH: i386 }
           # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, ARCH: arm64 }
           - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
-          - { DISTRO: fedora, ARCH: amd64 }
+          - { DISTRO: fedora, ARCH: amd64, PRIMARY_JOB: true }
           - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
     env: ${{ matrix.env }}
@@ -33,22 +86,46 @@ jobs:
         with:
           persist-credentials: false
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find container image
+        id: find_container
+        uses: ./.github/actions/find-container # zizmor: ignore[self-repository]
+        with:
+          distro: ${{ matrix.env.DISTRO }}
+          arch: ${{ matrix.env.ARCH }}
+          variant: ${{ matrix.env.VARIANT }}
+          container: ${{ matrix.env.CONTAINER }}
+          container_lut: ${{ inputs.container_lut }}
       - name: Download tarball
         if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tarball
+      - name: prepare LVFS firmware cache
+        run: mkdir -p "$RUNNER_TEMP/lvfs-firmware-cache"
+      - name: restore LVFS firmware cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/lvfs-firmware-cache
+          key: lvfs-firmware-${{ hashFiles('plugins/**/*test*/*.json') }}
+          restore-keys: lvfs-firmware-
       - name: Build in container
         env:
           CI_NETWORK: true
           VERSION: ${{ needs.library.outputs.version }}
           PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+          CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
         run: |
+          script="./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-build"
+          if [ -x "$script.py" ]; then
+            script="$script.py"
+          else
+            script="$script.sh"
+          fi
           docker run --privileged -t \
               -e "CI=$CI" \
               -e "CI_NETWORK=$CI_NETWORK" \
@@ -56,22 +133,28 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
-              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
+              -v "$RUNNER_TEMP/lvfs-firmware-cache:/root/.cache/fwupd" \
+              "${CONTAINER_URI}" \
+              "$script"
       - name: Save any applicable artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ join(matrix.env.*, '-') }}
           path: |
-            ${{ github.workspace }}/build/meson-logs/scanbuild/*
+            ${{ env.MESON_BUILDDIR }}/meson-logs/scanbuild/*
             ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
         run: |
-          if [ -x "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh" ]; then
+          script="./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test"
+          if [ -x "$script.py" ]; then
             echo "supported=true" >>"$GITHUB_OUTPUT"
+            echo "script=$script.py" >>"$GITHUB_OUTPUT"
+          elif [ -x "$script.sh" ]; then
+            echo "supported=true" >>"$GITHUB_OUTPUT"
+            echo "script=$script.sh" >>"$GITHUB_OUTPUT"
           else
             echo "supported=false" >>"$GITHUB_OUTPUT"
           fi
@@ -80,6 +163,8 @@ jobs:
         env:
           CI_NETWORK: true
           PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
+          CONTAINER_URI: "${{ steps.find_container.outputs.container_uri }}"
+          TEST_SCRIPT: "${{ steps.supported.outputs.script }}"
         run: |
           docker run --privileged -t \
               -e "CI=$CI" \
@@ -88,60 +173,31 @@ jobs:
               -e "VERSION=$VERSION" \
               -e "PYTHONWARNINGS=$PYTHONWARNINGS" \
               -v "$GITHUB_WORKSPACE:/github/workspace" \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
-              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
+              -v "$RUNNER_TEMP/lvfs-firmware-cache:/root/.cache/fwupd" \
+              "${CONTAINER_URI}" \
+              "$TEST_SCRIPT"
+      - name: fix LVFS firmware cache ownership
+        if: ${{ !cancelled() }}
+        run: sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/lvfs-firmware-cache"
+      - name: save LVFS firmware cache
+        # only one job can be allowed to save the cache
+        if: ${{ !cancelled() && matrix.env.PRIMARY_JOB == true && github.event_name == 'push' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/lvfs-firmware-cache
+          key: lvfs-firmware-${{ hashFiles('plugins/**/*test*/*.json') }}
       - name: Save any coverage data
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
+          if-no-files-found: ignore
       - name: Upload to codecov
-        if: steps.supported.outputs.supported == 'true' &&
-          matrix.env.VARIANT != 'tartan' && (
-          matrix.env.DISTRO == 'arch' ||
-          matrix.env.DISTRO == 'debian' ||
-          matrix.env.DISTRO == 'fedora')
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        if: matrix.env.VARIANT != 'tartan' &&
+          hashFiles('coverage.xml') != ''
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  library:
-    runs-on: ubuntu-latest
-    env:
-      PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Refresh dependencies
-        run: |
-          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11
-          sudo apt update -qq
-      - name: Install dependencies
-        run: |
-          sudo apt install -qq --yes meson
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-      - name: Build
-        run: |
-          meson setup build \
-                      -Dbuild=library \
-                      -Ddocs=disabled \
-                      -Dman=false \
-                      -Dauto_features=disabled \
-                      -Dtests=false
-          ninja -C build dist
-      - name: Save version
-        id: version
-        run: |
-          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >>"$GITHUB_OUTPUT"
-      - name: Save tarball
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: tarball
-          path: ${{ github.workspace }}/build/meson-dist/*xz
 
   publish-docs:
     if: ${{ inputs.publish }}
@@ -152,7 +208,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Download artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ubuntu-amd64
       - name: Install SSH key

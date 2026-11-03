@@ -8,12 +8,11 @@
 
 import argparse
 import os
-import sys
 import subprocess
-from typing import List
+import sys
 
 
-def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
+def _check(cwd: str, argv: list[str], limit: int = 0) -> int:
     # prime cache
     try:
         subprocess.check_output(argv, cwd=cwd)
@@ -24,8 +23,7 @@ def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
         rc = subprocess.run(
             ["valgrind"] + argv,
             cwd=cwd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            capture_output=True,
             encoding="utf-8",
             check=True,
         )
@@ -37,9 +35,9 @@ def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
         if line.find("in use at exit: ") != -1:
             value = int(line.split(" ")[9].strip().replace(",", ""))
     if limit and value > limit * 1024:
-        print(f"RSS usage was {value//1024}kB (limit of {limit}kB)")
+        print(f"RSS usage was {value // 1024}kB (limit of {limit}kB)")
         return 1
-    print(f"RSS usage was {value//1024}kB")
+    print(f"RSS usage was {value // 1024}kB")
     return 0
 
 

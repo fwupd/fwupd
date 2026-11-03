@@ -1,11 +1,14 @@
 # -*- mode: dockerfile -*-
-FROM fedora:44
+FROM --platform=linux/{{ARCH}} {{DISTRO}}:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
+ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
-RUN echo fubar > /etc/machine-id
 RUN dnf --enablerepo=updates-testing -y install \
-%%%DEPENDENCIES%%%
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{" &&" if loop.last}} \
+{% endfor %}
+    dnf clean all
 WORKDIR /github/workspace

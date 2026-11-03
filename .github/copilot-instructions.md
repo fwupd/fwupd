@@ -8,9 +8,9 @@ fwupd is a Linux firmware update daemon built with Meson, written in C with GLib
 
 ### CRITICAL: Setup and Build Process
 - **CONTAINER REQUIRED**: Use pre-built container `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent development environment
-- Setup script: `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
-- Build command: `build-fwupd` (in venv) -- takes 45+ minutes. NEVER CANCEL. Set timeout to 60+ minutes.
-- Test command: `test-fwupd` (in venv) -- takes 15+ minutes. NEVER CANCEL. Set timeout to 30+ minutes.
+- Setup command: `./fwupbuild --yes init builddir` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
+- Build command: `fwupbuild build` (in venv) -- takes 45+ minutes. NEVER CANCEL. Set timeout to 60+ minutes.
+- Test command: `fwupbuild test` (in venv) -- takes 15+ minutes. NEVER CANCEL. Set timeout to 30+ minutes.
 
 ### Bootstrap the Development Environment
 
@@ -23,32 +23,18 @@ docker pull ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest
 # Run container with source mounted
 docker run -it --privileged -v $(pwd):/workspace ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest
 
-# Inside container - install dependencies first
+# Inside container - set up the development environment
 cd /workspace
-./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
+./fwupbuild --yes init builddir
 
-# Create virtual environment
-python3 -m venv venv --system-site-packages --prompt fwupd
-source venv/bin/activate
-
-# Setup development wrappers
-BASE=../contrib/
-BIN=venv/bin/
-TEMPLATE=${BASE}/launch-venv.sh
-for F in fwupdtool fwupdmgr fwupd; do
-    rm -f ${BIN}/${F}
-    ln -s $TEMPLATE ${BIN}/${F}
-done
-rm -f ${BIN}/build-fwupd
-ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
-rm -f ${BIN}/test-fwupd
-ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
+# Enter the virtual environment
+source builddir/bin/activate
 
 # Build the project - takes 45+ minutes, NEVER CANCEL, set timeout 60+ minutes
-build-fwupd
+fwupbuild -C builddir build
 
 # Run tests - takes 15+ minutes, NEVER CANCEL, set timeout 30+ minutes
-test-fwupd
+fwupbuild -C builddir test
 ```
 ## Running Applications
 
@@ -76,13 +62,13 @@ fwupdtool --verbose --plugins PLUGIN install-blob /path/to/firmware.bin DEVICE_I
 ### End-to-End Testing (Two Terminals Required)
 Terminal 1 - Run daemon:
 ```bash
-source venv/bin/activate
+source builddir/bin/activate
 fwupd --verbose
 ```
 
 Terminal 2 - Run client:
 ```bash
-source venv/bin/activate
+source builddir/bin/activate
 fwupdmgr install ~/firmware.cab
 ```
 
@@ -97,8 +83,8 @@ fwupdmgr install ~/firmware.cab
 pre-commit run --all-files
 
 # Build and test (with proper timeouts)
-build-fwupd  # 45+ minutes, NEVER CANCEL
-test-fwupd   # 15+ minutes, NEVER CANCEL
+fwupbuild build  # 45+ minutes, NEVER CANCEL
+fwupbuild test   # 15+ minutes, NEVER CANCEL
 ```
 
 ### Manual Testing Scenarios
@@ -121,8 +107,8 @@ Always test at least one complete end-to-end scenario:
 ### Important Files
 - `meson.build` - Main build configuration
 - `meson_options.txt` - Build options (117 configurable options)
-- `contrib/setup` - Development environment setup script
-- `contrib/ci/fwupd_setup_helpers.py` - Dependency installation helper
+- `fwupbuild` - Build tool wrapper for environment setup, dependencies, build and test
+- `contrib/fwupbuild/` - Implementation of the `fwupbuild` tool
 - `.github/workflows/matrix.yml` - CI build matrix (Fedora, Debian, Arch, etc.)
 
 ### Build Dependencies (Ubuntu)
@@ -167,7 +153,7 @@ The CI tests on: Fedora, CentOS, Debian x86_64, Debian i386, Ubuntu x86_64, Arch
 ## Debugging with Visual Studio Code
 
 ### Available Tasks
-- Build task: `Ctrl+Shift+B` - runs `build-fwupd`
+- Build task: `Ctrl+Shift+B` - runs `fwupbuild build`
 - Test task: `Ctrl+Shift+P` -> "Run test task"
 - Debug task: `gdbserver-fwupd` for daemon debugging
 
@@ -211,11 +197,10 @@ meson setup build -Dplugin_uefi_capsule=enabled # enable specific plugin
 
 ### Build Issues
 - **CONTAINER REQUIRED**: Use `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent Debian environment
-- **Dependency Installation**: Run `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` inside container
+- **Dependency Installation**: Run `./fwupbuild --yes install-dependencies --os debian` inside container
 - **Git Ownership**: If you see "detected dubious ownership", run `git config --global --add safe.directory /workspace` inside container
-- Check Meson version: `./contrib/ci/fwupd_setup_helpers.py test-meson`
-- Verify venv setup: `source venv/bin/activate` should show `(fwupd)` prompt
-- **Python venv**: Use `python3 -m venv venv --system-site-packages` after dependency installation
+- Verify venv setup: `source builddir/bin/activate` should show `(fwupd)` prompt
+- **Python venv**: created in the build directory by `./fwupbuild init builddir`
 
 ### Runtime Issues
 - For daemon testing: ensure polkit/dbus running

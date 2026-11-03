@@ -15,19 +15,18 @@ import sys
 
 
 def populate_translations(path):
-    output = open(os.path.join(path, "strings.txt"), "w")
-    for root, _, files in os.walk(path):
-        for file in files:
-            val: str = ""
-            if not file.endswith("display_name"):
-                continue
-            with open(os.path.join(root, file)) as f:
-                val = f.read().replace('"', "").strip()
-            if not val:
-                continue
-            output.write("#TRANSLATORS: Description of BIOS setting\n")
-            output.write(f"{val}\n\n")
-    output.close()
+    with open(os.path.join(path, "strings.txt"), "w") as output:
+        for root, _, files in os.walk(path):
+            for file in files:
+                val: str = ""
+                if not file.endswith("display_name"):
+                    continue
+                with open(os.path.join(root, file)) as f:
+                    val = f.read().replace('"', "").strip()
+                if not val:
+                    continue
+                output.write("#TRANSLATORS: Description of BIOS setting\n")
+                output.write(f"{val}\n\n")
 
 
 if __name__ == "__main__":

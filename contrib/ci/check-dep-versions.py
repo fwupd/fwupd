@@ -9,18 +9,17 @@
 # Verify that minimum versions in meson.build and dependencies.xml
 # stay in sync to prevent drift in Debian Build-Depends.
 
+import argparse
 import os
 import re
 import sys
-import argparse
 import xml.etree.ElementTree as etree
-from typing import Dict, List, Tuple
 
 # Maps the dependency id in dependencies.xml to the meson dependency() name.
 # Only includes packages that have versioned control entries in the XML.
 # libusb-1.0-0-dev is intentionally omitted: its Debian package version (e.g. 1.0.27)
 # uses a different scheme than the pkg-config version checked by meson (e.g. 0.1.27).
-MESON_ID_MAP: Dict[str, str] = {
+MESON_ID_MAP: dict[str, str] = {
     "libglib2.0-dev": "gio-2.0",
     "gnutls-dev": "gnutls",
     "libxmlb-dev": "xmlb",
@@ -32,7 +31,7 @@ MESON_ID_MAP: Dict[str, str] = {
 }
 
 
-def _extract_dep_calls(content: str) -> List[str]:
+def _extract_dep_calls(content: str) -> list[str]:
     """Extract the argument text from each dependency() call in meson.build."""
     results = []
     pattern = re.compile(r"dependency\s*\(")
@@ -51,12 +50,12 @@ def _extract_dep_calls(content: str) -> List[str]:
     return results
 
 
-def get_meson_versions(meson_build_file: str) -> Dict[str, str]:
+def get_meson_versions(meson_build_file: str) -> dict[str, str]:
     """Parse meson.build to extract minimum version requirements."""
     with open(meson_build_file, encoding="utf-8") as f:
         content = f.read()
 
-    versions: Dict[str, str] = {}
+    versions: dict[str, str] = {}
 
     name_re = re.compile(r"""^\s*['"]([^'"]+)['"]""")
     ver_re = re.compile(r"""version\s*:\s*['"]>=\s*([^'"]+)['"]""")
@@ -73,8 +72,8 @@ def get_meson_versions(meson_build_file: str) -> Dict[str, str]:
     return versions
 
 
-def get_xml_versions(xml_file: str) -> Dict[str, str]:
-    versions: Dict[str, str] = {}
+def get_xml_versions(xml_file: str) -> dict[str, str]:
+    versions: dict[str, str] = {}
 
     tree = etree.parse(xml_file)
     root = tree.getroot()
@@ -93,7 +92,7 @@ def get_xml_versions(xml_file: str) -> Dict[str, str]:
     return versions
 
 
-def _sync_version_in_distro_block(block: str, version: str) -> Tuple[str, bool]:
+def _sync_version_in_distro_block(block: str, version: str) -> tuple[str, bool]:
     changed = False
 
     # Expand a self-closing control tag if needed.
@@ -152,7 +151,7 @@ def _sync_version_in_distro_block(block: str, version: str) -> Tuple[str, bool]:
     return block, changed
 
 
-def _sync_version_in_dep_block(dep_block: str, version: str) -> Tuple[str, bool]:
+def _sync_version_in_dep_block(dep_block: str, version: str) -> tuple[str, bool]:
     changed = False
 
     for distro_id in ("debian", "ubuntu"):
@@ -178,17 +177,17 @@ def _sync_version_in_dep_block(dep_block: str, version: str) -> Tuple[str, bool]
     return dep_block, changed
 
 
-def sync_xml_versions(xml_file: str, meson_versions: Dict[str, str]) -> List[str]:
+def sync_xml_versions(xml_file: str, meson_versions: dict[str, str]) -> list[str]:
     with open(xml_file, encoding="utf-8") as f:
         xml_content = f.read()
 
-    targets: Dict[str, str] = {}
+    targets: dict[str, str] = {}
     for xml_id, meson_id in MESON_ID_MAP.items():
         meson_version = meson_versions.get(meson_id)
         if meson_version:
             targets[xml_id] = meson_version
 
-    updated_ids: List[str] = []
+    updated_ids: list[str] = []
     for dep_id, version in targets.items():
         dep_re = re.compile(
             rf'(?P<head><dependency[^>]*\sid="{re.escape(dep_id)}"[^>]*>)(?P<body>.*?)(?P<tail>\n[ \t]*</dependency>)',
@@ -214,6 +213,32 @@ def sync_xml_versions(xml_file: str, meson_versions: Dict[str, str]) -> List[str
             f.write(xml_content)
 
     return updated_ids
+
+
+def validate_dtd(xml_file: str) -> int:
+    try:
+        from lxml import etree as lxml_etree
+    except ImportError:
+        print("WARNING: lxml not available, skipping DTD validation")
+        return 0
+
+    try:
+        tree = lxml_etree.parse(xml_file)
+    except lxml_etree.XMLSyntaxError as e:
+        print(f"ERROR: Failed to parse {xml_file}: {e}")
+        return 1
+
+    dtd = tree.docinfo.internalDTD
+    if dtd is None:
+        print("ERROR: No inline DTD found in dependencies.xml")
+        return 1
+
+    if dtd.validate(tree):
+        return 0
+
+    for error in dtd.error_log.filter_from_errors():
+        print(f"ERROR: DTD validation: {error}")
+    return 1
 
 
 def check_versions(fix: bool = False) -> int:
@@ -249,6 +274,8 @@ def check_versions(fix: bool = False) -> int:
                 f"but dependencies.xml has '>= {xml_ver}'"
             )
             rc = 1
+
+    rc |= validate_dtd(xml_file)
 
     return rc
 

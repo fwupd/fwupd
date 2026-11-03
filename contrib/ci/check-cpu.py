@@ -8,12 +8,11 @@
 
 import argparse
 import os
-import sys
 import subprocess
-from typing import List
+import sys
 
 
-def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
+def _check(cwd: str, argv: list[str], limit: int = 0) -> int:
     # prime cache
     try:
         subprocess.check_output(argv, cwd=cwd)
@@ -24,8 +23,7 @@ def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
         rc = subprocess.run(
             ["valgrind", "--tool=callgrind"] + argv,
             cwd=cwd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            capture_output=True,
             encoding="utf-8",
             check=True,
         )
@@ -37,9 +35,9 @@ def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
         if line.find("Collected : ") != -1:
             value = int(line.split(" ")[3])
     if limit and value > limit * 1_000_000:
-        print(f"CPU usage was {value//1_000_000}Mcycles (limit of {limit}Mcycles)")
+        print(f"CPU usage was {value // 1_000_000}Mcycles (limit of {limit}Mcycles)")
         return 1
-    print(f"CPU usage was {value//1_000_000}Mcycles")
+    print(f"CPU usage was {value // 1_000_000}Mcycles")
     return 0
 
 

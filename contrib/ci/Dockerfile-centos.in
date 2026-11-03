@@ -1,17 +1,19 @@
 # -*- mode: dockerfile -*-
-FROM quay.io/centos/centos:stream9
+FROM --platform=linux/{{ARCH}} quay.io/centos/{{DISTRO}}:{{VERSION}}
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
+ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
-RUN echo fubar > /etc/machine-id
-RUN dnf copr enable rhughes/fwupd-epel-9 -y
-RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+RUN dnf copr enable rhughes/fwupd-epel-10 -y
+RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
 RUN crb enable
 RUN dnf -y install \
-%%%DEPENDENCIES%%%
-RUN ls -R /var/cache
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{" &&" if loop.last}} \
+{% endfor %}
+    dnf clean all
 RUN wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
 RUN wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
 WORKDIR /github/workspace
