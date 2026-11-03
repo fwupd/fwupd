@@ -706,10 +706,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 			bufsz,
 			fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware)),
 			error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_WRITE,
-					    "filling forcetable failed");
+			g_prefix_error_literal(error, "filling forcetable failed: ");
 			return FALSE;
 		}
 		chunks = fu_chunk_array_new(buf2 + iap_addr,
