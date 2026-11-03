@@ -88,6 +88,7 @@ fu_test_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *va
 	const gchar *keys[] = {"AnotherWriteRequired",
 			       "CompositeChild",
 			       "DecompressDelay",
+			       "InstallLoopRestart",
 			       "NeedsActivation",
 			       "NeedsReboot",
 			       "RegistrationSupported",
