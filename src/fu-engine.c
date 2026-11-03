@@ -7709,6 +7709,10 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
+		g_debug("ignoring %s", error_local->message);
+	} else {
+		g_info("undid %s", fu_security_attr_get_appstream_id(hsi_attr));
+		return TRUE;
 	}
 
 	/* fall back to setting the BIOS attribute */
