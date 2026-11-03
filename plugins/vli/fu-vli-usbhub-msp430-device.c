@@ -318,7 +318,7 @@ fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 
 	/* add instance ID */
 	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
-	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL);
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "I2C", NULL);
 }
 
 static void
