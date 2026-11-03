@@ -133,7 +133,7 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_CODE_LOAD_READY),
 				  error)) {
-		g_prefix_error_literal(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
+		g_prefix_error_literal(error, "timeout waiting for CODE_LOAD_READY: ");
 		return FALSE;
 	}
 
@@ -243,7 +243,7 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self, GError **e
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_CODE_BOOTUP_DONE),
 				  error)) {
-		g_prefix_error_literal(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
+		g_prefix_error_literal(error, "timeout waiting for CODE_BOOTUP_DONE: ");
 		return FALSE;
 	}
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
