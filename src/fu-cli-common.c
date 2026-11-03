@@ -593,8 +593,8 @@ fu_cli_time_to_str(guint64 tmp)
 
 	/* hours */
 	tmp /= 60;
-	if (tmp < 60) {
-		/* TRANSLATORS: duration in minutes */
+	if (tmp < 24) {
+		/* TRANSLATORS: duration in hours */
 		return g_strdup_printf(ngettext("%u hour", "%u hours", (gint)tmp), (guint)tmp);
 	}
 
