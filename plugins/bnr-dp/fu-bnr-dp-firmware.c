@@ -439,6 +439,8 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 	}
 
 	image = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
+	if (image == NULL)
+		return FALSE;
 	st_header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(image, NULL),
 							  g_bytes_get_size(image),
 							  FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
