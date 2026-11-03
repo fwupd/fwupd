@@ -256,7 +256,7 @@ fu_hpi_cfu_device_send_offer_update_command(FuHpiCfuDevice *self,
 
 static gboolean
 fu_hpi_cfu_device_firmware_update_offer_accepted(FuHpiCfuDevice *self,
-						 gint8 *reply,
+						 FuHpiCfuFirmwareUpdateOffer *reply,
 						 gint8 *reason,
 						 GError **error)
 {
@@ -356,9 +356,9 @@ fu_hpi_cfu_device_read_content_ack(FuHpiCfuDevice *self,
 }
 
 static gboolean
-fu_hpi_cfu_device_firmware_update_offer_rejected(gint8 reply)
+fu_hpi_cfu_device_firmware_update_offer_rejected(FuHpiCfuFirmwareUpdateOffer reply)
 {
-	if (reply == FU_HPI_CFU_STATE_UPDATE_OFFER_REJECTED) {
+	if (reply == FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_REJECT) {
 		g_debug("OfferRejected");
 		return TRUE;
 	}
@@ -533,7 +533,7 @@ fu_hpi_cfu_device_handler_send_offer_accepted(FuHpiCfuDevice *self,
 					      FuHpiCfuHandlerOptions *options,
 					      GError **error)
 {
-	gint8 reply = 0;
+	FuHpiCfuFirmwareUpdateOffer reply = 0;
 	gint8 reason = 0;
 
 	if (!fu_hpi_cfu_device_firmware_update_offer_accepted(self, &reply, &reason, error)) {
@@ -1295,7 +1295,7 @@ fu_hpi_cfu_device_handler_swap_pending_send_offer_list_accepted(FuHpiCfuDevice *
 								FuHpiCfuHandlerOptions *options,
 								GError **error)
 {
-	gint8 reply = 0;
+	FuHpiCfuFirmwareUpdateOffer reply = 0;
 	gint8 reason = 0;
 
 	/* reply status must be SWAP_PENDING */
@@ -1311,7 +1311,7 @@ fu_hpi_cfu_device_handler_swap_pending_send_offer_list_accepted(FuHpiCfuDevice *
 	} else {
 		if (fu_hpi_cfu_device_firmware_update_offer_rejected(reply)) {
 			g_debug("swap_pending_send_offer_list_accepted: "
-				"reply: %d,OFFER_REJECTED: Reason:'%s'",
+				"reply: %u,OFFER_REJECTED: Reason:'%s'",
 				reply,
 				fu_cfu_rr_code_to_string(reason));
 
