@@ -285,7 +285,7 @@ fu_error_map_entry_to_gerror(guint value,
 			    entry.code,
 			    "%s [0x%x]",
 			    entry.message != NULL ? entry.message
-						  : fwupd_error_to_string(entry.value),
+						  : fwupd_error_to_string(entry.code),
 			    entry.value);
 		return FALSE;
 	}
