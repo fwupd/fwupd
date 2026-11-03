@@ -28,6 +28,7 @@ enum FuDfuRequest {
 }
 
 #[derive(ToString)]
+#[repr(u8)]
 enum FuDfuStatus {
     Ok,
     ErrTarget,
@@ -48,6 +49,7 @@ enum FuDfuStatus {
 }
 
 #[derive(ToString)]
+#[repr(u8)]
 enum FuDfuState {
     AppIdle,
     AppDetach,
@@ -60,6 +62,15 @@ enum FuDfuState {
     DfuManifestWaitReset,
     DfuUploadIdle,
     DfuError,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructDfuStatusRes {
+    status: FuDfuStatus,
+    poll_timeout: u24le,
+    state: FuDfuState,
+    _string_idx: u8,
 }
 
 #[derive(ToString)]
