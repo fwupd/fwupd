@@ -47,7 +47,7 @@ fu_acpi_ivrs_dma_remap_func(void)
 	g_assert_cmpstr(oem_id, ==, "TP-R1K  ");
 
 	rev = fu_acpi_table_get_oem_revision(FU_ACPI_TABLE(ivrs));
-	g_assert_cmpuint(rev, ==, 2417033216);
+	g_assert_cmpuint(rev, ==, 0x1190);
 }
 
 static void
@@ -88,7 +88,7 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 	g_assert_cmpstr(oem_id, ==, "TC-S07  ");
 
 	rev = fu_acpi_table_get_oem_revision(FU_ACPI_TABLE(ivrs));
-	g_assert_cmpuint(rev, ==, 1074921472);
+	g_assert_cmpuint(rev, ==, 0x1240);
 }
 
 int

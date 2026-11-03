@@ -10,7 +10,7 @@ struct FuStructAcpiTable {
     checksum: u8,
     oem_id: [char; 6],
     oem_table_id: [char; 8],
-    oem_revision: u32be,
+    oem_revision: u32le,
     creator_id: [char; 4],
     creator_revision: u32le,
 }
