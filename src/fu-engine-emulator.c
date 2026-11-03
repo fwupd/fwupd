@@ -169,15 +169,48 @@ fu_engine_emulator_load_phase(FuEngineEmulator *self,
 	return fu_engine_emulator_load_json_from_stream(self, stream, error);
 }
 
-/* the identity of a device in a snapshot, which does not change between snapshots */
+/* what identifies a device, ignoring when it was created; this is %NULL for a device with
+ * nothing that tells it apart from other devices of the same type */
+static gchar *
+fu_engine_emulator_json_device_identity(FwupdJsonObject *json_device)
+{
+	const gchar *gtype = fwupd_json_object_get_string(json_device, "GType", NULL);
+	const gchar *platform_id = fwupd_json_object_get_string(json_device, "PlatformId", NULL);
+	const gchar *backend_id = fwupd_json_object_get_string(json_device, "BackendId", NULL);
+	gint64 vid = 0;
+	gint64 pid = 0;
+
+	if ((platform_id == NULL || platform_id[0] == '\0') &&
+	    (backend_id == NULL || backend_id[0] == '\0'))
+		return NULL;
+	(void)fwupd_json_object_get_integer_with_default(json_device, "IdVendor", &vid, 0, NULL);
+	(void)fwupd_json_object_get_integer_with_default(json_device, "IdProduct", &pid, 0, NULL);
+	return g_strdup_printf("%s|%s|%s|%" G_GINT64_FORMAT "|%" G_GINT64_FORMAT,
+			       gtype != NULL ? gtype : "",
+			       platform_id != NULL ? platform_id : "",
+			       backend_id != NULL ? backend_id : "",
+			       vid,
+			       pid);
+}
+
+/* the identity of a device in a snapshot, which does not change between snapshots; this is
+ * %NULL if the device cannot be told apart from others, as the creation time alone is not
+ * enough to know it is the same device */
 static gchar *
 fu_engine_emulator_json_device_key(FwupdJsonObject *json_device)
 {
 	const gchar *created = fwupd_json_object_get_string(json_device, "Created", NULL);
-	const gchar *platform_id = fwupd_json_object_get_string(json_device, "PlatformId", NULL);
+	g_autofree gchar *identity = NULL;
+
 	if (created == NULL)
 		return NULL;
-	return g_strdup_printf("%s|%s", created, platform_id != NULL ? platform_id : "");
+
+	/* Created only has a resolution of one second with older versions of GLib, so a hub and
+	 * the HID it exposes can have the same value */
+	identity = fu_engine_emulator_json_device_identity(json_device);
+	if (identity == NULL)
+		return NULL;
+	return g_strdup_printf("%s|%s", created, identity);
 }
 
 /* a copy of @json_new, but with the events of @json_old inserted before the new events */
@@ -264,6 +297,8 @@ fu_engine_emulator_to_json(FuEngineEmulator *self,
 {
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 	g_autoptr(FwupdJsonArray) json_devices_old = NULL;
+	g_autoptr(GHashTable) identities_new =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 	/* the old snapshot */
 	if (blob_old != NULL) {
@@ -291,17 +326,40 @@ fu_engine_emulator_to_json(FuEngineEmulator *self,
 		FuDevice *device = g_ptr_array_index(devices, i);
 		g_autoptr(FwupdJsonObject) json_device = fwupd_json_object_new();
 		g_autoptr(FwupdJsonObject) json_device_merged = NULL;
+		gchar *identity_new;
 
 		/* interesting? */
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
 		fu_device_add_json(device, json_device, FWUPD_CODEC_FLAG_NONE);
+		identity_new = fu_engine_emulator_json_device_identity(json_device);
+		if (identity_new != NULL)
+			g_hash_table_add(identities_new, identity_new);
+
+		/* a device without an identity is never merged with an old one */
 		json_device_merged = fu_engine_emulator_json_device_find_and_merge(json_devices_old,
 										   json_device,
 										   error);
 		if (json_device_merged == NULL)
 			return FALSE;
 		fwupd_json_array_add_object(json_arr, json_device_merged);
+	}
+
+	/* devices removed since the last snapshot, e.g. a HID that went away, are still part of
+	 * the setup; a device that came back is replaced as it has been enumerated again, but
+	 * only if it can be told apart from other devices of the same type */
+	for (guint i = 0;
+	     json_devices_old != NULL && i < fwupd_json_array_get_size(json_devices_old);
+	     i++) {
+		g_autofree gchar *identity_old = NULL;
+		g_autoptr(FwupdJsonObject) json_old = NULL;
+		json_old = fwupd_json_array_get_object(json_devices_old, i, error);
+		if (json_old == NULL)
+			return FALSE;
+		identity_old = fu_engine_emulator_json_device_identity(json_old);
+		if (identity_old != NULL && g_hash_table_contains(identities_new, identity_old))
+			continue;
+		fwupd_json_array_add_object(json_arr, json_old);
 	}
 	fwupd_json_object_add_array(json_obj, "UsbDevices", json_arr);
 

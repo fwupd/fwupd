@@ -21,6 +21,7 @@
 #include "fu-plugin-private.h"
 #include "fu-remote.h"
 #include "fu-test.h"
+#include "fu-usb-backend.h"
 
 static void
 fu_engine_save_remote_broken(FuTemporaryDirectory *tmpdir)
@@ -3752,17 +3753,78 @@ fu_engine_report_metadata_func(void)
 #define FU_ENGINE_TEST_EMULATOR_CREATED_HID G_GINT64_CONSTANT(1700000001)
 
 static FuDevice *
+fu_engine_test_emulator_new_usb_device(FuContext *ctx,
+				       const gchar *id,
+				       gint64 created,
+				       const gchar *physical_id,
+				       guint16 vid,
+				       guint16 pid)
+{
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_USB_DEVICE, "context", ctx, NULL);
+	fu_device_set_id(device, id);
+	fu_device_add_instance_id(device, id);
+	fu_device_add_protocol(device, "com.acme");
+	if (physical_id != NULL)
+		fu_device_set_physical_id(device, physical_id);
+	fu_device_set_vid(device, vid);
+	fu_device_set_pid(device, pid);
+	fu_device_set_created_usec(device, created * G_USEC_PER_SEC);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	return g_steal_pointer(&device);
+}
+
+static FuDevice *
+fu_engine_test_emulator_add_usb_device_full(FuEngine *engine,
+					    FuContext *ctx,
+					    const gchar *id,
+					    gint64 created,
+					    const gchar *physical_id,
+					    guint16 vid,
+					    guint16 pid)
+{
+	g_autoptr(FuDevice) device =
+	    fu_engine_test_emulator_new_usb_device(ctx, id, created, physical_id, vid, pid);
+	fu_engine_add_device(engine, device);
+	return g_steal_pointer(&device);
+}
+
+static FuDevice *
+fu_engine_test_emulator_add_usb_device(FuEngine *engine,
+				       FuContext *ctx,
+				       const gchar *id,
+				       gint64 created,
+				       guint16 vid,
+				       guint16 pid)
+{
+	return fu_engine_test_emulator_add_usb_device_full(engine,
+							   ctx,
+							   id,
+							   created,
+							   "1-4.1.2",
+							   vid,
+							   pid);
+}
+
+/* a USB device is used as it has a PlatformId, which the plain FuDevice does not */
+static FuDevice *
+fu_engine_test_emulator_new_device(FuContext *ctx, const gchar *id, gint64 created)
+{
+	g_autofree gchar *physical_id = g_strdup_printf("test-%s", id);
+	return fu_engine_test_emulator_new_usb_device(ctx,
+						      id,
+						      created,
+						      physical_id,
+						      0x17EF,
+						      0x0001);
+}
+
+static FuDevice *
 fu_engine_test_emulator_add_device(FuEngine *engine,
 				   FuContext *ctx,
 				   const gchar *id,
 				   gint64 created)
 {
-	g_autoptr(FuDevice) device = fu_device_new(ctx);
-	fu_device_set_id(device, id);
-	fu_device_add_instance_id(device, id);
-	fu_device_add_protocol(device, "com.acme");
-	fu_device_set_created_usec(device, created * G_USEC_PER_SEC);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	g_autoptr(FuDevice) device = fu_engine_test_emulator_new_device(ctx, id, created);
 	fu_engine_add_device(engine, device);
 	return g_steal_pointer(&device);
 }
@@ -3779,10 +3841,23 @@ fu_engine_test_emulator_add_events(FuDevice *device, const gchar *first, ...) /*
 	va_end(args);
 }
 
-/* the events of a device exported to a phase, as a comma-separated list of event data */
-static gchar *
-fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, gint64 created)
+static gint
+fu_engine_test_emulator_sort_str(gconstpointer a, gconstpointer b)
 {
+	return g_strcmp0(*((const gchar **)a), *((const gchar **)b));
+}
+
+/* the events of a device exported to a phase, as a comma-separated list of event data; if
+ * @pid is not zero only the device with that IdProduct is used; if @all is set the lists of all
+ * the matching devices are returned, sorted and separated by a semicolon */
+static gchar *
+fu_engine_test_emulator_get_event_ids_internal(GBytes *zip_blob,
+					       const gchar *phase_fn,
+					       gint64 created,
+					       gint64 pid,
+					       gboolean all)
+{
+	g_autoptr(GPtrArray) lists = g_ptr_array_new_with_free_func(g_free);
 	g_autofree gchar *created_str = NULL;
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(FwupdJsonArray) json_devices = NULL;
@@ -3828,9 +3903,23 @@ fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, g
 		tmp = fwupd_json_object_get_string(json_device, "Created", NULL);
 		if (g_strcmp0(tmp, created_str) != 0)
 			continue;
+		if (pid != 0) {
+			gint64 pid_tmp = 0;
+			(void)fwupd_json_object_get_integer_with_default(json_device,
+									 "IdProduct",
+									 &pid_tmp,
+									 0,
+									 NULL);
+			if (pid_tmp != pid)
+				continue;
+		}
 		json_events = fwupd_json_object_get_array(json_device, "Events", NULL);
-		if (json_events == NULL)
-			return g_strdup("");
+		if (json_events == NULL) {
+			if (!all)
+				return g_strdup("");
+			g_ptr_array_add(lists, g_strdup(""));
+			continue;
+		}
 		for (guint j = 0; j < fwupd_json_array_get_size(json_events); j++) {
 			g_autoptr(FwupdJsonObject) json_event = NULL;
 			json_event = fwupd_json_array_get_object(json_events, j, &error);
@@ -3841,9 +3930,45 @@ fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, g
 				g_string_append_c(str, ',');
 			g_string_append(str, tmp != NULL ? tmp : "(null)");
 		}
+		if (all) {
+			g_ptr_array_add(lists, g_string_free(g_steal_pointer(&str), FALSE));
+			continue;
+		}
 		return g_string_free(g_steal_pointer(&str), FALSE);
 	}
+	if (all && lists->len > 0) {
+		g_autofree gchar **strv = g_new0(gchar *, lists->len + 1);
+		g_ptr_array_sort(lists, fu_engine_test_emulator_sort_str);
+		for (guint i = 0; i < lists->len; i++)
+			strv[i] = g_ptr_array_index(lists, i);
+		return g_strjoinv(";", strv);
+	}
 	return NULL;
+}
+
+static gchar *
+fu_engine_test_emulator_get_event_ids_pid(GBytes *zip_blob,
+					  const gchar *phase_fn,
+					  gint64 created,
+					  gint64 pid)
+{
+	return fu_engine_test_emulator_get_event_ids_internal(zip_blob,
+							      phase_fn,
+							      created,
+							      pid,
+							      FALSE);
+}
+
+static gchar *
+fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, gint64 created)
+{
+	return fu_engine_test_emulator_get_event_ids_pid(zip_blob, phase_fn, created, 0);
+}
+
+static gchar *
+fu_engine_test_emulator_get_all_event_ids(GBytes *zip_blob, const gchar *phase_fn, gint64 created)
+{
+	return fu_engine_test_emulator_get_event_ids_internal(zip_blob, phase_fn, created, 0, TRUE);
 }
 
 static GBytes *
@@ -4014,12 +4139,7 @@ fu_engine_emulator_save_late_events_func(void)
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 
 	/* the snapshot is taken when the device is added */
-	hub = fu_device_new(ctx);
-	fu_device_set_id(hub, "hub");
-	fu_device_add_instance_id(hub, "hub");
-	fu_device_add_protocol(hub, "com.acme");
-	fu_device_set_created_usec(hub, FU_ENGINE_TEST_EMULATOR_CREATED_HUB * G_USEC_PER_SEC);
-	fu_device_add_flag(hub, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	hub = fu_engine_test_emulator_new_device(ctx, "hub", FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
 	fu_engine_test_emulator_add_events(hub, "early", NULL);
 	fu_engine_add_device(engine, hub);
 
@@ -4044,7 +4164,7 @@ fu_engine_emulator_save_no_devices_func(void)
 {
 	g_autofree gchar *hub_ids = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuDevice) hub = fu_device_new(ctx);
+	g_autoptr(FuDevice) hub = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(GBytes) zip_blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -4055,11 +4175,7 @@ fu_engine_emulator_save_no_devices_func(void)
 	fu_engine_set_silo(engine, silo_empty);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 
-	fu_device_set_id(hub, "hub");
-	fu_device_add_instance_id(hub, "hub");
-	fu_device_add_protocol(hub, "com.acme");
-	fu_device_set_created_usec(hub, FU_ENGINE_TEST_EMULATOR_CREATED_HUB * G_USEC_PER_SEC);
-	fu_device_add_flag(hub, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	hub = fu_engine_test_emulator_new_device(ctx, "hub", FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
 	fu_engine_test_emulator_add_events(hub, "early", NULL);
 	fu_engine_add_device(engine, hub);
 
@@ -4110,6 +4226,349 @@ fu_engine_emulator_large_event_func(void)
 	g_assert_cmpstr(hub_ids, ==, expected);
 }
 
+/* a hub and its HID can be created in the same second and have the same physical ID, but
+ * the events of one must never be merged into the other */
+static void
+fu_engine_emulator_same_created_func(void)
+{
+	g_autofree gchar *hid_ids = NULL;
+	g_autofree gchar *hub_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hid = NULL;
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	hub = fu_engine_test_emulator_add_usb_device(engine,
+						     ctx,
+						     "hub",
+						     FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+						     0x17EF,
+						     0x1123);
+	hid = fu_engine_test_emulator_add_usb_device(engine,
+						     ctx,
+						     "hid",
+						     FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+						     0x17EF,
+						     0x4C42);
+	fu_engine_test_emulator_add_events(hub, "hub-a", NULL);
+	fu_engine_test_emulator_add_events(hid, "hid-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_engine_test_emulator_add_events(hub, "hub-b", NULL);
+	fu_engine_test_emulator_add_events(hid, "hid-b", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	hub_ids = fu_engine_test_emulator_get_event_ids_pid(zip_blob,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    0x1123);
+	g_assert_cmpstr(hub_ids, ==, "hub-a,hub-b");
+	hid_ids = fu_engine_test_emulator_get_event_ids_pid(zip_blob,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    0x4C42);
+	g_assert_cmpstr(hid_ids, ==, "hid-a,hid-b");
+}
+
+/* a device removed after the last snapshot is still part of the setup */
+static void
+fu_engine_emulator_removed_device_func(void)
+{
+	g_autofree gchar *hid_ids = NULL;
+	g_autofree gchar *hub_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hid = NULL;
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob1 = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	hub = fu_engine_test_emulator_add_usb_device(engine,
+						     ctx,
+						     "hub",
+						     FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+						     0x17EF,
+						     0x1123);
+	hid = fu_engine_test_emulator_add_usb_device(engine,
+						     ctx,
+						     "hid",
+						     FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+						     0x17EF,
+						     0x4C42);
+	fu_engine_test_emulator_add_events(hub, "hub-a", NULL);
+	fu_engine_test_emulator_add_events(hid, "hid-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* the HID is removed, then the hub produces more events */
+	fu_device_add_private_flag(hid, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+	fu_engine_test_emulator_add_events(hub, "hub-b", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	zip_blob1 = fu_engine_test_emulator_save(emulator);
+	hub_ids = fu_engine_test_emulator_get_event_ids_pid(zip_blob1,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    0x1123);
+	g_assert_cmpstr(hub_ids, ==, "hub-a,hub-b");
+	hid_ids = fu_engine_test_emulator_get_event_ids_pid(zip_blob1,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+							    0x4C42);
+	g_assert_cmpstr(hid_ids, ==, "hid-a");
+}
+
+static gint
+fu_engine_test_emulator_sort_by_pid(gconstpointer a, gconstpointer b)
+{
+	FuDevice *device_a = *((FuDevice **)a);
+	FuDevice *device_b = *((FuDevice **)b);
+	return (gint)fu_device_get_pid(device_a) - (gint)fu_device_get_pid(device_b);
+}
+
+/* load the saved emulation into a new engine, as the replay does, and return the devices
+ * as a comma-separated list of "PID:number-of-events" sorted by PID */
+static gchar *
+fu_engine_test_emulator_replay(GBytes *zip_blob)
+{
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	backend = fu_usb_backend_new(ctx);
+	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
+	fu_context_add_backend(ctx, backend);
+	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(zip_blob));
+	g_assert_true(fu_engine_emulator_load(emulator, stream, &error));
+	g_assert_no_error(error);
+	devices = fu_backend_get_devices(backend);
+	g_ptr_array_sort(devices, fu_engine_test_emulator_sort_by_pid);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
+		if (str->len > 0)
+			g_string_append_c(str, ',');
+		g_string_append_printf(str,
+				       "%04X:%u",
+				       fu_device_get_pid(device),
+				       fu_device_get_events(device)->len);
+	}
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/* hub and HID are saved, the HID is removed, and then optionally the same HID is enumerated
+ * again with a new creation time before the hub produces more events */
+static GBytes *
+fu_engine_test_emulator_save_removed_hid(gboolean replug)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hid = NULL;
+	g_autoptr(FuDevice) hid2 = NULL;
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	hub = fu_engine_test_emulator_add_usb_device_full(engine,
+							  ctx,
+							  "hub",
+							  FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							  "1-4.1.2.4",
+							  0x17EF,
+							  0x1123);
+	hid = fu_engine_test_emulator_add_usb_device_full(engine,
+							  ctx,
+							  "hid",
+							  FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+							  "1-4.1.2",
+							  0x17EF,
+							  0x4C42);
+	fu_engine_test_emulator_add_events(hub, "hub-a", "hub-b", NULL);
+	fu_engine_test_emulator_add_events(hid, "hid-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_device_add_private_flag(hid, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+	if (replug) {
+		hid2 = fu_engine_test_emulator_add_usb_device_full(
+		    engine,
+		    ctx,
+		    "hid2",
+		    FU_ENGINE_TEST_EMULATOR_CREATED_HID + 1,
+		    "1-4.1.2",
+		    0x17EF,
+		    0x4C42);
+		fu_engine_test_emulator_add_events(hid2, "hid2-a", "hid2-b", NULL);
+	}
+	fu_engine_test_emulator_add_events(hub, "hub-c", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	return fu_engine_test_emulator_save(emulator);
+}
+
+/* the saved setup is loaded back as the devices that were recorded, including the one that
+ * was removed, and a device that came back is only loaded once */
+static void
+fu_engine_emulator_removed_device_replay_func(void)
+{
+	g_autofree gchar *replay_removed = NULL;
+	g_autofree gchar *replay_replug = NULL;
+	g_autoptr(GBytes) zip_blob_removed = fu_engine_test_emulator_save_removed_hid(FALSE);
+	g_autoptr(GBytes) zip_blob_replug = fu_engine_test_emulator_save_removed_hid(TRUE);
+
+	replay_removed = fu_engine_test_emulator_replay(zip_blob_removed);
+	g_assert_cmpstr(replay_removed, ==, "1123:3,4C42:1");
+	replay_replug = fu_engine_test_emulator_replay(zip_blob_replug);
+	g_assert_cmpstr(replay_replug, ==, "1123:3,4C42:2");
+}
+
+/* devices that cannot be told apart are never treated as the same device coming back, so
+ * the events of one are not dropped when another of the same type is saved */
+static void
+fu_engine_emulator_anonymous_devices_func(void)
+{
+	g_autofree gchar *first_ids = NULL;
+	g_autofree gchar *second_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) first = NULL;
+	g_autoptr(FuDevice) second = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	first = fu_engine_test_emulator_add_usb_device_full(engine,
+							    ctx,
+							    "first",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    NULL,
+							    0x17EF,
+							    0x1123);
+	fu_engine_test_emulator_add_events(first, "first-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* a second device with the same VID:PID, and the first one goes away */
+	fu_device_add_private_flag(first, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+	second = fu_engine_test_emulator_add_usb_device_full(engine,
+							     ctx,
+							     "second",
+							     FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+							     NULL,
+							     0x17EF,
+							     0x1123);
+	fu_engine_test_emulator_add_events(second, "second-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	first_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							  "setup.json",
+							  FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(first_ids, ==, "first-a");
+	second_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							   "setup.json",
+							   FU_ENGINE_TEST_EMULATOR_CREATED_HID);
+	g_assert_cmpstr(second_ids, ==, "second-a");
+}
+
+/* two devices that cannot be told apart and were created at the same time have their events
+ * kept separate, rather than one being merged into the other */
+static void
+fu_engine_emulator_anonymous_same_created_func(void)
+{
+	g_autofree gchar *all_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) first = NULL;
+	g_autoptr(FuDevice) second = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	first = fu_engine_test_emulator_add_usb_device_full(engine,
+							    ctx,
+							    "first",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    NULL,
+							    0x17EF,
+							    0x1123);
+	second = fu_engine_test_emulator_add_usb_device_full(engine,
+							     ctx,
+							     "second",
+							     FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							     NULL,
+							     0x17EF,
+							     0x1123);
+	fu_engine_test_emulator_add_events(first, "first-a", NULL);
+	fu_engine_test_emulator_add_events(second, "second-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_engine_test_emulator_add_events(first, "first-b", NULL);
+	fu_engine_test_emulator_add_events(second, "second-b", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* no event is lost, and no device gets the events of the other */
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	all_ids = fu_engine_test_emulator_get_all_event_ids(zip_blob,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(all_ids, ==, "first-a;first-b;second-a;second-b");
+}
+
+/* a device that cannot be told apart from another one is never the same device just because
+ * it was created at the same time, even if there is only one of each in the snapshots */
+static void
+fu_engine_emulator_anonymous_single_same_created_func(void)
+{
+	g_autofree gchar *all_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) first = NULL;
+	g_autoptr(FuDevice) second = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	first = fu_engine_test_emulator_add_usb_device_full(engine,
+							    ctx,
+							    "first",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							    NULL,
+							    0x17EF,
+							    0x1123);
+	fu_engine_test_emulator_add_events(first, "first-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* a different device replaces it */
+	fu_device_add_private_flag(first, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+	second = fu_engine_test_emulator_add_usb_device_full(engine,
+							     ctx,
+							     "second",
+							     FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							     NULL,
+							     0x17EF,
+							     0x1123);
+	fu_engine_test_emulator_add_events(second, "second-a", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	/* the events of the two devices are not mixed */
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	all_ids = fu_engine_test_emulator_get_all_event_ids(zip_blob,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(all_ids, ==, "first-a;second-a");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4124,6 +4583,18 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/emulator/save-no-devices",
 			fu_engine_emulator_save_no_devices_func);
 	g_test_add_func("/fwupd/engine/emulator/large-event", fu_engine_emulator_large_event_func);
+	g_test_add_func("/fwupd/engine/emulator/same-created",
+			fu_engine_emulator_same_created_func);
+	g_test_add_func("/fwupd/engine/emulator/removed-device",
+			fu_engine_emulator_removed_device_func);
+	g_test_add_func("/fwupd/engine/emulator/removed-device-replay",
+			fu_engine_emulator_removed_device_replay_func);
+	g_test_add_func("/fwupd/engine/emulator/anonymous-devices",
+			fu_engine_emulator_anonymous_devices_func);
+	g_test_add_func("/fwupd/engine/emulator/anonymous-same-created",
+			fu_engine_emulator_anonymous_same_created_func);
+	g_test_add_func("/fwupd/engine/emulator/anonymous-single-same-created",
+			fu_engine_emulator_anonymous_single_same_created_func);
 	g_test_add_func("/fwupd/engine/emulator/save-late-events",
 			fu_engine_emulator_save_late_events_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
