@@ -63,7 +63,7 @@ fu_focal_moc_transport_hmac(FuSecureBytes *key,
 			    GError **error)
 {
 	gsize hmac_bufsz = 32;
-	guint8 *hmac_buf = g_malloc0(hmac_bufsz);
+	g_autofree guint8 *hmac_buf = g_malloc0(hmac_bufsz);
 	g_autoptr(FuSecureBytes) actual_secure = NULL;
 	g_autoptr(GHmac) hmac = NULL;
 
