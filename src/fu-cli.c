@@ -4977,7 +4977,7 @@ static gboolean
 fu_cli_sync(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	const gchar *host_bkc;
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -4988,6 +4988,7 @@ fu_cli_sync(FuCli *self, gchar **values, GError **error)
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
+	host_bkc = fwupd_client_get_host_bkc(priv->client);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(FwupdRelease) rel = NULL;
