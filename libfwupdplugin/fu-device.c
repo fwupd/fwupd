@@ -4398,7 +4398,7 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 	/* save response */
 	if (event != NULL) {
 		fu_device_event_set_str(event, "GType", G_OBJECT_TYPE_NAME(parent));
-		if (fu_device_get_id(self) != NULL)
+		if (fu_device_get_id(parent) != NULL)
 			fu_device_event_set_str(event, "DeviceId", fu_device_get_id(parent));
 		if (fu_device_get_backend_id(parent) != NULL) {
 			fu_device_event_set_str(event,
