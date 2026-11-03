@@ -355,7 +355,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)fu_chunk_array_length(chunks));
+						(gsize)fu_chunk_array_length(blocks));
 	}
 	fu_progress_step_done(progress);
 
