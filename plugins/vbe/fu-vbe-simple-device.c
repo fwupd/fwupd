@@ -226,7 +226,7 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 			    FWUPD_ERROR_WRITE,
 			    "image '%s' skip_offset=0x%x, bufsz=0x%x, area_size=0x%x",
 			    fu_firmware_get_id(FU_FIRMWARE(img)),
-			    (guint)store_offset,
+			    (guint)self->skip_offset,
 			    (guint)bufsz,
 			    (guint)self->area_size);
 		return FALSE;
