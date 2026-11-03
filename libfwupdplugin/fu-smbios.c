@@ -228,7 +228,14 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 			    intermediate_anchor_str);
 		return FALSE;
 	}
-	csum = fu_sum8(buf + 10, bufsz - 10);
+	if (!fu_sum8_safe(buf,
+			  bufsz,
+			  FU_STRUCT_SMBIOS_EP32_OFFSET_INTERMEDIATE_ANCHOR_STR,
+			  FU_STRUCT_SMBIOS_EP32_SIZE -
+			      FU_STRUCT_SMBIOS_EP32_OFFSET_INTERMEDIATE_ANCHOR_STR,
+			  &csum,
+			  error))
+		return FALSE;
 	if (csum != 0x00) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
