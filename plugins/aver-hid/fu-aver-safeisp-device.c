@@ -282,7 +282,8 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	const guint8 *m12_fw_buf;
 	guint32 cx3_checksum = 0;
 	guint32 m12_checksum = 0;
-	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks_cx3 = NULL;
+	g_autoptr(FuChunkArray) chunks_m12 = NULL;
 	g_autoptr(GBytes) cx3_fw = NULL;
 	g_autoptr(GBytes) m12_fw = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
@@ -349,15 +350,15 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* CX3 safeisp firmware upload */
-	chunks = fu_chunk_array_new_from_bytes(cx3_fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       512,
-					       error);
-	if (chunks == NULL)
+	chunks_cx3 = fu_chunk_array_new_from_bytes(cx3_fw,
+						   FU_CHUNK_ADDR_OFFSET_NONE,
+						   FU_CHUNK_PAGESZ_NONE,
+						   512,
+						   error);
+	if (chunks_cx3 == NULL)
 		return FALSE;
 	if (!fu_aver_safeisp_device_upload(self,
-					   chunks,
+					   chunks_cx3,
 					   fu_progress_get_child(progress),
 					   ISP_CX3,
 					   error))
@@ -379,15 +380,15 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* M12 safeisp firmware upload */
-	chunks = fu_chunk_array_new_from_bytes(m12_fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       512,
-					       error);
-	if (chunks == NULL)
+	chunks_m12 = fu_chunk_array_new_from_bytes(m12_fw,
+						   FU_CHUNK_ADDR_OFFSET_NONE,
+						   FU_CHUNK_PAGESZ_NONE,
+						   512,
+						   error);
+	if (chunks_m12 == NULL)
 		return FALSE;
 	if (!fu_aver_safeisp_device_upload(self,
-					   chunks,
+					   chunks_m12,
 					   fu_progress_get_child(progress),
 					   ISP_M12,
 					   error))
