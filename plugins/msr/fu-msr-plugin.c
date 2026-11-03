@@ -375,7 +375,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error_literal(error, "could not read PCI_MSR_AMD66_HWCFG: ");
+			g_prefix_error_literal(error, "could not read PCI_MSR_AMD64_HWCFG: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
