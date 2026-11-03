@@ -97,7 +97,7 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
-	if (!fu_input_stream_read_safe(stream,
+	if (!fu_input_stream_read_safe(stream_payload,
 				       verbuf,
 				       sizeof(verbuf),
 				       0x0,
