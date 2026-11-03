@@ -244,7 +244,7 @@ fu_nordic_hid_cfg_channel_get_event_id(FuNordicHidCfgChannel *self,
 		if (g_strcmp0(module_name, mod->name) == 0)
 			break;
 	}
-	if (mod == NULL || id > 0x0f)
+	if (id >= self->modules->len || id > 0x0f)
 		return FALSE;
 
 	*event_id = id << 4;
