@@ -1692,6 +1692,7 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 				  XB_QUERY_FLAG_NONE,
 				  error);
 	if (query == NULL) {
+		fwupd_error_convert(error);
 		g_prefix_error_literal(error, "failed to prepare query: ");
 		return NULL;
 	}
@@ -1700,8 +1701,10 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 				   fu_device_get_version(device),
 				   NULL);
 	release = xb_silo_query_first_with_context(silo, query, &context, error);
-	if (release == NULL)
+	if (release == NULL) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 
 	/* silo has to have same lifecycle as node */
 	g_object_set_data_full(G_OBJECT(release),
@@ -1813,8 +1816,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	/* find component in local metadata */
 	release = fu_engine_verify_from_local_metadata(self, device, &error_local);
 	if (release == NULL) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
-		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
