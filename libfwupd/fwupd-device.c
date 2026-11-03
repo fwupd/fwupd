@@ -3357,14 +3357,14 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_BATTERY_LEVEL,
 							&tmp64,
-							0,
+							FWUPD_BATTERY_LEVEL_INVALID,
 							error))
 		return FALSE;
 	fwupd_device_set_battery_level(self, tmp64);
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
 							&tmp64,
-							0,
+							FWUPD_BATTERY_LEVEL_INVALID,
 							error))
 		return FALSE;
 	fwupd_device_set_battery_threshold(self, tmp64);
