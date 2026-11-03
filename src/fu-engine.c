@@ -3057,10 +3057,6 @@ fu_engine_install_release(FuEngine *self,
 		return FALSE;
 
 	/* add device to database */
-	if (!fu_engine_add_release_metadata(self, release, error))
-		return FALSE;
-	if (!fu_engine_add_release_plugin_metadata(self, release, plugin, error))
-		return FALSE;
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
 		if (!fu_history_add_device(self->history, device, release, error))
 			return FALSE;
