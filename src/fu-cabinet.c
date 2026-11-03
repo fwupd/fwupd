@@ -305,9 +305,9 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents size invalid, expected "
-				    "%zu, got %" G_GUINT64_FORMAT,
-				    streamsz,
-				    size);
+				    "%" G_GUINT64_FORMAT ", got %zu",
+				    size,
+				    streamsz);
 			return FALSE;
 		}
 	} else {
@@ -329,8 +329,8 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents checksum invalid, expected %s, got %s",
-				    checksum,
-				    xb_node_get_text(csum_tmp));
+				    checksum_old,
+				    checksum);
 			return FALSE;
 		}
 	}
