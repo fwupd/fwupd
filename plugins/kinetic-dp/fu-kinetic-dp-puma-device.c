@@ -270,16 +270,20 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 				       FuProgress *progress,
 				       GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
+
 	if (!fu_kinetic_dp_puma_device_enter_code_loading_mode(self, error)) {
 		g_prefix_error_literal(error, "enter code loading mode failed: ");
 		return FALSE;
 	}
-	fu_kinetic_dp_puma_device_send_payload(self,
-					       fw,
-					       progress,
-					       PUMA_CHUNK_PROCESS_MAX_WAIT,
-					       TRUE,
-					       error);
+	if (!fu_kinetic_dp_puma_device_send_payload(self,
+						    fw,
+						    progress,
+						    PUMA_CHUNK_PROCESS_MAX_WAIT,
+						    TRUE,
+						    &error_local)) {
+		g_debug("ignoring failure to send ISP driver: %s", error_local->message);
+	}
 	if (!fu_kinetic_dp_puma_device_wait_drv_ready(self, error)) {
 		g_prefix_error_literal(error, "wait for ISP driver ready failed: ");
 		return FALSE;
