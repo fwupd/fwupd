@@ -7,10 +7,11 @@
 #
 # pylint: disable=too-many-instance-attributes,no-self-use
 
-import glob
 import os
-import subprocess
 import sys
+import subprocess
+import glob
+from typing import Dict, Optional, List, Union
 
 DEFAULT_BUILDDIR = ".ossfuzz"
 
@@ -66,8 +67,8 @@ class Builder:
         self,
         name: str,
         url: str,
-        commit: str | None = None,
-        patches: list[str] | None = None,
+        commit: Optional[str] = None,
+        patches: Optional[List[str]] = None,
     ) -> str:
         """checkout source tree, optionally to a specific commit"""
         srcdir_name = os.path.join(self.srcdir, name)
@@ -125,59 +126,22 @@ class Builder:
             )
             subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
-    def build_cargo_staticlib(self, package: str, libname: str) -> str:
-        """build a rust crate as a static library and return the archive path"""
-        srcdir = os.path.join(self.srcdir, "fwupd")
-        targetdir = os.path.join(self.builddir, "cargo")
-        dst = os.path.join(targetdir, "release", f"lib{libname}.a")
-        if not os.path.exists(dst):
-            print(f"building rust package {package} into {dst}")
-            try:
-                subprocess.run(
-                    [
-                        "cargo",
-                        "build",
-                        "--release",
-                        "--package",
-                        package,
-                        "--target-dir",
-                        targetdir,
-                    ],
-                    cwd=srcdir,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
-                sys.exit(1)
-        return dst
-
-    def build_automake_project(
-        self, srcdir: str, argv=None, autogen_in_root=False
-    ) -> None:
+    def build_automake_project(self, srcdir: str, argv=None) -> None:
         """configure and build the autoconf/automake project"""
         if not argv:
             argv = []
         srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
         if not os.path.exists(srcdir_build):
             os.makedirs(srcdir_build, exist_ok=True)
-
-            if autogen_in_root:
-                subprocess.run(
-                    ["./autogen.sh"] + argv,
-                    cwd=srcdir,
-                    check=True,
-                )
-                subprocess.run(
-                    ["../configure", f"--prefix={self.builddir}"] + argv,
-                    cwd=srcdir_build,
-                    check=True,
-                )
-            else:
-                subprocess.run(
-                    ["../autogen.sh", f"--prefix={self.builddir}"] + argv,
-                    cwd=srcdir_build,
-                    check=True,
-                )
+            subprocess.run(
+                [
+                    "../autogen.sh",
+                    f"--prefix={self.builddir}",
+                ]
+                + argv,
+                cwd=srcdir_build,
+                check=True,
+            )
             subprocess.run(["make", "install"], cwd=srcdir_build, check=True)
 
     def add_work_includedir(self, value: str) -> None:
@@ -192,19 +156,19 @@ class Builder:
         """add a LDFLAG"""
         self.ldflags.append(os.path.join(self.builddir, value))
 
-    def substitute(self, src: str, replacements: dict[str, str]) -> str:
+    def substitute(self, src: str, replacements: Dict[str, str]) -> str:
         """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
         with open(os.path.join(self.srcdir, src)) as f:
             blob = f.read()
-            for key, value in replacements.items():
-                blob = blob.replace(key, value)
+            for key in replacements:
+                blob = blob.replace(key, replacements[key])
             with open(os.path.join(self.builddir, dst), "w") as out:
                 out.write(blob)
         return dst
 
-    def compile(self, src: str, argv_extra: list[str] | None = None) -> str:
+    def compile(self, src: str, argv_extra: Optional[list[str]] = None) -> str:
         """compile a specific source file"""
         argv = [self.cc]
         argv.extend(self.cflags)
@@ -223,9 +187,7 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, f"{dst}")
 
-    def rustgen(self, src: str, includes: list[str] | None = None) -> str:
-        if includes is None:
-            includes = []
+    def rustgen(self, src: str, includes: List[str] = []) -> str:
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
@@ -251,7 +213,7 @@ class Builder:
             sys.exit(1)
         return fulldst_c
 
-    def link(self, objs: list[str], dst: str) -> str:
+    def link(self, objs: List[str], dst: str) -> str:
         """link multiple objects into a binary"""
         argv = [self.cxx] + self.cxxflags
         for obj in objs:
@@ -265,10 +227,10 @@ class Builder:
         subprocess.run(argv, cwd=self.srcdir, check=True)
         return os.path.join(self.installdir, dst)
 
-    def mkfuzztargets(self, exe: str, globstr: str) -> list[str]:
+    def mkfuzztargets(self, exe: str, globstr: str) -> List[str]:
         """make binary fuzzing targets from builder.xml files"""
         builder_xmls = glob.glob(globstr)
-        corpus: list[str] = []
+        corpus: List[str] = []
         if not builder_xmls:
             builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
@@ -280,18 +242,21 @@ class Builder:
                 argv = [exe, fn_src, fn_dst]
                 subprocess.run(argv, check=True)
             except subprocess.CalledProcessError as e:
-                print(f"tried to run: `{' '.join(argv)}` and got {e!s}")
+                print(f"tried to run: `{' '.join(argv)}` and got {str(e)}")
                 sys.exit(1)
             corpus.append(fn_dst)
         return corpus
 
-    def write_header(self, dst: str, defines: dict[str, str | int | None]) -> None:
+    def write_header(
+        self, dst: str, defines: Dict[str, Optional[Union[str, int]]]
+    ) -> None:
         """write a header file"""
         dstdir = os.path.join(self.builddir, os.path.dirname(dst))
         os.makedirs(dstdir, exist_ok=True)
         print(f"writing {dst}")
         with open(os.path.join(dstdir, os.path.basename(dst)), "w") as f:
-            for key, value in defines.items():
+            for key in defines:
+                value = defines[key]
                 if value is not None:
                     if isinstance(value, int):
                         f.write(f"#define {key} {value}\n")
@@ -301,7 +266,7 @@ class Builder:
                     f.write(f"#define {key}\n")
         self.add_work_includedir(os.path.dirname(dst))
 
-    def makezip(self, dst: str, corpus: list[str]) -> None:
+    def makezip(self, dst: str, corpus: List[str]) -> None:
         """create a zip file archive from a glob"""
         if not corpus:
             return
@@ -309,7 +274,7 @@ class Builder:
         print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
-    def grep_meson(self, src: str, token: str = "fuzzing") -> list[str]:
+    def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
         """find source files tagged with a specific comment"""
         srcs = []
         with open(os.path.join(self.srcdir, src, "meson.build")) as f:
@@ -366,16 +331,6 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-
-    # pcre
-    src = bld.checkout_source(
-        "pcre2", url="https://github.com/PCRE2Project/pcre2.git", commit="pcre2-10.42"
-    )
-    bld.build_automake_project(src, autogen_in_root=True, argv=["--disable-shared"])
-    # NOTE: the pcre2 ldflags are added *after* GLib below, as glib-2-80 links
-    # gregex.c against pcre2 and static archives must be listed after the lib
-    # that references them
-
     # libusb
     src = bld.checkout_source(
         "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"
@@ -386,7 +341,7 @@ def _build(bld: Builder) -> None:
 
     # GLib
     src = bld.checkout_source(
-        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-80"
+        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
     )
     bld.build_meson_project(
         src,
@@ -395,9 +350,10 @@ def _build(bld: Builder) -> None:
             "-Dselinux=disabled",
             "-Dnls=disabled",
             "-Dlibelf=disabled",
-            "-Dintrospection=disabled",
             "-Dbsymbolic_functions=false",
             "-Dtests=false",
+            "-Dinternal_pcre=true",
+            "--force-fallback-for=libpcre",
         ],
     )
     bld.add_work_includedir("include/glib-2.0")
@@ -407,10 +363,6 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgobject-2.0.a")
     bld.add_build_ldflag("lib/libglib-2.0.a")
     bld.add_build_ldflag("lib/libgthread-2.0.a")
-
-    # pcre2, listed after GLib as gregex.c references it (see above)
-    bld.add_build_ldflag("lib/libpcre2-8.a")
-    bld.add_build_ldflag("lib/libpcre2-posix.a")
 
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
@@ -448,10 +400,9 @@ def _build(bld: Builder) -> None:
     )
 
     # libfwupd + libfwupdplugin
-    built_objs: list[str] = []
-    fuzzing_objs: list[str] = []
+    built_objs: List[str] = []
+    fuzzing_objs: List[str] = []
     bld.add_src_includedir("fwupd")
-    bld.add_src_includedir("fwupd/rust/fwupd-ffi")
     for path in ["fwupd/libfwupd"]:
         bld.add_src_includedir(path)
         for src in bld.grep_meson(path):
@@ -468,11 +419,6 @@ def _build(bld: Builder) -> None:
                 built_objs.append(bld.compile(src))
             elif src.endswith(".rs"):
                 built_objs.append(bld.compile(bld.rustgen(src, includes=["fwupd.h"])))
-
-    # the rust FFI implementation, e.g. fu_rs_file_input_stream_new_from_path()
-    # -- appended last so the archive is pulled in after the C objects that
-    # reference it, and before the glib static libs it depends on in LDFLAGS
-    built_objs.append(bld.build_cargo_staticlib("fwupd-ffi", "fwupd_ffi"))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
@@ -508,8 +454,6 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd"),
         Fuzzer("ifd-bios", pattern="ifd-bios"),
-        Fuzzer("tpm-eventlog-v1", pattern="tpm-eventlog-v1"),
-        Fuzzer("tpm-eventlog-v2", pattern="tpm-eventlog-v2"),
         Fuzzer("zip"),
     ]:
         src = bld.substitute(
@@ -519,7 +463,9 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        bld.link([bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer")
+        exe = bld.link(
+            [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
+        )
 
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
@@ -549,7 +495,6 @@ def _build(bld: Builder) -> None:
     # plugins
     for fzr in [
         Fuzzer("acpi-phat", pattern="acpi-phat"),
-        Fuzzer("amd-afc", pattern="amd-afc-state"),
         Fuzzer("bcm57xx"),
         Fuzzer("ccgx"),
         Fuzzer("ccgx-dmc"),
@@ -561,7 +506,6 @@ def _build(bld: Builder) -> None:
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
         Fuzzer("hughski-colorhug", pattern="hughski-colorhug-device"),
         Fuzzer("pixart-rf"),
-        Fuzzer("realtek-alc408x"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
         Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
@@ -589,7 +533,7 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
-        bld.link(
+        exe = bld.link(
             fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
             f"{fzr.name}_fuzzer",
         )
@@ -639,8 +583,9 @@ if __name__ == "__main__":
                 "libtool",
                 "python3",
                 "python3-jinja2",
+                "python3-packaging",
             ],
-            stdout=subprocess.DEVNULL,
+            stdout=open(os.devnull, "wb"),
         )
     except FileNotFoundError:
         pass

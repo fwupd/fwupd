@@ -9,14 +9,14 @@
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-statements
 # pylint: disable=too-few-public-methods,too-many-branches,protected-access
 
-import argparse
 import glob
-import multiprocessing
-import os
 import sys
+import os
+import argparse
+import multiprocessing
 from dataclasses import dataclass, field
-
-from ctokenizer import Node, NodeHint, Token, TokenHint, Tokenizer
+from typing import Dict, List, Optional, Tuple
+from ctokenizer import Tokenizer, Node, NodeHint, Token, TokenHint
 
 
 # convert a CamelCase name into snake_case
@@ -47,22 +47,22 @@ def _value_relaxed(data: str) -> str:
 
 @dataclass
 class SourceFailure:
-    fn: str | None = None
-    linecnt: int | None = None
-    message: str | None = None
-    nocheck: str | None = None
+    fn: Optional[str] = None
+    linecnt: Optional[int] = None
+    message: Optional[str] = None
+    nocheck: Optional[str] = None
     expected: bool = False
 
 
 @dataclass
 class Checker:
     verbose: bool = False
-    failures: list[SourceFailure] = field(default_factory=list)
-    _current_fn: str | None = field(default=None, init=False)
-    _current_nocheck: str | None = field(default=None, init=False)
-    _gtype_parents: dict[str, str] = field(default_factory=dict)
-    _klass_funcs: list[str] = field(default_factory=list, init=False)
-    _expected_failure_prefixes: list[str] = field(default_factory=list, init=False)
+    failures: List[SourceFailure] = field(default_factory=list)
+    _current_fn: Optional[str] = field(default=None, init=False)
+    _current_nocheck: Optional[str] = field(default=None, init=False)
+    _gtype_parents: Dict[str, str] = field(default_factory=dict)
+    _klass_funcs: List[str] = field(default_factory=list, init=False)
+    _expected_failure_prefixes: List[str] = field(default_factory=list, init=False)
 
     def add_expected_failure(self, message_prefix: str) -> None:
         self._expected_failure_prefixes.append(message_prefix)
@@ -75,7 +75,7 @@ class Checker:
                 return False
         return True
 
-    def add_failure(self, message, linecnt: int | None = None) -> None:
+    def add_failure(self, message, linecnt: Optional[int] = None) -> None:
         # we were expecting this
         expected: bool = False
         for message_prefix in self._expected_failure_prefixes:
@@ -149,7 +149,8 @@ class Checker:
             "_sync",
             "_windows",
         ]:
-            prefix = prefix.removesuffix(suffix)
+            if prefix.endswith(suffix):
+                prefix = prefix[: -len(suffix)]
 
         # allowed truncations
         valid_prefixes = []
@@ -165,6 +166,7 @@ class Checker:
             "fu_logitech_hidpp_hidpp_msg": "fu_logitech_hidpp",
             "fu_self_test": "fu_test",
             "fu_string": "fu_str,fu_utf",
+            "fu_tool": "fu_util",
             "fu_windows_efivars": "fu_efivars",
         }.items():
             if prefix == key:
@@ -477,11 +479,12 @@ class Checker:
         idx = node.tokens.find_fuzzy(
             ["g_set_error", "(", "~*", ",", "~*", ",", "~*", ",", "~*", ")"]
         )
-        if idx != -1 and node.tokens[idx + 8].data.find("%m") == -1:
-            self.add_failure(
-                "missing literal, use g_set_error_literal() instead",
-                linecnt=node.linecnt,
-            )
+        if idx != -1:
+            if node.tokens[idx + 8].data.find("%m") == -1:
+                self.add_failure(
+                    "missing literal, use g_set_error_literal() instead",
+                    linecnt=node.linecnt,
+                )
 
     def _test_missing_error_suffixes(self, node: Node) -> None:
         """test for missing : suffixes"""
@@ -532,7 +535,7 @@ class Checker:
             return
 
         # only consider the last token
-        name: str | None = None
+        name: Optional[str] = None
         if node.hint == NodeHint.STRUCT_TYPEDEF:
             name = node.tokens_pre[-1].data
         else:
@@ -543,7 +546,8 @@ class Checker:
                 name = node.tokens_pre[idx].data
         if not name:
             return
-        name = name.removeprefix("_")
+        if name.startswith("_"):
+            name = name[1:]
         if self.verbose:
             print("struct_name", name)
 
@@ -752,15 +756,13 @@ class Checker:
             token1 = node.tokens[idx1 + 2]
             token2 = node.tokens[idx2 + 2]
             limit: int = 3
-            if (
-                token1.data == token2.data
-                and abs(token1.linecnt - token2.linecnt) < limit
-            ):
-                self.add_failure(
-                    "use fu_device_get_id_display() rather than "
-                    "fu_device_get_name()+fu_device_get_id()",
-                    linecnt=token1.linecnt,
-                )
+            if token1.data == token2.data:
+                if abs(token1.linecnt - token2.linecnt) < limit:
+                    self.add_failure(
+                        "use fu_device_get_id_display() rather than "
+                        "fu_device_get_name()+fu_device_get_id()",
+                        linecnt=token1.linecnt,
+                    )
 
     def _test_debug_fns(self, node: Node) -> None:
         # no console output expected
@@ -832,6 +834,7 @@ class Checker:
             "g_variant_get_strv": "Use fwupd_variant_get_strv() instead",
             "g_variant_get_double": "Use fwupd_variant_get_double() instead",
             "g_variant_get_int32": "Use fwupd_variant_get_int32() instead",
+            "g_ptr_array_copy": "Use fu_ptr_array_copy() instead",
             "g_random_int_range": "Use fu_common_get_random() or a predictable token instead",
             "g_assert": "Use g_set_error() or g_return_val_if_fail() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
@@ -848,12 +851,12 @@ class Checker:
                 self.add_failure(
                     f"contains blocked token {token.data}: {msg}", linecnt=token.linecnt
                 )
-        # only enforce FuInputStream/FwupdMemoryInputStream outside of libfwupd
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
             for token, msg in {
-                "~g_memory_input_stream_new*": "Use fwupd_memory_input_stream_new*() instead",
-                "g_file_read": "Use fwupd_file_input_stream_new_from_file() instead",
-                "~g_file_input_stream_*": "Use fwupd_file_input_stream_*() instead",
+                "~g_memory_input_stream_new*": "Use fu_memory_input_stream_new*() instead",
+                "g_file_read": "Use fu_file_input_stream_from_file() instead",
+                "~g_file_input_stream_*": "Use fu_file_input_stream_*() instead",
                 "g_zlib_compressor_new": "Use fu_compressor_stream_new_compress() instead",
                 "g_zlib_decompressor_new": "Use fu_compressor_stream_new_decompress() instead",
                 "g_input_stream_read_all": "Use fu_input_stream_read_all() instead",
@@ -902,12 +905,12 @@ class Checker:
                         linecnt=token.linecnt,
                     )
 
-        # only enforce FuInputStream/FwupdMemoryInputStream outside of libfwupd
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
         if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
             for search, msg in {
                 "GInputStream": "Use FuInputStream instead",
-                "GMemoryInputStream": "Use FwupdMemoryInputStream instead",
-                "GFileInputStream": "Use FwupdFileInputStream instead",
+                "GMemoryInputStream": "Use FuMemoryInputStream instead",
+                "GFileInputStream": "Use FuFileInputStream instead",
             }.items():
                 for token in node.tokens:
                     if token.data == search:
@@ -916,7 +919,7 @@ class Checker:
                             linecnt=token.linecnt,
                         )
 
-    def _test_magic_numbers_defined(self, nodes: list[Node]) -> None:
+    def _test_magic_numbers_defined(self, nodes: List[Node]) -> None:
         cnt: int = 0
         limit: int = 15
         linecnt: int = 0
@@ -938,7 +941,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_magic_numbers_inline(self, nodes: list[Node]) -> None:
+    def _test_magic_numbers_inline(self, nodes: List[Node]) -> None:
         cnt: int = 0
         limit: int = 80
         linecnt: int = 0
@@ -962,7 +965,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_gerror_false_returns(self, nodes: list[Node]) -> None:
+    def _test_gerror_false_returns(self, nodes: List[Node]) -> None:
         for node in nodes:
             if node.depth == 0:
                 continue
@@ -981,7 +984,7 @@ class Checker:
                     )
                     break
 
-    def _test_gerror_not_set(self, nodes: list[Node]) -> None:
+    def _test_gerror_not_set(self, nodes: List[Node]) -> None:
         limit: int = 10
         for node in nodes:
             if node.depth == 0:
@@ -994,7 +997,7 @@ class Checker:
                 if self.verbose:
                     print(f"GError required @{linecnt}")
 
-                found_linecnt: list[int] = []
+                found_linecnt: List[int] = []
 
                 # set error inner
                 idx_found = node.tokens.find_fuzzy(
@@ -1059,7 +1062,7 @@ class Checker:
             "dereferences GError; use error_local instead", linecnt=token.linecnt
         )
 
-    def _test_switch(self, nodes: list[Node]) -> None:
+    def _test_switch(self, nodes: List[Node]) -> None:
         limit: int = 2
         cnt: int = 0
         for node in nodes:
@@ -1076,7 +1079,7 @@ class Checker:
                     )
                     break
 
-    def _test_null_false_returns(self, nodes: list[Node]) -> None:
+    def _test_null_false_returns(self, nodes: List[Node]) -> None:
         # allowed values from g_return_val_if_fail()
         types_rvif = {
             "*": ["NULL"],
@@ -1205,7 +1208,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_firmware_convert_version(self, nodes: list[Node]) -> None:
+    def _test_firmware_convert_version(self, nodes: List[Node]) -> None:
         # contains fu_firmware_set_version_raw()
         _set_version_raw: bool = False
         for node in nodes:
@@ -1231,7 +1234,7 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
-    def _test_device_convert_version(self, nodes: list[Node]) -> None:
+    def _test_device_convert_version(self, nodes: List[Node]) -> None:
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-engine-test.c",
         ]:
@@ -1300,7 +1303,7 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
-    def _test_small_conditionals_with_braces(self, nodes: list[Node]) -> None:
+    def _test_small_conditionals_with_braces(self, nodes: List[Node]) -> None:
         # we need to parse the nodes in order
         for idx, node in enumerate(nodes):
             next_node_depth: int = 0
@@ -1397,7 +1400,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_gobject_parents(self, nodes: list[Node]) -> None:
+    def _test_gobject_parents(self, nodes: List[Node]) -> None:
         gtype: str = ""
         gtypeparent: str = ""
         for node in nodes:
@@ -1448,7 +1451,7 @@ class Checker:
                         linecnt=node.linecnt,
                     )
 
-    def _test_nodes(self, nodes: list[Node]) -> None:
+    def _test_nodes(self, nodes: List[Node]) -> None:
         # preroll
         self._klass_funcs.clear()
         for node in nodes:
@@ -1606,9 +1609,9 @@ class Checker:
         self._test_nodes(nodes)
 
 
-def _build_gtype_parents(fns: list[str]) -> dict[str, str]:
+def _build_gtype_parents(fns: List[str]) -> Dict[str, str]:
     """Pre-scan header files to build the GType parent map."""
-    gtype_parents: dict[str, str] = {}
+    gtype_parents: Dict[str, str] = {}
     for fn in fns:
         if not fn.endswith(".h"):
             continue
@@ -1631,8 +1634,8 @@ def _build_gtype_parents(fns: list[str]) -> dict[str, str]:
 
 
 def _check_file(
-    args: tuple[str, dict[str, str], bool],
-) -> list[SourceFailure]:
+    args: Tuple[str, Dict[str, str], bool],
+) -> List[SourceFailure]:
     """Check a single file -- top-level function for multiprocessing."""
     fn, gtype_parents, verbose = args
     print(f"checking {fn}…", file=sys.stderr)
@@ -1641,11 +1644,11 @@ def _check_file(
     return checker.failures
 
 
-def test_files(fns_optional: list[str], verbose: bool = False) -> int:
+def test_files(fns_optional: List[str], verbose: bool = False) -> int:
     # test all C and H files
 
     # use any file specified in argv, falling back to scanning the entire tree
-    fns: list[str] = []
+    fns: List[str] = []
     if fns_optional:
         for fn in fns_optional:
             if fn.startswith("contrib/ci/tests"):
@@ -1668,7 +1671,7 @@ def test_files(fns_optional: list[str], verbose: bool = False) -> int:
     gtype_parents = _build_gtype_parents(fns)
 
     # check files in parallel (fall back to serial for verbose or small batches)
-    failures: list[SourceFailure] = []
+    failures: List[SourceFailure] = []
     if verbose or len(fns) < 4:
         checker = Checker(verbose=verbose, _gtype_parents=gtype_parents)
         for fn in fns:

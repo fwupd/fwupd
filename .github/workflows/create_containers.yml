@@ -30,11 +30,14 @@ env:
   # latest one. It also gets rebuilt on every git push with a change to this file
   # here so to force a rebuild, change the number in the comment (or change
   # anything else in this file).
+  #
+  # The tags carry a 2_1_X prefix so they do not collide with the images built
+  # from main, whose dependency set differs (e.g. no vala).
   ARCH_CONTAINER_TAG: "latest"  # 0002
-  CENTOS_CONTAINER_TAG: "2026-10-08.0"
-  DEBIAN_CONTAINER_TAG: "2026-10-08.1"
-  UBUNTU_CONTAINER_TAG: "2026-10-15.1"
-  FEDORA_CONTAINER_TAG: "2026-10-08.0"
+  CENTOS_CONTAINER_TAG: "2_1_X-2026-11-03.0"
+  DEBIAN_CONTAINER_TAG: "2_1_X-2026-11-03.0"
+  UBUNTU_CONTAINER_TAG: "2_1_X-2026-11-03.0"
+  FEDORA_CONTAINER_TAG: "2_1_X-2026-11-03.0"
 
 jobs:
   find_or_create_container:
