@@ -5148,7 +5148,8 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) events = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_devices = NULL;
+	g_autoptr(GError) error_events = NULL;
 	g_autofree gchar *str = NULL;
 
 #ifndef HAVE_HSI
@@ -5169,21 +5170,21 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	events = fwupd_client_get_host_security_events(priv->client,
 						       10,
 						       priv->cancellable,
-						       &error_local);
+						       &error_events);
 	if (events == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_debug("ignoring failed events: %s", error_local->message);
+		if (g_error_matches(error_events, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring failed events: %s", error_events->message);
 		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+			g_propagate_error(error, g_steal_pointer(&error_events));
 			return FALSE;
 		}
 	}
 
 	/* the "also" */
-	devices = fwupd_client_get_devices(priv->client, priv->cancellable, &error_local);
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, &error_devices);
 	if (devices == NULL) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+		if (!g_error_matches(error_devices, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_propagate_error(error, g_steal_pointer(&error_devices));
 			return FALSE;
 		}
 	}
