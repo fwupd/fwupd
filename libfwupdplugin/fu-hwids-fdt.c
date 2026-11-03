@@ -91,8 +91,9 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/ibm,firmware-versions", NULL);
 	if (fdt_img_fwver != NULL) {
 		g_autofree gchar *version = NULL;
-		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
-		fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
+		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img_fwver), "version", &version, NULL);
+		if (version != NULL)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
 	}
 
 	/* fall back to the firmware unix time */
