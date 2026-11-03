@@ -92,7 +92,7 @@ fu_logitech_tap_touch_firmware_calculate_ap_crc_cb(const guint8 *buf,
 						   gpointer user_data,
 						   GError **error)
 {
-	guint32 *ap_check = (guint32 *)user_data;
+	guint16 *ap_check = (guint16 *)user_data;
 	const guint16 ap_polynomial = 0x8408;
 
 	for (gsize i = 0; i < bufsz; i++) {
@@ -113,7 +113,7 @@ fu_logitech_tap_touch_firmware_calculate_basic_cb(const guint8 *buf,
 						  gpointer user_data,
 						  GError **error)
 {
-	guint32 *df_check = (guint32 *)user_data;
+	guint16 *df_check = (guint16 *)user_data;
 	for (gsize i = 0; i < bufsz; i++)
 		*df_check += buf[i];
 	return TRUE;
