@@ -243,7 +243,7 @@ fu_redfish_common_func(void)
 	ipv4 = fu_redfish_common_buffer_to_ipv4(buf);
 	g_assert_cmpstr(ipv4, ==, "0.1.2.3");
 	ipv6 = fu_redfish_common_buffer_to_ipv6(buf);
-	g_assert_cmpstr(ipv6, ==, "00010203:04050607:08090a0b:0c0d0e0f");
+	g_assert_cmpstr(ipv6, ==, "0001:0203:0405:0607:0809:0a0b:0c0d:0e0f");
 	maca = fu_redfish_common_buffer_to_mac(buf);
 	g_assert_cmpstr(maca, ==, "00:01:02:03:04:05");
 }
