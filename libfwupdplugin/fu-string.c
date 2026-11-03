@@ -455,7 +455,8 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
 				helper->detected_nul = TRUE;
 				break;
 			}
-			if (strncmp((const gchar *)buf->data + offset,
+			if (offset + helper->delimiter_sz <= buf->len &&
+			    strncmp((const gchar *)buf->data + offset,
 				    helper->delimiter,
 				    helper->delimiter_sz) == 0)
 				break;
