@@ -441,7 +441,7 @@ fu_genesys_usbhub_firmware_export(FuFirmware *firmware,
 		g_autofree gchar *mask_project_ic_type =
 		    fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
 		g_autofree gchar *running_project_code =
-		    fu_struct_genesys_ts_static_get_mask_project_code(self->st_static_ts);
+		    fu_struct_genesys_ts_static_get_running_project_code(self->st_static_ts);
 		g_autofree gchar *running_project_hardware =
 		    fu_struct_genesys_ts_static_get_running_project_hardware(self->st_static_ts);
 		g_autofree gchar *running_project_firmware =
