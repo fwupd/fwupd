@@ -65,6 +65,7 @@ fu_uf2_device_probe_current_fw(FuUf2Device *self, GBytes *fw, GError **error)
 		fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware));
 
 	/* add instance ID for quirks */
+	self->family_id = fu_firmware_get_idx(firmware);
 	if (fu_firmware_get_idx(firmware) != 0x0) {
 		fu_device_add_instance_u32(FU_DEVICE(self),
 					   "FAMILY",
