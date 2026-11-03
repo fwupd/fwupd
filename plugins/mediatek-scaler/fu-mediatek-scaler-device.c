@@ -110,7 +110,7 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 	/* read into tmp buffer */
 	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
 	if (proxy == NULL)
-		return FALSE;
+		return NULL;
 	if (!fu_i2c_device_read(proxy, buf, sizeof(buf), error))
 		return NULL;
 

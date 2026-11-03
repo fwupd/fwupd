@@ -224,7 +224,7 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 			   bufout->len + 4,
 			   &checksum_calc,
 			   error))
-		return FALSE;
+		return NULL;
 	if (checksum_calc != checksum_actual) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
