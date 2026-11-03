@@ -77,8 +77,8 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 	fu_xmlb_builder_insert_kx(bn, "illegal_jedec", priv->illegal_jedec);
 	fu_xmlb_builder_insert_kx(bn, "illegal_jedec1", priv->illegal_jedec1);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		for (guint i = 1; i < 3; i++) {
-			g_autofree gchar *title = g_strdup_printf("flash_master%x", i + 1);
+		for (guint i = 1; i < G_N_ELEMENTS(priv->flash_master); i++) {
+			g_autofree gchar *title = g_strdup_printf("flash_master%x", i);
 			fu_xmlb_builder_insert_kx(bn, title, priv->flash_master[i]);
 		}
 		if (priv->flash_descriptor_regs != NULL) {
