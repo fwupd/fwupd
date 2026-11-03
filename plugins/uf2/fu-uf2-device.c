@@ -311,6 +311,8 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	if (fn1 == NULL)
 		return FALSE;
 	blob_txt = fu_device_get_contents_bytes(device, fn1, G_MAXUINT32, NULL, error);
+	if (blob_txt == NULL)
+		return FALSE;
 	lines = fu_strsplit_bytes(blob_txt, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "Model: ")) {
