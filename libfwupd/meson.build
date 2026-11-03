@@ -251,7 +251,7 @@ if introspection.allowed()
     install: true,
   )
 
-  if not meson.is_cross_build()
+  if not meson.is_cross_build() and find_program('vapigen', required: false).found()
     gnome.generate_vapi(
       'fwupd',
       sources: fwupd_gir[0],

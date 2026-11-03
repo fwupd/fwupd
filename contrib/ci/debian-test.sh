@@ -43,7 +43,7 @@ endgroup
 # generate coverage report from the source copy so gcovr filters match
 WORKSPACE="$PWD"
 (cd build &&
-    GCOVR_OUTPUT="$WORKSPACE/coverage.xml" "$WORKSPACE/contrib/ci/coverage.py")
+    GCOVR_OUTPUT="$WORKSPACE/coverage.xml" GCOVR_IGNORE_ERRORS=no_working_dir_found "$WORKSPACE/contrib/ci/coverage.py")
 
 group "Clean up"
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev
