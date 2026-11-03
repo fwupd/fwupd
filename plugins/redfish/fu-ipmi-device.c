@@ -515,7 +515,7 @@ fu_ipmi_device_setup(FuDevice *device, GError **error)
 		self->device_id = resp[0];
 		self->device_rev = resp[1];
 		bcd = resp[3] & 0x0f;
-		bcd += 10 * (resp[4] >> 3);
+		bcd += 10 * (resp[3] >> 4);
 		/* rev1.rev2.aux_revision */
 		g_string_append_printf(str, "%u.%02u", resp[2], bcd);
 		if (resp_len == 15) {
