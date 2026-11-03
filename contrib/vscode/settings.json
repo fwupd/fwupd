@@ -1,4 +1,4 @@
 {
   "editor.tabSize": 8,
-  "mesonbuild.buildFolder": "venv/build"
+  "mesonbuild.buildFolder": "builddir/build"
 }

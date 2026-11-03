@@ -11,21 +11,11 @@ import logging
 import os
 import subprocess
 import sys
-
-from typing import Iterator, List
+from collections.abc import Iterator
 
 
 def parse_version(ver):
     return tuple(map(int, ver.split(".")))
-
-
-# see https://github.com/mesonbuild/meson/pull/14890
-def old_meson_missing_vapi_deps_tag() -> bool:
-    version_str = subprocess.check_output(
-        ["meson", "--version"],
-        text=True,
-    )
-    return parse_version(version_str.strip()) <= parse_version("1.9.0")
 
 
 def objects_with_tag(obj) -> Iterator[dict]:
@@ -40,7 +30,7 @@ def objects_with_tag(obj) -> Iterator[dict]:
                 yield from objects_with_tag(i)
 
 
-def collect_tags(install_plan) -> List[str]:
+def collect_tags(install_plan) -> list[str]:
     tags = set()
 
     for obj in objects_with_tag(install_plan):
@@ -49,8 +39,8 @@ def collect_tags(install_plan) -> List[str]:
     return sorted(["null" if t is None else t for t in tags])
 
 
-def collect_files(install_plan, tag) -> List[str]:
-    files = list()
+def collect_files(install_plan, tag) -> list[str]:
+    files = []
 
     if tag == "null":
         tag = None
@@ -83,13 +73,9 @@ def check(install_plan) -> int:
     tags = collect_tags(install_plan)
 
     # check for files missing install tag
-    ignore_vapi_deps = old_meson_missing_vapi_deps_tag()
     for null_file in collect_files(install_plan, None):
-        if ignore_vapi_deps and null_file.endswith("fwupd.deps"):
-            logging.warning(f"missing meson install tag: {null_file}")
-        else:
-            logging.error(f"missing meson install tag: {null_file}")
-            exit_code = 1
+        logging.error(f"missing meson install tag: {null_file}")
+        exit_code = 1
 
     # check for incorrect test file tags
     for tag in [t for t in tags if t != "tests"]:
@@ -154,14 +140,14 @@ if __name__ == "__main__":
     if "PRE_COMMIT" not in os.environ:
         sys.exit(main())
 
-    if not os.path.exists("venv/build"):
+    if not os.path.exists("builddir/build"):
         logging.info("no configured build directory, skipping check-meson-install-tag")
         sys.exit(0)
 
     install_plan = json.loads(
         subprocess.check_output(
             ["meson", "introspect", "--install-plan"],
-            cwd="venv/build",
+            cwd="builddir/build",
             text=True,
         )
     )

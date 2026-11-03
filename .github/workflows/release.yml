@@ -6,18 +6,36 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
+  containers:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/create_containers.yml
+
   linux:
     permissions:
       contents: read
-    uses: ./.github/workflows/linux.yml
+    needs: [containers]
+    if: ${{ always() && needs.containers.result == 'success' }}
+    uses: $/.github/workflows/linux.yml
     with:
       publish: true
-    secrets: inherit
+      container_lut: ${{ needs.containers.outputs.container_lut }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      FWUPD_GITHUB_IO_SSH_KEY: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
 
   windows:
     permissions:
       contents: write
-    uses: ./.github/workflows/windows.yml
+    uses: $/.github/workflows/windows.yml
     with:
       publish: true
-    secrets: inherit
+
+  snap:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/snap.yml
+    with:
+      deploy: true
+    secrets:
+      STORE_LOGIN: ${{ secrets.STORE_LOGIN }}

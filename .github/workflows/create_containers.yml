@@ -1,48 +1,207 @@
 name: Create containers
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches: ['**']
+    paths:
+      - '.github/workflows/create_containers.yml'
+  workflow_call:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild of the container"
+        required: false
+        type: boolean
+        default: false
+      distro_filter:
+        description: "Only consider containers for the given distro name (e.g. 'arch')"
+        required: false
+        type: string
+        default: ''
+    outputs:
+      container_lut:
+        description: "A JSON lookup table for container URIs"
+        value: ${{ jobs.container_mapping.outputs.container_lut }}
+
+permissions: {}
+
+env:
+  # Our containers are currently per-distro. This can be changed if needed.
+  #
+  # The Arch container is force-rebuilt on schedule so we always run against the
+  # latest one. It also gets rebuilt on every git push with a change to this file
+  # here so to force a rebuild, change the number in the comment (or change
+  # anything else in this file).
+  ARCH_CONTAINER_TAG: "latest"  # 0002
+  CENTOS_CONTAINER_TAG: "2026-10-08.0"
+  DEBIAN_CONTAINER_TAG: "2026-10-08.1"
+  UBUNTU_CONTAINER_TAG: "2026-10-15.1"
+  FEDORA_CONTAINER_TAG: "2026-10-08.0"
 
 jobs:
-  push_to_registry:
+  find_or_create_container:
     permissions:
       contents: read
       packages: write # for docker/build-push-action
-    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
+    runs-on: ${{ case(matrix.distros.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     strategy:
       fail-fast: false
       matrix:
-        env:
-          # NOTE: values are joined by '-' for name of container image
-          - { DISTRO: arch, ARCH: amd64 }
-          - { DISTRO: centos, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
-          - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
-          - { DISTRO: debian, ARCH: arm64 }
-          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
-          - { DISTRO: fedora, ARCH: amd64 }
-          - { DISTRO: ubuntu, ARCH: amd64 }
-    env: ${{ matrix.env }}
+        distros:
+          - { DISTRO: arch, VERSION: latest, ARCH: amd64 , FORCE_REBUILD: true }
+          - { DISTRO: centos, VERSION: stream10, ARCH: amd64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: amd64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: i386 }
+          # - { DISTRO: debian, VERSION: unstable, ARCH: amd64, VARIANT: tartan }
+          - { DISTRO: debian, VERSION: testing, ARCH: arm64 }
+          - { DISTRO: debian, VERSION: testing, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: fedora, VERSION: 44, ARCH: amd64 }
+          - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64 }
     steps:
+      # We don't have matrix.* available at the jobs.if stage and
+      # GitHub doesn't have an option to say "skip the rest of the jobs"
+      - name: Check if we should run this job
+        id: should_we
+        if: ${{ github.event_name == 'push' || !inputs.distro_filter || matrix.distros.DISTRO == inputs.distro_filter }}
+        run: |
+          echo "run=true" >> "$GITHUB_OUTPUT"
       - name: Check out the repo
+        if: steps.should_we.outputs.run == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Generate Dockerfile
-        run: ./contrib/ci/generate_docker.py
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+        if: steps.should_we.outputs.run == 'true'
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Assemble container tag
+        if: steps.should_we.outputs.run == 'true'
+        id: tag
+        env:
+          DISTRO: ${{ matrix.distros.DISTRO }}
+          ARCH: ${{ matrix.distros.ARCH }}
+          VARIANT: ${{ matrix.distros.VARIANT }}
+          ARCH_CONTAINER_TAG: ${{ env.ARCH_CONTAINER_TAG }}
+          CENTOS_CONTAINER_TAG: ${{ env.CENTOS_CONTAINER_TAG }}
+          DEBIAN_CONTAINER_TAG: ${{ env.DEBIAN_CONTAINER_TAG }}
+          UBUNTU_CONTAINER_TAG: ${{ env.UBUNTU_CONTAINER_TAG }}
+          FEDORA_CONTAINER_TAG: ${{ env.FEDORA_CONTAINER_TAG }}
+          USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+          REPO_IS_FORK: ${{ github.event.repository.fork }}
+          FORCE_REBUILD: ${{ github.event_name != 'pull_request' && matrix.distros.FORCE_REBUILD || '' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DISTRO_UPPERCASE="$(echo "${DISTRO}" | tr '[:lower:]' '[:upper:]')"
+          TAG_VAR="${DISTRO_UPPERCASE}_CONTAINER_TAG"
+          CONTAINER_TAG="${!TAG_VAR}"
+          IDENTIFIER="${DISTRO}-${ARCH}${VARIANT:+-${VARIANT}}"
+
+          THIS_REPO="${USER_REPO:-$GITHUB_REPOSITORY}"
+          # for pull requests, use the base repository from the event
+          if [[ -n "$BASE_REPO" ]]; then
+            PARENT_REPO="$BASE_REPO"
+          # for pushes query the parent of the current repository
+          elif [[ "$REPO_IS_FORK" == "true" ]]; then
+            PARENT_REPO=$(gh api repos/${{ github.repository }} --jq '.parent.full_name')
+          else
+            PARENT_REPO="$THIS_REPO"
+          fi
+
+          # github username may be uppercase but docker tags must be all lowercase
+          THIS_REPO="${THIS_REPO,,}"
+          PARENT_REPO="${PARENT_REPO,,}"
+          THIS_REPO_TAG="ghcr.io/${THIS_REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+          PARENT_REPO_TAG="ghcr.io/${PARENT_REPO}/fwupd-${IDENTIFIER}:${CONTAINER_TAG}"
+
+          TAG=""
+
+          # if we re rebuild, it'll be in this repo here
+          if [[ -n "${FORCE_REBUILD:-}" ]]; then
+            echo "Force-rebuilding ${THIS_REPO_TAG}."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            TAG="${THIS_REPO_TAG}"
+          fi
+
+          # check parent first so forks don't unnecessarily rebuild
+          if [[ -z "$TAG" ]] && [[ "${THIS_REPO}" != "${PARENT_REPO}" ]]; then
+            echo "Checking for ${PARENT_REPO_TAG}"
+            if docker manifest inspect "${PARENT_REPO_TAG}" > /dev/null 2>&1; then
+              echo "Container ${PARENT_REPO_TAG} already exists."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              TAG="${PARENT_REPO_TAG}"
+            fi
+          fi
+
+          # check this repo
+          if [[ -z "$TAG" ]]; then
+            echo "Checking for ${THIS_REPO_TAG}"
+            if docker manifest inspect "${THIS_REPO_TAG}" > /dev/null 2>&1; then
+              echo "Container ${THIS_REPO_TAG} already exists."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              TAG="${THIS_REPO_TAG}"
+            fi
+          fi
+
+          if [[ -z "$TAG" ]]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Container ${TAG} does not exist."
+            TAG="$THIS_REPO_TAG"
+          fi
+
+          echo "Using container tag ${TAG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "{\"$IDENTIFIER\": \"$TAG\"}" > "image_${IDENTIFIER}.json"
+      - name: Save the json files containing the container mappings
+        if: steps.should_we.outputs.run == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-map-${{ strategy.job-index }}
+          path: image_*.json
+      - name: Let the user know container is not ready yet
+        if: steps.should_we.outputs.run == 'true' && steps.tag.outputs.exists != 'true' && github.event_name == 'pull_request'
+        env:
+          USER_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          echo "::error::The requested image ${TAG} does not yet exist. Wait until the push pipeline is complete, then re-run this job."
+          echo "The push pipelines should be listed here: https://github.com/${USER_REPO}/actions"
+          exit 1
+      # Steps below here are skipped for pull requests because we don't have permission anyway
+      - name: Generate Dockerfile
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        run: >-
+          ./fwupbuild dockerfile
+          --os "${{ matrix.distros.DISTRO }}"
+          --version "${{ matrix.distros.VERSION }}"
+          --arch "${{ matrix.distros.ARCH }}"
+          ${{ matrix.distros.VARIANT && format('--variant "{0}"', matrix.distros.VARIANT) || '' }};
+          cat Dockerfile
+      - name: Set up Docker Buildx
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Push to GitHub Packages
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        if: steps.should_we.outputs.run == 'true' && (inputs.force_rebuild || (steps.tag.outputs.exists != 'true' && github.event_name != 'pull_request'))
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ join(matrix.env.*, '-') }}:latest"
+          tags: ${{ steps.tag.outputs.tag }}
+
+  container_mapping:
+    needs: find_or_create_container
+    runs-on: ubuntu-latest
+    outputs:
+      container_lut: ${{ steps.merge.outputs.container_lut }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-map-*
+          merge-multiple: true
+      - name: merge individual JSON files into one
+        id: merge
+        run: |
+          jq -s 'add' image_*.json > container_lut.json
+          cat container_lut.json
+          echo "container_lut=$(jq -c . container_lut.json)" >> "$GITHUB_OUTPUT"

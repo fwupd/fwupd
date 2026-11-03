@@ -7,15 +7,13 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,
 # pylint: disable=missing-function-docstring,too-few-public-methods,consider-using-enumerate
 
-from typing import Optional, List
+import copy
+import sys
 from enum import Enum
 from fnmatch import fnmatch
-import sys
-import copy
 
 
 class TokenHint(Enum):
-
     COMMENT = 1
     STRING = 2
     DEFINE = 3
@@ -36,20 +34,17 @@ class TokenHint(Enum):
 
 
 def _check_int(s: str) -> bool:
-    if s.startswith("-"):
-        s = s[1:]
-    if s.startswith("0x"):
-        s = s[2:]
+    s = s.removeprefix("-")
+    s = s.removeprefix("0x")
     return s.isdigit()
 
 
 class Token:
-
-    def __init__(self, data: str, linecnt: int = 0, hint: Optional[TokenHint] = None):
+    def __init__(self, data: str, linecnt: int = 0, hint: TokenHint | None = None):
         self.linecnt: int = linecnt
         self.linecnt_end: int = linecnt
         self.data: str = data
-        self.hint: Optional[TokenHint] = hint
+        self.hint: TokenHint | None = hint
 
         # autohint
         if not self.hint:
@@ -85,7 +80,7 @@ def _token_fuzzy_match(token: Token, data: str) -> bool:
     """
 
     # hint
-    query: List[str] = data.split("@")
+    query: list[str] = data.split("@")
     try:
         if token.hint != TokenHint.value_of(query[1]):
             return False
@@ -108,8 +103,7 @@ def _token_fuzzy_match(token: Token, data: str) -> bool:
 
 
 class TokenList(list):
-
-    def __init__(self, tokens: Optional[list[Token]] = None):
+    def __init__(self, tokens: list[Token] | None = None):
         for token in tokens or []:
             self.append(token)
 
@@ -126,20 +120,19 @@ class TokenList(list):
         # autohint previous token
         if len(self) > 0 and token.hint == TokenHint.LBRACKET:
             token_prev: Token = self[-1]
-            if not token_prev.hint:
-                if token_prev.data.find("_") != -1:
-                    if token_prev.data.upper() == token_prev.data:
-                        token_prev.hint = TokenHint.MACRO
-                    else:
-                        token_prev.hint = TokenHint.FUNCTION
+            if not token_prev.hint and token_prev.data.find("_") != -1:
+                if token_prev.data.upper() == token_prev.data:
+                    token_prev.hint = TokenHint.MACRO
+                else:
+                    token_prev.hint = TokenHint.FUNCTION
 
         # add
         list.append(self, token)
 
     def find_fuzzy(
         self,
-        data_fuzzy: List[str],
-        offset: Optional[int] = None,
+        data_fuzzy: list[str],
+        offset: int | None = None,
         reverse: bool = False,
         skip_comments: bool = False,
     ) -> int:
@@ -152,7 +145,6 @@ class TokenList(list):
         else:
             pos_range = range(offset or 0, len(self) - (len(data_fuzzy) - 1))
         for pos in pos_range:
-
             all_match: bool = True
             for datapos in range(len(data_fuzzy)):
                 comment_offset: int = 0
@@ -166,7 +158,7 @@ class TokenList(list):
                 return pos
         return -1
 
-    def endswith_fuzzy(self, data_fuzzy: List[str]) -> bool:
+    def endswith_fuzzy(self, data_fuzzy: list[str]) -> bool:
         """
         Look for a fuzzy token sequence at the end of the list.
         Returns False if not found.
@@ -180,7 +172,7 @@ class TokenList(list):
                 return False
         return True
 
-    def count_fuzzy(self, data_fuzzy: List[str]) -> int:
+    def count_fuzzy(self, data_fuzzy: list[str]) -> int:
         """
         Return the number of fuzzy matches matching all tokens.
         """
@@ -197,7 +189,6 @@ class TokenList(list):
 
 
 class NodeHint(Enum):
-
     UNION = 1
     ENUM = 2
     STRUCT = 3
@@ -206,16 +197,13 @@ class NodeHint(Enum):
 
 
 class Node:
-
-    def __init__(
-        self, depth: int, linecnt: int, tokens_pre: Optional[TokenList] = None
-    ):
+    def __init__(self, depth: int, linecnt: int, tokens_pre: TokenList | None = None):
         self.depth: int = depth
         self.linecnt: int = linecnt
         self.linecnt_end: int = linecnt
         self.tokens_pre: TokenList = tokens_pre or TokenList()
         self.tokens: TokenList = TokenList()
-        self.hint: Optional[NodeHint] = None
+        self.hint: NodeHint | None = None
 
     def __repr__(self) -> str:
         tmp = [f"depth={self.depth}", f"linecnt={self.linecnt}"]
@@ -233,7 +221,7 @@ class Node:
 class Tokenizer:
     def __init__(self, data: str):
         self.tokens: TokenList = TokenList()
-        self._nodes: List[Node] = []
+        self._nodes: list[Node] = []
         self._acc: str = ""
         self._linecnt: int = 1
         if data:
@@ -267,7 +255,7 @@ class Tokenizer:
         # add new
         self.tokens.append(token)
 
-    def dump_acc(self, hint: Optional[TokenHint] = None) -> None:
+    def dump_acc(self, hint: TokenHint | None = None) -> None:
         stripped = self._acc.strip()
         if stripped:
             if fnmatch(stripped, "G_G*_FORMAT"):
@@ -282,10 +270,8 @@ class Tokenizer:
         is_escape_mode: bool = False
 
         for pos, char in enumerate(data):
-
             # newline
             if char == "\n":
-
                 if is_comment_mode:
                     self.dump_acc(hint=TokenHint.COMMENT)
                 else:
@@ -385,11 +371,10 @@ class Tokenizer:
     def _ensure_nodes(self) -> None:
         tokens_acc: TokenList = TokenList()
         depth: int = 0
-        stack: List[Node] = []
-        node_parent: Optional[Node] = None
+        stack: list[Node] = []
+        node_parent: Node | None = None
 
         for token in self.tokens:
-
             # ignore __attribute__
             if token.data == "G_GNUC_FLAG_ENUM":
                 continue
@@ -442,14 +427,13 @@ class Tokenizer:
             raise ValueError("has unequal nesting")
 
     @property
-    def nodes(self) -> List[Node]:
+    def nodes(self) -> list[Node]:
         if not self._nodes:
             self._ensure_nodes()
         return self._nodes
 
 
 if __name__ == "__main__":
-
     for fn in sys.argv[1:]:
         with open(fn, "rb") as f:
             tok = Tokenizer(f.read().decode())

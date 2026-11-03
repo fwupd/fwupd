@@ -109,8 +109,9 @@ The following builds are performed for every commit or pull request:
 
 ## Adding a new target
 
-Dockerfiles are generated dynamically by the python script `generate_docker.py`.
-The python script will recognize the environment variable `DISTRO` to determine what target to generate a Dockerfile for.
+Dockerfiles are generated dynamically by the command `./fwupbuild docker`.
+The python script takes `--distro`, `--version`, `--arch` and optionally `--variant`
+commandline arguments to determine what target to generate a Dockerfile for.
 
 ### dependencies.xml
 
@@ -136,7 +137,8 @@ Each distribution will have `package` elements and `control` elements.
 * `inclusive` elements represent an inclusive list of architectures to be installed on
 * `exclusive` elements represent an exclusive list of architectures to not be installed on
 
-For convenience there is also a helper script `./contrib/ci/fwupd_setup_helpers.py install-dependencies` that parses `dependencies.xml`.
+For convenience the `fwupbuild` dev helper tool has the `fwupbuild install-dependencies` command that uses
+`dependencies.xml` to install all dependencies for the given (or auto-detected) arch.
 
 ### Dockerfile.in
 

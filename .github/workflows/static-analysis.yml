@@ -23,7 +23,7 @@ jobs:
           apt-get install -qq --yes --no-install-recommends clang-tidy
       - name: ensure up-to-date dependencies are installed
         run: |-
-          ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          ./fwupbuild --yes install-dependencies --os ubuntu
       - name: configure
         run: |-
           meson setup -Dwerror=true build
@@ -44,7 +44,8 @@ jobs:
           persist-credentials: false
       - name: ensure up-to-date dependencies are installed
         run: |-
-          ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
+          apt-get update -qq
+          ./fwupbuild --yes install-dependencies --os debian
       - name: configure
         run: |-
           meson setup -Dwerror=true -Dstatic_analysis=true build

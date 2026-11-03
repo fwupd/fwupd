@@ -1,13 +1,18 @@
 # -*- mode: dockerfile -*-
-FROM debian:unstable
+FROM --platform=linux/{{ARCH}} {{DISTRO}}:{{VERSION}}
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
-%%%SETUP%%% \
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/{{DISTRO}}.sources; \
+{% if CROSSARCH %}
+    dpkg --add-architecture {{CROSSARCH}}; \
+{% endif %}
     apt-get update -qq; \
     apt-get install -qq --yes --no-install-recommends \
-    build-essential \
     clang-18 \
     clang-tools-18 \
     dpkg-dev \
@@ -15,9 +20,12 @@ RUN set -euxo pipefail; \
     libgirepository-2.0-dev \
     llvm-18-dev \
     python3-apt \
-%%%DEPENDENCIES%%%; \
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{";" if loop.last}} \
+{% endfor %}
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
 RUN set -euxo pipefail; \
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100; \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100; \

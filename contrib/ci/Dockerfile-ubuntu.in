@@ -1,17 +1,28 @@
 # -*- mode: dockerfile -*-
-FROM ubuntu:rolling
+FROM --platform=linux/{{ARCH}} {{DISTRO}}:{{VERSION}}
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
+ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
-    export DEBIAN_FRONTEND=noninteractive; \
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/{{DISTRO}}.sources; \
+{% if CROSSARCH %}
+    dpkg --add-architecture {{CROSSARCH}}; \
+{% endif %}
     apt-get update -qq; \
+    apt-get dist-upgrade -qq; \
     apt-get install -qq --yes --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:peter-hutterer/meson1.11; \
     apt-get install -qq --yes --no-install-recommends \
     meson \
     python3-apt \
     sudo \
-%%%DEPENDENCIES%%%; \
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{";" if loop.last}} \
+{% endfor %}
     apt-get clean
+RUN echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && locale-gen
 WORKDIR /github/workspace

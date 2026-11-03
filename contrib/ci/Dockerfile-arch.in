@@ -1,13 +1,17 @@
 # -*- mode: dockerfile -*-
-FROM archlinux:latest
+FROM --platform=linux/{{ARCH}} {{DISTRO}}:{{VERSION}}
 ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
-RUN sed "s,#en_US.UTF-8,en_US.UTF-8," /etc/locale.gen -i
-RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
-RUN locale-gen
+RUN sed "s,#en_US.UTF-8,en_US.UTF-8," /etc/locale.gen -i && \
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
+    locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
-%%%DEPENDENCIES%%%
+{% for dep in DEPENDENCIES %}
+    {{dep}}{{" &&" if loop.last}} \
+{% endfor %}
+    pacman -Sc --noconfirm
 WORKDIR /github/workspace

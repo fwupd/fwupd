@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import subprocess
-import os
 import json
+import os
 import shutil
+import subprocess
 
 
 def prepare(target):
@@ -31,7 +31,7 @@ def prepare(target):
 
     # update to build from main
     data["branch"] = "main"
-    for index in range(0, num_modules):
+    for index in range(num_modules):
         module = data["modules"][index]
         if type(module) != dict or "name" not in module:
             continue

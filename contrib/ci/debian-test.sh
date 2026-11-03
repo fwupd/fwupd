@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euox pipefail
+
+group() {
+    { echo "${CI:+::group::}🔵 $*"; } 2>/dev/null
+}
+
+endgroup() {
+    { [ -n "${CI:-}" ] && echo "::endgroup::" || true; } 2>/dev/null
+}
 
 # Set up fatal-criticals systemd override
 SYSTEMD_OVERRIDE="/etc/systemd/system/fwupd.service.d"
@@ -9,20 +17,34 @@ cat >"$SYSTEMD_OVERRIDE/override.conf" <<EOF
 Environment="G_DEBUG=fatal-criticals"
 EOF
 
-# install
+group "Update system and install dependencies"
 apt update -qq
-apt install -qq -y gcovr ./dist/*.deb
+apt install -qq -y ./dist/*.deb
+endgroup
 
+group "Enable test devices"
 fwupdtool enable-test-devices
+endgroup
+
 fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 
-# run tests
-./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
+group "Get the test firmware"
+if [[ "${CI_NETWORK:-false}" = "true" ]]; then
+    ./fwupbuild download-test-firmware --tests installed-tests --dest /usr/share/installed-tests/fwupd/
+fi
+endgroup
+
 service dbus restart
+
+group "Run the tests via gnome-desktop-testing-runner"
 gnome-desktop-testing-runner --timeout=2400 fwupd
+endgroup
 
-# generate coverage report
-./contrib/ci/coverage.sh
+# generate coverage report from the source copy so gcovr filters match
+WORKSPACE="$PWD"
+(cd build &&
+    GCOVR_OUTPUT="$WORKSPACE/coverage.xml" "$WORKSPACE/contrib/ci/coverage.py")
 
-# cleanup
+group "Clean up"
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev
+endgroup
