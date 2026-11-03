@@ -354,8 +354,8 @@ fu_pixart_tp_device_register_burst_write(FuPixartTpDevice *self,
 	/* send each chunk sequentially */
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		gsize chunk_sz = 0;
-		const guint8 *chunk_data = g_bytes_get_data(fu_chunk_get_bytes(chk), &chunk_sz);
+		gsize chunk_sz = fu_chunk_get_data_sz(chk);
+		const guint8 *chunk_data = fu_chunk_get_data(chk);
 
 		/* initialize payload with zeros */
 		guint8 payload[257] = {0};
