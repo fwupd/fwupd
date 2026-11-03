@@ -855,8 +855,9 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 	}
 
 	/* set expected active configuration */
-	if (active_i >= 0 && self->active_id != NULL) {
+	if (active_i >= 0) {
 		FuMmQmiDeviceFileInfo *file_info = g_ptr_array_index(file_infos, active_i);
+		g_clear_pointer(&self->active_id, g_array_unref);
 		self->active_id = g_array_ref(file_info->digest);
 	}
 
