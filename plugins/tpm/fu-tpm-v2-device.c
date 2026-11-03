@@ -332,11 +332,8 @@ fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self,
 	TPMT_HA *first_digest;
 	TPMT_HA *next_digest;
 	TSS2_RC rc;
-	gsize streamsz = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
@@ -347,13 +344,14 @@ fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		TPM2B_MAX_BUFFER data = {.size = streamsz};
+		TPM2B_MAX_BUFFER data = {0};
 		g_autoptr(FuChunk) chk = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		data.size = fu_chunk_get_data_sz(chk);
 		if (!fu_memcpy_safe((guint8 *)data.buffer,
 				    sizeof(data.buffer),
 				    0x0, /* dst */
