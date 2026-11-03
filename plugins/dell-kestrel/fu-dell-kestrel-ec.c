@@ -356,9 +356,11 @@ fu_dell_kestrel_ec_dock_info_cmd(FuDellKestrelEc *self, GError **error)
 		g_prefix_error_literal(error, "failed to query dock info: ");
 		return FALSE;
 	}
+	if (self->dock_info != NULL)
+		fu_struct_dell_kestrel_dock_info_unref(self->dock_info);
 	self->dock_info =
 	    fu_struct_dell_kestrel_dock_info_parse(st_res->buf->data, st_res->buf->len, 0, error);
-	return TRUE;
+	return self->dock_info != NULL;
 }
 
 static gboolean
