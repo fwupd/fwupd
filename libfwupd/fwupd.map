@@ -1229,6 +1229,8 @@ LIBFWUPD_2.2.1 {
     fwupd_client_emit_device_request;
     fwupd_client_get_pending_reboot;
     fwupd_client_run_connect_funcs;
+    fwupd_client_set_battery_level;
+    fwupd_client_set_battery_threshold;
     fwupd_client_set_host_bkc;
     fwupd_client_set_host_machine_id;
     fwupd_client_set_host_product;
