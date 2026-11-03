@@ -728,7 +728,7 @@ fu_pixart_rf_ble_device_write_firmware(FuDevice *device,
 		if (!fu_pixart_rf_ble_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)self->fwstate.offset + 1,
+						(gsize)i + 1,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
