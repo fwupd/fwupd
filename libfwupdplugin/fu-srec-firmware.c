@@ -510,9 +510,9 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 					return FALSE;
 				}
-				if (addr32_last > 0x0 && len_hole > 1) {
+				if (addr32_last > 0x0 && len_hole > 0) {
 					g_debug("filling address 0x%08x to 0x%08x at line %u",
-						addr32_last + 1,
+						addr32_last,
 						addr32_last + len_hole - 1,
 						rcd->ln);
 					for (guint i = 0; i < len_hole; i++)
