@@ -295,7 +295,9 @@ cd -
 
 %if 0%{?enable_tests}
 %if 0%{?enable_ci}
+if [ "${CI_NETWORK:-false}" = "true" ]; then
     ./fwupbuild download-test-firmware --tests=ci-tests --dest .
+fi
 %endif
 %check
 %meson_test
