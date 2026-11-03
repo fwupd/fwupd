@@ -478,8 +478,8 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 		return;
 
 	/* only specific CPUs are affected by GDS */
-	if (fu_processor_device_needs_mitigation(FU_PROCESSOR_DEVICE(device),
-						 FU_PROCESSOR_MITIGATION_FLAG_GDS))
+	if (!fu_processor_device_needs_mitigation(FU_PROCESSOR_DEVICE(device),
+						  FU_PROCESSOR_MITIGATION_FLAG_GDS))
 		return;
 
 	/* create attr */
