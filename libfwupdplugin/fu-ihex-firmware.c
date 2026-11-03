@@ -229,6 +229,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
 	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	gboolean got_data = FALSE;
 	gboolean got_eof = FALSE;
 	guint32 abs_addr = 0x0;
 	guint32 addr_last = 0x0;
@@ -317,7 +318,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 
 			/* any holes in the hex record */
 			len_hole = addr - addr_last;
-			if (addr_last > 0 && len_hole > 1 * FU_MB) {
+			if (got_data && len_hole > 1 * FU_MB) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -326,7 +327,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 				return FALSE;
 			}
-			if (addr_last > 0x0 && len_hole > 1) {
+			if (got_data && len_hole > 1) {
 				g_debug("filling address 0x%08x to 0x%08x on line %u",
 					addr_last + 1,
 					addr_last + len_hole - 1,
@@ -335,6 +336,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 					fu_byte_array_append_uint8(buf, priv->padding_value);
 			}
 			addr_last = addr + rcd->data->len - 1;
+			got_data = TRUE;
 			if (addr_last < addr) {
 				g_set_error(error,
 					    FWUPD_ERROR,

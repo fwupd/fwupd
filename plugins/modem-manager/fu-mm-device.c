@@ -365,7 +365,7 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	MMModem *modem = mm_object_peek_modem(omodem);
 	MMModemPortInfo *used_ports = NULL;
 	guint n_used_ports = 0;
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	MMModemPortInfo *ignored_ports = NULL;
 	guint n_ignored_ports = 0;
 #endif
@@ -435,7 +435,7 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 		mm_modem_port_info_array_free(used_ports, n_used_ports);
 	}
 
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	if (mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
 		for (guint i = 0; i < n_ignored_ports; i++) {
 			g_autofree gchar *device_file =

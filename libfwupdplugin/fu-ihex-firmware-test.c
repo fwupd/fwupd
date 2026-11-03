@@ -124,6 +124,33 @@ fu_ihex_firmware_offset_func(void)
 	g_assert_cmpint(g_bytes_get_size(data_verify), ==, 0x4);
 }
 
+static void
+fu_ihex_firmware_hole_func(void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	const gchar *hex = ":01000000AA55\n"
+			   ":01000400BB40\n"
+			   ":00000001FF\n";
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
+	g_autoptr(GBytes) blob = g_bytes_new_static(hex, strlen(hex));
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a hole after a single byte at address zero is still padded */
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	data_fw = fu_firmware_get_bytes(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	data = g_bytes_get_data(data_fw, &len);
+	g_assert_cmpint(len, ==, 5);
+	g_assert_cmpint(data[0], ==, 0xAA);
+	g_assert_cmpint(data[4], ==, 0xBB);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -133,5 +160,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/ihex-firmware", fu_ihex_firmware_func);
 	g_test_add_func("/fwupd/ihex-firmware/offset", fu_ihex_firmware_offset_func);
 	g_test_add_func("/fwupd/ihex-firmware/signed", fu_ihex_firmware_signed_func);
+	g_test_add_func("/fwupd/ihex-firmware/hole", fu_ihex_firmware_hole_func);
 	return g_test_run();
 }
