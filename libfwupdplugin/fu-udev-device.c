@@ -203,7 +203,6 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *fn_attr = NULL;
 	g_autofree gchar *symlink_target = NULL;
-	g_autofree gchar *value = NULL;
 
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no sysfs path");
@@ -234,14 +233,13 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	symlink_target = fu_path_get_symlink_target(fn_attr, error);
 	if (symlink_target == NULL)
 		return NULL;
-	value = g_path_get_basename(symlink_target);
 
 	/* save response */
 	if (event != NULL)
-		fu_device_event_set_str(event, "Data", value);
+		fu_device_event_set_str(event, "Data", symlink_target);
 
 	/* success */
-	return g_steal_pointer(&value);
+	return g_steal_pointer(&symlink_target);
 }
 
 /* private */
@@ -339,16 +337,24 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 
 	/* find the subsystem, driver and devtype */
 	if (priv->subsystem == NULL) {
+		g_autofree gchar *subsystem_basename = NULL;
 		g_autofree gchar *subsystem_tmp =
 		    fu_udev_device_get_symlink_target(self, "subsystem", error);
 		if (subsystem_tmp == NULL) {
 			g_prefix_error_literal(error, "failed to read subsystem: ");
 			return FALSE;
 		}
-		fu_udev_device_set_subsystem(self, subsystem_tmp);
+		subsystem_basename = g_path_get_basename(subsystem_tmp);
+		fu_udev_device_set_subsystem(self, subsystem_basename);
 	}
-	if (priv->driver == NULL)
-		priv->driver = fu_udev_device_get_symlink_target(self, "driver", NULL);
+	if (priv->driver == NULL) {
+		g_autofree gchar *driver_tmp =
+		    fu_udev_device_get_symlink_target(self, "driver", NULL);
+		if (driver_tmp != NULL) {
+			g_autofree gchar *driver_basename = g_path_get_basename(driver_tmp);
+			fu_udev_device_set_driver(self, driver_basename);
+		}
+	}
 	if (priv->devtype == NULL) {
 		priv->devtype = fu_udev_device_read_property(self, "DEVTYPE", NULL);
 		if (priv->devtype == NULL) {
