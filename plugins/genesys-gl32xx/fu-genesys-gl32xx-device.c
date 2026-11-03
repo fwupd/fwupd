@@ -751,7 +751,7 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify written data */
-	fw_read = fu_genesys_gl32xx_device_dump_bytes(self, progress, error);
+	fw_read = fu_genesys_gl32xx_device_dump_bytes(self, fu_progress_get_child(progress), error);
 	if (fw_read == NULL)
 		return FALSE;
 	fu_progress_step_done(progress);
