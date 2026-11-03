@@ -610,7 +610,7 @@ fu_elantp_i2c_device_detach(FuElantpI2cDevice *self, FuProgress *progress, GErro
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
-		ic_type = tmp & 0xFF;
+		ic_type &= 0xFF;
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
 	}
