@@ -445,7 +445,7 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, 
 	/* we have to request this one byte at a time */
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, G_N_ELEMENTS(signature_locations));
+	fu_progress_set_steps(progress, G_N_ELEMENTS(signature_locations) - 1);
 	for (guint i = 0; signature_locations[i].page != 0xff; i++) {
 		g_autoptr(GBytes) buf = NULL;
 		buf = fu_dfu_target_avr_get_chip_signature_for_addr(target,
