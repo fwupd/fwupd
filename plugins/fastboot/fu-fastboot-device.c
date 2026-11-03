@@ -692,7 +692,7 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "FastbootOperationDelay") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->operation_delay = tmp;
 		return TRUE;
