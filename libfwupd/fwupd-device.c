@@ -3247,13 +3247,16 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->modified > 0)
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	if (priv->update_state > 0) {
-		fwupd_json_object_add_integer(json_obj,
-					      FWUPD_RESULT_KEY_UPDATE_STATE,
-					      priv->update_state);
+	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_UPDATE_STATE,
+					     fwupd_update_state_to_string(priv->update_state));
 	}
-	if (priv->status > 0)
-		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_STATUS, priv->status);
+	if (priv->status != FWUPD_STATUS_UNKNOWN) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_STATUS,
+					     fwupd_status_to_string(priv->status));
+	}
 	if (priv->percentage > 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      FWUPD_RESULT_KEY_PERCENTAGE,
@@ -3425,12 +3428,32 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 							error))
 		return FALSE;
 	fwupd_device_set_modified(self, tmp64);
+
+	/* older versions wrote these as integers */
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_UPDATE_STATE, NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fwupd_device_set_update_state(self, fwupd_update_state_from_string(tmp));
+	} else {
+		if (!fwupd_json_object_get_integer_with_default(json_obj,
+								FWUPD_RESULT_KEY_UPDATE_STATE,
+								&tmp64,
+								FWUPD_UPDATE_STATE_UNKNOWN,
+								error))
+			return FALSE;
+		fwupd_device_set_update_state(self, tmp64);
+	}
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_STATUS, NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fwupd_device_set_status(self, fwupd_status_from_string(tmp));
+	} else {
+		if (!fwupd_json_object_get_integer_with_default(json_obj,
+								FWUPD_RESULT_KEY_STATUS,
+								&tmp64,
+								FWUPD_STATUS_UNKNOWN,
+								error))
+			return FALSE;
+		fwupd_device_set_status(self, tmp64);
+	}
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_PERCENTAGE,
 							&tmp64,
