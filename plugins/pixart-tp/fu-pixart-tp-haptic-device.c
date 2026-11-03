@@ -577,10 +577,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_TOUCH_CONTROL,
 							 FU_PIXART_TP_TF_TOUCH_CONTROL_DISABLE,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to disable touch");
+		g_prefix_error_literal(error, "failed to disable touch: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -590,10 +587,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_SET_UPGRADE_MODE,
 							 FU_PIXART_TP_TF_UPGRADE_MODE_ENTER_BOOT,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to enter bootloader mode");
+		g_prefix_error_literal(error, "failed to enter bootloader mode: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100);
@@ -604,10 +598,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_SET_UPGRADE_MODE,
 							 FU_PIXART_TP_TF_UPGRADE_MODE_ERASE_FLASH,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to send erase flash command");
+		g_prefix_error_literal(error, "failed to send erase flash command: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 2000);
