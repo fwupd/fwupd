@@ -578,13 +578,23 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version_str);
 
 	id_str = fu_struct_bnr_dp_factory_data_get_identification(st_factory_data);
-	if (id_str == NULL)
+	if (id_str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no identification in factory data");
 		return FALSE;
+	}
 	fu_device_set_name(FU_DEVICE(self), id_str);
 
 	serial = fu_struct_bnr_dp_factory_data_get_serial(st_factory_data);
-	if (serial == NULL)
+	if (serial == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no serial in factory data");
 		return FALSE;
+	}
 	fu_device_set_serial(device, serial);
 
 	fu_device_add_instance_u32(device, "DEV", fu_bnr_dp_effective_product_num(st_factory_data));
@@ -593,8 +603,13 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 				   fu_bnr_dp_effective_compat_id(st_factory_data));
 
 	hw_rev = fu_struct_bnr_dp_factory_data_get_hw_rev(st_factory_data);
-	if (hw_rev == NULL)
+	if (hw_rev == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no hardware revision in factory data");
 		return FALSE;
+	}
 	fu_device_add_instance_str(device, "HW_REV", hw_rev);
 
 	oui = g_strdup_printf("%06X", fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
