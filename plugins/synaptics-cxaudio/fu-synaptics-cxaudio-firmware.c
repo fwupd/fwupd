@@ -170,7 +170,7 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 		FuSrecFirmwareRecord *rcd = g_ptr_array_index(records, i);
 		if (rcd->kind != FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32)
 			continue;
-		if (rcd->addr > FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE)
+		if (rcd->addr >= FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE)
 			continue;
 		if (rcd->buf->len == 0) {
 			g_set_error(error,
