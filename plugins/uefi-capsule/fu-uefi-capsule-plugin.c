@@ -500,9 +500,10 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE) &&
-	    fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd-ux-capsule")) {
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE)) {
 		g_info("not providing UX capsule");
+		if (!fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd-ux-capsule"))
+			return TRUE;
 		return fu_efivars_delete(efivars,
 					 FU_EFIVARS_GUID_FWUPDATE,
 					 "fwupd-ux-capsule",
