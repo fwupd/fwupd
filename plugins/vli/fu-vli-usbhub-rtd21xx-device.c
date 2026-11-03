@@ -294,6 +294,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enable-isp");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "finish");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
 
 	/* simple image */
@@ -461,7 +462,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* the device needs some time to restart with the new firmware before
 	 * it can be queried again */
-	fu_device_sleep_full(device, 20000, progress); /* ms */
+	fu_device_sleep_full(device, 20000, fu_progress_get_child(progress)); /* ms */
 
 	/* success */
 	fu_progress_step_done(progress);
