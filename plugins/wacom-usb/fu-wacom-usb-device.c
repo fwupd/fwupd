@@ -813,9 +813,9 @@ fu_wacom_usb_device_add_modules(FuWacomUsbDevice *self, GError **error)
 	/* wait for all modules started successfully */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_wacom_usb_device_add_modules_cb,
-				  FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY,
 				  FU_WACOM_USB_DEVICE_TIMEOUT /
 				      FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY,
+				  FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY,
 				  buf,
 				  &error_local)) {
 		if (error_local->code != FWUPD_ERROR_INVALID_DATA) {
