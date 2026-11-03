@@ -314,6 +314,8 @@ fu_huddly_usb_device_hcp_write_file(FuHuddlyUsbDevice *self,
 	g_ptr_array_add(msgpack_items, fu_msgpack_item_new_string("file_data"));
 	g_ptr_array_add(msgpack_items, fu_msgpack_item_new_binary_stream(stream));
 	payload_msgpack = fu_msgpack_write(msgpack_items, error);
+	if (payload_msgpack == NULL)
+		return FALSE;
 	msg_req = fu_huddly_usb_hlink_msg_new("hcp/write", payload_msgpack);
 	buf = fu_huddly_usb_hlink_msg_write(msg_req, error);
 	if (buf == NULL)
