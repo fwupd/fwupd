@@ -376,7 +376,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize bufsz, GEr
 	if (fr != NULL) {
 		g_autofree gchar *str = fu_strstrip(fr);
 		if (str[0] != '\0')
-			fu_device_set_version(FU_DEVICE(self), fr);
+			fu_device_set_version(FU_DEVICE(self), str);
 	}
 
 	/* firmware update granularity */
