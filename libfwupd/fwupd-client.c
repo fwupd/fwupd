@@ -614,20 +614,40 @@ fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 	}
 }
 
-static void
+/**
+ * fwupd_client_set_battery_level:
+ * @self: a #FwupdClient
+ * @battery_level: value in percent
+ *
+ * Sets the system battery level in percent.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(battery_level <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_level == battery_level)
 		return;
 	priv->battery_level = battery_level;
 	g_object_notify(G_OBJECT(self), "battery-level");
 }
 
-static void
+/**
+ * fwupd_client_set_battery_threshold:
+ * @self: a #FwupdClient
+ * @battery_threshold: value in percent
+ *
+ * Sets the system battery threshold in percent.
+ *
+ * Since: 2.2.1
+ **/
+void
 fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(battery_threshold <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_threshold == battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;

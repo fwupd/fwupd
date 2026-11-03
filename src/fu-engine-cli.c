@@ -145,6 +145,9 @@ fu_engine_cli_start_engine(FuEngineCli *self,
 			   FuProgress *progress,
 			   GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(self->engine);
+	FwupdClient *client = fu_cli_get_client(FU_CLI(self));
+
 #ifdef HAVE_SYSTEMD
 	if (getuid() != 0 || geteuid() != 0) {
 		g_info("not attempting to stop daemon when running as user");
@@ -168,16 +171,10 @@ fu_engine_cli_start_engine(FuEngineCli *self,
 
 	/* copy properties from engine to client */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		g_object_set(fu_cli_get_client(FU_CLI(self)),
-			     "host-vendor",
-			     fu_engine_get_host_vendor(self->engine),
-			     "host-product",
-			     fu_engine_get_host_product(self->engine),
-			     "battery-level",
-			     fu_context_get_battery_level(fu_engine_get_context(self->engine)),
-			     "battery-threshold",
-			     fu_context_get_battery_threshold(fu_engine_get_context(self->engine)),
-			     NULL);
+		fwupd_client_set_host_vendor(client, fu_engine_get_host_vendor(self->engine));
+		fwupd_client_set_host_product(client, fu_engine_get_host_product(self->engine));
+		fwupd_client_set_battery_level(client, fu_context_get_battery_level(ctx));
+		fwupd_client_set_battery_threshold(client, fu_context_get_battery_threshold(ctx));
 	}
 
 	/* success */

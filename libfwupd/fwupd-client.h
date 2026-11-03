@@ -702,6 +702,10 @@ void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status) G_GNUC_NON_NULL(1);
 void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage) G_GNUC_NON_NULL(1);
+void
+fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level) G_GNUC_NON_NULL(1);
+void
+fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold) G_GNUC_NON_NULL(1);
 
 /* only needed when not using D-Bus in in-tree CLIs */
 typedef struct FwupdClientSyncImpl FwupdClientSyncImpl;

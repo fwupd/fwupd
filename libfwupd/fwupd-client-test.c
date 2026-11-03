@@ -345,11 +345,23 @@ fwupd_client_api(void)
 	g_assert_cmpint(fwupd_client_get_battery_level(client), ==, 50);
 	g_object_set_property(G_OBJECT(client), "battery-level", &value_int);
 
+	/* set battery level using the setter directly */
+	fwupd_client_set_battery_level(client, 75);
+	g_assert_cmpint(fwupd_client_get_battery_level(client), ==, 75);
+	fwupd_client_set_battery_level(client, 75);
+	g_assert_cmpint(fwupd_client_get_battery_level(client), ==, 75);
+
 	/* set same battery threshold multiple times */
 	g_value_set_int(&value_int, 20);
 	g_object_set_property(G_OBJECT(client), "battery-threshold", &value_int);
 	g_assert_cmpint(fwupd_client_get_battery_threshold(client), ==, 20);
 	g_object_set_property(G_OBJECT(client), "battery-threshold", &value_int);
+
+	/* set battery threshold using the setter directly */
+	fwupd_client_set_battery_threshold(client, 10);
+	g_assert_cmpint(fwupd_client_get_battery_threshold(client), ==, 10);
+	fwupd_client_set_battery_threshold(client, 10);
+	g_assert_cmpint(fwupd_client_get_battery_threshold(client), ==, 10);
 
 	/* set same status multiple times */
 	g_value_set_int(&value_int, FWUPD_STATUS_IDLE);
