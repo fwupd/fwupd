@@ -134,6 +134,7 @@ fu_srec_firmware_record_dup(const FuSrecFirmwareRecord *rcd)
 	FuSrecFirmwareRecord *dest;
 	g_return_val_if_fail(rcd != NULL, NULL);
 	dest = fu_srec_firmware_record_new(rcd->ln, rcd->kind, rcd->addr);
+	g_byte_array_unref(dest->buf);
 	dest->buf = g_byte_array_ref(rcd->buf);
 	return dest;
 }
