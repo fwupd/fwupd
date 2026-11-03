@@ -251,12 +251,14 @@ if introspection.allowed()
     install: true,
   )
 
-  gnome.generate_vapi(
-    'fwupd',
-    sources: fwupd_gir[0],
-    packages: ['gio-2.0'],
-    install: true,
-  )
+  if not meson.is_cross_build()
+    gnome.generate_vapi(
+      'fwupd',
+      sources: fwupd_gir[0],
+      packages: ['gio-2.0'],
+      install: true,
+    )
+  endif
 
   # Verify the map file is correct -- note we can't actually use the generated
   # file for two reasons:
