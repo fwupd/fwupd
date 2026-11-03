@@ -152,6 +152,10 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		st_area = fu_struct_fmap_area_parse_stream(stream, offset, error);
 		if (st_area == NULL)
 			return FALSE;
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
+			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
+			return FALSE;
+		}
 		area_size = fu_struct_fmap_area_get_size(st_area);
 		if (area_size == 0)
 			continue;
@@ -187,10 +191,6 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_addr(img, area_offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
-			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
-			return FALSE;
-		}
 	}
 
 	/* success */
