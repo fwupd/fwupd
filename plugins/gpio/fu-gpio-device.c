@@ -113,7 +113,7 @@ fu_gpio_device_assign_full(FuGpioDevice *self, guint64 line, gboolean value, GEr
 	const gchar consumer[] = "fwupd";
 	struct gpio_v2_line_request req = {
 	    .num_lines = 1,
-	    req.offsets[0] = line,
+	    .offsets[0] = line,
 	    .config.flags = GPIO_V2_LINE_FLAG_OUTPUT,
 	    .config.num_attrs = 1,
 	    .config.attrs[0].attr.values = value ? 0x1 : 0x0,
