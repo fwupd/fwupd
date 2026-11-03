@@ -15,24 +15,31 @@
 #include "fu-uefi-dbx-device.h"
 #include "fu-uefi-device-private.h"
 
+typedef struct {
+	const gchar *checksums[5];
+	const gchar *version;
+	const gchar *checksum;
+	const gchar *last_owner;
+	const gchar *reference_checksums[5];
+	gboolean write_reference;
+	gboolean corrupt_reference;
+} FuUefiDbxVersionTest;
+
 static void
-fu_uefi_dbx_version_func(void)
+fu_uefi_dbx_version_func(gconstpointer user_data)
 {
+	const FuUefiDbxVersionTest *test = user_data;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
-	g_autoptr(FuEfiSignature) sig_dbx1 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
-	g_autoptr(FuEfiSignature) sig_dbx2 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuEfiX509Signature) sig_kek = fu_efi_x509_signature_new();
 	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
 	g_autoptr(FuFirmware) siglist_kek = fu_efi_signature_list_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_dbx = NULL;
 	g_autoptr(GBytes) blob_kek = NULL;
-	g_autoptr(GBytes) csum1 = NULL;
-	g_autoptr(GBytes) csum2 = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_GNUTLS
@@ -40,6 +47,12 @@ fu_uefi_dbx_version_func(void)
 	g_test_skip("this test requires GnuTLS");
 	return;
 #endif
+
+	/* cache writes and reads must be isolated from the system state */
+	tmpdir = fu_temporary_directory_new("uefi-dbx", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* do not save silo */
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
@@ -66,24 +79,80 @@ fu_uefi_dbx_version_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* create a plausible dbx */
-	csum1 =
-	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
-				 &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(csum1);
-	fu_efi_signature_set_owner(sig_dbx1, FU_EFI_SIGNATURE_GUID_MICROSOFT);
-	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx1), csum1);
-	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx1), NULL);
+	if (test->reference_checksums[0] != NULL) {
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuFirmware) reference =
+		    g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+		g_autoptr(GBytes) blob = NULL;
 
-	csum2 =
-	    fu_bytes_from_string("96275DFD6282A522B011177EE049296952AC794832091F937FBBF92869028629",
-				 &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(csum2);
-	fu_efi_signature_set_owner(sig_dbx2, FU_EFI_SIGNATURE_GUID_MICROSOFT);
-	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx2), csum2);
-	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx2), NULL);
+		for (guint i = 0; test->reference_checksums[i] != NULL; i++) {
+			g_autoptr(FuEfiSignature) sig =
+			    fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+			g_autoptr(GBytes) csum =
+			    fu_bytes_from_string(test->reference_checksums[i], &error);
+			g_assert_no_error(error);
+			g_assert_nonnull(csum);
+			fu_efi_signature_set_owner(sig, FU_EFI_SIGNATURE_GUID_MICROSOFT);
+			fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
+			fu_firmware_add_image(reference, FU_FIRMWARE(sig), NULL);
+		}
+		blob = fu_firmware_write(reference, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(blob);
+		filename = fu_context_build_filename(ctx,
+						     &error,
+						     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						     "uefi-dbx.bin",
+						     NULL);
+		g_assert_no_error(error);
+		g_assert_nonnull(filename);
+		if (test->write_reference) {
+			g_autoptr(FuFirmware) parsed =
+			    g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+			g_autoptr(GBytes) cached = NULL;
+			ret = fu_firmware_parse_bytes(parsed,
+						      blob,
+						      0,
+						      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+						      &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+			ret = fu_device_write_firmware(device,
+						       parsed,
+						       progress,
+						       FWUPD_INSTALL_FLAG_NONE,
+						       &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+			cached = fu_bytes_get_contents(filename, &error);
+			g_assert_no_error(error);
+			g_assert_nonnull(cached);
+			g_assert_true(g_bytes_equal(cached, blob));
+		} else {
+			if (test->corrupt_reference) {
+				g_clear_pointer(&blob, g_bytes_unref);
+				blob = g_bytes_new_static("invalid", 7);
+			}
+			ret = fu_bytes_set_contents(filename, blob, &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+		}
+	}
+
+	/* create a plausible dbx in the supplied order */
+	for (guint i = 0; test->checksums[i] != NULL; i++) {
+		g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
+		g_autoptr(GBytes) csum = fu_bytes_from_string(test->checksums[i], &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(csum);
+		fu_efi_signature_set_owner(sig,
+					   test->checksums[i + 1] == NULL &&
+						   test->last_owner != NULL
+					       ? test->last_owner
+					       : FU_EFI_SIGNATURE_GUID_MICROSOFT);
+		fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
+		fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig), NULL);
+	}
 
 	blob_dbx = fu_firmware_write(siglist_dbx, &error);
 	g_assert_no_error(error);
@@ -101,7 +170,9 @@ fu_uefi_dbx_version_func(void)
 	ret = fu_device_probe(device, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpstr(fu_device_get_version(device), ==, "20260402");
+	g_assert_cmpstr(fu_device_get_version(device), ==, test->version);
+	g_assert_cmpuint(fu_device_get_checksums(device)->len, ==, 1);
+	g_assert_true(fu_device_has_checksum(device, test->checksum));
 }
 
 static void
@@ -413,7 +484,124 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
-	g_test_add_func("/uefi-dbx/version", fu_uefi_dbx_version_func);
+	{
+		const gchar *old =
+		    "13a1f37bedfb5417b6b737e2a3816c8fd587d74d836914b2b2edc9fd6ca30e58";
+		const gchar *middle =
+		    "96275dfd6282a522b011177ee049296952ac794832091f937fbbf92869028629";
+		const gchar *latest =
+		    "2ea557c44b83c0ad6b71efb7edcc18b6337ad1c1d682155dd9451b051b62ff40";
+		const gchar *unknown =
+		    "1111111111111111111111111111111111111111111111111111111111111111";
+		static FuUefiDbxVersionTest tests[12];
+		tests[0] = (FuUefiDbxVersionTest){
+		    .checksums = {old, middle, latest},
+		    .version = "20260707",
+		    .checksum = latest,
+		};
+		tests[1] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, middle, old},
+		    .version = "20260707",
+		    .checksum = latest,
+		    .reference_checksums = {old, middle, latest},
+		};
+		tests[2] = (FuUefiDbxVersionTest){
+		    .checksums = {middle, latest, old},
+		    .version = "20260707",
+		    .checksum = latest,
+		    .reference_checksums = {old, middle, latest},
+		};
+		tests[3] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, unknown},
+		    .version = NULL,
+		    .checksum = unknown,
+		    .reference_checksums = {latest},
+		};
+		tests[4] = (FuUefiDbxVersionTest){
+		    .checksums = {unknown},
+		    .version = NULL,
+		    .checksum = unknown,
+		};
+		tests[5] = (FuUefiDbxVersionTest){
+		    .checksums = {middle, latest},
+		    .version = "20260402",
+		    .checksum = middle,
+		    .last_owner = "00112233-4455-6677-8899-aabbccddeeff",
+		};
+		tests[6] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, old},
+		    .version = "20230501",
+		    .checksum = old,
+		    .reference_checksums = {old, middle, latest},
+		};
+		tests[7] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, old},
+		    .version = "20230501",
+		    .checksum = old,
+		    .reference_checksums = {old, unknown, latest},
+		};
+		tests[8] = (FuUefiDbxVersionTest){
+		    .checksums = {old, middle, latest},
+		    .version = "20260707",
+		    .checksum = latest,
+		    .reference_checksums = {old, middle},
+		};
+		tests[9] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, middle, old},
+		    .version = "20230501",
+		    .checksum = old,
+		    .reference_checksums = {old, middle, latest},
+		    .corrupt_reference = TRUE,
+		};
+		tests[10] = (FuUefiDbxVersionTest){
+		    .checksums = {latest, middle, old},
+		    .version = "20230501",
+		    .checksum = old,
+		};
+		tests[11] = (FuUefiDbxVersionTest){
+		    .checksums = {middle, latest, old},
+		    .version = "20260707",
+		    .checksum = latest,
+		    .reference_checksums = {old, middle, latest},
+		    .write_reference = TRUE,
+		};
+		g_test_add_data_func("/uefi-dbx/version/ascending",
+				     &tests[0],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/descending",
+				     &tests[1],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/reordered",
+				     &tests[2],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/unknown-tail",
+				     &tests[3],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/unknown",
+				     &tests[4],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/non-microsoft",
+				     &tests[5],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/missing-marker",
+				     &tests[6],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/missing-revocation",
+				     &tests[7],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/stale-cache",
+				     &tests[8],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/corrupt-cache",
+				     &tests[9],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/no-cache",
+				     &tests[10],
+				     fu_uefi_dbx_version_func);
+		g_test_add_data_func("/uefi-dbx/version/write-cache",
+				     &tests[11],
+				     fu_uefi_dbx_version_func);
+	}
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
 	g_test_add_func("/uefi-dbx/prepare-firmware", fu_uefi_dbx_prepare_firmware_func);
 	g_test_add_func("/uefi-dbx/validate-filename", fu_uefi_dbx_validate_filename_func);
