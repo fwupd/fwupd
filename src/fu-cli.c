@@ -5327,7 +5327,7 @@ fu_cli_cmd_get_plugins(FuCli *self, gchar **values, GError **error)
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) plugins = NULL;
 
-	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, NULL);
+	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, error);
 	if (plugins == NULL)
 		return FALSE;
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_cli_plugin_name_sort_cb);
