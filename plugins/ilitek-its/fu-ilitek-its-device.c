@@ -816,7 +816,7 @@ fu_ilitek_its_device_check_firmware(FuDevice *device,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware ic name %s does not match device ic name %s",
 			    fw_ic_name,
-			    fu_device_get_name(device));
+			    self->ic_name);
 		return FALSE;
 	}
 
