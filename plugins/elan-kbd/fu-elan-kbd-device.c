@@ -429,7 +429,7 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 		return NULL;
 	}
 	img_bootloader = fu_firmware_new_from_bytes(blob_bootloader);
-	fu_firmware_set_id(img_bootloader, "bootloader");
+	fu_firmware_set_idx(img_bootloader, FU_ELAN_KBD_FIRMWARE_IDX_BOOTLOADER);
 	if (!fu_firmware_add_image(firmware, img_bootloader, error))
 		return NULL;
 	fu_progress_step_done(progress);
