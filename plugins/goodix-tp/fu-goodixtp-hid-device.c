@@ -39,7 +39,7 @@ void
 fu_goodixtp_hid_device_set_patch_vid(FuGoodixtpHidDevice *self, const gchar *patch_vid)
 {
 	FuGoodixtpHidDevicePrivate *priv = GET_PRIVATE(self);
-	priv->patch_vid = g_strdup(patch_vid);
+	g_set_str(&priv->patch_vid, patch_vid);
 }
 
 void
