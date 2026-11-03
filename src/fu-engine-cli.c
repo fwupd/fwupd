@@ -1006,7 +1006,7 @@ fu_engine_cli_get_report_metadata_as_json(FuEngineCli *self,
 			continue;
 		if (fu_plugin_get_report_metadata(plugin) == NULL)
 			continue;
-		fwupd_json_object_add_object_map(json_obj,
+		fwupd_json_object_add_object_map(json_obj_tmp,
 						 fu_plugin_get_name(plugin),
 						 fu_plugin_get_report_metadata(plugin));
 		fwupd_json_array_add_object(json_array_plugins, json_obj_tmp);
