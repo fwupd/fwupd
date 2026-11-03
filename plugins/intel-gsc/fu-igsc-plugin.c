@@ -75,7 +75,7 @@ fu_igsc_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **
 	}
 	if (device_igsc != NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_igsc_plugin_set_pci_power_policy(device_igsc, "off", &error_local))
+		if (!fu_igsc_plugin_set_pci_power_policy(device_igsc, "auto", &error_local))
 			g_debug("failed to set power policy: %s", error_local->message);
 	}
 	return TRUE;
