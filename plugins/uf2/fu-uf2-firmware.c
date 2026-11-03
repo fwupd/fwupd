@@ -30,6 +30,9 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 		st_ext = fu_struct_uf2_extension_parse(buf, bufsz, offset, error);
 		if (st_ext == NULL)
 			return FALSE;
+		tag = fu_struct_uf2_extension_get_tag(st_ext);
+		if (tag == 0)
+			break;
 		sz = fu_struct_uf2_extension_get_size(st_ext);
 		if (sz == 0)
 			break;
@@ -43,9 +46,6 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 				    (guint)sz);
 			return FALSE;
 		}
-		tag = fu_struct_uf2_extension_get_tag(st_ext);
-		if (tag == 0)
-			break;
 		if (tag == FU_UF2_FIRMWARE_TAG_VERSION) {
 			g_autofree gchar *str = NULL;
 			str = fu_memstrsafe(buf,
