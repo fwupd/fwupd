@@ -586,7 +586,7 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 		return FALSE;
 	}
 	if (reply != 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "error: status 0x%#x", reply);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "error: status 0x%x", reply);
 		return FALSE;
 	}
 
