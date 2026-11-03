@@ -846,7 +846,6 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 				 GError **error)
 {
 	FuDfuDevice *proxy;
-	GBytes *chunk_tmp;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	g_autoptr(GBytes) contents = NULL;
@@ -863,6 +862,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	for (guint16 idx = 0; idx < G_MAXUINT16; idx++) {
 		guint32 chunk_size;
+		g_autoptr(GBytes) chunk_tmp = NULL;
 
 		/* read chunk of data */
 		chunk_tmp = fu_dfu_target_upload_chunk(self,
@@ -889,7 +889,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 
 		/* add to array */
 		g_debug("got #%04x chunk of size %" G_GUINT32_FORMAT, idx, chunk_size);
-		g_ptr_array_add(chunks, chunk_tmp);
+		g_ptr_array_add(chunks, g_steal_pointer(&chunk_tmp));
 
 		/* update UI */
 		if (chunk_size > 0)
