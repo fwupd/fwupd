@@ -89,9 +89,10 @@ fu_wacom_usb_module_bluetooth_id6_write_blob(FuWacomUsbModule *self,
 		if (chk == NULL)
 			return FALSE;
 
-		/* build data packet */
+		/* build data packet, padding the possibly incomplete last chunk with 0xFF */
 		fu_memwrite_uint32(buf + 0x3, 0x0, G_LITTLE_ENDIAN); /* addr, always zero */
-		memcpy(buf + 0x7,				     /* nocheck:blocked */
+		memset(buf + 0x7, 0xFF, FU_WACOM_USB_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ);
+		memcpy(buf + 0x7, /* nocheck:blocked */
 		       fu_chunk_get_data(chk),
 		       fu_chunk_get_data_sz(chk));
 		buf[2] = fu_wacom_usb_module_bluetooth_id6_calculate_crc(
