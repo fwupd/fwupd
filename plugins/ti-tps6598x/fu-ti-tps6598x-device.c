@@ -242,8 +242,8 @@ fu_ti_tps6598x_device_wait_for_command_cb(FuDevice *device, gpointer user_data, 
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid status register, got 0x%02x:0x%02x",
-			    buf->data[1],
-			    buf->data[2]);
+			    buf->data[0],
+			    buf->data[1]);
 		return FALSE;
 	}
 
