@@ -358,7 +358,7 @@ fu_hpi_cfu_device_read_content_ack(FuHpiCfuDevice *self,
 static gboolean
 fu_hpi_cfu_device_firmware_update_offer_rejected(gint8 reply)
 {
-	if (reply == FU_HPI_CFU_STATE_UPDATE_OFFER_REJECTED) {
+	if (reply == FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_REJECT) {
 		g_debug("OfferRejected");
 		return TRUE;
 	}
