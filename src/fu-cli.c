@@ -3576,11 +3576,9 @@ fu_cli_get_updates(FuCli *self, gchar **values, GError **error)
 		for (guint idx = 0; idx < g_strv_length(values); idx++) {
 			FwupdDevice *device = fu_cli_get_device_by_id(self, values[idx], error);
 			if (device == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_ARGS,
-					    "'%s' is not a valid GUID nor DEVICE-ID",
-					    values[idx]);
+				g_prefix_error(error,
+					       "'%s' is not a valid GUID nor DEVICE-ID: ",
+					       values[idx]);
 				return FALSE;
 			}
 			g_ptr_array_add(devices, device);
