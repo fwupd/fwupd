@@ -572,7 +572,7 @@ class StructItem:
             if len(val) != (self.size * 2) + 2:
                 raise ValueError(f"data has to be {self.size} bytes exactly")
             for idx in range(2, len(val), 2):
-                val_hex += f"\\x{val[idx:idx+2]}"
+                val_hex += f"\\x{val[idx : idx + 2]}"
             return val_hex
         if self.type in [
             Type.U8,

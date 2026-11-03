@@ -119,7 +119,7 @@ class FwupdHeads:
         heads_update_path = os.path.join(heads_boot_path, "firmware.rom")
         create_dirs(HEADS_UPDATES_DIR)
         if os.path.exists(heads_update_path):
-            print(f"Heads Update == {self.heads_update_version} " "already downloaded.")
+            print(f"Heads Update == {self.heads_update_version} already downloaded.")
             return EXIT_CODES["NOTHING_TO_DO"]
         else:
             os.mkdir(heads_boot_path)

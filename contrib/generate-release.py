@@ -25,7 +25,7 @@ def _get_last_release() -> str:
 def _get_next_release(last_tag: str) -> str:
     try:
         triplet: List[str] = last_tag.split(".")
-        return f"{triplet[0]}.{triplet[1]}.{int(triplet[2])+1}"
+        return f"{triplet[0]}.{triplet[1]}.{int(triplet[2]) + 1}"
     except IndexError:
         return last_tag
 

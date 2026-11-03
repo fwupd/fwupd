@@ -999,67 +999,6 @@
       <package only-if="amd64" />
     </distro>
   </dependency>
-  <dependency id="cargo">
-    <distro id="arch">
-      <package name="cargo" only-if="amd64" />
-    </distro>
-    <distro id="centos">
-      <package only-if="amd64" />
-    </distro>
-    <distro id="debian">
-      <build-target mode="native" />
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package only-if="amd64" />
-      <package only-if="arm64" />
-      <package only-if="mingw64" />
-    </distro>
-    <distro id="ubuntu">
-      <package only-if="amd64" />
-      <package only-if="arm64" />
-    </distro>
-  </dependency>
-  <dependency id="rustc">
-    <distro id="arch">
-      <package name="rust" only-if="amd64" />
-    </distro>
-    <distro id="centos">
-      <package only-if="amd64" />
-    </distro>
-    <distro id="debian">
-      <build-target mode="native" />
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package only-if="amd64" />
-      <package only-if="arm64" />
-      <package only-if="mingw64" />
-    </distro>
-    <distro id="freebsd">
-      <package name="rust" only-if="amd64" />
-    </distro>
-    <distro id="ubuntu">
-      <package only-if="amd64" />
-      <package only-if="arm64" />
-    </distro>
-  </dependency>
-  <dependency id="rustup">
-    <distro id="ubuntu">
-      <package only-if="android" />
-    </distro>
-  </dependency>
-  <dependency id="libstd-rust-dev">
-    <distro id="debian">
-      <build-target mode="multi-arch" />
-      <package />
-    </distro>
-  </dependency>
-  <dependency id="rust-std-static-x86_64-pc-windows-gnu">
-    <distro id="fedora">
-      <package only-if="mingw64" />
-    </distro>
-  </dependency>
   <dependency id="mingw-w64-tools">
     <distro id="centos">
       <package only-if="amd64" />

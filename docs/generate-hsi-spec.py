@@ -35,7 +35,7 @@ if __name__ == "__main__":
         if "id" not in item:
             print(f"skipping {fn} as no id")
             continue
-        txt += [f"<a id=\"{item['id']}\"></a>"]
+        txt += [f'<a id="{item["id"]}"></a>']
         if "deprecated-ids" in item:
             for deprecated_id in item["deprecated-ids"]:
                 txt += [f'<a id="{deprecated_id}"></a>']

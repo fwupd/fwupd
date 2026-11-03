@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 """A simple fwupd frontend"""
+
 import sys
 import os
 import dbus

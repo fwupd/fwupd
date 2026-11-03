@@ -13,6 +13,7 @@ Common parameter meanings:
     nr (8-bits unsigned integer)
         Driver-imposed ioctl function number.
 """
+
 import array
 import ctypes
 import struct
