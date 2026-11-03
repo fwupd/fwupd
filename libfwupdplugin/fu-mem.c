@@ -520,7 +520,7 @@ fu_memmem_safe(const guint8 *haystack,
 		return TRUE;
 	}
 #else
-	for (gsize i = 0; i < haystack_sz - needle_sz; i++) {
+	for (gsize i = 0; i <= haystack_sz - needle_sz; i++) {
 		if (memcmp(haystack + i, needle, needle_sz) == 0) {
 			if (offset != NULL)
 				*offset = i;
