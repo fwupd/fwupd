@@ -2101,7 +2101,7 @@ fu_engine_history_verfmt_func(void)
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpstr(fu_device_get_version(device), ==, "0.1.27");
+	g_assert_cmpstr(fu_device_get_version(device), ==, "1.0.27");
 }
 
 static void

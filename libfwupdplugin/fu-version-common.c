@@ -265,9 +265,9 @@ fu_version_from_uint24(guint32 val, FwupdVersionFormat kind)
 	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
 		/* BB.CC.DD */
 		return g_strdup_printf("%u.%u.%u",
-				       (val >> 24) & 0xff,
 				       (val >> 16) & 0xff,
-				       val & 0xffff);
+				       (val >> 8) & 0xff,
+				       val & 0xff);
 	}
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
 		/* BB.CCDD */

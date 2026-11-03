@@ -108,6 +108,7 @@ fu_version_func(void)
 	} version_from_uint24[] = {
 	    {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
 	    {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {0x010203, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_HEX},
 	};
