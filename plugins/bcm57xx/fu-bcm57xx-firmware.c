@@ -128,7 +128,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "stage1 offset invalid, got: 0x%x, expected 0x%x",
-			    (guint)stage1_sz,
+			    (guint)stage1_off,
 			    (guint)BCM_NVRAM_STAGE1_BASE);
 		return NULL;
 	}
