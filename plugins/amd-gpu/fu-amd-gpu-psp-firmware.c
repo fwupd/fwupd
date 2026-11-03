@@ -55,10 +55,12 @@ fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
 				 GError **error)
 {
 	g_autoptr(FuStructEfs) st = NULL;
-	st = fu_struct_efs_parse_stream(stream, 0, error);
+	st = fu_struct_efs_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
-	return fu_struct_psp_dir_validate_stream(stream, fu_struct_efs_get_psp_dir_loc(st), error);
+	return fu_struct_psp_dir_validate_stream(stream,
+						 offset + fu_struct_efs_get_psp_dir_loc(st),
+						 error);
 }
 
 static gboolean
