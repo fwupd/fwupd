@@ -501,13 +501,16 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 		return;
 	}
 
-	/* GDS mitigation has to be enabled [and locked] */
+	/* GDS mitigation has to be enabled [and locked]
+	 *
+	 * NOTE: IA32_MCU_OPT_CTRL is a per-core MSR, but only msr0 is read -- so this assumes the
+	 * firmware programs the GDS mitigation and lock bits identically on every logical CPU */
 	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis) {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
-	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
+	if (!self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
