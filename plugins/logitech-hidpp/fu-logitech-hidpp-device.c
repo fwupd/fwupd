@@ -169,7 +169,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 
 	/* if the device index is unset, grab it from the reply */
 	if (self->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
-	    fu_struct_logitech_hidpp_msg_get_device_id(st_req) !=
+	    fu_struct_logitech_hidpp_msg_get_device_id(st_rsp) !=
 		FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
 		self->device_idx = fu_struct_logitech_hidpp_msg_get_device_id(st_rsp);
 		g_debug("device index is %02x", self->device_idx);
