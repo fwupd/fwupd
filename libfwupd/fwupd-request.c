@@ -502,10 +502,22 @@ fwupd_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 					  FWUPD_RESULT_KEY_REQUEST_KIND,
 					  fwupd_request_kind_to_string(priv->kind));
 	}
-	fwupd_codec_string_append(str,
-				  idt,
-				  FWUPD_RESULT_KEY_FLAGS,
-				  fwupd_request_flag_to_string(priv->flags));
+	if (priv->flags != FWUPD_REQUEST_FLAG_NONE) {
+		g_autoptr(GString) flags_str = g_string_new(NULL);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->flags & ((guint64)1 << i)) == 0)
+				continue;
+			tmp = fwupd_request_flag_to_string((guint64)1 << i);
+			if (tmp == NULL)
+				continue;
+			if (flags_str->len > 0)
+				g_string_append(flags_str, "|");
+			g_string_append(flags_str, tmp);
+		}
+		if (flags_str->len > 0)
+			fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_FLAGS, flags_str->str);
+	}
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->message);
