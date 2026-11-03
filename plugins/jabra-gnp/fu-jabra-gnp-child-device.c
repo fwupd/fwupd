@@ -118,8 +118,11 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 			   sizeof(rx_data->rxbuf),
 			   0,
 			   sizeof(rx_data->rxbuf),
-			   error)) {
-		g_prefix_error_literal(error, "error reading from device: ");
+			   NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "error reading from device: empty buffer");
 		return FALSE;
 	}
 	return TRUE;
