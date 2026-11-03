@@ -6256,7 +6256,8 @@ fu_cli_bios_settings_parse_json(const gchar *json, GError **error)
 	fwupd_json_parser_set_max_depth(json_parser, 50);
 	fwupd_json_parser_set_max_items(json_parser, 1000);
 	fwupd_json_parser_set_max_quoted(json_parser, 1000);
-	json_node = fwupd_json_parser_load_from_data(json_parser, json, -1, error);
+	json_node =
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, error);
 	if (json_node == NULL) {
 		g_prefix_error(error, "failed to load '%s': ", json);
 		return NULL;

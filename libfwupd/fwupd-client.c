@@ -7217,7 +7217,8 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 
 	/* parse JSON reply */
 	str = g_strndup(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-	json_root = fwupd_json_parser_load_from_data(json_parser, str, -1, &error);
+	json_root =
+	    fwupd_json_parser_load_from_data(json_parser, str, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	if (json_root == NULL) {
 		g_task_return_new_error(task,
 					FWUPD_ERROR,
