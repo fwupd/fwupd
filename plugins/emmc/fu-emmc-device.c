@@ -507,7 +507,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 		failure_cnt++;
 		g_debug("programming failed: retrying (%u)", failure_cnt);
-		fu_progress_step_done(progress);
+		fu_progress_reset(fu_progress_get_child(progress));
 	}
 
 	fu_progress_step_done(progress);
