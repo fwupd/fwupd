@@ -296,7 +296,7 @@ fu_jabra_gnp_device_add_child(FuJabraGnpDevice *self, guint16 dfu_pid, GError **
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "expected address 0x%x, and got 0x%x",
-			    (guint)FU_JABRA_GNP_ADDRESS_OTA_CHILD,
+			    (guint)FU_JABRA_GNP_ADDRESS_PARENT,
 			    self->address);
 		return FALSE;
 	}
