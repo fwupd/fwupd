@@ -70,9 +70,8 @@ fu_wacom_raw_emr_device_w9013_erase_data(FuWacomRawEmrDevice *self, GError **err
 	    st_req,
 	    fu_wacom_raw_device_get_echo_next(FU_WACOM_RAW_DEVICE(self)));
 	buf[0] = 0x00; /* erased block */
-	buf[1] = fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
-						       (const guint8 *)&st_req,
-						       4);
+	buf[1] =
+	    fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00, st_req->buf->data, 4);
 	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
 				     st_req,
 				     NULL,
@@ -99,9 +98,8 @@ fu_wacom_raw_emr_device_w9013_erase_code(FuWacomRawEmrDevice *self,
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ERASE_FLASH);
 	fu_struct_wacom_raw_request_set_echo(st_req, idx);
 	buf[0] = block_nr;
-	buf[1] = fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
-						       (const guint8 *)&st_req,
-						       4);
+	buf[1] =
+	    fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00, st_req->buf->data, 4);
 	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
 				     st_req,
 				     NULL,
