@@ -435,18 +435,19 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, 
 	struct {
 		guint8 page;
 		guint addr;
-	} signature_locations[] = {{0x01, 0x30},
-				   {0x01, 0x31},
-				   {0x01, 0x60},
-				   {0x01, 0x61},
-				   {0xff, 0xff}};
+	} signature_locations[] = {
+	    {0x01, 0x30},
+	    {0x01, 0x31},
+	    {0x01, 0x60},
+	    {0x01, 0x61},
+	};
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* we have to request this one byte at a time */
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, G_N_ELEMENTS(signature_locations));
-	for (guint i = 0; signature_locations[i].page != 0xff; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(signature_locations); i++) {
 		g_autoptr(GBytes) buf = NULL;
 		buf = fu_dfu_target_avr_get_chip_signature_for_addr(target,
 								    signature_locations[i].page,
