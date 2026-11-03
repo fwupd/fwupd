@@ -3794,6 +3794,9 @@ fu_engine_test_emulator_get_event_ids(GBytes *zip_blob, const gchar *phase_fn, g
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
+	/* the same limits as the loader */
+	fwupd_json_parser_set_max_items(json_parser, 5000000);
+	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 	created_str = g_date_time_format_iso8601(dt);
 	ret = fu_firmware_parse_bytes(archive, zip_blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -4034,6 +4037,79 @@ fu_engine_emulator_save_late_events_func(void)
 	g_assert_cmpstr(hub_ids, ==, "early,late");
 }
 
+/* the engine saves the emulation when no devices are connected any more, which must not
+ * lose the setup that was already saved */
+static void
+fu_engine_emulator_save_no_devices_func(void)
+{
+	g_autofree gchar *hub_ids = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hub = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GOutputStream) stream = g_memory_output_stream_new_resizable();
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	gboolean ret;
+
+	fu_engine_set_silo(engine, silo_empty);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+
+	fu_device_set_id(hub, "hub");
+	fu_device_add_instance_id(hub, "hub");
+	fu_device_add_protocol(hub, "com.acme");
+	fu_device_set_created_usec(hub, FU_ENGINE_TEST_EMULATOR_CREATED_HUB * G_USEC_PER_SEC);
+	fu_device_add_flag(hub, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	fu_engine_test_emulator_add_events(hub, "early", NULL);
+	fu_engine_add_device(engine, hub);
+
+	/* the only device is no longer connected */
+	fu_engine_test_emulator_add_events(hub, "late", NULL);
+	fu_device_add_private_flag(hub, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+
+	ret = fu_engine_emulation_save(engine, stream, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(g_output_stream_close(stream, NULL, &error));
+	zip_blob = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(stream));
+	hub_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							"setup.json",
+							FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	g_assert_cmpstr(hub_ids, ==, "early");
+}
+
+/* events larger than the default JSON limits must survive being merged */
+static void
+fu_engine_emulator_large_event_func(void)
+{
+	g_autofree gchar *expected = NULL;
+	g_autofree gchar *hub_ids = NULL;
+	g_autofree gchar *large = g_strnfill(100000, 'x');
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineEmulator) emulator = fu_engine_emulator_new(engine);
+	g_autoptr(GBytes) zip_blob = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	fu_engine_set_silo(engine, silo_empty);
+	hub = fu_engine_test_emulator_add_device(engine,
+						 ctx,
+						 "hub",
+						 FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	fu_engine_test_emulator_add_events(hub, large, NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+	fu_engine_test_emulator_add_events(hub, "small", NULL);
+	fu_engine_test_emulator_save_phase(emulator, FU_ENGINE_EMULATOR_PHASE_SETUP);
+
+	zip_blob = fu_engine_test_emulator_save(emulator);
+	hub_ids = fu_engine_test_emulator_get_event_ids(zip_blob,
+							"setup.json",
+							FU_ENGINE_TEST_EMULATOR_CREATED_HUB);
+	expected = g_strdup_printf("%s,small", large);
+	g_assert_cmpstr(hub_ids, ==, expected);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4045,6 +4121,9 @@ main(int argc, char **argv)
 			fu_engine_emulator_setup_accumulate_func);
 	g_test_add_func("/fwupd/engine/emulator/phase-isolation",
 			fu_engine_emulator_phase_isolation_func);
+	g_test_add_func("/fwupd/engine/emulator/save-no-devices",
+			fu_engine_emulator_save_no_devices_func);
+	g_test_add_func("/fwupd/engine/emulator/large-event", fu_engine_emulator_large_event_func);
 	g_test_add_func("/fwupd/engine/emulator/save-late-events",
 			fu_engine_emulator_save_late_events_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);

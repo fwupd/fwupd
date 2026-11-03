@@ -102,6 +102,17 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	return TRUE;
 }
 
+/* the emulation files are large, so use the same limits when loading and when merging */
+static FwupdJsonParser *
+fu_engine_emulator_json_parser_new(void)
+{
+	FwupdJsonParser *json_parser = fwupd_json_parser_new();
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 5000000); /* yes, this big! */
+	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
+	return json_parser;
+}
+
 static gboolean
 fu_engine_emulator_load_json_from_stream(FuEngineEmulator *self,
 					 FuInputStream *stream,
@@ -110,12 +121,7 @@ fu_engine_emulator_load_json_from_stream(FuEngineEmulator *self,
 	GPtrArray *backends = fu_context_get_backends(fu_engine_get_context(self->engine));
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
-
-	/* set appropriate limits */
-	fwupd_json_parser_set_max_depth(json_parser, 50);
-	fwupd_json_parser_set_max_items(json_parser, 5000000); /* yes, this big! */
-	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
+	g_autoptr(FwupdJsonParser) json_parser = fu_engine_emulator_json_parser_new();
 
 	/* parse */
 	json_node = fwupd_json_parser_load_from_stream2(json_parser,
@@ -263,7 +269,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self,
 	if (blob_old != NULL) {
 		g_autoptr(FwupdJsonNode) json_node_old = NULL;
 		g_autoptr(FwupdJsonObject) json_obj_old = NULL;
-		g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+		g_autoptr(FwupdJsonParser) json_parser = fu_engine_emulator_json_parser_new();
 
 		json_node_old = fwupd_json_parser_load_from_bytes(json_parser,
 								  blob_old,
@@ -381,13 +387,25 @@ fu_engine_emulator_save_setup_pending(FuEngineEmulator *self,
 	g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(composite_cnt,
 								    FU_ENGINE_EMULATOR_PHASE_SETUP,
 								    write_cnt);
+	g_autoptr(GError) error_local = NULL;
+
 	if (g_strcmp0(self->last_save_fn, fn) != 0)
 		return TRUE;
-	return fu_engine_emulator_save_phase(self,
-					     composite_cnt,
-					     FU_ENGINE_EMULATOR_PHASE_SETUP,
-					     write_cnt,
-					     error);
+	if (!fu_engine_emulator_save_phase(self,
+					   composite_cnt,
+					   FU_ENGINE_EMULATOR_PHASE_SETUP,
+					   write_cnt,
+					   &error_local)) {
+		/* no devices are connected, e.g. all removed since the last snapshot, which
+		 * leaves the saved setup untouched */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug("not saving pending setup events: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
