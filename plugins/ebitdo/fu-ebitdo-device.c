@@ -93,7 +93,7 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to send to device on ep 0x%02x: %s",
-			    (guint)FU_EBITDO_USB_BOOTLOADER_EP_OUT,
+			    (guint)ep_out,
 			    error_local->message);
 		return FALSE;
 	}
