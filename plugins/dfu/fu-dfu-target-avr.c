@@ -857,10 +857,15 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 		fu_progress_step_done(progress);
 	}
 
-	/* truncate the image if any sectors are empty, i.e. all 0xff */
-	if (chunk_valid == G_MAXUINT) {
+	/* truncate the image if any sectors are empty, i.e. all 0xff -- unless the caller
+	 * asked for a specific size, in which case keep the readback bytes as-is */
+	if (expected_size > 0) {
+		g_debug("keeping all %u chunks as expected size 0x%x",
+			blobs->len,
+			(guint)expected_size);
+	} else if (chunk_valid == G_MAXUINT) {
 		g_debug("all %u chunks are empty", blobs->len);
-		g_ptr_array_set_size(chunks, 0);
+		g_ptr_array_set_size(blobs, 0);
 	} else if (blobs->len != chunk_valid + 1) {
 		g_debug("truncating chunks from %u to %u", blobs->len, chunk_valid + 1);
 		g_ptr_array_set_size(blobs, chunk_valid + 1);
