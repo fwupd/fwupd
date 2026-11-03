@@ -451,7 +451,7 @@ fu_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GErr
 	}
 
 	/* device is already on a different release */
-	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) != 0)
+	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel_bkc)) != 0)
 		return TRUE;
 
 	/* TRANSLATORS: BKC is the industry name for the best known configuration and is a set
@@ -463,7 +463,7 @@ fu_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GErr
 	    /* TRANSLATORS: %1 is the current device version number, and %2 is the
 	       command name, e.g. `fwupdmgr sync` */
 	    _("This device will be reverted back to %s when the %s command is performed."),
-	    fwupd_release_get_version(rel),
+	    fwupd_release_get_version(rel_bkc),
 	    cmd);
 
 	fu_console_box(
