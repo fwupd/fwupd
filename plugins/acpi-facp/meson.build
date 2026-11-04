@@ -8,6 +8,7 @@ plugins += {
 
 plugin_builtin_acpi_facp = static_library(
   'fu_plugin_acpi_facp',
+  rustgen.process('fu-acpi-facp.rs'),
   sources: [
     'fu-acpi-facp-plugin.c',
     'fu-acpi-facp.c',
