@@ -145,7 +145,7 @@ fu_path_mkdir(const gchar *dirname, GError **error)
 
 	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
 		g_debug("creating path %s", dirname);
-	if (g_mkdir_with_parents(dirname, 0755) == -1) {
+	if (g_mkdir_with_parents(dirname, 0700) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
