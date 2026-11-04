@@ -124,6 +124,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 			    tx_data->buf->len);
 		return FALSE;
 	}
+	fu_byte_array_set_size(tx_data->buf, self->report_size, 0x0);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -132,7 +133,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					    0x0200 | FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
 					    self->iface_hid,
 					    tx_data->buf->data,
-					    self->report_size,
+					    tx_data->buf->len,
 					    NULL,
 					    tx_data->timeout,
 					    error)) {
@@ -351,13 +352,16 @@ fu_jabra_gnp_device_ensure_report_size(FuJabraGnpDevice *self, GError **error)
 		g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
 		g_autoptr(FuHidReport) report = NULL;
 		g_autoptr(FuFirmware) item = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_firmware_parse_bytes(descriptor,
 					     blob,
 					     0x0,
 					     FU_FIRMWARE_PARSE_FLAG_NONE,
-					     error))
-			return FALSE;
+					     &error_local)) {
+			g_debug("ignoring HID descriptor: %s", error_local->message);
+			continue;
+		}
 		report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
 						       NULL,
 						       "usage-page",
