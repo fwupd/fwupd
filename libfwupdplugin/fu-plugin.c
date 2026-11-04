@@ -1936,6 +1936,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 					  ~FU_DEVICE_INCORPORATE_FLAG_PROXY);
 		fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 		fu_device_set_proxy(dev, proxy_tmp);
+		fu_device_set_target(dev, proxy_tmp);
 	}
 
 	/* notify plugins */

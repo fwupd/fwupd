@@ -1690,7 +1690,6 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	/* sometimes strong, sometimes weak */
 	if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY])) {
 		g_set_object(&priv->proxy, proxy);
-		fu_device_set_target(self, proxy);
 	} else {
 		if (priv->proxy != NULL)
 			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
@@ -8325,6 +8324,14 @@ fu_device_clear_events(FuDevice *self)
 	priv->event_idx = 0;
 }
 
+static FuDevice *
+fu_device_get_target(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->target;
+}
+
 /**
  * fu_device_set_target:
  * @self: a #FuDevice
@@ -8344,6 +8351,7 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(target == NULL || FU_IS_DEVICE(target));
 	g_return_if_fail(self != target);
+	g_return_if_fail(self != fu_device_get_target(target));
 
 	if (target != NULL)
 		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
