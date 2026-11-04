@@ -7026,6 +7026,10 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
 			fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
 	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_TARGET) {
+		if (priv->target == NULL && priv_donor->target != NULL)
+			fu_device_set_target(self, priv_donor->target);
+	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_PRIVATE_FLAGS) {
 		if (priv_donor->private_flags != NULL) {
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
