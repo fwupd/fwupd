@@ -199,6 +199,11 @@
       <package only-if="android" />
     </distro>
   </dependency>
+  <dependency id="clang-tidy">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
+    </distro>
+  </dependency>
   <dependency id="clang-tools">
     <distro id="ubuntu">
       <package only-if="amd64" />
@@ -1041,6 +1046,11 @@
       <package only-if="snap" />
     </distro>
   </dependency>
+  <dependency id="rustfmt">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
+    </distro>
+  </dependency>
   <dependency id="rustc">
     <distro id="arch">
       <package name="rust" only-if="amd64" />
@@ -1064,6 +1074,11 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="rust-clippy">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="rustup">
@@ -1868,6 +1883,11 @@
     </distro>
     <distro id="fedora">
       <package name="ShellCheck" only-if="amd64" />
+    </distro>
+  </dependency>
+  <dependency id="pre-commit">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="shfmt">
