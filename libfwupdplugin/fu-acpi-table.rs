@@ -16,6 +16,7 @@ struct FuStructAcpiTable {
 }
 
 // ACPI Fixed ACPI Description Table (FADT) Preferred_PM_Profile values.
+#[derive(ToString)]
 #[repr(u8)]
 enum FuAcpiFadtPmProfile {
     Unspecified,
