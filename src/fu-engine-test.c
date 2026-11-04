@@ -4416,10 +4416,16 @@ fu_engine_test_emulator_save_removed_hid(gboolean replug)
 }
 
 /* the saved setup is loaded back as the devices that were recorded, including the one that
- * was removed, and a device that came back is only loaded once */
+ * was removed, and a device that came back is only loaded once; the events that were saved
+ * are checked by ID as the replay only counts them */
 static void
 fu_engine_emulator_removed_device_replay_func(void)
 {
+	g_autofree gchar *hid_old = NULL;
+	g_autofree gchar *hid_removed = NULL;
+	g_autofree gchar *hid_replug = NULL;
+	g_autofree gchar *hub_removed = NULL;
+	g_autofree gchar *hub_replug = NULL;
 	g_autofree gchar *replay_removed = NULL;
 	g_autofree gchar *replay_replug = NULL;
 	g_autoptr(GBytes) zip_blob_removed = fu_engine_test_emulator_save_removed_hid(FALSE);
@@ -4427,8 +4433,35 @@ fu_engine_emulator_removed_device_replay_func(void)
 
 	replay_removed = fu_engine_test_emulator_replay(zip_blob_removed);
 	g_assert_cmpstr(replay_removed, ==, "1123:3,4C42:1");
+	hub_removed = fu_engine_test_emulator_get_event_ids_pid(zip_blob_removed,
+								"setup.json",
+								FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+								0x1123);
+	g_assert_cmpstr(hub_removed, ==, "hub-a,hub-b,hub-c");
+	hid_removed = fu_engine_test_emulator_get_event_ids_pid(zip_blob_removed,
+								"setup.json",
+								FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+								0x4C42);
+	g_assert_cmpstr(hid_removed, ==, "hid-a");
+
 	replay_replug = fu_engine_test_emulator_replay(zip_blob_replug);
 	g_assert_cmpstr(replay_replug, ==, "1123:3,4C42:2");
+	hub_replug = fu_engine_test_emulator_get_event_ids_pid(zip_blob_replug,
+							       "setup.json",
+							       FU_ENGINE_TEST_EMULATOR_CREATED_HUB,
+							       0x1123);
+	g_assert_cmpstr(hub_replug, ==, "hub-a,hub-b,hub-c");
+	hid_old = fu_engine_test_emulator_get_event_ids_pid(zip_blob_replug,
+							    "setup.json",
+							    FU_ENGINE_TEST_EMULATOR_CREATED_HID,
+							    0x4C42);
+	g_assert_null(hid_old);
+	hid_replug =
+	    fu_engine_test_emulator_get_event_ids_pid(zip_blob_replug,
+						      "setup.json",
+						      FU_ENGINE_TEST_EMULATOR_CREATED_HID + 1,
+						      0x4C42);
+	g_assert_cmpstr(hid_replug, ==, "hid2-a,hid2-b");
 }
 
 /* devices that cannot be told apart are never treated as the same device coming back, so
