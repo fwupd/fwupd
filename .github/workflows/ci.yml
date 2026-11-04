@@ -28,37 +28,26 @@ jobs:
   pre-commit:
     permissions:
       contents: read
-    needs: zizmor
+    needs: [zizmor, containers]
     if: ${{ github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
+    container:
+      image: ${{ fromJSON(needs.containers.outputs.container_lut)['ubuntu-amd64'] }} # zizmor: ignore[self-repository]
     env:
       SKIP: no-commit-to-branch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set up pre-commit
-        run: |
-          sudo apt-get update -qq
-          sudo add-apt-repository -y ppa:peter-hutterer/meson1.11; \
-          sudo apt-get install -qq --yes --no-install-recommends \
-            clang-format \
-            git \
-            meson \
-            patch \
-            pre-commit \
-            python3-lxml \
-            shellcheck \
-            shfmt
       - name: Run pre-commit hooks
-        run: pre-commit run -v --show-diff-on-failure --hook-stage commit --all-files
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          pre-commit run -v --show-diff-on-failure --hook-stage commit --all-files
 
   containers:
     permissions:
       contents: read
       packages: write
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
     uses: $/.github/workflows/create_containers.yml
 
   android:
@@ -122,9 +111,11 @@ jobs:
   static-analysis:
     permissions:
       contents: read
-    needs: pre-commit
-    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') }}
+    needs: [pre-commit, containers]
+    if: ${{ always() && (needs.pre-commit.result == 'success' || needs.pre-commit.result == 'skipped') && needs.containers.result == 'success' }}
     uses: $/.github/workflows/static-analysis.yml
+    with:
+      container_lut: ${{ needs.containers.outputs.container_lut }}
 
   windows:
     permissions:

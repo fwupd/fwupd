@@ -1,4 +1,9 @@
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      container_lut:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -10,20 +15,11 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest # zizmor: ignore[unpinned-images]
+      image: ${{ fromJSON(inputs.container_lut)['ubuntu-amd64'] }} # zizmor: ignore[self-repository]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: install dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |-
-          apt-get update -qq
-          apt-get install -qq --yes --no-install-recommends clang-tidy
-      - name: ensure up-to-date dependencies are installed
-        run: |-
-          ./fwupbuild --yes install-dependencies --os ubuntu
       - name: configure
         run: |-
           meson setup -Dwerror=true build
@@ -37,15 +33,11 @@ jobs:
   gcc:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/fwupd/fwupd/fwupd-debian-amd64:latest # zizmor: ignore[unpinned-images]
+      image: ${{ fromJSON(inputs.container_lut)['debian-amd64'] }} # zizmor: ignore[unpinned-images]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: ensure up-to-date dependencies are installed
-        run: |-
-          apt-get update -qq
-          ./fwupbuild --yes install-dependencies --os debian
       - name: configure
         run: |-
           meson setup -Dwerror=true -Dstatic_analysis=true build
