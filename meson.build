@@ -113,6 +113,7 @@ warning_flags = [
   '-Wno-cast-function-type',
   '-Wno-unknown-pragmas',
   '-Wno-missing-field-initializers',
+  '-Wno-missing-noreturn',
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
   '-Wold-style-definition',
