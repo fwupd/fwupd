@@ -92,6 +92,8 @@ FwupdDevice *
 fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error) G_GNUC_NON_NULL(1, 2);
 FuSecurityAttrs *
 fu_engine_get_host_security_attrs(FuEngine *self) G_GNUC_NON_NULL(1);
+GVariant *
+fu_engine_get_host_security_report(FuEngine *self, guint schema, GError **error) G_GNUC_NON_NULL(1);
 FuSecurityAttrs *
 fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error) G_GNUC_NON_NULL(1);
 GHashTable *

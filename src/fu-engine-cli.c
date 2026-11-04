@@ -3930,6 +3930,25 @@ fu_engine_cli_sync_impl_get_history(FwupdClient *client,
 	return fu_engine_get_history(self->engine, error);
 }
 
+static GVariant *
+fu_engine_cli_sync_impl_get_host_security_report(FwupdClient *client,
+						 guint schema,
+						 gpointer user_data,
+						 GCancellable *cancellable,
+						 GError **error)
+{
+#ifdef HAVE_HSI
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_get_host_security_report(self->engine, schema, error);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "HSI support not enabled");
+	return NULL;
+#endif
+}
+
 static GPtrArray *
 fu_engine_cli_sync_impl_get_host_security_attrs(FwupdClient *client,
 						gpointer user_data,
@@ -4311,6 +4330,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_downgrades = fu_engine_cli_sync_impl_get_downgrades,
 	    .get_history = fu_engine_cli_sync_impl_get_history,
 	    .get_host_security_attrs = fu_engine_cli_sync_impl_get_host_security_attrs,
+	    .get_host_security_report = fu_engine_cli_sync_impl_get_host_security_report,
 	    .get_host_security_events = fu_engine_cli_sync_impl_get_host_security_events,
 	    .get_releases = fu_engine_cli_sync_impl_get_releases,
 	    .get_results = fu_engine_cli_sync_impl_get_results,

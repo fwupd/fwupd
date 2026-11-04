@@ -71,6 +71,8 @@ fu_cli_update_reboot(GError **error);
 
 gboolean
 fu_cli_is_url(const gchar *perhaps_url) G_GNUC_NON_NULL(1);
+FwupdJsonObject *
+fu_cli_security_report_to_json(GVariant *report, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fu_cli_convert_description(const gchar *xml, GError **error) G_GNUC_NON_NULL(1);
 

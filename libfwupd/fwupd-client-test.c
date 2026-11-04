@@ -111,6 +111,37 @@ fwupd_client_impl_write_blob_cb(FwupdClient *self,
 	return TRUE;
 }
 
+static GVariant *
+fwupd_client_impl_get_host_security_report_cb(FwupdClient *self,
+					      guint schema,
+					      gpointer user_data,
+					      GCancellable *cancellable,
+					      GError **error)
+{
+	GVariantBuilder builder;
+	GVariantBuilder attrs;
+	GVariantBuilder failed;
+
+	if (schema != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported security report schema %u",
+			    schema);
+		return NULL;
+	}
+	g_variant_builder_init(&attrs, G_VARIANT_TYPE("aa{sv}"));
+	g_variant_builder_init(&failed, G_VARIANT_TYPE("as"));
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_add(&builder, "{sv}", "Schema", g_variant_new_uint32(schema));
+	g_variant_builder_add(&builder, "{sv}", "Score", g_variant_new_uint32(500));
+	g_variant_builder_add(&builder, "{sv}", "Level", g_variant_new_uint32(2));
+	g_variant_builder_add(&builder, "{sv}", "Ceiling", g_variant_new_uint32(4));
+	g_variant_builder_add(&builder, "{sv}", "Attributes", g_variant_builder_end(&attrs));
+	g_variant_builder_add(&builder, "{sv}", "Failed", g_variant_builder_end(&failed));
+	return g_variant_ref_sink(g_variant_builder_end(&builder));
+}
+
 static void
 fwupd_client_sync_impl_func(void)
 {
@@ -119,10 +150,13 @@ fwupd_client_sync_impl_func(void)
 	g_autoptr(FwupdClient) client = fwupd_client_new();
 	FwupdClientSyncImpl impl = {
 	    .connect = fwupd_client_impl_connect_cb,
+	    .get_host_security_report = fwupd_client_impl_get_host_security_report_cb,
 	    .set_feature_flags = fwupd_client_impl_set_feature_flags_cb,
 	    .write_blob = fwupd_client_impl_write_blob_cb,
 	};
 	FwupdClientImplHelper helper = {};
+	g_autoptr(GVariant) report = NULL;
+	guint schema, score;
 
 	fwupd_client_set_sync_impl(client, &impl, &helper, NULL);
 	ret = fwupd_client_connect(client, NULL, &error);
@@ -138,6 +172,19 @@ fwupd_client_sync_impl_func(void)
 	g_assert_cmpint(helper.feature_flags, ==, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	g_assert_true(helper.done_connect);
 	g_assert_true(helper.done_set_feature_flags);
+
+	report = fwupd_client_get_host_security_report(client, 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(report);
+	g_assert_true(g_variant_lookup(report, "Schema", "u", &schema));
+	g_assert_true(g_variant_lookup(report, "Score", "u", &score));
+	g_assert_cmpuint(schema, ==, 1);
+	g_assert_cmpuint(score, ==, 500);
+	g_clear_pointer(&report, g_variant_unref);
+	report = fwupd_client_get_host_security_report(client, 2, NULL, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(report);
+	g_clear_error(&error);
 
 	ret = fwupd_client_write_blob(client, "abc", "/etc/os-release", "1.2.3", NULL, &error);
 	g_assert_no_error(error);

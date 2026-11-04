@@ -5141,6 +5141,52 @@ fu_cli_security_fix_attr(FuCli *self, FuSecurityAttr *attr, GError **error)
 }
 
 static gboolean
+fu_cli_security_weighted_as_json(FuCli *self, GVariant *report, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdJsonObject) json_obj = fu_cli_security_report_to_json(report, error);
+	if (json_obj == NULL)
+		return FALSE;
+	fu_cli_print_json_object(priv->console, json_obj);
+	return TRUE;
+}
+
+static gboolean
+fu_cli_security_weighted(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GVariant) report = NULL;
+	g_auto(GStrv) failed = NULL;
+	guint score, level, ceiling;
+
+	report = fwupd_client_get_host_security_report(priv->client, 1, priv->cancellable, error);
+	if (report == NULL)
+		return FALSE;
+	if (!g_variant_lookup(report, "Score", "u", &score) ||
+	    !g_variant_lookup(report, "Level", "u", &level) ||
+	    !g_variant_lookup(report, "Ceiling", "u", &ceiling)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid weighted security report");
+		return FALSE;
+	}
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON))
+		return fu_cli_security_weighted_as_json(self, report, error);
+	/* TRANSLATORS: the maximum weighted HSI level allowed by failed checks */
+	fu_console_print(priv->console,
+			 _("Experimental weighted HSI: %u (score %u, maximum level %u)"),
+			 level,
+			 score,
+			 ceiling);
+	if (g_variant_lookup(report, "Failed", "^as", &failed)) {
+		for (guint i = 0; failed[i] != NULL; i++)
+			fu_console_print(priv->console, "  %s", failed[i]);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_cli_security(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
@@ -7301,6 +7347,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: command description */
 			     _("Gets the host security attributes"),
 			     fu_cli_security);
+	fu_cli_cmd_array_add(self,
+			     "security-weighted",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Gets the weighted host security report"),
+			     fu_cli_security_weighted);
 	fu_cli_cmd_array_add(self,
 			     "sync,sync-bkc",
 			     NULL,

@@ -264,6 +264,17 @@ fwupd_client_get_host_security_attrs_finish(FwupdClient *self,
 					    GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_get_host_security_report_async(FwupdClient *self,
+					    guint schema,
+					    GCancellable *cancellable,
+					    GAsyncReadyCallback callback,
+					    gpointer callback_data) G_GNUC_NON_NULL(1);
+GVariant *
+fwupd_client_get_host_security_report_finish(FwupdClient *self,
+					     GAsyncResult *res,
+					     GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_get_host_security_events_async(FwupdClient *self,
 					    guint limit,
 					    GCancellable *cancellable,

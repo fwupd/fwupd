@@ -158,6 +158,121 @@ PCs with confidential documents should have a `HSI:3` or higher level of protect
 In a graphical tool that would show details about the computer (such as GNOME Control Center's details tab) the OS could display a field indicating Host Security ID.
 The ID should be shown with an alert color if the security is not at least `HSI:1` or the suffix is `!`.
 
+### Experimental weighted report
+
+The shared `security-weighted` command in `fwupdmgr` and `fwupdtool` provides a
+separate experimental score. Successful checks earn points and each property
+counts once. Scores of 300, 500, 700 and 850 correspond to weighted levels 1,
+2, 3 and 4. Some failures limit the maximum level.
+
+Some protections require several existing checks. All required checks must
+pass. Independently successful protections contribute separately.
+
+| Protection | Required successful results | Points | Maximum level if unmet |
+|---|---|---:|---:|
+| Intel Boot Guard | `IntelBootguard.Enabled`, `IntelBootguard.Verified`, `IntelBootguard.Acm`, `IntelBootguard.Policy`, `IntelBootguard.Otp`, `Mei.ManufacturingMode` | 120 | — |
+| coreboot verified boot with flash locking | `Coreboot.Vboot`, `Mtd.Locked` | 100 | — |
+| AMD Platform Secure Boot | `Amd.PlatformSecureBoot` | 120 | — |
+| CET | `Cet.Enabled`, `Cet.Active` | 15 | — |
+| UEFI early-boot memory protection | `Uefi.MemoryProtection`, `Uefi.NxCompat` | 30 | — |
+
+The 120 and 100 point awards are experimental policy choices, not percentages
+or a calibrated comparison of security. The Boot Guard award is separate from
+the other ME hardening scores. A missing, unknown, unsupported or missing-data
+prerequisite does not complete a protection. It also does not prove that the
+protection is disabled.
+
+CSME16 does not report `Mei.ManufacturingMode`, because the older register bit
+changed meaning. CSME18 does not report `IntelBootguard.Verified` or
+`IntelBootguard.Policy`. These systems therefore cannot currently earn the
+Boot Guard points even when the unreported protections may be active. Improving
+those detectors is separate work.
+
+`Coreboot.Vboot` and `Mtd.Locked` mean only that those existing checks passed.
+They do not establish that the locked region contains the verification root or
+that privileged software cannot remove the lock. The existing Boot Guard policy
+check accepts either immediate shutdown or shutdown after 30 minutes.
+
+`Amd.SpiWriteProtection` remains an independent 120 point result for AMD ROM
+Armor. ROM Armor transfers flash control to the PSP and is not equivalent to
+bare SMM_BWP. The four existing Intel SPI checks total 80 points because they do
+not establish that protected ranges cover every required firmware region. The
+score does not check which flash regions ROM Armor protects or how updates are
+authorized.
+
+Points and level limits for each check:
+
+| Existing result | Points | Maximum level on failure | Notes |
+|---|---:|---:|---|
+| `Fwupd.Plugins` | 0 | — | runtime information |
+| `Fwupd.Updates` | 0 | — | runtime information |
+| `HostEmulation` | 0 | — | runtime information |
+| `Kernel.Swap` | 0 | — | runtime information |
+| `Amd.EntrySign` | 30 | 3 | |
+| `Amd.PlatformSecureBoot` | 0 | — | counted in the firmware verification table above |
+| `Amd.RollbackProtection` | 50 | 3 | independent of BIOS rollback protection |
+| `Amd.SmmLocked` | 50 | 3 | |
+| `Amd.SpiReplayProtection` | 30 | 3 | required on detected AMD CPUs |
+| `Amd.SpiWriteProtection` | 120 | 3 | required on detected AMD CPUs; ROM Armor result |
+| `Bios.CapsuleUpdates` | 0 | — | |
+| `Bios.RollbackProtection` | 50 | 3 | |
+| `Cet.Active` | 0 | — | required for CET points |
+| `Cet.Enabled` | 0 | — | required for CET points |
+| `Coreboot.Vboot` | 0 | — | required for coreboot verified boot points |
+| `EncryptedRam` | 20 | — | |
+| `Hp.Surestart` | 20 | — | |
+| `HwDiskEncryption` | 10 | — | |
+| `IntelBootguard.Acm` | 0 | — | required for Boot Guard points |
+| `IntelBootguard.Enabled` | 0 | — | required for Boot Guard points |
+| `IntelBootguard.Otp` | 0 | — | required for Boot Guard points |
+| `IntelBootguard.Policy` | 0 | — | required for Boot Guard points |
+| `IntelBootguard.Verified` | 0 | — | required for Boot Guard points |
+| `IntelGds` | 20 | — | |
+| `Iommu` | 10 | — | |
+| `Kernel.Lockdown` | 0 | — | runtime information |
+| `Kernel.Tainted` | 0 | — | runtime information |
+| `Mei.KeyManifest` | 20 | 2 | |
+| `Mei.ManufacturingMode` | 30 | 2 | also a Boot Guard prerequisite |
+| `Mei.OverrideStrap` | 30 | 2 | |
+| `Mei.Version` | 10 | 2 | |
+| `Mtd.Locked` | 0 | — | required for coreboot verified boot points |
+| `PlatformDebugEnabled` | 50 | 2 | |
+| `PlatformDebugLocked` | 30 | 3 | |
+| `PlatformFused` | 30 | 3 | |
+| `PrebootDma` | 30 | — | |
+| `Smap` | 20 | — | |
+| `Spi.Bioswe` | 20 | 3 | required on detected Intel CPUs |
+| `Spi.Ble` | 20 | 3 | required on detected Intel CPUs |
+| `Spi.Descriptor` | 20 | 3 | required on detected Intel CPUs |
+| `Spi.SmmBwp` | 20 | 3 | required on detected Intel CPUs |
+| `SupportedCpu` | 0 | — | |
+| `SuspendToIdle` | 0 | — | |
+| `SuspendToRam` | 10 | — | |
+| `Tpm.EmptyPcr` | 15 | — | |
+| `Tpm.ReconstructionPcr0` | 40 | — | |
+| `Tpm.Version20` | 1 | — | TPM presence only |
+| `Uefi.BootserviceVars` | 20 | 3 | |
+| `Uefi.Db.MsUefi` | 0 | — | |
+| `Uefi.Db.Production` | 20 | 2 | |
+| `Uefi.MemoryProtection` | 0 | — | required for UEFI early-boot memory protection points |
+| `Uefi.NxCompat` | 0 | — | required for UEFI early-boot memory protection points |
+| `Uefi.Pk` | 30 | 2 | |
+| `Uefi.SecureBoot` | 100 | 2 | |
+
+Missing Intel or AMD SPI checks count as failures when fwupd detects the
+corresponding CPU vendor. Other checks that are not reported are omitted, while
+reported failures and missing-data results can still limit the level. Host
+emulation uses an unknown CPU vendor and therefore cannot infer missing checks
+from the replay machine's CPU.
+
+The report's `Failed` field lists checks whose requirements were not met. It can
+include missing-data results and should not be read as proof of a hardware
+failure.
+
+This report does not change the existing HSI. Its weights and thresholds are
+proposed scoring choices and have not been established as calibrated across
+different hardware.
+
 On Linux `fwupd` is used to enumerate and update firmware.
 It exports a property `HostSecurityId` and a `GetHostSecurityAttrs()` method.
 The attributes are supposed to represent the *system as a whole* but individual (internal) devices are able to make a claim that they worsened the state of the security of the system.

@@ -1694,6 +1694,98 @@ fwupd_client_fixup_dbus_error(GError *error)
 }
 
 static void
+fwupd_client_get_host_security_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	GVariant *report;
+	if (result == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	g_variant_get(result, "(@a{sv})", &report);
+	g_task_return_pointer(task, report, (GDestroyNotify)g_variant_unref);
+}
+
+/**
+ * fwupd_client_get_host_security_report_async:
+ * @self: a #FwupdClient
+ * @schema: report schema version
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): callback
+ * @callback_data: data for @callback
+ *
+ * Gets the weighted host security report. Schema 1 returns the unsigned integer
+ * fields `Schema`, `Score`, `Level` and `Ceiling`, an `Attributes` array of
+ * security-attribute dictionaries, and a `Failed` string array of property IDs.
+ * Attributes that are not reported by the host are normally omitted. Required
+ * platform protections are failures when absent. Reported attributes with
+ * missing data receive no points and still apply their ceiling. Weights and
+ * thresholds remain fixed for a schema version.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Since: 2.2.1
+ */
+void
+fwupd_client_get_host_security_report_async(FwupdClient *self,
+					    guint schema,
+					    GCancellable *cancellable,
+					    GAsyncReadyCallback callback,
+					    gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_host_security_report_async);
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
+	/* call into daemon */
+	g_dbus_proxy_call(priv->proxy,
+			  "GetHostSecurityReport",
+			  g_variant_new("(u)", schema),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_get_host_security_report_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_get_host_security_report_finish:
+ * @self: a #FwupdClient
+ * @res: asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.get_host_security_report_async].
+ *
+ * Returns: (transfer full): the report or %NULL
+ *
+ * Since: 2.2.1
+ */
+GVariant *
+fwupd_client_get_host_security_report_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
 fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
@@ -8878,6 +8970,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_downgrades = fwupd_client_sync_impl_get_downgrades,
 	    .get_history = fwupd_client_sync_impl_get_history,
 	    .get_host_security_attrs = fwupd_client_sync_impl_get_host_security_attrs,
+	    .get_host_security_report = fwupd_client_sync_impl_get_host_security_report,
 	    .get_host_security_events = fwupd_client_sync_impl_get_host_security_events,
 	    .get_releases = fwupd_client_sync_impl_get_releases,
 	    .get_results = fwupd_client_sync_impl_get_results,
