@@ -90,6 +90,9 @@ enum FuDeviceIncorporateFlags {
     // Sets the custom flags.
     // Since: 2.1.2
     CustomFlags = 1 << 30,
+    // Sets the event target.
+    // Since: 2.2.1
+    Target = 1 << 31,
     // All flags
     All = u64::MAX,
 }
