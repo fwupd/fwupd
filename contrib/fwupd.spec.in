@@ -59,6 +59,11 @@ BuildRequires: gettext
 BuildRequires: hwdata
 BuildRequires: rustc
 BuildRequires: cargo
+%if 0%{?fedora}
+BuildRequires: cargo-rpm-macros
+BuildRequires: rust-zerocopy+derive-devel
+BuildRequires: rust-libc-devel
+%endif
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
 BuildRequires: libusb1-devel >= %{libusb_version}
@@ -226,6 +231,12 @@ fwupd wrapper for Qubes OS
 
 %prep
 %autosetup -p1
+
+# use the crates from Fedora as the build has no network access
+%if 0%{?fedora}
+%cargo_prep
+cargo generate-lockfile --offline
+%endif
 
 # the EFI helper
 %if 0%{?libfwupd_19x_version}

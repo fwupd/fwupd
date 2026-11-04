@@ -1053,6 +1053,21 @@
       <package only-if="android" />
     </distro>
   </dependency>
+  <dependency id="cargo-rpm-macros">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency id="rust-zerocopy+derive-devel">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency id="rust-libc-devel">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
   <dependency id="libstd-rust-dev">
     <distro id="debian">
       <build-target mode="multi-arch" />
