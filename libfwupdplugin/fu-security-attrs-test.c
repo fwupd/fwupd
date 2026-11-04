@@ -193,7 +193,8 @@ fu_security_attrs_hsi_func(void)
 	g_clear_object(&attr);
 }
 
-static void
+/* returns a borrowed pointer that is valid while attrs owns it */
+static FuSecurityAttr *
 fu_security_attrs_test_add_attr(FuContext *ctx,
 				FuSecurityAttrs *attrs,
 				const gchar *appstream_id,
@@ -208,6 +209,7 @@ fu_security_attrs_test_add_attr(FuContext *ctx,
 	if (success)
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fu_security_attrs_append(attrs, attr);
+	return attr;
 }
 
 static void
@@ -336,6 +338,191 @@ fu_security_attrs_hsi_suspend_to_ram_func(void)
 	}
 }
 
+static void
+fu_security_attrs_test_scoped_obsolete(FwupdSecurityAttrResult esrt_result,
+				       FwupdSecurityAttrResult oem_result,
+				       gboolean oem_first)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	FuSecurityAttr *attr_esrt = NULL;
+	FuSecurityAttr *attr_oem = NULL;
+	FuSecurityAttr *attr_secureboot = NULL;
+	g_autoptr(FuSecurityAttr) selected = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (oem_first) {
+		attr_oem = fu_security_attrs_test_add_attr(
+		    ctx,
+		    attrs,
+		    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+		    "dell",
+		    oem_result,
+		    oem_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	}
+	attr_esrt =
+	    fu_security_attrs_test_add_attr(ctx,
+					    attrs,
+					    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					    "uefi_capsule",
+					    esrt_result,
+					    esrt_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	if (!oem_first) {
+		attr_oem = fu_security_attrs_test_add_attr(
+		    ctx,
+		    attrs,
+		    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+		    "dell",
+		    oem_result,
+		    oem_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	}
+	attr_secureboot = fu_security_attrs_test_add_attr(ctx,
+							  attrs,
+							  FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
+							  "uefi_capsule",
+							  FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							  TRUE);
+	fu_security_attr_add_obsolete(
+	    attr_oem,
+	    "uefi_capsule:" FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+
+	fu_security_attrs_depsolve(attrs);
+	g_assert_true(fu_security_attr_has_flag(attr_esrt, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_false(fu_security_attr_has_flag(attr_oem, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_false(
+	    fu_security_attr_has_flag(attr_secureboot, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	selected =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(selected);
+	g_assert_cmpstr(fu_security_attr_get_plugin(selected), ==, "dell");
+	g_assert_cmpint(fu_security_attr_get_result(selected), ==, oem_result);
+}
+
+static void
+fu_security_attrs_scoped_obsolete_oem_failure_func(void)
+{
+	for (guint order = 0; order < 2; order++) {
+		fu_security_attrs_test_scoped_obsolete(FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+						       order == 0);
+	}
+}
+
+static void
+fu_security_attrs_scoped_obsolete_oem_success_func(void)
+{
+	for (guint order = 0; order < 2; order++) {
+		fu_security_attrs_test_scoped_obsolete(FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+						       FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						       order == 0);
+	}
+}
+
+static void
+fu_security_attrs_scoped_obsolete_both_failure_func(void)
+{
+	for (guint order = 0; order < 2; order++) {
+		fu_security_attrs_test_scoped_obsolete(FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+						       order == 0);
+	}
+}
+
+static void
+fu_security_attrs_obsolete_plugin_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	FuSecurityAttr *attr_bios = NULL;
+	FuSecurityAttr *attr_secureboot = NULL;
+	g_autoptr(FuSecurityAttr) attr_oem = NULL;
+
+	attr_bios = fu_security_attrs_test_add_attr(ctx,
+						    attrs,
+						    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+						    "uefi_capsule",
+						    FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+						    TRUE);
+	attr_secureboot = fu_security_attrs_test_add_attr(ctx,
+							  attrs,
+							  FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
+							  "uefi_capsule",
+							  FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							  TRUE);
+	attr_oem = fu_security_attr_new(ctx, FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+	fu_security_attr_set_plugin(attr_oem, "oem");
+	fu_security_attr_add_obsolete(attr_oem, "uefi_capsule");
+	fu_security_attrs_append(attrs, attr_oem);
+
+	fu_security_attrs_depsolve(attrs);
+	g_assert_true(fu_security_attr_has_flag(attr_bios, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_true(
+	    fu_security_attr_has_flag(attr_secureboot, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+}
+
+static void
+fu_security_attrs_test_amd_rollback_aggregation(FwupdSecurityAttrResult bios_result,
+						FwupdSecurityAttrResult amd_result,
+						const gchar *expected_hsi)
+{
+	g_autofree gchar *hsi = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	FuSecurityAttr *attr_amd = NULL;
+	FuSecurityAttr *attr_bios = NULL;
+
+	fu_security_attrs_test_add_attr(ctx,
+					attrs,
+					FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE,
+					"test",
+					FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+					TRUE);
+	attr_bios =
+	    fu_security_attrs_test_add_attr(ctx,
+					    attrs,
+					    FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION,
+					    "uefi_capsule",
+					    bios_result,
+					    bios_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_test_add_attr(ctx,
+					attrs,
+					FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
+					"test",
+					FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+					TRUE);
+	attr_amd =
+	    fu_security_attrs_test_add_attr(ctx,
+					    attrs,
+					    FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION,
+					    "pci_psp",
+					    amd_result,
+					    amd_result == FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_depsolve(attrs);
+	g_assert_false(fu_security_attr_has_flag(attr_bios, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	g_assert_false(fu_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	hsi = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi, ==, expected_hsi);
+}
+
+static void
+fu_security_attrs_amd_rollback_aggregation_bios_failure_func(void)
+{
+	fu_security_attrs_test_amd_rollback_aggregation(FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+							FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							"HSI:1");
+}
+
+static void
+fu_security_attrs_amd_rollback_aggregation_amd_failure_func(void)
+{
+	fu_security_attrs_test_amd_rollback_aggregation(FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+							FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+							"HSI:3");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -344,5 +531,17 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/security-attrs/hsi", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs/hsi-suspend-to-ram",
 			fu_security_attrs_hsi_suspend_to_ram_func);
+	g_test_add_func("/fwupd/security-attrs/scoped-obsolete/oem-failure",
+			fu_security_attrs_scoped_obsolete_oem_failure_func);
+	g_test_add_func("/fwupd/security-attrs/scoped-obsolete/oem-success",
+			fu_security_attrs_scoped_obsolete_oem_success_func);
+	g_test_add_func("/fwupd/security-attrs/scoped-obsolete/both-failure",
+			fu_security_attrs_scoped_obsolete_both_failure_func);
+	g_test_add_func("/fwupd/security-attrs/obsolete-plugin",
+			fu_security_attrs_obsolete_plugin_func);
+	g_test_add_func("/fwupd/security-attrs/aggregation/amd-rollback/bios-failure",
+			fu_security_attrs_amd_rollback_aggregation_bios_failure_func);
+	g_test_add_func("/fwupd/security-attrs/aggregation/amd-rollback/amd-failure",
+			fu_security_attrs_amd_rollback_aggregation_amd_failure_func);
 	return g_test_run();
 }

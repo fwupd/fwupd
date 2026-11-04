@@ -181,21 +181,37 @@ fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *heigh
 	return TRUE;
 }
 
+gboolean
+fu_uefi_read_file_as_uint64_full(const gchar *path,
+				 const gchar *attr_name,
+				 guint64 *value,
+				 GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *fn = g_build_filename(path, attr_name, NULL);
+
+	g_return_val_if_fail(value != NULL, FALSE);
+
+	if (!g_file_get_contents(fn, &data, NULL, error))
+		return FALSE;
+	if (!fu_strtoull(data, value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
+		g_prefix_error(error, "failed to parse %s: ", fn);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
 {
-	guint64 tmp = 0;
-	g_autofree gchar *data = NULL;
-	g_autofree gchar *fn = g_build_filename(path, attr_name, NULL);
+	guint64 value = 0;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!g_file_get_contents(fn, &data, NULL, NULL))
-		return 0x0;
-	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
+	if (fu_uefi_read_file_as_uint64_full(path, attr_name, &value, &error_local))
+		return value;
+	if (error_local->domain == FWUPD_ERROR)
 		g_warning("invalid string specified: %s", error_local->message);
-		return G_MAXUINT64;
-	}
-	return tmp;
+	return error_local->domain == FWUPD_ERROR ? G_MAXUINT64 : 0;
 }
 
 gboolean

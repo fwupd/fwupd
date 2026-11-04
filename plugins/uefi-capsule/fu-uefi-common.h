@@ -24,6 +24,11 @@ fu_uefi_get_built_app_path(FuPathStore *pstore,
 			   GError **error);
 gboolean
 fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *height, GError **error);
+gboolean
+fu_uefi_read_file_as_uint64_full(const gchar *path,
+				 const gchar *attr_name,
+				 guint64 *value,
+				 GError **error);
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name);
 gboolean
