@@ -90,6 +90,15 @@ def wait_boot() -> None:
     raise RuntimeError("device did not finish booting")
 
 
+def adb_root() -> None:
+    """restart adbd as root, retrying as it can close the connection just after boot"""
+    for _ in range(5):
+        if adb("root", check=False).returncode == 0:
+            return
+        time.sleep(5)
+    raise RuntimeError("could not restart adbd as root")
+
+
 def wait_service_registered() -> bool:
     for _ in range(30):
         if "org.freedesktop.fwupd.IFwupd" in adb_shell_output("service list"):
@@ -117,7 +126,7 @@ def run_tests(args: argparse.Namespace, prefix: str) -> int:
 
     wait_boot()
     # AOSP userdebug images allow rooting; needed to write /data and relax SELinux
-    adb("root")
+    adb_root()
     wait_boot()
     adb_shell("setenforce 0", check=False)
 
