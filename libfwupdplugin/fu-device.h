@@ -102,6 +102,7 @@ struct _FuDeviceClass {
 				   FuFirmwareParseFlags flags,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*incorporate_from_proxy)(FuDevice *self, FuDevice *donor);
+	void (*set_version_raw)(FuDevice *self, guint64 *version_raw);
 #endif
 };
 
@@ -443,6 +444,14 @@ fu_device_new(FuContext *ctx);
  * Since: 1.9.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION "md-set-version"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW:
+ *
+ * Set the device integer version from the metadata if available.
+ *
+ * Since: 2.1.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW "md-set-version-raw"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM:
  *
