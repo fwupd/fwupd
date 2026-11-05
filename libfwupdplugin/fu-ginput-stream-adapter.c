@@ -28,7 +28,7 @@ typedef struct {
 } FuGInputStreamAdapterClass;
 
 GType
-fu_ginput_stream_adapter_get_type(void);
+fu_ginput_stream_adapter_get_type(void); /* NOLINT(misc-use-internal-linkage) */
 
 static void
 fu_ginput_stream_adapter_seekable_iface_init(GSeekableIface *iface);
