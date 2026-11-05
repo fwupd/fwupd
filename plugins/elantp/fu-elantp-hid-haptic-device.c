@@ -838,7 +838,10 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 	guint16 tmp = 0;
 
 	/* haptic EEPROM IAP process runs in the TP main code */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -857,9 +860,6 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 	}
 
 	/* get OSM version */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
 	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
 					   FU_ETP_RPTID_TP_FEATURE,
 					   FU_ETP_CMD_I2C_OSM_VERSION,
@@ -1007,7 +1007,7 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 		return FALSE;
 
 	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "in bootloader mode");
 		return FALSE;
 	}
