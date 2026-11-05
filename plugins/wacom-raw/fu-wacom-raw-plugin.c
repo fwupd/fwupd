@@ -27,7 +27,8 @@ fu_wacom_raw_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
 			fu_device_add_child(device, device_tmp);
 		}
-		fu_plugin_cache_add(plugin, "drm", device);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			fu_plugin_cache_add(plugin, "drm", device);
 	}
 }
 
