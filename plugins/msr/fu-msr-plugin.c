@@ -478,8 +478,8 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 		return;
 
 	/* only specific CPUs are affected by GDS */
-	if (fu_processor_device_needs_mitigation(FU_PROCESSOR_DEVICE(device),
-						 FU_PROCESSOR_MITIGATION_FLAG_GDS))
+	if (!fu_processor_device_needs_mitigation(FU_PROCESSOR_DEVICE(device),
+						  FU_PROCESSOR_MITIGATION_FLAG_GDS))
 		return;
 
 	/* create attr */
@@ -507,7 +507,7 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
-	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
+	if (!self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
