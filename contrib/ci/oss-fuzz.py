@@ -129,7 +129,13 @@ class Builder:
         """build a rust crate as a static library and return the archive path"""
         srcdir = os.path.join(self.srcdir, "fwupd")
         targetdir = os.path.join(self.builddir, "cargo")
-        dst = os.path.join(targetdir, "release", f"lib{libname}.a")
+        target = subprocess.run(
+            ["rustc", "--print", "host-tuple"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dst = os.path.join(targetdir, target, "release", f"lib{libname}.a")
         if not os.path.exists(dst):
             print(f"building rust package {package} into {dst}")
             try:
@@ -140,6 +146,8 @@ class Builder:
                         "--release",
                         "--package",
                         package,
+                        "--target",
+                        target,
                         "--target-dir",
                         targetdir,
                     ],
