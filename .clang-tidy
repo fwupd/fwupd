@@ -50,3 +50,6 @@ Checks:
   - -portability-avoid-pragma-once # too useful to remove
 
 WarningsAsErrors: "*"
+
+# pkg-config uses -I rather than -isystem, so these are not treated as system headers
+ExcludeHeaderFilterRegex: "^/usr/.*"
