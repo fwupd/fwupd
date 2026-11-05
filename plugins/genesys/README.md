@@ -285,6 +285,41 @@ The firmware is deployed when the device is in normal runtime mode, and the devi
 
 The HP Mxfd FHD Monitors must be connected to host via the USB-C cable to apply an update. The devices remain functional during the update; the Scaler update is ~10 minute long.
 
+## Hardware Validation: Lenovo P34WD-40
+
+Tested on 2026-11-05 on a complete Lenovo P34WD-40 monitor connected to an Ubuntu 24.04 host,
+using a standalone build of this tree (`-Dbuild=standalone -Dtests=false`) and `fwupdtool --plugins genesys`.
+
+| Hub  | IC     | Version | HID proxy      | Result of `get-devices`                             |
+|------|--------|---------|----------------|-----------------------------------------------------|
+| 1121 | 352510 | 86.25   | `f00f` monitor | Updatable, RUNMODE_C, no inhibit                    |
+| 1122 | 352350 | 87.16   | `4c41`         | Updatable, RUNMODE_C, no inhibit                    |
+| 1123 | 352350 | 88.17   | `4c42`         | Updatable, RUNMODE_C, no inhibit                    |
+
+The vendor firmware of each Hub (same version as the one running) was written with `write-blob`,
+in the order 1123, 1122, 1121:
+
+| Hub  | Image size | Duration | Result                                                      |
+|------|------------|----------|-------------------------------------------------------------|
+| 1123 | 0x7c00     | 4.8 s    | Erase, write, verify and restart, `Successfully installed`  |
+| 1122 | 0x7c00     | 5.3 s    | Erase, write, verify and restart, `Successfully installed`  |
+| 1121 | 0xb000     | 6.5 s    | Erase, write, verify and restart, `Successfully installed`  |
+
+After the three updates the devices were enumerated again: versions, GUIDs, Hub to HID relations
+and the Updatable flag were identical to the state before the update, and the Hubs came back
+without being replugged.
+
+On the two GL3523 Hubs (1122 and 1123) bank 1 was newer than bank 2 when the bank versions were read,
+so the update first backed up bank 1 to bank 2 and then wrote bank 1.
+On the GL3525 Hub (1121) bank 1 was written.
+
+Not covered by this test:
+
+* an update to a version that differs from the running one
+* the bank 2 write on the GL3525 Hub (1121) when bank 1 is the newer bank
+* installing a cabinet archive through the daemon (`fwupdmgr`)
+* the refusal of an older image on the GL3525 Hub
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, for example set to `USB:0x03F0` for HP.
