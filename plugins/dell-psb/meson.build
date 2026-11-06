@@ -1,13 +1,18 @@
 host_machine.system() in ['linux', 'android'] or subdir_done()
 # FuDellPsbDevice uses the SG_IO primitives, which are stubs without scsi/sg.h
-cc.has_header('scsi/sg.h', required: false) or subdir_done()
+cc.has_header(
+  'scsi/sg.h',
+  required: false,
+) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellPsb"']
 plugins += {
   meson.current_source_dir().split('/')[-1]: true,
 }
+plugin_quirks += files('dell-psb.quirk')
 plugin_builtins += static_library(
   'fu_plugin_dell_psb',
+  rustgen.process('fu-dell-psb.rs'),
   sources: [
     'fu-dell-psb-plugin.c',
     'fu-dell-psb-device.c',
@@ -17,3 +22,6 @@ plugin_builtins += static_library(
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/dell-psb-setup.json')
+device_tests += files('tests/dell-psb.json')

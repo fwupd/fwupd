@@ -47,6 +47,7 @@ plugins = {
   'dell-kestrel': false,
   'dell-psb': false,
   'devlink': false,
+  'dfu': false,
   'ebitdo': false,
   'egis-moc': false,
   'elan-ts': false,

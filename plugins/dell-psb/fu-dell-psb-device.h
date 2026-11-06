@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Dell Technologies
+ * Copyright 2026 Arno Dubois <a.dubois@criteo.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

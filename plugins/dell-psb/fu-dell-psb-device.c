@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Dell Technologies
+ * Copyright 2026 Arno Dubois <a.dubois@criteo.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-dell-psb-device.h"
+#include "fu-dell-psb-struct.h"
 
 struct _FuDellPsbDevice {
 	FuBlockDevice parent_instance;
@@ -14,15 +15,16 @@ struct _FuDellPsbDevice {
 
 G_DEFINE_TYPE(FuDellPsbDevice, fu_dell_psb_device, FU_TYPE_BLOCK_DEVICE)
 
-/* READ BUFFER(10), mode 0x01, offset 0xE6E007, length 0x3C */
-#define FU_DELL_PSB_READ_BUFFER_CMD  0x3C
-#define FU_DELL_PSB_WRITE_BUFFER_CMD 0x3B
-#define FU_DELL_PSB_VERSION_LENGTH   0x3C
-#define FU_DELL_PSB_CHUNK_SIZE	     0x8000 /* 32 KiB */
+#define FU_DELL_PSB_VERSION_LENGTH 0x100     /* enough for the banner at 0x44 */
+#define FU_DELL_PSB_CHUNK_SIZE	   0x8000    /* 32 KiB */
+#define FU_DELL_PSB_BUFFER_ID	   0x00	     /* flat window onto the firmware image */
+#define FU_DELL_PSB_MAX_IMAGE_SIZE 0x1000000 /* 16 MiB: the offset field is 24 bits */
 
 static gboolean
 fu_dell_psb_device_probe(FuDevice *device, GError **error)
 {
+	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *guid = NULL;
 	g_autoptr(FuDevice) device_scsi = NULL;
 	g_autoptr(FuDevice) pci = NULL;
 
@@ -30,8 +32,7 @@ fu_dell_psb_device_probe(FuDevice *device, GError **error)
 	 * scsi_device parent, as FuScsiDevice does */
 	device_scsi = fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_device", NULL);
 	if (device_scsi != NULL) {
-		g_autofree gchar *devpath =
-		    fu_udev_device_get_devpath(FU_UDEV_DEVICE(device_scsi));
+		g_autofree gchar *devpath = fu_udev_device_get_devpath(FU_UDEV_DEVICE(device_scsi));
 		if (devpath != NULL) {
 			g_autofree gchar *physical_id = g_strdup_printf("DEVPATH=%s", devpath);
 			fu_device_set_physical_id(device, physical_id);
@@ -44,18 +45,32 @@ fu_dell_psb_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_device_probe(pci, error))
 		return FALSE;
-	fu_device_incorporate(device,
-			      pci,
-			      FU_DEVICE_INCORPORATE_FLAG_VENDOR |
-				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
-				  FU_DEVICE_INCORPORATE_FLAG_VID |
-				  FU_DEVICE_INCORPORATE_FLAG_PID |
-				  FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS |
-				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+
+	fu_device_incorporate(
+	    device,
+	    pci,
+	    FU_DEVICE_INCORPORATE_FLAG_VENDOR | FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+		FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
+		FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS | FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "SUBSYS", NULL))
 		return FALSE;
+
+	/* the quirk database, not the plugin, decides which PCI function is the
+	 * switch; anything else on scsi_generic is not ours */
+	instance_id = g_strdup_printf("PCI\\VEN_%s&DEV_%s",
+				      fu_device_get_instance_str(pci, "VEN"),
+				      fu_device_get_instance_str(pci, "DEV"));
+	guid = fwupd_guid_hash_string(instance_id);
+	if (fu_context_lookup_quirk_by_id(fu_device_get_context(device), guid, "DellPsbDevice") ==
+	    NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not a Dell PSB switch");
+		return FALSE;
+	}
 
 	/* set after incorporate, which may have copied a donor name */
 	fu_device_set_name(device, "PCIe Switch Firmware");
@@ -65,34 +80,98 @@ fu_dell_psb_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/* the image starts with an "@(#)PCI-<version> <date>" banner, e.g.
+ * "@(#)PCI-4.160.3.0 09/27/2024" at offset 0x44 */
+static gchar *
+fu_dell_psb_device_parse_version(const guint8 *buf, gsize bufsz, GError **error)
+{
+	const gchar *prefix = "@(#)PCI-";
+	const gchar *start = NULL;
+	const gchar *end = NULL;
+	g_autofree gchar *banner = NULL;
+
+	/* the banner is NUL terminated, so bound the search by the buffer */
+	for (gsize i = 0; i + strlen(prefix) < bufsz; i++) {
+		if (memcmp(buf + i, prefix, strlen(prefix)) == 0) {
+			start = (const gchar *)buf + i + strlen(prefix);
+			break;
+		}
+	}
+	if (start == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no @(#)PCI- version banner found in the firmware image");
+		return NULL;
+	}
+
+	/* the version runs up to the first space or NUL */
+	end = start;
+	while ((const guint8 *)end < buf + bufsz && *end != '\0' && *end != ' ')
+		end++;
+	if (end == start) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "empty version in the @(#)PCI- banner");
+		return NULL;
+	}
+
+	banner = g_strndup(start, (gsize)(end - start));
+	if (fu_version_guess_format(banner) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid version %s in the @(#)PCI- banner",
+			    banner);
+		return NULL;
+	}
+	return g_steal_pointer(&banner);
+}
+
 static gboolean
 fu_dell_psb_device_setup(FuDevice *device, GError **error)
 {
-	/* nocheck:magic */
-	const guint8 cdb[] = {FU_DELL_PSB_READ_BUFFER_CMD,
-			       0x01, /* mode */
-			       0xE6, /* buffer offset, big endian */
-			       0xE0,
-			       0x07,
-			       0x00, /* length, big endian */
-			       FU_DELL_PSB_VERSION_LENGTH,
-			       0x00,
-			       0x00,
-			       0x00};
+	gsize bufsz_out = 0;
 	guint8 buf[FU_DELL_PSB_VERSION_LENGTH] = {0};
+	g_autoptr(FuStructDellPsbReadBuffer) st_cdb = NULL;
 	g_autofree gchar *version = NULL;
 
-	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(device),
-					    cdb,
-					    sizeof(cdb),
-					    buf,
-					    sizeof(buf),
-					    error)) {
+	/* buffer ID 0x00 is a flat window onto the firmware image starting at
+	 * address 0; the version is the "@(#)PCI-<version> <date>" banner near
+	 * the start of it */
+	/* nocheck:magic */
+	st_cdb = fu_struct_dell_psb_read_buffer_new();
+	fu_struct_dell_psb_read_buffer_set_buffer_id(st_cdb, FU_DELL_PSB_BUFFER_ID);
+	fu_struct_dell_psb_read_buffer_set_offset(st_cdb, 0x0);
+	fu_struct_dell_psb_read_buffer_set_length(st_cdb, FU_DELL_PSB_VERSION_LENGTH);
+	fu_struct_dell_psb_read_buffer_set_control(st_cdb, 0x00);
+
+	if (!fu_block_device_sg_io_cmd_read_full(FU_BLOCK_DEVICE(device),
+						 st_cdb->buf->data,
+						 st_cdb->buf->len,
+						 buf,
+						 sizeof(buf),
+						 &bufsz_out,
+						 error)) {
 		g_prefix_error_literal(error, "failed to read PSB firmware version: ");
 		return FALSE;
 	}
 
-	version = g_strdup_printf("%u.%u.%u.%u", buf[12], buf[13], buf[14], buf[15]);
+	/* a short read leaves the banner incomplete */
+	if (bufsz_out < FU_DELL_PSB_VERSION_LENGTH) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "short read: got %" G_GSIZE_FORMAT " bytes, expected %u",
+			    bufsz_out,
+			    (guint)FU_DELL_PSB_VERSION_LENGTH);
+		return FALSE;
+	}
+
+	version = fu_dell_psb_device_parse_version(buf, bufsz_out, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(device, version);
 
 	/* success */
@@ -101,7 +180,7 @@ fu_dell_psb_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_dell_psb_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -111,6 +190,20 @@ fu_dell_psb_device_prepare_firmware(FuDevice *device,
 	/* the payload is written verbatim: no header stripping, no trailer */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
+
+	/* the WRITE BUFFER(10) offset field is 24 bits, so images larger than
+	 * 16 MiB silently wrap around the device address space */
+	if (fu_firmware_get_size(firmware) > FU_DELL_PSB_MAX_IMAGE_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware image too large: got %" G_GSIZE_FORMAT " bytes, "
+			    "maximum is %u bytes (16 MiB)",
+			    fu_firmware_get_size(firmware),
+			    (guint)FU_DELL_PSB_MAX_IMAGE_SIZE);
+		return NULL;
+	}
+
 	return g_steal_pointer(&firmware);
 }
 
@@ -122,7 +215,7 @@ fu_dell_psb_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	guint32 offset = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
@@ -145,18 +238,21 @@ fu_dell_psb_device_write_firmware(FuDevice *device,
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		guint8 cdb[10] = {FU_DELL_PSB_WRITE_BUFFER_CMD,
-				  0x02, /* mode */
-				  0x00 /* buffer id */};
+		g_autoptr(FuStructDellPsbWriteBuffer) st_cdb = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		fu_memwrite_uint24(cdb + 3, offset, G_BIG_ENDIAN);
-		fu_memwrite_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_BIG_ENDIAN);
+
+		st_cdb = fu_struct_dell_psb_write_buffer_new();
+		fu_struct_dell_psb_write_buffer_set_buffer_id(st_cdb, 0x00);
+		fu_struct_dell_psb_write_buffer_set_offset(st_cdb, offset);
+		fu_struct_dell_psb_write_buffer_set_length(st_cdb, fu_chunk_get_data_sz(chk));
+		fu_struct_dell_psb_write_buffer_set_control(st_cdb, 0x00);
+
 		if (!fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(device),
-						     cdb,
-						     sizeof(cdb),
+						     st_cdb->buf->data,
+						     st_cdb->buf->len,
 						     fu_chunk_get_data(chk),
 						     fu_chunk_get_data_sz(chk),
 						     error)) {
@@ -173,7 +269,6 @@ fu_dell_psb_device_write_firmware(FuDevice *device,
 
 	/* the switch activates the new image on the next power cycle */
 	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
 	/* success */
 	return TRUE;
@@ -186,6 +281,10 @@ fu_dell_psb_device_init(FuDellPsbDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	/* the switch only activates the new image on the next power cycle, so the
+	 * user knows before the update starts */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 }
 
 static void
