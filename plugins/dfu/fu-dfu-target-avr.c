@@ -445,7 +445,7 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, 
 	/* we have to request this one byte at a time */
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, G_N_ELEMENTS(signature_locations));
+	fu_progress_set_steps(progress, G_N_ELEMENTS(signature_locations) - 1);
 	for (guint i = 0; signature_locations[i].page != 0xff; i++) {
 		g_autoptr(GBytes) buf = NULL;
 		buf = fu_dfu_target_avr_get_chip_signature_for_addr(target,
@@ -860,7 +860,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 	/* truncate the image if any sectors are empty, i.e. all 0xff */
 	if (chunk_valid == G_MAXUINT) {
 		g_debug("all %u chunks are empty", blobs->len);
-		g_ptr_array_set_size(chunks, 0);
+		g_ptr_array_set_size(blobs, 0);
 	} else if (blobs->len != chunk_valid + 1) {
 		g_debug("truncating chunks from %u to %u", blobs->len, chunk_valid + 1);
 		g_ptr_array_set_size(blobs, chunk_valid + 1);
