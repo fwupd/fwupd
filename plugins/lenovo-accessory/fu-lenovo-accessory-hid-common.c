@@ -12,7 +12,7 @@
 
 #define FU_LENOVO_ACCESSORY_MAX_PAIR_SLOTS 6
 
-static gboolean
+gboolean
 fu_lenovo_accessory_hid_add_child(FuLenovoAccessoryImpl *self, guint8 target_slot, GError **error)
 {
 	guint16 pid = 0;

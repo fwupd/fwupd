@@ -1,11 +1,10 @@
 {
   "name": "Lenovo 700 Wireless Keyboard",
   "interactive": false,
-  "broken": true,
   "steps": [
     {
       "url": "e636ff9d98647ae22559d33bf3d42bb3c6cf261f38d0b490078872cc7a5bbda5-Lenovo-keyboard_6297-vs1.0.00.cab",
-      "emulation-url": "bcc0a600064e8017d3689af94d50fc728ead0079db2e25234a42e856ec25542f-emulation.zip",
+      "emulation-url": "8a34bdaf0c248c9ee1dc73f1ac6ca729d263e5e190e9f16019fb2f00f32d43ea-700_Wireless_Modern_Keyboard.zip",
       "components": [
         {
           "version": "1.0.0",
