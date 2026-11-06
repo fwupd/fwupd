@@ -398,16 +398,23 @@ fu_mm_backend_setup(FuBackend *backend,
 		    GError **error)
 {
 	FuMmBackend *self = FU_MM_BACKEND(backend);
+	GMainContext *main_ctx = fu_context_get_main_context(fu_backend_get_context(backend));
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GFile) file = g_file_new_for_path(FU_MM_BACKEND_MODEM_POWER_SYSFS_PATH);
 
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
 		return FALSE;
+
+	/* the object manager signals are dispatched on the thread-default main context at
+	 * construction time, so bind them to the context we iterate -- otherwise the modem
+	 * removal is never seen while waiting for the replug */
+	g_main_context_push_thread_default(main_ctx);
 	self->manager = mm_manager_new_sync(connection,
 					    G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START,
 					    NULL,
 					    error);
+	g_main_context_pop_thread_default(main_ctx);
 	if (self->manager == NULL)
 		return FALSE;
 
