@@ -11,6 +11,7 @@
 
 struct _FuDellPsbDevice {
 	FuBlockDevice parent_instance;
+	gchar *banner; /* the whole "@(#)PCI-<version> <date>" string */
 };
 
 G_DEFINE_TYPE(FuDellPsbDevice, fu_dell_psb_device, FU_TYPE_BLOCK_DEVICE)
@@ -83,17 +84,21 @@ fu_dell_psb_device_probe(FuDevice *device, GError **error)
 /* the image starts with an "@(#)PCI-<version> <date>" banner, e.g.
  * "@(#)PCI-4.160.3.0 09/27/2024" at offset 0x44 */
 static gchar *
-fu_dell_psb_device_parse_version(const guint8 *buf, gsize bufsz, GError **error)
+fu_dell_psb_device_parse_banner(const guint8 *buf, gsize bufsz, GError **error)
 {
 	const gchar *prefix = "@(#)PCI-";
+	const gchar *banner_start = NULL;
 	const gchar *start = NULL;
 	const gchar *end = NULL;
+	const gchar *banner_end = NULL;
 	g_autofree gchar *banner = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* the banner is NUL terminated, so bound the search by the buffer */
 	for (gsize i = 0; i + strlen(prefix) < bufsz; i++) {
 		if (memcmp(buf + i, prefix, strlen(prefix)) == 0) {
-			start = (const gchar *)buf + i + strlen(prefix);
+			banner_start = (const gchar *)buf + i;
+			start = banner_start + strlen(prefix);
 			break;
 		}
 	}
@@ -117,13 +122,19 @@ fu_dell_psb_device_parse_version(const guint8 *buf, gsize bufsz, GError **error)
 		return NULL;
 	}
 
-	banner = g_strndup(start, (gsize)(end - start));
-	if (fu_version_guess_format(banner) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+	/* keep the whole banner: the trailing date is useful when debugging */
+	banner_end = end;
+	while ((const guint8 *)banner_end < buf + bufsz && *banner_end != '\0')
+		banner_end++;
+	banner = g_strndup(banner_start, (gsize)(banner_end - banner_start));
+
+	version = g_strndup(start, (gsize)(end - start));
+	if (fu_version_guess_format(version) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid version %s in the @(#)PCI- banner",
-			    banner);
+			    version);
 		return NULL;
 	}
 	return g_steal_pointer(&banner);
@@ -132,9 +143,11 @@ fu_dell_psb_device_parse_version(const guint8 *buf, gsize bufsz, GError **error)
 static gboolean
 fu_dell_psb_device_setup(FuDevice *device, GError **error)
 {
+	FuDellPsbDevice *self = FU_DELL_PSB_DEVICE(device);
 	gsize bufsz_out = 0;
 	guint8 buf[FU_DELL_PSB_VERSION_LENGTH] = {0};
 	g_autoptr(FuStructDellPsbReadBuffer) st_cdb = NULL;
+	g_autofree gchar *banner = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* buffer ID 0x00 is a flat window onto the firmware image starting at
@@ -169,9 +182,20 @@ fu_dell_psb_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	version = fu_dell_psb_device_parse_version(buf, bufsz_out, error);
-	if (version == NULL)
+	banner = fu_dell_psb_device_parse_banner(buf, bufsz_out, error);
+	if (banner == NULL)
 		return FALSE;
+	g_free(self->banner);
+	self->banner = g_steal_pointer(&banner);
+
+	/* the version is the banner up to the first space */
+	version = g_strdup(self->banner + strlen("@(#)PCI-"));
+	for (gchar *p = version; *p != '\0'; p++) {
+		if (*p == ' ') {
+			*p = '\0';
+			break;
+		}
+	}
 	fu_device_set_version(device, version);
 
 	/* success */
@@ -275,6 +299,23 @@ fu_dell_psb_device_write_firmware(FuDevice *device,
 }
 
 static void
+fu_dell_psb_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuDellPsbDevice *self = FU_DELL_PSB_DEVICE(device);
+	fwupd_codec_string_append(str, idt, "Banner", self->banner);
+	fwupd_codec_string_append_hex(str, idt, "ChunkSize", FU_DELL_PSB_CHUNK_SIZE);
+	fwupd_codec_string_append_hex(str, idt, "MaxImageSize", FU_DELL_PSB_MAX_IMAGE_SIZE);
+}
+
+static void
+fu_dell_psb_device_finalize(GObject *object)
+{
+	FuDellPsbDevice *self = FU_DELL_PSB_DEVICE(object);
+	g_free(self->banner);
+	G_OBJECT_CLASS(fu_dell_psb_device_parent_class)->finalize(object);
+}
+
+static void
 fu_dell_psb_device_init(FuDellPsbDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.psb");
@@ -291,6 +332,9 @@ static void
 fu_dell_psb_device_class_init(FuDellPsbDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_dell_psb_device_finalize;
+	device_class->to_string = fu_dell_psb_device_to_string;
 	device_class->probe = fu_dell_psb_device_probe;
 	device_class->setup = fu_dell_psb_device_setup;
 	device_class->prepare_firmware = fu_dell_psb_device_prepare_firmware;
