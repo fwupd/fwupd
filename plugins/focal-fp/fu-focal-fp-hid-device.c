@@ -555,7 +555,7 @@ fu_focal_fp_hid_device_reload(FuDevice *device, GError **error)
 	if (!fu_focal_fp_hid_device_read_reg(self, 0xA3, &idbuf[1], error))
 		return FALSE;
 	g_debug("id1=%x, id2=%x", idbuf[1], idbuf[0]);
-	if (idbuf[1] != 0x58 && idbuf[0] != 0x22) {
+	if (idbuf[1] != 0x58 || idbuf[0] != 0x22) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
