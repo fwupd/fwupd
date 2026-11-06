@@ -358,6 +358,21 @@ fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progres
 	return TRUE;
 }
 
+static gint
+fu_backend_device_added_sort_cb(gconstpointer a, gconstpointer b)
+{
+	FuDevice *device_a = *((FuDevice **)a);
+	FuDevice *device_b = *((FuDevice **)b);
+	gint64 created_a = fu_device_get_created_usec(device_a);
+	gint64 created_b = fu_device_get_created_usec(device_b);
+
+	if (created_a != created_b)
+		return created_a < created_b ? -1 : 1;
+
+	/* a parent backend ID is a prefix of the ID of its children, so it sorts first */
+	return g_strcmp0(fu_device_get_backend_id(device_a), fu_device_get_backend_id(device_b));
+}
+
 static gboolean
 fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
@@ -481,6 +496,11 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		g_debug("not found %s, adding", id_display);
 		g_ptr_array_add(devices_added, g_object_ref(device_tmp));
 	}
+
+	/* the file order is not stable as the devices are saved from a hash table, but a plugin may
+	 * need the parent to have been added before the child; this only works if the parent was
+	 * created first, it is not a sort by the device topology */
+	g_ptr_array_sort(devices_added, fu_backend_device_added_sort_cb);
 
 	/* emit removes then adds */
 	for (guint i = 0; i < devices_remove->len; i++) {

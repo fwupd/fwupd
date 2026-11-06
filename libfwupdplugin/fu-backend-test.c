@@ -173,6 +173,105 @@ fu_backend_emulate_func(void)
 }
 
 static void
+fu_backend_emulate_order_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
+{
+	GPtrArray *order = (GPtrArray *)user_data;
+	g_ptr_array_add(order, g_strdup(fu_device_get_backend_id(device)));
+}
+
+static gchar *
+fu_backend_emulate_order_json(const gchar *const *created, const gchar *const *ids)
+{
+	GString *str = g_string_new("{\"UsbDevices\":[");
+	for (guint i = 0; ids[i] != NULL; i++) {
+		if (i > 0)
+			g_string_append(str, ",");
+		g_string_append(str, "{");
+		if (created[i] != NULL)
+			g_string_append_printf(str, "\"Created\":\"%s\",", created[i]);
+		g_string_append_printf(str,
+				       "\"GType\":\"FuUdevDevice\",\"BackendId\":\"%s\"}",
+				       ids[i]);
+	}
+	g_string_append(str, "]}");
+	return g_string_free(str, FALSE);
+}
+
+static gchar *
+fu_backend_emulate_order_load(const gchar *const *created, const gchar *const *ids)
+{
+	gboolean ret;
+	g_autofree gchar *json = fu_backend_emulate_order_json(created, ids);
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) order = g_ptr_array_new_with_free_func(g_free);
+
+	backend = g_object_new(FU_TYPE_BACKEND,
+			       "context",
+			       ctx,
+			       "name",
+			       "udev",
+			       "device-gtype",
+			       FU_TYPE_UDEV_DEVICE,
+			       NULL);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-added",
+			 G_CALLBACK(fu_backend_emulate_order_cb),
+			 order);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_ptr_array_add(order, NULL);
+	return g_strjoinv(",", (gchar **)order->pdata);
+}
+
+static void
+fu_backend_emulate_order_func(void)
+{
+	g_autofree gchar *reversed = NULL;
+	g_autofree gchar *same_created = NULL;
+	g_autofree gchar *missing_created = NULL;
+	g_autofree gchar *unrelated = NULL;
+	g_autofree gchar *mixed = NULL;
+
+	/* the child is stored before the parent, but the parent was created first */
+	reversed =
+	    fu_backend_emulate_order_load((const gchar *const[]){"2026-11-02T03:29:04.341798Z",
+								 "2026-11-02T03:29:04.341796Z",
+								 NULL},
+					  (const gchar *const[]){"usb:1:2", "usb:1", NULL});
+	g_assert_cmpstr(reversed, ==, "usb:1,usb:1:2");
+
+	/* identical timestamps, so the parent ID (a prefix of the child ID) has to win */
+	same_created = fu_backend_emulate_order_load(
+	    (const gchar *const[]){"2026-11-02T03:29:04Z", "2026-11-02T03:29:04Z", NULL},
+	    (const gchar *const[]){"usb:1:2", "usb:1", NULL});
+	g_assert_cmpstr(same_created, ==, "usb:1,usb:1:2");
+
+	/* old files without any timestamp */
+	missing_created = fu_backend_emulate_order_load(
+	    (const gchar *const[]){NULL, NULL, NULL},
+	    (const gchar *const[]){"usb:1:2", "usb:1", "usb:0", NULL});
+	g_assert_cmpstr(missing_created, ==, "usb:0,usb:1,usb:1:2");
+
+	/* unrelated devices are all added, in the order they were created */
+	unrelated =
+	    fu_backend_emulate_order_load((const gchar *const[]){"2026-11-02T03:29:06Z",
+								 "2026-11-02T03:29:04Z",
+								 "2026-11-02T03:29:05Z",
+								 NULL},
+					  (const gchar *const[]){"usb:c", "usb:a", "usb:b", NULL});
+	g_assert_cmpstr(unrelated, ==, "usb:a,usb:b,usb:c");
+
+	/* one device with a timestamp and one without */
+	mixed = fu_backend_emulate_order_load(
+	    (const gchar *const[]){"2026-11-02T03:29:04Z", NULL, NULL},
+	    (const gchar *const[]){"usb:1:2", "usb:1", NULL});
+	g_assert_cmpstr(mixed, ==, "usb:1,usb:1:2");
+}
+
+static void
 fu_backend_func(void)
 {
 	FuDevice *dev;
@@ -227,5 +326,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
+	g_test_add_func("/fwupd/backend/emulate-order", fu_backend_emulate_order_func);
 	return g_test_run();
 }
