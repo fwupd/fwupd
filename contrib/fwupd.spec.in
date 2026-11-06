@@ -127,10 +127,6 @@ Requires(postun): systemd
 Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libxmlb%{?_isa} >= %{libxmlb_version}
 Requires: shared-mime-info
-%if 0%{?have_tui}
-Requires: python3-gobject
-Requires: python3-textual
-%endif
 
 # deliberately has no _isa as libusbx in RHEL-9 does not include it
 Requires: libusb1 >= %{libusb_version}
@@ -168,6 +164,9 @@ Recommends: %{name}-plugin-modem-manager
 Recommends: %{name}-efi
 Recommends: %{name}-plugin-uefi-capsule-data
 %endif
+%if 0%{?have_tui}
+Recommends: %{name}-tui
+%endif
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -187,6 +186,19 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description tests
 Data files for installed tests.
+
+%if 0%{?have_tui}
+%package tui
+Summary: Terminal user interface for %{name}
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: python3
+Requires: python3-gobject
+Requires: python3-textual
+
+%description tui
+This provides fwupdtui, an interactive terminal interface for managing firmware
+and platform security. It is optional as it requires Python.
+%endif
 
 %if 0%{?have_modem_manager}
 %package plugin-modem-manager
@@ -366,9 +378,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %endif
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
-%if 0%{?have_tui}
-%{_bindir}/fwupdtui
-%endif
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/bios-settings.d
 %{_sysconfdir}/fwupd/bios-settings.d/README.md
@@ -387,10 +396,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/fish/vendor_completions.d/fwupdmgr.fish
-%if 0%{?have_tui}
-%{_datadir}/bash-completion/completions/fwupdtui
-%{_datadir}/fish/vendor_completions.d/fwupdtui.fish
-%endif
 %dir %{_datadir}/fwupd
 %dir %{_datadir}/fwupd/metainfo
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
@@ -403,9 +408,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_mandir}/man1/fwupdtool.1*
-%if 0%{?have_tui}
-%{_mandir}/man1/fwupdtui.1*
-%endif
 %if 0%{?have_uefi}
 %{_mandir}/man1/dbxtool.*
 %endif
@@ -447,6 +449,13 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %if 0%{?have_uefi}
 %files plugin-uefi-capsule-data
 %{_datadir}/fwupd/uefi-capsule-ux.zip
+%endif
+%if 0%{?have_tui}
+%files tui
+%{_bindir}/fwupdtui
+%{_datadir}/bash-completion/completions/fwupdtui
+%{_datadir}/fish/vendor_completions.d/fwupdtui.fish
+%{_mandir}/man1/fwupdtui.1*
 %endif
 
 %files devel
