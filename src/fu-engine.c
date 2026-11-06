@@ -7229,10 +7229,12 @@ fu_engine_plugin_rules_changed_cb(FuPlugin *plugin, gpointer user_data)
 	GPtrArray *rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_INHIBITS_IDLE);
 	if (rules == NULL)
 		return;
+#ifndef __ANDROID__
 	for (guint j = 0; j < rules->len; j++) {
 		const gchar *tmp = g_ptr_array_index(rules, j);
 		fu_idle_inhibit(self->idle, FU_IDLE_INHIBIT_TIMEOUT, tmp);
 	}
+#endif
 }
 
 static void

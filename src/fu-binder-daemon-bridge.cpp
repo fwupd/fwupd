@@ -231,6 +231,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	binder_status_t
 	dump(int fd, const char ** /*args*/, uint32_t /*numArgs*/) override
 	{
+		fu_binder_daemon_reset_idle(m_daemon);
 		g_autofree gchar *json = fwupd_codec_to_json_string(FWUPD_CODEC(m_daemon),
 								    FWUPD_CODEC_FLAG_TRUSTED,
 								    NULL);
@@ -305,6 +306,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) devices = NULL;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-devices", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -379,6 +381,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	addEventListener(
 	    const std::shared_ptr<aidl_fwupd::IFwupdEventListener> &in_listener) override
 	{
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (in_listener) {
 			std::lock_guard<std::mutex> lock(m_listeners_mutex);
 			m_listeners.push_back(in_listener);
@@ -448,6 +451,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) remotes = NULL;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-remotes", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -470,6 +474,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getHwids(std::vector<aidl_fwupd::FwupdHwid> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-hwids", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -486,6 +491,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		GPtrArray *plugins;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-plugins", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -513,6 +519,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) devices = NULL;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-history", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -535,6 +542,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getProperties(aidl_fwupd::FwupdProperties *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-properties", &error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -780,6 +788,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		GHashTableIter iter;
 		gpointer key, value;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-report-metadata",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
@@ -810,6 +819,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) items = NULL;
 
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-bios-settings",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
@@ -851,6 +861,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getHostSecurityAttrs(std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-host-security-attrs",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
@@ -873,6 +884,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			      std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-host-security-events",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
