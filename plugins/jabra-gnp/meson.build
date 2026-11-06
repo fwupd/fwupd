@@ -22,7 +22,11 @@ plugin_builtin_jabra_gnp = static_library(
 )
 plugin_builtins += plugin_builtin_jabra_gnp
 
-device_tests += files('tests/jabra-evolve2-75.json')
+device_tests += files(
+  'tests/jabra-evolve2-75.json',
+  'tests/jabra-evolve3-65-flex.json',
+  'tests/jabra-evolve3-65-stereo.json',
+)
 
 if get_option('tests')
   e = executable(
