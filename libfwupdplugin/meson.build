@@ -557,6 +557,7 @@ if get_option('tests')
     'progress',
     'protobuf',
     'quirks',
+    'sbatlevel-section',
     'secure-bytes',
     'security-attrs',
     'smbios',
