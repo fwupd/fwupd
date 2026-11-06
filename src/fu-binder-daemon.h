@@ -21,6 +21,9 @@ FuEngineRequest *
 fu_binder_daemon_create_request(FuBinderDaemon *self);
 
 void
+fu_binder_daemon_reset_idle(FuBinderDaemon *self);
+
+void
 fu_binder_daemon_set_feature_flags(FuBinderDaemon *self, FwupdFeatureFlags feature_flags);
 
 gboolean

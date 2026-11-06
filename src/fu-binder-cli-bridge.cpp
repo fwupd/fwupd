@@ -116,8 +116,15 @@ fu_binder_cli_bridge_get_service_handle(GError **error)
 		return NULL;
 	}
 
+	ABinderProcess_startThreadPool();
+	auto wait_svc =
+	    (AIBinder * (*)(const char *)) dlsym(handle, "AServiceManager_waitForService");
 	auto get_svc = (AIBinder * (*)(const char *)) dlsym(handle, "AServiceManager_getService");
-	AIBinder *binder = get_svc ? get_svc("org.freedesktop.fwupd.IFwupd/default") : NULL;
+	AIBinder *binder = NULL;
+	if (wait_svc != NULL)
+		binder = wait_svc("org.freedesktop.fwupd.IFwupd/default");
+	else if (get_svc != NULL)
+		binder = get_svc("org.freedesktop.fwupd.IFwupd/default");
 	dlclose(handle);
 
 	if (binder == NULL) {
