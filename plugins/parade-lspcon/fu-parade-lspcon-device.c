@@ -190,7 +190,7 @@ fu_parade_lspcon_device_flash_read(FuParadeLspconDevice *self,
 		 * full page everywhere except possibly in the first and last reads */
 		guint8 page_data[256] = {0x0};
 		guint8 page_data_start = base_address & 0xFF;
-		gsize page_data_take = MIN((gssize)len, 256 - page_data_start);
+		gsize page_data_take = MIN(len - offset, (gsize)256 - page_data_start);
 		g_autoptr(FuParadeLspconI2cAddressGuard) guard = NULL;
 
 		if (!fu_parade_lspcon_device_map_page(self, base_address, error))
@@ -631,7 +631,7 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 						fu_progress_get_child(progress),
 						error))
 		return FALSE;
-	buf = fu_input_stream_read_byte_array(stream, target_address, blocksz, NULL, error);
+	buf = fu_input_stream_read_byte_array(stream, 0x0, blocksz, NULL, error);
 	if (buf == NULL)
 		return FALSE;
 	if (!fu_memcmp_safe(buf->data, buf->len, 0x0, readback_buf, blocksz, 0x0, blocksz, error)) {
