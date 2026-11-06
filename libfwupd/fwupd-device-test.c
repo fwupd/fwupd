@@ -59,6 +59,7 @@ fwupd_device_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdDevice) dev2 = fwupd_device_new();
+	g_autoptr(FwupdDevice) dev3 = fwupd_device_new();
 	g_autoptr(FwupdDevice) dev_new = fwupd_device_new();
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
@@ -140,6 +141,8 @@ fwupd_device_func(void)
 	g_assert_true(ret);
 
 	/* export to json */
+	fwupd_device_set_update_state(dev, FWUPD_UPDATE_STATE_FAILED);
+	fwupd_device_set_status(dev, FWUPD_STATUS_DEVICE_WRITE);
 	data = fwupd_codec_to_json_string(FWUPD_CODEC(dev), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -174,6 +177,8 @@ fwupd_device_func(void)
 				  "  ],\n"
 				  "  \"Created\": 1,\n"
 				  "  \"Modified\": 86400,\n"
+				  "  \"UpdateState\": \"failed\",\n"
+				  "  \"Status\": \"device-write\",\n"
 				  "  \"Releases\": [\n"
 				  "    {\n"
 				  "      \"AppstreamId\": \"org.dave.ColorHug.firmware\",\n"
@@ -222,6 +227,23 @@ fwupd_device_func(void)
 	g_assert_true(fwupd_device_has_instance_id(dev2, "USB\\VID_1234&PID_0001"));
 	g_assert_true(fwupd_device_has_flag(dev2, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false(fwupd_device_has_flag(dev2, FWUPD_DEVICE_FLAG_LOCKED));
+	g_assert_cmpint(fwupd_device_get_update_state(dev2), ==, FWUPD_UPDATE_STATE_FAILED);
+	g_assert_cmpint(fwupd_device_get_status(dev2), ==, FWUPD_STATUS_DEVICE_WRITE);
+
+	/* from legacy JSON with integers */
+	ret = fwupd_codec_from_json_string(
+	    FWUPD_CODEC(dev3),
+	    "{\"DeviceId\": \"0000000000000000000000000000000000000000\", "
+	    "\"UpdateState\": 2, \"Status\": 5}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_device_get_update_state(dev3), ==, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_cmpint(fwupd_device_get_status(dev3), ==, FWUPD_STATUS_DEVICE_WRITE);
+	g_assert_cmpuint(fwupd_device_get_battery_level(dev3), ==, FWUPD_BATTERY_LEVEL_INVALID);
+	g_assert_cmpuint(fwupd_device_get_battery_threshold(dev3),
+			 ==,
+			 fwupd_device_get_battery_threshold(dev_new));
 }
 
 int
