@@ -120,6 +120,30 @@ fu_block_device_ioctl_sense_cb(FuIoctl *self,
 }
 #endif
 
+#ifdef HAVE_SCSI_SG_H
+/* a transport error can leave status at zero, so check host_status too */
+static gboolean
+fu_block_device_sg_io_check_status(const struct sg_io_hdr *io_hdr,
+				   const guint8 *sense_buffer,
+				   GError **error)
+{
+	if (io_hdr->status == 0 && io_hdr->host_status == 0)
+		return TRUE;
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "command fail with status %x, host_status 0x%02x, driver_status 0x%02x, "
+		    "senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+		    io_hdr->status,
+		    io_hdr->host_status,
+		    io_hdr->driver_status,
+		    sense_buffer[2],
+		    sense_buffer[12],
+		    sense_buffer[13]);
+	return FALSE;
+}
+#endif
+
 /**
  * fu_block_device_sg_io_cmd_none:
  * @self: a #FuBlockDevice
@@ -172,17 +196,8 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return TRUE;
 
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
+	if (!fu_block_device_sg_io_check_status(&io_hdr, sense_buffer, error))
 		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -196,27 +211,31 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 }
 
 /**
- * fu_block_device_sg_io_cmd_read:
+ * fu_block_device_sg_io_cmd_read_full:
  * @self: a #FuBlockDevice
  * @cdb: a cdb command
  * @cdbsz: sizeof @cdb
  * @buf: buffer to read into
  * @bufsz: sizeof @buf
+ * @bufsz_out: (out) (optional): the number of bytes actually transferred
  * @error: (nullable): optional return location for an error
  *
- * Performs a SCSI IO read command.
+ * Performs a SCSI IO read command, also returning how much of @buf the device
+ * actually filled. A short read leaves the tail of @buf untouched, so callers
+ * parsing a fixed layout must check @bufsz_out.
  *
  * Returns: %TRUE on success
  *
- * Since: 2.0.0
+ * Since: 2.2.2
  **/
 gboolean
-fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
-			       const guint8 *cdb,
-			       gsize cdbsz,
-			       guint8 *buf,
-			       gsize bufsz,
-			       GError **error)
+fu_block_device_sg_io_cmd_read_full(FuBlockDevice *self,
+				    const guint8 *cdb,
+				    gsize cdbsz,
+				    guint8 *buf,
+				    gsize bufsz,
+				    gsize *bufsz_out,
+				    GError **error)
 {
 #ifdef HAVE_SCSI_SG_H
 	guint8 sense_buffer[FU_BLOCK_DEVICE_SG_IO_SENSE_BUFFER_LEN] = {0};
@@ -255,17 +274,11 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return TRUE;
 
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
+	if (!fu_block_device_sg_io_check_status(&io_hdr, sense_buffer, error))
 		return FALSE;
-	}
+
+	if (bufsz_out != NULL)
+		*bufsz_out = bufsz - (gsize)io_hdr.resid;
 
 	if (bufsz > 0)
 		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
@@ -279,6 +292,32 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 			    "unsupported as scsi/sg.h not found");
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_block_device_sg_io_cmd_read:
+ * @self: a #FuBlockDevice
+ * @cdb: a cdb command
+ * @cdbsz: sizeof @cdb
+ * @buf: buffer to read into
+ * @bufsz: sizeof @buf
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a SCSI IO read command, ignoring any short read.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
+			       const guint8 *cdb,
+			       gsize cdbsz,
+			       guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	return fu_block_device_sg_io_cmd_read_full(self, cdb, cdbsz, buf, bufsz, NULL, error);
 }
 
 /**
@@ -341,17 +380,8 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return TRUE;
 
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
+	if (!fu_block_device_sg_io_check_status(&io_hdr, sense_buffer, error))
 		return FALSE;
-	}
 
 	if (bufsz > 0)
 		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
