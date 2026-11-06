@@ -6581,6 +6581,36 @@ fwupd_client_download_ipfs(FwupdClient *self,
 	return g_steal_pointer(&bstdout);
 }
 
+static gchar *
+fwupd_client_strsafe_ascii(GByteArray *buf, guint len_max)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(buf != NULL, NULL);
+
+	/* nothing to parse */
+	if (buf->data == NULL || buf->len == 0)
+		return NULL;
+
+	/* add each printable ASCII char up to @len_man */
+	for (guint i = 0; i < MIN(buf->len, len_max); i++) {
+		const gchar val = buf->data[i];
+		if (val == '\0')
+			break;
+		if (g_ascii_isspace(val)) {
+			g_string_append_c(str, ' ');
+			continue;
+		}
+		if (g_ascii_isprint(val))
+			g_string_append_c(str, val);
+	}
+	if (str->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 static GBytes *
 fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
 {
@@ -6639,8 +6669,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 	g_info("status-code was %ld", status_code);
 	if (status_code == 429) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -6655,8 +6685,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 	if (status_code == 502 || status_code == 503 || status_code == 504) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_TIMED_OUT,
@@ -6673,8 +6703,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 	if (status_code >= 400) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
