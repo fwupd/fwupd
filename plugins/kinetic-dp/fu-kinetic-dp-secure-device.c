@@ -484,7 +484,7 @@ fu_kinetic_dp_secure_device_wait_dpcd_cmd_cleared_cb(FuDevice *device,
 	if (status == FU_KINETIC_DP_DPCD_CMD_STS_NONE)
 		return TRUE;
 
-	if ((status & DPCD_KT_CONFIRMATION_BIT) > 0) {
+	if ((status & DPCD_KT_CONFIRMATION_BIT) == 0) {
 		/* status is not cleared but confirmation bit is cleared,
 		 * it means that target responded with failure */
 		if (status == FU_KINETIC_DP_DPCD_STS_INVALID_IMAGE) {
