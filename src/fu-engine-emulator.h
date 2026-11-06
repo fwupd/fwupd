@@ -47,5 +47,10 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_engine_emulator_save_setup_pending(FuEngineEmulator *self,
+				      guint composite_cnt,
+				      guint write_cnt,
+				      GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS
