@@ -13,7 +13,7 @@
 static const gchar *
 fu_uefi_bootmgr_get_suffix(FuPathStore *pstore, GError **error)
 {
-	guint64 firmware_bits;
+	guint64 firmware_bits = 0;
 	g_autofree gchar *sysfsefidir = NULL;
 	struct {
 		guint64 bits;
@@ -39,15 +39,8 @@ fu_uefi_bootmgr_get_suffix(FuPathStore *pstore, GError **error)
 	    fu_path_store_build_filename(pstore, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
 	if (sysfsefidir == NULL)
 		return NULL;
-	firmware_bits = fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size");
-	if (firmware_bits == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "%s/fw_platform_size cannot be found",
-			    sysfsefidir);
+	if (!fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size", &firmware_bits, error))
 		return NULL;
-	}
 	for (guint i = 0; suffixes[i].arch != NULL; i++) {
 		if (firmware_bits != suffixes[i].bits)
 			continue;
@@ -144,7 +137,7 @@ gboolean
 fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *height, GError **error)
 {
 	guint32 height_tmp;
-	guint32 width_tmp;
+	guint32 width_tmp = 0;
 	g_autofree gchar *fbdir = NULL;
 
 	fbdir = fu_path_store_build_filename(pstore,
@@ -162,8 +155,10 @@ fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *heigh
 				    "EFI framebuffer not found");
 		return FALSE;
 	}
-	height_tmp = fu_uefi_read_file_as_uint64(fbdir, "height");
-	width_tmp = fu_uefi_read_file_as_uint64(fbdir, "width");
+	if (!fu_uefi_read_file_as_uint32(fbdir, "height", &height_tmp, error))
+		return FALSE;
+	if (!fu_uefi_read_file_as_uint32(fbdir, "width", &width_tmp, error))
+		return FALSE;
 	if (width_tmp == 0 || height_tmp == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -181,21 +176,37 @@ fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *heigh
 	return TRUE;
 }
 
-guint64
-fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
+gboolean
+fu_uefi_read_file_as_uint64(const gchar *path,
+			    const gchar *attr_name,
+			    guint64 *value,
+			    GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *fn = g_build_filename(path, attr_name, NULL);
+
+	if (!g_file_get_contents(fn, &data, NULL, error))
+		return FALSE;
+	return fu_strtoull(data, value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error);
+}
+
+gboolean
+fu_uefi_read_file_as_uint32(const gchar *path,
+			    const gchar *attr_name,
+			    guint32 *value,
+			    GError **error)
 {
 	guint64 tmp = 0;
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *fn = g_build_filename(path, attr_name, NULL);
-	g_autoptr(GError) error_local = NULL;
 
-	if (!g_file_get_contents(fn, &data, NULL, NULL))
-		return 0x0;
-	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_warning("invalid string specified: %s", error_local->message);
-		return G_MAXUINT64;
-	}
-	return tmp;
+	if (!g_file_get_contents(fn, &data, NULL, error))
+		return FALSE;
+	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+	if (value != NULL)
+		*value = (guint32)tmp;
+	return TRUE;
 }
 
 gboolean

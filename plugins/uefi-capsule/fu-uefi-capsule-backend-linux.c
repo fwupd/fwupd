@@ -22,18 +22,13 @@ G_DEFINE_TYPE(FuUefiCapsuleBackendLinux,
 	      fu_uefi_capsule_backend_linux,
 	      FU_TYPE_UEFI_CAPSULE_BACKEND)
 
-/* yes, unsized uint_t */
-static guint
-fu_uefi_capsule_backend_linux_read(const gchar *path, const gchar *filename)
-{
-	return fu_uefi_read_file_as_uint64(path, filename);
-}
-
 static FuUefiCapsuleDevice *
 fu_uefi_capsule_backend_linux_device_new(FuUefiCapsuleBackendLinux *self,
 					 const gchar *physical_id,
-					 const gchar *path)
+					 const gchar *path,
+					 GError **error)
 {
+	guint32 tmp32 = 0;
 	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
@@ -54,23 +49,32 @@ fu_uefi_capsule_backend_linux_device_new(FuUefiCapsuleBackendLinux *self,
 	dev = g_object_new(fu_uefi_capsule_backend_get_device_gtype(FU_UEFI_CAPSULE_BACKEND(self)),
 			   "fw-class",
 			   fw_class,
-			   "capsule-flags",
-			   fu_uefi_capsule_backend_linux_read(path, "capsule_flags"),
-			   "kind",
-			   fu_uefi_capsule_backend_linux_read(path, "fw_type"),
-			   "fw-version",
-			   fu_uefi_capsule_backend_linux_read(path, "fw_version"),
-			   "last-attempt-status",
-			   fu_uefi_capsule_backend_linux_read(path, "last_attempt_status"),
-			   "last-attempt-version",
-			   fu_uefi_capsule_backend_linux_read(path, "last_attempt_version"),
-			   "fw-version-lowest",
-			   fu_uefi_capsule_backend_linux_read(path, "lowest_supported_fw_version"),
 			   "fmp-hardware-instance",
 			   (guint64)0x0,
 			   "version-format",
 			   FWUPD_VERSION_FORMAT_NUMBER,
 			   NULL);
+
+	if (!fu_uefi_read_file_as_uint32(path, "fw_type", &tmp32, error))
+		return NULL;
+	if (tmp32 >= FU_UEFI_CAPSULE_DEVICE_KIND_LAST)
+		tmp32 = FU_UEFI_CAPSULE_DEVICE_KIND_UNKNOWN;
+	fu_uefi_capsule_device_set_kind(dev, tmp32);
+	if (!fu_uefi_read_file_as_uint32(path, "capsule_flags", &tmp32, error))
+		return NULL;
+	fu_uefi_capsule_device_set_capsule_flags(dev, tmp32);
+	if (!fu_uefi_read_file_as_uint32(path, "fw_version", &tmp32, error))
+		return NULL;
+	fu_uefi_capsule_device_set_fw_version(dev, tmp32);
+	if (!fu_uefi_read_file_as_uint32(path, "last_attempt_status", &tmp32, error))
+		return NULL;
+	fu_uefi_capsule_device_set_last_attempt_status(dev, tmp32);
+	if (!fu_uefi_read_file_as_uint32(path, "last_attempt_version", &tmp32, error))
+		return NULL;
+	fu_uefi_capsule_device_set_last_attempt_version(dev, tmp32);
+	if (!fu_uefi_read_file_as_uint32(path, "lowest_supported_fw_version", &tmp32, error))
+		return NULL;
+	fu_uefi_capsule_device_set_fw_version_lowest(dev, tmp32);
 
 	/* u-boot for instance */
 	if (!self->use_rt_set_variable)
@@ -163,8 +167,13 @@ fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress,
 	/* add each device */
 	while ((fn = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *path = g_build_filename(esrt_entries, fn, NULL);
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuUefiCapsuleDevice) dev =
-		    fu_uefi_capsule_backend_linux_device_new(self, esrt_path, path);
+		    fu_uefi_capsule_backend_linux_device_new(self, esrt_path, path, &error_local);
+		if (dev == NULL) {
+			g_warning("skipping ESRT entry %s: %s", fn, error_local->message);
+			continue;
+		}
 		fu_backend_device_added(backend, FU_DEVICE(dev));
 	}
 
