@@ -7,20 +7,21 @@
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
 # Milo Casagrande <milo@ubuntu.com>, 2017-2023
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Pierfrancesco Passerini <passero@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-29 16:01+0100\n"
-"PO-Revision-Date: 2025-10-24 10:20+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-11-08 13:51+0000\n"
+"Last-Translator: Pierfrancesco Passerini <passero@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/fwupd/fwupd/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 2026.11.2.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware stabile)"
@@ -48,19 +49,20 @@ msgid "Wake on LAN"
 msgstr ""
 
 msgid "Num Lock"
-msgstr ""
+msgstr "Bloc Num"
 
+#, fuzzy
 msgid "Memory Encryption"
-msgstr ""
+msgstr "Cifratura della memoria"
 
 msgid "Dedicated Video Memory"
-msgstr ""
+msgstr "Memoria video dedicata"
 
 msgid "Camera"
 msgstr ""
 
 msgid "Microphone"
-msgstr ""
+msgstr "Microfono"
 
 msgid "Bluetooth"
 msgstr ""
@@ -69,7 +71,7 @@ msgid "Wireless LAN"
 msgstr ""
 
 msgid "Fingerprint Reader"
-msgstr ""
+msgstr "Lettore di impronte digitali"
 
 msgid "Touchscreen"
 msgstr ""
@@ -78,10 +80,10 @@ msgid "Audio"
 msgstr ""
 
 msgid "Media Card Reader"
-msgstr ""
+msgstr "Lettore di schede di memoria"
 
 msgid "Keyboard Backlight"
-msgstr ""
+msgstr "Retroilluminazione tastiera"
 
 #. TRANSLATORS: description of a BIOS firmware update setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -92,101 +94,101 @@ msgid "Settings will apply after system reboots"
 msgstr "Le impostazioni saranno applicate dopo il riavvio"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "Arresta il servizio fwupd"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "È richiesta l'autenticazione per interrompere il servizio di aggiornamento del firmware"
 
 msgid "Install signed system firmware"
-msgstr "Installa firmware firmato di sistema"
+msgstr "Installa firmware di sistema firmato"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "È richiesto autenticarsi per aggiornare il firmware su questa macchina"
+msgstr "È richiesta l'autenticazione per aggiornare il firmware su questa macchina"
 
 msgid "Install unsigned system firmware"
-msgstr "Installa firmware non firmato di sistema"
+msgstr "Installa firmware di sistema non firmato"
 
 msgid "Install old version of signed system firmware"
-msgstr "Installa versione precedente del firmware firmato di sistema"
+msgstr "Installa versione precedente del firmware di sistema firmato"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "È richiesto autenticarsi tornare al precedente firmware su questa macchina"
+msgstr "È richiesta l'autenticazione per installare una versione precedente del firmware su questa macchina"
 
 msgid "Install old version of unsigned system firmware"
-msgstr "Installa versione precedente del firmware non firmato di sistema"
+msgstr "Installa versione precedente del firmware di sistema non firmato"
 
 msgid "Install signed device firmware"
-msgstr "Installa firmware firmato del dispositivo"
+msgstr "Installa firmware del dispositivo firmato"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "È richiesto autenticarsi per aggiornare il firmware su un dispositivo rimovibile"
+msgstr "È richiesta l'autenticazione per aggiornare il firmware su un dispositivo rimovibile"
 
 msgid "Install unsigned device firmware"
 msgstr "Installa firmware non firmato del dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "È richiesto autenticarsi per tornare al precedente firmware su un dispositivo rimovibile"
+msgstr "È richiesta l'autenticazione per tornare al precedente firmware su un dispositivo rimovibile"
 
 msgid "Unlock the device to allow access"
 msgstr "Sblocco del dispositivo per consentire l'accesso"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "È richiesto autenticarsi per sbloccare un dispositivo"
+msgstr "È richiesta l'autenticazione per sbloccare un dispositivo"
 
 msgid "Modify daemon configuration"
 msgstr "Modifica la configurazione del demone"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr "È richiesto autenticarsi per modificare la configurazione del demone"
+msgstr "È richiesta l'autenticazione per modificare la configurazione del demone"
 
 msgid "Reset daemon configuration"
 msgstr "Resetta la configurazione del demone"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr "È richiesta l'autenticazione per poter resettare la configurazione del demone ai valori di default"
+msgstr "È richiesta l'autenticazione per poter ripristinare la configurazione del demone ai valori di default"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Modifica una proprietà del dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "È richiesta l'autenticazione per modificare una proprietà del dispositivo"
 
 msgid "Activate the new firmware on the device"
 msgstr "Attiva il nuovo firmware sul dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "È richiesto autenticarsi per passare alla nuova versione del firmware"
+msgstr "È richiesta l'autenticazione per passare alla nuova versione del firmware"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Elimina la cronologia degli aggiornamenti firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "È richiesta l'autenticazione per eliminare la cronologia degli aggiornamenti firmware"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Verifica il firmware del dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "È richiesta l'autenticazione per verificare il firmware su un dispositivo"
 
 msgid "Update the stored device verification information"
 msgstr "Aggiornamento delle informazioni di verifica del dispositivo salvate"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "È richiesto autenticarsi per aggiornare il codice di controllo del dispositivo salvato"
+msgstr "È richiesta l'autenticazione per aggiornare i checksum memorizzati per il dispositivo"
 
 msgid "Get configured remotes"
 msgstr ""
@@ -210,8 +212,9 @@ msgid "Authentication is required to enable or disable a configured remote used 
 msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+#, fuzzy
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "È richiesto autenticarsi per modificare un remoto configurato utilizzato per aggiornamenti firmware"
+msgstr "È richiesta l'autenticazione per modificare un server remoto configurato per gli aggiornamenti del firmware"
 
 msgid "Clean a configured remote"
 msgstr ""
@@ -226,31 +229,32 @@ msgstr "Imposta l'elenco dei firmware approvati"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "È richiesto autenticarsi per impostare l'elenco dei firmware approvati"
+msgstr "È richiesta l'autenticazione per impostare l'elenco dei firmware approvati"
 
 msgid "Sign data using the client certificate"
 msgstr "Firma i dati col certificato del client"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr "È richiesto autenticarsi per firmare i dati utilizzando il certificato del client"
+msgstr "È richiesta l'autenticazione per firmare i dati utilizzando il certificato del client"
 
 msgid "Get BIOS settings"
 msgstr "Recupero impostazioni BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr "È richiesto autenticarsi per leggere le impostazioni BIOS"
+msgstr "È richiesta l'autenticazione per leggere le impostazioni del BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Configura una o più impostazioni BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr "È richiesto autenticarsi per modificare le impostazioni BIOS"
+msgstr "È richiesta l'autenticazione per modificare le impostazioni del BIOS"
 
+#, fuzzy
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "Miglioramento della sicurezza di HSI"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -403,11 +407,11 @@ msgstr "Applicazione aggiornamento non riuscita"
 
 #. TRANSLATORS: success
 msgid "Done!"
-msgstr "Fatto."
+msgstr "Fatto!"
 
 #. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
-msgstr "Nessuna azione specificata."
+msgstr "Nessuna azione specificata!"
 
 #. TRANSLATORS: fallback name shown when a BIOS setting has no name
 msgid "Unnamed setting"
@@ -419,26 +423,26 @@ msgstr ""
 
 #. TRANSLATORS: error shown when a non-numeric value is entered
 msgid "Enter a valid integer"
-msgstr ""
+msgstr "Inserisci un numero intero valido"
 
 #. TRANSLATORS: error shown when a number is out of range
 #, python-brace-format
 msgid "Value must be between {lower} and {upper}"
-msgstr ""
+msgstr "Il valore deve essere compreso tra {lower} e {upper}"
 
 #. TRANSLATORS: error shown when a number is not a valid increment
 #, python-brace-format
 msgid "Value must use an increment of {increment}"
-msgstr ""
+msgstr "Il valore deve essere un multiplo di {increment}"
 
 #. TRANSLATORS: error shown when text is the wrong length
 #, python-brace-format
 msgid "Text length must be between {lower} and {upper}"
-msgstr ""
+msgstr "La lunghezza del testo deve essere compresa tra {lower} e {upper}"
 
 #. TRANSLATORS: error shown when a setting type cannot be edited
 msgid "This setting type cannot be changed"
-msgstr ""
+msgstr "Questo tipo di impostazione non può essere modificato"
 
 #. TRANSLATORS: button to close the editor without saving
 #. TRANSLATORS: button to cancel the confirmation dialog
@@ -449,27 +453,27 @@ msgstr "Annulla"
 
 #. TRANSLATORS: button to save the edited setting value
 msgid "Save"
-msgstr ""
+msgstr "Salva"
 
 #. TRANSLATORS: dialog title for installing a local firmware file
 msgid "Install Local Firmware"
-msgstr ""
+msgstr "Installa firmware locale"
 
 #. TRANSLATORS: input placeholder for the firmware archive path
 msgid "Path to a .cab firmware archive"
-msgstr ""
+msgstr "Percorso di un archivio firmware .cab"
 
 #. TRANSLATORS: button to proceed with the entered path
 msgid "Continue"
-msgstr ""
+msgstr "Continua"
 
 #. TRANSLATORS: error shown when the entered path does not exist
 msgid "File not found"
-msgstr ""
+msgstr "File non trovato"
 
 #. TRANSLATORS: units for displaying a file size (bytes, kilobytes, etc.)
 msgid "bytes"
-msgstr ""
+msgstr "byte"
 
 msgid "KB"
 msgstr ""
@@ -483,12 +487,12 @@ msgstr ""
 #. TRANSLATORS: a duration in seconds
 #, python-brace-format
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} secondi"
 
 #. TRANSLATORS: a duration in minutes
 #, python-brace-format
 msgid "{minutes} minutes"
-msgstr ""
+msgstr "{minutes} minuti"
 
 #. TRANSLATORS: host security attribute result: the check passed
 #. TRANSLATORS: Suffix: the HSI result
@@ -589,12 +593,12 @@ msgstr ""
 
 #. TRANSLATORS: application subtitle shown in the header
 msgid "Firmware management"
-msgstr ""
+msgstr "Gestione del firmware"
 
 #. TRANSLATORS: footer label for the key that quits the application
 #. TRANSLATORS: button to quit the application
 msgid "Quit"
-msgstr ""
+msgstr "Esci"
 
 #. TRANSLATORS: footer label for the key that returns to the home screen
 #. TRANSLATORS: button to return to the home screen
@@ -603,23 +607,23 @@ msgstr ""
 
 #. TRANSLATORS: footer label for the key that focuses the search box
 msgid "Search"
-msgstr ""
+msgstr "Ricerca"
 
 #. TRANSLATORS: footer label for the key that edits the selected setting
 #. TRANSLATORS: button to edit the selected setting
 msgid "Edit"
-msgstr ""
+msgstr "Modifica"
 
 #. TRANSLATORS: footer label for the key that applies pending changes
 #. TRANSLATORS: button to apply pending BIOS changes
 msgid "Apply"
-msgstr ""
+msgstr "Applica"
 
 #. TRANSLATORS: footer label for the key that refreshes the current view
 #. TRANSLATORS: button to reload the list of devices
 #. TRANSLATORS: button to reload the security attributes
 msgid "Refresh"
-msgstr ""
+msgstr "Aggiorna"
 
 #. TRANSLATORS: title of the home menu
 msgid "Firmware Management"
@@ -627,19 +631,19 @@ msgstr ""
 
 #. TRANSLATORS: home screen introductory text
 msgid "Choose what you would like to inspect or change."
-msgstr ""
+msgstr "Scegli che cosa esaminare o modificare."
 
 #. TRANSLATORS: home screen hint on how to navigate the menu
 msgid "Use ↑/↓ and Enter, or press 1, 2, or 3."
-msgstr ""
+msgstr "Utilizza ↑/↓ e Invio, o premere 1, 2, o 3."
 
 #. TRANSLATORS: button to open the BIOS settings view
 msgid "Manage BIOS Settings"
-msgstr ""
+msgstr "Gestione impostazioni del BIOS"
 
 #. TRANSLATORS: button to open the devices view
 msgid "Manage Devices"
-msgstr ""
+msgstr "Gestione dei dispositivi"
 
 #. TRANSLATORS: button to open the host security view
 msgid "View Security Measurement"
@@ -651,7 +655,7 @@ msgstr ""
 
 #. TRANSLATORS: tree root label for the BIOS settings list
 msgid "BIOS Settings"
-msgstr ""
+msgstr "Impostazioni del BIOS"
 
 #. TRANSLATORS: placeholder shown before a setting is selected
 msgid "Select a setting to view its details."
@@ -663,7 +667,7 @@ msgstr ""
 
 #. TRANSLATORS: tree root label for the devices list
 msgid "Devices"
-msgstr ""
+msgstr "Dispositivi"
 
 #. TRANSLATORS: button to refresh firmware metadata
 msgid "Refresh Metadata"
@@ -2390,7 +2394,7 @@ msgstr "%s deve rimanere collegato alla rete elettrica durante l'aggiornamento p
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
 msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "Alcuni dei segreti della piattaforma potrebbero essere invalidati durante l'aggiornamento del firmware"
+msgstr "Alcune chiavi di sicurezza della piattaforma potrebbero essere invalidate durante l'aggiornamento del firmware."
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
@@ -2496,12 +2500,12 @@ msgstr "Nessun dispositivo trovato con GUID corrispondenti"
 
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
-msgstr "Ok"
+msgstr "OK!"
 
 #. TRANSLATORS: the inhibit ID is a short string like dbus-123456
 #, c-format
 msgid "Inhibit ID is %s."
-msgstr "L'ID d'inibizione è %s"
+msgstr "L'ID d'inibizione è %s."
 
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
@@ -2953,7 +2957,7 @@ msgstr "Comando non trovato"
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
-msgstr "Il demone ha caricato codice di terze parti e non è più supportato dagli sviluppatori."
+msgstr "Il demone ha caricato codice di terze parti e non è più supportato dagli sviluppatori!"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
