@@ -71,6 +71,13 @@ fu_strtoull(const gchar *str,
 
 	/* convert */
 	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
+	if (endptr == str) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no digits to parse");
+		return FALSE;
+	}
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -170,6 +177,13 @@ fu_strtoll(const gchar *str,
 
 	/* convert */
 	value_tmp = g_ascii_strtoll(str, &endptr, base); /* nocheck:blocked */
+	if (endptr == str) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no digits to parse");
+		return FALSE;
+	}
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
