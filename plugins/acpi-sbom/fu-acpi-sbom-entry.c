@@ -27,6 +27,12 @@ fu_acpi_sbom_entry_get_format(FuAcpiSbomEntry *self)
 	return self->format;
 }
 
+FuUswidPayloadCompression
+fu_acpi_sbom_entry_get_compression(FuAcpiSbomEntry *self)
+{
+	return self->compression;
+}
+
 static void
 fu_acpi_sbom_entry_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -89,6 +95,7 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 	guint16 hdrsz;
 	guint32 payloadsz;
 	gsize payloadsz_max;
+	gsize streamsz = 0;
 	g_autoptr(FuStructAcpiSbomEntry) st = NULL;
 	g_autoptr(GBytes) blob_uncompressed = NULL;
 
@@ -134,6 +141,18 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 			    fu_firmware_get_size_max(firmware));
 		return FALSE;
 	}
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if ((gsize)hdrsz + (gsize)payloadsz > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "header size 0x%x and payload size 0x%x exceed stream size 0x%zx",
+			    hdrsz,
+			    payloadsz,
+			    streamsz);
+		return FALSE;
+	}
 	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 	self->compression = fu_struct_acpi_sbom_entry_get_compression(st);
 	self->format = fu_struct_acpi_sbom_entry_get_format(st);
@@ -174,25 +193,30 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 		    fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (blob_uncompressed == NULL)
 			return FALSE;
+	} else if (self->compression == FU_USWID_PAYLOAD_COMPRESSION_VENDOR) {
+		g_debug("ignoring SBOM entry with vendor compression");
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "compression format 0x%x is not supported",
-			    self->compression);
+			    "compression format 0x%x [%s] is not supported",
+			    self->compression,
+			    fu_uswid_payload_compression_to_string(self->compression));
 		return FALSE;
 	}
 
-	/* payload */
-	if (g_bytes_get_size(blob_uncompressed) > payloadsz_max) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "uncompressed payload exceeds max 0x%zx",
-			    payloadsz_max);
-		return FALSE;
+	/* optional payload */
+	if (blob_uncompressed != NULL) {
+		if (g_bytes_get_size(blob_uncompressed) > payloadsz_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "uncompressed payload exceeds max 0x%zx",
+				    payloadsz_max);
+			return FALSE;
+		}
+		fu_firmware_set_bytes(firmware, blob_uncompressed);
 	}
-	fu_firmware_set_bytes(firmware, blob_uncompressed);
 
 	/* success */
 	return TRUE;
