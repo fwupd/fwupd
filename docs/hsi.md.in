@@ -160,9 +160,15 @@ The ID should be shown with an alert color if the security is not at least `HSI:
 
 ### Experimental weighted report
 
-A separate experimental report scores successful checks, with each property
-counted once. Scores of 300, 500, 575 and 650 correspond to weighted levels 1,
+The shared `security-weighted` command in `fwupdmgr` and `fwupdtool` provides a
+separate experimental score. Successful checks earn points and each property
+counts once. Scores of 300, 500, 575 and 650 correspond to weighted levels 1,
 2, 3 and 4. Some failures limit the maximum level.
+
+Use ordinary `security --json` to capture a host for weighted replay. This
+includes `SecurityAttributesOriginal`, which preserves the observations before
+legacy dependency processing. `security-weighted --json` emits the weighted
+report only and cannot be used as the host-emulation capture file.
 
 Points require a positively verified result. Unsupported, unknown and
 missing-data results earn no points and apply the check's existing level limit.

@@ -239,8 +239,10 @@ fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 		return;
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
-	g_clear_object(&self->host_security_attrs_original);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 	g_signal_emit(self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
@@ -4944,8 +4946,10 @@ fu_engine_metadata_changed(FuEngine *self)
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
-	g_clear_object(&self->host_security_attrs_original);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -5241,8 +5245,10 @@ fu_engine_update_metadata(FuEngine *self,
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
-	g_clear_object(&self->host_security_attrs_original);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -7245,8 +7251,10 @@ fu_engine_context_security_changed_cb(FuContext *ctx, gpointer user_data)
 	FuEngine *self = FU_ENGINE(user_data);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
-	g_clear_object(&self->host_security_attrs_original);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make UI refresh */
 	fu_engine_emit_changed(self);
@@ -7583,8 +7591,11 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 	}
 
 	/* preserve the reported results before calculating the existing HSI */
-	g_clear_object(&self->host_security_attrs_original);
-	self->host_security_attrs_original = fu_security_attrs_copy(self->host_security_attrs);
+	if (!self->host_emulation) {
+		g_clear_object(&self->host_security_attrs_original);
+		self->host_security_attrs_original =
+		    fu_security_attrs_copy(self->host_security_attrs);
+	}
 
 	/* set the obsoletes flag for each attr */
 	fu_security_attrs_depsolve(self->host_security_attrs);
@@ -7802,11 +7813,31 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 static gboolean
 fu_engine_security_attrs_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
 	/* not supplied */
 	if (!fwupd_json_object_has_node(json_obj, "SecurityAttributes"))
 		return TRUE;
 	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_obj, error))
 		return FALSE;
+
+	/* weighted scoring requires the results before legacy dependency processing */
+	json_arr = fwupd_json_object_get_array(json_obj, "SecurityAttributesOriginal", NULL);
+	if (json_arr != NULL) {
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			g_autoptr(FuSecurityAttr) attr = fu_security_attr_new(self->ctx, NULL);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(attr), json_obj_tmp, error))
+				return FALSE;
+			fu_security_attrs_append(attrs, attr);
+		}
+		g_set_object(&self->host_security_attrs_original, attrs);
+	}
 
 	/* success */
 	return TRUE;
@@ -9289,14 +9320,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			if (fn == NULL)
 				return FALSE;
 		}
+		self->host_emulation = TRUE;
 		if (!fu_engine_load_host_emulation(self, fn, error)) {
+			self->host_emulation = FALSE;
 			g_prefix_error_literal(error, "failed to load emulated host: ");
 			return FALSE;
 		}
 
 		/* do not load actual hardware */
 		flags &= ~FU_ENGINE_LOAD_FLAG_COLDPLUG;
-		self->host_emulation = TRUE;
 	}
 
 	/* set up backends */

@@ -3782,6 +3782,143 @@ fu_engine_report_metadata_func(void)
 	}
 }
 
+static void
+fu_engine_host_emulation_security_report_func(void)
+{
+	const gchar *json = "{\n"
+			    "  \"SecurityAttributes\": [\n"
+			    "    {\"AppstreamId\": \"org.fwupd.hsi.EncryptedRam\", "
+			    "\"HsiResult\": \"encrypted\", \"Plugin\": \"cpu\", "
+			    "\"Flags\": [\"success\"]},\n"
+			    "    {\"AppstreamId\": \"org.fwupd.hsi.SuspendToRam\", "
+			    "\"HsiResult\": \"enabled\", \"Plugin\": \"linux_sleep\", "
+			    "\"Flags\": [\"success\"]}\n"
+			    "  ],\n"
+			    "  \"SecurityAttributesOriginal\": [\n"
+			    "    {\"AppstreamId\": \"org.fwupd.hsi.EncryptedRam\", "
+			    "\"HsiResult\": \"encrypted\", \"Plugin\": \"cpu\", "
+			    "\"Flags\": [\"success\"]},\n"
+			    "    {\"AppstreamId\": \"org.fwupd.hsi.SuspendToRam\", "
+			    "\"HsiResult\": \"enabled\", \"Plugin\": \"linux_sleep\"}\n"
+			    "  ]\n"
+			    "}\n";
+	const gchar *json_legacy = "{\n"
+				   "  \"SecurityAttributes\": [\n"
+				   "    {\"AppstreamId\": \"org.fwupd.hsi.EncryptedRam\", "
+				   "\"HsiResult\": \"encrypted\", \"Plugin\": \"cpu\", "
+				   "\"Flags\": [\"success\"]},\n"
+				   "    {\"AppstreamId\": \"org.fwupd.hsi.SuspendToRam\", "
+				   "\"HsiResult\": \"enabled\", \"Plugin\": \"linux_sleep\", "
+				   "\"Flags\": [\"success\"]}\n"
+				   "  ]\n"
+				   "}\n";
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *fn_legacy = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx_legacy = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngine) engine_legacy = fu_engine_new(ctx_legacy);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_legacy = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttr) suspend = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) original_attrs = NULL;
+	g_autoptr(GVariant) attrs_tuple = NULL;
+	g_autoptr(GVariant) attrs_variant = NULL;
+	g_autoptr(GVariant) report = NULL;
+	gboolean found_suspend = FALSE;
+	guint score;
+
+	if (!g_test_subprocess()) {
+		g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+		g_test_trap_assert_passed();
+		return;
+	}
+
+	tmpdir = fu_temporary_directory_new("host-emulation", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "security.json", NULL);
+	fn_legacy = fu_temporary_directory_build(tmpdir, "security-legacy.json", NULL);
+	ret = g_file_set_contents(fn, json, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_set_contents(fn_legacy, json_legacy, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* legacy processing changes S3, but weighted scoring uses the original */
+	(void)g_setenv("FWUPD_HOST_EMULATE", fn, TRUE);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_remove_flag(ctx, FU_CONTEXT_FLAG_IS_CONTAINER);
+	fu_context_remove_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR);
+	attrs = fu_engine_get_host_security_attrs(engine);
+	suspend = fu_security_attrs_get_by_appstream_id(attrs,
+							FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+							&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(suspend);
+	g_assert_true(fu_security_attr_has_flag(suspend, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+
+	report = fu_engine_get_host_security_report(engine, 1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(report);
+	g_assert_true(g_variant_lookup(report, "Score", "u", &score));
+	g_assert_cmpuint(score, ==, 20);
+	g_assert_true(g_variant_lookup(report, "Attributes", "@aa{sv}", &attrs_variant));
+	attrs_tuple = g_variant_ref_sink(g_variant_new_tuple(&attrs_variant, 1));
+	original_attrs =
+	    fwupd_codec_array_from_variant(attrs_tuple, FWUPD_TYPE_SECURITY_ATTR, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(original_attrs);
+	for (guint i = 0; i < original_attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(original_attrs, i);
+		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr),
+			      FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) != 0)
+			continue;
+		found_suspend = TRUE;
+		g_assert_cmpint(fwupd_security_attr_get_result(attr),
+				==,
+				FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	}
+	g_assert_true(found_suspend);
+
+	/* older captures still provide legacy HSI, but not weighted scoring */
+	(void)g_setenv("FWUPD_HOST_EMULATE", fn_legacy, TRUE);
+	ret = fu_engine_load(engine_legacy,
+			     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress_legacy,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_remove_flag(ctx_legacy, FU_CONTEXT_FLAG_IS_CONTAINER);
+	fu_context_remove_flag(ctx_legacy, FU_CONTEXT_FLAG_IS_HYPERVISOR);
+	g_clear_object(&attrs);
+	attrs = fu_engine_get_host_security_attrs(engine_legacy);
+	g_assert_nonnull(attrs);
+	g_clear_object(&suspend);
+	suspend = fu_security_attrs_get_by_appstream_id(attrs,
+							FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM,
+							&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(suspend);
+	g_assert_true(fu_security_attr_has_flag(suspend, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_clear_pointer(&report, g_variant_unref);
+	report = fu_engine_get_host_security_report(engine_legacy, 1, &error);
+	g_assert_null(report);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3835,5 +3972,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
 			fu_engine_plugin_composite_multistep_func);
 	g_test_add_func("/fwupd/engine/write-bios-attrs", fu_engine_modify_bios_settings_func);
+	g_test_add_func("/fwupd/engine/host-emulation-security-report",
+			fu_engine_host_emulation_security_report_func);
 	return g_test_run();
 }
