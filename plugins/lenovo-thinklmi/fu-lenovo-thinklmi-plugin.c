@@ -18,6 +18,8 @@ G_DEFINE_TYPE(FuLenovoThinklmiPlugin, fu_lenovo_thinklmi_plugin, FU_TYPE_PLUGIN)
 #define BIOS_SETTING_BOOT_ORDER_LOCK "com.thinklmi.BootOrderLock"
 #define BIOS_SETTING_SECURE_ROLLBACK "com.thinklmi.SecureRollBackPrevention"
 
+#define FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI "use-fwupd-efi"
+
 static gboolean
 fu_lenovo_thinklmi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
@@ -61,7 +63,9 @@ fu_lenovo_thinklmi_plugin_uefi_capsule_registered(FuContext *ctx, FuDevice *devi
 		g_debug("failed to find %s in cache", BIOS_SETTING_BOOT_ORDER_LOCK);
 		return;
 	}
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), "Enable") == 0) {
+	/* bootloaders handling capsules themselves do not need to write BootOrder */
+	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), "Enable") == 0 &&
+	    fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI)) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-bootorder",
 				  "BootOrder is locked in firmware setup");
