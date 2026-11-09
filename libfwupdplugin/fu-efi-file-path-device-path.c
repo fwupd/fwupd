@@ -161,6 +161,7 @@ fu_efi_file_path_device_path_class_init(FuEfiFilePathDevicePathClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->export = fu_efi_file_path_device_path_export;
 	firmware_class->build = fu_efi_file_path_device_path_build;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_KB);
 }
 
 /**
