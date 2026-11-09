@@ -17,3 +17,5 @@ FuFirmware *
 fu_acpi_sbom_entry_new(void);
 FuUswidPayloadFormat
 fu_acpi_sbom_entry_get_format(FuAcpiSbomEntry *self);
+FuUswidPayloadCompression
+fu_acpi_sbom_entry_get_compression(FuAcpiSbomEntry *self);

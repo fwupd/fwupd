@@ -14,6 +14,7 @@ enum FuUswidPayloadCompression {
     None = 0x00,
     Zlib = 0x01,
     Lzma = 0x02,
+    Vendor = 0xFF,
 }
 
 #[derive(ToString, FromString)]
