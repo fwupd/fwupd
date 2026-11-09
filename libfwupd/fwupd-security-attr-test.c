@@ -22,6 +22,8 @@ fwupd_security_attr_func(void)
 	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.bar");
 	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new(NULL);
 	g_autoptr(FwupdSecurityAttr) attr3 = fwupd_security_attr_new(NULL);
+	g_autoptr(FwupdSecurityAttr) attr4 = fwupd_security_attr_new(NULL);
+	g_autoptr(FwupdSecurityAttr) attr5 = fwupd_security_attr_new(NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -154,6 +156,38 @@ fwupd_security_attr_func(void)
 	ret = fu_test_compare_lines(str2, str1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* preserve original evidence when serializing weighted reports */
+	fwupd_security_attr_set_flags(attr1, FWUPD_SECURITY_ATTR_FLAG_NONE);
+	fwupd_security_attr_set_result_success(attr1, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	fwupd_security_attr_set_flags(attr1,
+				      FWUPD_SECURITY_ATTR_FLAG_SUCCESS |
+					  FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	g_clear_pointer(&data, g_variant_unref);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(attr1), FWUPD_CODEC_FLAG_NONE);
+	ret = fwupd_codec_from_variant(FWUPD_CODEC(attr4), data, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr4),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	g_assert_cmpuint(fwupd_security_attr_get_flags(attr4),
+			 ==,
+			 FWUPD_SECURITY_ATTR_FLAG_SUCCESS | FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+
+	g_clear_pointer(&json, g_free);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(attr1), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(attr5), json, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr5),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	g_assert_cmpuint(fwupd_security_attr_get_flags(attr5),
+			 ==,
+			 FWUPD_SECURITY_ATTR_FLAG_SUCCESS | FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 }
 
 int

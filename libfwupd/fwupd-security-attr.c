@@ -1354,6 +1354,7 @@ static gboolean
 fwupd_security_attr_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
+	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	const gchar *tmp;
 	gint64 tmpi = 0;
 	g_autoptr(FwupdJsonArray) json_array1 = NULL;
@@ -1440,8 +1441,9 @@ fwupd_security_attr_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErr
 			FwupdSecurityAttrFlags flag = fwupd_security_attr_flag_from_string(
 			    fwupd_json_array_get_string(json_array1, i, NULL));
 			if (flag != FWUPD_SECURITY_ATTR_FLAG_NONE)
-				fwupd_security_attr_add_flag(self, flag);
+				flags |= flag;
 		}
+		fwupd_security_attr_set_flags(self, flags);
 	}
 	json_array2 = fwupd_json_object_get_array(json_obj, FWUPD_RESULT_KEY_GUID, NULL);
 	if (json_array2 != NULL) {
@@ -1679,12 +1681,20 @@ static void
 fwupd_security_attr_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
+	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
+	FwupdSecurityAttrResult result = FWUPD_SECURITY_ATTR_RESULT_UNKNOWN;
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
+		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
+			flags = fwupd_variant_get_uint64(value);
+		else if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT) == 0)
+			result = fwupd_variant_get_uint32(value);
 		fwupd_security_attr_from_key_value(self, key, value);
 		g_variant_unref(value);
 	}
+	fwupd_security_attr_set_result(self, result);
+	fwupd_security_attr_set_flags(self, flags);
 }
 
 static void
