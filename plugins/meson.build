@@ -122,6 +122,7 @@ plugins = {
   'qsi-dock': false,
   'raydium-tp': false,
   'realtek-alc408x': false,
+  'realtek-billboard': false,
   'realtek-mst': false,
   'realtek-scaler': false,
   'redfish': false,
