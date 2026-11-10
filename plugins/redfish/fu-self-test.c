@@ -510,6 +510,22 @@ fu_redfish_bearer_token_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* a rotated token is used by new requests */
+	fu_config_set_value_internal(fu_context_get_config(ctx),
+				     "redfish",
+				     "BearerToken",
+				     "invalid-token");
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* removing the token restores basic authentication */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "redfish", "BearerToken", NULL);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void

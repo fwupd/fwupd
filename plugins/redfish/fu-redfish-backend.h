@@ -30,8 +30,6 @@ const gchar *
 fu_redfish_backend_get_username(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password);
-void
-fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token);
 gboolean
 fu_redfish_backend_has_bearer_token(FuRedfishBackend *self);
 void

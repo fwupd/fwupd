@@ -153,6 +153,15 @@ or
 curl -k https://192.168.0.133:443/redfish/v1/
 ```
 
+## Bearer Token Rotation
+
+The `[redfish]` `BearerToken` setting is reloaded when `fwupd.conf` changes, so
+a rotated token does not need a daemon restart. Removing the setting restores
+username/password authentication, so `Username` and `Password` must be configured
+first: a daemon started with a token does not create a BMC user. Changes to them
+still need a restart, and a `BearerToken` in the mutable configuration overrides
+the system value, so rotate or remove it there too.
+
 ## External Interface Access
 
 This requires HTTP access to a given URL.

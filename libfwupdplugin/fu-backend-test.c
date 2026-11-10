@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-test.h"
@@ -221,11 +222,31 @@ fu_backend_func(void)
 	g_assert_true(dev == dev1);
 }
 
+static void
+fu_backend_config_func(void)
+{
+	g_autofree gchar *value_none = NULL;
+	g_autofree gchar *value_backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuBackend) backend = NULL;
+
+	backend = g_object_new(FU_TYPE_BACKEND, "context", ctx, "name", "foo", NULL);
+	value_none = fu_backend_get_config_str(backend, "Key");
+	g_assert_null(value_none);
+
+	/* only the section named after the backend is used */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "bar", "Key", "wrong");
+	fu_config_set_value_internal(fu_context_get_config(ctx), "foo", "Key", "right");
+	value_backend = fu_backend_get_config_str(backend, "Key");
+	g_assert_cmpstr(value_backend, ==, "right");
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
+	g_test_add_func("/fwupd/backend/config", fu_backend_config_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
 	return g_test_run();
 }
