@@ -125,6 +125,13 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	if (firmware == NULL)
 		firmware = fu_firmware_new_from_bytes(data);
 
+	/* ->check_firmware() */
+	if (fu_device_check_firmware(device,
+				     firmware,
+				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				     NULL))
+		g_debug("did ->check_firmware()!");
+
 	/* ->write_firmware() */
 	if (fu_device_write_firmware(device, firmware, progress3, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->write_firmware()!");

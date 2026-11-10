@@ -111,5 +111,10 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_device_check_firmware(FuDevice *self,
+			 FuFirmware *firmware,
+			 FuFirmwareParseFlags flags,
+			 GError **error) G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

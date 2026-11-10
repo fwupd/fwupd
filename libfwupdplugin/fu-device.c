@@ -5738,6 +5738,32 @@ fu_device_write_firmware(FuDevice *self,
 	return TRUE;
 }
 
+/* private */
+gboolean
+fu_device_check_firmware(FuDevice *self,
+			 FuFirmware *firmware,
+			 FuFirmwareParseFlags flags,
+			 GError **error)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not provided */
+	if (device_class->check_firmware == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "->check_firmware is not supported by device");
+		return FALSE;
+	}
+
+	/* proxy */
+	return device_class->check_firmware(self, firmware, flags, error);
+}
+
 /**
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
@@ -5791,7 +5817,7 @@ fu_device_prepare_firmware(FuDevice *self,
 
 	/* check firmware is compatible with the device */
 	if (device_class->check_firmware != NULL) {
-		if (!device_class->check_firmware(self, firmware, flags, error))
+		if (!fu_device_check_firmware(self, firmware, flags, error))
 			return NULL;
 	}
 
