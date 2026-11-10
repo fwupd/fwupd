@@ -496,7 +496,6 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	g_autofree gchar *password = NULL;
-	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *session_key_file = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
@@ -569,9 +568,6 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	password = fu_plugin_get_config_value(plugin, "Password");
 	if (password != NULL)
 		fu_redfish_backend_set_password(self->backend, password);
-	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
-	if (bearer_token != NULL)
-		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
 	session_key_file = fu_plugin_get_config_value(plugin, "SessionKeyFile");
 	if (session_key_file != NULL)
 		fu_redfish_backend_set_session_key_file(self->backend, session_key_file);

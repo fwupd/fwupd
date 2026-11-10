@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-context-private.h"
 #include "fu-device-locker.h"
 #include "fu-device-private.h"
 
@@ -602,6 +603,31 @@ fu_backend_get_context(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	return priv->ctx;
+}
+
+/**
+ * fu_backend_get_config_str:
+ * @self: a #FuBackend
+ * @key: (not nullable): a settings key
+ *
+ * Gets a config value from the section named after the backend, falling back to the default
+ * value if missing.
+ *
+ * Returns: (transfer full) (nullable): string value
+ *
+ * Since: 2.2.1
+ **/
+gchar *
+fu_backend_get_config_str(FuBackend *self, const gchar *key)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(priv->name != NULL, NULL);
+	g_return_val_if_fail(FU_IS_CONTEXT(priv->ctx), NULL);
+
+	return fu_config_get_value(fu_context_get_config(priv->ctx), priv->name, key);
 }
 
 /**

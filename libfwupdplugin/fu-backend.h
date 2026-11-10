@@ -62,6 +62,8 @@ const gchar *
 fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuContext *
 fu_backend_get_context(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+gchar *
+fu_backend_get_config_str(FuBackend *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_backend_get_enabled(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 void

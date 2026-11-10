@@ -22,7 +22,6 @@ struct _FuRedfishBackend {
 	gchar *hostname;
 	gchar *username;
 	gchar *password;
-	gchar *bearer_token;
 	gchar *session_key_file;
 	gchar *session_key;
 	gchar *session_uri;
@@ -66,6 +65,13 @@ fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 	return self->uuid;
 }
 
+/* read on demand so that a rotated token is used by the next request */
+static gchar *
+fu_redfish_backend_get_bearer_token(FuRedfishBackend *self)
+{
+	return fu_backend_get_config_str(FU_BACKEND(self), "BearerToken");
+}
+
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
@@ -78,6 +84,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *bearer_token = fu_redfish_backend_get_bearer_token(self);
 
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
@@ -100,11 +107,11 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
+	if (bearer_token != NULL) {
 		/* Some custom implementation require special authentication through bearer token.
 		 * Let's use that if configured to do so. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
-		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
+		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, bearer_token);
 	} else {
 		/* Here is the common auth scenario, when no specific bearer token is configured.
 		 * since DSP0266 makes Basic Authorization a requirement,
@@ -784,13 +791,6 @@ fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 	g_set_str(&self->password, password);
 }
 
-void
-fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
-{
-	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
-	g_set_str(&self->bearer_token, bearer_token);
-}
-
 /**
  * fu_redfish_backend_has_bearer_token:
  * @self: a #FuRedfishBackend
@@ -803,8 +803,11 @@ fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_
 gboolean
 fu_redfish_backend_has_bearer_token(FuRedfishBackend *self)
 {
+	g_autofree gchar *bearer_token = NULL;
+
 	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
-	return self->bearer_token != NULL;
+	bearer_token = fu_redfish_backend_get_bearer_token(self);
+	return bearer_token != NULL;
 }
 
 void
@@ -854,10 +857,11 @@ static void
 fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
+	g_autofree gchar *bearer_token = fu_redfish_backend_get_bearer_token(self);
 	fwupd_codec_string_append(str, idt, "Hostname", self->hostname);
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
-	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
+	fwupd_codec_string_append_bool(str, idt, "BearerToken", bearer_token != NULL);
 	fwupd_codec_string_append(str, idt, "SessionKeyFile", self->session_key_file);
 	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
@@ -885,7 +889,6 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);
-	g_free(self->bearer_token);
 	g_free(self->session_key_file);
 	g_free(self->session_key);
 	g_free(self->session_uri);
