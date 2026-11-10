@@ -595,6 +595,7 @@ static void
 fu_cabinet_error_size_func(void)
 {
 	gboolean ret;
+	gsize size_max_old;
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -614,12 +615,14 @@ fu_cabinet_error_size_func(void)
 	    "firmware.bin",
 	    "world",
 	    NULL);
+	size_max_old = fu_firmware_get_size_max(FU_FIRMWARE(cabinet));
 	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(cabinet), 123);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(cabinet), size_max_old);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
