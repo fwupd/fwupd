@@ -341,6 +341,7 @@ static void
 fu_cabinet_unsigned_func(void)
 {
 	GBytes *blob_tmp;
+	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	gboolean ret;
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
@@ -389,9 +390,26 @@ fu_cabinet_unsigned_func(void)
 	g_assert_nonnull(rel);
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
 	csum = xb_node_query_first(rel, "checksum[@target='content']", &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
 	g_assert_null(csum);
+	g_clear_error(&error);
 	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBasename");
 	g_assert_nonnull(blob_tmp);
+
+	/* unsigned metainfo file must not be trusted */
+	blob_tmp = xb_node_get_data(rel, "fwupd::ReleaseFlags");
+	g_assert_nonnull(blob_tmp);
+	ret = fu_memcpy_safe((guint8 *)&release_flags,
+			     sizeof(release_flags),
+			     0x0,
+			     g_bytes_get_data(blob_tmp, NULL),
+			     g_bytes_get_size(blob_tmp),
+			     0x0,
+			     sizeof(release_flags),
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
 }
 
 static void
@@ -644,6 +662,101 @@ fu_cabinet_error_wrong_checksum_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_cabinet_error_spoofed_metadata_trust_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+#if !LIBXMLB_CHECK_VERSION(0, 3, 30)
+	g_test_skip("requires libxmlb 0.3.30 or later");
+	return;
+#endif
+
+	/* unsigned metainfo file pretending to be signed */
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <info>\n"
+	    "    <metadata_trust/>\n"
+	    "  </info>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\"/>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+				      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpstr(error->message, ==, "XML info was not created with XbBuilderSource");
+	g_assert_false(ret);
+}
+
+static void
+fu_cabinet_error_sign_spoofed_filename_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuSecureBytes) privkey = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) cert = g_bytes_new_static("cert", 4);
+	g_autoptr(GBytes) privkey_blob = g_bytes_new_static("privkey", 7);
+	g_autoptr(GError) error = NULL;
+
+#if !LIBXMLB_CHECK_VERSION(0, 3, 30)
+	g_test_skip("requires libxmlb 0.3.30 or later");
+	return;
+#endif
+
+	/* metainfo file trying to get an arbitrary file signed */
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <info>\n"
+	    "    <filename>evil.bin</filename>\n"
+	    "  </info>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\"/>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    "evil.bin",
+	    "evil",
+	    NULL);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+				      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the spoofed filename is rejected before anything is signed */
+	privkey = fu_secure_bytes_new_from_bytes(privkey_blob);
+	ret = fu_cabinet_sign(cabinet, cert, privkey, FU_CABINET_SIGN_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_cmpstr(error->message, ==, "XML info was not created with XbBuilderSource");
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -660,5 +773,9 @@ main(int argc, char **argv)
 			fu_cabinet_error_wrong_checksum_func);
 	g_test_add_func("/fwupd/cabinet/error-missing-file", fu_cabinet_error_missing_file_func);
 	g_test_add_func("/fwupd/cabinet/error-size", fu_cabinet_error_size_func);
+	g_test_add_func("/fwupd/cabinet/error-sign-spoofed-filename",
+			fu_cabinet_error_sign_spoofed_filename_func);
+	g_test_add_func("/fwupd/cabinet/error-spoofed-metadata-trust",
+			fu_cabinet_error_spoofed_metadata_trust_func);
 	return g_test_run();
 }
