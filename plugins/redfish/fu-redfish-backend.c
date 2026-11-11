@@ -44,9 +44,6 @@ struct _FuRedfishBackend {
 
 G_DEFINE_TYPE(FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
 
-typedef struct curl_slist _curl_slist;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
-
 const gchar *
 fu_redfish_backend_get_vendor(FuRedfishBackend *self)
 {
@@ -148,7 +145,13 @@ fu_redfish_backend_request_new(FuRedfishBackend *self, GError **error)
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
 	bearer_token = fu_redfish_backend_get_bearer_token(self);
-	if (bearer_token != NULL) {
+
+	if (self->session_key_file != NULL) {
+		g_autofree gchar *session_key = fu_redfish_backend_get_session_key(self, error);
+		if (session_key == NULL)
+			return NULL;
+		fu_redfish_request_set_auth_token(request, session_key);
+	} else if (bearer_token != NULL) {
 		/* Some custom implementation require special authentication through bearer token.
 		 * Let's use that if configured to do so. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
@@ -427,9 +430,7 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 {
-	g_autofree gchar *auth_header = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(_curl_slist) hs = NULL;
 	CURL *curl;
 
 	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
@@ -450,11 +451,9 @@ fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 	request = fu_redfish_backend_request_new(self, error);
 	if (request == NULL)
 		return FALSE;
+	fu_redfish_request_set_auth_token(request, self->session_key);
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	auth_header = g_strconcat("X-Auth-Token: ", self->session_key, NULL);
-	hs = curl_slist_append(hs, auth_header);
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
 	if (!fu_redfish_request_perform(request, self->session_uri, 0, error)) {
 		g_prefix_error_literal(error, "failed to delete session: ");
 		return FALSE;
@@ -897,6 +896,13 @@ fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *ses
 {
 	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->session_key_file, session_key_file);
+}
+
+const gchar *
+fu_redfish_backend_get_session_key_file(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->session_key_file;
 }
 
 const gchar *

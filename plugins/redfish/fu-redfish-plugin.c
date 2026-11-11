@@ -103,6 +103,7 @@ fu_redfish_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 		/* did the user password expire? we cannot refresh a password that we do
 		 * not authenticate with */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED) &&
+		    fu_redfish_backend_get_session_key_file(self->backend) == NULL &&
 		    !fu_redfish_backend_has_bearer_token(self->backend)) {
 			if (!fu_redfish_plugin_change_expired(plugin, error))
 				return FALSE;
@@ -585,9 +586,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
-	/* a bearer token replaces the BMC user account entirely, so there is
-	 * nothing to verify or create over IPMI */
-	if (!fu_redfish_backend_has_bearer_token(self->backend)) {
+	/* a bearer token or a session key replaces the BMC user account entirely, so
+	 * there is nothing to verify or create over IPMI */
+	if (!fu_redfish_backend_has_bearer_token(self->backend) && session_key_file == NULL) {
 		if (!fu_redfish_plugin_ensure_ipmi_user(plugin, username, password, error))
 			return FALSE;
 	}

@@ -16,8 +16,6 @@ struct _FuRedfishHpeDevice {
 
 G_DEFINE_TYPE(FuRedfishHpeDevice, fu_redfish_hpe_device, FU_TYPE_REDFISH_DEVICE)
 
-typedef struct curl_slist _curl_slist;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 static gboolean
@@ -219,7 +217,6 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	g_autofree gchar *sessionkey = NULL;
 	g_autofree gchar *sessionkey_kv = NULL;
 	g_autoptr(curl_mime) mime = NULL;
-	g_autoptr(_curl_slist) hs = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GString) json_str = NULL;
@@ -282,9 +279,7 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 
 	sessionkey_kv = g_strconcat("sessionKey=", sessionkey, NULL);
 	(void)curl_easy_setopt(curl, CURLOPT_COOKIE, sessionkey_kv);
-
-	hs = curl_slist_append(hs, g_strconcat("X-Auth-Token: ", sessionkey, NULL));
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+	fu_redfish_request_set_auth_token(request, sessionkey);
 	fu_progress_step_done(progress);
 
 	if (!fu_redfish_request_perform(request,
