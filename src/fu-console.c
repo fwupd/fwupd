@@ -119,7 +119,6 @@ static void
 fu_console_reset_line(FuConsole *self)
 {
 	if (self->contents_to_clear) {
-		fu_console_erase_line(self);
 		/* re-enable cursor */
 		g_print("\033[?25h\n");
 		self->contents_to_clear = FALSE;
