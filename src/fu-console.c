@@ -9,7 +9,12 @@
 #include "config.h"
 
 #include <glib/gi18n.h>
+#include <signal.h>
 #include <stdio.h>
+
+#ifdef HAVE_SIGACTION
+#include <unistd.h>
+#endif
 
 #ifdef HAVE_READLINE
 #include <readline/history.h>
@@ -107,6 +112,48 @@ fu_console_setup(FuConsole *self, GError **error)
 	return TRUE;
 }
 
+/* the cursor is a property of the terminal, not of the FuConsole instance */
+static volatile sig_atomic_t fu_console_cursor_hidden = 0;
+
+#ifdef HAVE_SIGACTION
+static void
+fu_console_fatal_signal_cb(int signum)
+{
+	/* only async-signal-safe functions are allowed here */
+	if (fu_console_cursor_hidden) {
+		const gchar msg[] = "\033[?25h\n";
+		if (write(STDOUT_FILENO, msg, sizeof(msg) - 1) < 0) {
+			/* nothing we can do */
+		}
+	}
+
+	/* SA_RESETHAND restored the default action, so this crashes as normal */
+	raise(signum);
+}
+#endif
+
+static void
+fu_console_setup_fatal_signals(void)
+{
+#ifdef HAVE_SIGACTION
+	const gint signums[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGTRAP};
+	struct sigaction sa = {0};
+	sa.sa_handler = fu_console_fatal_signal_cb;
+	sa.sa_flags = SA_RESETHAND;
+	sigemptyset(&sa.sa_mask);
+	for (guint i = 0; i < G_N_ELEMENTS(signums); i++) {
+		struct sigaction sa_old = {0};
+
+		/* do not override a handler installed by something else, e.g. ASan */
+		if (sigaction(signums[i], NULL, &sa_old) != 0)
+			continue;
+		if (sa_old.sa_handler != SIG_DFL)
+			continue;
+		sigaction(signums[i], &sa, NULL);
+	}
+#endif
+}
+
 static void
 fu_console_erase_line(FuConsole *self)
 {
@@ -121,6 +168,7 @@ fu_console_reset_line(FuConsole *self)
 	if (self->contents_to_clear) {
 		/* re-enable cursor */
 		g_print("\033[?25h\n");
+		fu_console_cursor_hidden = 0;
 		self->contents_to_clear = FALSE;
 	}
 }
@@ -589,6 +637,7 @@ fu_console_refresh(FuConsole *self)
 
 	/* dump to screen, disabling the cursor */
 	g_print("%s\033[?25l", str->str);
+	fu_console_cursor_hidden = 1;
 	self->contents_to_clear = TRUE;
 }
 
@@ -898,6 +947,9 @@ fu_console_class_init(FuConsoleClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_console_finalize;
+
+	/* restore the cursor if we crash while the progressbar is shown */
+	fu_console_setup_fatal_signals();
 }
 
 /**
