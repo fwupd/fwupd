@@ -89,11 +89,50 @@ fu_volume_gpt_type_func(void)
 	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("0x00"), ==, "0x00");
 }
 
+/*
+ * A volume that is already mounted is left alone by the locker -- it is not
+ * ours to unmount, and doing so would pull the mount out from under whatever
+ * mounted it in the first place.
+ */
+static void
+fu_volume_locker_mounted_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+	g_autoptr(FuVolumeLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("volume-locker", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	volume = fu_volume_new_from_mount_path(fu_temporary_directory_get_path(tmpdir));
+	g_assert_nonnull(volume);
+	g_assert_true(fu_volume_is_mounted(volume));
+
+	locker = fu_volume_locker_new(volume, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+
+	/* still mounted, as the locker did not take ownership of the mount */
+	g_assert_true(fu_volume_is_mounted(volume));
+
+	/* closing is a no-op, and is idempotent */
+	ret = fu_volume_locker_close(locker, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_volume_locker_close(locker, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_volume_is_mounted(volume));
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/volume/gpt-type", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/volume/write-file", fu_volume_write_file_func);
+	g_test_add_func("/fwupd/volume/locker/mounted", fu_volume_locker_mounted_func);
 	return g_test_run();
 }
