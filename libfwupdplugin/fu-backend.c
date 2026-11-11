@@ -374,6 +374,50 @@ fu_backend_device_added_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
+fu_backend_device_is_ancestor(FuDevice *parent, FuDevice *child)
+{
+	const gchar *id_parent = fu_device_get_backend_id(parent);
+	const gchar *id_child = fu_device_get_backend_id(child);
+	gsize len;
+
+	if (id_parent == NULL || id_child == NULL)
+		return FALSE;
+	len = strlen(id_parent);
+	if (len == 0 || !g_str_has_prefix(id_child, id_parent))
+		return FALSE;
+	return id_child[len] == ':' || id_child[len] == '/';
+}
+
+static void
+fu_backend_device_added_order_add(GPtrArray *sorted,
+				  GPtrArray *ordered,
+				  GHashTable *seen,
+				  FuDevice *device)
+{
+	if (!g_hash_table_add(seen, device))
+		return;
+	for (guint i = 0; i < sorted->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(sorted, i);
+		if (fu_backend_device_is_ancestor(device_tmp, device))
+			fu_backend_device_added_order_add(sorted, ordered, seen, device_tmp);
+	}
+	g_ptr_array_add(ordered, g_object_ref(device));
+}
+
+static GPtrArray *
+fu_backend_device_added_order(GPtrArray *devices)
+{
+	g_autoptr(GHashTable) seen = g_hash_table_new(g_direct_hash, g_direct_equal);
+	GPtrArray *ordered = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		fu_backend_device_added_order_add(devices, ordered, seen, device);
+	}
+	return ordered;
+}
+
+static gboolean
 fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBackend *self = FU_BACKEND(codec);
@@ -382,6 +426,7 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 	const gchar *fwupd_version;
 	g_autoptr(GPtrArray) devices_added =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) devices_ordered = NULL;
 	g_autoptr(GPtrArray) devices_remove = NULL;
 
 	/* no registered specialized GType */
@@ -498,9 +543,10 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 	}
 
 	/* the file order is not stable as the devices are saved from a hash table, but a plugin may
-	 * need the parent to have been added before the child; this only works if the parent was
-	 * created first, it is not a sort by the device topology */
+	 * need the parent to have been added before the child, so use the creation time and then
+	 * always add the parents first */
 	g_ptr_array_sort(devices_added, fu_backend_device_added_sort_cb);
+	devices_ordered = fu_backend_device_added_order(devices_added);
 
 	/* emit removes then adds */
 	for (guint i = 0; i < devices_remove->len; i++) {
@@ -509,8 +555,8 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 			continue;
 		fu_backend_device_removed(self, device);
 	}
-	for (guint i = 0; i < devices_added->len; i++) {
-		FuDevice *donor = g_ptr_array_index(devices_added, i);
+	for (guint i = 0; i < devices_ordered->len; i++) {
+		FuDevice *donor = g_ptr_array_index(devices_ordered, i);
 		g_autoptr(FuDevice) device = NULL;
 		g_autoptr(GError) error_local = NULL;
 

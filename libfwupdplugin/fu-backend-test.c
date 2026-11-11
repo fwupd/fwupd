@@ -230,6 +230,9 @@ static void
 fu_backend_emulate_order_func(void)
 {
 	g_autofree gchar *reversed = NULL;
+	g_autofree gchar *child_first = NULL;
+	g_autofree gchar *opposite = NULL;
+	g_autofree gchar *grandchild = NULL;
 	g_autofree gchar *same_created = NULL;
 	g_autofree gchar *missing_created = NULL;
 	g_autofree gchar *unrelated = NULL;
@@ -242,6 +245,32 @@ fu_backend_emulate_order_func(void)
 								 NULL},
 					  (const gchar *const[]){"usb:1:2", "usb:1", NULL});
 	g_assert_cmpstr(reversed, ==, "usb:1,usb:1:2");
+
+	/* the child was created before the parent, but the parent still has to be added first */
+	child_first =
+	    fu_backend_emulate_order_load((const gchar *const[]){"2026-11-02T03:29:04.341796Z",
+								 "2026-11-02T03:29:04.341798Z",
+								 NULL},
+					  (const gchar *const[]){"usb:1:2", "usb:1", NULL});
+	g_assert_cmpstr(child_first, ==, "usb:1,usb:1:2");
+
+	/* same second, so the sub-second part decides, and the backend IDs sort the other way */
+	opposite =
+	    fu_backend_emulate_order_load((const gchar *const[]){"2026-11-02T03:29:04.341798Z",
+								 "2026-11-02T03:29:04.341796Z",
+								 NULL},
+					  (const gchar *const[]){"usb:1", "usb:2", NULL});
+	g_assert_cmpstr(opposite, ==, "usb:2,usb:1");
+
+	/* a grandchild created first drags both of its ancestors in front of it */
+	grandchild = fu_backend_emulate_order_load(
+	    (const gchar *const[]){"2026-11-02T03:29:01Z",
+				   "2026-11-02T03:29:03Z",
+				   "2026-11-02T03:29:02Z",
+				   "2026-11-02T03:29:00Z",
+				   NULL},
+	    (const gchar *const[]){"usb:1:2:3", "usb:1", "usb:1:2", "usb:5", NULL});
+	g_assert_cmpstr(grandchild, ==, "usb:5,usb:1,usb:1:2,usb:1:2:3");
 
 	/* identical timestamps, so the parent ID (a prefix of the child ID) has to win */
 	same_created = fu_backend_emulate_order_load(
