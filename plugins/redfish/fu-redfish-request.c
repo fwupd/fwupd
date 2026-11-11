@@ -18,12 +18,16 @@ struct _FuRedfishRequest {
 	FwupdJsonParser *json_parser;
 	FwupdJsonObject *json_obj;
 	GHashTable *cache; /* nullable */
+	gchar *auth_token;
 };
 
 G_DEFINE_TYPE(FuRedfishRequest, fu_redfish_request, G_TYPE_OBJECT)
 
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
+
+typedef struct curl_slist _curl_slist;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 
 FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self, GError **error)
@@ -129,18 +133,21 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 	return TRUE;
 }
 
-gboolean
-fu_redfish_request_perform(FuRedfishRequest *self,
-			   const gchar *path,
-			   FuRedfishRequestPerformFlags flags,
-			   GError **error)
+static gboolean
+fu_redfish_request_perform_internal(FuRedfishRequest *self,
+				    const gchar *path,
+				    GPtrArray *headers,
+				    FuRedfishRequestPerformFlags flags,
+				    GError **error)
 {
 	CURLcode res;
 	g_autofree gchar *str = NULL;
 	g_autoptr(curlptr) uri_str = NULL;
+	g_autoptr(_curl_slist) hs = NULL;
 
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), FALSE);
 	g_return_val_if_fail(path != NULL, FALSE);
+	g_return_val_if_fail(headers != NULL, FALSE);
 	g_return_val_if_fail(self->status_code == 0, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -155,6 +162,17 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 			return TRUE;
 		}
 	}
+
+	/* optional X-Auth-Token */
+	if (self->auth_token != NULL)
+		g_ptr_array_add(headers, g_strdup_printf("X-Auth-Token: %s", self->auth_token));
+
+	/* add headers */
+	for (guint i = 0; i < headers->len; i++) {
+		const gchar *header = g_ptr_array_index(headers, i);
+		hs = curl_slist_append(hs, header);
+	}
+	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 
 	/* do request */
 	if (self->path_prefix != NULL) {
@@ -205,8 +223,15 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 	return TRUE;
 }
 
-typedef struct curl_slist _curl_slist;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
+gboolean
+fu_redfish_request_perform(FuRedfishRequest *self,
+			   const gchar *path,
+			   FuRedfishRequestPerformFlags flags,
+			   GError **error)
+{
+	g_autoptr(GPtrArray) headers = g_ptr_array_new_with_free_func(g_free);
+	return fu_redfish_request_perform_internal(self, path, headers, flags, error);
+}
 
 static void
 fu_redfish_request_reset(FuRedfishRequest *self)
@@ -224,8 +249,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 				FuRedfishRequestPerformFlags flags,
 				GError **error)
 {
-	g_autofree gchar *etag_header = NULL;
-	g_autoptr(_curl_slist) hs = NULL;
+	g_autoptr(GPtrArray) headers = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GString) str = NULL;
 
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), FALSE);
@@ -249,7 +273,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 			return FALSE;
 		etag = fwupd_json_object_get_string(json_obj2, "@odata.etag", NULL);
 		if (etag != NULL)
-			etag_header = g_strdup_printf("If-Match: %s", etag);
+			g_ptr_array_add(headers, g_strdup_printf("If-Match: %s", etag));
 
 		/* allow us to reuse the request */
 		fu_redfish_request_reset(self);
@@ -263,11 +287,9 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	(void)curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, request);
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDS, str->str);
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
-	hs = curl_slist_append(hs, "Content-Type: application/json");
-	if (etag_header != NULL)
-		hs = curl_slist_append(hs, etag_header);
-	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
-	return fu_redfish_request_perform(self, path, flags, error);
+	g_ptr_array_add(headers, g_strdup("Content-Type: application/json"));
+
+	return fu_redfish_request_perform_internal(self, path, headers, flags, error);
 }
 
 static size_t
@@ -293,6 +315,14 @@ fu_redfish_request_set_cache(FuRedfishRequest *self, GHashTable *cache)
 	g_return_if_fail(cache != NULL);
 	g_return_if_fail(self->cache == NULL);
 	self->cache = g_hash_table_ref(cache);
+}
+
+void
+fu_redfish_request_set_auth_token(FuRedfishRequest *self, const gchar *auth_token)
+{
+	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
+	g_return_if_fail(auth_token != NULL);
+	g_set_str(&self->auth_token, auth_token);
 }
 
 void
@@ -328,6 +358,7 @@ fu_redfish_request_finalize(GObject *object)
 	g_object_unref(self->json_parser);
 	g_byte_array_unref(self->buf);
 	g_free(self->path_prefix);
+	g_free(self->auth_token);
 	curl_easy_cleanup(self->curl);
 	curl_url_cleanup(self->uri);
 	G_OBJECT_CLASS(fu_redfish_request_parent_class)->finalize(object);
