@@ -126,29 +126,38 @@ VersionFormat = compal-bios
 
 # SpacemiT K1 firmware resources
 [e0d887fc-3bdf-5dcd-a1c5-2fcf9045aa10]
-Name = SpacemiT K1 EDK2 Firmware
+Name = K1 EDK2
+Vendor = SpacemiT
 
 [d2ce42f9-7acd-59ec-b592-851cdf66a474]
-Name = SpacemiT K1 FSBL Firmware
+Name = K1 FSBL
+Vendor = SpacemiT
 
 [ca1ae9e7-d441-54c0-9b34-dd99274dc961]
-Name = SpacemiT K1 OpenSBI Firmware
+Name = K1 OpenSBI
+Vendor = SpacemiT
 
 # SpacemiT K3 firmware resources
 [6bef1c3d-132b-45f0-84f8-5db2330a46f5]
-Name = SpacemiT K3 EDK2 Firmware
+Name = K3 EDK2
+Vendor = SpacemiT
 
 [6331a8df-c6c8-5ddd-9182-559f63cf68e7]
-Name = SpacemiT K3 FSBL Firmware
+Name = K3 FSBL
+Vendor = SpacemiT
 
 [84985aa7-d3a1-5148-b404-5dc308b1b52e]
-Name = SpacemiT K3 ESOS Firmware
+Name = K3 ESOS
+Vendor = SpacemiT
 
 [59ede4d5-f316-57bf-a64b-9545e9803719]
-Name = SpacemiT K3 OpenSBI Firmware
+Name = K3 OpenSBI
+Vendor = SpacemiT
 
 [56561821-0429-5145-acfd-2befeb1417f4]
-Name = SpacemiT K3 BootInfo Firmware
+Name = K3 BootInfo
+Vendor = SpacemiT
 
 [d1b9c82f-97c4-4b1c-8085-c193fea3c813]
-Name = SpacemiT K3 EC Firmware
+Name = K3 EC
+Vendor = SpacemiT
