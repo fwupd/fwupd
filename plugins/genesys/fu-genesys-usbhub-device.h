@@ -30,6 +30,14 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     GENESYS_USBHUB_DEVICE,
 		     FuUsbDevice)
 
+typedef gboolean (*FuGenesysUsbhubCtrlHook)(FuUsbDirection direction,
+					    guint8 request,
+					    guint16 value,
+					    guint8 *data,
+					    gsize length,
+					    gpointer user_data,
+					    GError **error);
+
 gboolean
 fu_genesys_usbhub_device_set_proxy(FuGenesysUsbhubDevice *self,
 				   FuDevice *proxy,
@@ -71,6 +79,14 @@ fu_genesys_usbhub_device_finish_flash_setup(FuGenesysUsbhubDevice *self);
 
 gboolean
 fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **error);
+
+gboolean
+fu_genesys_usbhub_device_setup_flash_late_opened(FuGenesysUsbhubDevice *self, GError **error);
+
+void
+fu_genesys_usbhub_device_set_ctrl_hook(FuGenesysUsbhubDevice *self,
+				       FuGenesysUsbhubCtrlHook hook,
+				       gpointer user_data);
 
 FuGenesysUsbhubBankState
 fu_genesys_usbhub_device_bank_state_from_error(const GError *error);

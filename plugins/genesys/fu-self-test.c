@@ -11,7 +11,7 @@
 /*
  * The test vectors are literal hardware identifiers (PIDs, flash opcodes and offsets), so the
  * count of inline magic values is expected to be high.
- * nocheck:magic-inlines=282
+ * nocheck:magic-inlines=290
  */
 
 #include "fu-cfi-device.h"
@@ -2617,6 +2617,159 @@ fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func(void)
 	}
 }
 
+/* what the fake hub saw and what it is told to do, per vendor command */
+typedef struct {
+	guint n_enter;
+	guint n_reset;
+	gboolean fail_enter;
+} FuGenesysTestIspHub;
+
+/* ISP_ENTER (value 1) and reset (value 3) are the only writes of the setup; the flash status
+ * register reads as ready and every other read, which is the flash probe, fails */
+static gboolean
+fu_genesys_test_isp_hub_ctrl_cb(FuUsbDirection direction,
+				guint8 request,
+				guint16 value,
+				guint8 *data,
+				gsize length,
+				gpointer user_data,
+				GError **error)
+{
+	FuGenesysTestIspHub *hub = user_data;
+
+	if (direction == FU_USB_DIRECTION_HOST_TO_DEVICE) {
+		if (value == 0x0001) {
+			hub->n_enter++;
+			if (hub->fail_enter) {
+				g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "enter");
+				return FALSE;
+			}
+			return TRUE;
+		}
+		g_assert_cmpuint(value, ==, 0x0003);
+		hub->n_reset++;
+		return TRUE;
+	}
+	if (value == (0x05 << 8 | 0x02)) {
+		memset(data, 0, length);
+		return TRUE;
+	}
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "flash probe");
+	return FALSE;
+}
+
+/* a late setup that fails after ISP_ENTER leaves the hub possibly in ISP mode: it is not reset, as
+ * that drops the whole hub chain, ISP_ENTER is not sent again by this device, the original error is
+ * kept and the hub never becomes updatable */
+static void
+fu_genesys_usbhub_device_p34_flash_setup_isp_leave_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+
+	/* the flash probe fails after ISP_ENTER, and so do the retries */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "flash probe"));
+		g_assert_nonnull(g_strstr_len(error->message, -1, "may still be in ISP mode"));
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+
+		/* no second ISP_ENTER and still no reset */
+		for (guint i = 0; i < 2; i++) {
+			g_clear_error(&error);
+			g_assert_false(
+			    fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+			g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+			g_assert_nonnull(g_strstr_len(error->message, -1, "not entering ISP mode"));
+			g_assert_nonnull(g_strstr_len(error->message, -1, "replug"));
+		}
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_SUPPORTED,
+							  "not set up yet");
+	}
+
+	/* ISP_ENTER itself fails: it may have reached the hub, so it is not sent again either */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		FuGenesysTestIspHub fake = {.fail_enter = TRUE};
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "may still be in ISP mode"));
+		g_clear_error(&error);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+	}
+
+	/* a setup() running again on the same device starts from a finished setup, so it enters
+	 * ISP mode as it did before */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_clear_error(&error);
+		fu_genesys_usbhub_device_finish_flash_setup(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+		g_assert_cmpuint(fake.n_enter, ==, 2);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+	}
+
+	/* nothing pending: no command is sent at all */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		g_assert_true(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_no_error(error);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+	}
+}
+
 /* only a failed signature check says the bank is bad; any other failure says nothing */
 static void
 fu_genesys_usbhub_device_p34_bank_state_from_error_func(void)
@@ -2716,6 +2869,8 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_flash_setup_not_pending_func);
 	g_test_add_func("/fwupd/genesys/p34/flash-setup-lifecycle",
 			fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func);
+	g_test_add_func("/fwupd/genesys/p34/flash-setup-isp-leave",
+			fu_genesys_usbhub_device_p34_flash_setup_isp_leave_func);
 	g_test_add_func("/fwupd/genesys/p34/bank-state-from-image",
 			fu_genesys_usbhub_device_p34_bank_state_from_image_func);
 	g_test_add_func("/fwupd/genesys/p34/select-update-bank",

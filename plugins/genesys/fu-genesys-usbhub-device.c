@@ -100,6 +100,9 @@ struct _FuGenesysUsbhubDevice {
 
 	gboolean is_gl352350;	      /* model with unique codesign mechanism */
 	gboolean flash_setup_pending; /* hid-transport hub waiting for its HID proxy */
+	gboolean isp_enter_sent;      /* ISP_ENTER may have reached the hub since the setup began */
+	FuGenesysUsbhubCtrlHook ctrl_hook; /* tests only */
+	gpointer ctrl_hook_data;
 	guint16 hid_proxy_pid;	      /* the HID model that belongs to this hub, from the quirk */
 	guint16 parent_hub_pid;	      /* 0 = no check, else the upstream hub PID, from the quirk */
 	gboolean hid_proxy_ambiguous; /* single-hid-proxy: a second live HID showed up */
@@ -436,6 +439,15 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 				       GError **error)
 {
 	FuDevice *proxy;
+
+	if (self->ctrl_hook != NULL)
+		return self->ctrl_hook(direction,
+				       request,
+				       value,
+				       data,
+				       length,
+				       self->ctrl_hook_data,
+				       error);
 
 	proxy = fu_device_get_proxy(FU_DEVICE(self), NULL);
 	if (proxy != NULL) {
@@ -870,6 +882,9 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 				      FuGenesysIspMode mode,
 				      GError **error)
 {
+	/* a failed ISP_ENTER may still have reached the hub */
+	if (mode == ISP_ENTER)
+		self->isp_enter_sent = TRUE;
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
 						    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -2225,8 +2240,41 @@ fu_genesys_usbhub_device_finish_flash_setup(FuGenesysUsbhubDevice *self)
 {
 	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
 
+	/* the flash setup worked; this does not confirm the ISP state of the hardware */
 	self->flash_setup_pending = FALSE;
+	self->isp_enter_sent = FALSE;
 	fu_device_uninhibit(FU_DEVICE(self), FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+}
+
+/* the part of the late setup that needs the device to be open; a failed setup may leave the hub in
+ * ISP mode and the setup stays pending, so the hub is not updatable. Nothing resets it here, as
+ * that drops the whole hub chain, and ISP_ENTER is not sent again by this device: a replug creates
+ * a new device that sets up again. */
+gboolean
+fu_genesys_usbhub_device_setup_flash_late_opened(FuGenesysUsbhubDevice *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!self->flash_setup_pending)
+		return TRUE;
+
+	if (self->isp_enter_sent) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not entering ISP mode again, the hub may still be in ISP "
+				    "mode after a failed flash setup: replug the hub");
+		return FALSE;
+	}
+	if (!fu_genesys_usbhub_device_setup_flash(self, error)) {
+		if (self->isp_enter_sent)
+			g_prefix_error_literal(error, "hub may still be in ISP mode, replug it: ");
+		return FALSE;
+	}
+
+	fu_genesys_usbhub_device_finish_flash_setup(self);
+	return TRUE;
 }
 
 /* finish the flash part of setup through the HID proxy; called once the proxy is bound */
@@ -2245,11 +2293,19 @@ fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **
 	locker = fu_device_locker_new(FU_DEVICE(self), error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_genesys_usbhub_device_setup_flash(self, error))
-		return FALSE;
+	return fu_genesys_usbhub_device_setup_flash_late_opened(self, error);
+}
 
-	fu_genesys_usbhub_device_finish_flash_setup(self);
-	return TRUE;
+/* tests only: replaces the USB control transfer and the HID proxy */
+void
+fu_genesys_usbhub_device_set_ctrl_hook(FuGenesysUsbhubDevice *self,
+				       FuGenesysUsbhubCtrlHook hook,
+				       gpointer user_data)
+{
+	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
+
+	self->ctrl_hook = hook;
+	self->ctrl_hook_data = user_data;
 }
 
 static void
