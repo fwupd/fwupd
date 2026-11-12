@@ -123,3 +123,32 @@ Flags = no-ux-capsule
 # AMD Halo Box
 [07b49333-279c-47be-be97-852a4dfe8885]
 VersionFormat = compal-bios
+
+# SpacemiT K1 firmware resources
+[e0d887fc-3bdf-5dcd-a1c5-2fcf9045aa10]
+Name = SpacemiT K1 EDK2 Firmware
+
+[d2ce42f9-7acd-59ec-b592-851cdf66a474]
+Name = SpacemiT K1 FSBL Firmware
+
+[ca1ae9e7-d441-54c0-9b34-dd99274dc961]
+Name = SpacemiT K1 OpenSBI Firmware
+
+# SpacemiT K3 firmware resources
+[6bef1c3d-132b-45f0-84f8-5db2330a46f5]
+Name = SpacemiT K3 EDK2 Firmware
+
+[6331a8df-c6c8-5ddd-9182-559f63cf68e7]
+Name = SpacemiT K3 FSBL Firmware
+
+[84985aa7-d3a1-5148-b404-5dc308b1b52e]
+Name = SpacemiT K3 ESOS Firmware
+
+[59ede4d5-f316-57bf-a64b-9545e9803719]
+Name = SpacemiT K3 OpenSBI Firmware
+
+[56561821-0429-5145-acfd-2befeb1417f4]
+Name = SpacemiT K3 BootInfo Firmware
+
+[d1b9c82f-97c4-4b1c-8085-c193fea3c813]
+Name = SpacemiT K3 EC Firmware
