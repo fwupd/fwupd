@@ -257,8 +257,10 @@ fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
 		if (!fu_redfish_request_perform(request,
 						member_uri,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-						error))
+						error)) {
+			g_prefix_error(error, "failed to coldplug %s: ", member_uri);
 			return FALSE;
+		}
 		json_obj_tmp = fu_redfish_request_get_json_object(request, error);
 		if (json_obj_tmp == NULL)
 			return FALSE;
@@ -287,8 +289,10 @@ fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self,
 	if (!fu_redfish_request_perform(request,
 					collection_uri,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to coldplug %s: ", collection_uri);
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -379,8 +383,10 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 					     "POST",
 					     json_obj,
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					     error))
+					     error)) {
+		g_prefix_error_literal(error, "failed to create session: ");
 		return FALSE;
+	}
 
 	/* check this was set */
 	session_key = fu_redfish_backend_get_session_key(self, error);
@@ -561,8 +567,10 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	if (!fu_redfish_request_perform(request,
 					self->update_uri_path,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to coldplug %s: ", self->update_uri_path);
 		return FALSE;
+	}
 
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
@@ -664,8 +672,10 @@ fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
 	if (!fu_redfish_request_perform(request,
 					member_uri,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to setup dell member %s: ", member_uri);
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -712,8 +722,10 @@ fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/Systems",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error_literal(error, "failed to setup dell: ");
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -766,8 +778,10 @@ fu_redfish_backend_setup(FuBackend *backend,
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
