@@ -7332,6 +7332,8 @@ fu_device_category_to_name(const gchar *cat)
 		return "Headset";
 	if (g_strcmp0(cat, "X-Touchscreen") == 0)
 		return "Touchscreen";
+	if (g_strcmp0(cat, "X-ExpansionCard") == 0)
+		return "Expansion Card";
 	return NULL;
 }
 
