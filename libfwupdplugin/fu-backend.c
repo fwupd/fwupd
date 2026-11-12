@@ -374,10 +374,8 @@ fu_backend_device_added_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_backend_device_is_ancestor(FuDevice *parent, FuDevice *child)
+fu_backend_id_is_ancestor(const gchar *id_parent, const gchar *id_child)
 {
-	const gchar *id_parent = fu_device_get_backend_id(parent);
-	const gchar *id_child = fu_device_get_backend_id(child);
 	gsize len;
 
 	if (id_parent == NULL || id_child == NULL)
@@ -389,17 +387,18 @@ fu_backend_device_is_ancestor(FuDevice *parent, FuDevice *child)
 }
 
 static void
-fu_backend_device_added_order_add(GPtrArray *sorted,
-				  GPtrArray *ordered,
-				  GHashTable *seen,
-				  FuDevice *device)
+fu_backend_add_device_ordered(GPtrArray *sorted,
+			      GPtrArray *ordered,
+			      GHashTable *seen,
+			      FuDevice *device)
 {
 	if (!g_hash_table_add(seen, device))
 		return;
 	for (guint i = 0; i < sorted->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(sorted, i);
-		if (fu_backend_device_is_ancestor(device_tmp, device))
-			fu_backend_device_added_order_add(sorted, ordered, seen, device_tmp);
+		if (fu_backend_id_is_ancestor(fu_device_get_backend_id(device_tmp),
+					      fu_device_get_backend_id(device)))
+			fu_backend_add_device_ordered(sorted, ordered, seen, device_tmp);
 	}
 	g_ptr_array_add(ordered, g_object_ref(device));
 }
@@ -412,7 +411,7 @@ fu_backend_device_added_order(GPtrArray *devices)
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		fu_backend_device_added_order_add(devices, ordered, seen, device);
+		fu_backend_add_device_ordered(devices, ordered, seen, device);
 	}
 	return ordered;
 }
