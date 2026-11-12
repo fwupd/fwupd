@@ -662,9 +662,9 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 				g_clear_error(error);
 				invalid_acks++;
 			} else if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
-				       chunk_number ||
+				       (guint16)chunk_number ||
 				   fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
-				       (chunk_number % 0xFFFF) - 1) {
+				       (guint16)(chunk_number - 1)) {
 				invalid_acks = 0;
 			} else {
 				g_debug("mismatched chunk %d", chunk_number);
