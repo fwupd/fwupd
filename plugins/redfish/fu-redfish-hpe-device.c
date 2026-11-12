@@ -33,7 +33,9 @@ fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/UpdateService",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -110,7 +112,9 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/UpdateService",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -244,7 +248,9 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* create the multipart request */
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);
 
