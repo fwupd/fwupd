@@ -41,6 +41,17 @@ device_tests += files(
 )
 
 if get_option('tests')
+  # the installed test cannot read the source tree, so it ships its own fixtures
+  install_data(
+    ['genesys.quirk', 'genesys-usbhub-fwbank.quirk'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'quirks.d'),
+    install_tag: 'tests',
+  )
+  install_data(
+    ['../../data/cfi.quirk'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'cfi'),
+    install_tag: 'tests',
+  )
   e = executable(
     'genesys-self-test',
     sources: ['fu-self-test.c'],

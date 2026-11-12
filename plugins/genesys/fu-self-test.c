@@ -21,9 +21,33 @@
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
 
+/*
+ * The quirk fixtures are found relative to G_TEST_SRCDIR so the installed test does not need the
+ * source tree: an installed test has them in "tests/quirks.d" and "tests/cfi", while a build tree
+ * run has genesys*.quirk next to the sources and data/cfi.quirk two levels above.
+ */
 #define FU_GENESYS_TEST_BANK_VALID   FU_GENESYS_USBHUB_BANK_STATE_VALID
 #define FU_GENESYS_TEST_BANK_INVALID FU_GENESYS_USBHUB_BANK_STATE_INVALID
 #define FU_GENESYS_TEST_BANK_UNKNOWN FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN
+
+static gchar *
+fu_genesys_test_quirks_dir(void)
+{
+	g_autofree gchar *installed = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	if (g_file_test(installed, G_FILE_TEST_IS_DIR))
+		return g_steal_pointer(&installed);
+	return g_strdup(g_test_get_dir(G_TEST_DIST));
+}
+
+static gchar *
+fu_genesys_test_cfi_quirk_path(void)
+{
+	g_autofree gchar *installed =
+	    g_test_build_filename(G_TEST_DIST, "tests", "cfi", "cfi.quirk", NULL);
+	if (g_file_test(installed, G_FILE_TEST_IS_REGULAR))
+		return g_steal_pointer(&installed);
+	return g_test_build_filename(G_TEST_DIST, "..", "..", "data", "cfi.quirk", NULL);
+}
 
 static void
 fu_genesys_usbhub_device_project_compatibility_matrix_func(void)
@@ -162,7 +186,7 @@ fu_genesys_usbhub_device_p34_hid_quirk_func(void)
 	    "USB\\VID_17EF&PID_4C41", /* L2 */
 	    "USB\\VID_17EF&PID_4C42", /* L3 */
 	};
-	g_autofree gchar *quirks_dir = g_strdup(SRCDIR);
+	g_autofree gchar *quirks_dir = fu_genesys_test_quirks_dir();
 	g_autoptr(FuContext) ctx = g_object_new(FU_TYPE_CONTEXT, NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -209,7 +233,7 @@ static const FuGenesysTestPair fu_genesys_test_pairs[] = {
 static FuContext *
 fu_genesys_test_context_new(void)
 {
-	g_autofree gchar *quirks_dir = g_strdup(SRCDIR);
+	g_autofree gchar *quirks_dir = fu_genesys_test_quirks_dir();
 	g_autoptr(FuContext) ctx = g_object_new(FU_TYPE_CONTEXT, NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1640,8 +1664,7 @@ fu_genesys_test_cfi_lookup(FuContext *ctx, FuDevice *proxy, const gchar *flash_i
 static void
 fu_genesys_usbhub_device_p34_cfi_c84012_func(void)
 {
-	g_autofree gchar *repo_quirk =
-	    g_build_filename(SRCDIR, "..", "..", "data", "cfi.quirk", NULL);
+	g_autofree gchar *repo_quirk = fu_genesys_test_cfi_quirk_path();
 	g_autofree gchar *tmpdir = g_dir_make_tmp("fwupd-genesys-cfi-XXXXXX", NULL);
 	g_autofree gchar *copy = NULL;
 	g_autofree gchar *contents = NULL;
