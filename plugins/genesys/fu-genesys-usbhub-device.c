@@ -295,6 +295,20 @@ fu_genesys_usbhub_device_ensure_parent_hub(FuGenesysUsbhubDevice *self, GError *
 							 error);
 }
 
+/* the flash geometry is only known once the late setup succeeded */
+static gboolean
+fu_genesys_usbhub_device_ensure_flash_setup(FuGenesysUsbhubDevice *self, GError **error)
+{
+	if (self->flash_setup_pending) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "the flash of this hub is not set up yet");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* the gate in front of every entry that can change the hardware state */
 static gboolean
 fu_genesys_usbhub_device_ensure_hid_proxy(FuGenesysUsbhubDevice *self, GError **error)
@@ -303,6 +317,8 @@ fu_genesys_usbhub_device_ensure_hid_proxy(FuGenesysUsbhubDevice *self, GError **
 	g_autoptr(FuDevice) hid_parent = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	if (!fu_genesys_usbhub_device_ensure_flash_setup(self, error))
+		return FALSE;
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_REQUIRE_HID_PROXY))
 		return fu_genesys_usbhub_device_ensure_parent_hub(self, error);
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_SINGLE_HID_PROXY) &&
@@ -1686,6 +1702,11 @@ fu_genesys_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError *
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	FuDevice *proxy;
 
+	/* a hub that was never detached has nothing to attach back, and the reset is a
+	 * vendor request; only the flash gate is applied so the recovery after a failed
+	 * update is never blocked by a topology check */
+	if (!fu_genesys_usbhub_device_ensure_flash_setup(self, error))
+		return FALSE;
 	if (!fu_genesys_usbhub_device_reset(self, error))
 		return FALSE;
 
@@ -2026,8 +2047,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 					    "hid-transport with codesign is not supported");
 			return FALSE;
 		}
-		self->flash_setup_pending = TRUE;
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
 	} else if (!fu_genesys_usbhub_device_setup_flash(self, error)) {
 		return FALSE;
 	}
@@ -2097,6 +2117,28 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/* not updatable until the flash part of setup has succeeded, independent of the HID proxy */
+void
+fu_genesys_usbhub_device_begin_flash_setup(FuGenesysUsbhubDevice *self)
+{
+	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
+
+	self->flash_setup_pending = TRUE;
+	fu_device_inhibit(FU_DEVICE(self),
+			  FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP,
+			  "The flash of this hub is not set up yet");
+}
+
+/* the device becomes updatable again only when no other inhibit is left */
+void
+fu_genesys_usbhub_device_finish_flash_setup(FuGenesysUsbhubDevice *self)
+{
+	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
+
+	self->flash_setup_pending = FALSE;
+	fu_device_uninhibit(FU_DEVICE(self), FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+}
+
 /* finish the flash part of setup through the HID proxy; called once the proxy is bound */
 gboolean
 fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **error)
@@ -2116,8 +2158,7 @@ fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **
 	if (!fu_genesys_usbhub_device_setup_flash(self, error))
 		return FALSE;
 
-	self->flash_setup_pending = FALSE;
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_genesys_usbhub_device_finish_flash_setup(self);
 	return TRUE;
 }
 

@@ -15,6 +15,7 @@
 #define FU_GENESYS_USBHUB_FLAG_SINGLE_HID_PROXY	    "single-hid-proxy"
 #define FU_GENESYS_USBHUB_INHIBIT_HID_PROXY	    "hid-proxy"
 #define FU_GENESYS_USBHUB_INHIBIT_HID_AMBIGUOUS	    "hid-proxy-ambiguous"
+#define FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP	    "flash-setup"
 G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     fu_genesys_usbhub_device,
 		     FU,
@@ -53,6 +54,12 @@ fu_genesys_usbhub_device_check_hid_binding(const gchar *hub_physical_id,
 					   guint16 hid_vid,
 					   guint16 hid_pid,
 					   GError **error);
+
+void
+fu_genesys_usbhub_device_begin_flash_setup(FuGenesysUsbhubDevice *self);
+
+void
+fu_genesys_usbhub_device_finish_flash_setup(FuGenesysUsbhubDevice *self);
 
 gboolean
 fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **error);

@@ -11,7 +11,7 @@
 /*
  * The test vectors are literal hardware identifiers (PIDs, flash opcodes and offsets), so the
  * count of inline magic values is expected to be high.
- * nocheck:magic-inlines=229
+ * nocheck:magic-inlines=245
  */
 
 #include "fu-cfi-device.h"
@@ -244,16 +244,23 @@ fu_genesys_test_hid_new(guint16 vid, guint16 pid)
 }
 
 static void
-fu_genesys_test_assert_gate_error(GError *error, FwupdError code)
+fu_genesys_test_assert_gate_error_msg(GError *error, FwupdError code, const gchar *msg)
 {
 	g_assert_error(error, FWUPD_ERROR, code);
-	g_assert_nonnull(g_strstr_len(error->message, -1, "HID proxy"));
+	g_assert_nonnull(g_strstr_len(error->message, -1, msg));
+}
+
+static void
+fu_genesys_test_assert_gate_error(GError *error, FwupdError code)
+{
+	fu_genesys_test_assert_gate_error_msg(error, code, "HID proxy");
 }
 
 /* every entry that can change hardware state must refuse before sending any command */
 static void
-fu_genesys_test_assert_entries_refuse(FuDevice *device, /* nocheck:name */
-				      FwupdError code)
+fu_genesys_test_assert_entries_refuse_msg(FuDevice *device, /* nocheck:name */
+					  FwupdError code,
+					  const gchar *msg)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(device);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -262,12 +269,12 @@ fu_genesys_test_assert_entries_refuse(FuDevice *device, /* nocheck:name */
 	{
 		g_autoptr(GError) error = NULL;
 		g_assert_false(klass->detach(device, progress, &error));
-		fu_genesys_test_assert_gate_error(error, code);
+		fu_genesys_test_assert_gate_error_msg(error, code, msg);
 	}
 	{
 		g_autoptr(GError) error = NULL;
 		g_assert_false(klass->prepare(device, progress, FWUPD_INSTALL_FLAG_NONE, &error));
-		fu_genesys_test_assert_gate_error(error, code);
+		fu_genesys_test_assert_gate_error_msg(error, code, msg);
 	}
 	{
 		g_autoptr(GError) error = NULL;
@@ -276,14 +283,28 @@ fu_genesys_test_assert_entries_refuse(FuDevice *device, /* nocheck:name */
 						     progress,
 						     FWUPD_INSTALL_FLAG_NONE,
 						     &error));
-		fu_genesys_test_assert_gate_error(error, code);
+		fu_genesys_test_assert_gate_error_msg(error, code, msg);
 	}
 	{
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GBytes) blob = klass->dump_firmware(device, progress, &error);
 		g_assert_null(blob);
-		fu_genesys_test_assert_gate_error(error, code);
+		fu_genesys_test_assert_gate_error_msg(error, code, msg);
 	}
+
+	/* attach() is only gated on the flash setup, the HID proxy is not checked there */
+	if (g_strcmp0(msg, "not set up yet") == 0) {
+		g_autoptr(GError) error = NULL;
+		g_assert_false(klass->attach(device, progress, &error));
+		fu_genesys_test_assert_gate_error_msg(error, code, msg);
+	}
+}
+
+static void
+fu_genesys_test_assert_entries_refuse(FuDevice *device, /* nocheck:name */
+				      FwupdError code)
+{
+	fu_genesys_test_assert_entries_refuse_msg(device, code, "HID proxy");
 }
 
 /* acceptance 1: no proxy -> inhibited and every state-changing entry refuses */
@@ -1873,6 +1894,251 @@ fu_genesys_usbhub_device_p34_update_bank_func(void)
 	fu_genesys_test_update_bank_expect(FALSE, FALSE, FALSE, 0x0000, 0x0000, 0x8710, TRUE);
 }
 
+static void
+fu_genesys_test_assert_not_updatable(FuDevice *hub, /* nocheck:name */
+				     const gchar *inhibit_id)
+{
+	g_assert_true(fu_device_has_inhibit(hub, inhibit_id));
+	g_assert_false(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+}
+
+/* the flash inhibit and the HID proxy inhibit are independent: releasing one never makes the
+ * hub updatable while the other is held, whatever the order */
+static void
+fu_genesys_usbhub_device_p34_flash_setup_inhibit_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+
+	for (guint order = 0; order < 2; order++) {
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) hid = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		g_autoptr(GError) error = NULL;
+
+		/* what setup() does for a HID transport hub whose proxy is not bound yet */
+		g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_HID_PROXY);
+		g_assert_true(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_SUPPORTED,
+							  "not set up yet");
+
+		if (order == 0) {
+			/* the proxy is bound first: the flash inhibit alone keeps the hub locked */
+			g_assert_true(
+			    fu_genesys_usbhub_device_set_proxy(self,
+							       FU_DEVICE(hid),
+							       FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+							       &error));
+			g_assert_no_error(error);
+			g_assert_false(
+			    fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_HID_PROXY));
+			fu_genesys_test_assert_not_updatable(hub,
+							     FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+			fu_genesys_test_assert_entries_refuse_msg(hub,
+								  FWUPD_ERROR_NOT_SUPPORTED,
+								  "not set up yet");
+
+			/* late setup cannot succeed on a closed hub: still locked, can be retried
+			 */
+			g_assert_false(fu_genesys_usbhub_device_setup_flash_late(self, &error));
+			g_assert_nonnull(error);
+			g_clear_error(&error);
+			fu_genesys_test_assert_not_updatable(hub,
+							     FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+			fu_genesys_test_assert_entries_refuse_msg(hub,
+								  FWUPD_ERROR_NOT_SUPPORTED,
+								  "not set up yet");
+
+			fu_genesys_usbhub_device_finish_flash_setup(self);
+			g_assert_false(
+			    fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+			g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+			g_assert_false(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+		} else {
+			/* the flash is set up first: the missing proxy keeps the hub locked */
+			fu_genesys_usbhub_device_finish_flash_setup(self);
+			g_assert_false(
+			    fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+			fu_genesys_test_assert_not_updatable(hub,
+							     FU_GENESYS_USBHUB_INHIBIT_HID_PROXY);
+			fu_genesys_test_assert_entries_refuse(hub, FWUPD_ERROR_NOT_FOUND);
+
+			g_assert_true(
+			    fu_genesys_usbhub_device_set_proxy(self,
+							       FU_DEVICE(hid),
+							       FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+							       &error));
+			g_assert_no_error(error);
+			g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+			g_assert_false(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+		}
+	}
+}
+
+/* a hub without a pending flash setup is unaffected, and the late setup is a no-op for it */
+static void
+fu_genesys_usbhub_device_p34_flash_setup_not_pending_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+	g_autoptr(FuDevice) hub = fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_true(
+	    fu_genesys_usbhub_device_setup_flash_late(FU_GENESYS_USBHUB_DEVICE(hub), &error));
+	g_assert_no_error(error);
+	g_assert_false(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+	g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+/* the unit that decides INVALID from a complete read of a bank must agree with the checksum
+ * of the firmware itself, and a short buffer must never be taken for a bad one */
+/* prepare() picks the same bank as before for every chip: the older one, bank 1 on a tie, and
+ * GL3523 backs the newer bank 1 up instead of using bank 2 */
+/* the flash inhibit lives through the whole life of the HID proxy, not only through the first
+ * binding */
+static void
+fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+
+	/* the flash is set up, then the HID goes away and a new one is bound */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) hid1 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		g_autoptr(FuDevice) hid2 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_true(fu_genesys_usbhub_device_set_proxy(self,
+								 hid1,
+								 FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								 &error));
+		g_assert_no_error(error);
+		fu_genesys_usbhub_device_finish_flash_setup(self);
+		g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+		/* the HID is unplugged: every entry refuses, and the flash does not need to be set
+		 * up again */
+		fu_device_add_private_flag(hid1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_FOUND,
+							  "no longer connected");
+		g_assert_false(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+		g_assert_true(fu_genesys_usbhub_device_setup_flash_late(self, &error));
+		g_assert_no_error(error);
+
+		/* a new verified HID is bound: still updatable, no flash inhibit comes back */
+		g_assert_true(fu_genesys_usbhub_device_set_proxy(self,
+								 hid2,
+								 FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								 &error));
+		g_assert_no_error(error);
+		g_assert_true(fu_device_get_proxy(hub, NULL) == hid2);
+		g_assert_false(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+		g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+	}
+
+	/* the HID goes away and comes back while the flash is still not set up */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) hid1 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		g_autoptr(FuDevice) hid2 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_true(fu_genesys_usbhub_device_set_proxy(self,
+								 hid1,
+								 FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								 &error));
+		g_assert_no_error(error);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late(self, &error));
+		g_clear_error(&error);
+		fu_device_add_private_flag(hid1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+		g_assert_true(fu_genesys_usbhub_device_set_proxy(self,
+								 hid2,
+								 FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								 &error));
+		g_assert_no_error(error);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_SUPPORTED,
+							  "not set up yet");
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late(self, &error));
+		g_clear_error(&error);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+	}
+
+	/* a second live HID while the flash is not set up: the ambiguity and the flash inhibit
+	 * both hold, and finishing the flash setup does not release the ambiguity */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) hid1 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		g_autoptr(FuDevice) hid2 = fu_genesys_test_hid_new(0x17EF, 0xF00F);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_true(fu_genesys_usbhub_device_set_proxy(self,
+								 hid1,
+								 FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								 &error));
+		g_assert_no_error(error);
+		g_assert_false(fu_genesys_usbhub_device_set_proxy(self,
+								  hid2,
+								  FU_GENESYS_TEST_HUB_PHYSICAL_ID,
+								  &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_clear_error(&error);
+		g_assert_true(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+		g_assert_true(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_HID_AMBIGUOUS));
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_SUPPORTED,
+							  "not set up yet");
+		fu_genesys_usbhub_device_finish_flash_setup(self);
+		g_assert_false(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_INVALID_DATA,
+							  "ambiguous");
+	}
+
+	/* setup() running again: the inhibit is idempotent and one finish releases it, a finish
+	 * without a begin changes nothing, and a new begin locks the hub again */
+	{
+		g_autoptr(FuDevice) hub =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(hub);
+
+		fu_genesys_usbhub_device_finish_flash_setup(self);
+		g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		fu_genesys_usbhub_device_finish_flash_setup(self);
+		g_assert_false(fu_device_has_inhibit(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP));
+		g_assert_true(fu_device_has_flag(hub, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		fu_genesys_test_assert_not_updatable(hub, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+		fu_genesys_test_assert_entries_refuse_msg(hub,
+							  FWUPD_ERROR_NOT_SUPPORTED,
+							  "not set up yet");
+	}
+}
+
+/* only a failed signature check says the bank is bad; any other failure says nothing */
 int
 main(int argc, char **argv)
 {
@@ -1935,6 +2201,12 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_bank_runs_target_func);
 	g_test_add_func("/fwupd/genesys/p34/update-bank",
 			fu_genesys_usbhub_device_p34_update_bank_func);
+	g_test_add_func("/fwupd/genesys/p34/flash-setup-inhibit",
+			fu_genesys_usbhub_device_p34_flash_setup_inhibit_func);
+	g_test_add_func("/fwupd/genesys/p34/flash-setup-not-pending",
+			fu_genesys_usbhub_device_p34_flash_setup_not_pending_func);
+	g_test_add_func("/fwupd/genesys/p34/flash-setup-lifecycle",
+			fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func);
 	g_test_add_func("/fwupd/genesys/p34/update-bank-flags",
 			fu_genesys_usbhub_device_p34_update_bank_flags_func);
 	return g_test_run();
