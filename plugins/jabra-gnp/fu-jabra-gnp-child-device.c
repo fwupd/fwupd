@@ -72,6 +72,7 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 gboolean
 fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
 	FuDevice *proxy;
@@ -92,29 +93,6 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 		return FALSE;
 	}
 
-	/* device status or battery report (when not allowed), ignore and rx again */
-	st_pkt =
-	    fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf, sizeof(rx_data->rxbuf), 0x0, error);
-	if (st_pkt == NULL)
-		return FALSE;
-	if ((fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
-	     FU_JABRA_GNP_PACKET_CMD_GET_DEVICE_STATUS) ||
-	    ((fu_struct_jabra_gnp_packet_get_cmd(st_pkt) ==
-	      FU_JABRA_GNP_PACKET_CMD_GET_BATTERY_LEVEL) &&
-	     !rx_data->allow_battery_reports)) {
-		if (!fu_usb_device_interrupt_transfer(
-			FU_USB_DEVICE(proxy),
-			fu_jabra_gnp_device_get_epin(FU_JABRA_GNP_DEVICE(proxy)),
-			rx_data->rxbuf,
-			FU_JABRA_GNP_BUF_SIZE,
-			NULL,
-			rx_data->timeout,
-			error)) {
-			g_prefix_error_literal(error, "failed to read from device: ");
-			return FALSE;
-		}
-	}
-
 	if (fu_memcmp_safe(rx_data->rxbuf,
 			   sizeof(rx_data->rxbuf),
 			   0,
@@ -129,32 +107,46 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 				    "error reading from device: empty buffer");
 		return FALSE;
 	}
-	return TRUE;
-}
 
-gboolean
-fu_jabra_gnp_child_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
-	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
-
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_child_device_rx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  rx_data,
-				  error))
-		return FALSE;
-	if (self->sequence_number != rx_data->rxbuf[3]) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "sequence_number error -- got 0x%x, expected 0x%x",
-			    rx_data->rxbuf[3],
-			    self->sequence_number);
+	st_pkt =
+	    fu_struct_jabra_gnp_packet_parse(rx_data->rxbuf, sizeof(rx_data->rxbuf), 0x0, error);
+	if (st_pkt == NULL) {
+		g_prefix_error_literal(error, "failed to parse packet: ");
 		return FALSE;
 	}
-	self->sequence_number += 1;
+
+	if (rx_data->command != 0 &&
+	    fu_struct_jabra_gnp_packet_get_cmd(st_pkt) != rx_data->command) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "received command 0x%04x, expected 0x%04x",
+			    fu_struct_jabra_gnp_packet_get_cmd(st_pkt),
+			    rx_data->command);
+		return FALSE;
+	}
+	if (rx_data->check_ack && rx_data->rxbuf[5] != 0xFF) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "expected ack 0xFF, got 0x%02x 0x%02x",
+			    rx_data->rxbuf[5],
+			    rx_data->rxbuf[6]);
+		return FALSE;
+	}
+	if (rx_data->check_sequence_number) {
+		if (rx_data->rxbuf[3] != self->sequence_number) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sequence_number error -- got 0x%x, expected 0x%x",
+				    rx_data->rxbuf[3],
+				    self->sequence_number);
+			return FALSE;
+		}
+		self->sequence_number += 1;
+	}
+
 	return TRUE;
 }
 

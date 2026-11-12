@@ -32,7 +32,9 @@ typedef struct {
 typedef struct {
 	guint8 rxbuf[FU_JABRA_GNP_BUF_SIZE];
 	const guint timeout;
-	gboolean allow_battery_reports;
+	guint16 command;
+	gboolean check_ack;
+	gboolean check_sequence_number;
 } FuJabraGnpRxData;
 
 typedef struct {
@@ -112,6 +114,14 @@ fu_jabra_gnp_write_version(FuDevice *device,
 			   GError **error) G_GNUC_NON_NULL(1, 4);
 gboolean
 fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
+    G_GNUC_NON_NULL(1);
+gboolean
+fu_jabra_gnp_get_config_mode_permission(FuDevice *device,
+					guint8 address,
+					guint8 seq,
+					GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_jabra_gnp_end_config_mode(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
 fu_jabra_gnp_trigger_reboot(FuDevice *device, guint8 address, guint8 seq, GError **error)
