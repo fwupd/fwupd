@@ -16,3 +16,13 @@ polkit.addRule(function(action, subject) {
         return polkit.Result.YES;
     }
 });
+
+// Allow the fwupd-refresh service user to install or downgrade signed
+// and trusted internal firmware, which is required by `fwupdmgr sync`.
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.freedesktop.fwupd.update-internal-trusted" ||
+            action.id == "org.freedesktop.fwupd.downgrade-internal-trusted") &&
+        subject.user == "fwupd-refresh") {
+        return polkit.Result.YES;
+    }
+});
