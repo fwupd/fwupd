@@ -1904,6 +1904,7 @@ static gboolean
 fu_genesys_usbhub_device_setup_flash(FuGenesysUsbhubDevice *self, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
+	g_autoptr(FuCfiDevice) cfi_device = NULL;
 	guint32 block_size;
 	guint32 sector_size;
 
@@ -1911,9 +1912,12 @@ fu_genesys_usbhub_device_setup_flash(FuGenesysUsbhubDevice *self, GError **error
 	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
 		return FALSE;
 	/* setup cfi device */
-	self->cfi_device = fu_genesys_usbhub_device_cfi_setup(self, error);
-	if (self->cfi_device == NULL)
+	cfi_device = fu_genesys_usbhub_device_cfi_setup(self, error);
+	if (cfi_device == NULL)
 		return FALSE;
+
+	/* the late setup is retried when it failed, so do not leak the previous device */
+	g_set_object(&self->cfi_device, cfi_device);
 	block_size = fu_cfi_device_get_block_size(self->cfi_device);
 	if (block_size != 0)
 		self->flash_block_size = block_size;
