@@ -11,7 +11,7 @@
 /*
  * The test vectors are literal hardware identifiers (PIDs, flash opcodes and offsets), so the
  * count of inline magic values is expected to be high.
- * nocheck:magic-inlines=245
+ * nocheck:magic-inlines=282
  */
 
 #include "fu-cfi-device.h"
@@ -20,6 +20,10 @@
 #include "fu-genesys-hubhid-device.h"
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
+
+#define FU_GENESYS_TEST_BANK_VALID   FU_GENESYS_USBHUB_BANK_STATE_VALID
+#define FU_GENESYS_TEST_BANK_INVALID FU_GENESYS_USBHUB_BANK_STATE_INVALID
+#define FU_GENESYS_TEST_BANK_UNKNOWN FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN
 
 static void
 fu_genesys_usbhub_device_project_compatibility_matrix_func(void)
@@ -1567,7 +1571,8 @@ fu_genesys_usbhub_device_p34_update_bank_flags_func(void)
 						       0x8624,
 						       0x8630,
 						       FALSE,
-						       TRUE);
+						       FU_GENESYS_TEST_BANK_VALID,
+						       FU_GENESYS_TEST_BANK_VALID);
 	fu_firmware_set_version_raw(firmware, 0x8617);
 	for (guint i = 0; i < G_N_ELEMENTS(flags); i++) {
 		g_autoptr(GError) error_write = NULL;
@@ -1586,7 +1591,8 @@ fu_genesys_usbhub_device_p34_update_bank_flags_func(void)
 						       0x0000,
 						       0x0000,
 						       FALSE,
-						       FALSE);
+						       FU_GENESYS_TEST_BANK_UNKNOWN,
+						       FU_GENESYS_TEST_BANK_UNKNOWN);
 	fu_firmware_set_version_raw(firmware, 0x8630);
 	for (guint i = 0; i < G_N_ELEMENTS(flags); i++) {
 		g_autoptr(GError) error_write = NULL;
@@ -1840,58 +1846,405 @@ fu_genesys_usbhub_device_p34_bank_runs_target_func(void)
 }
 
 static void
-fu_genesys_test_update_bank_expect(gboolean newest_bank_runs,
-				   gboolean banks_known,
+fu_genesys_test_update_bank_expect(gboolean banks_compared,
+				   gboolean newest_bank_runs,
 				   gboolean update_bank2,
+				   FuGenesysUsbhubBankState bank1_state,
+				   FuGenesysUsbhubBankState bank2_state,
 				   guint16 bank1,
 				   guint16 bank2,
+				   gboolean other_bank_runs,
 				   guint16 target,
-				   gboolean expect_ok)
+				   gboolean expect_ok,
+				   const gchar *expect_msg)
 {
 	g_autoptr(GError) error = NULL;
-	gboolean ret = fu_genesys_usbhub_device_check_update_bank(newest_bank_runs,
-								  banks_known,
+	gboolean ret = fu_genesys_usbhub_device_check_update_bank(banks_compared,
+								  newest_bank_runs,
 								  update_bank2,
+								  bank1_state,
+								  bank2_state,
 								  bank1,
 								  bank2,
+								  other_bank_runs,
 								  target,
 								  &error);
 	g_assert_cmpint(ret, ==, expect_ok);
-	if (expect_ok)
+	if (expect_ok) {
 		g_assert_no_error(error);
-	else
-		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		return;
+	}
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	if (expect_msg != NULL)
+		g_assert_nonnull(g_strstr_len(error->message, -1, expect_msg));
 }
 
 static void
 fu_genesys_usbhub_device_p34_update_bank_func(void)
 {
+	const FuGenesysUsbhubBankState v = FU_GENESYS_TEST_BANK_VALID;
+	const FuGenesysUsbhubBankState i = FU_GENESYS_TEST_BANK_INVALID;
+	const FuGenesysUsbhubBankState u = FU_GENESYS_TEST_BANK_UNKNOWN;
+
 	/* 1121 banks 86.24/86.24: prepare picks bank1 */
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8624, 0x8624, 0x8617, FALSE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8624, 0x8624, 0x8623, FALSE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8624, 0x8624, 0x8624, TRUE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8624, 0x8624, 0x8630, TRUE);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8624,
+					   0x8624,
+					   FALSE,
+					   0x8617,
+					   FALSE,
+					   "86.17");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8624,
+					   0x8624,
+					   FALSE,
+					   0x8623,
+					   FALSE,
+					   "86.23");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8624,
+					   0x8624,
+					   FALSE,
+					   0x8624,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8624,
+					   0x8624,
+					   FALSE,
+					   0x8630,
+					   TRUE,
+					   NULL);
 
 	/* bank1 newer than bank2: prepare picks bank2, so bank1 is the one that stays */
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, TRUE, 0x8630, 0x8624, 0x8624, FALSE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, TRUE, 0x8630, 0x8624, 0x8630, TRUE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, TRUE, 0x8630, 0x8624, 0x8640, TRUE);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   v,
+					   v,
+					   0x8630,
+					   0x8624,
+					   TRUE,
+					   0x8624,
+					   FALSE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   v,
+					   v,
+					   0x8630,
+					   0x8624,
+					   TRUE,
+					   0x8630,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   v,
+					   v,
+					   0x8630,
+					   0x8624,
+					   TRUE,
+					   0x8640,
+					   TRUE,
+					   NULL);
 
 	/* 86.17 beside 86.24: the older image is refused, the 86.24 restore is allowed */
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8617, 0x8624, 0x8617, FALSE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8617, 0x8624, 0x8624, TRUE);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8617,
+					   0x8624,
+					   FALSE,
+					   0x8617,
+					   FALSE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8617,
+					   0x8624,
+					   FALSE,
+					   0x8624,
+					   TRUE,
+					   NULL);
 
-	/* an invalid other bank reads as 0: nothing to lose, but the kept bank still counts */
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, FALSE, 0x8624, 0x0000, 0x8617, TRUE);
-	fu_genesys_test_update_bank_expect(TRUE, TRUE, TRUE, 0x8624, 0x0000, 0x8617, FALSE);
+	/* the kept bank has no valid firmware and is not the running one: nothing to lose */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   i,
+					   0x8624,
+					   0x0000,
+					   FALSE,
+					   0x8617,
+					   TRUE,
+					   NULL);
 
-	/* versions not read: cannot tell, so refuse even an upgrade */
-	fu_genesys_test_update_bank_expect(TRUE, FALSE, FALSE, 0x0000, 0x0000, 0x8630, FALSE);
+	/* the kept bank is valid, the one to overwrite is not: the kept bank still counts */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   v,
+					   i,
+					   0x8624,
+					   0x0000,
+					   FALSE,
+					   0x8617,
+					   FALSE,
+					   "86.24");
 
-	/* not GL3525 dual-image (1122/1123, both banks invalid): never refused */
-	fu_genesys_test_update_bank_expect(FALSE, TRUE, FALSE, 0x8716, 0x8716, 0x8710, TRUE);
-	fu_genesys_test_update_bank_expect(FALSE, TRUE, FALSE, 0x8710, 0x8716, 0x8710, TRUE);
-	fu_genesys_test_update_bank_expect(FALSE, FALSE, FALSE, 0x0000, 0x0000, 0x8710, TRUE);
+	/* the kept bank has no valid firmware but the hub says it runs it: version 0 is not
+	 * trustworthy, so refuse even an upgrade */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   i,
+					   0x8624,
+					   0x0000,
+					   TRUE,
+					   0x8630,
+					   FALSE,
+					   "running bank");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   i,
+					   v,
+					   0x0000,
+					   0x8624,
+					   TRUE,
+					   0x8630,
+					   FALSE,
+					   "running bank");
+
+	/* versions not read, or the read failed: cannot tell, so refuse even an upgrade */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   u,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8630,
+					   FALSE,
+					   "were not read");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   v,
+					   u,
+					   0x8624,
+					   0x0000,
+					   FALSE,
+					   0x8630,
+					   FALSE,
+					   "were not read");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   TRUE,
+					   u,
+					   v,
+					   0x0000,
+					   0x8624,
+					   FALSE,
+					   0x8630,
+					   FALSE,
+					   "were not read");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   TRUE,
+					   FALSE,
+					   i,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8630,
+					   FALSE,
+					   "were not read");
+
+	/* not GL3525 dual-image (1122/1123, both banks read): never refused */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8716,
+					   0x8716,
+					   FALSE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   v,
+					   v,
+					   0x8710,
+					   0x8716,
+					   FALSE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   u,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8710,
+					   FALSE,
+					   "were not read");
+
+	/* the bank was not chosen from the versions (bank 1 is always written): nothing to check,
+	 * whatever was or was not read */
+	fu_genesys_test_update_bank_expect(FALSE,
+					   TRUE,
+					   FALSE,
+					   u,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8630,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(FALSE,
+					   FALSE,
+					   FALSE,
+					   u,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+
+	/* a bank that was not read refuses the update on every chip, not only on the GL3525 */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   u,
+					   u,
+					   0x0000,
+					   0x0000,
+					   FALSE,
+					   0x8710,
+					   FALSE,
+					   "were not read");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   v,
+					   u,
+					   0x8710,
+					   0x0000,
+					   FALSE,
+					   0x8710,
+					   FALSE,
+					   "were not read");
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   TRUE,
+					   u,
+					   v,
+					   0x0000,
+					   0x8710,
+					   FALSE,
+					   0x8710,
+					   FALSE,
+					   "were not read");
+
+	/* the other chips never look at the versions or at the running bank once both were read */
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   v,
+					   i,
+					   0x8716,
+					   0x0000,
+					   TRUE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   TRUE,
+					   i,
+					   v,
+					   0x0000,
+					   0x8716,
+					   TRUE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+	fu_genesys_test_update_bank_expect(TRUE,
+					   FALSE,
+					   FALSE,
+					   i,
+					   i,
+					   0x0000,
+					   0x0000,
+					   TRUE,
+					   0x8710,
+					   TRUE,
+					   NULL);
+
+	/* every state combination of the GL3525 for the same target: only an unread bank, a
+	 * running bank without firmware, or an older target refuses */
+	for (guint b1 = 0; b1 < 3; b1++) {
+		for (guint b2 = 0; b2 < 3; b2++) {
+			for (guint bank2 = 0; bank2 < 2; bank2++) {
+				for (guint runs = 0; runs < 2; runs++) {
+					FuGenesysUsbhubBankState s1 = b1;
+					FuGenesysUsbhubBankState s2 = b2;
+					FuGenesysUsbhubBankState other = bank2 ? s1 : s2;
+					gboolean unread = s1 == u || s2 == u;
+					gboolean bad_running = other == i && runs;
+
+					fu_genesys_test_update_bank_expect(TRUE,
+									   TRUE,
+									   bank2,
+									   s1,
+									   s2,
+									   0x8624,
+									   0x8624,
+									   runs,
+									   0x8630,
+									   !unread && !bad_running,
+									   NULL);
+				}
+			}
+		}
+	}
 }
 
 static void
@@ -1997,8 +2350,111 @@ fu_genesys_usbhub_device_p34_flash_setup_not_pending_func(void)
 
 /* the unit that decides INVALID from a complete read of a bank must agree with the checksum
  * of the firmware itself, and a short buffer must never be taken for a bad one */
+static void
+fu_genesys_usbhub_device_p34_bank_state_from_image_func(void)
+{
+	guint8 buf[64] = {0};
+	g_autoptr(GError) error = NULL;
+
+	for (guint i = 0; i < sizeof(buf) - 2; i++)
+		buf[i] = (guint8)(i * 7 + 1);
+
+	/* nothing to judge */
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(NULL, 0),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN);
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, 0),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN);
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, 1),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN);
+
+	/* a matching and a mismatching checksum, at the same size as the real read */
+	fu_memwrite_uint16(buf + sizeof(buf) - 2, fu_sum16(buf, sizeof(buf) - 2), G_BIG_ENDIAN);
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, sizeof(buf)),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_VALID);
+	buf[3] ^= 0x01;
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, sizeof(buf)),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_INVALID);
+	buf[3] ^= 0x01;
+
+	/* an erased bank never matches */
+	memset(buf, 0xFF, sizeof(buf));
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, sizeof(buf)),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_INVALID);
+
+	/* the same verdict as fu_genesys_usbhub_firmware_verify_checksum() for every flipped byte
+	 */
+	fu_memwrite_uint16(buf + sizeof(buf) - 2, 0, G_BIG_ENDIAN);
+	memset(buf, 0, sizeof(buf) - 2);
+	for (guint i = 0; i < sizeof(buf); i++) {
+		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(FuInputStream) stream = NULL;
+		g_autoptr(GError) error_local = NULL;
+		gboolean ret;
+
+		buf[i] ^= 0x5A;
+		blob = g_bytes_new(buf, sizeof(buf));
+		stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
+		ret = fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local);
+		g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_image(buf, sizeof(buf)) ==
+				    FU_GENESYS_USBHUB_BANK_STATE_VALID,
+				==,
+				ret);
+		buf[i] ^= 0x5A;
+	}
+	g_assert_no_error(error);
+}
+
 /* prepare() picks the same bank as before for every chip: the older one, bank 1 on a tie, and
  * GL3523 backs the newer bank 1 up instead of using bank 2 */
+static void
+fu_genesys_usbhub_device_p34_select_update_bank_func(void)
+{
+	const struct {
+		guint16 bank1;
+		guint16 bank2;
+		gboolean newer_bank1;
+	} versions[] = {
+	    {0x8624, 0x8624, FALSE}, /* tie */
+	    {0x8630, 0x8624, TRUE},
+	    {0x8624, 0x8630, FALSE},
+	    {0x0000, 0x8624, FALSE}, /* bank 1 invalid */
+	    {0x8624, 0x0000, TRUE},  /* bank 2 invalid */
+	    {0x0000, 0x0000, FALSE},
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(versions); i++) {
+		gboolean backup = FALSE;
+
+		/* every chip but the GL3523 */
+		g_assert_cmpint(fu_genesys_usbhub_device_select_update_bank2(FALSE,
+									     versions[i].bank1,
+									     versions[i].bank2,
+									     &backup),
+				==,
+				versions[i].newer_bank1);
+		g_assert_false(backup);
+		g_assert_cmpint(fu_genesys_usbhub_device_select_update_bank2(FALSE,
+									     versions[i].bank1,
+									     versions[i].bank2,
+									     NULL),
+				==,
+				versions[i].newer_bank1);
+
+		/* GL3523 always overwrites bank 1 */
+		g_assert_false(fu_genesys_usbhub_device_select_update_bank2(TRUE,
+									    versions[i].bank1,
+									    versions[i].bank2,
+									    &backup));
+		g_assert_cmpint(backup, ==, versions[i].newer_bank1);
+	}
+}
+
 /* the flash inhibit lives through the whole life of the HID proxy, not only through the first
  * binding */
 static void
@@ -2139,6 +2595,36 @@ fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func(void)
 }
 
 /* only a failed signature check says the bank is bad; any other failure says nothing */
+static void
+fu_genesys_usbhub_device_p34_bank_state_from_error_func(void)
+{
+	FwupdError others[] = {
+	    FWUPD_ERROR_READ,
+	    FWUPD_ERROR_WRITE,
+	    FWUPD_ERROR_INTERNAL,
+	    FWUPD_ERROR_INVALID_DATA,
+	    FWUPD_ERROR_NOT_SUPPORTED,
+	    FWUPD_ERROR_TIMED_OUT,
+	    FWUPD_ERROR_NOT_FOUND,
+	};
+	g_autoptr(GError) sig =
+	    g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID, "x");
+	g_autoptr(GError) glib = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED, "x");
+
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_error(sig),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_INVALID);
+	g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_error(glib),
+			==,
+			FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN);
+	for (guint j = 0; j < G_N_ELEMENTS(others); j++) {
+		g_autoptr(GError) err = g_error_new_literal(FWUPD_ERROR, others[j], "x");
+		g_assert_cmpint(fu_genesys_usbhub_device_bank_state_from_error(err),
+				==,
+				FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2207,6 +2693,12 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_flash_setup_not_pending_func);
 	g_test_add_func("/fwupd/genesys/p34/flash-setup-lifecycle",
 			fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func);
+	g_test_add_func("/fwupd/genesys/p34/bank-state-from-image",
+			fu_genesys_usbhub_device_p34_bank_state_from_image_func);
+	g_test_add_func("/fwupd/genesys/p34/select-update-bank",
+			fu_genesys_usbhub_device_p34_select_update_bank_func);
+	g_test_add_func("/fwupd/genesys/p34/bank-state-from-error",
+			fu_genesys_usbhub_device_p34_bank_state_from_error_func);
 	g_test_add_func("/fwupd/genesys/p34/update-bank-flags",
 			fu_genesys_usbhub_device_p34_update_bank_flags_func);
 	return g_test_run();
