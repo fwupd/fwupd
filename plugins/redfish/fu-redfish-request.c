@@ -116,7 +116,7 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 			error_code = FWUPD_ERROR_NOT_SUPPORTED;
 		else if (g_strcmp0(id, "SMC.1.0.OemFirmwareAlreadyInUpdateMode") == 0 ||
 			 g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0 ||
-			 g_pattern_match_simple("IDRAC.*.RED014", id))
+			 (id != NULL && g_pattern_match_simple("IDRAC.*.RED014", id)))
 			error_code = FWUPD_ERROR_ALREADY_PENDING;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
