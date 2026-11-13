@@ -71,7 +71,7 @@ certificates found in the system KEK and optionally the EFI architecture. e.g.
 
 ...where `arch` is typically one of `IA32`, `X64`, `ARM` or `AA64`
 
-Additionally, the last listed dbx SHA256 checksum is added as a quirk-only GUID so that the version
+Additionally, the selected dbx SHA256 checksum is added as a quirk-only GUID so that the version
 can be corrected even when fwupd is operating 100% offline.
 
 * `UEFI\CSUM_{sha256}`
@@ -83,8 +83,20 @@ pressure about SPI usage -- but local dbx updates are append-only.
 This means that if you remove hashes then you can have a different number of dbx checksums on your
 machine depending on whether you went `A→B→C→D` or `A→D`...
 
-In these cases we look at the *last-entry* dbx checksum and compare to the set we know, either from
-the quirk files, local metadata, or remote metadata from the LVFS.
+By default we compare the last Microsoft dbx checksum to the versions known from the quirk files,
+local metadata, or remote metadata from the LVFS.
+
+Firmware can retain older entries after newer version markers. To verify updates despite this
+ordering, fwupd retains the complete applied update in `uefi-dbx.bin` in its local state directory.
+If every revocation in that reference is installed, its final Microsoft checksum can identify a
+newer version than the trailing entry in the installed database. Both markers must have known
+versions in the quirk files; an unknown trailing marker is preserved for metadata-based detection.
+A missing, incomplete, or unreadable reference falls back to the trailing checksum. An older
+reference never overrides a newer trailing marker.
+
+A cached reference is created when fwupd writes a dbx update. Updates applied before this cache
+was available, or by another operating system, continue to use trailing-checksum detection until
+an update is applied through fwupd.
 
 The `org.linuxfoundation.dbx.*.firmware` components will match against a hash of the system PK.
 The latest cabinet archive can also be installed into the `vendor-firmware`

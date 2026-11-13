@@ -24,11 +24,23 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags install_flags,
 				  GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
+	g_autofree gchar *filename = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
+		return FALSE;
+
+	/* retain the complete update for order-independent verification after reboot */
+	filename = fu_context_build_filename(ctx,
+					     error,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "uefi-dbx.bin",
+					     NULL);
+	if (filename == NULL || !fu_path_mkdir_parent(filename, error) ||
+	    !fu_bytes_set_contents(filename, fw, error))
 		return FALSE;
 
 	/* write entire chunk to efivarsfs */
@@ -78,16 +90,84 @@ fu_uefi_dbx_device_set_checksum(FuUefiDbxDevice *self, const gchar *csum, GError
 	return TRUE;
 }
 
+static guint64
+fu_uefi_dbx_device_get_checksum_version(FuUefiDbxDevice *self, const gchar *checksum)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	const gchar *version_str;
+	guint64 version = 0;
+	g_autofree gchar *checksum_upper = g_ascii_strup(checksum, -1);
+	g_autofree gchar *instance_id = g_strdup_printf("UEFI\\CSUM_%s", checksum_upper);
+	g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
+	g_autoptr(GError) error = NULL;
+
+	version_str = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_VERSION_RAW);
+	if (version_str == NULL)
+		return 0;
+	if (!fu_strtoull(version_str, &version, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error)) {
+		g_debug("invalid cached dbx version: %s", error->message);
+		return 0;
+	}
+	return version;
+}
+
+/* only use the cached release marker when every revocation is installed */
+static gchar *
+fu_uefi_dbx_device_get_cached_checksum(FuUefiDbxDevice *self, FuFirmware *dbx)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *checksum = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuFirmware) reference = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+	g_autoptr(GPtrArray) sigs = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = fu_context_build_filename(ctx,
+					     &error,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "uefi-dbx.bin",
+					     NULL);
+	if (filename == NULL) {
+		g_debug("cannot locate cached dbx update: %s", error->message);
+		return NULL;
+	}
+	file = g_file_new_for_path(filename);
+	if (!fu_firmware_parse_file(reference, file, FU_FIRMWARE_PARSE_FLAG_NONE, &error)) {
+		g_debug("cannot read cached dbx update: %s", error->message);
+		return NULL;
+	}
+	sigs = fu_firmware_get_images(reference);
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
+		g_autofree gchar *checksum_tmp = NULL;
+		g_autoptr(FuFirmware) installed = NULL;
+		checksum_tmp = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+		if (checksum_tmp == NULL)
+			return NULL;
+		installed = fu_firmware_get_image_by_checksum(dbx, checksum_tmp, NULL);
+		if (installed == NULL || fu_efi_signature_get_kind(FU_EFI_SIGNATURE(installed)) !=
+					     fu_efi_signature_get_kind(sig))
+			return NULL;
+		if (g_strcmp0(fu_efi_signature_get_owner(sig), FU_EFI_SIGNATURE_GUID_MICROSOFT) ==
+		    0) {
+			g_free(checksum);
+			checksum = g_strdup(checksum_tmp);
+		}
+	}
+	return g_steal_pointer(&checksum);
+}
+
 static gboolean
 fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 {
+	g_autofree gchar *checksum_cached = NULL;
 	g_autoptr(GBytes) dbx_blob = NULL;
 	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new();
 	g_autoptr(GPtrArray) sigs = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* use the number of checksums in the dbx as a version number, ignoring
-	 * some owners that do not make sense */
+	/* read the installed revocations */
 	dbx_blob = fu_uefi_device_get_efivar_bytes(FU_UEFI_DEVICE(self),
 						   FU_EFIVARS_GUID_SECURITY_DATABASE,
 						   "dbx",
@@ -116,6 +196,9 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		return TRUE;
 	}
 
+	/* an installed composite update is a reliable reference even if firmware reordered it */
+	checksum_cached = fu_uefi_dbx_device_get_cached_checksum(self, dbx);
+
 	/* add the last checksum to the device */
 	for (guint i = sigs->len; i > 0; i--) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
@@ -136,6 +219,14 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		}
 
 		if (csum != NULL) {
+			guint64 version = fu_uefi_dbx_device_get_checksum_version(self, csum);
+			/* preserve unknown trailing markers and do not downgrade a later update */
+			if (version > 0 && checksum_cached != NULL &&
+			    fu_uefi_dbx_device_get_checksum_version(self, checksum_cached) >
+				version) {
+				g_free(csum);
+				csum = g_steal_pointer(&checksum_cached);
+			}
 			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
 				return FALSE;
 			break;
