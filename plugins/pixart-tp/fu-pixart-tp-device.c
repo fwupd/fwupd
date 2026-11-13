@@ -10,6 +10,7 @@
 #include "fu-pixart-tp-device.h"
 #include "fu-pixart-tp-firmware.h"
 #include "fu-pixart-tp-haptic-device.h"
+#include "fu-pixart-tp-ndt-haptic-device.h"
 #include "fu-pixart-tp-section.h"
 
 typedef struct {
@@ -28,6 +29,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW
 #define FU_PIXART_TP_DEVICE_PAGE_SIZE	256
 
 #define FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC "has-haptic"
+
+#define FU_PIXART_TP_DEVICE_FLAG_HAS_NDT_HAPTIC "has-ndt-haptic"
 
 static void
 fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -1641,8 +1644,27 @@ static gboolean
 fu_pixart_tp_device_probe(FuDevice *device, GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+	gboolean has_haptic =
+	    fu_device_has_private_flag(device, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC);
+	gboolean has_ndt_haptic =
+	    fu_device_has_private_flag(device, FU_PIXART_TP_DEVICE_FLAG_HAS_NDT_HAPTIC);
 
-	if (fu_device_has_private_flag(device, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC)) {
+	/* one TP only has one haptic solution, so this is a bug in the quirk file */
+	if (has_haptic && has_ndt_haptic) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "has-haptic and has-ndt-haptic are mutually exclusive");
+		return FALSE;
+	}
+
+	if (has_ndt_haptic) {
+		g_autoptr(FuPixartTpNdtHapticDevice) child =
+		    fu_pixart_tp_ndt_haptic_device_new(device);
+		fu_pixart_tp_device_add_child_for_update_type(self,
+							      FU_DEVICE(child),
+							      FU_PIXART_TP_UPDATE_TYPE_NDT_FORCE);
+	} else if (has_haptic) {
 		g_autoptr(FuPixartTpHapticDevice) child = fu_pixart_tp_haptic_device_new(device);
 		fu_pixart_tp_device_add_child_for_update_type(self,
 							      FU_DEVICE(child),
@@ -1709,4 +1731,5 @@ fu_pixart_tp_device_class_init(FuPixartTpDeviceClass *klass)
 	device_class->convert_version = fu_pixart_tp_device_convert_version;
 	device_class->reload = fu_pixart_tp_device_reload;
 	fu_device_register_private_flag(device_class, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC);
+	fu_device_register_private_flag(device_class, FU_PIXART_TP_DEVICE_FLAG_HAS_NDT_HAPTIC);
 }

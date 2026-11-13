@@ -72,6 +72,7 @@ enum FuPixartTpRegUser0 {
     InternalVersion = 0x02,
     RunMode         = 0x16,
     ProxyMode       = 0x56,
+    NdtUpdate       = 0x57,
     CrcCtrl         = 0x82,
     CrcResult       = 0x84,
 }
@@ -537,6 +538,7 @@ enum FuPixartTpUpdateType {
     Param           = 3,
     HidDescriptor   = 4,
     TfForce         = 16,
+    NdtForce        = 17,
 }
 
 #[derive(ToString, FromString)]
