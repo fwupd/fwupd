@@ -117,6 +117,7 @@ struct _FuEngine {
 	gchar *host_machine_id;
 	FuJcatContext *jcat_context;
 	FuSecurityAttrs *host_security_attrs;
+	FuSecurityAttrs *host_security_attrs_original;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
 	GSource *acquiesce_source;
@@ -238,7 +239,10 @@ fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 		return;
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 	g_signal_emit(self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
@@ -4942,7 +4946,10 @@ fu_engine_metadata_changed(FuEngine *self)
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -5238,7 +5245,10 @@ fu_engine_update_metadata(FuEngine *self,
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -7241,7 +7251,10 @@ fu_engine_context_security_changed_cb(FuContext *ctx, gpointer user_data)
 	FuEngine *self = FU_ENGINE(user_data);
 
 	/* invalidate host security attributes */
-	fu_security_attrs_remove_all(self->host_security_attrs);
+	if (!self->host_emulation) {
+		fu_security_attrs_remove_all(self->host_security_attrs);
+		g_clear_object(&self->host_security_attrs_original);
+	}
 
 	/* make UI refresh */
 	fu_engine_emit_changed(self);
@@ -7550,35 +7563,42 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 static void
 fu_engine_security_attrs_depsolve(FuEngine *self)
 {
-	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GPtrArray) items = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 
-	/* set the obsoletes flag for each attr */
-	fu_security_attrs_depsolve(self->host_security_attrs);
-
-	/* set the fallback names for clients without native translations */
-	items = fu_security_attrs_get_all(self->host_security_attrs, NULL);
+	fu_security_attrs_ensure_level_and_version(self->host_security_attrs);
 	for (guint i = 0; i < items->len; i++) {
 		FuSecurityAttr *attr = g_ptr_array_index(items, i);
 		if (fu_security_attr_get_name(attr) == NULL) {
-			g_autofree gchar *name_tmp =
+			g_autofree gchar *name =
 			    fu_security_attr_get_name_translated(FU_SECURITY_ATTR(attr));
-			if (name_tmp == NULL) {
+			if (name == NULL) {
 				g_warning("failed to get fallback for %s",
 					  fu_security_attr_get_appstream_id(attr));
 				continue;
 			}
-			fu_security_attr_set_name(attr, name_tmp);
+			fu_security_attr_set_name(attr, name);
 		}
-		if (fu_security_attr_get_title(attr) == NULL)
+		if (fu_security_attr_get_title(attr) == NULL) {
 			fu_security_attr_set_title(
 			    attr,
 			    fu_security_attr_get_title_translated(FU_SECURITY_ATTR(attr)));
+		}
 		if (fu_security_attr_get_description(FU_SECURITY_ATTR(attr)) == NULL) {
 			fu_security_attr_set_description(
 			    attr,
 			    fu_security_attr_get_description_translated(FU_SECURITY_ATTR(attr)));
 		}
 	}
+
+	/* preserve the reported results before calculating the existing HSI */
+	if (!self->host_emulation) {
+		g_clear_object(&self->host_security_attrs_original);
+		self->host_security_attrs_original =
+		    fu_security_attrs_copy(self->host_security_attrs);
+	}
+
+	/* set the obsoletes flag for each attr */
+	fu_security_attrs_depsolve(self->host_security_attrs);
 }
 
 /**
@@ -7793,11 +7813,31 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 static gboolean
 fu_engine_security_attrs_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
 	/* not supplied */
 	if (!fwupd_json_object_has_node(json_obj, "SecurityAttributes"))
 		return TRUE;
 	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_obj, error))
 		return FALSE;
+
+	/* weighted scoring requires the results before legacy dependency processing */
+	json_arr = fwupd_json_object_get_array(json_obj, "SecurityAttributesOriginal", NULL);
+	if (json_arr != NULL) {
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			g_autoptr(FuSecurityAttr) attr = fu_security_attr_new(self->ctx, NULL);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(attr), json_obj_tmp, error))
+				return FALSE;
+			fu_security_attrs_append(attrs, attr);
+		}
+		g_set_object(&self->host_security_attrs_original, attrs);
+	}
 
 	/* success */
 	return TRUE;
@@ -7979,6 +8019,45 @@ fu_engine_get_host_security_attrs(FuEngine *self)
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	fu_engine_ensure_security_attrs(self);
 	return g_object_ref(self->host_security_attrs);
+}
+
+GVariant *
+fu_engine_get_host_security_report(FuEngine *self, guint schema, GError **error)
+{
+	FuCpuVendor cpu_vendor;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	if (g_getenv("UMOCKDEV_DIR") == NULL &&
+	    fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_IS_CONTAINER)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for container");
+		return NULL;
+	}
+	if (g_getenv("UMOCKDEV_DIR") == NULL &&
+	    fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for unprivileged hypervisor");
+		return NULL;
+	}
+	fu_engine_ensure_security_attrs(self);
+	if (self->host_security_attrs_original == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unmodified security attributes are unavailable");
+		return NULL;
+	}
+	cpu_vendor = g_getenv("FWUPD_HOST_EMULATE") != NULL ? FU_CPU_VENDOR_UNKNOWN
+							    : fu_context_get_cpu_vendor(self->ctx);
+	return fu_security_attrs_calculate_weighted(self->host_security_attrs_original,
+						    schema,
+						    cpu_vendor,
+						    error);
 }
 
 FuSecurityAttrs *
@@ -9241,14 +9320,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			if (fn == NULL)
 				return FALSE;
 		}
+		self->host_emulation = TRUE;
 		if (!fu_engine_load_host_emulation(self, fn, error)) {
+			self->host_emulation = FALSE;
 			g_prefix_error_literal(error, "failed to load emulated host: ");
 			return FALSE;
 		}
 
 		/* do not load actual hardware */
 		flags &= ~FU_ENGINE_LOAD_FLAG_COLDPLUG;
-		self->host_emulation = TRUE;
 	}
 
 	/* set up backends */
@@ -9903,6 +9983,7 @@ fu_engine_finalize(GObject *obj)
 
 	g_free(self->host_machine_id);
 	g_object_unref(self->host_security_attrs);
+	g_clear_object(&self->host_security_attrs_original);
 	g_object_unref(self->idle);
 	g_object_unref(self->remote_list);
 	g_object_unref(self->history);

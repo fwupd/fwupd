@@ -361,6 +361,40 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetHostSecurityReport'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a weighted host security report. Schema 1 contains the unsigned
+            integer fields Schema, Score, Level and Ceiling, an Attributes array
+            of security-attribute dictionaries, and a Failed array of property
+            identifiers. Each property contributes once, even when more than one
+            provider reports it. A failed property can limit Level using Ceiling.
+            Attributes not reported by the host are normally omitted. Required
+            platform protections are listed in Failed and apply their ceiling
+            when the host does not report them. Reported attributes with missing
+            data receive no points and still apply their ceiling.
+            Weights, thresholds and ceilings are part of the schema and require a
+            new schema version when changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='u' name='schema' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The report schema version.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sv}' name='report' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The weighted host security report.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
     <method name='GetHostSecurityAttrs'>
       <doc:doc>
         <doc:description>
