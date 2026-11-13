@@ -99,6 +99,10 @@ fu_pixart_tp_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(section), stream, offset, flags, error))
 			return FALSE;
 		update_type = fu_pixart_tp_section_get_update_type(section);
+
+		/* a child device finds its own section using the update type */
+		fu_firmware_set_idx(FU_FIRMWARE(section), update_type);
+
 		if (update_type == FU_PIXART_TP_UPDATE_TYPE_FW_SECTION) {
 			if (!fu_pixart_tp_section_has_flag(section,
 							   FU_PIXART_TP_FIRMWARE_FLAG_VALID)) {
@@ -122,9 +126,6 @@ fu_pixart_tp_firmware_parse(FuFirmware *firmware,
 			}
 			saw_param = TRUE;
 			fu_firmware_set_id(FU_FIRMWARE(section), "parameter");
-
-		} else if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE) {
-			fu_firmware_set_id(FU_FIRMWARE(section), "tf-force");
 		}
 
 		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(section), error))

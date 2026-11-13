@@ -858,8 +858,8 @@ fu_pixart_tp_haptic_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	/* find the TF_FORCE section image by ID */
-	return fu_firmware_get_image_by_id(firmware, "tf-force", error);
+	/* find the TF_FORCE section image by update type */
+	return fu_firmware_get_image_by_idx(firmware, FU_PIXART_TP_UPDATE_TYPE_TF_FORCE, error);
 }
 
 static gboolean
