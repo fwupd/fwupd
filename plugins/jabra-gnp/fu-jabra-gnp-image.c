@@ -19,10 +19,13 @@ struct _FuJabraGnpImage {
 G_DEFINE_TYPE(FuJabraGnpImage, fu_jabra_gnp_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_jabra_gnp_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_jabra_gnp_image_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuJabraGnpImage *self = FU_JABRA_GNP_IMAGE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "crc32", self->crc32);
+	if (self->crc32 != 0)
+		fwupd_json_object_add_integer(json_object, "crc32", self->crc32);
 }
 
 gboolean

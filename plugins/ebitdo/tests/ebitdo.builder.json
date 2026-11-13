@@ -1,0 +1,6 @@
+{
+  "gtype": "FuEbitdoFirmware",
+  "version_raw": "0x10002",
+  "addr": "0x3000",
+  "data": "aGVsbG8gd29ybGQ="
+}

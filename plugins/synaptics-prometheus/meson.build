@@ -25,7 +25,7 @@ plugin_builtins += plugin_builtin_synaptics_prometheus
 
 if get_option('tests')
   install_data(
-    ['tests/synaptics-prometheus.builder.xml'],
+    ['tests/synaptics-prometheus.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

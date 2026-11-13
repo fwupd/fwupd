@@ -40,15 +40,29 @@ G_DEFINE_TYPE_EXTENDED(FuUsbInterface,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_interface_codec_iface_init));
 
 static void
-fu_usb_interface_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_usb_interface_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "number", self->iface.bInterfaceNumber);
-	fu_xmlb_builder_insert_kx(bn, "alternate", self->iface.bAlternateSetting);
-	fu_xmlb_builder_insert_kx(bn, "class", self->iface.bInterfaceClass);
-	fu_xmlb_builder_insert_kx(bn, "subclass", self->iface.bInterfaceSubClass);
-	fu_xmlb_builder_insert_kx(bn, "protocol", self->iface.bInterfaceProtocol);
-	fu_xmlb_builder_insert_kx(bn, "interface", self->iface.iInterface);
+	if (self->iface.bInterfaceNumber != 0)
+		fwupd_json_object_add_integer(json_object, "number", self->iface.bInterfaceNumber);
+	if (self->iface.bAlternateSetting != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "alternate",
+					      self->iface.bAlternateSetting);
+	if (self->iface.bInterfaceClass != 0)
+		fwupd_json_object_add_integer(json_object, "class", self->iface.bInterfaceClass);
+	if (self->iface.bInterfaceSubClass != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "subclass",
+					      self->iface.bInterfaceSubClass);
+	if (self->iface.bInterfaceProtocol != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "protocol",
+					      self->iface.bInterfaceProtocol);
+	if (self->iface.iInterface != 0)
+		fwupd_json_object_add_integer(json_object, "interface", self->iface.iInterface);
 }
 
 static gboolean

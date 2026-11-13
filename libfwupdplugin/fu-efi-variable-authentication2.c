@@ -54,18 +54,18 @@ fu_efi_variable_authentication2_get_signers(FuEfiVariableAuthentication2 *self)
 static void
 fu_efi_variable_authentication2_export(FuFirmware *firmware,
 				       FuFirmwareExportFlags flags,
-				       XbBuilderNode *bn)
+				       FwupdJsonObject *json_object)
 {
-	g_autoptr(XbBuilderNode) bn_signers = NULL;
 	FuEfiVariableAuthentication2 *self = FU_EFI_VARIABLE_AUTHENTICATION2(firmware);
+	g_autoptr(FwupdJsonArray) json_signers = fwupd_json_array_new();
 
-	bn_signers = xb_builder_node_insert(bn, "signers", NULL);
 	for (guint i = 0; i < self->signers->len; i++) {
 		FuFirmware *img = g_ptr_array_index(self->signers, i);
-		g_autoptr(XbBuilderNode) bn_firmware = NULL;
-		bn_firmware = xb_builder_node_insert(bn_signers, "firmware", NULL);
-		fu_firmware_export(img, flags, bn_firmware);
+		g_autoptr(FwupdJsonObject) json_firmware = fwupd_json_object_new();
+		fu_firmware_export(img, flags, json_firmware);
+		fwupd_json_array_add_object(json_signers, json_firmware);
 	}
+	fwupd_json_object_add_array(json_object, "signers", json_signers);
 }
 
 static gboolean

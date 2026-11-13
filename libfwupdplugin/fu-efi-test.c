@@ -337,14 +337,9 @@ fu_efi_timestamp_roundtrip_func(void)
 	gboolean ret;
 	g_autoptr(FuStructEfiTime) st_src = fu_struct_efi_time_new();
 	g_autoptr(FuStructEfiTime) st_dst = fu_struct_efi_time_new();
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("timestamp");
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbSilo) silo = NULL;
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	gint64 tmp = 0;
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *xml = NULL;
 
 	fu_struct_efi_time_set_year(st_src, 2024);
 	fu_struct_efi_time_set_month(st_src, 6);
@@ -353,25 +348,37 @@ fu_efi_timestamp_roundtrip_func(void)
 	fu_struct_efi_time_set_minute(st_src, 30);
 	fu_struct_efi_time_set_second(st_src, 45);
 
-	fu_efi_timestamp_export(st_src, bn);
-
-	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(xml);
-
-	blob = g_bytes_new(xml, strlen(xml));
-	ret = xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	/* export to JSON */
+	fu_efi_timestamp_export(st_src, json_object);
+	ret = fwupd_json_object_get_integer(json_object, "year", &tmp, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_cmpint(tmp, ==, 2024);
+	ret = fwupd_json_object_get_integer(json_object, "month", &tmp, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	n = xb_silo_query_first(silo, "timestamp", &error);
+	g_assert_true(ret);
+	g_assert_cmpint(tmp, ==, 6);
+	ret = fwupd_json_object_get_integer(json_object, "day", &tmp, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(n);
+	g_assert_true(ret);
+	g_assert_cmpint(tmp, ==, 15);
+	ret = fwupd_json_object_get_integer(json_object, "hour", &tmp, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(tmp, ==, 10);
+	ret = fwupd_json_object_get_integer(json_object, "minute", &tmp, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(tmp, ==, 30);
+	ret = fwupd_json_object_get_integer(json_object, "second", &tmp, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(tmp, ==, 45);
 
-	fu_efi_timestamp_build(st_dst, n);
+	/* build from the exported JSON */
+	ret = fu_efi_timestamp_build(st_dst, json_object, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	g_assert_cmpint(fu_struct_efi_time_get_year(st_dst), ==, 2024);
 	g_assert_cmpint(fu_struct_efi_time_get_month(st_dst), ==, 6);
@@ -385,16 +392,11 @@ static void
 fu_efi_timestamp_export_zero_func(void)
 {
 	g_autoptr(FuStructEfiTime) st = fu_struct_efi_time_new();
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("timestamp");
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *xml = NULL;
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 
-	fu_efi_timestamp_export(st, bn);
-
-	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(xml);
-	g_assert_cmpstr(xml, ==, "<timestamp />");
+	/* all-zero fields are omitted */
+	fu_efi_timestamp_export(st, json_object);
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), ==, 0);
 }
 
 int

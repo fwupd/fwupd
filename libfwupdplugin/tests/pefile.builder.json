@@ -1,0 +1,63 @@
+{
+  "gtype": "FuPefileFirmware",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "id": ".text",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuFirmware",
+      "id": ".textXXXXXX",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuCsvFirmware",
+      "id": ".sbat",
+      "write_column_ids": false,
+      "firmware": [
+        {
+          "gtype": "FuCsvEntry",
+          "values": {
+            "component_name": "sbat",
+            "component_generation": "1"
+          }
+        }
+      ]
+    },
+    {
+      "gtype": "FuSbatlevelSection",
+      "id": ".sbatlevel",
+      "firmware": [
+        {
+          "gtype": "FuCsvFirmware",
+          "id": "previous",
+          "write_column_ids": false,
+          "firmware": [
+            {
+              "gtype": "FuCsvEntry",
+              "values": {
+                "component_name": "grub",
+                "component_generation": "1"
+              }
+            }
+          ]
+        },
+        {
+          "gtype": "FuCsvFirmware",
+          "id": "latest",
+          "write_column_ids": false,
+          "firmware": [
+            {
+              "gtype": "FuCsvEntry",
+              "values": {
+                "component_name": "sbat",
+                "component_generation": "1"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

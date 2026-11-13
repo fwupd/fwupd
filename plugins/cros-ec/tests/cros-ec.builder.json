@@ -1,0 +1,22 @@
+{
+  "gtype": "FuCrosEcFirmware",
+  "addr": "0x3000",
+  "firmware": [
+    {
+      "id": "RO_FRID",
+      "data": "Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA="
+    },
+    {
+      "id": "RW_FWID",
+      "data": "Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA="
+    },
+    {
+      "id": "EC_RO",
+      "data": "Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA="
+    },
+    {
+      "id": "EC_RW",
+      "data": "Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA="
+    }
+  ]
+}

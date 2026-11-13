@@ -1023,22 +1023,23 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **error)
+fu_coswid_firmware_build_entity(FuCoswidFirmware *self,
+				FwupdJsonObject *json_object,
+				GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	FuCoswidEntityRole role;
-	g_autoptr(GPtrArray) roles = NULL;
 	g_autoptr(FuCoswidFirmwareEntity) entity = g_new0(FuCoswidFirmwareEntity, 1);
 
 	/* these are required */
-	tmp = xb_node_query_text(n, "name", error);
+	tmp = fwupd_json_object_get_string(json_object, "name", error);
 	if (tmp == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
 	entity->name = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "regid", error);
+	tmp = fwupd_json_object_get_string(json_object, "regid", error);
 	if (tmp == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -1046,11 +1047,15 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 	entity->regid = g_strdup(tmp);
 
 	/* optional */
-	roles = xb_node_query(n, "role", 0, NULL);
-	if (roles != NULL) {
-		for (guint i = 0; i < roles->len; i++) {
-			XbNode *c = g_ptr_array_index(roles, i);
-			tmp = xb_node_get_text(c);
+	if (fwupd_json_object_has_node(json_object, "roles")) {
+		g_autoptr(FwupdJsonArray) json_roles =
+		    fwupd_json_object_get_array(json_object, "roles", error);
+		if (json_roles == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_roles); i++) {
+			tmp = fwupd_json_array_get_string(json_roles, i, error);
+			if (tmp == NULL)
+				return FALSE;
 			role = fu_coswid_entity_role_from_string(tmp);
 			if (role == FU_COSWID_ENTITY_ROLE_UNKNOWN ||
 			    role >= FU_COSWID_ENTITY_ROLE_LAST) {
@@ -1071,14 +1076,14 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 }
 
 static gboolean
-fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
+fu_coswid_firmware_build_link(FuCoswidFirmware *self, FwupdJsonObject *json_object, GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	g_autoptr(FuCoswidFirmwareLink) link = g_new0(FuCoswidFirmwareLink, 1);
 
 	/* required */
-	tmp = xb_node_query_text(n, "href", error);
+	tmp = fwupd_json_object_get_string(json_object, "href", error);
 	if (tmp == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -1086,7 +1091,8 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 	link->href = g_strdup(tmp);
 
 	/* optional */
-	tmp = xb_node_query_text(n, "rel", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "rel", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		link->rel = fu_coswid_link_rel_from_string(tmp);
 		if (link->rel == FU_COSWID_LINK_REL_UNKNOWN) {
@@ -1106,7 +1112,7 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 
 static gboolean
 fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
-			      XbNode *n,
+			      FwupdJsonObject *json_object,
 			      FuCoswidFirmwarePayload *payload,
 			      GError **error)
 {
@@ -1114,7 +1120,7 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
 	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
 
 	/* required */
-	tmp = xb_node_query_text(n, "value", error);
+	tmp = fwupd_json_object_get_string(json_object, "value", error);
 	if (tmp == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
@@ -1124,7 +1130,8 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
 		return FALSE;
 
 	/* optional */
-	tmp = xb_node_query_text(n, "alg_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "alg_id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		hash->alg_id = fu_coswid_hash_alg_from_string(tmp);
 		if (hash->alg_id == FU_COSWID_HASH_ALG_UNKNOWN) {
@@ -1143,28 +1150,41 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
 }
 
 static gboolean
-fu_coswid_firmware_build_payload(FuCoswidFirmware *self, XbNode *n, GError **error)
+fu_coswid_firmware_build_payload(FuCoswidFirmware *self,
+				 FwupdJsonObject *json_object,
+				 GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	guint64 tmp64;
+	gint64 tmp64 = G_MAXINT64;
 	g_autoptr(FuCoswidFirmwarePayload) payload = fu_coswid_firmware_payload_new();
-	g_autoptr(GPtrArray) hashes = NULL;
 
 	/* required */
-	tmp = xb_node_query_text(n, "name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		payload->name = g_strdup(tmp);
-	tmp64 = xb_node_query_text_as_uint(n, "size", NULL);
-	if (tmp64 != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"size",
+							&tmp64,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp64 != G_MAXINT64)
 		payload->size = tmp64;
 
 	/* multiple hashes allowed */
-	hashes = xb_node_query(n, "hash", 0, NULL);
-	if (hashes != NULL) {
-		for (guint i = 0; i < hashes->len; i++) {
-			XbNode *c = g_ptr_array_index(hashes, i);
-			if (!fu_coswid_firmware_build_hash(self, c, payload, error))
+	if (fwupd_json_object_has_node(json_object, "hashes")) {
+		g_autoptr(FwupdJsonArray) json_hashes =
+		    fwupd_json_object_get_array(json_object, "hashes", error);
+		if (json_hashes == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_hashes); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_hashes, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_coswid_firmware_build_hash(self, json_item, payload, error))
 				return FALSE;
 		}
 	}
@@ -1175,33 +1195,36 @@ fu_coswid_firmware_build_payload(FuCoswidFirmware *self, XbNode *n, GError **err
 }
 
 static gboolean
-fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_coswid_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(firmware);
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	g_autoptr(GPtrArray) links = NULL;
-	g_autoptr(GPtrArray) payloads = NULL;
-	g_autoptr(GPtrArray) entities = NULL;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "product", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "product", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->product = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "summary", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "summary", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->summary = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "colloquial_version", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "colloquial_version", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->colloquial_version = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "persistent_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "persistent_id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->persistent_id = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "device_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "device_id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->device_id = g_strdup(tmp);
 
-	tmp = xb_node_query_text(n, "version_scheme", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "version_scheme", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		priv->version_scheme = fu_coswid_version_scheme_from_string(tmp);
 		if (priv->version_scheme == FU_COSWID_VERSION_SCHEME_UNKNOWN) {
@@ -1215,31 +1238,49 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	}
 
 	/* multiple links allowed */
-	links = xb_node_query(n, "link", 0, NULL);
-	if (links != NULL) {
-		for (guint i = 0; i < links->len; i++) {
-			XbNode *c = g_ptr_array_index(links, i);
-			if (!fu_coswid_firmware_build_link(self, c, error))
+	if (fwupd_json_object_has_node(json_object, "links")) {
+		g_autoptr(FwupdJsonArray) json_links =
+		    fwupd_json_object_get_array(json_object, "links", error);
+		if (json_links == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_links); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_links, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_coswid_firmware_build_link(self, json_item, error))
 				return FALSE;
 		}
 	}
 
 	/* multiple payloads allowed */
-	payloads = xb_node_query(n, "payload", 0, NULL);
-	if (payloads != NULL) {
-		for (guint i = 0; i < payloads->len; i++) {
-			XbNode *c = g_ptr_array_index(payloads, i);
-			if (!fu_coswid_firmware_build_payload(self, c, error))
+	if (fwupd_json_object_has_node(json_object, "payloads")) {
+		g_autoptr(FwupdJsonArray) json_payloads =
+		    fwupd_json_object_get_array(json_object, "payloads", error);
+		if (json_payloads == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_payloads); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_payloads, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_coswid_firmware_build_payload(self, json_item, error))
 				return FALSE;
 		}
 	}
 
 	/* multiple entities allowed */
-	entities = xb_node_query(n, "entity", 0, NULL);
-	if (entities != NULL) {
-		for (guint i = 0; i < entities->len; i++) {
-			XbNode *c = g_ptr_array_index(entities, i);
-			if (!fu_coswid_firmware_build_entity(self, c, error))
+	if (fwupd_json_object_has_node(json_object, "entities")) {
+		g_autoptr(FwupdJsonArray) json_entities =
+		    fwupd_json_object_get_array(json_object, "entities", error);
+		if (json_entities == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_entities); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_entities, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_coswid_firmware_build_entity(self, json_item, error))
 				return FALSE;
 		}
 	}
@@ -1249,57 +1290,102 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_coswid_firmware_export_payload(FuCoswidFirmwarePayload *payload, FwupdJsonObject *json_object)
+{
+	if (payload->name != NULL)
+		fwupd_json_object_add_string(json_object, "name", payload->name);
+	if (payload->size != 0)
+		fwupd_json_object_add_integer(json_object, "size", (gint64)payload->size);
+	if (payload->hashes->len > 0) {
+		g_autoptr(FwupdJsonArray) json_hashes = fwupd_json_array_new();
+		for (guint j = 0; j < payload->hashes->len; j++) {
+			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
+			g_autoptr(FwupdJsonObject) json_hash = fwupd_json_object_new();
+			g_autofree gchar *value = fu_bytes_to_string(hash->value);
+			const gchar *alg_id_str = fu_coswid_hash_alg_to_string(hash->alg_id);
+			if (alg_id_str != NULL)
+				fwupd_json_object_add_string(json_hash, "alg_id", alg_id_str);
+			fwupd_json_object_add_string(json_hash, "value", value);
+			fwupd_json_array_add_object(json_hashes, json_hash);
+		}
+		fwupd_json_object_add_array(json_object, "hashes", json_hashes);
+	}
+}
+
+static void
+fu_coswid_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(firmware);
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	if (priv->version_scheme != FU_COSWID_VERSION_SCHEME_UNKNOWN) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "version_scheme",
-					  fu_coswid_version_scheme_to_string(priv->version_scheme));
+		const gchar *version_scheme_str =
+		    fu_coswid_version_scheme_to_string(priv->version_scheme);
+		if (version_scheme_str != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "version_scheme",
+						     version_scheme_str);
 	}
-	fu_xmlb_builder_insert_kv(bn, "product", priv->product);
-	fu_xmlb_builder_insert_kv(bn, "summary", priv->summary);
-	fu_xmlb_builder_insert_kv(bn, "colloquial_version", priv->colloquial_version);
-	fu_xmlb_builder_insert_kv(bn, "persistent_id", priv->persistent_id);
-	fu_xmlb_builder_insert_kv(bn, "device_id", priv->device_id);
-	for (guint i = 0; i < priv->links->len; i++) {
-		FuCoswidFirmwareLink *link = g_ptr_array_index(priv->links, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "link", NULL);
-		fu_xmlb_builder_insert_kv(bc, "href", link->href);
-		if (link->rel != FU_COSWID_LINK_REL_UNKNOWN) {
-			fu_xmlb_builder_insert_kv(bc,
-						  "rel",
-						  fu_coswid_link_rel_to_string(link->rel));
-		}
-	}
-	for (guint i = 0; i < priv->payloads->len; i++) {
-		FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "payload", NULL);
-		fu_xmlb_builder_insert_kv(bc, "name", payload->name);
-		fu_xmlb_builder_insert_kx(bc, "size", payload->size);
-		for (guint j = 0; j < payload->hashes->len; j++) {
-			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
-			g_autoptr(XbBuilderNode) bh = xb_builder_node_insert(bc, "hash", NULL);
-			g_autofree gchar *value = fu_bytes_to_string(hash->value);
-			fu_xmlb_builder_insert_kv(bh,
-						  "alg_id",
-						  fu_coswid_hash_alg_to_string(hash->alg_id));
-			fu_xmlb_builder_insert_kv(bh, "value", value);
-		}
-	}
-	for (guint i = 0; i < priv->entities->len; i++) {
-		FuCoswidFirmwareEntity *entity = g_ptr_array_index(priv->entities, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "entity", NULL);
-		fu_xmlb_builder_insert_kv(bc, "name", entity->name);
-		fu_xmlb_builder_insert_kv(bc, "regid", entity->regid);
-		for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
-			if (FU_BIT_IS_SET(entity->roles, j)) {
-				fu_xmlb_builder_insert_kv(bc,
-							  "role",
-							  fu_coswid_entity_role_to_string(j));
+	if (priv->product != NULL)
+		fwupd_json_object_add_string(json_object, "product", priv->product);
+	if (priv->summary != NULL)
+		fwupd_json_object_add_string(json_object, "summary", priv->summary);
+	if (priv->colloquial_version != NULL)
+		fwupd_json_object_add_string(json_object,
+					     "colloquial_version",
+					     priv->colloquial_version);
+	if (priv->persistent_id != NULL)
+		fwupd_json_object_add_string(json_object, "persistent_id", priv->persistent_id);
+	if (priv->device_id != NULL)
+		fwupd_json_object_add_string(json_object, "device_id", priv->device_id);
+	if (priv->links->len > 0) {
+		g_autoptr(FwupdJsonArray) json_links = fwupd_json_array_new();
+		for (guint i = 0; i < priv->links->len; i++) {
+			FuCoswidFirmwareLink *link = g_ptr_array_index(priv->links, i);
+			g_autoptr(FwupdJsonObject) json_link = fwupd_json_object_new();
+			if (link->href != NULL)
+				fwupd_json_object_add_string(json_link, "href", link->href);
+			if (link->rel != FU_COSWID_LINK_REL_UNKNOWN) {
+				const gchar *rel_str = fu_coswid_link_rel_to_string(link->rel);
+				if (rel_str != NULL)
+					fwupd_json_object_add_string(json_link, "rel", rel_str);
 			}
+			fwupd_json_array_add_object(json_links, json_link);
 		}
+		fwupd_json_object_add_array(json_object, "links", json_links);
+	}
+	if (priv->payloads->len > 0) {
+		g_autoptr(FwupdJsonArray) json_payloads = fwupd_json_array_new();
+		for (guint i = 0; i < priv->payloads->len; i++) {
+			FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
+			g_autoptr(FwupdJsonObject) json_payload = fwupd_json_object_new();
+			fu_coswid_firmware_export_payload(payload, json_payload);
+			fwupd_json_array_add_object(json_payloads, json_payload);
+		}
+		fwupd_json_object_add_array(json_object, "payloads", json_payloads);
+	}
+	if (priv->entities->len > 0) {
+		g_autoptr(FwupdJsonArray) json_entities = fwupd_json_array_new();
+		for (guint i = 0; i < priv->entities->len; i++) {
+			FuCoswidFirmwareEntity *entity = g_ptr_array_index(priv->entities, i);
+			g_autoptr(FwupdJsonObject) json_entity = fwupd_json_object_new();
+			g_autoptr(FwupdJsonArray) json_roles = fwupd_json_array_new();
+			if (entity->name != NULL)
+				fwupd_json_object_add_string(json_entity, "name", entity->name);
+			if (entity->regid != NULL)
+				fwupd_json_object_add_string(json_entity, "regid", entity->regid);
+			for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
+				if (FU_BIT_IS_SET(entity->roles, j)) {
+					const gchar *role_str = fu_coswid_entity_role_to_string(j);
+					if (role_str != NULL)
+						fwupd_json_array_add_string(json_roles, role_str);
+				}
+			}
+			fwupd_json_object_add_array(json_entity, "roles", json_roles);
+			fwupd_json_array_add_object(json_entities, json_entity);
+		}
+		fwupd_json_object_add_array(json_object, "entities", json_entities);
 	}
 }
 

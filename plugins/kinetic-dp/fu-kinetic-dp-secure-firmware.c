@@ -36,18 +36,33 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuKineticDpSecureFirmware,
 static void
 fu_kinetic_dp_secure_firmware_export(FuFirmware *firmware,
 				     FuFirmwareExportFlags flags,
-				     XbBuilderNode *bn)
+				     FwupdJsonObject *json_object)
 {
 	FuKineticDpSecureFirmware *self = FU_KINETIC_DP_SECURE_FIRMWARE(firmware);
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *chip_id_str = fu_kinetic_dp_chip_to_string(priv->chip_id);
 
-	fu_xmlb_builder_insert_kv(bn, "chip_id", fu_kinetic_dp_chip_to_string(priv->chip_id));
-	fu_xmlb_builder_insert_kx(bn, "isp_drv_size", priv->isp_drv_size);
-	fu_xmlb_builder_insert_kx(bn, "esm_payload_size", priv->esm_payload_size);
-	fu_xmlb_builder_insert_kx(bn, "arm_app_code_size", priv->arm_app_code_size);
-	fu_xmlb_builder_insert_kx(bn, "app_init_data_size", priv->app_init_data_size);
-	fu_xmlb_builder_insert_kx(bn, "cmdb_block_size", priv->cmdb_block_size);
-	fu_xmlb_builder_insert_kb(bn, "esm_xip_enabled", priv->esm_xip_enabled);
+	if (chip_id_str != NULL)
+		fwupd_json_object_add_string(json_object, "chip_id", chip_id_str);
+	if (priv->isp_drv_size != 0)
+		fwupd_json_object_add_integer(json_object, "isp_drv_size", priv->isp_drv_size);
+	if (priv->esm_payload_size != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "esm_payload_size",
+					      priv->esm_payload_size);
+	if (priv->arm_app_code_size != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "arm_app_code_size",
+					      priv->arm_app_code_size);
+	if (priv->app_init_data_size != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "app_init_data_size",
+					      priv->app_init_data_size);
+	if (priv->cmdb_block_size != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "cmdb_block_size",
+					      priv->cmdb_block_size);
+	fwupd_json_object_add_boolean(json_object, "esm_xip_enabled", priv->esm_xip_enabled);
 }
 
 static gboolean

@@ -1,0 +1,14 @@
+{
+  "gtype": "FuAcpiTable",
+  "id": "DMAR",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuFirmware",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

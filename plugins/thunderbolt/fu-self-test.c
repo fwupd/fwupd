@@ -340,7 +340,7 @@ write_controller_fw(const gchar *nvm)
 	gssize n;
 
 	fw_path =
-	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.json", NULL);
 	firmware_ctl = fu_firmware_new_from_filename(fw_path, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware_ctl);
@@ -954,7 +954,7 @@ test_set_up(FuThunderboltTest *tt, gconstpointer params)
 		g_autoptr(FuFirmware) firmware = NULL;
 
 		fw_path =
-		    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.xml", NULL);
+		    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.json", NULL);
 		firmware = fu_firmware_new_from_filename(fw_path, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(firmware);
@@ -1045,13 +1045,13 @@ test_image_validation(FuThunderboltTest *tt, gconstpointer user_data)
 
 	/* image as if read from the controller (i.e. no headers) */
 	ctl_path =
-	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.json", NULL);
 	firmware_ctl = fu_firmware_new_from_filename(ctl_path, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware_ctl);
 
 	/* valid firmware update image */
-	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.xml", NULL);
+	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.json", NULL);
 	firmware_fwi = fu_firmware_new_from_filename(fwi_path, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware_fwi);

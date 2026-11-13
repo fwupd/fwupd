@@ -70,52 +70,76 @@ fu_pixart_tp_section_init(FuPixartTpSection *self)
 }
 
 static void
-fu_pixart_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pixart_tp_section_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuPixartTpSection *self = FU_PIXART_TP_SECTION(firmware);
+	const gchar *update_type_str = fu_pixart_tp_update_type_to_string(self->update_type);
 
-	fu_xmlb_builder_insert_kv(bn,
-				  "update_type",
-				  fu_pixart_tp_update_type_to_string(self->update_type));
+	if (update_type_str != NULL)
+		fwupd_json_object_add_string(json_object, "update_type", update_type_str);
 	if (self->flags != FU_PIXART_TP_FIRMWARE_FLAG_NONE) {
 		g_autofree gchar *str = fu_pixart_tp_firmware_flags_to_string(self->flags);
-		fu_xmlb_builder_insert_kv(bn, "flags", str);
+		fwupd_json_object_add_string(json_object, "flags", str);
 	}
-	fu_xmlb_builder_insert_kx(bn, "target_flash_start", self->target_flash_start);
-	fu_xmlb_builder_insert_kx(bn, "section_crc", self->section_crc);
+	if (self->target_flash_start != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "target_flash_start",
+					      self->target_flash_start);
+	if (self->section_crc != 0)
+		fwupd_json_object_add_integer(json_object, "section_crc", self->section_crc);
 	if (self->reserved != NULL) {
 		g_autofree gchar *str = fu_byte_array_to_string(self->reserved);
-		fu_xmlb_builder_insert_kv(bn, "reserved", str);
+		fwupd_json_object_add_string(json_object, "reserved", str);
 	}
 }
 
 static gboolean
-fu_pixart_tp_section_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_pixart_tp_section_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuPixartTpSection *self = FU_PIXART_TP_SECTION(firmware);
 	const gchar *tmp;
-	guint64 tmp64 = 0;
+	gint64 tmp64 = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "update_type", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "update_type", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->update_type = fu_pixart_tp_update_type_from_string(tmp);
-	tmp = xb_node_query_text(n, "flags", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "flags", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->flags = fu_pixart_tp_firmware_flags_from_string(tmp);
-	tmp = xb_node_query_text(n, "target_flash_start", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "target_flash_start")) {
+		if (!fwupd_json_object_get_integer(json_object,
+						   "target_flash_start",
+						   &tmp64,
+						   error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid target_flash_start");
+			return FALSE;
+		}
 		self->target_flash_start = (guint32)tmp64;
 	}
-	tmp = xb_node_query_text(n, "section_crc", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "section_crc")) {
+		if (!fwupd_json_object_get_integer(json_object, "section_crc", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid section_crc");
+			return FALSE;
+		}
 		self->section_crc = (guint32)tmp64;
 	}
-	tmp = xb_node_query_text(n, "reserved", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "reserved", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (self->reserved != NULL)
 			g_byte_array_unref(self->reserved);

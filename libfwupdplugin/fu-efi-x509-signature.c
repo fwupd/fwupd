@@ -38,13 +38,19 @@ struct _FuEfiX509Signature {
 G_DEFINE_TYPE(FuEfiX509Signature, fu_efi_x509_signature, FU_TYPE_EFI_SIGNATURE)
 
 static void
-fu_efi_x509_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_x509_signature_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "issuer", self->issuer);
-	fu_xmlb_builder_insert_kv(bn, "subject", self->subject);
-	fu_xmlb_builder_insert_kv(bn, "subject_name", self->subject_name);
-	fu_xmlb_builder_insert_kv(bn, "subject_vendor", self->subject_vendor);
+	if (self->issuer != NULL)
+		fwupd_json_object_add_string(json_object, "issuer", self->issuer);
+	if (self->subject != NULL)
+		fwupd_json_object_add_string(json_object, "subject", self->subject);
+	if (self->subject_name != NULL)
+		fwupd_json_object_add_string(json_object, "subject_name", self->subject_name);
+	if (self->subject_vendor != NULL)
+		fwupd_json_object_add_string(json_object, "subject_vendor", self->subject_vendor);
 }
 
 /**

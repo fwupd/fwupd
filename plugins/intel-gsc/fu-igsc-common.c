@@ -9,31 +9,41 @@
 #include "fu-igsc-common.h"
 
 static void
-fu_igsc_fwdata_device_info_export_one(FuIgscFwdataDeviceInfo4 *st, XbBuilderNode *bn)
+fu_igsc_fwdata_device_info_export_one(FuIgscFwdataDeviceInfo4 *st, FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "vendor_id", fu_igsc_fwdata_device_info4_get_vendor_id(st));
-	fu_xmlb_builder_insert_kx(bn, "device_id", fu_igsc_fwdata_device_info4_get_device_id(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "subsys_vendor_id",
-				  fu_igsc_fwdata_device_info4_get_subsys_vendor_id(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "subsys_device_id",
-				  fu_igsc_fwdata_device_info4_get_subsys_device_id(st));
+	if (fu_igsc_fwdata_device_info4_get_vendor_id(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "vendor_id",
+					      fu_igsc_fwdata_device_info4_get_vendor_id(st));
+	if (fu_igsc_fwdata_device_info4_get_device_id(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "device_id",
+					      fu_igsc_fwdata_device_info4_get_device_id(st));
+	if (fu_igsc_fwdata_device_info4_get_subsys_vendor_id(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "subsys_vendor_id",
+					      fu_igsc_fwdata_device_info4_get_subsys_vendor_id(st));
+	if (fu_igsc_fwdata_device_info4_get_subsys_device_id(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "subsys_device_id",
+					      fu_igsc_fwdata_device_info4_get_subsys_device_id(st));
 }
 
 void
-fu_igsc_fwdata_device_info_export(GPtrArray *device_infos, XbBuilderNode *bn)
+fu_igsc_fwdata_device_info_export(GPtrArray *device_infos, FwupdJsonObject *json_object)
 {
-	g_autoptr(XbBuilderNode) bc = NULL;
+	g_autoptr(FwupdJsonArray) json_device_infos = NULL;
 
 	if (device_infos->len == 0)
 		return;
-	bc = xb_builder_node_insert(bn, "device_infos", NULL);
+	json_device_infos = fwupd_json_array_new();
 	for (guint i = 0; i < device_infos->len; i++) {
 		FuIgscFwdataDeviceInfo4 *st = g_ptr_array_index(device_infos, i);
-		g_autoptr(XbBuilderNode) bm = xb_builder_node_insert(bc, "match", NULL);
-		fu_igsc_fwdata_device_info_export_one(st, bm);
+		g_autoptr(FwupdJsonObject) json_match = fwupd_json_object_new();
+		fu_igsc_fwdata_device_info_export_one(st, json_match);
+		fwupd_json_array_add_object(json_device_infos, json_match);
 	}
+	fwupd_json_object_add_array(json_object, "device_infos", json_device_infos);
 }
 
 static gboolean

@@ -161,12 +161,4 @@ fu_common_get_random(guint bufsz, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gchar *
 fu_common_get_random_string(guint length, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
-void
-fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)
-    G_GNUC_NON_NULL(1);
-void
-fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
-void
-fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
-
 G_END_DECLS

@@ -1,0 +1,24 @@
+{
+  "gtype": "FuPefileFirmware",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "id": ".text",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuCsvFirmware",
+      "id": ".sbata",
+      "write_column_ids": false,
+      "firmware": [
+        {
+          "gtype": "FuCsvEntry",
+          "values": {
+            "component_name": "sbat",
+            "component_generation": "2"
+          }
+        }
+      ]
+    }
+  ]
+}

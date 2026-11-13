@@ -37,14 +37,20 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuFirmware, fu_dfu_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_dfu_firmware_get_instance_private(o))
 
 static void
-fu_dfu_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_dfu_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "vendor", priv->vid);
-	fu_xmlb_builder_insert_kx(bn, "product", priv->pid);
-	fu_xmlb_builder_insert_kx(bn, "release", priv->release);
-	fu_xmlb_builder_insert_kx(bn, "dfu_version", priv->dfu_version);
+	if (priv->vid != 0)
+		fwupd_json_object_add_integer(json_object, "vendor", priv->vid);
+	if (priv->pid != 0)
+		fwupd_json_object_add_integer(json_object, "product", priv->pid);
+	if (priv->release != 0)
+		fwupd_json_object_add_integer(json_object, "release", priv->release);
+	if (priv->dfu_version != 0)
+		fwupd_json_object_add_integer(json_object, "dfu_version", priv->dfu_version);
 }
 
 /* private */
@@ -373,24 +379,44 @@ fu_dfu_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_dfu_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_dfu_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "vendor", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"vendor",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->vid = tmp;
-	tmp = xb_node_query_text_as_uint(n, "product", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"product",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->pid = tmp;
-	tmp = xb_node_query_text_as_uint(n, "release", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"release",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->release = tmp;
-	tmp = xb_node_query_text_as_uint(n, "dfu_version", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"dfu_version",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->dfu_version = tmp;
 
 	/* success */

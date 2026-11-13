@@ -286,29 +286,31 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_cab_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_cab_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "compressed", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->compressed, error))
-			return FALSE;
-	}
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"compressed",
+							&priv->compressed,
+							FALSE,
+							error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
 }
 
 static void
-fu_cab_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_cab_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kb(bn, "compressed", priv->compressed);
+	fwupd_json_object_add_boolean(json_object, "compressed", priv->compressed);
 }
 
 static void

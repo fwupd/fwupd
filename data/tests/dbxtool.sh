@@ -39,28 +39,36 @@ run() {
 }
 
 # build an EFI_SIGNATURE_LIST to use as the installed dbx
-cat >${TMPDIR}/dbx.builder.xml <<EOF
-<firmware gtype="FuEfiSignatureList">
-  <firmware gtype="FuEfiSignature">
-    <kind>sha256</kind>
-    <owner>77fa9abd-0359-4d32-bd60-28f4e78f784b</owner>
-    <checksum>418ad44c79e3fddd6a0574b24fcf0fb8fee4b3ff2be635d21a5c0852bdea635c</checksum>
-  </firmware>
-</firmware>
+cat >${TMPDIR}/dbx.builder.json <<EOF
+{
+  "gtype": "FuEfiSignatureList",
+  "firmware": [
+    {
+      "gtype": "FuEfiSignature",
+      "kind": "sha256",
+      "owner": "77fa9abd-0359-4d32-bd60-28f4e78f784b",
+      "checksum": "418ad44c79e3fddd6a0574b24fcf0fb8fee4b3ff2be635d21a5c0852bdea635c"
+    }
+  ]
+}
 EOF
-fwupdtool firmware-build ${TMPDIR}/dbx.builder.xml ${TMPDIR}/dbx.bin >/dev/null 2>&1
+fwupdtool firmware-build ${TMPDIR}/dbx.builder.json ${TMPDIR}/dbx.bin >/dev/null 2>&1
 
 # ...and a different one to use as an update
-cat >${TMPDIR}/update.builder.xml <<EOF
-<firmware gtype="FuEfiSignatureList">
-  <firmware gtype="FuEfiSignature">
-    <kind>sha256</kind>
-    <owner>77fa9abd-0359-4d32-bd60-28f4e78f784b</owner>
-    <checksum>0000000000000000000000000000000000000000000000000000000000000000</checksum>
-  </firmware>
-</firmware>
+cat >${TMPDIR}/update.builder.json <<EOF
+{
+  "gtype": "FuEfiSignatureList",
+  "firmware": [
+    {
+      "gtype": "FuEfiSignature",
+      "kind": "sha256",
+      "owner": "77fa9abd-0359-4d32-bd60-28f4e78f784b",
+      "checksum": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}
 EOF
-fwupdtool firmware-build ${TMPDIR}/update.builder.xml ${TMPDIR}/update.bin >/dev/null 2>&1
+fwupdtool firmware-build ${TMPDIR}/update.builder.json ${TMPDIR}/update.bin >/dev/null 2>&1
 
 # seed the system dbx efivar: 4 bytes of attributes (NV|BS|RT) then the data
 printf '\007\000\000\000' >${FWUPD_SYSFSFWDIR}/efi/efivars/dbx-${DBX_GUID}

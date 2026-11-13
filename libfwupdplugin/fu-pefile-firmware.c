@@ -46,12 +46,19 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWAR
 #define FU_PEFILE_FIRMWARE_SYMBOLS_MAX 1000000
 
 static void
-fu_pefile_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pefile_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);
 	FuPefileFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kv(bn, "authenticode_hash", priv->authenticode_hash);
-	fu_xmlb_builder_insert_kv(bn, "subsystem", fu_coff_subsystem_to_string(priv->subsystem_id));
+	const gchar *subsystem_str = fu_coff_subsystem_to_string(priv->subsystem_id);
+	if (priv->authenticode_hash != NULL)
+		fwupd_json_object_add_string(json_object,
+					     "authenticode_hash",
+					     priv->authenticode_hash);
+	if (subsystem_str != NULL)
+		fwupd_json_object_add_string(json_object, "subsystem", subsystem_str);
 }
 
 static gboolean

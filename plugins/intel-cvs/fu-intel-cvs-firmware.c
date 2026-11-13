@@ -20,11 +20,15 @@ struct _FuIntelCvsFirmware {
 G_DEFINE_TYPE(FuIntelCvsFirmware, fu_intel_cvs_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_intel_cvs_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_intel_cvs_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuIntelCvsFirmware *self = FU_INTEL_CVS_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
-	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
+	if (self->vid != 0)
+		fwupd_json_object_add_integer(json_object, "vid", self->vid);
+	if (self->pid != 0)
+		fwupd_json_object_add_integer(json_object, "pid", self->pid);
 }
 
 static gboolean

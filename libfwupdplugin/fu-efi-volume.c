@@ -38,15 +38,18 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiVolume, fu_efi_volume, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_volume_get_instance_private(o))
 
 static void
-fu_efi_volume_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_volume_export(FuFirmware *firmware,
+		     FuFirmwareExportFlags flags,
+		     FwupdJsonObject *json_object)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "attrs", priv->attrs);
+	if (priv->attrs != 0)
+		fwupd_json_object_add_integer(json_object, "attrs", priv->attrs);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "name",
-					  fu_efi_guid_to_name(fu_firmware_get_id(firmware)));
+		const gchar *name_str = fu_efi_guid_to_name(fu_firmware_get_id(firmware));
+		if (name_str != NULL)
+			fwupd_json_object_add_string(json_object, "name", name_str);
 	}
 }
 

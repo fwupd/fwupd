@@ -37,13 +37,22 @@ fu_fdt_firmware_func(void)
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* write file */
-	fdt_tmp = fu_firmware_new_from_xml(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	fdt_tmp = fu_firmware_new_from_json("{\n"
+					    "  \"gtype\": \"FuFdtFirmware\",\n"
+					    "  \"firmware\": [\n"
+					    "    {\n"
+					    "      \"gtype\": \"FuFdtImage\",\n"
+					    "      \"metadata\": [\n"
+					    "        {\n"
+					    "          \"key\": \"compatible\",\n"
+					    "          \"format\": \"str\",\n"
+					    "          \"value\": \"pine64,rockpro64-v2.1\"\n"
+					    "        }\n"
+					    "      ]\n"
+					    "    }\n"
+					    "  ]\n"
+					    "}\n",
+					    &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt_tmp);
 	fn = fu_temporary_directory_build(tmpdir, "system.dtb", NULL);

@@ -24,10 +24,13 @@ fu_fresco_pd_firmware_get_customer_id(FuFrescoPdFirmware *self)
 }
 
 static void
-fu_fresco_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_fresco_pd_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuFrescoPdFirmware *self = FU_FRESCO_PD_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "customer_id", self->customer_id);
+	if (self->customer_id != 0)
+		fwupd_json_object_add_integer(json_object, "customer_id", self->customer_id);
 }
 
 static gboolean

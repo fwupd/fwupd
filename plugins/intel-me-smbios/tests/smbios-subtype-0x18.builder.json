@@ -1,0 +1,29 @@
+{
+  "gtype": "FuSmbios",
+  "items": [
+    {
+      "type": "0xdd",
+      "length": "0x1a",
+      "handle": "0x0018",
+      "buf": "dd1a18000301000c00f41000020000000000000304100120a909",
+      "strings": {
+        "00": "Reference Code - ME",
+        "01": "MEBx version",
+        "02": "ME Firmware Version",
+        "03": "Consumer SKU"
+      }
+    },
+    {
+      "type": "0xdb",
+      "length": "0x6a",
+      "handle": "0x0073",
+      "buf": "db6a730001040145020090060185392000000000400000000000000200204002ffffffffffffffffffffffffffffffffffffffffffffffff0300000080000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000",
+      "strings": {
+        "00": "MEI1",
+        "01": "MEI2",
+        "02": "MEI3",
+        "03": "MEI4"
+      }
+    }
+  ]
+}

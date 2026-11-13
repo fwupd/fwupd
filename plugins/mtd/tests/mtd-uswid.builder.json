@@ -1,0 +1,10 @@
+{
+  "gtype": "FuUswidFirmware",
+  "id": "SBOM",
+  "firmware": [
+    {
+      "gtype": "FuCoswidFirmware",
+      "version": "456"
+    }
+  ]
+}

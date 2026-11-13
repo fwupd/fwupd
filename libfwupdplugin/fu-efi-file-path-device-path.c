@@ -106,11 +106,12 @@ fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 static void
 fu_efi_file_path_device_path_export(FuFirmware *firmware,
 				    FuFirmwareExportFlags flags,
-				    XbBuilderNode *bn)
+				    FwupdJsonObject *json_object)
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(firmware);
 	g_autofree gchar *name = fu_efi_file_path_device_path_get_name(self, NULL);
-	fu_xmlb_builder_insert_kv(bn, "name", name);
+	if (name != NULL)
+		fwupd_json_object_add_string(json_object, "name", name);
 }
 
 static void
@@ -125,15 +126,18 @@ fu_efi_file_path_device_path_add_json(FwupdCodec *codec,
 }
 
 static gboolean
-fu_efi_file_path_device_path_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_file_path_device_path_build(FuFirmware *firmware,
+				   FwupdJsonObject *json_object,
+				   GError **error)
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(firmware);
-	g_autoptr(XbNode) data = NULL;
 
 	/* optional data */
-	data = xb_node_query_first(n, "name", NULL);
-	if (data != NULL) {
-		if (!fu_efi_file_path_device_path_set_name(self, xb_node_get_text(data), error))
+	if (fwupd_json_object_has_node(json_object, "name")) {
+		const gchar *name = NULL;
+		if (!fwupd_json_object_get_string_optional(json_object, "name", &name, error))
+			return FALSE;
+		if (!fu_efi_file_path_device_path_set_name(self, name, error))
 			return FALSE;
 	}
 

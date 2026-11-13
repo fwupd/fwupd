@@ -50,13 +50,13 @@ fu_wacom_usb_firmware_parse_func(void)
 				 g_bytes_get_size(blob_block));
 }
 static void
-fu_wacom_usb_firmware_xml_func(void)
+fu_wacom_usb_firmware_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "wacom-usb.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "wacom-usb.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "346f6196449b356777cf241f6edb039d503b88a1",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
@@ -82,7 +82,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	g_type_ensure(FU_TYPE_WACOM_USB_FIRMWARE);
 	g_test_add_func("/wacom-usb/firmware/parse", fu_wacom_usb_firmware_parse_func);
-	g_test_add_func("/wacom-usb/firmware/xml", fu_wacom_usb_firmware_xml_func);
+	g_test_add_func("/wacom-usb/firmware/json", fu_wacom_usb_firmware_json_func);
 	g_test_add_func("/wacom-usb/buffer-dump", fu_wacom_usb_buffer_dump_func);
 	return g_test_run();
 }

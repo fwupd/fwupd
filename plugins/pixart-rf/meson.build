@@ -38,7 +38,7 @@ device_tests += files(
 
 if get_option('tests')
   install_data(
-    ['tests/pixart-rf.builder.xml'],
+    ['tests/pixart-rf.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

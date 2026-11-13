@@ -20,14 +20,14 @@
 #define FU_VBE_SIMPLE_TEST_STORE      (FU_VBE_SIMPLE_TEST_AREA_START + 0x200)
 
 static FuTemporaryDirectory *
-fu_vbe_test_write_fdt(FuContext *ctx, const gchar *xml, GError **error)
+fu_vbe_test_write_fdt(FuContext *ctx, const gchar *json, GError **error)
 {
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(FuFirmware) fdt_tmp = NULL;
 	g_autoptr(GFile) file = NULL;
 
-	fdt_tmp = fu_firmware_new_from_xml(xml, error);
+	fdt_tmp = fu_firmware_new_from_json(json, error);
 	if (fdt_tmp == NULL)
 		return NULL;
 	tmpdir = fu_temporary_directory_new("vbe", error);
@@ -48,7 +48,7 @@ fu_vbe_plugin_coldplug_func(void)
 	GPtrArray *devices;
 	FuDevice *dev;
 	g_autofree gchar *storage = NULL;
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -67,29 +67,73 @@ fu_vbe_plugin_coldplug_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
-	    "          <metadata key=\"cur-version\" format=\"str\">1.2.3</metadata>\n"
-	    "          <metadata key=\"bootloader-version\" format=\"str\">2022.01</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
-	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    storage);
-	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFdtFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"metadata\": [\n"
+			       "        {\n"
+			       "          \"key\": \"compatible\",\n"
+			       "          \"format\": \"str\",\n"
+			       "          \"value\": \"pine64,rockpro64-v2.1\"\n"
+			       "        }\n"
+			       "      ],\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"chosen\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"fwupd\",\n"
+			       "              \"firmware\": [\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-simple\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"cur-version\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"1.2.3\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"bootloader-version\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"2022.01\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"%s\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x100000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x200000\"\n"
+			       "                    }\n"
+			       "                  ]\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 
@@ -133,7 +177,7 @@ fu_vbe_abrec_test_boot(FuTemporaryDirectory *tmpdir, const gchar *booted_slot)
 	g_autofree gchar *disk = fu_temporary_directory_build(tmpdir, "disk.img", NULL);
 	g_autofree gchar *dtb = fu_temporary_directory_build(tmpdir, "system.dtb", NULL);
 	g_autofree gchar *slot = NULL;
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -145,43 +189,107 @@ fu_vbe_abrec_test_boot(FuTemporaryDirectory *tmpdir, const gchar *booted_slot)
 	fu_context_add_firmware_gtypes(ctx);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 	if (booted_slot != NULL) {
-		slot = g_strdup_printf("<metadata key=\"booted-slot\" format=\"str\">%s</metadata>",
-				       booted_slot);
+		slot = g_strdup_printf(
+		    ",{\"key\": \"booted-slot\", \"format\": \"str\", \"value\": \"%s\"}",
+		    booted_slot);
 	}
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <metadata key=\"compatible\" format=\"str\">vendor,board</metadata>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware0</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-abrec</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"area-size\" format=\"uint32\">0x10000</metadata>\n"
-	    "          <metadata key=\"state-offset\" format=\"uint32\">0x0</metadata>\n"
-	    "          <metadata key=\"state-size\" format=\"uint32\">0x40</metadata>\n"
-	    "          <metadata key=\"slot-a-offset\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"slot-b-offset\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"slot-size\" format=\"uint32\">0x10000</metadata>\n"
-	    "          <metadata key=\"slot-info-offset\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"slot-info-size\" format=\"uint32\">0x1000</metadata>\n"
-	    "          %s\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    disk,
-	    (guint)FU_VBE_TEST_STATE,
-	    (guint)FU_VBE_TEST_SLOT_A,
-	    (guint)FU_VBE_TEST_SLOT_B,
-	    (guint)FU_VBE_TEST_SLOT_INFO,
-	    slot != NULL ? slot : "");
-	fdt = fu_firmware_new_from_xml(xml, &error);
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFdtFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"chosen\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"fwupd\",\n"
+			       "              \"metadata\": [\n"
+			       "                {\n"
+			       "                  \"key\": \"compatible\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"vendor,board\"\n"
+			       "                }\n"
+			       "              ],\n"
+			       "              \"firmware\": [\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware0\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-abrec\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"%s\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x10000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"state-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x0\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"state-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x40\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-a-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-b-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x10000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-info-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-info-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x1000\"\n"
+			       "                    }%s\n"
+			       "                  ]\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       disk,
+			       (guint)FU_VBE_TEST_STATE,
+			       (guint)FU_VBE_TEST_SLOT_A,
+			       (guint)FU_VBE_TEST_SLOT_B,
+			       (guint)FU_VBE_TEST_SLOT_INFO,
+			       slot != NULL ? slot : "");
+	fdt = fu_firmware_new_from_json(json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt);
 	ret = fu_firmware_write_file(fdt, file, &error);
@@ -548,47 +656,100 @@ fu_vbe_abrec_test_device_new(FuContext *ctx,
 			     guint32 slot_recovery)
 {
 	g_autofree gchar *recovery = NULL;
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFdtImage) fdt_root = NULL;
 	g_autoptr(FuFdtImage) fdt_node = NULL;
 	g_autoptr(GError) error = NULL;
 
 	if (slot_recovery != 0) {
-		recovery = g_strdup_printf("<metadata key=\"slot-recovery-offset\" "
-					   "format=\"uint32\">0x%x</metadata>",
+		recovery = g_strdup_printf(",{\"key\": \"slot-recovery-offset\", "
+					   "\"format\": \"uint32\", \"value\": \"0x%x\"}",
 					   (guint)slot_recovery);
 	}
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware0</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-abrec</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">mmc1</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x1000</metadata>\n"
-	    "          <metadata key=\"state-offset\" format=\"uint32\">0x0</metadata>\n"
-	    "          <metadata key=\"state-size\" format=\"uint32\">0x40</metadata>\n"
-	    "          <metadata key=\"slot-a-offset\" format=\"uint32\">0x10000</metadata>\n"
-	    "          <metadata key=\"slot-b-offset\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"slot-size\" format=\"uint32\">0x10000</metadata>\n"
-	    "          <metadata key=\"slot-info-offset\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"slot-info-size\" format=\"uint32\">0x1000</metadata>\n"
-	    "          %s\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    (guint)slot_b,
-	    (guint)slot_info_offset,
-	    recovery != NULL ? recovery : "");
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFdtFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"chosen\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"fwupd\",\n"
+			       "              \"firmware\": [\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware0\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-abrec\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"mmc1\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x1000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"state-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x0\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"state-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x40\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-a-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x10000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-b-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x10000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-info-offset\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"slot-info-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x1000\"\n"
+			       "                    }%s\n"
+			       "                  ]\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       (guint)slot_b,
+			       (guint)slot_info_offset,
+			       recovery != NULL ? recovery : "");
 	fu_context_add_firmware_gtypes(ctx);
-	fdt = fu_firmware_new_from_xml(xml, &error);
+	fdt = fu_firmware_new_from_json(json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt);
 	fdt_root = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/chosen/fwupd", &error);
@@ -1112,7 +1273,7 @@ fu_vbe_plugin_coldplug_two_func(void)
 	gboolean ret;
 	GPtrArray *devices;
 	g_autofree gchar *storage = NULL;
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_vbe_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -1130,34 +1291,83 @@ fu_vbe_plugin_coldplug_two_func(void)
 	g_assert_true(ret);
 
 	/* two methods, each with its own node */
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware0</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x100000</metadata>\n"
-	    "          <metadata key=\"area-size\" format=\"uint32\">0x200000</metadata>\n"
-	    "        </firmware>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware1</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x300000</metadata>\n"
-	    "          <metadata key=\"area-size\" format=\"uint32\">0x400000</metadata>\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    storage,
-	    storage);
-	tmpdir = fu_vbe_test_write_fdt(ctx, xml, &error);
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFdtFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"chosen\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"fwupd\",\n"
+			       "              \"firmware\": [\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware0\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-simple\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"%s\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x100000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x200000\"\n"
+			       "                    }\n"
+			       "                  ]\n"
+			       "                },\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware1\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-simple\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"%s\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x300000\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x400000\"\n"
+			       "                    }\n"
+			       "                  ]\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       storage,
+			       storage);
+	tmpdir = fu_vbe_test_write_fdt(ctx, json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
@@ -1206,24 +1416,48 @@ fu_vbe_plugin_coldplug_invalid_compatible_func(void)
 
 	fu_context_add_firmware_gtypes(ctx);
 
-	tmpdir = fu_vbe_test_write_fdt(
-	    ctx,
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-unknown</metadata>\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	tmpdir = fu_vbe_test_write_fdt(ctx,
+				       "{\n"
+				       "  \"gtype\": \"FuFdtFirmware\",\n"
+				       "  \"firmware\": [\n"
+				       "    {\n"
+				       "      \"gtype\": \"FuFdtImage\",\n"
+				       "      \"metadata\": [\n"
+				       "        {\n"
+				       "          \"key\": \"compatible\",\n"
+				       "          \"format\": \"str\",\n"
+				       "          \"value\": \"pine64,rockpro64-v2.1\"\n"
+				       "        }\n"
+				       "      ],\n"
+				       "      \"firmware\": [\n"
+				       "        {\n"
+				       "          \"gtype\": \"FuFdtImage\",\n"
+				       "          \"id\": \"chosen\",\n"
+				       "          \"firmware\": [\n"
+				       "            {\n"
+				       "              \"gtype\": \"FuFdtImage\",\n"
+				       "              \"id\": \"fwupd\",\n"
+				       "              \"firmware\": [\n"
+				       "                {\n"
+				       "                  \"gtype\": \"FuFdtImage\",\n"
+				       "                  \"id\": \"firmware\",\n"
+				       "                  \"metadata\": [\n"
+				       "                    {\n"
+				       "                      \"key\": \"compatible\",\n"
+				       "                      \"format\": \"str\",\n"
+				       "                      \"value\": \"fwupd,vbe-unknown\"\n"
+				       "                    }\n"
+				       "                  ]\n"
+				       "                }\n"
+				       "              ]\n"
+				       "            }\n"
+				       "          ]\n"
+				       "        }\n"
+				       "      ]\n"
+				       "    }\n"
+				       "  ]\n"
+				       "}\n",
+				       &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 
@@ -1237,36 +1471,72 @@ fu_vbe_plugin_coldplug_invalid_compatible_func(void)
 static FuDevice *
 fu_vbe_simple_test_device_new(FuContext *ctx, const gchar *storage)
 {
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFdtImage) fdt_root = NULL;
 	g_autoptr(FuFdtImage) fdt_node = NULL;
 	g_autoptr(GError) error = NULL;
 
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFdtFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>chosen</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>fwupd</id>\n"
-	    "        <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>firmware</id>\n"
-	    "          <metadata key=\"compatible\" format=\"str\">fwupd,vbe-simple</metadata>\n"
-	    "          <metadata key=\"storage\" format=\"str\">%s</metadata>\n"
-	    "          <metadata key=\"area-start\" format=\"uint32\">0x%x</metadata>\n"
-	    "          <metadata key=\"area-size\" format=\"uint32\">0x%x</metadata>\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    storage,
-	    (guint)FU_VBE_SIMPLE_TEST_AREA_START,
-	    (guint)FU_VBE_SIMPLE_TEST_AREA_SIZE);
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFdtFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"chosen\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"fwupd\",\n"
+			       "              \"metadata\": [\n"
+			       "                {\n"
+			       "                  \"key\": \"compatible\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"pine64,rockpro64-v2.1\"\n"
+			       "                }\n"
+			       "              ],\n"
+			       "              \"firmware\": [\n"
+			       "                {\n"
+			       "                  \"gtype\": \"FuFdtImage\",\n"
+			       "                  \"id\": \"firmware\",\n"
+			       "                  \"metadata\": [\n"
+			       "                    {\n"
+			       "                      \"key\": \"compatible\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"fwupd,vbe-simple\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"storage\",\n"
+			       "                      \"format\": \"str\",\n"
+			       "                      \"value\": \"%s\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-start\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    },\n"
+			       "                    {\n"
+			       "                      \"key\": \"area-size\",\n"
+			       "                      \"format\": \"uint32\",\n"
+			       "                      \"value\": \"0x%x\"\n"
+			       "                    }\n"
+			       "                  ]\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       storage,
+			       (guint)FU_VBE_SIMPLE_TEST_AREA_START,
+			       (guint)FU_VBE_SIMPLE_TEST_AREA_SIZE);
 	fu_context_add_firmware_gtypes(ctx);
-	fdt = fu_firmware_new_from_xml(xml, &error);
+	fdt = fu_firmware_new_from_json(json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt);
 	fdt_root = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/chosen/fwupd", &error);
@@ -1322,46 +1592,130 @@ fu_vbe_simple_test_fit_new(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fit = fu_firmware_new_from_xml(
-	    "<firmware gtype=\"FuFitFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>images</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-1</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">other</metadata>\n"
-	    "        <metadata key=\"data\" format=\"data\">b3RoZXI=</metadata>\n" /* other */
-	    "        <metadata key=\"store-offset\" format=\"uint32\">0x100</metadata>\n"
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-2</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
-	    "        <metadata key=\"data\" format=\"data\">cm9jaw==</metadata>\n" /* rock */
-	    "        <metadata key=\"store-offset\" format=\"uint32\">0x200</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>configurations</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"compatible\" format=\"strlist\">other,board</metadata>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-2</id>\n"
-	    "        <metadata key=\"compatible\" "
-	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	fit = fu_firmware_new_from_json("{\n"
+					"  \"gtype\": \"FuFitFirmware\",\n"
+					"  \"firmware\": [\n"
+					"    {\n"
+					"      \"gtype\": \"FuFdtImage\",\n"
+					"      \"metadata\": [\n"
+					"        {\n"
+					"          \"key\": \"timestamp\",\n"
+					"          \"format\": \"uint32\",\n"
+					"          \"value\": \"0x629d4abd\"\n"
+					"        }\n"
+					"      ],\n"
+					"      \"firmware\": [\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"images\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"other\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data\",\n"
+					"                  \"format\": \"data\",\n"
+					"                  \"value\": \"b3RoZXI=\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"store-offset\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x100\"\n"
+					"                }\n"
+					"              ]\n"
+					"            },\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-2\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"rock\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data\",\n"
+					"                  \"format\": \"data\",\n"
+					"                  \"value\": \"cm9jaw==\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"store-offset\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x200\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        },\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"configurations\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"conf-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"compatible\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"other,board\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"version\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"1.2.3\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"firmware\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"firmware-1\"\n"
+					"                }\n"
+					"              ]\n"
+					"            },\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"conf-2\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"compatible\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"pine64,rockpro64-v2.1\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"version\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"1.2.3\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"firmware\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"firmware-2\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        }\n"
+					"      ]\n"
+					"    }\n"
+					"  ]\n"
+					"}\n",
+					&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fit);
 	blob = fu_firmware_write(fit, &error);
@@ -1405,38 +1759,83 @@ fu_vbe_simple_device_prepare_func(void)
 static GBytes *
 fu_vbe_test_fit_new_cfgs(const gchar *cfgs)
 {
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuFirmware) fit = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	xml = g_strdup_printf(
-	    "<firmware gtype=\"FuFitFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>images</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-1</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">any</metadata>\n"
-	    "        <metadata key=\"data\" format=\"data\">YW55</metadata>\n" /* any */
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-2</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
-	    "        <metadata key=\"data\" format=\"data\">cm9jaw==</metadata>\n" /* rock */
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>configurations</id>\n"
-	    "%s"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    cfgs);
-	fit = fu_firmware_new_from_xml(xml, &error);
+	json = g_strdup_printf("{\n"
+			       "  \"gtype\": \"FuFitFirmware\",\n"
+			       "  \"firmware\": [\n"
+			       "    {\n"
+			       "      \"gtype\": \"FuFdtImage\",\n"
+			       "      \"metadata\": [\n"
+			       "        {\n"
+			       "          \"key\": \"timestamp\",\n"
+			       "          \"format\": \"uint32\",\n"
+			       "          \"value\": \"0x629d4abd\"\n"
+			       "        }\n"
+			       "      ],\n"
+			       "      \"firmware\": [\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"images\",\n"
+			       "          \"firmware\": [\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"firmware-1\",\n"
+			       "              \"metadata\": [\n"
+			       "                {\n"
+			       "                  \"key\": \"type\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"firmware\"\n"
+			       "                },\n"
+			       "                {\n"
+			       "                  \"key\": \"description\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"any\"\n"
+			       "                },\n"
+			       "                {\n"
+			       "                  \"key\": \"data\",\n"
+			       "                  \"format\": \"data\",\n"
+			       "                  \"value\": \"YW55\"\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            },\n"
+			       "            {\n"
+			       "              \"gtype\": \"FuFdtImage\",\n"
+			       "              \"id\": \"firmware-2\",\n"
+			       "              \"metadata\": [\n"
+			       "                {\n"
+			       "                  \"key\": \"type\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"firmware\"\n"
+			       "                },\n"
+			       "                {\n"
+			       "                  \"key\": \"description\",\n"
+			       "                  \"format\": \"str\",\n"
+			       "                  \"value\": \"rock\"\n"
+			       "                },\n"
+			       "                {\n"
+			       "                  \"key\": \"data\",\n"
+			       "                  \"format\": \"data\",\n"
+			       "                  \"value\": \"cm9jaw==\"\n"
+			       "                }\n"
+			       "              ]\n"
+			       "            }\n"
+			       "          ]\n"
+			       "        },\n"
+			       "        {\n"
+			       "          \"gtype\": \"FuFdtImage\",\n"
+			       "          \"id\": \"configurations\",\n"
+			       "          \"firmware\": [%s]\n"
+			       "        }\n"
+			       "      ]\n"
+			       "    }\n"
+			       "  ]\n"
+			       "}\n",
+			       cfgs);
+	fit = fu_firmware_new_from_json(json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fit);
 	blob = fu_firmware_write(fit, &error);
@@ -1487,31 +1886,47 @@ fu_vbe_simple_device_no_compatible_func(void)
 	g_assert_true(ret);
 
 	/* a single configuration with no compatible strings applies to every board */
-	id_any = fu_vbe_test_pick_image(
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n",
-	    dev,
-	    &error);
+	id_any = fu_vbe_test_pick_image("{\n"
+					"  \"gtype\": \"FuFdtImage\",\n"
+					"  \"id\": \"conf-1\",\n"
+					"  \"metadata\": [\n"
+					"    {\n"
+					"      \"key\": \"version\",\n"
+					"      \"format\": \"str\",\n"
+					"      \"value\": \"1.2.3\"\n"
+					"    },\n"
+					"    {\n"
+					"      \"key\": \"firmware\",\n"
+					"      \"format\": \"strlist\",\n"
+					"      \"value\": \"firmware-1\"\n"
+					"    }\n"
+					"  ]\n"
+					"}\n",
+					dev,
+					&error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(id_any, ==, "firmware-1");
 
 	/* with more than one, a configuration with no compatible strings is skipped */
 	id_skip = fu_vbe_test_pick_image(
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-2</id>\n"
-	    "        <metadata key=\"compatible\" "
-	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
-	    "      </firmware>\n",
+	    "{\n"
+	    "  \"gtype\": \"FuFdtImage\",\n"
+	    "  \"id\": \"conf-1\",\n"
+	    "  \"metadata\": [\n"
+	    "    {\"key\": \"version\", \"format\": \"str\", \"value\": \"1.2.3\"},\n"
+	    "    {\"key\": \"firmware\", \"format\": \"strlist\", \"value\": \"firmware-1\"}\n"
+	    "  ]\n"
+	    "},\n"
+	    "{\n"
+	    "  \"gtype\": \"FuFdtImage\",\n"
+	    "  \"id\": \"conf-2\",\n"
+	    "  \"metadata\": [\n"
+	    "    {\"key\": \"compatible\", \"format\": \"strlist\", \"value\": "
+	    "\"pine64,rockpro64-v2.1\"},\n"
+	    "    {\"key\": \"version\", \"format\": \"str\", \"value\": \"1.2.3\"},\n"
+	    "    {\"key\": \"firmware\", \"format\": \"strlist\", \"value\": \"firmware-2\"}\n"
+	    "  ]\n"
+	    "}\n",
 	    dev,
 	    &error);
 	g_assert_no_error(error);
@@ -1519,17 +1934,23 @@ fu_vbe_simple_device_no_compatible_func(void)
 
 	/* ...so if none of the others match, there is nothing for this board */
 	id_none = fu_vbe_test_pick_image(
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-2</id>\n"
-	    "        <metadata key=\"compatible\" format=\"strlist\">other,board</metadata>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-2</metadata>\n"
-	    "      </firmware>\n",
+	    "{\n"
+	    "  \"gtype\": \"FuFdtImage\",\n"
+	    "  \"id\": \"conf-1\",\n"
+	    "  \"metadata\": [\n"
+	    "    {\"key\": \"version\", \"format\": \"str\", \"value\": \"1.2.3\"},\n"
+	    "    {\"key\": \"firmware\", \"format\": \"strlist\", \"value\": \"firmware-1\"}\n"
+	    "  ]\n"
+	    "},\n"
+	    "{\n"
+	    "  \"gtype\": \"FuFdtImage\",\n"
+	    "  \"id\": \"conf-2\",\n"
+	    "  \"metadata\": [\n"
+	    "    {\"key\": \"compatible\", \"format\": \"strlist\", \"value\": \"other,board\"},\n"
+	    "    {\"key\": \"version\", \"format\": \"str\", \"value\": \"1.2.3\"},\n"
+	    "    {\"key\": \"firmware\", \"format\": \"strlist\", \"value\": \"firmware-2\"}\n"
+	    "  ]\n"
+	    "}\n",
 	    dev,
 	    &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
@@ -1574,34 +1995,88 @@ fu_vbe_simple_device_external_func(void)
 	g_assert_true(ret);
 
 	/* an update with its data after the FIT, as written by 'mkimage -E' */
-	fit = fu_firmware_new_from_xml(
-	    "<firmware gtype=\"FuFitFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>images</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-1</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">rock</metadata>\n"
-	    "        <metadata key=\"data-offset\" format=\"uint32\">0x0</metadata>\n"
-	    "        <metadata key=\"data-size\" format=\"uint32\">0x4</metadata>\n"
-	    "        <metadata key=\"store-offset\" format=\"uint32\">0x200</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>configurations</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"compatible\" "
-	    "format=\"strlist\">pine64,rockpro64-v2.1</metadata>\n"
-	    "        <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	fit = fu_firmware_new_from_json("{\n"
+					"  \"gtype\": \"FuFitFirmware\",\n"
+					"  \"firmware\": [\n"
+					"    {\n"
+					"      \"gtype\": \"FuFdtImage\",\n"
+					"      \"metadata\": [\n"
+					"        {\n"
+					"          \"key\": \"timestamp\",\n"
+					"          \"format\": \"uint32\",\n"
+					"          \"value\": \"0x629d4abd\"\n"
+					"        }\n"
+					"      ],\n"
+					"      \"firmware\": [\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"images\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"rock\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-offset\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x0\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-size\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x4\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"store-offset\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x200\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        },\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"configurations\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"conf-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"compatible\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"pine64,rockpro64-v2.1\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"version\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"1.2.3\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"firmware\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"firmware-1\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        }\n"
+					"      ]\n"
+					"    }\n"
+					"  ]\n"
+					"}\n",
+					&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fit);
 	fdt = fu_firmware_write(fit, &error);

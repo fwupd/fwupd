@@ -26,7 +26,7 @@ device_tests += files('tests/realtek-alc408x.json')
 
 if get_option('tests')
   install_data(
-    ['tests/realtek-alc408x.builder.xml'],
+    ['tests/realtek-alc408x.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

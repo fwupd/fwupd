@@ -1,0 +1,32 @@
+{
+  "gtype": "FuDfuseFirmware",
+  "vendor": "0x1234",
+  "product": "0x5678",
+  "release": "0x8642",
+  "firmware": [
+    {
+      "idx": "0x1",
+      "id": "one",
+      "chunks": [
+        {
+          "data": "aGVsbG8gd29ybGQ=",
+          "addr": "0x8001234"
+        },
+        {
+          "data": "aGVsbG8gd29ybGQ=",
+          "addr": "0x8005678"
+        }
+      ]
+    },
+    {
+      "id": "two",
+      "addr": "0x7",
+      "chunks": [
+        {
+          "data": "aGVsbG8gd29ybGQ=",
+          "addr": "0x8000000"
+        }
+      ]
+    }
+  ]
+}

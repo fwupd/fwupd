@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 enum FuSynapticsMstFamily {
     Unknown = 0xFF,
     Tesla = 0,

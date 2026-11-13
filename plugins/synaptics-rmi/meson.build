@@ -33,7 +33,7 @@ device_tests += files('tests/synaptics-rmi-tm4066.json')
 
 if get_option('tests')
   install_data(
-    ['tests/synaptics-rmi-0x.builder.xml', 'tests/synaptics-rmi-10.builder.xml'],
+    ['tests/synaptics-rmi-0x.builder.json', 'tests/synaptics-rmi-10.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

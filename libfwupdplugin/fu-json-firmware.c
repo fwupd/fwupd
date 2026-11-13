@@ -100,19 +100,21 @@ fu_json_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_json_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_json_firmware_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuJsonFirmware *self = FU_JSON_FIRMWARE(firmware);
 	FuJsonFirmwarePrivate *priv = GET_PRIVATE(self);
 	if (priv->json_node != NULL) {
 		g_autoptr(GString) str =
 		    fwupd_json_node_to_string(priv->json_node, FWUPD_JSON_EXPORT_FLAG_NONE);
-		fu_xmlb_builder_insert_kv(bn, "json", str->str);
+		fwupd_json_object_add_string(json_object, "json", str->str);
 	}
 }
 
 static gboolean
-fu_json_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_json_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuJsonFirmware *self = FU_JSON_FIRMWARE(firmware);
 	FuJsonFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -125,7 +127,7 @@ fu_json_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* simple properties */
-	json = xb_node_query_text(n, "json", error);
+	json = fwupd_json_object_get_string(json_object, "json", error);
 	if (json == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;

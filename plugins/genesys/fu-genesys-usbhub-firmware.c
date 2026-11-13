@@ -464,7 +464,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_genesys_usbhub_firmware_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
-				  XbBuilderNode *bn)
+				  FwupdJsonObject *json_object)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	if (self->st_static_ts != NULL) {
@@ -486,27 +486,54 @@ fu_genesys_usbhub_firmware_export(FuFirmware *firmware,
 		    fu_struct_genesys_ts_static_get_running_project_firmware(self->st_static_ts);
 		g_autofree gchar *running_project_ic_type =
 		    fu_struct_genesys_ts_static_get_running_project_ic_type(self->st_static_ts);
+		const gchar *tool_string_version_str =
+		    fu_genesys_ts_version_to_string(tool_string_version);
 
-		fu_xmlb_builder_insert_kv(bn,
-					  "tool_string_version",
-					  fu_genesys_ts_version_to_string(tool_string_version));
-		fu_xmlb_builder_insert_kv(bn, "mask_project_code", mask_project_code);
+		if (tool_string_version_str != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "tool_string_version",
+						     tool_string_version_str);
+		if (mask_project_code != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "mask_project_code",
+						     mask_project_code);
 		if (mask_project_hardware != NULL)
 			mask_project_hardware[0] += 0x11; /* '0' -> 'A'... */
-		fu_xmlb_builder_insert_kv(bn, "mask_project_hardware", mask_project_hardware);
-		fu_xmlb_builder_insert_kv(bn, "mask_project_firmware", mask_project_firmware);
-		fu_xmlb_builder_insert_kv(bn, "mask_project_ic_type", mask_project_ic_type);
-		fu_xmlb_builder_insert_kv(bn, "running_project_code", running_project_code);
+		if (mask_project_hardware != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "mask_project_hardware",
+						     mask_project_hardware);
+		if (mask_project_firmware != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "mask_project_firmware",
+						     mask_project_firmware);
+		if (mask_project_ic_type != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "mask_project_ic_type",
+						     mask_project_ic_type);
+		if (running_project_code != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "running_project_code",
+						     running_project_code);
 		if (running_project_hardware != NULL)
 			running_project_hardware[0] += 0x11; /* '0' -> 'A'... */
-		fu_xmlb_builder_insert_kv(bn, "running_project_hardware", running_project_hardware);
-		fu_xmlb_builder_insert_kv(bn, "running_project_firmware", running_project_firmware);
-		fu_xmlb_builder_insert_kv(bn, "running_project_ic_type", running_project_ic_type);
+		if (running_project_hardware != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "running_project_hardware",
+						     running_project_hardware);
+		if (running_project_firmware != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "running_project_firmware",
+						     running_project_firmware);
+		if (running_project_ic_type != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "running_project_ic_type",
+						     running_project_ic_type);
 	}
 }
 
 static gboolean
-fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_genesys_usbhub_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	const gchar *tmp;
@@ -514,7 +541,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 	/* optional properties */
 	self->st_static_ts = fu_struct_genesys_ts_static_new();
 
-	tmp = xb_node_query_text(n, "tool_string_version", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "tool_string_version", &tmp, error))
+		return FALSE;
 	if (tmp == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -525,7 +553,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 	fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 
 	/* mask_project_code */
-	tmp = xb_node_query_text(n, "mask_project_code", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "mask_project_code", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		gsize len = strlen(tmp);
 		if (len != 4) {
@@ -544,7 +573,11 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 	}
 
 	/* mask_project_ic_type */
-	tmp = xb_node_query_text(n, "mask_project_ic_type", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object,
+						   "mask_project_ic_type",
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL) {
 		gsize len = strlen(tmp);
 		if (len != 6) {

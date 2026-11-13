@@ -57,9 +57,9 @@ if get_option('tests')
   )
   install_data(
     [
-      'tests/mtd-fmap.builder.xml',
-      'tests/mtd-ifd.builder.xml',
-      'tests/mtd-uswid.builder.xml',
+      'tests/mtd-fmap.builder.json',
+      'tests/mtd-ifd.builder.json',
+      'tests/mtd-uswid.builder.json',
       'tests/mtd-fwupd.conf',
     ],
     install_dir: join_paths(installed_test_datadir, 'tests'),

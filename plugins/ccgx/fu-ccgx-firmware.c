@@ -56,14 +56,21 @@ fu_ccgx_firmware_get_fw_mode(FuCcgxFirmware *self)
 }
 
 static void
-fu_ccgx_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ccgx_firmware_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "silicon_id", self->silicon_id);
+	if (self->silicon_id != 0)
+		fwupd_json_object_add_integer(json_object, "silicon_id", self->silicon_id);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kx(bn, "app_type", self->app_type);
-		fu_xmlb_builder_insert_kx(bn, "records", self->records->len);
-		fu_xmlb_builder_insert_kv(bn, "fw_mode", fu_ccgx_fw_mode_to_string(self->fw_mode));
+		const gchar *fw_mode_str = fu_ccgx_fw_mode_to_string(self->fw_mode);
+		if (self->app_type != 0)
+			fwupd_json_object_add_integer(json_object, "app_type", self->app_type);
+		if (self->records->len != 0)
+			fwupd_json_object_add_integer(json_object, "records", self->records->len);
+		if (fw_mode_str != NULL)
+			fwupd_json_object_add_string(json_object, "fw_mode", fw_mode_str);
 	}
 }
 
@@ -493,14 +500,19 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_ccgx_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_ccgx_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "silicon_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"silicon_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->silicon_id = tmp;
 
 	/* success */

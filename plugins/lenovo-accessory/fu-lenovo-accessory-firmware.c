@@ -44,12 +44,12 @@ fu_lenovo_accessory_firmware_get_algo(FuLenovoAccessoryFirmware *self)
 static void
 fu_lenovo_accessory_firmware_export(FuFirmware *firmware,
 				    FuFirmwareExportFlags flags,
-				    XbBuilderNode *bn)
+				    FwupdJsonObject *json_object)
 {
 	FuLenovoAccessoryFirmware *self = FU_LENOVO_ACCESSORY_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "algo",
-				  fu_lenovo_accessory_signature_algo_to_string(self->algo));
+	const gchar *algo_str = fu_lenovo_accessory_signature_algo_to_string(self->algo);
+	if (algo_str != NULL)
+		fwupd_json_object_add_string(json_object, "algo", algo_str);
 }
 
 static gboolean

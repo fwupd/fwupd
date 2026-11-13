@@ -21,16 +21,20 @@ struct _FuAcpiUefi {
 G_DEFINE_TYPE(FuAcpiUefi, fu_acpi_uefi, FU_TYPE_ACPI_TABLE)
 
 static void
-fu_acpi_uefi_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_acpi_uefi_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuAcpiUefi *self = FU_ACPI_UEFI(firmware);
 
 	/* FuAcpiTable->export */
-	FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)->export(firmware, flags, bn);
+	FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)->export(firmware, flags, json_object);
 
-	fu_xmlb_builder_insert_kb(bn, "is_insyde", self->is_insyde);
-	fu_xmlb_builder_insert_kx(bn, "insyde_cod_status", self->insyde_cod_status);
-	fu_xmlb_builder_insert_kv(bn, "guid", self->guid);
+	fwupd_json_object_add_boolean(json_object, "is_insyde", self->is_insyde);
+	if (self->insyde_cod_status != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "insyde_cod_status",
+					      self->insyde_cod_status);
+	if (self->guid != NULL)
+		fwupd_json_object_add_string(json_object, "guid", self->guid);
 }
 
 static gboolean

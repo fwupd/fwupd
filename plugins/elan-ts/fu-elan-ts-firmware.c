@@ -103,12 +103,17 @@ fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, FuInputStream *strea
 }
 
 static void
-fu_elan_ts_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_elan_ts_firmware_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuElanTsFirmware *self = FU_ELAN_TS_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "fw_type", self->fw_type);
-	fu_xmlb_builder_insert_kx(bn, "debug_setting", self->debug_setting);
-	fu_xmlb_builder_insert_kx(bn, "remark_id", self->remark_id);
+	if (self->fw_type != 0)
+		fwupd_json_object_add_integer(json_object, "fw_type", self->fw_type);
+	if (self->debug_setting != 0)
+		fwupd_json_object_add_integer(json_object, "debug_setting", self->debug_setting);
+	if (self->remark_id != 0)
+		fwupd_json_object_add_integer(json_object, "remark_id", self->remark_id);
 }
 
 static gboolean

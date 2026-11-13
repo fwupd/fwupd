@@ -1,0 +1,16 @@
+{
+  "gtype": "FuCabFirmware",
+  "compressed": true,
+  "firmware": [
+    {
+      "gtype": "FuCabImage",
+      "id": "hello.txt",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuCabImage",
+      "id": "goodbye.txt",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

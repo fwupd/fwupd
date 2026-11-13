@@ -1,0 +1,34 @@
+{
+  "gtype": "FuEfiVolume",
+  "id": "fff12b8d-7696-4c8b-a985-2747075b4f50",
+  "attrs": "0xfeff",
+  "firmware": [
+    {
+      "gtype": "FuEfiVss2VariableStore",
+      "size": "0xdfb8",
+      "firmware": [
+        {
+          "gtype": "FuEfiVssAuthVariable",
+          "id": "CustomMode",
+          "data": "AA==",
+          "data_size": "0x1",
+          "data_type": "GBytes",
+          "vendor_guid": "c076ec0c-7028-4399-a072-71ee5c448b9f",
+          "state": "variable-added",
+          "attributes": "non-volatile,bootservice-access"
+        }
+      ]
+    },
+    {
+      "data": "",
+      "data_size": "0x1000",
+      "data_type": "GBytes"
+    },
+    {
+      "gtype": "FuEfiFtwStore",
+      "data": "",
+      "data_size": "0xFE0",
+      "state": "healthy"
+    }
+  ]
+}

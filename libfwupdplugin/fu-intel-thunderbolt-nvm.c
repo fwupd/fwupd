@@ -175,36 +175,41 @@ fu_intel_thunderbolt_nvm_get_flash_size(FuIntelThunderboltNvm *self)
 static void
 fu_intel_thunderbolt_nvm_export(FuFirmware *firmware,
 				FuFirmwareExportFlags flags,
-				XbBuilderNode *bn)
+				FwupdJsonObject *json_object)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "vendor_id", priv->vendor_id);
-	fu_xmlb_builder_insert_kx(bn, "device_id", priv->device_id);
-	fu_xmlb_builder_insert_kx(bn, "model_id", priv->model_id);
-	fu_xmlb_builder_insert_kv(bn,
-				  "family",
-				  fu_intel_thunderbolt_nvm_family_to_string(priv->family));
-	fu_xmlb_builder_insert_kb(bn, "is_host", priv->is_host);
-	fu_xmlb_builder_insert_kb(bn, "is_native", priv->is_native);
-	fu_xmlb_builder_insert_kx(bn, "flash_size", priv->flash_size);
-	fu_xmlb_builder_insert_kx(bn, "generation", priv->gen);
-	fu_xmlb_builder_insert_kx(bn, "ports", priv->ports);
-	fu_xmlb_builder_insert_kb(bn, "has_pd", priv->has_pd);
+	const gchar *family_str = fu_intel_thunderbolt_nvm_family_to_string(priv->family);
+	g_autoptr(FwupdJsonArray) json_sections = fwupd_json_array_new();
+	if (priv->vendor_id != 0)
+		fwupd_json_object_add_integer(json_object, "vendor_id", priv->vendor_id);
+	if (priv->device_id != 0)
+		fwupd_json_object_add_integer(json_object, "device_id", priv->device_id);
+	if (priv->model_id != 0)
+		fwupd_json_object_add_integer(json_object, "model_id", priv->model_id);
+	if (family_str != NULL)
+		fwupd_json_object_add_string(json_object, "family", family_str);
+	fwupd_json_object_add_boolean(json_object, "is_host", priv->is_host);
+	fwupd_json_object_add_boolean(json_object, "is_native", priv->is_native);
+	if (priv->flash_size != 0)
+		fwupd_json_object_add_integer(json_object, "flash_size", priv->flash_size);
+	if (priv->gen != 0)
+		fwupd_json_object_add_integer(json_object, "generation", priv->gen);
+	if (priv->ports != 0)
+		fwupd_json_object_add_integer(json_object, "ports", priv->ports);
+	fwupd_json_object_add_boolean(json_object, "has_pd", priv->has_pd);
 	for (guint i = 0; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_LAST; i++) {
 		if (priv->sections[i] != 0x0) {
-			g_autofree gchar *tmp = g_strdup_printf("0x%x", priv->sections[i]);
-			g_autoptr(XbBuilderNode) bc =
-			    xb_builder_node_insert(bn,
-						   "section",
-						   "type",
-						   fu_intel_thunderbolt_nvm_section_to_string(i),
-						   "offset",
-						   tmp,
-						   NULL);
-			g_return_if_fail(bc != NULL);
+			g_autoptr(FwupdJsonObject) json_section = fwupd_json_object_new();
+			const gchar *type_str = fu_intel_thunderbolt_nvm_section_to_string(i);
+			if (type_str != NULL)
+				fwupd_json_object_add_string(json_section, "type", type_str);
+			fwupd_json_object_add_integer(json_section, "offset", priv->sections[i]);
+			fwupd_json_array_add_object(json_sections, json_section);
 		}
 	}
+	if (fwupd_json_array_get_size(json_sections) > 0)
+		fwupd_json_object_add_array(json_object, "sections", json_sections);
 }
 
 static inline gboolean
@@ -691,35 +696,54 @@ fu_intel_thunderbolt_nvm_check_compatible(FuFirmware *firmware,
 }
 
 static gboolean
-fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "vendor_id", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "vendor_id")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "vendor_id", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid vendor_id");
+			return FALSE;
+		}
 		priv->vendor_id = val;
 	}
-	tmp = xb_node_query_text(n, "device_id", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "device_id")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "device_id", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid device_id");
+			return FALSE;
+		}
 		priv->device_id = val;
 	}
-	tmp = xb_node_query_text(n, "model_id", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "model_id")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "model_id", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid model_id");
+			return FALSE;
+		}
 		priv->model_id = val;
 	}
-	tmp = xb_node_query_text(n, "family", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "family", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		priv->family = fu_intel_thunderbolt_nvm_family_from_string(tmp);
 		if (priv->family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN) {
@@ -731,23 +755,31 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 			return FALSE;
 		}
 	}
-	tmp = xb_node_query_text(n, "flash_size", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, 0x07, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "flash_size")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "flash_size", &val, error))
 			return FALSE;
+		if (val < 0 || val > 0x07) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid flash_size");
+			return FALSE;
+		}
 		priv->flash_size = val;
 	}
-	tmp = xb_node_query_text(n, "is_host", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->is_host, error))
-			return FALSE;
-	}
-	tmp = xb_node_query_text(n, "is_native", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->is_native, error))
-			return FALSE;
-	}
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"is_host",
+							&priv->is_host,
+							FALSE,
+							error))
+		return FALSE;
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"is_native",
+							&priv->is_native,
+							FALSE,
+							error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

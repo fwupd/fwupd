@@ -40,7 +40,7 @@ device_tests += files(
 
 if get_option('tests')
   install_data(
-    ['tests/pixart-tp.builder.xml'],
+    ['tests/pixart-tp.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
     install_tag: 'tests',
   )

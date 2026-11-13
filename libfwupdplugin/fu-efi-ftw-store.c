@@ -30,12 +30,15 @@ struct _FuEfiFtwStore {
 G_DEFINE_TYPE(FuEfiFtwStore, fu_efi_ftw_store, FU_TYPE_FIRMWARE)
 
 static void
-fu_efi_ftw_store_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_ftw_store_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuEfiFtwStore *self = FU_EFI_FTW_STORE(firmware);
 	if (self->state != FU_EFI_VARIABLE_STORE_STATE_UNSET) {
 		const gchar *str = fu_efi_variable_store_state_to_string(self->state);
-		fu_xmlb_builder_insert_kv(bn, "state", str);
+		if (str != NULL)
+			fwupd_json_object_add_string(json_object, "state", str);
 	}
 }
 
@@ -124,13 +127,14 @@ fu_efi_ftw_store_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_ftw_store_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_ftw_store_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiFtwStore *self = FU_EFI_FTW_STORE(firmware);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "state", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "state", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->state = fu_efi_variable_store_state_from_string(tmp);
 

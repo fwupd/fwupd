@@ -9,12 +9,15 @@
 #include "fu-amd-afc-form.h"
 
 void
-fu_amd_afc_form_export(FuAmdAfcForm *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_form_export(FuAmdAfcForm *self,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "id", self->id);
+	if (self->id != 0)
+		fwupd_json_object_add_integer(json_object, "id", self->id);
 	if (self->name != NULL)
-		fu_xmlb_builder_insert_kv(bn, "name", self->name);
-	fu_xmlb_builder_insert_kb(bn, "visited", self->visited);
+		fwupd_json_object_add_string(json_object, "name", self->name);
+	fwupd_json_object_add_boolean(json_object, "visited", self->visited);
 }
 
 void

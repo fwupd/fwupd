@@ -21,21 +21,27 @@ G_DEFINE_TYPE(Fu{{VendorExample}}Firmware, fu_{{vendor_example}}_firmware, FU_TY
 static void
 fu_{{vendor_example}}_firmware_export(FuFirmware *firmware,
 				   FuFirmwareExportFlags flags,
-				   XbBuilderNode *bn)
+				   FwupdJsonObject *json_object)
 {
 	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "start_addr", self->start_addr);
+	if (self->start_addr != 0)
+		fwupd_json_object_add_integer(json_object, "start_addr", self->start_addr);
 }
 
 static gboolean
-fu_{{vendor_example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_{{vendor_example}}_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = 0;
 
 	/* TODO: load from .builder.xml */
-	tmp = xb_node_query_text_as_uint(n, "start_addr", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"start_addr",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->start_addr = tmp;
 
 	/* success */

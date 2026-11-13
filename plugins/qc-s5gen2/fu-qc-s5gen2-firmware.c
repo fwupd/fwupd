@@ -36,12 +36,17 @@ fu_qc_s5gen2_firmware_get_id(FuQcS5gen2Firmware *self)
 }
 
 static void
-fu_qc_s5gen2_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_qc_s5gen2_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuQcS5gen2Firmware *self = FU_QC_S5GEN2_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "device_variant", self->device_variant);
-	fu_xmlb_builder_insert_kx(bn, "protocol_version", self->protocol_ver);
-	fu_xmlb_builder_insert_kx(bn, "generated_file_id", self->file_id);
+	if (self->device_variant != NULL)
+		fwupd_json_object_add_string(json_object, "device_variant", self->device_variant);
+	if (self->protocol_ver != 0)
+		fwupd_json_object_add_integer(json_object, "protocol_version", self->protocol_ver);
+	if (self->file_id != 0)
+		fwupd_json_object_add_integer(json_object, "generated_file_id", self->file_id);
 }
 
 static gboolean

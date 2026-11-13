@@ -57,21 +57,24 @@ fu_efi_vss_auth_variable_get_state(FuEfiVssAuthVariable *self)
 static void
 fu_efi_vss_auth_variable_export(FuFirmware *firmware,
 				FuFirmwareExportFlags flags,
-				XbBuilderNode *bn)
+				FwupdJsonObject *json_object)
 {
 	FuEfiVssAuthVariable *self = FU_EFI_VSS_AUTH_VARIABLE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "vendor_guid", self->vendor_guid);
+	if (self->vendor_guid != NULL)
+		fwupd_json_object_add_string(json_object, "vendor_guid", self->vendor_guid);
 	if (self->state != FU_EFI_VARIABLE_STATE_UNSET) {
 		const gchar *str = fu_efi_variable_state_to_string(self->state);
-		fu_xmlb_builder_insert_kv(bn, "state", str);
+		if (str != NULL)
+			fwupd_json_object_add_string(json_object, "state", str);
 	}
 	if (self->attributes != FU_EFI_VARIABLE_ATTR_NONE) {
 		g_autofree gchar *str = fu_efi_variable_attrs_to_string(self->attributes);
-		fu_xmlb_builder_insert_kv(bn, "attributes", str);
+		fwupd_json_object_add_string(json_object, "attributes", str);
 	}
 	if (self->timestamp != NULL) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "timestamp", NULL);
-		fu_efi_timestamp_export(self->timestamp, bc);
+		g_autoptr(FwupdJsonObject) json_timestamp = fwupd_json_object_new();
+		fu_efi_timestamp_export(self->timestamp, json_timestamp);
+		fwupd_json_object_add_object(json_object, "timestamp", json_timestamp);
 	}
 }
 
@@ -265,28 +268,34 @@ fu_efi_vss_auth_variable_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_vss_auth_variable_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_vss_auth_variable_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiVssAuthVariable *self = FU_EFI_VSS_AUTH_VARIABLE(firmware);
 	const gchar *tmp;
-	g_autoptr(XbNode) n_timestamp = NULL;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "vendor_guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "vendor_guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->vendor_guid = g_strdup(tmp);
-	tmp = xb_node_query_text(n, "attributes", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "attributes", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->attributes = fu_efi_variable_attrs_from_string(tmp);
-	tmp = xb_node_query_text(n, "state", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "state", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->state = fu_efi_variable_state_from_string(tmp);
 
 	/* EFI_TIME */
-	n_timestamp = xb_node_query_first(n, "timestamp", NULL);
-	if (n_timestamp != NULL) {
+	if (fwupd_json_object_has_node(json_object, "timestamp")) {
+		g_autoptr(FwupdJsonObject) json_timestamp =
+		    fwupd_json_object_get_object(json_object, "timestamp", error);
+		if (json_timestamp == NULL)
+			return FALSE;
 		self->timestamp = fu_struct_efi_time_new();
-		fu_efi_timestamp_build(self->timestamp, n_timestamp);
+		if (!fu_efi_timestamp_build(self->timestamp, json_timestamp, error))
+			return FALSE;
 	}
 
 	/* success */

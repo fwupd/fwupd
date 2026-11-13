@@ -582,7 +582,7 @@ fu_test_mtd_device_ifd_func(gconstpointer user_data)
 
 	/* write the IFD image */
 	firmware =
-	    fu_test_mtd_prepare_mtdram_device(device, FU_TYPE_IFD_FIRMWARE, "mtd-ifd.builder.xml");
+	    fu_test_mtd_prepare_mtdram_device(device, FU_TYPE_IFD_FIRMWARE, "mtd-ifd.builder.json");
 	g_assert_nonnull(firmware);
 
 	/* re-probe image */
@@ -630,7 +630,7 @@ fu_test_mtd_device_fmap_func(gconstpointer user_data)
 	/* write the FMAP image */
 	firmware = fu_test_mtd_prepare_mtdram_device(device,
 						     FU_TYPE_FMAP_FIRMWARE,
-						     "mtd-fmap.builder.xml");
+						     "mtd-fmap.builder.json");
 	g_assert_nonnull(firmware);
 
 	/* re-probe image */
@@ -675,7 +675,7 @@ fu_test_mtd_device_uswid_func(gconstpointer user_data)
 	/* write the uSWID image */
 	firmware = fu_test_mtd_prepare_mtdram_device(device,
 						     FU_TYPE_USWID_FIRMWARE,
-						     "mtd-uswid.builder.xml");
+						     "mtd-uswid.builder.json");
 	g_assert_nonnull(firmware);
 
 	/* re-probe image */

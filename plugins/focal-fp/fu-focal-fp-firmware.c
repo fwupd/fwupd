@@ -27,11 +27,15 @@ fu_focal_fp_firmware_get_checksum(FuFocalFpFirmware *self)
 }
 
 static void
-fu_focal_fp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_focal_fp_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuFocalFpFirmware *self = FU_FOCAL_FP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "start_address", self->start_address);
-	fu_xmlb_builder_insert_kx(bn, "checksum", self->checksum);
+	if (self->start_address != 0)
+		fwupd_json_object_add_integer(json_object, "start_address", self->start_address);
+	if (self->checksum != 0)
+		fwupd_json_object_add_integer(json_object, "checksum", self->checksum);
 }
 
 static gboolean

@@ -171,7 +171,7 @@ fu_synaptics_rmi_firmware_0x_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-rmi-0x.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-rmi-0x.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "8b097c034028a69e6416bcc39f312e2fa9247381",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
@@ -188,7 +188,7 @@ fu_synaptics_rmi_firmware_10_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-rmi-10.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-rmi-10.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "bd85539bb100e5bd6debb00b06b5a7e7fa9bd030",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,

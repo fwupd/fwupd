@@ -1,7 +1,0 @@
-<firmware gtype="FuUsbBosDescriptor">
-  <dev_capability_type>bos</dev_capability_type>
-  <firmware>
-    <id>payload</id>
-    <data>WFhYWFhYWFhYWFhY</data> <!-- XXXXXXXXXXXX -->
-  </firmware>
-</firmware>

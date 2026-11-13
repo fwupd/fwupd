@@ -16,10 +16,13 @@ struct _FuRaydiumTpImage {
 G_DEFINE_TYPE(FuRaydiumTpImage, fu_raydium_tp_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_raydium_tp_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_raydium_tp_image_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuRaydiumTpImage *self = FU_RAYDIUM_TP_IMAGE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "checksum", self->checksum);
+	if (self->checksum != 0)
+		fwupd_json_object_add_integer(json_object, "checksum", self->checksum);
 }
 
 guint32

@@ -193,7 +193,7 @@ fu_cfu_offer_version_func(void)
 static void
 fu_cfu_offer_export_func(void)
 {
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FuFirmware) firmware = fu_cfu_offer_new();
 	g_autoptr(GError) error = NULL;
 
@@ -202,14 +202,13 @@ fu_cfu_offer_export_func(void)
 	fu_cfu_offer_set_component_id(FU_CFU_OFFER(firmware), 0xAB);
 	fu_cfu_offer_set_product_id(FU_CFU_OFFER(firmware), 0xDEAD);
 
-	xml = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
+	json = fu_firmware_export_to_json(firmware, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(xml);
-	g_assert_nonnull(g_strstr_len(xml, -1, "<segment_number>0x42</segment_number>"));
-	g_assert_nonnull(
-	    g_strstr_len(xml, -1, "<force_immediate_reset>true</force_immediate_reset>"));
-	g_assert_nonnull(g_strstr_len(xml, -1, "<component_id>0xab</component_id>"));
-	g_assert_nonnull(g_strstr_len(xml, -1, "<product_id>0xdead</product_id>"));
+	g_assert_nonnull(json);
+	g_assert_nonnull(g_strstr_len(json, -1, "\"segment_number\": 66"));
+	g_assert_nonnull(g_strstr_len(json, -1, "\"force_immediate_reset\": true"));
+	g_assert_nonnull(g_strstr_len(json, -1, "\"component_id\": 171"));
+	g_assert_nonnull(g_strstr_len(json, -1, "\"product_id\": 57005"));
 }
 
 static void

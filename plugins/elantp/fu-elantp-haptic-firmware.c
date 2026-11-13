@@ -27,10 +27,11 @@ fu_elantp_haptic_firmware_get_driver_ic(FuElantpHapticFirmware *self)
 static void
 fu_elantp_haptic_firmware_export(FuFirmware *firmware,
 				 FuFirmwareExportFlags flags,
-				 XbBuilderNode *bn)
+				 FwupdJsonObject *json_object)
 {
 	FuElantpHapticFirmware *self = FU_ELANTP_HAPTIC_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "driver_ic", self->driver_ic);
+	if (self->driver_ic != 0)
+		fwupd_json_object_add_integer(json_object, "driver_ic", self->driver_ic);
 }
 
 static gboolean

@@ -1,0 +1,8 @@
+{
+  "gtype": "FuDfuFirmware",
+  "data": "WFhYWFhYWFhYWFhY",
+  "vendor": "0x1234",
+  "product": "0x4321",
+  "release": "0xDEAD",
+  "dfu_version": "0x100"
+}

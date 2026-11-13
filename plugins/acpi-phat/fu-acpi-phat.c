@@ -21,11 +21,11 @@ struct _FuAcpiPhat {
 G_DEFINE_TYPE(FuAcpiPhat, fu_acpi_phat, FU_TYPE_FIRMWARE)
 
 static void
-fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
 	if (self->oem_id != NULL)
-		fu_xmlb_builder_insert_kv(bn, "oem_id", self->oem_id);
+		fwupd_json_object_add_string(json_object, "oem_id", self->oem_id);
 }
 
 static gboolean
@@ -262,13 +262,14 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_acpi_phat_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_acpi_phat_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "oem_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "oem_id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_acpi_phat_set_oem_id(self, tmp);
 
@@ -276,31 +277,57 @@ fu_acpi_phat_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_acpi_phat_to_report_string_cb(XbBuilderNode *bn, gpointer user_data)
+/* copy the JSON object, skipping volatile keys and recursing into child images */
+static FwupdJsonObject *
+fu_acpi_phat_to_report_json_filter(FwupdJsonObject *json_src, guint depth)
 {
-	if (g_strcmp0(xb_builder_node_get_element(bn), "offset") == 0 ||
-	    g_strcmp0(xb_builder_node_get_element(bn), "flags") == 0 ||
-	    g_strcmp0(xb_builder_node_get_element(bn), "size") == 0)
-		xb_builder_node_add_flag(bn, XB_BUILDER_NODE_FLAG_IGNORE);
-	return FALSE;
+	g_autoptr(FwupdJsonObject) json_dst = fwupd_json_object_new();
+
+	for (guint i = 0; i < fwupd_json_object_get_size(json_src); i++) {
+		const gchar *key = fwupd_json_object_get_key_for_index(json_src, i, NULL);
+		if (key == NULL)
+			continue;
+		if (g_strcmp0(key, "offset") == 0 || g_strcmp0(key, "flags") == 0 ||
+		    g_strcmp0(key, "size") == 0)
+			continue;
+		if (depth == 0 && g_strcmp0(key, "firmware") == 0) {
+			g_autoptr(FwupdJsonArray) json_arr_src =
+			    fwupd_json_object_get_array(json_src, key, NULL);
+			g_autoptr(FwupdJsonArray) json_arr_dst = fwupd_json_array_new();
+			if (json_arr_src == NULL)
+				continue;
+			for (guint j = 0; j < fwupd_json_array_get_size(json_arr_src); j++) {
+				g_autoptr(FwupdJsonObject) json_img =
+				    fwupd_json_array_get_object(json_arr_src, j, NULL);
+				g_autoptr(FwupdJsonObject) json_img_dst = NULL;
+				if (json_img == NULL)
+					continue;
+				json_img_dst =
+				    fu_acpi_phat_to_report_json_filter(json_img, depth + 1);
+				fwupd_json_array_add_object(json_arr_dst, json_img_dst);
+			}
+			fwupd_json_object_add_array(json_dst, key, json_arr_dst);
+		} else {
+			g_autoptr(FwupdJsonNode) json_node =
+			    fwupd_json_object_get_node_for_index(json_src, i, NULL);
+			if (json_node != NULL)
+				fwupd_json_object_add_node(json_dst, key, json_node);
+		}
+	}
+	return g_steal_pointer(&json_dst);
 }
 
 gchar *
 fu_acpi_phat_to_report_string(FuAcpiPhat *self)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
-	fu_firmware_export(FU_FIRMWARE(self), FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
-	xb_builder_node_traverse(bn,
-				 G_PRE_ORDER,
-				 G_TRAVERSE_ALL,
-				 3,
-				 fu_acpi_phat_to_report_string_cb,
-				 NULL);
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      NULL);
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_report = NULL;
+	g_autoptr(GString) str = NULL;
+
+	fu_firmware_export(FU_FIRMWARE(self), FU_FIRMWARE_EXPORT_FLAG_NONE, json_object);
+	json_report = fu_acpi_phat_to_report_json_filter(json_object, 0);
+	str = fwupd_json_object_to_string(json_report, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void

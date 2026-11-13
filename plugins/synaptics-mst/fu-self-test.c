@@ -168,13 +168,13 @@ fu_plugin_synaptics_mst_tb16_func(void)
 }
 
 static void
-fu_synaptics_mst_firmware_xml_func(void)
+fu_synaptics_mst_firmware_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "synaptics-mst.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "synaptics-mst.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "67b8fc4661f7585a8cd6c46ef6088293d4399135",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_WRITE,
@@ -191,7 +191,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 	g_test_add_func("/fwupd/plugin/synaptics_mst/none", fu_plugin_synaptics_mst_none_func);
 	g_test_add_func("/fwupd/plugin/synaptics_mst/tb16", fu_plugin_synaptics_mst_tb16_func);
-	g_test_add_func("/fwupd/plugin/synaptics_mst/firmware/xml",
-			fu_synaptics_mst_firmware_xml_func);
+	g_test_add_func("/fwupd/plugin/synaptics_mst/firmware/json",
+			fu_synaptics_mst_firmware_json_func);
 	return g_test_run();
 }

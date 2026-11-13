@@ -33,7 +33,7 @@ device_tests += files('tests/framework-hdmi.json')
 
 if get_option('tests')
   install_data(
-    ['tests/ccgx.builder.xml'],
+    ['tests/ccgx.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

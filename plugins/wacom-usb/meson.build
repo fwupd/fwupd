@@ -41,7 +41,7 @@ device_tests += files(
 
 if get_option('tests')
   install_data(
-    ['tests/wacom-usb.builder.xml'],
+    ['tests/wacom-usb.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

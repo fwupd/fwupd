@@ -1,0 +1,24 @@
+{
+  "gtype": "FuBcm57xxFirmware",
+  "version": "1.2.3",
+  "firmware": [
+    {
+      "gtype": "FuBcm57xxStage1Image",
+      "version_raw": "0x123456",
+      "id": "stage1",
+      "idx": "0x01",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuBcm57xxStage2Image",
+      "id": "stage2",
+      "data": ""
+    },
+    {
+      "gtype": "FuBcm57xxDictImage",
+      "id": "ape",
+      "addr": "0x7",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

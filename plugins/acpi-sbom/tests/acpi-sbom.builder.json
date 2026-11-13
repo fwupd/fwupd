@@ -1,0 +1,17 @@
+{
+  "gtype": "FuAcpiSbomTable",
+  "id": "SBOM",
+  "firmware": [
+    {
+      "gtype": "FuAcpiSbomEntry",
+      "format": "cyclonedx",
+      "compression": "vendor",
+      "data": "dmVuZG9yIGRhdGE="
+    },
+    {
+      "gtype": "FuAcpiSbomEntry",
+      "format": "cyclonedx",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

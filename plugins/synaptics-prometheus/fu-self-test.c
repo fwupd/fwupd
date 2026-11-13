@@ -87,14 +87,14 @@ fu_test_synaptics_prometheus_firmware_func(void)
 }
 
 static void
-fu_synaptics_prometheus_firmware_xml_func(void)
+fu_synaptics_prometheus_firmware_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
 	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-prometheus.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "synaptics-prometheus.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "5fa24664fb28e78cbd88970e6026d996fc051550",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
@@ -111,7 +111,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_SYNAPTICS_PROMETHEUS_FIRMWARE);
 	g_test_add_func("/synaptics-prometheus/firmware",
 			fu_test_synaptics_prometheus_firmware_func);
-	g_test_add_func("/synaptics-prometheus/firmware/xml",
-			fu_synaptics_prometheus_firmware_xml_func);
+	g_test_add_func("/synaptics-prometheus/firmware/json",
+			fu_synaptics_prometheus_firmware_json_func);
 	return g_test_run();
 }

@@ -35,14 +35,20 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuAcpiTable, fu_acpi_table, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_acpi_table_get_instance_private(o))
 
 static void
-fu_acpi_table_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_acpi_table_export(FuFirmware *firmware,
+		     FuFirmwareExportFlags flags,
+		     FwupdJsonObject *json_object)
 {
 	FuAcpiTable *self = FU_ACPI_TABLE(firmware);
 	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "revision", priv->revision);
-	fu_xmlb_builder_insert_kv(bn, "oem_id", priv->oem_id);
-	fu_xmlb_builder_insert_kv(bn, "oem_table_id", priv->oem_table_id);
-	fu_xmlb_builder_insert_kx(bn, "oem_revision", priv->oem_revision);
+	if (priv->revision != 0)
+		fwupd_json_object_add_integer(json_object, "revision", priv->revision);
+	if (priv->oem_id != NULL)
+		fwupd_json_object_add_string(json_object, "oem_id", priv->oem_id);
+	if (priv->oem_table_id != NULL)
+		fwupd_json_object_add_string(json_object, "oem_table_id", priv->oem_table_id);
+	if (priv->oem_revision != 0)
+		fwupd_json_object_add_integer(json_object, "oem_revision", priv->oem_revision);
 }
 
 /**

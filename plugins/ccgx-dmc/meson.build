@@ -26,7 +26,7 @@ device_tests += files('tests/hp-dock-g5.json')
 
 if get_option('tests')
   install_data(
-    ['tests/ccgx-dmc.builder.xml'],
+    ['tests/ccgx-dmc.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

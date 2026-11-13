@@ -31,19 +31,34 @@ struct _FuBnrDpFirmware {
 G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_bnr_dp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_bnr_dp_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kx(bn, "device_id", self->device_id);
-	fu_xmlb_builder_insert_kv(bn, "usage", self->usage);
-	fu_xmlb_builder_insert_kx(bn, "function", self->function);
-	fu_xmlb_builder_insert_kx(bn, "variant", self->variant);
-	fu_xmlb_builder_insert_kx(bn, "payload_length", self->payload_length);
-	fu_xmlb_builder_insert_kx(bn, "payload_checksum", self->payload_checksum);
-	fu_xmlb_builder_insert_kv(bn, "material", self->material);
-	fu_xmlb_builder_insert_kv(bn, "creation_date", self->creation_date);
-	fu_xmlb_builder_insert_kv(bn, "comment", self->comment);
+	if (self->device_id != 0)
+		fwupd_json_object_add_integer(json_object, "device_id", (gint64)self->device_id);
+	if (self->usage != NULL)
+		fwupd_json_object_add_string(json_object, "usage", self->usage);
+	if (self->function != 0)
+		fwupd_json_object_add_integer(json_object, "function", self->function);
+	if (self->variant != 0)
+		fwupd_json_object_add_integer(json_object, "variant", (gint64)self->variant);
+	if (self->payload_length != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "payload_length",
+					      (gint64)self->payload_length);
+	if (self->payload_checksum != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "payload_checksum",
+					      self->payload_checksum);
+	if (self->material != NULL)
+		fwupd_json_object_add_string(json_object, "material", self->material);
+	if (self->creation_date != NULL)
+		fwupd_json_object_add_string(json_object, "creation_date", self->creation_date);
+	if (self->comment != NULL)
+		fwupd_json_object_add_string(json_object, "comment", self->comment);
 }
 
 static gchar *

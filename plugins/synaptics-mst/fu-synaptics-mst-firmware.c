@@ -40,11 +40,14 @@ fu_synaptics_mst_firmware_set_family(FuSynapticsMstFirmware *self, FuSynapticsMs
 static void
 fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 				 FuFirmwareExportFlags flags,
-				 XbBuilderNode *bn)
+				 FwupdJsonObject *json_object)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "board_id", self->board_id);
-	fu_xmlb_builder_insert_kv(bn, "family", fu_synaptics_mst_family_to_string(self->family));
+	const gchar *family_str = fu_synaptics_mst_family_to_string(self->family);
+	if (self->board_id != 0)
+		fwupd_json_object_add_integer(json_object, "board_id", self->board_id);
+	if (family_str != NULL)
+		fwupd_json_object_add_string(json_object, "family", family_str);
 }
 
 static gboolean
@@ -166,18 +169,34 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_synaptics_mst_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_mst_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "board_id", NULL);
-	if (tmp != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"board_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
 		self->board_id = tmp;
-	tmp = xb_node_query_text_as_uint(n, "family", NULL);
-	if (tmp != G_MAXUINT64)
-		self->family = tmp;
+	if (fwupd_json_object_has_node(json_object, "family")) {
+		const gchar *family = fwupd_json_object_get_string(json_object, "family", error);
+		if (family == NULL)
+			return FALSE;
+		self->family = fu_synaptics_mst_family_from_string(family);
+		if (self->family == FU_SYNAPTICS_MST_FAMILY_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid family %s",
+				    family);
+			return FALSE;
+		}
+	}
 
 	/* success */
 	return TRUE;

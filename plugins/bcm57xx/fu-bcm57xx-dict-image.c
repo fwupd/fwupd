@@ -18,13 +18,17 @@ struct _FuBcm57xxDictImage {
 G_DEFINE_TYPE(FuBcm57xxDictImage, fu_bcm57xx_dict_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_bcm57xx_dict_image_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE(firmware);
 	if (self->target != 0xff)
-		fu_xmlb_builder_insert_kx(bn, "target", self->target);
+		if (self->target != 0)
+			fwupd_json_object_add_integer(json_object, "target", self->target);
 	if (self->kind != 0xff)
-		fu_xmlb_builder_insert_kx(bn, "kind", self->kind);
+		if (self->kind != 0)
+			fwupd_json_object_add_integer(json_object, "kind", self->kind);
 }
 
 static gboolean
@@ -78,17 +82,27 @@ fu_bcm57xx_dict_image_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_bcm57xx_dict_image_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_bcm57xx_dict_image_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* two simple properties */
-	tmp = xb_node_query_text_as_uint(n, "kind", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"kind",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		fu_bcm57xx_dict_image_set_kind(self, tmp);
-	tmp = xb_node_query_text_as_uint(n, "target", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"target",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		fu_bcm57xx_dict_image_set_target(self, tmp);
 
 	/* success */

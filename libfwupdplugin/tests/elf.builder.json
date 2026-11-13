@@ -1,0 +1,13 @@
+{
+  "gtype": "FuElfFirmware",
+  "firmware": [
+    {
+      "id": ".text",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "id": ".rodata",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

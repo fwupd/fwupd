@@ -1,0 +1,126 @@
+{
+  "gtype": "FuFitFirmware",
+  "version_raw": "0x11",
+  "firmware": [
+    {
+      "gtype": "FuFdtImage",
+      "metadata": [
+        {
+          "key": "creator",
+          "format": "str",
+          "value": "FIT test"
+        },
+        {
+          "key": "description",
+          "format": "str",
+          "value": "FIT description"
+        },
+        {
+          "key": "timestamp",
+          "format": "uint32",
+          "value": "0x629d4abd"
+        }
+      ],
+      "firmware": [
+        {
+          "gtype": "FuFdtImage",
+          "id": "images",
+          "firmware": [
+            {
+              "gtype": "FuFdtImage",
+              "id": "firmware-1",
+              "metadata": [
+                {
+                  "key": "entry",
+                  "format": "str"
+                },
+                {
+                  "key": "os",
+                  "format": "str",
+                  "value": "u-boot"
+                },
+                {
+                  "key": "data",
+                  "format": "data",
+                  "value": "YWJj"
+                },
+                {
+                  "key": "load",
+                  "format": "data",
+                  "value": "AAABAA=="
+                },
+                {
+                  "key": "arch",
+                  "format": "str",
+                  "value": "arm64"
+                },
+                {
+                  "key": "type",
+                  "format": "str",
+                  "value": "firmware"
+                },
+                {
+                  "key": "compression",
+                  "format": "str",
+                  "value": "none"
+                },
+                {
+                  "key": "description",
+                  "format": "str",
+                  "value": "v1.2.4"
+                }
+              ],
+              "firmware": [
+                {
+                  "gtype": "FuFdtImage",
+                  "id": "hash-1",
+                  "metadata": [
+                    {
+                      "key": "algo",
+                      "format": "str",
+                      "value": "crc32"
+                    },
+                    {
+                      "key": "value",
+                      "format": "uint32",
+                      "value": "0x352441C2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "gtype": "FuFdtImage",
+          "id": "configurations",
+          "metadata": [
+            {
+              "key": "default",
+              "format": "str",
+              "value": "conf-1"
+            }
+          ],
+          "firmware": [
+            {
+              "gtype": "FuFdtImage",
+              "id": "conf-1",
+              "metadata": [
+                {
+                  "key": "compatible",
+                  "format": "strlist",
+                  "value": "alice:bob:clara"
+                },
+                {
+                  "key": "firmware",
+                  "format": "str",
+                  "value": "firmware-1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

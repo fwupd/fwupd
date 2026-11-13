@@ -35,11 +35,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuLinearFirmware, fu_linear_firmware, FU_TYPE_FIRMWAR
 enum { PROP_0, PROP_IMAGE_GTYPE, PROP_LAST };
 
 static void
-fu_linear_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_linear_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kv(bn, "image_gtype", g_type_name(priv->image_gtype));
+	fwupd_json_object_add_string(json_object, "image_gtype", g_type_name(priv->image_gtype));
 }
 
 /**
@@ -79,14 +81,15 @@ fu_linear_firmware_set_image_gtype(FuLinearFirmware *self, GType image_gtype)
 }
 
 static gboolean
-fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_linear_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "image_gtype", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "image_gtype", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fu_gtype_from_name(tmp, &priv->image_gtype, FU_TYPE_FIRMWARE, error))
 			return FALSE;

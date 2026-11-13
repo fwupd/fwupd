@@ -16,7 +16,7 @@ fu_srec_firmware_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "srec.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "srec.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);

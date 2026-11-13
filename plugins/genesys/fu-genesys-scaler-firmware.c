@@ -81,27 +81,28 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 static void
 fu_genesys_scaler_firmware_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
-				  XbBuilderNode *bn)
+				  FwupdJsonObject *json_object)
 {
 	FuGenesysScalerFirmware *self = FU_GENESYS_SCALER_FIRMWARE(firmware);
 	gchar N[0x200 + 1] = {'\0'};
 	gchar E[0x006 + 1] = {'\0'};
 
 	memcpy(N, self->public_key.N + 4, sizeof(N) - 1); /* nocheck:blocked */
-	fu_xmlb_builder_insert_kv(bn, "N", N);
+	fwupd_json_object_add_string(json_object, "N", N);
 
 	memcpy(E, self->public_key.E + 4, sizeof(E) - 1); /* nocheck:blocked */
-	fu_xmlb_builder_insert_kv(bn, "E", E);
+	fwupd_json_object_add_string(json_object, "E", E);
 }
 
 static gboolean
-fu_genesys_scaler_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_genesys_scaler_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuGenesysScalerFirmware *self = FU_GENESYS_SCALER_FIRMWARE(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "N", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "N", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fu_memcpy_safe((guint8 *)&self->public_key.N,
 				    sizeof(self->public_key.N),
@@ -114,7 +115,8 @@ fu_genesys_scaler_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 			return FALSE;
 	}
 
-	tmp = xb_node_query_text(n, "E", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "E", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fu_memcpy_safe((guint8 *)&self->public_key.E,
 				    sizeof(self->public_key.E),

@@ -19,10 +19,13 @@ struct _FuLenovoDockImage {
 G_DEFINE_TYPE(FuLenovoDockImage, fu_lenovo_dock_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_lenovo_dock_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_lenovo_dock_image_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuLenovoDockImage *self = FU_LENOVO_DOCK_IMAGE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "crc", self->crc);
+	if (self->crc != 0)
+		fwupd_json_object_add_integer(json_object, "crc", self->crc);
 }
 
 guint32

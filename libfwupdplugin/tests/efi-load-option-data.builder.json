@@ -1,0 +1,29 @@
+{
+  "gtype": "FuEfiLoadOption",
+  "id": "Fedora",
+  "attrs": "0x1",
+  "kind": "data",
+  "optional_data": "AABCTwo=",
+  "firmware": [
+    {
+      "gtype": "FuEfiDevicePathList",
+      "firmware": [
+        {
+          "gtype": "FuEfiHardDriveDevicePath",
+          "idx": "0x4",
+          "partition_number": "0x1",
+          "partition_start": "0x800",
+          "partition_size": "0x12c000",
+          "partition_signature": "9ed1b2b2-5c29-4b62-a329-84d462b47ce7",
+          "partition_format": "guid-partition-table",
+          "signature_type": "guid"
+        },
+        {
+          "gtype": "FuEfiFilePathDevicePath",
+          "idx": "0x4",
+          "name": "/EFI/fedora/shimx64.efi"
+        }
+      ]
+    }
+  ]
+}

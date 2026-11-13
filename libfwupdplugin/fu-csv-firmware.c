@@ -220,26 +220,28 @@ fu_csv_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_csv_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_csv_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kb(bn, "write_column_ids", priv->write_column_ids);
+	fwupd_json_object_add_boolean(json_object, "write_column_ids", priv->write_column_ids);
 }
 
 static gboolean
-fu_csv_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_csv_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "write_column_ids", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->write_column_ids, error))
-			return FALSE;
-	}
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"write_column_ids",
+							&priv->write_column_ids,
+							TRUE,
+							error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
