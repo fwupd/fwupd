@@ -371,6 +371,9 @@ fwupd_json_object_get_string_with_default(FwupdJsonObject *self,
  *
  * Gets an integer from a JSON object. An error is returned if @key is not the correct type.
  *
+ * A string value with a `0x` prefix is also accepted, e.g. `"0x1F"`, and is parsed as an
+ * unsigned 64 bit hexadecimal number.
+ *
  * Returns: %TRUE if @value was parsed as an integer
  *
  * Since: 2.1.1
@@ -404,6 +407,9 @@ fwupd_json_object_get_integer(FwupdJsonObject *self,
  * @error: (nullable): optional return location for an error
  *
  * Gets an integer from a JSON object. An error is returned if @key is not the correct type.
+ *
+ * A string value with a `0x` prefix is also accepted, e.g. `"0x1F"`, and is parsed as an
+ * unsigned 64 bit hexadecimal number.
  *
  * Returns: %TRUE if @value was parsed as an integer
  *
