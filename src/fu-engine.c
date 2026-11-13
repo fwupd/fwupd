@@ -2496,6 +2496,8 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
+		if (!fu_plugin_has_flag(plugin_tmp, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE))
+			continue;
 		if (!fu_plugin_runner_composite_cleanup(plugin_tmp, devices, error))
 			return FALSE;
 	}
@@ -2681,6 +2683,12 @@ fu_engine_install_releases(FuEngine *self,
 	}
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
+		g_autoptr(GError) error_local = NULL;
+		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
+		if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
+			g_warning("failed to cleanup after failed prepare composite action: %s",
+				  error_local->message);
+		}
 		g_prefix_error_literal(error, "failed to prepare composite action: ");
 		return FALSE;
 	}
