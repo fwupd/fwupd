@@ -81,6 +81,7 @@ if get_option('tests')
       'fu-self-test.c',
       'fu-mm-common.c',
       'fu-mm-device.c',
+      'fu-mm-mhi-firehose-device.c',
     ],
     include_directories: plugin_incdirs,
     dependencies: [
