@@ -17,6 +17,7 @@ typedef struct {
 	guint8 ver_bank;
 	guint16 ver_addr;
 	guint16 part_id;
+	GArray *child_update_types; /* (element-type FuPixartTpUpdateType) */
 } FuPixartTpDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW_DEVICE)
@@ -1087,6 +1088,17 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 }
 
 static gboolean
+fu_pixart_tp_device_is_tp_update_type(FuPixartTpDevice *self, FuPixartTpUpdateType update_type)
+{
+	FuPixartTpDeviceClass *klass = FU_PIXART_TP_DEVICE_GET_CLASS(self);
+
+	/* a subclass that does not say otherwise writes nothing itself */
+	if (klass->is_tp_update_type == NULL)
+		return FALSE;
+	return klass->is_tp_update_type(self, update_type);
+}
+
+static gboolean
 fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 				  FuPixartTpSection *section,
 				  FuProgress *progress,
@@ -1102,11 +1114,9 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 	if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)
 		return TRUE;
 
-	/* TF_FORCE is now handled by the haptic child-device */
+	/* sections for a child device are skipped before getting here */
 	update_type = fu_pixart_tp_section_get_update_type(section);
-	if (update_type != FU_PIXART_TP_UPDATE_TYPE_GENERAL &&
-	    update_type != FU_PIXART_TP_UPDATE_TYPE_FW_SECTION &&
-	    update_type != FU_PIXART_TP_UPDATE_TYPE_PARAM) {
+	if (!fu_pixart_tp_device_is_tp_update_type(self, update_type)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -1183,7 +1193,6 @@ fu_pixart_tp_device_write_sections(FuPixartTpDevice *self,
 
 	for (guint i = 0; i < sections->len; i++) {
 		FuPixartTpSection *section = g_ptr_array_index(sections, i);
-		FuPixartTpUpdateType update_type = fu_pixart_tp_section_get_update_type(section);
 
 		/* skip non-updatable sections */
 		if (!fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_VALID) ||
@@ -1193,11 +1202,9 @@ fu_pixart_tp_device_write_sections(FuPixartTpDevice *self,
 			continue;
 		}
 
-		/* skip TF_FORCE sections:
-		 * - handled by TF/haptic child device using its own image
-		 * - parent TP only handles TP firmware/parameter sections */
-		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE) {
-			g_debug("skip TF_FORCE section %u for TP parent device", i);
+		/* skip sections written by a child device using its own image */
+		if (fu_pixart_tp_device_section_is_for_child(self, section)) {
+			g_debug("skip child device section %u for TP parent device", i);
 			fu_progress_step_done(progress);
 			continue;
 		}
@@ -1391,20 +1398,17 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 
 	/* calculate total bytes for valid internal TP sections
 	 * NOTE:
-	 * - TF_FORCE sections are skipped here; they are handled by the
-	 * TF/haptic child-device using its own firmware image.
+	 * - sections for a child device, e.g. TF_FORCE, are skipped here; they are
+	 * handled by the child device using its own firmware image.
 	 */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPixartTpSection *section = g_ptr_array_index(sections, i);
 		guint32 section_length = 0;
-		FuPixartTpUpdateType update_type;
 
 		if (!fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_VALID) ||
 		    fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_IS_EXTERNAL))
 			continue;
-
-		update_type = fu_pixart_tp_section_get_update_type(section);
-		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE)
+		if (fu_pixart_tp_device_section_is_for_child(self, section))
 			continue;
 
 		section_length = fu_firmware_get_size(FU_FIRMWARE(section));
@@ -1426,7 +1430,7 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 	if (!fu_pixart_tp_device_firmware_clear(self, FU_PIXART_TP_FIRMWARE(firmware), error))
 		return FALSE;
 
-	/* program all TP sections (TF_FORCE handled by child device) */
+	/* program all TP sections (child device sections are handled by the child) */
 	if (!fu_pixart_tp_device_write_sections(self,
 						sections,
 						fu_progress_get_child(progress),
@@ -1561,12 +1565,52 @@ fu_pixart_tp_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+/* the child device writes all the sections of this update type using its own image */
+static void
+fu_pixart_tp_device_add_child_for_update_type(FuPixartTpDevice *self,
+					      FuDevice *child,
+					      FuPixartTpUpdateType update_type)
+{
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+	fu_device_add_child(FU_DEVICE(self), child);
+	g_array_append_val(priv->child_update_types, update_type);
+}
+
+gboolean
+fu_pixart_tp_device_section_is_for_child(FuPixartTpDevice *self, FuPixartTpSection *section)
+{
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+	FuPixartTpUpdateType update_type;
+
+	g_return_val_if_fail(FU_IS_PIXART_TP_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PIXART_TP_SECTION(section), FALSE);
+
+	update_type = fu_pixart_tp_section_get_update_type(section);
+	for (guint i = 0; i < priv->child_update_types->len; i++) {
+		if (g_array_index(priv->child_update_types, FuPixartTpUpdateType, i) == update_type)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_pixart_tp_device_real_is_tp_update_type(FuPixartTpDevice *self, FuPixartTpUpdateType update_type)
+{
+	return update_type == FU_PIXART_TP_UPDATE_TYPE_GENERAL ||
+	       update_type == FU_PIXART_TP_UPDATE_TYPE_FW_SECTION ||
+	       update_type == FU_PIXART_TP_UPDATE_TYPE_PARAM;
+}
+
 static gboolean
 fu_pixart_tp_device_probe(FuDevice *device, GError **error)
 {
+	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+
 	if (fu_device_has_private_flag(device, FU_PIXART_TP_DEVICE_FLAG_HAS_HAPTIC)) {
 		g_autoptr(FuPixartTpHapticDevice) child = fu_pixart_tp_haptic_device_new(device);
-		fu_device_add_child(device, FU_DEVICE(child));
+		fu_pixart_tp_device_add_child_for_update_type(self,
+							      FU_DEVICE(child),
+							      FU_PIXART_TP_UPDATE_TYPE_TF_FORCE);
 	}
 
 	/* success */
@@ -1594,15 +1638,28 @@ fu_pixart_tp_device_init(FuPixartTpDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_FIRMWARE);
 
+	priv->child_update_types = g_array_new(FALSE, FALSE, sizeof(FuPixartTpUpdateType));
 	priv->sram_select = 0x0F;
 	priv->ver_bank = 0x00;
 	priv->ver_addr = 0xB2;
 }
 
 static void
+fu_pixart_tp_device_finalize(GObject *object)
+{
+	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(object);
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+	g_array_unref(priv->child_update_types);
+	G_OBJECT_CLASS(fu_pixart_tp_device_parent_class)->finalize(object);
+}
+
+static void
 fu_pixart_tp_device_class_init(FuPixartTpDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_pixart_tp_device_finalize;
+	klass->is_tp_update_type = fu_pixart_tp_device_real_is_tp_update_type;
 	device_class->to_string = fu_pixart_tp_device_to_string;
 	device_class->probe = fu_pixart_tp_device_probe;
 	device_class->setup = fu_pixart_tp_device_setup;
