@@ -1114,7 +1114,7 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 	if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)
 		return TRUE;
 
-	/* sections for a child device are skipped before getting here */
+	/* already checked in ->check_firmware(), but be paranoid */
 	update_type = fu_pixart_tp_section_get_update_type(section);
 	if (!fu_pixart_tp_device_is_tp_update_type(self, update_type)) {
 		g_set_error(error,
@@ -1602,6 +1602,42 @@ fu_pixart_tp_device_real_is_tp_update_type(FuPixartTpDevice *self, FuPixartTpUpd
 }
 
 static gboolean
+fu_pixart_tp_device_check_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuFirmwareParseFlags flags,
+				   GError **error)
+{
+	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+	g_autoptr(GPtrArray) sections = fu_firmware_get_images(firmware);
+
+	/* fail before anything is erased if neither the TP nor a child can write a section */
+	for (guint i = 0; i < sections->len; i++) {
+		FuPixartTpSection *section = g_ptr_array_index(sections, i);
+		FuPixartTpUpdateType update_type = fu_pixart_tp_section_get_update_type(section);
+
+		if (!fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_VALID) ||
+		    fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_IS_EXTERNAL))
+			continue;
+		if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)
+			continue;
+		if (fu_pixart_tp_device_section_is_for_child(self, section))
+			continue;
+		if (fu_pixart_tp_device_is_tp_update_type(self, update_type))
+			continue;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "section %u has update type 0x%x which this device cannot write",
+			    i,
+			    (guint)update_type);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_pixart_tp_device_probe(FuDevice *device, GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
@@ -1660,6 +1696,7 @@ fu_pixart_tp_device_class_init(FuPixartTpDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_pixart_tp_device_finalize;
 	klass->is_tp_update_type = fu_pixart_tp_device_real_is_tp_update_type;
+	device_class->check_firmware = fu_pixart_tp_device_check_firmware;
 	device_class->to_string = fu_pixart_tp_device_to_string;
 	device_class->probe = fu_pixart_tp_device_probe;
 	device_class->setup = fu_pixart_tp_device_setup;
