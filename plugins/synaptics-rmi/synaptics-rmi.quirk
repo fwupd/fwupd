@@ -22,6 +22,12 @@ GType = FuSynapticsRmiHidDevice
 Vendor = Synaptics
 RemoveDelay = 60000
 
+[HIDRAW\VEN_06CB&DEV_96F1]
+Plugin = synaptics_rmi
+GType = FuSynapticsRmiHidDevice
+Vendor = Synaptics
+RemoveDelay = 60000
+
 [HIDRAW\VEN_06CB&DEV_D014]
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiHidDevice
