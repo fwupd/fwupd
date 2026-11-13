@@ -50,21 +50,29 @@ fu_synaptics_cxaudio_firmware_get_layout_version(FuSynapticsCxaudioFirmware *sel
 static void
 fu_synaptics_cxaudio_firmware_export(FuFirmware *firmware,
 				     FuFirmwareExportFlags flags,
-				     XbBuilderNode *bn)
+				     FwupdJsonObject *json_object)
 {
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "file_kind",
-				  fu_synaptics_cxaudio_file_kind_to_string(self->file_kind));
-	fu_xmlb_builder_insert_kv(bn,
-				  "device_kind",
-				  fu_synaptics_cxaudio_device_kind_to_string(self->device_kind));
-	fu_xmlb_builder_insert_kx(bn, "layout_signature", self->layout_signature);
-	fu_xmlb_builder_insert_kx(bn, "layout_version", self->layout_version);
+	const gchar *file_kind_str = fu_synaptics_cxaudio_file_kind_to_string(self->file_kind);
+	const gchar *device_kind_str =
+	    fu_synaptics_cxaudio_device_kind_to_string(self->device_kind);
+	if (file_kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "file_kind", file_kind_str);
+	if (device_kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "device_kind", device_kind_str);
+	if (self->layout_signature != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "layout_signature",
+					      self->layout_signature);
+	if (self->layout_version != 0)
+		fwupd_json_object_add_integer(json_object, "layout_version", self->layout_version);
 	if (self->layout_version >= 1) {
-		fu_xmlb_builder_insert_kx(bn, "vid", self->vendor_id);
-		fu_xmlb_builder_insert_kx(bn, "pid", self->product_id);
-		fu_xmlb_builder_insert_kx(bn, "rev", self->revision_id);
+		if (self->vendor_id != 0)
+			fwupd_json_object_add_integer(json_object, "vid", self->vendor_id);
+		if (self->product_id != 0)
+			fwupd_json_object_add_integer(json_object, "pid", self->product_id);
+		if (self->revision_id != 0)
+			fwupd_json_object_add_integer(json_object, "rev", self->revision_id);
 	}
 }
 

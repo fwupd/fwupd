@@ -9,11 +9,14 @@
 #include "fu-amd-afc-option.h"
 
 void
-fu_amd_afc_option_export(FuAmdAfcOption *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_option_export(FuAmdAfcOption *self,
+			 FuFirmwareExportFlags flags,
+			 FwupdJsonObject *json_object)
 {
 	if (self->name != NULL)
-		fu_xmlb_builder_insert_kv(bn, "name", self->name);
-	fu_xmlb_builder_insert_kx(bn, "value", self->value);
+		fwupd_json_object_add_string(json_object, "name", self->name);
+	if (self->value != 0)
+		fwupd_json_object_add_integer(json_object, "value", (gint64)self->value);
 }
 
 void

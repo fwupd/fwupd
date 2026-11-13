@@ -135,7 +135,7 @@ fu_input_stream_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdFileInputStream) stream = NULL;
 
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.json", NULL);
 	g_assert_nonnull(fn);
 	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
 	g_assert_no_error(error);

@@ -1863,7 +1863,7 @@ fu_engine_cli_firmware_export(FuCli *cli, gchar **values, GError **error)
 		return FALSE;
 	if (fu_cli_has_arg_flag(FU_CLI(self), FU_CLI_ARG_FLAG_SHOW_ALL))
 		flags |= FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG;
-	str = fu_firmware_export_to_xml(firmware, flags | FU_FIRMWARE_EXPORT_FLAG_SORTED, error);
+	str = fu_firmware_export_to_json(firmware, flags | FU_FIRMWARE_EXPORT_FLAG_SORTED, error);
 	if (str == NULL)
 		return FALSE;
 	fu_console_print_literal(console, str);
@@ -2002,10 +2002,9 @@ fu_engine_cli_firmware_build(FuCli *cli, gchar **values, GError **error)
 	g_autoptr(FuFirmware) firmware_dst = NULL;
 	g_autoptr(GBytes) blob_dst = NULL;
 	g_autoptr(GBytes) blob_src = NULL;
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_object = NULL;
 
 	/* check args */
 	if (g_strv_length(values) != 2) {
@@ -2030,45 +2029,31 @@ fu_engine_cli_firmware_build(FuCli *cli, gchar **values, GError **error)
 			    error))
 		return FALSE;
 
-	/* parse XML */
-	if (!xb_builder_source_load_bytes(source, blob_src, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error_literal(error, "could not parse XML: ");
-		fwupd_error_convert(error);
+	/* parse JSON, where base64 data can be quite large */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 100000);
+	fwupd_json_parser_set_max_quoted(json_parser, 0x4000000);
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
+						      blob_src,
+						      FWUPD_JSON_LOAD_FLAG_NONE,
+						      error);
+	if (json_node == NULL) {
+		g_prefix_error_literal(error, "could not parse JSON: ");
 		return FALSE;
 	}
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL) {
-		fwupd_error_convert(error);
+	json_object = fwupd_json_node_get_object(json_node, error);
+	if (json_object == NULL)
 		return FALSE;
-	}
 
 	/* create FuFirmware of specific GType */
-	n = xb_silo_query_first(silo, "firmware", error);
-	if (n == NULL) {
-		fwupd_error_convert(error);
+	if (!fwupd_json_object_get_string_optional(json_object, "gtype", &tmp, error))
 		return FALSE;
-	}
-	tmp = xb_node_get_attr(n, "gtype");
 	if (tmp != NULL) {
 		if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_FIRMWARE, error))
 			return FALSE;
 	}
-	tmp = xb_node_get_attr(n, "id");
-	if (tmp != NULL) {
-		gtype =
-		    fu_context_get_firmware_gtype_by_id(fu_engine_get_context(self->engine), tmp);
-		if (gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "GType %s not supported",
-				    tmp);
-			return FALSE;
-		}
-	}
 	firmware = g_object_new(gtype, NULL);
-	if (!fu_firmware_build(firmware, n, error))
+	if (!fu_firmware_build(firmware, json_object, error))
 		return FALSE;
 
 	/* write new file */
@@ -4547,7 +4532,7 @@ main(int argc, char *argv[])
 	fu_cli_cmd_array_add(FU_CLI(self),
 			     "firmware-build",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			     _("BUILDER-XML FILENAME-DST"),
+			     _("BUILDER-JSON FILENAME-DST"),
 			     /* TRANSLATORS: command description */
 			     _("Build a firmware file"),
 			     fu_engine_cli_firmware_build);
@@ -4563,7 +4548,7 @@ main(int argc, char *argv[])
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			     _("FILENAME [FIRMWARE-TYPE]"),
 			     /* TRANSLATORS: command description */
-			     _("Export a firmware file structure to XML"),
+			     _("Export a firmware file structure to JSON"),
 			     fu_engine_cli_firmware_export);
 	fu_cli_cmd_array_add(FU_CLI(self),
 			     "firmware-extract",

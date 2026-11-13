@@ -33,12 +33,14 @@ fu_vli_usbhub_firmware_get_device_id(FuVliUsbhubFirmware *self)
 }
 
 static void
-fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_vli_usbhub_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "device_kind",
-				  fu_vli_device_kind_to_string(self->device_kind));
+	const gchar *device_kind_str = fu_vli_device_kind_to_string(self->device_kind);
+	if (device_kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "device_kind", device_kind_str);
 }
 
 static gboolean

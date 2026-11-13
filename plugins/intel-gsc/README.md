@@ -15,22 +15,25 @@ This plugin is used to update the Intel graphics system controller via the Intel
   and the `FuStructIgscFwuFwImageData` is also part of that. This then gives the `arb_svn`.
 * The `IMGI` partition is a `FuStructIgscFwuGwsImageInfo`, which gives us `hw_sku`
 
-```xml
-<firmware gtype="FuIgscCodeFirmware">
-  <id>BMG_</id>
-  <version>0021.1111</version>
-  <hw_sku>0x2</hw_sku>
-  <arb_svn>0x2</arb_svn>
-  <firmware>
-    <id>INFO</id>
-  </firmware>
-  <firmware>
-    <id>IMGI</id>
-  </firmware>
-  <firmware>
-    <id>FWIM</id>
-  </firmware>
-</firmware>
+```json
+{
+  "gtype": "FuIgscCodeFirmware",
+  "id": "BMG_",
+  "version": "0021.1111",
+  "hw_sku": "0x2",
+  "arb_svn": "0x2",
+  "firmware": [
+    {
+      "id": "INFO"
+    },
+    {
+      "id": "IMGI"
+    },
+    {
+      "id": "FWIM"
+    }
+  ]
+}
 ```
 
 ### FWDATA
@@ -40,60 +43,63 @@ This plugin is used to update the Intel graphics system controller via the Intel
   This provides `oem_version`, `major_version` and `data_arb_svn`.
 * The `SDTA` (also called a "GDTA") data partition is a `FuIfwiCpdFirmware`
 
-```xml
-<firmware gtype="FuIgscAuxFirmware">
-  <oem_version>0x39</oem_version>
-  <major_version>0xcb</major_version>
-  <data_arb_svn>0x1</data_arb_svn>
-  <device_infos>
-    <match>
-      <vendor_id>0x8086</vendor_id>
-      <device_id>0xe20b</device_id>
-      <subsys_vendor_id>0x8086</subsys_vendor_id>
-      <subsys_device_id>0x1100</subsys_device_id>
-    </match>
-  </device_infos>
-  <firmware>
-    <id>INFO</id>
-  </firmware>
-  <firmware>
-    <id>CKSM</id>
-  </firmware>
-  <firmware>
-    <id>GDTA</id>
-  </firmware>
-</firmware>
+```json
+{
+  "gtype": "FuIgscAuxFirmware",
+  "oem_version": "0x39",
+  "major_version": "0xcb",
+  "data_arb_svn": "0x1",
+  "device_infos": {
+    "match": ""
+  },
+  "firmware": [
+    {
+      "id": "INFO"
+    },
+    {
+      "id": "CKSM"
+    },
+    {
+      "id": "GDTA"
+    }
+  ]
+}
 ```
 
 * The `SDTA` is parsed as:
 
-```xml
-<firmware gtype="FuIfwiCpdFirmware">
-  <header_version>0x2</header_version>
-  <entry_version>0x1</entry_version>
-  <firmware>
-    <id>GDTA.man</id>
-    <version_raw>0xcb</version_raw>
-    <firmware>
-      <idx>0x23</idx>
-    </firmware>
-    <firmware>
-      <idx>0x16</idx>
-    </firmware>
-    <firmware>
-      <idx>0x1d</idx>
-    </firmware>
-    <firmware>
-      <idx>0x25</idx>
-    </firmware>
-  </firmware>
-  <firmware>
-    <id>GDTA</id>
-  </firmware>
-  <firmware>
-    <id>GDTA.met</id>
-  </firmware>
-</firmware>
+```json
+{
+  "gtype": "FuIfwiCpdFirmware",
+  "header_version": "0x2",
+  "entry_version": "0x1",
+  "firmware": [
+    {
+      "id": "GDTA.man",
+      "version_raw": "0xcb",
+      "firmware": [
+        {
+          "idx": "0x23"
+        },
+        {
+          "idx": "0x16"
+        },
+        {
+          "idx": "0x1d"
+        },
+        {
+          "idx": "0x25"
+        }
+      ]
+    },
+    {
+      "id": "GDTA"
+    },
+    {
+      "id": "GDTA.met"
+    }
+  ]
+}
 ```
 
 * The `GDTA.man` partition of the CPD contains the manifest extensions.
@@ -103,77 +109,88 @@ This plugin is used to update the Intel graphics system controller via the Intel
 * The oprom expansion header is formatted as a `FuIfwiCpdFirmware` image
 * The `OROM.man` section has two unknown (and unparsed) extension types
 
-```xml
-<firmware gtype="FuIgscOpromFirmware">
-  <idx>0xf1</idx>
-  <size>0x800</size>
-  <firmware gtype="FuIfwiCpdFirmware">
-    <id>cpd</id>
-    <idx>0x4d4f524f</idx>
-    <header_version>0x2</header_version>
-    <entry_version>0x1</entry_version>
-    <firmware>
-      <id>OROM.man</id>
-      <version_raw>0x4200017</version_raw>
-      <firmware>
-        <idx>0x23</idx>
-      </firmware>
-      <firmware>
-        <idx>0x16</idx>
-      </firmware>
-    </firmware>
-    <firmware>
-      <id>CODE</id>
-    </firmware>
-    <firmware>
-      <id>CODE.met</id>
-    </firmware>
-  </firmware>
-</firmware>
+```json
+{
+  "gtype": "FuIgscOpromFirmware",
+  "idx": "0xf1",
+  "size": "0x800",
+  "firmware": [
+    {
+      "gtype": "FuIfwiCpdFirmware",
+      "id": "cpd",
+      "idx": "0x4d4f524f",
+      "header_version": "0x2",
+      "entry_version": "0x1",
+      "firmware": [
+        {
+          "id": "OROM.man",
+          "version_raw": "0x4200017",
+          "firmware": [
+            {
+              "idx": "0x23"
+            },
+            {
+              "idx": "0x16"
+            }
+          ]
+        },
+        {
+          "id": "CODE"
+        },
+        {
+          "id": "CODE.met"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ### OPROMDATA
 
-```xml
-<firmware gtype="FuIgscOpromFirmware">
-  <idx>0xf0</idx>
-  <size>0x800</size>
-  <device_infos>
-    <match>
-      <vendor_id>0x8086</vendor_id>
-      <device_id>0xe20b</device_id>
-      <subsys_vendor_id>0x8086</subsys_vendor_id>
-      <subsys_device_id>0x1100</subsys_device_id>
-    </match>
-  </device_infos>
-  <firmware gtype="FuIfwiCpdFirmware">
-    <id>cpd</id>
-    <idx>0x4d4f524f</idx>
-    <header_version>0x2</header_version>
-    <entry_version>0x1</entry_version>
-    <firmware>
-      <id>OROM.man</id>
-      <version_raw>0x4200017</version_raw>
-      <firmware>
-        <idx>0x23</idx>
-      </firmware>
-      <firmware>
-        <idx>0x16</idx>
-      </firmware>
-      <firmware>
-        <idx>0x25</idx>
-      </firmware>
-    </firmware>
-    <firmware>
-      <id>VBT</id>
-      <idx>0x1</idx>
-    </firmware>
-    <firmware>
-      <id>VBT.met</id>
-      <idx>0x2</idx>
-    </firmware>
-  </firmware>
-</firmware>
+```json
+{
+  "gtype": "FuIgscOpromFirmware",
+  "idx": "0xf0",
+  "size": "0x800",
+  "device_infos": {
+    "match": ""
+  },
+  "firmware": [
+    {
+      "gtype": "FuIfwiCpdFirmware",
+      "id": "cpd",
+      "idx": "0x4d4f524f",
+      "header_version": "0x2",
+      "entry_version": "0x1",
+      "firmware": [
+        {
+          "id": "OROM.man",
+          "version_raw": "0x4200017",
+          "firmware": [
+            {
+              "idx": "0x23"
+            },
+            {
+              "idx": "0x16"
+            },
+            {
+              "idx": "0x25"
+            }
+          ]
+        },
+        {
+          "id": "VBT",
+          "idx": "0x1"
+        },
+        {
+          "id": "VBT.met",
+          "idx": "0x2"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 This plugin supports the following protocol ID, used by all devices and sub-devices:

@@ -1,0 +1,17 @@
+{
+  "gtype": "FuWacomUsbFirmware",
+  "firmware": [
+    {
+      "gtype": "FuSrecFirmware",
+      "idx": "0x0",
+      "addr": "0x8008000",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuSrecFirmware",
+      "idx": "0x1",
+      "addr": "0x8040000",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

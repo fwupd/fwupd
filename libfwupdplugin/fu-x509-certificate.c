@@ -58,11 +58,15 @@ struct _FuX509Certificate {
 G_DEFINE_TYPE(FuX509Certificate, fu_x509_certificate, FU_TYPE_FIRMWARE)
 
 static void
-fu_x509_certificate_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_x509_certificate_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuX509Certificate *self = FU_X509_CERTIFICATE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "issuer", self->issuer);
-	fu_xmlb_builder_insert_kv(bn, "subject", self->subject);
+	if (self->issuer != NULL)
+		fwupd_json_object_add_string(json_object, "issuer", self->issuer);
+	if (self->subject != NULL)
+		fwupd_json_object_add_string(json_object, "subject", self->subject);
 }
 
 /**

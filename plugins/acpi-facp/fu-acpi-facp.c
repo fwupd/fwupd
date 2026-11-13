@@ -18,14 +18,14 @@ struct _FuAcpiFacp {
 G_DEFINE_TYPE(FuAcpiFacp, fu_acpi_facp, FU_TYPE_ACPI_TABLE)
 
 static void
-fu_acpi_facp_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_acpi_facp_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuAcpiFacp *self = FU_ACPI_FACP(firmware);
 
 	/* FuAcpiTable->export */
-	FU_FIRMWARE_CLASS(fu_acpi_facp_parent_class)->export(firmware, flags, bn);
+	FU_FIRMWARE_CLASS(fu_acpi_facp_parent_class)->export(firmware, flags, json_object);
 
-	fu_xmlb_builder_insert_kb(bn, "s2i", self->s2i);
+	fwupd_json_object_add_boolean(json_object, "s2i", self->s2i);
 }
 
 static gboolean
@@ -89,17 +89,17 @@ fu_acpi_facp_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_acpi_facp_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_acpi_facp_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuAcpiFacp *self = FU_ACPI_FACP(firmware);
-	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "s2i", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &self->s2i, error))
-			return FALSE;
-	}
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"s2i",
+							&self->s2i,
+							FALSE,
+							error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

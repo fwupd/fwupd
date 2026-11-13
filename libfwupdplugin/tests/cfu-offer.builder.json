@@ -1,0 +1,14 @@
+{
+  "gtype": "FuCfuOffer",
+  "segment_number": "0x42",
+  "force_immediate_reset": true,
+  "force_ignore_version": true,
+  "component_id": "0xAB",
+  "token": "0xCD",
+  "version_raw": "0x4567",
+  "hw_variant": "0xFACE",
+  "protocol_revision": "0xF",
+  "bank": "0x1",
+  "milestone": "0x2",
+  "product_id": "0xDEAD"
+}

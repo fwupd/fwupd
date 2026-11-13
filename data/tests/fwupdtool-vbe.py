@@ -12,6 +12,7 @@ storage.
 """
 
 import base64
+import json
 import os
 import subprocess
 import sys
@@ -56,91 +57,148 @@ ABREC_PICK_B = 1
 # how long to let fwupdtool run, in seconds; each run takes well under one
 TIMEOUT = 60
 
-# the devicetree which the firmware passes to the OS, describing the
-# vbe-simple method and the version which is running
-FDT_XML = """\
-<firmware gtype="FuFdtFirmware">
-  <firmware gtype="FuFdtImage">
-    <metadata key="compatible" format="str">vendor,board</metadata>
-    <firmware gtype="FuFdtImage">
-      <id>chosen</id>
-      <firmware gtype="FuFdtImage">
-        <id>fwupd</id>
-        <metadata key="compatible" format="str">vendor,board</metadata>
-        <firmware gtype="FuFdtImage">
-          <id>firmware</id>
-          <metadata key="compatible" format="str">fwupd,vbe-simple</metadata>
-          <metadata key="cur-version" format="str">{version}</metadata>
-          <metadata key="storage" format="str">{storage}</metadata>
-          <metadata key="area-start" format="uint32">{area_start:#x}</metadata>
-          <metadata key="area-size" format="uint32">{area_size:#x}</metadata>
-          <metadata key="skip-offset" format="uint32">{skip_offset:#x}</metadata>
-        </firmware>
-      </firmware>
-    </firmware>
-  </firmware>
-</firmware>
-"""
 
-# the devicetree which the firmware passes to the OS, describing the
-# vbe-abrec method and the slot which booted
-ABREC_FDT_XML = """\
-<firmware gtype="FuFdtFirmware">
-  <firmware gtype="FuFdtImage">
-    <metadata key="compatible" format="str">vendor,board</metadata>
-    <firmware gtype="FuFdtImage">
-      <id>chosen</id>
-      <firmware gtype="FuFdtImage">
-        <id>fwupd</id>
-        <metadata key="compatible" format="str">vendor,board</metadata>
-        <firmware gtype="FuFdtImage">
-          <id>firmware0</id>
-          <metadata key="compatible" format="str">fwupd,vbe-abrec</metadata>
-          <metadata key="storage" format="str">{storage}</metadata>
-          <metadata key="area-start" format="uint32">0x0</metadata>
-          <metadata key="state-offset" format="uint32">{state_offset:#x}</metadata>
-          <metadata key="state-size" format="uint32">{state_size:#x}</metadata>
-          <metadata key="slot-a-offset" format="uint32">{slot_a:#x}</metadata>
-          <metadata key="slot-b-offset" format="uint32">{slot_b:#x}</metadata>
-          <metadata key="slot-size" format="uint32">{slot_size:#x}</metadata>
-          <metadata key="slot-info-offset" format="uint32">{slot_info_offset:#x}</metadata>
-          <metadata key="slot-info-size" format="uint32">{slot_info_size:#x}</metadata>
-          <metadata key="booted-slot" format="str">{booted_slot}</metadata>
-        </firmware>
-      </firmware>
-    </firmware>
-  </firmware>
-</firmware>
-"""
+def _md(key, fmt, value):
+    """a devicetree property for a firmware builder"""
+    return {"key": key, "format": fmt, "value": value}
 
-# a FIT with one firmware image, whose data is either inside the FIT or
-# follows it; the configuration is selected by its compatible string, if any
-FIT_XML = """\
-<firmware gtype="{gtype}">
-  <firmware gtype="FuFdtImage">
-    <metadata key="timestamp" format="uint32">0x629d4abd</metadata>
-    <firmware gtype="FuFdtImage">
-      <id>images</id>
-      <firmware gtype="FuFdtImage">
-        <id>firmware-1</id>
-        <metadata key="type" format="str">firmware</metadata>
-        <metadata key="description" format="str">test</metadata>
-        {data}
-        <metadata key="store-offset" format="uint32">{store_offset:#x}</metadata>
-      </firmware>
-    </firmware>
-    <firmware gtype="FuFdtImage">
-      <id>configurations</id>
-      <firmware gtype="FuFdtImage">
-        <id>conf-1</id>
-        {compatible}
-        <metadata key="version" format="str">{version}</metadata>
-        <metadata key="firmware" format="strlist">firmware-1</metadata>
-      </firmware>
-    </firmware>
-  </firmware>
-</firmware>
-"""
+
+def _img(img_id=None, metadata=None, firmware=None):
+    """a devicetree node for a firmware builder"""
+    obj = {"gtype": "FuFdtImage"}
+    if img_id:
+        obj["id"] = img_id
+    if metadata:
+        obj["metadata"] = metadata
+    if firmware:
+        obj["firmware"] = firmware
+    return obj
+
+
+def _fdt_chosen(firmware_node):
+    """the devicetree which the firmware passes to the OS"""
+    return json.dumps(
+        {
+            "gtype": "FuFdtFirmware",
+            "firmware": [
+                _img(
+                    metadata=[_md("compatible", "str", "vendor,board")],
+                    firmware=[
+                        _img(
+                            "chosen",
+                            firmware=[
+                                _img(
+                                    "fwupd",
+                                    metadata=[_md("compatible", "str", "vendor,board")],
+                                    firmware=[firmware_node],
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ],
+        },
+        indent=2,
+    )
+
+
+def fdt_builder(version, storage, area_start, area_size, skip_offset):
+    """the devicetree describing the vbe-simple method and the running version"""
+    return _fdt_chosen(
+        _img(
+            "firmware",
+            metadata=[
+                _md("compatible", "str", "fwupd,vbe-simple"),
+                _md("cur-version", "str", version),
+                _md("storage", "str", storage),
+                _md("area-start", "uint32", f"{area_start:#x}"),
+                _md("area-size", "uint32", f"{area_size:#x}"),
+                _md("skip-offset", "uint32", f"{skip_offset:#x}"),
+            ],
+        )
+    )
+
+
+def abrec_fdt_builder(
+    storage,
+    state_offset,
+    state_size,
+    slot_a,
+    slot_b,
+    slot_size,
+    slot_info_offset,
+    slot_info_size,
+    booted_slot,
+):
+    """the devicetree describing the vbe-abrec method and the slot which booted"""
+    return _fdt_chosen(
+        _img(
+            "firmware0",
+            metadata=[
+                _md("compatible", "str", "fwupd,vbe-abrec"),
+                _md("storage", "str", storage),
+                _md("area-start", "uint32", "0x0"),
+                _md("state-offset", "uint32", f"{state_offset:#x}"),
+                _md("state-size", "uint32", f"{state_size:#x}"),
+                _md("slot-a-offset", "uint32", f"{slot_a:#x}"),
+                _md("slot-b-offset", "uint32", f"{slot_b:#x}"),
+                _md("slot-size", "uint32", f"{slot_size:#x}"),
+                _md("slot-info-offset", "uint32", f"{slot_info_offset:#x}"),
+                _md("slot-info-size", "uint32", f"{slot_info_size:#x}"),
+                _md("booted-slot", "str", booted_slot),
+            ],
+        )
+    )
+
+
+def fit_builder(gtype, data, compatible, version, store_offset):
+    """a FIT with one firmware image, whose data is either inside the FIT or
+    follows it; the configuration is selected by its compatible string, if any"""
+    return json.dumps(
+        {
+            "gtype": gtype,
+            "firmware": [
+                _img(
+                    metadata=[_md("timestamp", "uint32", "0x629d4abd")],
+                    firmware=[
+                        _img(
+                            "images",
+                            firmware=[
+                                _img(
+                                    "firmware-1",
+                                    metadata=[
+                                        _md("type", "str", "firmware"),
+                                        _md("description", "str", "test"),
+                                        *data,
+                                        _md(
+                                            "store-offset",
+                                            "uint32",
+                                            f"{store_offset:#x}",
+                                        ),
+                                    ],
+                                )
+                            ],
+                        ),
+                        _img(
+                            "configurations",
+                            firmware=[
+                                _img(
+                                    "conf-1",
+                                    metadata=[
+                                        *compatible,
+                                        _md("version", "str", version),
+                                        _md("firmware", "strlist", "firmware-1"),
+                                    ],
+                                )
+                            ],
+                        ),
+                    ],
+                )
+            ],
+        },
+        indent=2,
+    )
+
 
 # the metadata for a cab holding an update with the given version
 METAINFO_XML = """\
@@ -324,21 +382,16 @@ class VbeTest(unittest.TestCase):
             # a FIT with external data is not valid until the data is added,
             # so build it as a plain devicetree
             gtype = "FuFdtFirmware"
-            prop = (
-                '<metadata key="data-offset" format="uint32">0x0</metadata>\n'
-                f'<metadata key="data-size" format="uint32">{len(data):#x}'
-                "</metadata>"
-            )
+            prop = [
+                _md("data-offset", "uint32", "0x0"),
+                _md("data-size", "uint32", f"{len(data):#x}"),
+            ]
         else:
             gtype = "FuFitFirmware"
             encoded = base64.b64encode(data).decode()
-            prop = f'<metadata key="data" format="data">{encoded}</metadata>'
-        compat = (
-            '<metadata key="compatible" format="strlist">vendor,board</metadata>'
-            if compatible
-            else ""
-        )
-        xml = FIT_XML.format(
+            prop = [_md("data", "data", encoded)]
+        compat = [_md("compatible", "strlist", "vendor,board")] if compatible else []
+        builder = fit_builder(
             gtype=gtype,
             data=prop,
             compatible=compat,
@@ -346,7 +399,7 @@ class VbeTest(unittest.TestCase):
             store_offset=STORE_OFFSET,
         )
         fit = self.path("test.fit")
-        self.run_ok("firmware-build", self.write("fit.builder.xml", xml), fit)
+        self.run_ok("firmware-build", self.write("fit.builder.json", builder), fit)
         with open(fit, "rb") as f:
             contents = f.read()
 
@@ -382,7 +435,7 @@ class VbeSimpleTest(VbeTest):
         Args:
             version (str): the version of the firmware which is running
         """
-        xml = FDT_XML.format(
+        builder = fdt_builder(
             version=version,
             storage=self.storage,
             area_start=AREA_START,
@@ -390,7 +443,7 @@ class VbeSimpleTest(VbeTest):
             skip_offset=SKIP_OFFSET,
         )
         fdt = os.path.join(self.env["FWUPD_SYSFSFWDIR"], "fdt")
-        self.run_ok("firmware-build", self.write("fdt.builder.xml", xml), fdt)
+        self.run_ok("firmware-build", self.write("fdt.builder.json", builder), fdt)
 
     def check_storage(self, data):
         """Check that the image went into the area, and nothing else changed
@@ -446,7 +499,7 @@ class VbeAbrecTest(VbeTest):
         Args:
             slot (str): the slot which the firmware booted from, e.g. "a"
         """
-        xml = ABREC_FDT_XML.format(
+        builder = abrec_fdt_builder(
             storage=self.storage,
             state_offset=ABREC_STATE_OFFSET,
             state_size=ABREC_STATE_SIZE,
@@ -458,7 +511,7 @@ class VbeAbrecTest(VbeTest):
             booted_slot=slot,
         )
         fdt = os.path.join(self.env["FWUPD_SYSFSFWDIR"], "fdt")
-        self.run_ok("firmware-build", self.write("fdt.builder.xml", xml), fdt)
+        self.run_ok("firmware-build", self.write("fdt.builder.json", builder), fdt)
 
     def get_flags(self):
         """Read the flags from the state in the storage

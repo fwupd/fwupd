@@ -1,0 +1,15 @@
+{
+  "gtype": "FuZipFirmware",
+  "firmware": [
+    {
+      "gtype": "FuZipFile",
+      "id": "hello.txt",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuZipFile",
+      "id": "goodbye.txt",
+      "data": "Z29vZGJ5ZQ=="
+    }
+  ]
+}

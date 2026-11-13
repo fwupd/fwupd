@@ -28,7 +28,7 @@ device_tests += files('tests/focal-moc.json')
 if get_option('tests')
   install_data(
     [
-      'tests/focal-moc.builder.xml',
+      'tests/focal-moc.builder.json',
     ],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )

@@ -14,7 +14,9 @@ typedef struct {
 } FuAmdAfcVarstore;
 
 void
-fu_amd_afc_varstore_export(FuAmdAfcVarstore *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+fu_amd_afc_varstore_export(FuAmdAfcVarstore *self,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object);
 void
 fu_amd_afc_varstore_free(FuAmdAfcVarstore *self);
 

@@ -21,20 +21,28 @@ G_DEFINE_TYPE(FuRealtekAlc408xFirmware, fu_realtek_alc408x_firmware, FU_TYPE_FIR
 static void
 fu_realtek_alc408x_firmware_export(FuFirmware *firmware,
 				   FuFirmwareExportFlags flags,
-				   XbBuilderNode *bn)
+				   FwupdJsonObject *json_object)
 {
 	FuRealtekAlc408xFirmware *self = FU_REALTEK_ALC408X_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "chip", self->chip);
+	if (self->chip != 0)
+		fwupd_json_object_add_integer(json_object, "chip", self->chip);
 }
 
 static gboolean
-fu_realtek_alc408x_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_realtek_alc408x_firmware_build(FuFirmware *firmware,
+				  FwupdJsonObject *json_object,
+				  GError **error)
 {
 	FuRealtekAlc408xFirmware *self = FU_REALTEK_ALC408X_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
-	tmp = xb_node_query_text_as_uint(n, "chip", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"chip",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->chip = tmp;
 
 	/* success */

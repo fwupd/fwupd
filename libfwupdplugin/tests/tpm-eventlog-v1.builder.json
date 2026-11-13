@@ -1,0 +1,21 @@
+{
+  "gtype": "FuTpmEventlogV1",
+  "firmware": [
+    {
+      "gtype": "FuTpmEventlogItem",
+      "data": "AA==",
+      "data_size": "0x1",
+      "data_type": "GBytes",
+      "kind": "s-crtm-version",
+      "sha1": "231f248f12ef9f38549f1bda7a859b781b5caab0"
+    },
+    {
+      "gtype": "FuTpmEventlogItem",
+      "data": "AA==",
+      "data_size": "0x1",
+      "data_type": "GBytes",
+      "kind": "efi-platform-firmware-blob",
+      "sha1": "d235e68f43ec4db54caea469e1e69a8fcd93610f"
+    }
+  ]
+}

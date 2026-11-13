@@ -22,58 +22,80 @@ struct _FuLenovoDockFirmware {
 G_DEFINE_TYPE(FuLenovoDockFirmware, fu_lenovo_dock_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_lenovo_dock_firmware_export_usage(FuStructLenovoDockUsage *st, XbBuilderNode *bn)
+fu_lenovo_dock_firmware_export_usage(FuStructLenovoDockUsage *st, FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn,
-				  "total_number",
-				  fu_struct_lenovo_dock_usage_get_total_number(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "composite_version",
-				  fu_struct_lenovo_dock_usage_get_composite_version(st));
-	fu_xmlb_builder_insert_kx(bn, "pid", fu_struct_lenovo_dock_usage_get_pid(st));
+	if (fu_struct_lenovo_dock_usage_get_total_number(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "total_number",
+					      fu_struct_lenovo_dock_usage_get_total_number(st));
+	if (fu_struct_lenovo_dock_usage_get_composite_version(st) != 0)
+		fwupd_json_object_add_integer(
+		    json_object,
+		    "composite_version",
+		    fu_struct_lenovo_dock_usage_get_composite_version(st));
+	if (fu_struct_lenovo_dock_usage_get_pid(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "pid",
+					      fu_struct_lenovo_dock_usage_get_pid(st));
 }
 
 static void
-fu_lenovo_dock_firmware_export_usage_item(FuStructLenovoDockUsageItem *st, XbBuilderNode *bn)
+fu_lenovo_dock_firmware_export_usage_item(FuStructLenovoDockUsageItem *st,
+					  FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "addr", fu_struct_lenovo_dock_usage_item_get_address(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "max_size",
-				  fu_struct_lenovo_dock_usage_item_get_max_size(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "target_version",
-				  fu_struct_lenovo_dock_usage_item_get_target_version(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "target_size",
-				  fu_struct_lenovo_dock_usage_item_get_target_size(st));
-	fu_xmlb_builder_insert_kx(bn,
-				  "target_crc32",
-				  fu_struct_lenovo_dock_usage_item_get_target_crc32(st));
+	if (fu_struct_lenovo_dock_usage_item_get_address(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "addr",
+					      fu_struct_lenovo_dock_usage_item_get_address(st));
+	if (fu_struct_lenovo_dock_usage_item_get_max_size(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "max_size",
+					      fu_struct_lenovo_dock_usage_item_get_max_size(st));
+	if (fu_struct_lenovo_dock_usage_item_get_target_version(st) != 0)
+		fwupd_json_object_add_integer(
+		    json_object,
+		    "target_version",
+		    fu_struct_lenovo_dock_usage_item_get_target_version(st));
+	if (fu_struct_lenovo_dock_usage_item_get_target_size(st) != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "target_size",
+					      fu_struct_lenovo_dock_usage_item_get_target_size(st));
+	if (fu_struct_lenovo_dock_usage_item_get_target_crc32(st) != 0)
+		fwupd_json_object_add_integer(
+		    json_object,
+		    "target_crc32",
+		    fu_struct_lenovo_dock_usage_item_get_target_crc32(st));
 }
 
 static void
-fu_lenovo_dock_firmware_export_usage_items(GPtrArray *st_usage_items, XbBuilderNode *bn)
+fu_lenovo_dock_firmware_export_usage_items(GPtrArray *st_usage_items, FwupdJsonArray *json_array)
 {
 	for (guint i = 0; i < st_usage_items->len; i++) {
 		FuStructLenovoDockUsageItem *st_usage_item = g_ptr_array_index(st_usage_items, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "item", NULL);
-		fu_lenovo_dock_firmware_export_usage_item(st_usage_item, bc);
+		g_autoptr(FwupdJsonObject) json_item = fwupd_json_object_new();
+		fu_lenovo_dock_firmware_export_usage_item(st_usage_item, json_item);
+		fwupd_json_array_add_object(json_array, json_item);
 	}
 }
 
 static void
-fu_lenovo_dock_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_lenovo_dock_firmware_export(FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       FwupdJsonObject *json_object)
 {
 	FuLenovoDockFirmware *self = FU_LENOVO_DOCK_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
+	if (self->pid != 0)
+		fwupd_json_object_add_integer(json_object, "pid", self->pid);
 
 	if (self->st_usage != NULL) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "usage", NULL);
-		fu_lenovo_dock_firmware_export_usage(self->st_usage, bc);
+		g_autoptr(FwupdJsonObject) json_usage = fwupd_json_object_new();
+		fu_lenovo_dock_firmware_export_usage(self->st_usage, json_usage);
+		fwupd_json_object_add_object(json_object, "usage", json_usage);
 	}
 	if (self->st_usage_items->len > 0) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "items", NULL);
-		fu_lenovo_dock_firmware_export_usage_items(self->st_usage_items, bc);
+		g_autoptr(FwupdJsonArray) json_items = fwupd_json_array_new();
+		fu_lenovo_dock_firmware_export_usage_items(self->st_usage_items, json_items);
+		fwupd_json_object_add_array(json_object, "items", json_items);
 	}
 }
 

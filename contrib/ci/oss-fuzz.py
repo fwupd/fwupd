@@ -276,14 +276,14 @@ class Builder:
         return os.path.join(self.installdir, dst)
 
     def mkfuzztargets(self, exe: str, globstr: str) -> list[str]:
-        """make binary fuzzing targets from builder.xml files"""
+        """make binary fuzzing targets from builder.json files"""
         builder_xmls = glob.glob(globstr)
         corpus: list[str] = []
         if not builder_xmls:
             builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
             fn_dst = os.path.join(
-                self.builddir, os.path.basename(fn_src).replace(".builder.xml", ".bin")
+                self.builddir, os.path.basename(fn_src).replace(".builder.json", ".bin")
             )
             print(f"building {fn_src} into {fn_dst}")
             try:
@@ -553,7 +553,7 @@ def _build(bld: Builder) -> None:
                 "fwupd",
                 "libfwupdplugin",
                 "tests",
-                f"{fzr.name}*.builder.xml",
+                f"{fzr.name}*.builder.json",
             ),
         )
         bld.makezip(
@@ -629,7 +629,7 @@ def _build(bld: Builder) -> None:
                 "plugins",
                 fzr.srcdir,
                 "tests",
-                f"{fzr.name}*.builder.xml",
+                f"{fzr.name}*.builder.json",
             ),
         )
         bld.makezip(

@@ -220,7 +220,7 @@ fwupd_json_node_get_object(FwupdJsonNode *self, GError **error)
  *
  * Gets the JSON array from a JSON node.
  *
- * Returns: (transfer none): a #FwupdJsonArray, or %NULL if the node was the wrong kind.
+ * Returns: (transfer full): a #FwupdJsonArray, or %NULL if the node was the wrong kind.
  *
  * Since: 2.1.1
  **/

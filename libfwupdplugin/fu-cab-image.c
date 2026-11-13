@@ -102,13 +102,14 @@ fu_cab_image_set_created(FuCabImage *self, GDateTime *created)
 }
 
 static gboolean
-fu_cab_image_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_cab_image_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCabImage *self = FU_CAB_IMAGE(firmware);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "win32_filename", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "win32_filename", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GString) filename = g_string_new(tmp);
 		g_string_replace(filename, "\\", "/", 0);
@@ -116,7 +117,8 @@ fu_cab_image_build(FuFirmware *firmware, XbNode *n, GError **error)
 			return FALSE;
 		fu_cab_image_set_win32_filename(self, tmp);
 	}
-	tmp = xb_node_query_text(n, "created", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "created", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) created = g_date_time_new_from_iso8601(tmp, NULL);
 		if (created == NULL) {
@@ -135,13 +137,15 @@ fu_cab_image_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_cab_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_cab_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuCabImage *self = FU_CAB_IMAGE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "win32_filename", self->win32_filename);
+	if (self->win32_filename != NULL)
+		fwupd_json_object_add_string(json_object, "win32_filename", self->win32_filename);
 	if (self->created != NULL) {
 		g_autofree gchar *str = g_date_time_format_iso8601(self->created);
-		fu_xmlb_builder_insert_kv(bn, "created", str);
+		if (str != NULL)
+			fwupd_json_object_add_string(json_object, "created", str);
 	}
 }
 

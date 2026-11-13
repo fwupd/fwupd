@@ -1,0 +1,91 @@
+{
+  "gtype": "FuHidDescriptor",
+  "firmware": [
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff02"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "kind": "local",
+          "value": "0x1"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "collection",
+          "value": "0x1"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff02"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x14"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0x9"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "kind": "local",
+          "value": "0x1"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "feature",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff02"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x14"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0x9"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "end-collection"
+        }
+      ]
+    }
+  ]
+}

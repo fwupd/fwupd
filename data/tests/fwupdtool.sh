@@ -210,8 +210,8 @@ fi
 
 # ---
 echo " ● Firmware builder…"
-echo "<firmware gtype=\"FuSrecFirmware\"><id>HDR</id><data>aGVsbG8gd29ybGQ=</data></firmware>" >${TMPDIR}/blob.builder.xml
-run firmware-build ${TMPDIR}/blob.builder.xml ${TMPDIR}/blob.srec
+echo '{"gtype": "FuSrecFirmware", "id": "HDR", "data": "aGVsbG8gd29ybGQ="}' >${TMPDIR}/blob.builder.json
+run firmware-build ${TMPDIR}/blob.builder.json ${TMPDIR}/blob.srec
 expect_rc 0
 
 # ---

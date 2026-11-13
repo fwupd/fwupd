@@ -1286,12 +1286,12 @@ fu_focal_moc_firmware_func(void)
 }
 
 static void
-fu_focal_moc_firmware_xml_func(void)
+fu_focal_moc_firmware_json_func(void)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "focal-moc.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "focal-moc.builder.json", NULL);
 	g_assert_true(
 	    fu_firmware_roundtrip_from_filename(filename,
 						"82d74338dcf189114871f15666e96b7471db3e82",
@@ -1459,19 +1459,19 @@ fu_focal_moc_firmware_entry_offset_func(void)
 }
 
 static void
-fu_focal_moc_firmware_xml_invalid_func(void)
+fu_focal_moc_firmware_json_invalid_func(void)
 {
-	const gchar *xmls[] = {
-	    "<firmware gtype=\"FuFocalMocFirmware\"><digest>zz</digest></firmware>",
-	    "<firmware gtype=\"FuFocalMocFirmware\"><digest>aabb</digest></firmware>",
-	    "<firmware gtype=\"FuFocalMocFirmware\"><signature>aabb</signature></firmware>",
+	const gchar *jsons[] = {
+	    "{\"gtype\": \"FuFocalMocFirmware\", \"digest\": \"zz\"}",
+	    "{\"gtype\": \"FuFocalMocFirmware\", \"digest\": \"aabb\"}",
+	    "{\"gtype\": \"FuFocalMocFirmware\", \"signature\": \"aabb\"}",
 	};
 
-	for (guint i = 0; i < G_N_ELEMENTS(xmls); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(jsons); i++) {
 		g_autoptr(FuFirmware) firmware = NULL;
 		g_autoptr(GError) error = NULL;
 
-		firmware = fu_firmware_new_from_xml(xmls[i], &error);
+		firmware = fu_firmware_new_from_json(jsons[i], &error);
 		g_assert_null(firmware);
 		g_assert_nonnull(error);
 	}
@@ -1508,7 +1508,7 @@ main(int argc, char **argv)
 	g_test_add_func("/focal-moc/iap-status-layout", fu_focal_moc_iap_status_layout_func);
 	g_test_add_func("/focal-moc/status-error", fu_focal_moc_status_error_func);
 	g_test_add_func("/focal-moc/firmware/parse", fu_focal_moc_firmware_func);
-	g_test_add_func("/focal-moc/firmware/xml", fu_focal_moc_firmware_xml_func);
+	g_test_add_func("/focal-moc/firmware/json", fu_focal_moc_firmware_json_func);
 	g_test_add_func("/focal-moc/firmware/wrong-type", fu_focal_moc_firmware_wrong_type_func);
 	g_test_add_func("/focal-moc/firmware/invalid", fu_focal_moc_firmware_invalid_func);
 	g_test_add_func("/focal-moc/firmware/size-max", fu_focal_moc_firmware_size_max_func);
@@ -1516,6 +1516,6 @@ main(int argc, char **argv)
 	g_test_add_func("/focal-moc/firmware/truncated", fu_focal_moc_firmware_truncated_func);
 	g_test_add_func("/focal-moc/firmware/entry-offset",
 			fu_focal_moc_firmware_entry_offset_func);
-	g_test_add_func("/focal-moc/firmware/xml-invalid", fu_focal_moc_firmware_xml_invalid_func);
+	g_test_add_func("/focal-moc/firmware/xml-invalid", fu_focal_moc_firmware_json_invalid_func);
 	return g_test_run();
 }

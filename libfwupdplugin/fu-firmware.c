@@ -168,7 +168,7 @@ fu_firmware_set_version(FuFirmware *self, const gchar *version)
  *
  * Gets an raw version that represents the firmware. This is most frequently
  * used when building firmware with `<version_raw>0x123456</version_raw>` in a
- * `firmware.builder.xml` file to avoid string splitting and sanity checks.
+ * `firmware.builder.json` file to avoid string splitting and sanity checks.
  *
  * Returns: an integer, or %G_MAXUINT64 for invalid
  *
@@ -1296,41 +1296,49 @@ fu_firmware_parse_bytes(FuFirmware *self,
 /**
  * fu_firmware_build:
  * @self: a #FuFirmware
- * @n: a Xmlb node
+ * @json_object: a #FwupdJsonObject
  * @error: (nullable): optional return location for an error
  *
- * Builds a firmware from an XML manifest. The manifest would typically have the
+ * Builds a firmware from a JSON manifest. The manifest would typically have the
  * following form:
  *
- * |[<!-- language="XML" -->
- * <?xml version="1.0" encoding="UTF-8"?>
- * <firmware gtype="FuBcm57xxFirmware">
- *   <version>1.2.3</version>
- *   <firmware gtype="FuBcm57xxStage1Image">
- *     <version>7.8.9</version>
- *     <id>stage1</id>
- *     <idx>0x01</idx>
- *     <filename>stage1.bin</filename>
- *   </firmware>
- *   <firmware gtype="FuBcm57xxStage2Image">
- *     <id>stage2</id>
- *     <data/> <!-- empty! -->
- *   </firmware>
- *   <firmware gtype="FuBcm57xxDictImage">
- *     <id>ape</id>
- *     <addr>0x7</addr>
- *     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
- *   </firmware>
- * </firmware>
+ * |[<!-- language="JSON" -->
+ * {
+ *   "gtype": "FuBcm57xxFirmware",
+ *   "version": "1.2.3",
+ *   "firmware": [
+ *     {
+ *       "gtype": "FuBcm57xxStage1Image",
+ *       "version": "7.8.9",
+ *       "id": "stage1",
+ *       "idx": "0x01",
+ *       "filename": "stage1.bin"
+ *     },
+ *     {
+ *       "gtype": "FuBcm57xxStage2Image",
+ *       "id": "stage2",
+ *       "data": ""
+ *     },
+ *     {
+ *       "gtype": "FuBcm57xxDictImage",
+ *       "id": "ape",
+ *       "addr": "0x7",
+ *       "data": "aGVsbG8gd29ybGQ="
+ *     }
+ *   ]
+ * }
  * ]|
  *
  * This would be used in a build-system to merge images from generated files:
- * `fwupdtool firmware-build fw.builder.xml test.fw`
+ * `fwupdtool firmware-build fw.builder.json test.fw`
  *
- * Static binary content can be specified in the `<firmware>/<data>` section and
- * is encoded as base64 text if not empty.
+ * Static binary content can be specified in the `data` member and is encoded as base64
+ * text if not empty. The optional `data_size` member pads the data with `0xFF` bytes.
  *
- * Additionally, extra nodes can be included under nested `<firmware>` objects
+ * Integer values may be specified as JSON numbers, or as hexadecimal strings with a `0x`
+ * prefix, e.g. `"0x1F"`.
+ *
+ * Additionally, extra members can be included in nested `firmware` objects
  * which can be parsed by the subclassed objects. You should verify the
  * subclassed object `FuFirmware->build` vfunc for the specific additional
  * options supported.
@@ -1344,32 +1352,30 @@ fu_firmware_parse_bytes(FuFirmware *self,
  * Since: 1.5.0
  **/
 gboolean
-fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
+fu_firmware_build(FuFirmware *self, FwupdJsonObject *json_object, GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	guint64 tmpval;
-	guint64 version_raw;
-	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GPtrArray) xb_images = NULL;
-	g_autoptr(XbNode) data = NULL;
+	gint64 tmpval = G_MAXINT64;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(XB_IS_NODE(n), FALSE);
+	g_return_val_if_fail(json_object != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* subclassed */
 	if (klass->build != NULL) {
-		if (!klass->build(self, n, error))
+		if (!klass->build(self, json_object, error))
 			return FALSE;
 	}
 
 	/* set attributes */
-	tmp = xb_node_query_text(n, "version", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "version", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_firmware_set_version(self, tmp); /* nocheck:set-version */
-	tmp = xb_node_query_text(n, "version_format", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "version_format", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		FwupdVersionFormat version_format = fwupd_version_format_from_string(tmp);
 		if (version_format == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -1382,30 +1388,66 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		}
 		fu_firmware_set_version_format(self, version_format);
 	}
-	version_raw = xb_node_query_text_as_uint(n, "version_raw", NULL);
-	if (version_raw != G_MAXUINT64)
-		fu_firmware_set_version_raw(self, version_raw);
-	tmp = xb_node_query_text(n, "id", NULL);
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"version_raw",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
+		fu_firmware_set_version_raw(self, tmpval);
+	if (!fwupd_json_object_get_string_optional(json_object, "id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_firmware_set_id(self, tmp);
-	tmpval = xb_node_query_text_as_uint(n, "idx", NULL);
-	if (tmpval != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"idx",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
 		fu_firmware_set_idx(self, tmpval);
-	tmpval = xb_node_query_text_as_uint(n, "addr", NULL);
-	if (tmpval != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"addr",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
 		fu_firmware_set_addr(self, tmpval);
-	tmpval = xb_node_query_text_as_uint(n, "offset", NULL);
-	if (tmpval != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"offset",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
 		fu_firmware_set_offset(self, tmpval);
-	tmpval = xb_node_query_text_as_uint(n, "size", NULL);
-	if (tmpval != G_MAXUINT64)
-		fu_firmware_set_size(self, tmpval);
-	tmpval = xb_node_query_text_as_uint(n, "size_max", NULL);
-	if (tmpval != G_MAXUINT64)
-		fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), tmpval);
-	tmpval = xb_node_query_text_as_uint(n, "alignment", NULL);
-	if (tmpval != G_MAXUINT64) {
-		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"size",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
+		fu_firmware_set_size(self, (gsize)tmpval);
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"size_max",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64)
+		fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), (gsize)tmpval);
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"alignment",
+							&tmpval,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpval != G_MAXINT64) {
+		if (tmpval < 0 || tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -1416,30 +1458,39 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		}
 		fu_firmware_set_alignment(self, (guint8)tmpval);
 	}
-	data = xb_node_query_first(n, "data", NULL);
-	if (data != NULL) {
-		guint64 sz = xb_node_get_attr_as_uint(data, "size");
+
+	/* data, which may be empty */
+	if (fwupd_json_object_has_node(json_object, "data") ||
+	    fwupd_json_object_has_node(json_object, "data_type")) {
 		g_autoptr(GBytes) blob = NULL;
 
 		/* base64 encoded data */
-		if (xb_node_get_text(data) != NULL) {
+		if (!fwupd_json_object_get_string_optional(json_object, "data", &tmp, error))
+			return FALSE;
+		if (tmp != NULL) {
 			gsize bufsz = 0;
-			g_autofree guchar *buf = NULL;
-			buf = g_base64_decode(xb_node_get_text(data), &bufsz);
+			g_autofree guchar *buf = g_base64_decode(tmp, &bufsz);
 			blob = g_bytes_new(buf, bufsz);
 		} else {
 			blob = g_bytes_new(NULL, 0);
 		}
 
 		/* padding is optional */
-		if (sz == 0 || sz == G_MAXUINT64) {
+		if (!fwupd_json_object_get_integer_with_default(json_object,
+								"data_size",
+								&tmpval,
+								G_MAXINT64,
+								error))
+			return FALSE;
+		if (tmpval <= 0 || tmpval == G_MAXINT64) {
 			fu_firmware_set_bytes(self, blob);
 		} else {
-			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)sz, 0xFF);
+			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)tmpval, 0xFF);
 			fu_firmware_set_bytes(self, blob_padded);
 		}
 	}
-	tmp = xb_node_query_text(n, "filename", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "filename", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (priv->bytes == NULL) {
 			g_autoptr(GBytes) blob = NULL;
@@ -1452,25 +1503,41 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	}
 
 	/* optional chunks */
-	chunks = xb_node_query(n, "chunks/chunk", 0, NULL);
-	if (chunks != NULL) {
-		for (guint i = 0; i < chunks->len; i++) {
-			XbNode *c = g_ptr_array_index(chunks, i);
+	if (fwupd_json_object_has_node(json_object, "chunks")) {
+		g_autoptr(FwupdJsonArray) json_chunks =
+		    fwupd_json_object_get_array(json_object, "chunks", error);
+		if (json_chunks == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_chunks); i++) {
 			g_autoptr(FuChunk) chk = fu_chunk_bytes_new(NULL);
+			g_autoptr(FwupdJsonObject) json_chunk =
+			    fwupd_json_array_get_object(json_chunks, i, error);
+			if (json_chunk == NULL)
+				return FALSE;
 			fu_chunk_set_idx(chk, i);
-			if (!fu_chunk_build(chk, c, error))
+			if (!fu_chunk_build(chk, json_chunk, error))
 				return FALSE;
 			fu_firmware_add_chunk(self, chk);
 		}
 	}
 
 	/* parse images */
-	xb_images = xb_node_query(n, "firmware", 0, NULL);
-	if (xb_images != NULL) {
-		for (guint i = 0; i < xb_images->len; i++) {
-			XbNode *xb_image = g_ptr_array_index(xb_images, i);
+	if (fwupd_json_object_has_node(json_object, "firmware")) {
+		g_autoptr(FwupdJsonArray) json_images =
+		    fwupd_json_object_get_array(json_object, "firmware", error);
+		if (json_images == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_images); i++) {
 			g_autoptr(FuFirmware) img = NULL;
-			tmp = xb_node_get_attr(xb_image, "gtype");
+			g_autoptr(FwupdJsonObject) json_image =
+			    fwupd_json_array_get_object(json_images, i, error);
+			if (json_image == NULL)
+				return FALSE;
+			if (!fwupd_json_object_get_string_optional(json_image,
+								   "gtype",
+								   &tmp,
+								   error))
+				return FALSE;
 			if (tmp != NULL) {
 				GType gtype = G_TYPE_INVALID;
 				if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_FIRMWARE, error))
@@ -1481,7 +1548,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			}
 			if (!fu_firmware_add_image(self, img, error))
 				return FALSE;
-			if (!fu_firmware_build(img, xb_image, error))
+			if (!fu_firmware_build(img, json_image, error))
 				return FALSE;
 		}
 	}
@@ -1490,43 +1557,71 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	return TRUE;
 }
 
+/* parses a builder manifest into the root JSON object */
+static FwupdJsonObject *
+fu_firmware_builder_load_json(GBytes *blob, GError **error)
+{
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+
+	/* base64 data can be quite large */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 100000);
+	fwupd_json_parser_set_max_quoted(json_parser, 0x4000000);
+	json_node =
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	if (json_node == NULL) {
+		g_prefix_error_literal(error, "could not parse JSON: ");
+		return NULL;
+	}
+	return fwupd_json_node_get_object(json_node, error);
+}
+
 /**
- * fu_firmware_new_from_xml:
- * @xml: XML text
+ * fu_firmware_new_from_json:
+ * @json: JSON text
  * @error: (nullable): optional return location for an error
  *
- * Builds a firmware from an XML manifest. The manifest would typically have the
+ * Builds a firmware from a JSON manifest. The manifest would typically have the
  * following form:
  *
- * |[<!-- language="XML" -->
- * <?xml version="1.0" encoding="UTF-8"?>
- * <firmware gtype="FuBcm57xxFirmware">
- *   <version>1.2.3</version>
- *   <firmware gtype="FuBcm57xxStage1Image">
- *     <version>7.8.9</version>
- *     <id>stage1</id>
- *     <idx>0x01</idx>
- *     <filename>stage1.bin</filename>
- *   </firmware>
- *   <firmware gtype="FuBcm57xxStage2Image">
- *     <id>stage2</id>
- *     <data/> <!-- empty! -->
- *   </firmware>
- *   <firmware gtype="FuBcm57xxDictImage">
- *     <id>ape</id>
- *     <addr>0x7</addr>
- *     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
- *   </firmware>
- * </firmware>
+ * |[<!-- language="JSON" -->
+ * {
+ *   "gtype": "FuBcm57xxFirmware",
+ *   "version": "1.2.3",
+ *   "firmware": [
+ *     {
+ *       "gtype": "FuBcm57xxStage1Image",
+ *       "version": "7.8.9",
+ *       "id": "stage1",
+ *       "idx": "0x01",
+ *       "filename": "stage1.bin"
+ *     },
+ *     {
+ *       "gtype": "FuBcm57xxStage2Image",
+ *       "id": "stage2",
+ *       "data": ""
+ *     },
+ *     {
+ *       "gtype": "FuBcm57xxDictImage",
+ *       "id": "ape",
+ *       "addr": "0x7",
+ *       "data": "aGVsbG8gd29ybGQ="
+ *     }
+ *   ]
+ * }
  * ]|
  *
  * This would be used in a build-system to merge images from generated files:
- * `fwupdtool firmware-build fw.builder.xml test.fw`
+ * `fwupdtool firmware-build fw.builder.json test.fw`
  *
- * Static binary content can be specified in the `<firmware>/<data>` section and
- * is encoded as base64 text if not empty.
+ * Static binary content can be specified in the `data` member and is encoded as base64
+ * text if not empty. The optional `data_size` member pads the data with `0xFF` bytes.
  *
- * Additionally, extra nodes can be included under nested `<firmware>` objects
+ * Integer values may be specified as JSON numbers, or as hexadecimal strings with a `0x`
+ * prefix, e.g. `"0x1F"`.
+ *
+ * Additionally, extra members can be included in nested `firmware` objects
  * which can be parsed by the subclassed objects. You should verify the
  * subclassed object `FuFirmware->build` vfunc for the specific additional
  * options supported.
@@ -1538,60 +1633,46 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
  * Since: 2.1.1
  **/
 FuFirmware *
-fu_firmware_new_from_xml(const gchar *xml, GError **error)
+fu_firmware_new_from_json(const gchar *json, GError **error)
 {
 	GType gtype;
 	const gchar *gtypestr = NULL;
 	g_autoptr(FuFirmware) self = NULL;
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FwupdJsonObject) json_object = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
-	g_return_val_if_fail(xml != NULL, NULL);
+	g_return_val_if_fail(json != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* parse XML */
-	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error_literal(error, "could not parse XML: ");
-		fwupd_error_convert(error);
+	/* parse JSON */
+	blob = g_bytes_new_static(json, strlen(json));
+	json_object = fu_firmware_builder_load_json(blob, error);
+	if (json_object == NULL)
 		return NULL;
-	}
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL) {
-		fwupd_error_convert(error);
-		return NULL;
-	}
 
 	/* create FuFirmware of specific GType */
-	n = xb_silo_query_first(silo, "firmware", error);
-	if (n == NULL) {
-		fwupd_error_convert(error);
-		return NULL;
-	}
-	gtypestr = xb_node_get_attr(n, "gtype");
+	gtypestr = fwupd_json_object_get_string(json_object, "gtype", NULL);
 	if (gtypestr == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "expected gtype for <firmware>");
+				    "expected gtype for firmware");
 		return NULL;
 	}
 	if (!fu_gtype_from_name(gtypestr, &gtype, FU_TYPE_FIRMWARE, error))
 		return NULL;
 	self = g_object_new(gtype, NULL);
-	if (!fu_firmware_build(self, n, error))
+	if (!fu_firmware_build(self, json_object, error))
 		return NULL;
 	return g_steal_pointer(&self);
 }
 
 /**
  * fu_firmware_new_from_filename:
- * @filename: filename of XML builder
+ * @filename: filename of JSON builder
  * @error: (nullable): optional return location for an error
  *
- * Builds a firmware from an XML manifest.
+ * Builds a firmware from a JSON manifest.
  *
  * Returns: a #FuFirmware on success, else %NULL
  *
@@ -1600,14 +1681,14 @@ fu_firmware_new_from_xml(const gchar *xml, GError **error)
 FuFirmware *
 fu_firmware_new_from_filename(const gchar *filename, GError **error)
 {
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 
 	g_return_val_if_fail(filename != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (!g_file_get_contents(filename, &xml, NULL, error))
+	if (!g_file_get_contents(filename, &json, NULL, error))
 		return NULL;
-	return fu_firmware_new_from_xml(xml, error);
+	return fu_firmware_new_from_json(json, error);
 }
 
 /**
@@ -2534,9 +2615,9 @@ fu_firmware_get_images_sorted(FuFirmware *self)
  * fu_firmware_export:
  * @self: a #FuFirmware
  * @flags: firmware export flags, e.g. %FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG
- * @bn: a Xmlb builder node
+ * @json_object: a #FwupdJsonObject
  *
- * This allows us to build an XML object for the nested firmware.
+ * This allows us to build a JSON object for the nested firmware.
  *
  * The image children will have a predictable order if the firmware has
  * %FU_FIRMWARE_FLAG_DEDUPE_ID or %FU_FIRMWARE_FLAG_DEDUPE_IDX and
@@ -2545,7 +2626,7 @@ fu_firmware_get_images_sorted(FuFirmware *self)
  * Since: 1.6.0
  **/
 void
-fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -2554,36 +2635,51 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 
 	/* object */
 	if (g_strcmp0(gtypestr, "FuFirmware") != 0)
-		xb_builder_node_set_attr(bn, "gtype", gtypestr);
+		fwupd_json_object_add_string(json_object, "gtype", gtypestr);
 
 	/* subclassed type */
 	flags_for_display &= ~FU_FIRMWARE_FLAG_DONE_PARSE;
 	if (flags_for_display != FU_FIRMWARE_FLAG_NONE) {
 		g_autofree gchar *str = fu_firmware_flags_to_string(flags_for_display);
-		fu_xmlb_builder_insert_kv(bn, "flags", str);
+		fwupd_json_object_add_string(json_object, "flags", str);
 	}
-	fu_xmlb_builder_insert_kv(bn, "id", priv->id);
-	fu_xmlb_builder_insert_kx(bn, "idx", priv->idx);
-	fu_xmlb_builder_insert_kv(bn, "version", priv->version);
-	fu_xmlb_builder_insert_kx(bn, "version_raw", priv->version_raw);
+	if (priv->id != NULL)
+		fwupd_json_object_add_string(json_object, "id", priv->id);
+	if (priv->idx != 0)
+		fwupd_json_object_add_integer(json_object, "idx", (gint64)priv->idx);
+	if (priv->version != NULL)
+		fwupd_json_object_add_string(json_object, "version", priv->version);
+	if (priv->version_raw != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "version_raw",
+					      (gint64)priv->version_raw);
 	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "version_format",
-					  fwupd_version_format_to_string(priv->version_format));
+		const gchar *version_format_str =
+		    fwupd_version_format_to_string(priv->version_format);
+		if (version_format_str != NULL)
+			fwupd_json_object_add_string(json_object,
+						     "version_format",
+						     version_format_str);
 	}
-	fu_xmlb_builder_insert_kx(bn, "addr", priv->addr);
-	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
-	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
-	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
+	if (priv->addr != 0)
+		fwupd_json_object_add_integer(json_object, "addr", (gint64)priv->addr);
+	if (priv->offset != 0)
+		fwupd_json_object_add_integer(json_object, "offset", (gint64)priv->offset);
+	if (priv->alignment != 0)
+		fwupd_json_object_add_integer(json_object, "alignment", priv->alignment);
+	if (priv->size != 0)
+		fwupd_json_object_add_integer(json_object, "size", (gint64)priv->size);
 	{
 		FuFirmwareClassPrivate *cpriv =
 		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
-		if (cpriv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT)
-			fu_xmlb_builder_insert_kx(bn, "size_max", cpriv->size_max);
+		if (cpriv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT && cpriv->size_max != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "size_max",
+						      (gint64)cpriv->size_max);
 	}
-	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
+	if (priv->filename != NULL)
+		fwupd_json_object_add_string(json_object, "filename", priv->filename);
 	if (priv->stream != NULL) {
-		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
 		g_autofree gchar *datastr = NULL;
 		if (priv->streamsz <= 0x100) {
 			g_autoptr(GByteArray) buf = fu_input_stream_read_byte_array(priv->stream,
@@ -2603,55 +2699,51 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 				}
 			}
 		}
-		xb_builder_node_insert_text(bn,
-					    "data",
-					    datastr,
-					    "type",
-					    "FuInputStream",
-					    "size",
-					    dataszstr,
-					    NULL);
+		if (datastr != NULL)
+			fwupd_json_object_add_string(json_object, "data", datastr);
+		fwupd_json_object_add_string(json_object, "data_type", "FuInputStream");
+		fwupd_json_object_add_integer(json_object, "data_size", (gint64)priv->streamsz);
 	} else if (priv->bytes != NULL && g_bytes_get_size(priv->bytes) == 0) {
-		xb_builder_node_insert_text(bn, "data", NULL, "type", "GBytes", NULL);
+		fwupd_json_object_add_string(json_object, "data_type", "GBytes");
 	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
 		g_autofree gchar *datastr = NULL;
-		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)bufsz);
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
 			datastr = fu_memstrsafe(buf, bufsz, 0x0, MIN(bufsz, 0x100), NULL);
 		} else {
 			datastr = fu_base64_encode(buf, bufsz);
 		}
-		xb_builder_node_insert_text(bn,
-					    "data",
-					    datastr,
-					    "type",
-					    "GBytes",
-					    "size",
-					    dataszstr,
-					    NULL);
+		if (datastr != NULL)
+			fwupd_json_object_add_string(json_object, "data", datastr);
+		fwupd_json_object_add_string(json_object, "data_type", "GBytes");
+		fwupd_json_object_add_integer(json_object, "data_size", (gint64)bufsz);
 	}
 
 	/* chunks */
 	if (priv->chunks != NULL && priv->chunks->len > 0) {
-		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "chunks", NULL);
+		g_autoptr(FwupdJsonArray) json_chunks = fwupd_json_array_new();
 		for (guint i = 0; i < priv->chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index(priv->chunks, i);
-			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bp, "chunk", NULL);
-			fu_chunk_export(chk, flags, bc);
+			g_autoptr(FwupdJsonObject) json_chunk = fwupd_json_object_new();
+			fu_chunk_export(chk, flags, json_chunk);
+			fwupd_json_array_add_object(json_chunks, json_chunk);
 		}
+		fwupd_json_object_add_array(json_object, "chunks", json_chunks);
 	}
 
 	/* magic */
 	if (priv->magic != NULL && priv->magic->len > 0) {
-		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "magic", NULL);
+		g_autoptr(FwupdJsonArray) json_magic = fwupd_json_array_new();
 		for (guint i = 0; i < priv->magic->len; i++) {
 			FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
+			g_autoptr(FwupdJsonObject) json_patch = fwupd_json_object_new();
 			g_autofree gchar *str = fu_bytes_to_string(patch->blob);
-			g_autofree gchar *offset = g_strdup_printf("0x%x", (guint)patch->offset);
-			xb_builder_node_insert_text(bp, "data", str, "offset", offset, NULL);
+			fwupd_json_object_add_string(json_patch, "data", str);
+			fwupd_json_object_add_integer(json_patch, "offset", (gint64)patch->offset);
+			fwupd_json_array_add_object(json_magic, json_patch);
 		}
+		fwupd_json_object_add_array(json_object, "magic", json_magic);
 	}
 
 	/* image gtypes */
@@ -2659,59 +2751,59 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		FuFirmwareClassPrivate *cpriv =
 		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
 		if (cpriv->image_gtypes_cnt > 0) {
-			g_autoptr(XbBuilderNode) bp =
-			    xb_builder_node_insert(bn, "image_gtypes", NULL);
+			g_autoptr(FwupdJsonArray) json_gtypes = fwupd_json_array_new();
 			for (guint i = 0; i < cpriv->image_gtypes_cnt; i++) {
-				xb_builder_node_insert_text(bp,
-							    "gtype",
-							    g_type_name(cpriv->image_gtypes[i]),
-							    NULL);
+				fwupd_json_array_add_string(json_gtypes,
+							    g_type_name(cpriv->image_gtypes[i]));
 			}
+			fwupd_json_object_add_array(json_object, "image_gtypes", json_gtypes);
 		}
 	}
 
 	/* vfunc */
 	if (klass->export != NULL)
-		klass->export(self, flags, bn);
+		klass->export(self, flags, json_object);
 
 	/* children */
 	if (priv->images->len > 0) {
 		g_autoptr(GPtrArray) images = flags & FU_FIRMWARE_EXPORT_FLAG_SORTED
 						  ? fu_firmware_get_images_sorted(self)
 						  : g_ptr_array_ref(priv->images);
+		g_autoptr(FwupdJsonArray) json_images = fwupd_json_array_new();
 		for (guint i = 0; i < images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(images, i);
-			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "firmware", NULL);
-			fu_firmware_export(img, flags, bc);
+			g_autoptr(FwupdJsonObject) json_image = fwupd_json_object_new();
+			fu_firmware_export(img, flags, json_image);
+			fwupd_json_array_add_object(json_images, json_image);
 		}
+		fwupd_json_object_add_array(json_object, "firmware", json_images);
 	}
 }
 
 /**
- * fu_firmware_export_to_xml:
+ * fu_firmware_export_to_json:
  * @self: a #FuFirmware
  * @flags: firmware export flags, e.g. %FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG
  * @error: (nullable): optional return location for an error
  *
- * This allows us to build an XML object for the nested firmware.
+ * Exports the nested firmware as JSON text.
  *
  * Returns: a string value, or %NULL for invalid.
  *
- * Since: 1.6.0
+ * Since: 2.2.1
  **/
 gchar *
-fu_firmware_export_to_xml(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
+fu_firmware_export_to_json(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+	g_autoptr(GString) str = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	fu_firmware_export(self, flags, bn);
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      error);
+
+	fu_firmware_export(self, flags, json_object);
+	str = fwupd_json_object_to_string(json_object, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
@@ -2727,16 +2819,14 @@ fu_firmware_export_to_xml(FuFirmware *self, FuFirmwareExportFlags flags, GError 
 gchar *
 fu_firmware_to_string(FuFirmware *self)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+	g_autoptr(GString) str = NULL;
 	fu_firmware_export(self,
 			   FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG |
 			       FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
-			   bn);
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      NULL);
+			   json_object);
+	str = fwupd_json_object_to_string(json_object, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void
@@ -2946,37 +3036,37 @@ fu_firmware_new_from_gtypes(FuInputStream *stream,
 }
 
 /**
- * fu_firmware_roundtrip_from_xml:
- * @builder_xml: (not nullable): XML describing the firmware
+ * fu_firmware_roundtrip_from_json:
+ * @builder_json: (not nullable): JSON describing the firmware
  * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
  * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
  * @error: (nullable): optional return location for an error
  *
- * Roundtrip a firmware from builder XML to binary and back to XML.
+ * Roundtrip a firmware from builder JSON to binary and back to JSON.
  *
  * Returns: %TRUE for success
  *
  * Since: 2.1.1
  **/
 gboolean
-fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
-			       const gchar *checksum_expected,
-			       FuFirmwareBuilderFlags flags,
-			       GError **error)
+fu_firmware_roundtrip_from_json(const gchar *builder_json,
+				const gchar *checksum_expected,
+				FuFirmwareBuilderFlags flags,
+				GError **error)
 {
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *json_out = NULL;
 	g_autoptr(FuFirmware) firmware1 = NULL;
 	g_autoptr(FuFirmware) firmware2 = NULL;
 
-	g_return_val_if_fail(builder_xml != NULL, FALSE);
+	g_return_val_if_fail(builder_json != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* build and write */
-	firmware1 = fu_firmware_new_from_xml(builder_xml, error);
+	firmware1 = fu_firmware_new_from_json(builder_json, error);
 	if (firmware1 == NULL) {
-		g_prefix_error(error, "failed to build %s: ", builder_xml);
+		g_prefix_error(error, "failed to build %s: ", builder_json);
 		return FALSE;
 	}
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, error);
@@ -3000,7 +3090,7 @@ fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
 
 		fw = fu_firmware_write(firmware1, error);
 		if (fw == NULL) {
-			g_prefix_error(error, "failed to write %s: ", builder_xml);
+			g_prefix_error(error, "failed to write %s: ", builder_json);
 			return FALSE;
 		}
 		if (!fu_firmware_parse_bytes(firmware3,
@@ -3009,30 +3099,30 @@ fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
 					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
 						 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 					     error)) {
-			g_prefix_error(error, "failed to parse %s: ", builder_xml);
+			g_prefix_error(error, "failed to parse %s: ", builder_json);
 			return FALSE;
 		}
 		if ((flags & FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE) == 0) {
 			g_autoptr(GBytes) fw2 = NULL;
 			fw2 = fu_firmware_write(firmware3, error);
 			if (fw2 == NULL) {
-				g_prefix_error(error, "failed to write %s: ", builder_xml);
+				g_prefix_error(error, "failed to write %s: ", builder_json);
 				return FALSE;
 			}
 			if (!fu_bytes_compare(fw2, fw, error)) {
-				g_prefix_error(error, "failed to compare %s: ", builder_xml);
+				g_prefix_error(error, "failed to compare %s: ", builder_json);
 				return FALSE;
 			}
 		}
 	}
 
 	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, error);
-	if (xml_out == NULL) {
-		g_prefix_error(error, "cannot export %s: ", builder_xml);
+	json_out = fu_firmware_export_to_json(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, error);
+	if (json_out == NULL) {
+		g_prefix_error(error, "cannot export %s: ", builder_json);
 		return FALSE;
 	}
-	firmware2 = fu_firmware_new_from_xml(xml_out, error);
+	firmware2 = fu_firmware_new_from_json(json_out, error);
 	if (firmware2 == NULL)
 		return FALSE;
 	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, error);
@@ -3054,12 +3144,12 @@ fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
 
 /**
  * fu_firmware_roundtrip_from_filename:
- * @builder_fn: (not nullable): XML filename describing the firmware
+ * @builder_fn: (not nullable): JSON filename describing the firmware
  * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
  * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
  * @error: (nullable): optional return location for an error
  *
- * Roundtrip a firmware from builder XML filename to binary and back to XML.
+ * Roundtrip a firmware from builder JSON filename to binary and back to JSON.
  *
  * Returns: %TRUE for success
  *
@@ -3071,16 +3161,16 @@ fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
 				    FuFirmwareBuilderFlags flags,
 				    GError **error)
 {
-	g_autofree gchar *xml = NULL;
+	g_autofree gchar *json = NULL;
 
 	g_return_val_if_fail(builder_fn != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!g_file_get_contents(builder_fn, &xml, NULL, error)) {
+	if (!g_file_get_contents(builder_fn, &json, NULL, error)) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
-	return fu_firmware_roundtrip_from_xml(xml, checksum_expected, flags, error);
+	return fu_firmware_roundtrip_from_json(json, checksum_expected, flags, error);
 }
 
 static gboolean
@@ -3111,38 +3201,22 @@ static GByteArray *
 fu_firmware_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
 {
 	FuFirmware *self = FU_FIRMWARE(fuzzer);
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FwupdJsonObject) json_object = NULL;
 
 	/* sanity check */
 	if (blob == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "builder XML required");
+				    "builder JSON required");
 		return NULL;
 	}
 
-	/* parse XML */
-	if (!xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error_literal(error, "could not parse XML: ");
-		fwupd_error_convert(error);
+	/* parse JSON */
+	json_object = fu_firmware_builder_load_json(blob, error);
+	if (json_object == NULL)
 		return NULL;
-	}
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL) {
-		fwupd_error_convert(error);
-		return NULL;
-	}
-	n = xb_silo_query_first(silo, "firmware", error);
-	if (n == NULL) {
-		fwupd_error_convert(error);
-		return NULL;
-	}
-	if (!fu_firmware_build(self, n, error))
+	if (!fu_firmware_build(self, json_object, error))
 		return NULL;
 	return fu_firmware_write_array(self, error);
 }

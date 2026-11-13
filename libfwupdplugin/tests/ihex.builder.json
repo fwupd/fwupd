@@ -1,0 +1,10 @@
+{
+  "gtype": "FuIhexFirmware",
+  "data": "TmVxdWUgcG9ycm8gcXVpc3F1YW0gZXN0IHF1aSBkb2xvcmVtIGlwc3VtIHF1aWEgZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyLCBhZGlwaXNjaSB2ZWxpdAo=",
+  "firmware": [
+    {
+      "id": "signature",
+      "data": "ZGF2ZQ=="
+    }
+  ]
+}

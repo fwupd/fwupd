@@ -1,0 +1,45 @@
+{
+  "gtype": "FuUswidFirmware",
+  "id": "foo",
+  "version": "1.2.3",
+  "hdrver": "0x3",
+  "compression": "zlib",
+  "firmware": [
+    {
+      "gtype": "FuCoswidFirmware",
+      "id": "fwupd-efi:fwupdx64",
+      "version": "1.4",
+      "version_scheme": "semver",
+      "product": "fwupdx64",
+      "summary": "EFI helpers to install system firmware",
+      "colloquial_version": "1.3-3-g1d0c69f",
+      "links": [
+        {
+          "rel": "license",
+          "href": "https://spdx.org/licenses/LGPL-2.0.html"
+        }
+      ],
+      "payloads": [
+        {
+          "name": "foo.bin",
+          "size": 123,
+          "hashes": [
+            {
+              "alg_id": "sha256",
+              "value": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "Richard Hughes",
+          "regid": "hughsie.com",
+          "roles": [
+            "tag-creator"
+          ]
+        }
+      ]
+    }
+  ]
+}

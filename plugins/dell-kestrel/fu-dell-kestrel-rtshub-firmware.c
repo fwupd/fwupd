@@ -30,10 +30,11 @@ fu_dell_kestrel_rtshub_firmware_convert_version(FuFirmware *firmware, guint64 ve
 static void
 fu_dell_kestrel_rtshub_firmware_export(FuFirmware *firmware,
 				       FuFirmwareExportFlags flags,
-				       XbBuilderNode *bn)
+				       FwupdJsonObject *json_object)
 {
 	FuDellKestrelRtshubFirmware *self = FU_DELL_KESTREL_RTSHUB_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "product_id", self->pid);
+	if (self->pid != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", self->pid);
 }
 
 static gboolean

@@ -1,0 +1,15 @@
+{
+  "gtype": "FuOpromFirmware",
+  "machine_type": "0x1",
+  "compression_type": "0x0",
+  "vendor_id": "0x8086",
+  "idx": "0x1",
+  "data": "aGVsbG8gd29ybGQ=",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "id": "cpd",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

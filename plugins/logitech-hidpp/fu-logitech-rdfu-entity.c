@@ -146,18 +146,21 @@ fu_logitech_rdfu_entity_add_entry(FuLogitechRdfuEntity *self,
 }
 
 static void
-fu_logitech_rdfu_entity_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_logitech_rdfu_entity_export(FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       FwupdJsonObject *json_object)
 {
 	FuLogitechRdfuEntity *self = FU_LOGITECH_RDFU_ENTITY(firmware);
 
 	if (self->model_id != NULL)
-		fu_xmlb_builder_insert_kv(bn, "modelId", self->model_id);
+		fwupd_json_object_add_string(json_object, "modelId", self->model_id);
 	if (self->magic != NULL) {
 		g_autofree gchar *magic = fu_byte_array_to_string(self->magic);
-		fu_xmlb_builder_insert_kv(bn, "magic", magic);
+		fwupd_json_object_add_string(json_object, "magic", magic);
 	}
 	if (self->blocks != NULL)
-		fu_xmlb_builder_insert_kx(bn, "blocks", self->blocks->len);
+		if (self->blocks->len != 0)
+			fwupd_json_object_add_integer(json_object, "blocks", self->blocks->len);
 }
 
 static void

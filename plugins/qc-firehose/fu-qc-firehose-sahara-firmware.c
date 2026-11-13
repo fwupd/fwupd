@@ -48,15 +48,19 @@ fu_qc_firehose_sahara_firmware_allows_pending_image(FuQcFirehoseSaharaFirmware *
 static void
 fu_qc_firehose_sahara_firmware_export(FuFirmware *firmware,
 				      FuFirmwareExportFlags flags,
-				      XbBuilderNode *bn)
+				      FwupdJsonObject *json_object)
 {
 	FuQcFirehoseSaharaFirmware *self = FU_QC_FIREHOSE_SAHARA_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "image_id", self->image_id);
+	if (self->image_id != 0)
+		fwupd_json_object_add_integer(json_object, "image_id", self->image_id);
 	if (self->allowed_pending_image_ids->len > 0) {
 		for (guint i = 0; i < self->allowed_pending_image_ids->len; i++) {
 			guint32 allowed_image_id =
 			    g_array_index(self->allowed_pending_image_ids, guint32, i);
-			fu_xmlb_builder_insert_kx(bn, "allowed_pending_image_id", allowed_image_id);
+			if (allowed_image_id != 0)
+				fwupd_json_object_add_integer(json_object,
+							      "allowed_pending_image_id",
+							      allowed_image_id);
 		}
 	}
 }

@@ -204,32 +204,41 @@ fu_focal_moc_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_focal_moc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_focal_moc_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuFocalMocFirmware *self = FU_FOCAL_MOC_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kx(bn, "entry_offset", self->entry_offset);
+	if (self->entry_offset != 0)
+		fwupd_json_object_add_integer(json_object, "entry_offset", self->entry_offset);
 	if (self->digest != NULL) {
 		g_autofree gchar *str = fu_bytes_to_string(self->digest);
-		fu_xmlb_builder_insert_kv(bn, "digest", str);
+		fwupd_json_object_add_string(json_object, "digest", str);
 	}
 	if (self->signature != NULL) {
 		g_autofree gchar *str = fu_bytes_to_string(self->signature);
-		fu_xmlb_builder_insert_kv(bn, "signature", str);
+		fwupd_json_object_add_string(json_object, "signature", str);
 	}
 }
 
 static gboolean
-fu_focal_moc_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_focal_moc_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuFocalMocFirmware *self = FU_FOCAL_MOC_FIRMWARE(firmware);
 	const gchar *tmp;
-	guint64 value;
+	gint64 value = G_MAXINT64;
 
-	value = xb_node_query_text_as_uint(n, "entry_offset", NULL);
-	if (value != G_MAXUINT64 && value <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"entry_offset",
+							&value,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (value != G_MAXINT64 && value <= G_MAXUINT32)
 		self->entry_offset = (guint32)value;
-	tmp = xb_node_query_text(n, "digest", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "digest", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = fu_bytes_from_string(tmp, error);
 		if (blob == NULL)
@@ -245,7 +254,8 @@ fu_focal_moc_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		g_clear_pointer(&self->digest, g_bytes_unref);
 		self->digest = g_steal_pointer(&blob);
 	}
-	tmp = xb_node_query_text(n, "signature", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "signature", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = fu_bytes_from_string(tmp, error);
 		if (blob == NULL)

@@ -1013,14 +1013,14 @@ fu_uefi_capsule_grub_func(void)
 }
 
 static void
-fu_uefi_update_info_xml_func(void)
+fu_uefi_update_info_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
 	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "uefi-update-info.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "uefi-update-info.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "18e8c43a912d3918498723340ae80a57d8b0657c",
 						  FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -1317,7 +1317,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi-capsule/cod-device", fu_uefi_cod_device_func);
 	g_test_add_func("/uefi-capsule/cod-device/hex-idx", fu_uefi_cod_device_hex_idx_func);
 	g_test_add_func("/uefi-capsule/update-info", fu_uefi_update_info_func);
-	g_test_add_func("/uefi-capsule/update-info/xml", fu_uefi_update_info_xml_func);
+	g_test_add_func("/uefi-capsule/update-info/json", fu_uefi_update_info_json_func);
 	g_test_add_func("/uefi-capsule/backend/invalid-entries",
 			fu_uefi_capsule_backend_invalid_entries_func);
 	g_test_add_func("/uefi-capsule/no-coalesce", fu_uefi_capsule_no_coalesce_func);

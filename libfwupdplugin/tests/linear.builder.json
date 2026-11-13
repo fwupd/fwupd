@@ -1,0 +1,14 @@
+{
+  "gtype": "FuLinearFirmware",
+  "image_gtype": "FuDfuFirmware",
+  "firmware": [
+    {
+      "gtype": "FuDfuFirmware",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuDfuFirmware",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

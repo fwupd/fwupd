@@ -16,11 +16,14 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuNordicHidFirmware, fu_nordic_hid_firmware, FU_TYPE_
 #define GET_PRIVATE(o) (fu_nordic_hid_firmware_get_instance_private(o))
 
 static void
-fu_nordic_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_nordic_hid_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuNordicHidFirmware *self = FU_NORDIC_HID_FIRMWARE(firmware);
 	FuNordicHidFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "crc32", priv->crc32);
+	if (priv->crc32 != 0)
+		fwupd_json_object_add_integer(json_object, "crc32", priv->crc32);
 }
 
 static gchar *

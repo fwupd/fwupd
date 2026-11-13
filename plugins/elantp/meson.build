@@ -39,7 +39,7 @@ device_tests += files(
 
 if get_option('tests')
   install_data(
-    ['tests/elantp.builder.xml'],
+    ['tests/elantp.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

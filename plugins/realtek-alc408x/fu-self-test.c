@@ -21,13 +21,14 @@ fu_realtek_alc408x_version_func(void)
 }
 
 static void
-fu_realtek_alc408x_firmware_xml_func(void)
+fu_realtek_alc408x_firmware_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "realtek-alc408x.builder.xml", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "realtek-alc408x.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "3d7a78c3207609824759e151cad1cb38d48b932f",
 						  FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -43,7 +44,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_REALTEK_ALC408X_FIRMWARE);
 	g_test_add_func("/fwupd/realtek-alc408x/version", fu_realtek_alc408x_version_func);
-	g_test_add_func("/fwupd/realtek-alc408x/firmware/xml",
-			fu_realtek_alc408x_firmware_xml_func);
+	g_test_add_func("/fwupd/realtek-alc408x/firmware/json",
+			fu_realtek_alc408x_firmware_json_func);
 	return g_test_run();
 }

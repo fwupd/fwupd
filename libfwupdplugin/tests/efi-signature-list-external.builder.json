@@ -1,0 +1,9 @@
+{
+  "gtype": "FuEfiSignatureList",
+  "firmware": [
+    {
+      "gtype": "FuEfiSignature",
+      "kind": "external"
+    }
+  ]
+}

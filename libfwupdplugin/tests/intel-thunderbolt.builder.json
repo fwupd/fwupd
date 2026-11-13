@@ -1,0 +1,12 @@
+{
+  "gtype": "FuIntelThunderboltNvm",
+  "offset": "0x10",
+  "vendor_id": "0xd4",
+  "device_id": "0x15ef",
+  "model_id": "0xb070",
+  "family": "titan-ridge",
+  "flash_size": "0x3",
+  "is_host": false,
+  "is_native": false,
+  "version_raw": "0x6000"
+}

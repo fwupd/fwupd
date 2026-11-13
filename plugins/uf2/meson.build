@@ -25,7 +25,7 @@ plugin_builtins += plugin_builtin_uf2
 
 if get_option('tests')
   install_data(
-    ['tests/uf2.builder.xml'],
+    ['tests/uf2.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

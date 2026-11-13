@@ -14,7 +14,9 @@ typedef struct {
 } FuAmdAfcOption;
 
 void
-fu_amd_afc_option_export(FuAmdAfcOption *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+fu_amd_afc_option_export(FuAmdAfcOption *self,
+			 FuFirmwareExportFlags flags,
+			 FwupdJsonObject *json_object);
 void
 fu_amd_afc_option_free(FuAmdAfcOption *self);
 

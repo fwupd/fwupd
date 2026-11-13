@@ -17,7 +17,8 @@ fu_hid_descriptor_container_func(void)
 	g_autoptr(FuHidReport) report = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "hid-descriptor2.builder.xml", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "hid-descriptor2.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -53,7 +54,7 @@ fu_hid_descriptor_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *filename = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "hid-descriptor.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "hid-descriptor.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);

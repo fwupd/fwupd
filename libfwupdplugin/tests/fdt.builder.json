@@ -1,0 +1,73 @@
+{
+  "gtype": "FuFdtFirmware",
+  "version_raw": "0x11",
+  "firmware": [
+    {
+      "gtype": "FuFdtImage",
+      "offset": "0x5",
+      "metadata": [
+        {
+          "key": "key",
+          "format": "str",
+          "value": "hello world"
+        }
+      ],
+      "firmware": [
+        {
+          "gtype": "FuFdtImage",
+          "id": "images",
+          "firmware": [
+            {
+              "gtype": "FuFdtImage",
+              "id": "firmware-1",
+              "metadata": [
+                {
+                  "key": "key",
+                  "format": "uint32",
+                  "value": "0x123"
+                }
+              ],
+              "firmware": [
+                {
+                  "gtype": "FuFdtImage",
+                  "id": "hash-1",
+                  "metadata": [
+                    {
+                      "key": "key",
+                      "format": "data",
+                      "value": "aGVsbG8gd29ybGQ"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "gtype": "FuFdtImage",
+          "id": "configurations",
+          "metadata": [
+            {
+              "key": "key",
+              "format": "str",
+              "value": "conf-1"
+            }
+          ],
+          "firmware": [
+            {
+              "gtype": "FuFdtImage",
+              "id": "conf-1",
+              "metadata": [
+                {
+                  "key": "key",
+                  "format": "data",
+                  "value": "aGVsbG8gd29ybGQ"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

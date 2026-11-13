@@ -127,29 +127,27 @@ static void
 fu_acpi_facp_builder_func(void)
 {
 	gboolean ret;
-	const gchar *xml = "<firmware gtype=\"FuAcpiFacp\">\n"
-			   "  <s2i>true</s2i>\n"
-			   "</firmware>\n";
-	g_autofree gchar *xml_out = NULL;
+	const gchar *json = "{\"gtype\": \"FuAcpiFacp\", \"s2i\": true}";
+	g_autofree gchar *json_out = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GError) error = NULL;
 
 	g_type_ensure(FU_TYPE_ACPI_FACP);
 
 	/* build */
-	firmware = fu_firmware_new_from_xml(xml, &error);
+	firmware = fu_firmware_new_from_json(json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 	g_assert_true(fu_acpi_facp_get_s2i(FU_ACPI_FACP(firmware)));
 
 	/* export */
-	xml_out = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
+	json_out = fu_firmware_export_to_json(firmware, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(xml_out);
-	g_assert_nonnull(g_strstr_len(xml_out, -1, "<s2i>true</s2i>"));
+	g_assert_nonnull(json_out);
+	g_assert_nonnull(g_strstr_len(json_out, -1, "\"s2i\": true"));
 
 	/* write, parse and build again */
-	ret = fu_firmware_roundtrip_from_xml(xml, NULL, FU_FIRMWARE_BUILDER_FLAG_NONE, &error);
+	ret = fu_firmware_roundtrip_from_json(json, NULL, FU_FIRMWARE_BUILDER_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

@@ -18,11 +18,15 @@ struct _FuBitmapImage {
 G_DEFINE_TYPE(FuBitmapImage, fu_bitmap_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_bitmap_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_bitmap_image_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuBitmapImage *self = FU_BITMAP_IMAGE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "width", self->width);
-	fu_xmlb_builder_insert_kx(bn, "height", self->height);
+	if (self->width != 0)
+		fwupd_json_object_add_integer(json_object, "width", self->width);
+	if (self->height != 0)
+		fwupd_json_object_add_integer(json_object, "height", self->height);
 }
 
 static gboolean

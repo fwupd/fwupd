@@ -24,7 +24,7 @@ device_tests += files('tests/algoltek-au84612.json')
 
 if get_option('tests')
   install_data(
-    ['tests/algoltek-usbcr.builder.xml'],
+    ['tests/algoltek-usbcr.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

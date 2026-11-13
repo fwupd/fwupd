@@ -1,0 +1,22 @@
+{
+  "gtype": "FuIfdFirmware",
+  "descriptor_map0": "0x40003",
+  "descriptor_map1": "0x58100208",
+  "descriptor_map2": "0x310330",
+  "firmware": [
+    {
+      "gtype": "FuIfdImage",
+      "id": "bios",
+      "idx": "0x1",
+      "addr": "0x1000",
+      "data": "V29ybGQh"
+    },
+    {
+      "gtype": "FuIfdImage",
+      "id": "me",
+      "idx": "0x2",
+      "addr": "0x2000",
+      "data": "V29ybGQh"
+    }
+  ]
+}

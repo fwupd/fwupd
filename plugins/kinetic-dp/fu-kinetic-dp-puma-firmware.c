@@ -48,14 +48,18 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuKineticDpPumaFirmware, fu_kinetic_dp_puma_firmware,
 static void
 fu_kinetic_dp_puma_firmware_export(FuFirmware *firmware,
 				   FuFirmwareExportFlags flags,
-				   XbBuilderNode *bn)
+				   FwupdJsonObject *json_object)
 {
 	FuKineticDpPumaFirmware *self = FU_KINETIC_DP_PUMA_FIRMWARE(firmware);
 	FuKineticDpPumaFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *chip_id_str = fu_kinetic_dp_chip_to_string(priv->chip_id);
 
-	fu_xmlb_builder_insert_kv(bn, "chip_id", fu_kinetic_dp_chip_to_string(priv->chip_id));
-	fu_xmlb_builder_insert_kx(bn, "cmdb_version", priv->cmdb_version);
-	fu_xmlb_builder_insert_kx(bn, "cmdb_revision", priv->cmdb_revision);
+	if (chip_id_str != NULL)
+		fwupd_json_object_add_string(json_object, "chip_id", chip_id_str);
+	if (priv->cmdb_version != 0)
+		fwupd_json_object_add_integer(json_object, "cmdb_version", priv->cmdb_version);
+	if (priv->cmdb_revision != 0)
+		fwupd_json_object_add_integer(json_object, "cmdb_revision", priv->cmdb_revision);
 }
 
 static gboolean

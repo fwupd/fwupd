@@ -368,13 +368,14 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_edid_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
 	const gchar *value;
 
 	/* simple properties */
-	value = xb_node_query_text(n, "pnp_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "pnp_id", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz != 3) {
@@ -388,7 +389,8 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_pnp_id(self, value);
 	}
-	value = xb_node_query_text(n, "serial_number", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "serial_number", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz > FU_STRUCT_EDID_DESCRIPTOR_SIZE_DATA) {
@@ -402,7 +404,8 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_serial_number(self, value);
 	}
-	value = xb_node_query_text(n, "eisa_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "eisa_id", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz > FU_STRUCT_EDID_DESCRIPTOR_SIZE_DATA) {
@@ -416,11 +419,17 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_eisa_id(self, value);
 	}
-	value = xb_node_query_text(n, "product_code", NULL);
-	if (value != NULL) {
-		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "product_code")) {
+		gint64 tmp = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "product_code", &tmp, error))
 			return FALSE;
+		if (tmp < 0 || tmp > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid product_code");
+			return FALSE;
+		}
 		fu_edid_set_product_code(self, tmp);
 	}
 
@@ -429,14 +438,19 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_edid_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_edid_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuEdid *self = FU_EDID(firmware);
-	fu_xmlb_builder_insert_kv(bn, "pnp_id", self->pnp_id);
-	fu_xmlb_builder_insert_kv(bn, "serial_number", self->serial_number);
-	fu_xmlb_builder_insert_kv(bn, "product_name", self->product_name);
-	fu_xmlb_builder_insert_kv(bn, "eisa_id", self->eisa_id);
-	fu_xmlb_builder_insert_kx(bn, "product_code", self->product_code);
+	if (self->pnp_id != NULL)
+		fwupd_json_object_add_string(json_object, "pnp_id", self->pnp_id);
+	if (self->serial_number != NULL)
+		fwupd_json_object_add_string(json_object, "serial_number", self->serial_number);
+	if (self->product_name != NULL)
+		fwupd_json_object_add_string(json_object, "product_name", self->product_name);
+	if (self->eisa_id != NULL)
+		fwupd_json_object_add_string(json_object, "eisa_id", self->eisa_id);
+	if (self->product_code != 0)
+		fwupd_json_object_add_integer(json_object, "product_code", self->product_code);
 }
 
 static void

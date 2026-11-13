@@ -45,7 +45,7 @@ fu_acpi_sbom_plugin_func(void)
 
 	/* build a SBOM blob */
 	fu_context_add_firmware_gtypes(ctx);
-	filename_xml = g_test_build_filename(G_TEST_DIST, "tests", "acpi-sbom.builder.xml", NULL);
+	filename_xml = g_test_build_filename(G_TEST_DIST, "tests", "acpi-sbom.builder.json", NULL);
 	g_assert_nonnull(filename_xml);
 	firmware = fu_firmware_new_from_filename(filename_xml, &error);
 	g_assert_no_error(error);

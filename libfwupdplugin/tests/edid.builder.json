@@ -1,0 +1,7 @@
+{
+  "gtype": "FuEdid",
+  "product_code": "0x1234",
+  "serial_number": "0x87654321",
+  "pnp_id": "HUG",
+  "eisa_id": "Hughes"
+}

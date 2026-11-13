@@ -1,0 +1,24 @@
+{
+  "gtype": "FuEfiLoadOption",
+  "id": "Linux-Firmware-Updater",
+  "attrs": "0x1",
+  "kind": "hive",
+  "metadata": {
+    "path": "/foo/bar/baz",
+    "cmdline": "acpi=off",
+    "novalue": ""
+  },
+  "firmware": [
+    {
+      "gtype": "FuEfiDevicePathList",
+      "firmware": [
+        {
+          "gtype": "FuEfiFilePathDevicePath",
+          "idx": "0x04",
+          "subtype": "0x04",
+          "name": "Hello World"
+        }
+      ]
+    }
+  ]
+}

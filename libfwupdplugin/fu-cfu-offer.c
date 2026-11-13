@@ -45,20 +45,34 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCfuOffer, fu_cfu_offer, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cfu_offer_get_instance_private(o))
 
 static void
-fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "segment_number", priv->segment_number);
-	fu_xmlb_builder_insert_kb(bn, "force_immediate_reset", priv->force_immediate_reset);
-	fu_xmlb_builder_insert_kb(bn, "force_ignore_version", priv->force_ignore_version);
-	fu_xmlb_builder_insert_kx(bn, "component_id", priv->component_id);
-	fu_xmlb_builder_insert_kx(bn, "token", priv->token);
-	fu_xmlb_builder_insert_kx(bn, "hw_variant", priv->hw_variant);
-	fu_xmlb_builder_insert_kx(bn, "protocol_revision", priv->protocol_revision);
-	fu_xmlb_builder_insert_kx(bn, "bank", priv->bank);
-	fu_xmlb_builder_insert_kx(bn, "milestone", priv->milestone);
-	fu_xmlb_builder_insert_kx(bn, "product_id", priv->product_id);
+	if (priv->segment_number != 0)
+		fwupd_json_object_add_integer(json_object, "segment_number", priv->segment_number);
+	fwupd_json_object_add_boolean(json_object,
+				      "force_immediate_reset",
+				      priv->force_immediate_reset);
+	fwupd_json_object_add_boolean(json_object,
+				      "force_ignore_version",
+				      priv->force_ignore_version);
+	if (priv->component_id != 0)
+		fwupd_json_object_add_integer(json_object, "component_id", priv->component_id);
+	if (priv->token != 0)
+		fwupd_json_object_add_integer(json_object, "token", priv->token);
+	if (priv->hw_variant != 0)
+		fwupd_json_object_add_integer(json_object, "hw_variant", priv->hw_variant);
+	if (priv->protocol_revision != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "protocol_revision",
+					      priv->protocol_revision);
+	if (priv->bank != 0)
+		fwupd_json_object_add_integer(json_object, "bank", priv->bank);
+	if (priv->milestone != 0)
+		fwupd_json_object_add_integer(json_object, "milestone", priv->milestone);
+	if (priv->product_id != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", priv->product_id);
 }
 
 /**
@@ -487,47 +501,88 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_cfu_offer_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_cfu_offer_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
-	const gchar *tmpb;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "segment_number", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"segment_number",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->segment_number = tmp;
-	tmpb = xb_node_query_text(n, "force_immediate_reset", NULL);
-	if (tmpb != NULL) {
-		if (!fu_strtobool(tmpb, &priv->force_immediate_reset, error))
-			return FALSE;
-	}
-	tmpb = xb_node_query_text(n, "force_ignore_version", NULL);
-	if (tmpb != NULL) {
-		if (!fu_strtobool(tmpb, &priv->force_ignore_version, error))
-			return FALSE;
-	}
-	tmp = xb_node_query_text_as_uint(n, "component_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"force_immediate_reset",
+							&priv->force_immediate_reset,
+							FALSE,
+							error))
+		return FALSE;
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"force_ignore_version",
+							&priv->force_ignore_version,
+							FALSE,
+							error))
+		return FALSE;
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"component_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->component_id = tmp;
-	tmp = xb_node_query_text_as_uint(n, "token", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"token",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->token = tmp;
-	tmp = xb_node_query_text_as_uint(n, "hw_variant", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"hw_variant",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->hw_variant = tmp;
-	tmp = xb_node_query_text_as_uint(n, "protocol_revision", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"protocol_revision",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->protocol_revision = tmp;
-	tmp = xb_node_query_text_as_uint(n, "bank", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"bank",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->bank = tmp;
-	tmp = xb_node_query_text_as_uint(n, "milestone", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"milestone",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->milestone = tmp;
-	tmp = xb_node_query_text_as_uint(n, "product_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"product_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		priv->product_id = tmp;
 
 	/* success */

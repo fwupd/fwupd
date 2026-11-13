@@ -1,0 +1,7 @@
+{
+  "gtype": "FuEfiVssAuthVariable",
+  "id": "CustomMode",
+  "data": "aGVsbG8gd29ybGQ=",
+  "vendor_guid": "c076ec0c-7028-4399-a072-71ee5c448b9f",
+  "attributes": "non-volatile,bootservice-access"
+}

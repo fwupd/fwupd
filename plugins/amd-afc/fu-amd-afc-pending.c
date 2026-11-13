@@ -9,11 +9,14 @@
 #include "fu-amd-afc-pending.h"
 
 void
-fu_amd_afc_pending_export(FuAmdAfcPending *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_pending_export(FuAmdAfcPending *self,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "setting", self->setting);
+	if (self->setting != 0)
+		fwupd_json_object_add_integer(json_object, "setting", self->setting);
 	if (self->value != NULL)
-		fu_xmlb_builder_insert_kv(bn, "value", self->value);
+		fwupd_json_object_add_string(json_object, "value", self->value);
 }
 
 void

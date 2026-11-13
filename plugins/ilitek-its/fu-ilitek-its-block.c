@@ -16,10 +16,13 @@ struct _FuIlitekItsBlock {
 G_DEFINE_TYPE(FuIlitekItsBlock, fu_ilitek_its_block, FU_TYPE_FIRMWARE)
 
 static void
-fu_ilitek_its_block_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ilitek_its_block_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuIlitekItsBlock *self = FU_ILITEK_ITS_BLOCK(firmware);
-	fu_xmlb_builder_insert_kx(bn, "crc", self->crc);
+	if (self->crc != 0)
+		fwupd_json_object_add_integer(json_object, "crc", self->crc);
 }
 
 static gboolean

@@ -30,20 +30,25 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_signature_get_instance_private(o))
 
 static void
-fu_efi_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_signature_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
+	const gchar *kind_str = fu_efi_signature_kind_to_string(priv->kind);
 
-	fu_xmlb_builder_insert_kv(bn, "kind", fu_efi_signature_kind_to_string(priv->kind));
-	fu_xmlb_builder_insert_kv(bn, "owner", priv->owner);
+	if (kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "kind", kind_str);
+	if (priv->owner != NULL)
+		fwupd_json_object_add_string(json_object, "owner", priv->owner);
 
 	/* special case: this is *literally* a hash */
 	if (priv->kind == FU_EFI_SIGNATURE_KIND_SHA256) {
 		g_autoptr(GBytes) blob = fu_firmware_get_bytes(firmware, NULL);
 		if (blob != NULL) {
 			g_autofree gchar *str = fu_bytes_to_string(blob);
-			fu_xmlb_builder_insert_kv(bn, "checksum", str);
+			fwupd_json_object_add_string(json_object, "checksum", str);
 		}
 	}
 }
@@ -207,13 +212,14 @@ fu_efi_signature_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_signature_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "kind", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "kind", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		FuEfiSignatureKind kind = fu_efi_signature_kind_from_string(tmp);
 		if (kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {
@@ -226,7 +232,8 @@ fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_efi_signature_set_kind(self, kind);
 	}
-	tmp = xb_node_query_text(n, "owner", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "owner", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fwupd_guid_from_string(tmp, NULL, FWUPD_GUID_FLAG_MIXED_ENDIAN, error)) {
 			g_prefix_error(error, "failed to parse owner %s, expected GUID: ", tmp);
@@ -234,7 +241,8 @@ fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_efi_signature_set_owner(self, tmp);
 	}
-	tmp = xb_node_query_text(n, "checksum", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "checksum", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GBytes) data = NULL;
 		data = fu_bytes_from_string(tmp, error);

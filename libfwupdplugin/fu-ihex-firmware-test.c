@@ -21,7 +21,7 @@ fu_ihex_firmware_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a Intel hex32 file */
-	filename_hex = g_test_build_filename(G_TEST_DIST, "tests", "ihex.builder.xml", NULL);
+	filename_hex = g_test_build_filename(G_TEST_DIST, "tests", "ihex.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename_hex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -61,7 +61,7 @@ fu_ihex_firmware_signed_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a signed Intel hex32 file */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ihex-signed.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ihex-signed.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);

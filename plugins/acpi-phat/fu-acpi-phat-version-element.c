@@ -20,13 +20,13 @@ G_DEFINE_TYPE(FuAcpiPhatVersionElement, fu_acpi_phat_version_element, FU_TYPE_FI
 static void
 fu_acpi_phat_version_element_export(FuFirmware *firmware,
 				    FuFirmwareExportFlags flags,
-				    XbBuilderNode *bn)
+				    FwupdJsonObject *json_object)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
 	if (self->guid != NULL)
-		fu_xmlb_builder_insert_kv(bn, "guid", self->guid);
+		fwupd_json_object_add_string(json_object, "guid", self->guid);
 	if (self->producer_id != NULL)
-		fu_xmlb_builder_insert_kv(bn, "producer_id", self->producer_id);
+		fwupd_json_object_add_string(json_object, "producer_id", self->producer_id);
 }
 
 static gboolean
@@ -88,16 +88,20 @@ fu_acpi_phat_version_element_set_producer_id(FuAcpiPhatVersionElement *self,
 }
 
 static gboolean
-fu_acpi_phat_version_element_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_acpi_phat_version_element_build(FuFirmware *firmware,
+				   FwupdJsonObject *json_object,
+				   GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "producer_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "producer_id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_acpi_phat_version_element_set_producer_id(self, tmp);
-	tmp = xb_node_query_text(n, "guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_acpi_phat_version_element_set_guid(self, tmp);
 

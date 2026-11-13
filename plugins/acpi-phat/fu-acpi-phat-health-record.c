@@ -22,15 +22,15 @@ G_DEFINE_TYPE(FuAcpiPhatHealthRecord, fu_acpi_phat_health_record, FU_TYPE_FIRMWA
 static void
 fu_acpi_phat_health_record_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
-				  XbBuilderNode *bn)
+				  FwupdJsonObject *json_object)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
 	if (self->guid != NULL)
-		fu_xmlb_builder_insert_kv(bn, "guid", self->guid);
+		fwupd_json_object_add_string(json_object, "guid", self->guid);
 	if (self->device_path != NULL)
-		fu_xmlb_builder_insert_kv(bn, "device_path", self->device_path);
+		fwupd_json_object_add_string(json_object, "device_path", self->device_path);
 	if (self->am_healthy != 0)
-		fu_xmlb_builder_insert_kx(bn, "am_healthy", self->am_healthy);
+		fwupd_json_object_add_integer(json_object, "am_healthy", self->am_healthy);
 }
 
 static gboolean
@@ -151,21 +151,28 @@ fu_acpi_phat_health_record_set_device_path(FuAcpiPhatHealthRecord *self, const g
 }
 
 static gboolean
-fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_acpi_phat_health_record_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
 	const gchar *tmp;
-	guint64 tmp64;
+	gint64 tmp64 = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "device_path", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "device_path", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_acpi_phat_health_record_set_device_path(self, tmp);
-	tmp = xb_node_query_text(n, "guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_acpi_phat_health_record_set_guid(self, tmp);
-	tmp64 = xb_node_query_text_as_uint(n, "am_healthy", NULL);
-	if (tmp64 != G_MAXUINT64) {
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"am_healthy",
+							&tmp64,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp64 != G_MAXINT64) {
 		if (tmp64 > G_MAXUINT8) {
 			g_set_error(error,
 				    FWUPD_ERROR,

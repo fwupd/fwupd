@@ -1,0 +1,15 @@
+{
+  "gtype": "FuIfwiFptFirmware",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "idx": "0x4f464e49",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuFirmware",
+      "idx": "0x4d495746",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

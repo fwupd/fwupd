@@ -1,0 +1,13 @@
+{
+  "gtype": "FuCfuPayload",
+  "chunks": [
+    {
+      "data": "aGVsbG8gd29ybGQ=",
+      "addr": "0x8001234"
+    },
+    {
+      "data": "aGVsbG8gd29ybGQ=",
+      "addr": "0x8005678"
+    }
+  ]
+}

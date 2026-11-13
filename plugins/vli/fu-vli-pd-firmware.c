@@ -26,12 +26,14 @@ fu_vli_pd_firmware_get_kind(FuVliPdFirmware *self)
 }
 
 static void
-fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_vli_pd_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "device_kind",
-				  fu_vli_device_kind_to_string(self->device_kind));
+	const gchar *device_kind_str = fu_vli_device_kind_to_string(self->device_kind);
+	if (device_kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "device_kind", device_kind_str);
 }
 
 static gboolean

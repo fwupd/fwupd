@@ -491,21 +491,25 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_load_option_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_load_option_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);
 	const gchar *str;
-	guint64 tmp;
-	g_autoptr(GPtrArray) metadata = NULL;
-	g_autoptr(XbNode) optional_data = NULL;
+	gint64 tmp = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "attrs", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"attrs",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		self->attrs = tmp;
 
 	/* simple properties */
-	str = xb_node_query_text(n, "kind", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "kind", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		self->kind = fu_efi_load_option_kind_from_string(str);
 		if (self->kind == FU_EFI_LOAD_OPTION_KIND_UNKNOWN) {
@@ -519,13 +523,17 @@ fu_efi_load_option_build(FuFirmware *firmware, XbNode *n, GError **error)
 	}
 
 	/* optional data */
-	optional_data = xb_node_query_first(n, "optional_data", NULL);
-	if (optional_data != NULL) {
+	if (fwupd_json_object_has_node(json_object, "optional_data")) {
 		g_autoptr(GBytes) blob = NULL;
-		if (xb_node_get_text(optional_data) != NULL) {
+		if (!fwupd_json_object_get_string_optional(json_object,
+							   "optional_data",
+							   &str,
+							   error))
+			return FALSE;
+		if (str != NULL) {
 			gsize bufsz = 0;
 			g_autofree guchar *buf = NULL;
-			buf = g_base64_decode(xb_node_get_text(optional_data), &bufsz);
+			buf = g_base64_decode(str, &bufsz);
 			blob = g_bytes_new(buf, bufsz);
 		} else {
 			blob = g_bytes_new(NULL, 0);
@@ -533,16 +541,23 @@ fu_efi_load_option_build(FuFirmware *firmware, XbNode *n, GError **error)
 		fu_efi_load_option_set_optional_data(self, blob);
 		self->kind = FU_EFI_LOAD_OPTION_KIND_DATA;
 	}
-	metadata = xb_node_query(n, "metadata/*", 0, NULL);
-	if (metadata != NULL) {
-		for (guint i = 0; i < metadata->len; i++) {
-			XbNode *c = g_ptr_array_index(metadata, i);
-			const gchar *value = xb_node_get_text(c);
-			if (xb_node_get_element(c) == NULL)
-				continue;
-			fu_efi_load_option_set_metadata(self,
-							xb_node_get_element(c),
-							value != NULL ? value : "");
+	if (fwupd_json_object_has_node(json_object, "metadata")) {
+		g_autoptr(FwupdJsonObject) json_metadata =
+		    fwupd_json_object_get_object(json_object, "metadata", error);
+		if (json_metadata == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_object_get_size(json_metadata); i++) {
+			const gchar *key =
+			    fwupd_json_object_get_key_for_index(json_metadata, i, error);
+			const gchar *value;
+			if (key == NULL)
+				return FALSE;
+			if (!fwupd_json_object_get_string_optional(json_metadata,
+								   key,
+								   &value,
+								   error))
+				return FALSE;
+			fu_efi_load_option_set_metadata(self, key, value != NULL ? value : "");
 		}
 	}
 
@@ -551,30 +566,36 @@ fu_efi_load_option_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_load_option_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);
 
-	fu_xmlb_builder_insert_kx(bn, "attrs", self->attrs);
+	if (self->attrs != 0)
+		fwupd_json_object_add_integer(json_object, "attrs", self->attrs);
 	if (self->kind != FU_EFI_LOAD_OPTION_KIND_UNKNOWN) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "kind",
-					  fu_efi_load_option_kind_to_string(self->kind));
+		const gchar *kind_str = fu_efi_load_option_kind_to_string(self->kind);
+		if (kind_str != NULL)
+			fwupd_json_object_add_string(json_object, "kind", kind_str);
 	}
 	if (g_hash_table_size(self->metadata) > 0) {
 		GHashTableIter iter;
 		const gchar *key;
 		const gchar *value;
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "metadata", NULL);
+		g_autoptr(FwupdJsonObject) json_metadata = fwupd_json_object_new();
 		g_hash_table_iter_init(&iter, self->metadata);
-		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-			xb_builder_node_insert_text(bc, key, value, NULL);
+		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
+			if (value != NULL)
+				fwupd_json_object_add_string(json_metadata, key, value);
+		}
+		fwupd_json_object_add_object(json_object, "metadata", json_metadata);
 	}
 	if (self->optional_data != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(self->optional_data, &bufsz);
 		g_autofree gchar *datastr = fu_base64_encode(buf, bufsz);
-		xb_builder_node_insert_text(bn, "optional_data", datastr, NULL);
+		fwupd_json_object_add_string(json_object, "optional_data", datastr);
 	}
 }
 

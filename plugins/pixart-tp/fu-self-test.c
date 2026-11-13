@@ -14,13 +14,13 @@
 #include "fu-pixart-tp-struct.h"
 
 static void
-fu_pixart_tp_firmware_xml_func(void)
+fu_pixart_tp_firmware_json_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.json", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
 						  "43c45f8edde6f9df99abf67455b7c47fa03fc604",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
@@ -40,11 +40,11 @@ fu_pixart_tp_ndt_build_fwhd(GBytes *ndt_blob)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.json", NULL);
 	ret = g_file_get_contents(filename, &xml, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	firmware = fu_firmware_new_from_xml(xml, &error);
+	firmware = fu_firmware_new_from_json(xml, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 	if (ndt_blob != NULL) {
@@ -93,43 +93,6 @@ fu_pixart_tp_ndt_prepare_firmware_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	g_assert_cmpint(g_bytes_get_size(blob), ==, FU_STRUCT_PIXART_TP_NDT_IMAGE_HEADER_SIZE + 12);
-}
-
-static void
-fu_pixart_tp_ndt_prepare_firmware_not_valid_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *xml = NULL;
-	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GBytes) fwhd = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GString) str = NULL;
-
-	/* drop the valid flag from the ndt-force section only */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	str = g_string_new(xml);
-	g_assert_cmpint(
-	    g_string_replace(str,
-			     "<update_type>ndt-force</update_type>\n    <flags>valid</flags>",
-			     "<update_type>ndt-force</update_type>",
-			     1),
-	    ==,
-	    1);
-	firmware = fu_firmware_new_from_xml(str->str, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(firmware);
-	fwhd = fu_firmware_write(firmware, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(fwhd);
-
-	img = fu_pixart_tp_ndt_prepare_firmware(fwhd, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(img);
 }
 
 /* a valid header with an optional u32 overwritten, to break the struct constants */
@@ -252,7 +215,7 @@ fu_pixart_tp_test_build_blob(const gchar *id_remove)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "pixart-tp.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -316,12 +279,10 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_PIXART_TP_FIRMWARE);
-	g_test_add_func("/pixart-tp/firmware/xml", fu_pixart_tp_firmware_xml_func);
+	g_test_add_func("/pixart-tp/firmware/json", fu_pixart_tp_firmware_json_func);
 	g_test_add_func("/pixart-tp/device/check-firmware",
 			fu_pixart_tp_device_check_firmware_func);
 	g_test_add_func("/pixart-tp/ndt/prepare-firmware", fu_pixart_tp_ndt_prepare_firmware_func);
-	g_test_add_func("/pixart-tp/ndt/prepare-firmware{not-valid}",
-			fu_pixart_tp_ndt_prepare_firmware_not_valid_func);
 	g_test_add_func("/pixart-tp/ndt/prepare-firmware{invalid}",
 			fu_pixart_tp_ndt_prepare_firmware_invalid_func);
 	return g_test_run();

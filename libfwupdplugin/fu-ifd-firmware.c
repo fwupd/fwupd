@@ -59,35 +59,70 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define FU_IFD_FREG_LIMIT(freg) ((((freg) >> 4) & 0x07FFF000) | 0x00000FFF)
 
 static void
-fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ifd_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "descriptor_map0", priv->descriptor_map0);
-	fu_xmlb_builder_insert_kx(bn, "descriptor_map1", priv->descriptor_map1);
-	fu_xmlb_builder_insert_kx(bn, "descriptor_map2", priv->descriptor_map2);
-	fu_xmlb_builder_insert_kx(bn, "num_regions", priv->num_regions);
-	fu_xmlb_builder_insert_kx(bn, "num_components", priv->num_components + 1);
-	fu_xmlb_builder_insert_kx(bn, "flash_region_base_addr", priv->flash_region_base_addr);
-	fu_xmlb_builder_insert_kx(bn, "flash_component_base_addr", priv->flash_component_base_addr);
-	fu_xmlb_builder_insert_kx(bn, "flash_master_base_addr", priv->flash_master_base_addr);
-	fu_xmlb_builder_insert_kx(bn, "flash_ich_strap_base_addr", priv->flash_ich_strap_base_addr);
-	fu_xmlb_builder_insert_kx(bn, "flash_mch_strap_base_addr", priv->flash_mch_strap_base_addr);
-	fu_xmlb_builder_insert_kx(bn, "components_rcd", priv->components_rcd);
-	fu_xmlb_builder_insert_kx(bn, "illegal_jedec", priv->illegal_jedec);
-	fu_xmlb_builder_insert_kx(bn, "illegal_jedec1", priv->illegal_jedec1);
+	if (priv->descriptor_map0 != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "descriptor_map0",
+					      priv->descriptor_map0);
+	if (priv->descriptor_map1 != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "descriptor_map1",
+					      priv->descriptor_map1);
+	if (priv->descriptor_map2 != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "descriptor_map2",
+					      priv->descriptor_map2);
+	if (priv->num_regions != 0)
+		fwupd_json_object_add_integer(json_object, "num_regions", priv->num_regions);
+	fwupd_json_object_add_integer(json_object, "num_components", priv->num_components + 1);
+	if (priv->flash_region_base_addr != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "flash_region_base_addr",
+					      priv->flash_region_base_addr);
+	if (priv->flash_component_base_addr != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "flash_component_base_addr",
+					      priv->flash_component_base_addr);
+	if (priv->flash_master_base_addr != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "flash_master_base_addr",
+					      priv->flash_master_base_addr);
+	if (priv->flash_ich_strap_base_addr != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "flash_ich_strap_base_addr",
+					      priv->flash_ich_strap_base_addr);
+	if (priv->flash_mch_strap_base_addr != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "flash_mch_strap_base_addr",
+					      priv->flash_mch_strap_base_addr);
+	if (priv->components_rcd != 0)
+		fwupd_json_object_add_integer(json_object, "components_rcd", priv->components_rcd);
+	if (priv->illegal_jedec != 0)
+		fwupd_json_object_add_integer(json_object, "illegal_jedec", priv->illegal_jedec);
+	if (priv->illegal_jedec1 != 0)
+		fwupd_json_object_add_integer(json_object, "illegal_jedec1", priv->illegal_jedec1);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
 		for (guint i = 1; i < G_N_ELEMENTS(priv->flash_master); i++) {
 			g_autofree gchar *title = g_strdup_printf("flash_master%x", i);
-			fu_xmlb_builder_insert_kx(bn, title, priv->flash_master[i]);
+			if (priv->flash_master[i] != 0)
+				fwupd_json_object_add_integer(json_object,
+							      title,
+							      priv->flash_master[i]);
 		}
 		if (priv->flash_descriptor_regs != NULL) {
 			for (guint i = 0; i < priv->num_regions; i++) {
 				g_autofree gchar *title =
 				    g_strdup_printf("flash_descriptor_reg%x", i);
-				fu_xmlb_builder_insert_kx(bn,
-							  title,
-							  priv->flash_descriptor_regs[i]);
+				if (priv->flash_descriptor_regs[i] != 0)
+					fwupd_json_object_add_integer(
+					    json_object,
+					    title,
+					    priv->flash_descriptor_regs[i]);
 			}
 		}
 	}
@@ -484,27 +519,52 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_ifd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_ifd_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "descriptor_map0", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"descriptor_map0",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->descriptor_map0 = tmp;
-	tmp = xb_node_query_text_as_uint(n, "descriptor_map1", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"descriptor_map1",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->descriptor_map1 = tmp;
-	tmp = xb_node_query_text_as_uint(n, "descriptor_map2", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"descriptor_map2",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->descriptor_map2 = tmp;
-	tmp = xb_node_query_text_as_uint(n, "components_rcd", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"components_rcd",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->components_rcd = tmp;
-	tmp = xb_node_query_text_as_uint(n, "illegal_jedec", NULL);
-	if (tmp != G_MAXUINT64) {
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"illegal_jedec",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64) {
 		priv->illegal_jedec = tmp & 0xFFFFFFFF;
 		priv->illegal_jedec1 = tmp >> 32;
 	}

@@ -1,0 +1,10 @@
+{
+  "gtype": "FuUsbBosDescriptor",
+  "dev_capability_type": "bos",
+  "firmware": [
+    {
+      "id": "payload",
+      "data": "WFhYWFhYWFhYWFhY"
+    }
+  ]
+}

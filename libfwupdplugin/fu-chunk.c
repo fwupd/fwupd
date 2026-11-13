@@ -290,14 +290,16 @@ fu_chunk_bytes_new(GBytes *bytes)
 }
 
 void
-fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "idx", self->idx);
-	fu_xmlb_builder_insert_kx(bn, "page", self->page);
-	fu_xmlb_builder_insert_kx(bn, "addr", self->address);
+	if (self->idx != 0)
+		fwupd_json_object_add_integer(json_object, "idx", self->idx);
+	if (self->page != 0)
+		fwupd_json_object_add_integer(json_object, "page", self->page);
+	if (self->address != 0)
+		fwupd_json_object_add_integer(json_object, "addr", (gint64)self->address);
 	if (self->data != NULL) {
 		g_autofree gchar *datastr = NULL;
-		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)self->data_sz);
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
 			datastr = fu_memstrsafe(self->data,
 						self->data_sz,
@@ -307,9 +309,12 @@ fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 		} else {
 			datastr = fu_base64_encode(self->data, self->data_sz);
 		}
-		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
+		if (datastr != NULL)
+			fwupd_json_object_add_string(json_object, "data", datastr);
+		fwupd_json_object_add_integer(json_object, "data_size", (gint64)self->data_sz);
 	} else {
-		fu_xmlb_builder_insert_kx(bn, "size", self->data_sz);
+		if (self->data_sz != 0)
+			fwupd_json_object_add_integer(json_object, "size", (gint64)self->data_sz);
 	}
 }
 
@@ -326,13 +331,11 @@ fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 gchar *
 fu_chunk_to_string(FuChunk *self)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunk");
-	fu_chunk_export(self, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bn);
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      NULL);
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+	g_autoptr(GString) str = NULL;
+	fu_chunk_export(self, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, json_object);
+	str = fwupd_json_object_to_string(json_object, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
@@ -348,17 +351,16 @@ fu_chunk_to_string(FuChunk *self)
 gchar *
 fu_chunk_array_to_string(GPtrArray *chunks)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunks");
+	g_autoptr(FwupdJsonArray) json_array = fwupd_json_array_new();
+	g_autoptr(GString) str = NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "chunk", NULL);
-		fu_chunk_export(chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bc);
+		g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+		fu_chunk_export(chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, json_object);
+		fwupd_json_array_add_object(json_array, json_object);
 	}
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      NULL);
+	str = fwupd_json_array_to_string(json_array, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
@@ -481,36 +483,51 @@ fu_chunk_array_new(const guint8 *data,
 
 /* private */
 gboolean
-fu_chunk_build(FuChunk *self, XbNode *n, GError **error)
+fu_chunk_build(FuChunk *self, FwupdJsonObject *json_object, GError **error)
 {
-	guint64 tmp;
-	g_autoptr(XbNode) data = NULL;
+	gint64 tmp = G_MAXINT64;
 
 	g_return_val_if_fail(FU_IS_CHUNK(self), FALSE);
-	g_return_val_if_fail(XB_IS_NODE(n), FALSE);
+	g_return_val_if_fail(json_object != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "idx", NULL);
-	if (tmp != G_MAXUINT64)
-		self->idx = tmp;
-	tmp = xb_node_query_text_as_uint(n, "page", NULL);
-	if (tmp != G_MAXUINT64)
-		self->page = tmp;
-	tmp = xb_node_query_text_as_uint(n, "addr", NULL);
-	if (tmp != G_MAXUINT64)
-		self->address = tmp;
-	data = xb_node_query_first(n, "data", NULL);
-	if (data != NULL && xb_node_get_text(data) != NULL) {
-		gsize bufsz = 0;
-		g_autofree guchar *buf = NULL;
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"idx",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		self->idx = (guint32)tmp;
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"page",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		self->page = (guint32)tmp;
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"addr",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		self->address = (gsize)tmp;
+	if (fwupd_json_object_has_node(json_object, "data")) {
+		const gchar *data = NULL;
 		g_autoptr(GBytes) blob = NULL;
-		buf = g_base64_decode(xb_node_get_text(data), &bufsz);
-		blob = g_bytes_new(buf, bufsz);
-		fu_chunk_set_bytes(self, blob);
-	} else if (data != NULL) {
-		g_autoptr(GBytes) blob = NULL;
-		blob = g_bytes_new(NULL, 0);
+		if (!fwupd_json_object_get_string_optional(json_object, "data", &data, error))
+			return FALSE;
+		if (data != NULL) {
+			gsize bufsz = 0;
+			g_autofree guchar *buf = g_base64_decode(data, &bufsz);
+			blob = g_bytes_new(buf, bufsz);
+		} else {
+			blob = g_bytes_new(NULL, 0);
+		}
 		fu_chunk_set_bytes(self, blob);
 	}
 

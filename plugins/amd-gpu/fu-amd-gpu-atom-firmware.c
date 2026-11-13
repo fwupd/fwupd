@@ -46,19 +46,27 @@ G_DEFINE_TYPE(FuAmdGpuAtomFirmware, fu_amd_gpu_atom_firmware, FU_TYPE_OPROM_FIRM
 static void
 fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 				FuFirmwareExportFlags flags,
-				XbBuilderNode *bn)
+				FwupdJsonObject *json_object)
 {
 	FuAmdGpuAtomFirmware *self = FU_AMD_GPU_ATOM_FIRMWARE(firmware);
 
-	FU_FIRMWARE_CLASS(fu_amd_gpu_atom_firmware_parent_class)->export(firmware, flags, bn);
+	FU_FIRMWARE_CLASS(fu_amd_gpu_atom_firmware_parent_class)
+	    ->export(firmware, flags, json_object);
 
-	fu_xmlb_builder_insert_kv(bn, "part_number", self->part_number);
-	fu_xmlb_builder_insert_kv(bn, "asic", self->asic);
-	fu_xmlb_builder_insert_kv(bn, "pci_type", self->pci_type);
-	fu_xmlb_builder_insert_kv(bn, "memory_type", self->memory_type);
-	fu_xmlb_builder_insert_kv(bn, "bios_date", self->bios_date);
-	fu_xmlb_builder_insert_kv(bn, "model_name", self->model_name);
-	fu_xmlb_builder_insert_kv(bn, "config_filename", self->config_filename);
+	if (self->part_number != NULL)
+		fwupd_json_object_add_string(json_object, "part_number", self->part_number);
+	if (self->asic != NULL)
+		fwupd_json_object_add_string(json_object, "asic", self->asic);
+	if (self->pci_type != NULL)
+		fwupd_json_object_add_string(json_object, "pci_type", self->pci_type);
+	if (self->memory_type != NULL)
+		fwupd_json_object_add_string(json_object, "memory_type", self->memory_type);
+	if (self->bios_date != NULL)
+		fwupd_json_object_add_string(json_object, "bios_date", self->bios_date);
+	if (self->model_name != NULL)
+		fwupd_json_object_add_string(json_object, "model_name", self->model_name);
+	if (self->config_filename != NULL)
+		fwupd_json_object_add_string(json_object, "config_filename", self->config_filename);
 }
 
 static gboolean

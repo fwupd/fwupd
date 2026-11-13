@@ -1,0 +1,6 @@
+{
+  "gtype": "FuSrecFirmware",
+  "addr": "0x1000000",
+  "id": "HDR",
+  "data": "aGVsbG8gd29ybGQ="
+}

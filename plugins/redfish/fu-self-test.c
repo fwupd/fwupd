@@ -1371,7 +1371,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_REDFISH_HPE_DEVICE);
 
 	smbios_data_fn =
-	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.json", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
 
 	fu_self_init(self);

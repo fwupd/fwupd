@@ -38,42 +38,59 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define FU_FMAP_FIRMWARE_AREAS_MAX 1024
 
 static void
-fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_fmap_firmware_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "ver_major", priv->ver_major);
-	fu_xmlb_builder_insert_kx(bn, "ver_minor", priv->ver_minor);
-	fu_xmlb_builder_insert_kx(bn, "signature_offset", priv->signature_offset);
+	if (priv->ver_major != 0)
+		fwupd_json_object_add_integer(json_object, "ver_major", priv->ver_major);
+	if (priv->ver_minor != 0)
+		fwupd_json_object_add_integer(json_object, "ver_minor", priv->ver_minor);
+	if (priv->signature_offset != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "signature_offset",
+					      (gint64)priv->signature_offset);
 }
 
 static gboolean
-fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_fmap_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "signature_offset", NULL);
-	if (tmp != NULL) {
-		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "signature_offset")) {
+		gint64 tmp64 = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "signature_offset", &tmp64, error))
 			return FALSE;
 		priv->signature_offset = (gsize)tmp64;
 	}
-	tmp = xb_node_query_text(n, "ver_major", NULL);
-	if (tmp != NULL) {
-		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "ver_major")) {
+		gint64 tmp64 = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "ver_major", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid ver_major");
+			return FALSE;
+		}
 		priv->ver_major = (gsize)tmp64;
 	}
-	tmp = xb_node_query_text(n, "ver_minor", NULL);
-	if (tmp != NULL) {
-		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "ver_minor")) {
+		gint64 tmp64 = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "ver_minor", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid ver_minor");
+			return FALSE;
+		}
 		priv->ver_minor = (gsize)tmp64;
 	}
 

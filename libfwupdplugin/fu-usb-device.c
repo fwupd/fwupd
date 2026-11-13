@@ -3157,7 +3157,7 @@ fu_usb_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **erro
 {
 	g_autoptr(FuFirmware) fw = NULL;
 	g_type_ensure(FU_TYPE_FIRMWARE);
-	fw = fu_firmware_new_from_xml(g_bytes_get_data(blob, NULL), error);
+	fw = fu_firmware_new_from_json(g_bytes_get_data(blob, NULL), error);
 	if (fw == NULL)
 		return NULL;
 	return fu_firmware_write_array(fw, error);

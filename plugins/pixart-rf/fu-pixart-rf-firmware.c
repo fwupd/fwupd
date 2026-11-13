@@ -33,10 +33,13 @@ fu_pixart_rf_firmware_get_model_name(FuPixartRfFirmware *self)
 }
 
 static void
-fu_pixart_rf_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pixart_rf_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "model_name", self->model_name);
+	if (self->model_name != NULL)
+		fwupd_json_object_add_string(json_object, "model_name", self->model_name);
 }
 
 static gboolean
@@ -200,13 +203,14 @@ fu_pixart_rf_firmware_parse(FuFirmware *firmware,
 }
 
 static gboolean
-fu_pixart_rf_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_pixart_rf_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "model_name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "model_name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		self->model_name = g_strdup(tmp);
 

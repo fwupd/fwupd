@@ -1,0 +1,15 @@
+{
+  "gtype": "FuBnrDpFirmware",
+  "version": "0.13",
+  "version_raw": "0xd",
+  "data": "[GInputStream]",
+  "data_size": "0x300000",
+  "device_id": "0x2f1a",
+  "usage": "fw",
+  "function": "0x5f",
+  "payload_length": "0x300000",
+  "payload_checksum": "0x7262",
+  "material": "5DLDPO.1001-00",
+  "creation_date": "04.09.2024",
+  "comment": ""
+}

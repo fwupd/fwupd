@@ -1,0 +1,21 @@
+{
+  "gtype": "FuFmapFirmware",
+  "signature_offset": "0x0",
+  "firmware": [
+    {
+      "id": "FMAP",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuUswidFirmware",
+      "id": "SBOM",
+      "hdrver": "0x1",
+      "firmware": [
+        {
+          "gtype": "FuCoswidFirmware",
+          "version": "456"
+        }
+      ]
+    }
+  ]
+}

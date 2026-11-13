@@ -1,0 +1,12 @@
+{
+  "gtype": "FuUswidFirmware",
+  "hdrver": "0x1",
+  "firmware": [
+    {
+      "gtype": "FuCoswidFirmware",
+      "id": "fwupd",
+      "version": "1.2.3",
+      "version_scheme": "semver"
+    }
+  ]
+}

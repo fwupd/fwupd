@@ -94,15 +94,24 @@ fu_oprom_firmware_get_compression_type(FuOpromFirmware *self)
 }
 
 static void
-fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_oprom_firmware_export(FuFirmware *firmware,
+			 FuFirmwareExportFlags flags,
+			 FwupdJsonObject *json_object)
 {
 	FuOpromFirmware *self = FU_OPROM_FIRMWARE(firmware);
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "machine_type", priv->machine_type);
-	fu_xmlb_builder_insert_kx(bn, "subsystem", priv->subsystem);
-	fu_xmlb_builder_insert_kx(bn, "compression_type", priv->compression_type);
-	fu_xmlb_builder_insert_kx(bn, "vendor_id", priv->vendor_id);
-	fu_xmlb_builder_insert_kx(bn, "device_id", priv->device_id);
+	if (priv->machine_type != 0)
+		fwupd_json_object_add_integer(json_object, "machine_type", priv->machine_type);
+	if (priv->subsystem != 0)
+		fwupd_json_object_add_integer(json_object, "subsystem", priv->subsystem);
+	if (priv->compression_type != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "compression_type",
+					      priv->compression_type);
+	if (priv->vendor_id != 0)
+		fwupd_json_object_add_integer(json_object, "vendor_id", priv->vendor_id);
+	if (priv->device_id != 0)
+		fwupd_json_object_add_integer(json_object, "device_id", priv->device_id);
 }
 
 static gboolean
@@ -255,46 +264,75 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_oprom_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_oprom_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuOpromFirmware *self = FU_OPROM_FIRMWARE(firmware);
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "machine_type", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "machine_type")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "machine_type", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid machine_type");
+			return FALSE;
+		}
 		priv->machine_type = val;
 	}
-	tmp = xb_node_query_text(n, "subsystem", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "subsystem")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "subsystem", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid subsystem");
+			return FALSE;
+		}
 		priv->subsystem = val;
 	}
-	tmp = xb_node_query_text(n, "compression_type", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "compression_type")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "compression_type", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid compression_type");
+			return FALSE;
+		}
 		priv->compression_type = val;
 	}
-	tmp = xb_node_query_text(n, "vendor_id", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "vendor_id")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "vendor_id", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid vendor_id");
+			return FALSE;
+		}
 		priv->vendor_id = val;
 	}
-	tmp = xb_node_query_text(n, "device_id", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "device_id")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "device_id", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid device_id");
+			return FALSE;
+		}
 		priv->device_id = val;
 	}
 

@@ -1,0 +1,49 @@
+{
+  "gtype": "FuAcpiPhat",
+  "id": "SUDODAVE",
+  "version_raw": "0x1",
+  "oem_id": "HUGHES",
+  "firmware": [
+    {
+      "gtype": "FuAcpiPhatVersionRecord",
+      "version_raw": "0x1",
+      "firmware": [
+        {
+          "gtype": "FuAcpiPhatVersionElement",
+          "version_raw": "0x123",
+          "guid": "40338ceb-b966-4eae-adae-9c32edfcc484",
+          "producer_id": "HUGH"
+        },
+        {
+          "gtype": "FuAcpiPhatVersionElement",
+          "version_raw": "0x124",
+          "guid": "2082b5e0-7a64-478a-b1b2-e3404fab6dad",
+          "producer_id": "LENO"
+        }
+      ]
+    },
+    {
+      "gtype": "FuAcpiPhatVersionRecord",
+      "version_raw": "0x1",
+      "firmware": [
+        {
+          "gtype": "FuAcpiPhatVersionElement",
+          "version_raw": "0x125",
+          "guid": "dfbaaded-754b-5214-a5f2-46aa3331e8ce",
+          "producer_id": "DELL"
+        }
+      ]
+    },
+    {
+      "gtype": "FuAcpiPhatVersionRecord",
+      "version_raw": "0x1"
+    },
+    {
+      "gtype": "FuAcpiPhatHealthRecord",
+      "version_raw": "0x1",
+      "am_healthy": "0x1",
+      "guid": "dfbaaded-754b-5214-a5f2-46aa3331e8ce",
+      "device_path": "/dev/foo"
+    }
+  ]
+}

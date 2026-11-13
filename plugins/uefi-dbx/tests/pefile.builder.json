@@ -1,0 +1,10 @@
+{
+  "gtype": "FuPefileFirmware",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "id": ".text",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

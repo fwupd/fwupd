@@ -214,12 +214,12 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 
 	/* export -> build */
 	if (!g_strv_contains(noxml, g_type_name(gtype))) {
-		g_autofree gchar *xml = fu_firmware_export_to_xml(
+		g_autofree gchar *json = fu_firmware_export_to_json(
 		    firmware,
 		    FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG | FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
 		    NULL);
-		if (xml != NULL) {
-			g_autoptr(FuFirmware) firmware2 = fu_firmware_new_from_xml(xml, &error);
+		if (json != NULL) {
+			g_autoptr(FuFirmware) firmware2 = fu_firmware_new_from_json(json, &error);
 			g_assert_no_error(error);
 			g_assert_nonnull(firmware2);
 		}
