@@ -26,6 +26,8 @@ plugin_builtins += plugin_builtin_pixart_tp
 
 device_tests += files(
   'tests/pixart-tp-pjp274.json',
+  'tests/pixart-tp-pjp343.json',
+  'tests/pixart-tp-pjp360.json',
   'tests/pixart-tp-plp239.json',
   'tests/pixart-tp.json',
 )
