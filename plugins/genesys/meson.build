@@ -10,7 +10,8 @@ plugin_quirks += files(
 plugin_builtins += static_library(
   'fu_plugin_genesys',
   rustgen.process(
-    'fu-genesys-usbhub.rs' # fuzzing
+    'fu-genesys.rs', # fuzzing
+    'fu-genesys-usbhub.rs', # fuzzing
   ),
   sources: [
     'fu-genesys-scaler-firmware.c', # fuzzing
