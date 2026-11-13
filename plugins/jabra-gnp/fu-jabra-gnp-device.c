@@ -21,6 +21,7 @@ struct _FuJabraGnpDevice {
 	guint8 address;
 	guint8 epin;
 	guint16 dfu_pid;
+	guint32 report_size;
 };
 
 G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_USB_DEVICE)
@@ -39,6 +40,13 @@ fu_jabra_gnp_device_get_epin(FuJabraGnpDevice *self)
 	return self->epin;
 }
 
+guint32
+fu_jabra_gnp_device_get_report_size(FuJabraGnpDevice *self)
+{
+	g_return_val_if_fail(FU_IS_JABRA_GNP_DEVICE(self), 0);
+	return self->report_size;
+}
+
 static void
 fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -48,6 +56,7 @@ fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "SequenceNumber", self->sequence_number);
 	fwupd_codec_string_append_hex(str, idt, "Address", self->address);
 	fwupd_codec_string_append_hex(str, idt, "DfuPid", self->dfu_pid);
+	fwupd_codec_string_append_hex(str, idt, "ReportSize", self->report_size);
 }
 
 static guint8
@@ -225,6 +234,7 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+	guint32 report_size = fu_jabra_gnp_device_get_report_size(self);
 
 	g_return_val_if_fail(child_dfu_pid != NULL, FALSE);
 
@@ -232,7 +242,7 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 	fu_struct_jabra_gnp_packet_set_dst(st, FU_JABRA_GNP_ADDRESS_OTA_CHILD);
 	fu_struct_jabra_gnp_packet_set_sequence_number(st, self->sequence_number);
 	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_NAME);
-	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, report_size, 0x0);
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_jabra_gnp_device_tx_cb,
@@ -330,10 +340,78 @@ fu_jabra_gnp_device_add_child(FuJabraGnpDevice *self, guint16 dfu_pid, GError **
 }
 
 static gboolean
+fu_jabra_gnp_device_ensure_report_size(FuJabraGnpDevice *self, GError **error)
+{
+	g_autoptr(GPtrArray) descriptors = NULL;
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.2.1")) {
+		self->report_size = FU_JABRA_GNP_BUF_SIZE;
+		return TRUE;
+	}
+
+	descriptors = fu_usb_device_get_hid_descriptors(FU_USB_DEVICE(self), error);
+	if (descriptors == NULL)
+		return FALSE;
+	for (guint i = 0; i < descriptors->len; i++) {
+		GBytes *blob = g_ptr_array_index(descriptors, i);
+		g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+		g_autoptr(FuHidReport) report = NULL;
+		g_autoptr(FuFirmware) item = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_firmware_parse_bytes(descriptor,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
+					     &error_local)) {
+			g_debug("ignoring HID descriptor: %s", error_local->message);
+			continue;
+		}
+		report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+						       NULL,
+						       "usage-page",
+						       0xFF00,
+						       "report-id",
+						       FU_STRUCT_JABRA_GNP_PACKET_DEFAULT_IFACE,
+						       "report-size",
+						       8,
+						       "output",
+						       0x0102,
+						       NULL);
+		if (report == NULL)
+			continue;
+		item = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-count", error);
+		if (item == NULL)
+			return FALSE;
+		/* include the report ID byte */
+		self->report_size = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item)) + 1;
+		break;
+	}
+
+	/* sanity check */
+	if (self->report_size < 63 || self->report_size > FU_JABRA_GNP_BUF_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid GNP report size %u",
+			    self->report_size);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_jabra_gnp_device_ensure_report_size(self, error))
+		return FALSE;
 	if (!fu_jabra_gnp_ensure_name(device, self->address, self->sequence_number, error))
 		return FALSE;
 	if (!fu_jabra_gnp_ensure_version(device, self->address, self->sequence_number, error))
