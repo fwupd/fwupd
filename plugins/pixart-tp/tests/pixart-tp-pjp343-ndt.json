@@ -1,0 +1,24 @@
+{
+  "name": "PixArt POCO 4802 NDT Haptic Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "a9c5e21a9143d3c7b2d25faf086c2c7d30b53ff397f6caeb8f49ed2a887a7759-firmware.cab",
+      "emulation-url": "cbd1b03e27c316eb8dcf665e6f941e6e059720a4e4c243ea50b50032671ee086-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0xff01",
+          "guids": [
+            "e88d7ec1-90ad-58ec-91f9-0218820fed62"
+          ]
+        },
+        {
+          "version": "45.1.1.0",
+          "guids": [
+            "23f33db8-5017-5eda-b4d1-bdf4b70d7a0f"
+          ]
+        }
+      ]
+    }
+  ]
+}
