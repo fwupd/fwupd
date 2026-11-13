@@ -227,10 +227,14 @@ fwupd_security_attr_get_obsoletes(FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_add_obsolete:
  * @self: a #FwupdSecurityAttr
- * @appstream_id: the appstream_id or plugin name
+ * @appstream_id: the AppStream ID, plugin name, or `plugin:AppStreamID`
  *
- * Adds an attribute appstream_id to obsolete. The obsoleted attribute will not
- * contribute to the calculated HSI value or be visible in command line tools.
+ * Specifies which other attributes this attribute replaces. Replaced attributes
+ * do not contribute to the HSI value or appear in command line tools.
+ *
+ * Use a plugin name to match all attributes from that plugin, an AppStream ID
+ * to match that ID from any plugin, or `plugin:AppStreamID` to match only that
+ * ID from the named plugin.
  *
  * Since: 1.5.0
  **/
