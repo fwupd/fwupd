@@ -886,16 +886,22 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	g_autofree gchar *device_id = NULL;
 
 	/* devlink-specific properties */
-	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
-	dev_name = fwupd_json_object_get_string(json_obj, "DevName", NULL);
-	ven = fwupd_json_object_get_string(json_obj, "Vid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BusName", &bus_name, error))
+		return FALSE;
+	if (!fwupd_json_object_get_string_optional(json_obj, "DevName", &dev_name, error))
+		return FALSE;
+	if (!fwupd_json_object_get_string_optional(json_obj, "Vid", &ven, error))
+		return FALSE;
 	if (ven == NULL)
-		ven = fwupd_json_object_get_string(json_obj, "Ven", NULL);
+		if (!fwupd_json_object_get_string_optional(json_obj, "Ven", &ven, error))
+			return FALSE;
 	if (ven != NULL)
 		fu_device_add_instance_str(device, "VEN", ven);
-	dev = fwupd_json_object_get_string(json_obj, "Pid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Pid", &dev, error))
+		return FALSE;
 	if (dev == NULL)
-		dev = fwupd_json_object_get_string(json_obj, "Dev", NULL);
+		if (!fwupd_json_object_get_string_optional(json_obj, "Dev", &dev, error))
+			return FALSE;
 	if (dev != NULL)
 		fu_device_add_instance_str(device, "DEV", dev);
 

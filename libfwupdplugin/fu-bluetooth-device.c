@@ -561,22 +561,28 @@ fu_bluetooth_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GErro
 	const gchar *tmp;
 	gint64 tmp64 = 0;
 
-	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "PhysicalId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_physical_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "LogicalId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "LogicalId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_logical_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_name(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Modalias", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Modalias", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_bluetooth_device_set_modalias(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Icon", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Icon", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_add_icon(device, tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "Battery", &tmp64, 100, error))

@@ -861,13 +861,16 @@ fu_mm_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **err
 		return FALSE;
 
 	/* optional properties */
-	tmp = fwupd_json_object_get_string(json_obj, "Version", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Version", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_version(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "PhysicalId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_physical_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BranchAt", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BranchAt", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_mm_device_set_branch_at(self, tmp);
 

@@ -417,7 +417,11 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		}
 
 		/* get the GType */
-		device_gtypestr = fwupd_json_object_get_string(object_tmp, "GType", NULL);
+		if (!fwupd_json_object_get_string_optional(object_tmp,
+							   "GType",
+							   &device_gtypestr,
+							   error))
+			return FALSE;
 		if (device_gtypestr == NULL)
 			device_gtypestr = "FuUsbDevice";
 		if (g_strcmp0(device_gtypestr, "FuBluezDevice") == 0)

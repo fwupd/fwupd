@@ -89,7 +89,8 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 	self->dev_capability_type = tmpi;
 
 	/* data */
-	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "ExtraData", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);

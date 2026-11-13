@@ -1366,24 +1366,33 @@ fwupd_security_attr_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErr
 	fwupd_security_attr_set_appstream_id(self, tmp);
 
 	/* all optional */
-	fwupd_security_attr_set_name(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL));
-	fwupd_security_attr_set_title(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, NULL));
-	fwupd_security_attr_set_description(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
-	fwupd_security_attr_set_plugin(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PLUGIN, NULL));
-	fwupd_security_attr_set_fwupd_version(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION, NULL));
-	fwupd_security_attr_set_url(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_URI, NULL));
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_NAME, &tmp, error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_name(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_SUMMARY, &tmp, error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_title(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_DESCRIPTION,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_description(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_PLUGIN, &tmp, error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_plugin(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_VERSION, &tmp, error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_fwupd_version(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_URI, &tmp, error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_url(self, tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_HSI_LEVEL,
 							&tmpi,
@@ -1398,38 +1407,66 @@ fwupd_security_attr_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErr
 							error))
 		return FALSE;
 	fwupd_security_attr_set_created(self, tmpi);
-	fwupd_security_attr_set_bios_setting_id(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, NULL));
-	fwupd_security_attr_set_bios_setting_target_value(
-	    self,
-	    fwupd_json_object_get_string(json_obj,
-					 FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
-					 NULL));
-	fwupd_security_attr_set_bios_setting_current_value(
-	    self,
-	    fwupd_json_object_get_string(json_obj,
-					 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-					 NULL));
-	fwupd_security_attr_set_kernel_current_value(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE, NULL));
-	fwupd_security_attr_set_kernel_target_value(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE, NULL));
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_bios_setting_id(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_bios_setting_target_value(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_bios_setting_current_value(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_kernel_current_value(self, tmp);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+						   &tmp,
+						   error))
+		return FALSE;
+	if (tmp != NULL)
+		fwupd_security_attr_set_kernel_target_value(self, tmp);
 
 	/* also optional */
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_HSI_RESULT, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_HSI_RESULT,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_security_attr_set_result(self, fwupd_security_attr_result_from_string(tmp));
 
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL) {
 		fwupd_security_attr_set_result_fallback(
 		    self,
 		    fwupd_security_attr_result_from_string(tmp));
 	}
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL) {
 		fwupd_security_attr_set_result_success(self,
 						       fwupd_security_attr_result_from_string(tmp));
