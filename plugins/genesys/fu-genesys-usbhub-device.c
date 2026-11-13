@@ -83,7 +83,7 @@ typedef struct {
 	guint32 fw_bank_addr[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	guint32 fw_bank_capacity[FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	guint32 fw_data_max_count;
-} FuGenesysModelSpec;
+} FuGenesysIspModelSpec;
 
 struct _FuGenesysUsbhubDevice {
 	FuUsbDevice parent_instance;
@@ -92,7 +92,7 @@ struct _FuGenesysUsbhubDevice {
 	FuStructGenesysTsVendorSupport *st_vendor_ts;
 	FuStructGenesysTsBrandProject *st_project_ts;
 	FuGenesysVendorCommandSetting vcs;
-	FuGenesysModelSpec spec;
+	FuGenesysIspModelSpec spec;
 
 	FuGenesysTsVersion tool_string_version;
 	FuGenesysFwStatus running_bank;
@@ -923,7 +923,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 	}
 
 	/* keep hub bank 1 fw that may needs backup to bank2 later */
-	if (self->spec.chip.model == ISP_MODEL_HUB_GL3523 && bank_num == FW_BANK_1)
+	if (self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523 && bank_num == FW_BANK_1)
 		self->hub_fw_bank1_data = g_steal_pointer(&blob);
 
 	/* success */
@@ -1118,15 +1118,15 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	}
 	if (memcmp(project_ic_type, "3523", 4) == 0) {
 		if (self->spec.chip.revision >= 60) {
-			self->spec.chip.model = ISP_MODEL_HUB_GL3523PLUS;
+			self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3523_PLUS;
 		} else {
-			self->spec.chip.model = ISP_MODEL_HUB_GL3523;
+			self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3523;
 			self->is_gl352350 = self->spec.chip.revision == 50;
 		}
 	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3590;
+		self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3590;
 	} else if (memcmp(project_ic_type, "3525", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3525;
+		self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3525;
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1193,8 +1193,8 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 
 	/* get running mode, portnum, bonding and flash dump location bit */
 	switch (self->spec.chip.model) {
-	case ISP_MODEL_HUB_GL3523:
-	case ISP_MODEL_HUB_GL3523PLUS: {
+	case FU_GENESYS_ISP_MODEL_HUB_GL3523:
+	case FU_GENESYS_ISP_MODEL_HUB_GL3523_PLUS: {
 		g_autoptr(FuStructGenesysTsDynamicGl3523) st_dynamic_ts = NULL;
 		st_dynamic_ts = fu_struct_genesys_ts_dynamic_gl3523_parse(buf, bufsz, 0, error);
 		if (st_dynamic_ts == NULL) {
@@ -1214,7 +1214,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		flash_dump_location_bit = (bonding & GL3523_BONDING_FLASH_DUMP_LOCATION_BIT) > 0;
 		break;
 	}
-	case ISP_MODEL_HUB_GL3590: {
+	case FU_GENESYS_ISP_MODEL_HUB_GL3590: {
 		if (self->spec.chip.revision == 30) {
 			g_autoptr(FuStructGenesysTsDynamicGl359030) st_dynamic_ts = NULL;
 			st_dynamic_ts =
@@ -1258,7 +1258,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		}
 		break;
 	}
-	case ISP_MODEL_HUB_GL3525: {
+	case FU_GENESYS_ISP_MODEL_HUB_GL3525: {
 		g_autoptr(FuStructGenesysTsDynamicGl3525) st_dynamic_ts = NULL;
 		st_dynamic_ts = fu_struct_genesys_ts_dynamic_gl3525_parse(buf, bufsz, 0, error);
 		if (st_dynamic_ts == NULL) {
@@ -1801,7 +1801,8 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 					      "UpdateBank",
 					      self->update_fw_banks[i]);
 
-		if (self->spec.chip.model == ISP_MODEL_HUB_GL3523 && i == FU_GENESYS_FW_TYPE_HUB)
+		if (self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523 &&
+		    i == FU_GENESYS_FW_TYPE_HUB)
 			fwupd_codec_string_append_bool(str,
 						       idt_bank_detail,
 						       "BackupHubFwBank1",
@@ -1925,7 +1926,7 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 		if (self->fw_bank_vers[FW_BANK_1][fw_type] >
 		    self->fw_bank_vers[FW_BANK_2][fw_type]) {
 			/* bank1 is more recent than bank2: write fw on bank2 */
-			if (self->spec.chip.model == ISP_MODEL_HUB_GL3523) {
+			if (self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523) {
 				/* GL3523 unique dual bank mechanism */
 				self->backup_hub_fw_bank1 = TRUE;
 				self->update_fw_banks[fw_type] = FW_BANK_1;
