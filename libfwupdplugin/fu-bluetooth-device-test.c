@@ -170,15 +170,15 @@ fu_bluetooth_device_json_func(void)
 	fu_bluetooth_device_set_modalias(dev, "usb:v0461p4EEFd0001");
 	fu_device_set_battery_level(FU_DEVICE(dev), 50);
 
-	/* serialize via the device add_json vfunc */
-	fu_device_add_json(FU_DEVICE(dev), json_obj, FWUPD_CODEC_FLAG_NONE);
+	/* serialize via the device export vfunc */
+	fu_device_export(FU_DEVICE(dev), json_obj, FWUPD_CODEC_FLAG_NONE);
 	json = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 	g_assert_nonnull(json);
 	g_assert_nonnull(g_strstr_len(json->str, -1, "FuBluetoothDevice"));
 	g_assert_nonnull(g_strstr_len(json->str, -1, "Mouse"));
 
-	/* parse back via the device from_json vfunc */
-	ret = fu_device_from_json(FU_DEVICE(dev2), json_obj, &error);
+	/* parse back via the device build vfunc */
+	ret = fu_device_build(FU_DEVICE(dev2), json_obj, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(dev2)), ==, "Mouse");

@@ -346,7 +346,7 @@ fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_uefi_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
@@ -377,7 +377,7 @@ fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 }
 
 static gboolean
-fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_uefi_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
@@ -465,8 +465,8 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	device_class->probe = fu_uefi_device_probe;
 	device_class->dump_firmware = fu_uefi_device_dump_firmware;
 	device_class->incorporate = fu_uefi_device_incorporate;
-	device_class->from_json = fu_uefi_device_from_json;
-	device_class->add_json = fu_uefi_device_add_json;
+	device_class->build = fu_uefi_device_build;
+	device_class->export = fu_uefi_device_export;
 	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }
 

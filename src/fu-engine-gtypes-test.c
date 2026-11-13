@@ -149,9 +149,9 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 
 	/* roundtrip to JSON */
 	device3 = g_object_new(gtype, "context", ctx, NULL);
-	fu_device_add_json(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-	if (fu_device_from_json(device3, json_obj, NULL))
-		g_debug("did ->from_json()");
+	fu_device_export(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (fu_device_build(device3, json_obj, NULL))
+		g_debug("did ->build()");
 }
 
 static void

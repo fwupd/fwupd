@@ -175,7 +175,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, FwupdJson
 		/* interesting? */
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
-		fu_device_add_json(device, json_device, FWUPD_CODEC_FLAG_NONE);
+		fu_device_export(device, json_device, FWUPD_CODEC_FLAG_NONE);
 		fwupd_json_array_add_object(json_arr, json_device);
 	}
 	fwupd_json_object_add_array(json_obj, "UsbDevices", json_arr);

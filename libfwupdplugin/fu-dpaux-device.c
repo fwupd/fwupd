@@ -426,13 +426,13 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_dpaux_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_dpaux_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* FuUdevDevice->add_json */
-	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->add_json(device, json_obj, flags);
+	/* FuUdevDevice->export */
+	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->export(device, json_obj, flags);
 
 	/* optional properties */
 	if (priv->dpcd_offset != 0)
@@ -440,13 +440,13 @@ fu_dpaux_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodec
 }
 
 static gboolean
-fu_dpaux_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_dpaux_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	gint64 tmp64 = 0;
 
-	/* FuUdevDevice->from_json */
-	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->from_json(device, json_obj, error))
+	/* FuUdevDevice->build */
+	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->build(device, json_obj, error))
 		return FALSE;
 
 	/* optional properties */
@@ -534,8 +534,8 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	device_class->to_string = fu_dpaux_device_to_string;
 	device_class->incorporate = fu_dpaux_device_incorporate;
 	device_class->convert_version = fu_dpaux_device_convert_version;
-	device_class->from_json = fu_dpaux_device_from_json;
-	device_class->add_json = fu_dpaux_device_add_json;
+	device_class->build = fu_dpaux_device_build;
+	device_class->export = fu_dpaux_device_export;
 
 	/**
 	 * FuDpauxDevice:dpcd-ieee-oui:

@@ -849,7 +849,7 @@ fu_devlink_device_cleanup(FuDevice *device,
 }
 
 static void
-fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_devlink_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 
@@ -876,7 +876,7 @@ fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCod
 }
 
 static gboolean
-fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_devlink_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	const gchar *bus_name;
@@ -1006,8 +1006,8 @@ fu_devlink_device_class_init(FuDevlinkDeviceClass *klass)
 	device_class->to_string = fu_devlink_device_to_string;
 	device_class->setup = fu_devlink_device_setup;
 	device_class->reload = fu_devlink_device_setup;
-	device_class->add_json = fu_devlink_device_add_json;
-	device_class->from_json = fu_devlink_device_from_json;
+	device_class->export = fu_devlink_device_export;
+	device_class->build = fu_devlink_device_build;
 	device_class->incorporate = fu_devlink_device_incorporate;
 	device_class->set_quirk_kv = fu_devlink_device_set_quirk_kv;
 }

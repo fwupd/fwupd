@@ -540,7 +540,7 @@ fu_bluetooth_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
-fu_bluetooth_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_bluetooth_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuBluetoothDevice *self = FU_BLUETOOTH_DEVICE(device);
 	FuBluetoothDevicePrivate *priv = GET_PRIVATE(self);
@@ -561,7 +561,7 @@ fu_bluetooth_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdC
 }
 
 static gboolean
-fu_bluetooth_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_bluetooth_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBluetoothDevice *self = FU_BLUETOOTH_DEVICE(device);
 	const gchar *tmp;
@@ -627,8 +627,8 @@ fu_bluetooth_device_class_init(FuBluetoothDeviceClass *klass)
 	device_class->reload = fu_bluetooth_device_reload;
 	device_class->to_string = fu_bluetooth_device_to_string;
 	device_class->convert_version = fu_bluetooth_device_convert_version;
-	device_class->from_json = fu_bluetooth_device_from_json;
-	device_class->add_json = fu_bluetooth_device_add_json;
+	device_class->build = fu_bluetooth_device_build;
+	device_class->export = fu_bluetooth_device_export;
 
 	/**
 	 * FuBluetoothDevice::changed:

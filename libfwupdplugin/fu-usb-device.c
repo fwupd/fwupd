@@ -2822,7 +2822,7 @@ fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_usb_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -2972,7 +2972,7 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 }
 
 static void
-fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_usb_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -3189,8 +3189,8 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->to_string = fu_usb_device_to_string;
 	device_class->incorporate = fu_usb_device_incorporate;
 	device_class->convert_version = fu_usb_device_convert_version;
-	device_class->from_json = fu_usb_device_from_json;
-	device_class->add_json = fu_usb_device_add_json;
+	device_class->build = fu_usb_device_build;
+	device_class->export = fu_usb_device_export;
 	fu_device_register_private_flag_safe(device_class, FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 	quarks[QUARK_ADD_INSTANCE_ID_REV] =
 	    fu_device_find_private_flag(device_class, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);

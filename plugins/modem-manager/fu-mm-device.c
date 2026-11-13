@@ -847,15 +847,15 @@ fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value
 }
 
 static gboolean
-fu_mm_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_mm_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	const gchar *tmp;
 	g_autoptr(FwupdJsonArray) json_array_ids = NULL;
 	g_autoptr(FwupdJsonObject) json_object_ports = NULL;
 
-	/* FuUdevDevice->from_json */
-	if (!FU_DEVICE_CLASS(fu_mm_device_parent_class)->from_json(device, json_obj, error))
+	/* FuUdevDevice->build */
+	if (!FU_DEVICE_CLASS(fu_mm_device_parent_class)->build(device, json_obj, error))
 		return FALSE;
 
 	/* optional properties */
@@ -909,7 +909,7 @@ fu_mm_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **err
 }
 
 static void
-fu_mm_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_mm_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
@@ -918,8 +918,8 @@ fu_mm_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFla
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 	g_autoptr(FwupdJsonObject) json_object_ports = fwupd_json_object_new();
 
-	/* FuUdevDevice->add_json */
-	FU_DEVICE_CLASS(fu_mm_device_parent_class)->add_json(device, json_obj, flags);
+	/* FuUdevDevice->export */
+	FU_DEVICE_CLASS(fu_mm_device_parent_class)->export(device, json_obj, flags);
 
 	/* optional properties */
 	fwupd_json_object_add_string(json_obj, "GType", G_OBJECT_TYPE_NAME(self));
@@ -1038,8 +1038,8 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	device_class->setup = fu_mm_device_setup;
 	device_class->to_string = fu_mm_device_to_string;
 	device_class->set_quirk_kv = fu_mm_device_set_quirk_kv;
-	device_class->from_json = fu_mm_device_from_json;
-	device_class->add_json = fu_mm_device_add_json;
+	device_class->build = fu_mm_device_build;
+	device_class->export = fu_mm_device_export;
 	device_class->open = fu_mm_device_open;
 
 	pspec = g_param_spec_boolean("inhibited",

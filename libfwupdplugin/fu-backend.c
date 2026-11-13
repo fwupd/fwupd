@@ -548,7 +548,7 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED);
 		if (fwupd_version != NULL)
 			fu_device_set_fwupd_version(device_tmp, fwupd_version);
-		if (!fu_device_from_json(device_tmp, object_tmp, error))
+		if (!fu_device_build(device_tmp, object_tmp, error))
 			return FALSE;
 		if (fu_device_get_backend_id(device_tmp) == NULL) {
 			g_set_error(error,
@@ -644,7 +644,7 @@ fu_backend_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlag
 		g_autoptr(FwupdJsonObject) json_device = fwupd_json_object_new();
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
-		fu_device_add_json(device, json_device, FWUPD_CODEC_FLAG_NONE);
+		fu_device_export(device, json_device, FWUPD_CODEC_FLAG_NONE);
 		fwupd_json_array_add_object(json_arr, json_device);
 	}
 	fwupd_json_object_add_array(json_obj, "UsbDevices", json_arr);

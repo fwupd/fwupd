@@ -93,10 +93,12 @@ struct _FuDeviceClass {
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
 	void (*invalidate)(FuDevice *self);
 	gchar *(*convert_version)(FuDevice *self, guint64 version_raw);
-	void (*add_json)(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags);
-	gboolean (*from_json)(FuDevice *self,
-			      FwupdJsonObject *json_obj,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+#ifndef __cplusplus
+	void (*export)(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags);
+#endif
+	gboolean (*build)(FuDevice *self,
+			  FwupdJsonObject *json_obj,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*check_firmware)(FuDevice *self,
 				   FuFirmware *firmware,
 				   FuFirmwareParseFlags flags,

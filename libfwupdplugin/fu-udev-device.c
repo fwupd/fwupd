@@ -2479,7 +2479,7 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 }
 
 static void
-fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_udev_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -2508,7 +2508,7 @@ fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 }
 
 static gboolean
-fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_udev_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	const gchar *tmp;
@@ -2671,8 +2671,8 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 	device_class->probe_complete = fu_udev_device_probe_complete;
-	device_class->from_json = fu_udev_device_from_json;
-	device_class->add_json = fu_udev_device_add_json;
+	device_class->build = fu_udev_device_build;
+	device_class->export = fu_udev_device_export;
 	quarks[QUARK_SYSFS_USE_PHYSICAL_ID] =
 	    fu_device_register_private_flag_safe(device_class,
 						 FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID);
