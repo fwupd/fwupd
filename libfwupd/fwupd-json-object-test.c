@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fwupd-error.h"
 #include "fwupd-json-node.h"
 #include "fwupd-json-object.h"
 
@@ -101,12 +102,50 @@ fwupd_json_object_invalid_func(void)
 	g_assert_nonnull(error2);
 }
 
+static void
+fwupd_json_object_optional_func(void)
+{
+	gboolean ret;
+	const gchar *value = "unset";
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GError) error = NULL;
+
+	fwupd_json_object_add_string(json_obj, "Str", "dave");
+	fwupd_json_object_add_integer(json_obj, "Int", 123);
+	fwupd_json_object_add_string(json_obj, "Null", NULL);
+
+	/* present */
+	ret = fwupd_json_object_get_string_optional(json_obj, "Str", &value, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(value, ==, "dave");
+
+	/* missing */
+	ret = fwupd_json_object_get_string_optional(json_obj, "Nope", &value, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_null(value);
+
+	/* null */
+	value = "unset";
+	ret = fwupd_json_object_get_string_optional(json_obj, "Null", &value, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_null(value);
+
+	/* wrong type */
+	ret = fwupd_json_object_get_string_optional(json_obj, "Int", &value, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/json-object/roundtrip", fwupd_json_object_roundtrip_func);
 	g_test_add_func("/fwupd/json-object/default", fwupd_json_object_default_func);
+	g_test_add_func("/fwupd/json-object/optional", fwupd_json_object_optional_func);
 	g_test_add_func("/fwupd/json-object/invalid", fwupd_json_object_invalid_func);
 	return g_test_run();
 }

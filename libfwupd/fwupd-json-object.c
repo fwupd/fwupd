@@ -282,6 +282,49 @@ fwupd_json_object_get_string(FwupdJsonObject *self, const gchar *key, GError **e
 }
 
 /**
+ * fwupd_json_object_get_string_optional:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (out) (nullable) (transfer none): string value, or %NULL if @key is not found
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets an optional string from a JSON object. If @key is not found, or the value is null, then
+ * @value is set to %NULL and %TRUE is returned. An error is returned if @key is not a string.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fwupd_json_object_get_string_optional(FwupdJsonObject *self,
+				      const gchar *key,
+				      const gchar **value,
+				      GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	GRefString *string;
+
+	g_return_val_if_fail(self != NULL, FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	string = fwupd_json_object_get_string(self, key, &error_local);
+	if (string == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			if (value != NULL)
+				*value = NULL;
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	if (value != NULL)
+		*value = string;
+	return TRUE;
+}
+
+/**
  * fwupd_json_object_get_string_with_default:
  * @self: a #FwupdJsonObject
  * @key: (not nullable): dictionary key
