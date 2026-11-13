@@ -2191,7 +2191,7 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_hidpp_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_logitech_hidpp_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	const gchar *tmp;
@@ -2218,9 +2218,7 @@ fu_logitech_hidpp_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, 
 }
 
 static void
-fu_logitech_hidpp_device_add_json(FuDevice *device,
-				  FwupdJsonObject *json_obj,
-				  FwupdCodecFlags flags)
+fu_logitech_hidpp_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 
@@ -2251,8 +2249,8 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 	device_class->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
 	device_class->cleanup = fu_logitech_hidpp_device_cleanup;
 	device_class->set_progress = fu_logitech_hidpp_device_set_progress;
-	device_class->from_json = fu_logitech_hidpp_device_from_json;
-	device_class->add_json = fu_logitech_hidpp_device_add_json;
+	device_class->build = fu_logitech_hidpp_device_build;
+	device_class->export = fu_logitech_hidpp_device_export;
 	fu_device_register_private_flag(device_class,
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
 	fu_device_register_private_flag(device_class, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE);

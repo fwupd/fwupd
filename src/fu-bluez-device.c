@@ -740,7 +740,7 @@ fu_bluez_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
-fu_bluez_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_bluez_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 
@@ -759,7 +759,7 @@ fu_bluez_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodec
 }
 
 static gboolean
-fu_bluez_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_bluez_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 	g_autoptr(FwupdJsonArray) json_array_uuids = NULL;
@@ -858,8 +858,8 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 	device_class->convert_version = fu_bluez_device_convert_version;
-	device_class->from_json = fu_bluez_device_from_json;
-	device_class->add_json = fu_bluez_device_add_json;
+	device_class->build = fu_bluez_device_build;
+	device_class->export = fu_bluez_device_export;
 
 	bluetooth_proxy_class->read = fu_bluez_device_read;
 	bluetooth_proxy_class->write = fu_bluez_device_write;

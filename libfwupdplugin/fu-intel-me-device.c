@@ -701,7 +701,7 @@ fu_intel_me_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 }
 
 static gboolean
-fu_intel_me_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_intel_me_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(device);
 	const gchar *version;
@@ -727,7 +727,7 @@ fu_intel_me_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError
 }
 
 static void
-fu_intel_me_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_intel_me_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(device);
 	fwupd_json_object_add_string(json_obj, "GType", "FuIntelMeDevice");
@@ -792,8 +792,8 @@ fu_intel_me_device_class_init(FuIntelMeDeviceClass *klass)
 	object_class->constructed = fu_intel_me_device_constructed;
 	object_class->finalize = fu_intel_me_device_finalize;
 	device_class->to_string = fu_intel_me_device_to_string;
-	device_class->from_json = fu_intel_me_device_from_json;
-	device_class->add_json = fu_intel_me_device_add_json;
+	device_class->build = fu_intel_me_device_build;
+	device_class->export = fu_intel_me_device_export;
 	device_class->add_security_attrs = fu_intel_me_device_add_security_attrs;
 }
 

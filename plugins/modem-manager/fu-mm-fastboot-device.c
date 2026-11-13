@@ -63,14 +63,13 @@ fu_mm_fastboot_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_mm_fastboot_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 	const gchar *tmp;
 
-	/* FuMmDevice->from_json */
-	if (!FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)
-		 ->from_json(device, json_obj, error))
+	/* FuMmDevice->build */
+	if (!FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)->build(device, json_obj, error))
 		return FALSE;
 
 	/* optional properties */
@@ -84,12 +83,12 @@ fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GEr
 }
 
 static void
-fu_mm_fastboot_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_mm_fastboot_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 
-	/* FuMmDevice->add_json */
-	FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)->add_json(device, json_obj, flags);
+	/* FuMmDevice->export */
+	FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)->export(device, json_obj, flags);
 
 	/* optional properties */
 	if (self->detach_at != NULL)
@@ -140,8 +139,8 @@ fu_mm_fastboot_device_class_init(FuMmFastbootDeviceClass *klass)
 	device_class->detach = fu_mm_fastboot_device_detach;
 	device_class->probe = fu_mm_fastboot_device_probe;
 	device_class->to_string = fu_mm_fastboot_device_to_string;
-	device_class->from_json = fu_mm_fastboot_device_from_json;
-	device_class->add_json = fu_mm_fastboot_device_add_json;
+	device_class->build = fu_mm_fastboot_device_build;
+	device_class->export = fu_mm_fastboot_device_export;
 	fu_device_register_private_flag(device_class,
 					FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE);
 }

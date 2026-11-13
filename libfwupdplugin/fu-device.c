@@ -8770,15 +8770,15 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 }
 
 static void
-fu_device_add_json_internal(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_device_export_internal(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
-	if (device_class->add_json != NULL)
-		device_class->add_json(self, json_obj, flags);
+	if (device_class->export != NULL)
+		device_class->export(self, json_obj, flags);
 }
 
 void
-fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_device_export(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(self);
@@ -8797,10 +8797,10 @@ fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags fl
 
 	/* optional proxy */
 	if (priv->proxy != NULL)
-		fu_device_add_json_internal(priv->proxy, json_obj, flags);
+		fu_device_export_internal(priv->proxy, json_obj, flags);
 
 	/* subclass can overwrite */
-	fu_device_add_json_internal(self, json_obj, flags);
+	fu_device_export_internal(self, json_obj, flags);
 
 	/* events */
 	if (priv->proxy != NULL && fu_device_get_events(priv->proxy)->len > 0)
@@ -8822,7 +8822,7 @@ fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags fl
 
 /* private; used to load an emulated device */
 gboolean
-fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
+fu_device_build(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 {
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
@@ -8866,14 +8866,14 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	}
 
 	/* subclassed */
-	if (device_class->from_json != NULL)
-		return device_class->from_json(self, json_obj, error);
+	if (device_class->build != NULL)
+		return device_class->build(self, json_obj, error);
 
 	/* proxy */
 	if (priv->proxy != NULL) {
 		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
-		if (device_class->from_json != NULL)
-			return device_class->from_json(priv->proxy, json_obj, error);
+		if (device_class->build != NULL)
+			return device_class->build(priv->proxy, json_obj, error);
 	}
 
 	/* success */
