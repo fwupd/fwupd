@@ -1,0 +1,21 @@
+{
+  "name": "Jabra Evolve3 65 Flex",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "0569e655a9044a6ba8bcf13ddf184422527c7532bd32bc92a12ae07806a2aefc-jabra-evolve3-65-flex-1.0.1.cab",
+      "emulation-url": "e7509b15bfc0593bf76afa69d0c1090a9f3fe0ff18b21247f23ea358e80c991c-jabra-evolve3-65-flex-emulation.zip",
+      "components": [
+        {
+          "version": "1.0.1",
+          "protocol": "com.jabra.gnp",
+          "guids": [
+            "3b647dfc-720b-5944-86be-08ec23bb195d",
+            "8244b367-2c03-5f5e-9f51-39652ed4940f",
+            "b9b41f76-b921-5259-b11c-5f89125225c2"
+          ]
+        }
+      ]
+    }
+  ]
+}

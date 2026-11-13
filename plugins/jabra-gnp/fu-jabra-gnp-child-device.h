@@ -26,7 +26,3 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 gboolean
 fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
     G_GNUC_NON_NULL(1);
-
-gboolean
-fu_jabra_gnp_child_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, GError **error)
-    G_GNUC_NON_NULL(1);
