@@ -138,20 +138,6 @@ struct _FuGenesysUsbhubDevice {
 
 G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVICE)
 
-void
-fu_genesys_usbhub_device_set_proxy(FuGenesysUsbhubDevice *self, FuDevice *proxy)
-{
-	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
-	g_return_if_fail(FU_IS_GENESYS_HUBHID_DEVICE(proxy));
-
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_set_proxy(FU_DEVICE(self), proxy);
-
-	/* align usb max length(0xffff) to usb2 packet size(0x40) */
-	self->flash_rw_size = 0xffc0;
-}
-
 static gboolean
 fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 				       FuProgress *progress,
@@ -183,7 +169,6 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 							    length,
 							    error);
 	}
-
 	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					      direction,
 					      request_type,
@@ -208,6 +193,13 @@ fu_genesys_usbhub_device_mstar_scaler_setup(FuGenesysUsbhubDevice *self, GError 
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_genesys_usbhub_device_set_flash_rw_size(FuGenesysUsbhubDevice *self, guint32 flash_rw_size)
+{
+	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
+	self->flash_rw_size = flash_rw_size;
 }
 
 static gboolean
@@ -1427,6 +1419,10 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+	g_autoptr(FuDevice) device_child = NULL;
+	g_autoptr(GError) error_local = NULL;
+
 	if (fu_usb_device_get_class(FU_USB_DEVICE(device)) != FU_USB_CLASS_HUB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1449,6 +1445,30 @@ fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* can we find a HID proxy to use? */
+	device_child = fu_device_get_backend_child(device, "usb:usb_device", &error_local);
+	if (device_child == NULL) {
+		g_debug("no child: %s", error_local->message);
+	} else {
+		g_autoptr(FuDevice) device_usbhub = NULL;
+
+		device_usbhub = fu_device_incorporate_from_donor(FU_TYPE_GENESYS_HUBHID_DEVICE,
+								 device_child,
+								 error);
+		if (device_usbhub == NULL)
+			return FALSE;
+
+		/* align usb max length(0xffff) to usb2 packet size(0x40) */
+		fu_genesys_usbhub_device_set_flash_rw_size(self, 0xffc0);
+		fu_device_set_proxy(FU_DEVICE(self), device_usbhub);
+		fu_device_set_target(device_usbhub, FU_DEVICE(self));
+
+		/* okay for the next *time* we open, but we've already chosen the path now */
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3018,7 +3038,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "GenesysUsbhubDeviceTransferSize") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->flash_rw_size = tmp;
+		fu_genesys_usbhub_device_set_flash_rw_size(self, tmp);
 
 		/* success */
 		return TRUE;
@@ -3182,12 +3202,14 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.usbhub");
 	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* 30ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_HUBHID_DEVICE);
 	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_FIRMWARE);
+	fu_genesys_usbhub_device_set_flash_rw_size(self, 64);
 
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
@@ -3196,7 +3218,6 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->flash_write_delay = 500;	/* 500ms */
 	self->flash_block_size = 64 * FU_KB;
 	self->flash_sector_size = 4 * FU_KB;
-	self->flash_rw_size = 64;
 	self->is_gl352350 = FALSE;
 	self->has_codesign = FALSE;
 	self->has_hw_codesign = FALSE;
