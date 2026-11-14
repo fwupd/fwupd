@@ -2,21 +2,9 @@
 
 [USB\VID_05E3&PID_0610]
 Plugin = genesys
-GType = FuGenesysUsbhubDevice
 
 [USB\VID_05E3&PID_0630]
 Plugin = genesys
-GType = FuGenesysUsbhubDevice
-
-# Genesys Logic USB Hubs' HID
-
-[USB\VID_05E3&PID_0102]
-Plugin = genesys
-GType = FuGenesysHubhidDevice
-
-[USB\VID_05E3&PID_0155]
-Plugin = genesys
-GType = FuGenesysHubhidDevice
 
 # Brand Products
 
@@ -34,7 +22,6 @@ Flags = dual-image
 # usbhub
 [USB\VID_03F0&PID_0610]
 Plugin = genesys
-GType = FuGenesysUsbhubDevice
 Name = HP USB-C Controller
 Flags = dual-image,has-public-key
 GenesysUsbhubSwitchRequest = 0xA1

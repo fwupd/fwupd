@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     FU,
 		     GENESYS_USBHUB_DEVICE,
 		     FuUsbDevice)
-
-void
-fu_genesys_usbhub_device_set_proxy(FuGenesysUsbhubDevice *self, FuDevice *proxy);
