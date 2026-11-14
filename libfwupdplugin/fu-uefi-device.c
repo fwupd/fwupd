@@ -384,7 +384,8 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fwupd_guid_is_valid(tmp)) {
 			g_set_error(error,
@@ -396,10 +397,12 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 		}
 		fu_uefi_device_set_guid(self, tmp);
 	}
-	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_uefi_device_set_name(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
 

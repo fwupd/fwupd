@@ -8494,7 +8494,8 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Created", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
 #if GLIB_CHECK_VERSION(2, 80, 0)

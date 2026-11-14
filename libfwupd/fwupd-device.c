@@ -3299,55 +3299,98 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	fwupd_device_set_id(self, tmp);
 
 	/* also optional */
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_NAME, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_name(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_parent_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_COMPOSITE_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_COMPOSITE_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_composite_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PROTOCOL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_PROTOCOL,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_add_protocol(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SERIAL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_SERIAL, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_serial(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_SUMMARY, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_summary(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DETAILS_URL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_DETAILS_URL,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_details_url(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BRANCH, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_BRANCH, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_branch(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PLUGIN, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_PLUGIN, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_plugin(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VENDOR, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_VENDOR, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_vendor(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VENDOR_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VENDOR_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_auto(GStrv) split = g_strsplit(tmp, "|", -1);
 		for (guint i = 0; split[i] != NULL; i++)
 			fwupd_device_add_vendor_id(self, split[i]);
 	}
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_VERSION, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_LOWEST, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_LOWEST,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_lowest(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_HIGHEST, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_HIGHEST,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_highest(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_bootloader(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_FORMAT, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_FORMAT,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_format(self, fwupd_version_format_from_string(tmp));
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
@@ -3429,7 +3472,7 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 		return FALSE;
 	fwupd_device_set_modified(self, tmp64);
 
-	/* older versions wrote these as integers */
+	/* the legacy format used an integer */
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_UPDATE_STATE, NULL);
 	if (tmp != NULL) {
 		fwupd_device_set_update_state(self, fwupd_update_state_from_string(tmp));
@@ -3442,6 +3485,7 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 			return FALSE;
 		fwupd_device_set_update_state(self, tmp64);
 	}
+	/* the legacy format used an integer */
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_STATUS, NULL);
 	if (tmp != NULL) {
 		fwupd_device_set_status(self, fwupd_status_from_string(tmp));
@@ -3461,7 +3505,11 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 							error))
 		return FALSE;
 	fwupd_device_set_percentage(self, tmp64);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_UPDATE_ERROR, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_UPDATE_ERROR,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_update_error(self, tmp);
 

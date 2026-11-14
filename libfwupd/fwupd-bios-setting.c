@@ -1198,6 +1198,7 @@ static gboolean
 fwupd_bios_setting_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
+	const gchar *str = NULL;
 	gboolean tmpb = FALSE;
 	gint64 tmpi = 0;
 	g_autoptr(FwupdJsonArray) json_arr = NULL;
@@ -1209,42 +1210,75 @@ fwupd_bios_setting_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GErro
 							error))
 		return FALSE;
 	fwupd_bios_setting_set_kind(self, tmpi);
-	fwupd_bios_setting_set_id(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, NULL));
-	fwupd_bios_setting_set_appstream_id(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_APPSTREAM_ID, NULL));
-	fwupd_bios_setting_set_icon(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ICON, NULL));
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_id(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_APPSTREAM_ID,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_appstream_id(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_ICON,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_icon(self, str);
 
-	fwupd_bios_setting_set_name(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL));
-	fwupd_bios_setting_set_parent(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_PARENT, NULL));
-	fwupd_bios_setting_set_description(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
-	fwupd_bios_setting_set_path(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_FILENAME, NULL));
-	fwupd_bios_setting_set_current_value(
-	    self,
-	    fwupd_json_object_get_string(json_obj,
-					 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-					 NULL));
-	fwupd_bios_setting_set_filename(
-	    self,
-	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME, NULL));
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_NAME, &str, error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_name(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_PARENT,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_parent(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_DESCRIPTION,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_description(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_FILENAME,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_path(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_current_value(self, str);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME,
+						   &str,
+						   error))
+		return FALSE;
+	if (str != NULL)
+		fwupd_bios_setting_set_filename(self, str);
 	json_arr = fwupd_json_object_get_array(json_obj,
 					       FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
 					       NULL);
 	if (json_arr != NULL) {
 		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
-			const gchar *tmp = fwupd_json_array_get_string(json_arr, i, NULL);
+			const gchar *tmp = fwupd_json_array_get_string(json_arr, i, error);
+			if (tmp == NULL)
+				return FALSE;
 			fwupd_bios_setting_add_possible_value(self, tmp);
 		}
 	}
