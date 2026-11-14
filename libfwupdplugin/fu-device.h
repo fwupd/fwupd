@@ -1049,6 +1049,8 @@ void
 fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_proxy_with_fallback(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_target(FuDevice *self, FuDevice *target) G_GNUC_NON_NULL(1);
 const gchar *
 fu_device_get_metadata(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gboolean
