@@ -244,8 +244,10 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	if (gtype == FU_TYPE_UDEV_DEVICE) {
 		device = g_object_ref(donor);
 	} else {
-		device = g_object_new(gtype, "backend", FU_BACKEND(self), NULL);
-		fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
+		device = fu_device_incorporate_from_donor(gtype, donor, error);
+		if (device == NULL)
+			return NULL;
+		fu_device_set_backend(device, backend);
 		if (!fu_device_probe(device, error)) {
 			g_prefix_error_literal(error, "failed to probe: ");
 			return NULL;

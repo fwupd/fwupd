@@ -1242,6 +1242,10 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags flag)
     G_GNUC_NON_NULL(1, 2);
+FuDevice *
+fu_device_incorporate_from_donor(GType gtype,
+				 FuDevice *donor,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 void
 fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
     G_GNUC_NON_NULL(1);
