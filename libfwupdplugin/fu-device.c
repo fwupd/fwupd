@@ -6241,6 +6241,15 @@ fu_device_open(FuDevice *self, GError **error)
 		return fu_device_ensure_id(self, error);
 	}
 
+	/* probe */
+	if (!fu_device_probe(self, error)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_prefix_error(error,
+			       "failed to probe %s: ",
+			       id_display != NULL ? id_display : "device");
+		return FALSE;
+	}
+
 	/* use proxy */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
