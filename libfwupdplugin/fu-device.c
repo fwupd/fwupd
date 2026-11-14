@@ -7135,6 +7135,41 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 }
 
 /**
+ * fu_device_incorporate_from_donor:
+ * @gtype: a #GType
+ * @donor: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Create a device of a specific GType and copy all the properties from the donor object.
+ *
+ * Returns: (transfer full): a #FuDevice, or %NULL on error
+ *
+ * Since: 2.2.1
+ **/
+FuDevice *
+fu_device_incorporate_from_donor(GType gtype, FuDevice *donor, GError **error)
+{
+	g_autoptr(FuDevice) self = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(donor), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (!g_type_is_a(gtype, G_OBJECT_TYPE(donor))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device GType %s is not a superset of %s",
+			    g_type_name(gtype),
+			    G_OBJECT_TYPE_NAME(donor));
+		return NULL;
+	}
+	self = g_object_new(gtype, NULL);
+	fu_device_incorporate(self, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
+	return g_steal_pointer(&self);
+}
+
+/**
  * fu_device_replace:
  * @self: a #FuDevice
  * @donor: the old #FuDevice
