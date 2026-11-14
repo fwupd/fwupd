@@ -1,0 +1,3 @@
+# Dell PowerEdge PSB PCIe switch (XE9680 / XE8640 / XE9640)
+[PCI\VEN_1000&DEV_00B2]
+DellPsbDevice = true
