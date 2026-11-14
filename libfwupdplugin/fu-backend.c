@@ -190,6 +190,47 @@ fu_backend_get_device_parent(FuBackend *self,
 }
 
 /**
+ * fu_backend_get_device_child:
+ * @self: a #FuBackend
+ * @device: a #FuDevice
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create the child device (of the correct type) for a given device subsystem.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.2.1
+ **/
+FuDevice *
+fu_backend_get_device_child(FuBackend *self,
+			    FuDevice *device,
+			    const gchar *subsystem,
+			    GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	g_autoptr(FuDevice) child = NULL;
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->get_device_child == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "->get_device_child is not implemented in %s",
+			    G_OBJECT_TYPE_NAME(self));
+		return NULL;
+	}
+	child = klass->get_device_child(self, device, subsystem, error);
+	if (child == NULL)
+		return NULL;
+	fu_device_set_backend(child, self);
+	return g_steal_pointer(&child);
+}
+
+/**
  * fu_backend_create_device:
  * @self: a #FuBackend
  * @backend_id: a backend ID, typically a sysfs path
