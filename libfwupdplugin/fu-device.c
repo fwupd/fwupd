@@ -6143,6 +6143,7 @@ fu_device_open_internal(FuDevice *self, GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuDeviceLocker) locker_proxy = NULL;
 
 	/* already open */
 	g_atomic_int_inc(&priv->open_refcount);
@@ -6156,6 +6157,16 @@ fu_device_open_internal(FuDevice *self, GError **error)
 			       "failed to probe %s: ",
 			       id_display != NULL ? id_display : "device");
 		return FALSE;
+	}
+
+	/* this was set from ->probe() */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
+		FuDevice *proxy = fu_device_get_proxy(self, error);
+		if (proxy == NULL)
+			return FALSE;
+		locker_proxy = fu_device_locker_new(proxy, error);
+		if (locker_proxy == NULL)
+			return FALSE;
 	}
 
 	/* ensure the device ID is already setup */
