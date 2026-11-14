@@ -162,6 +162,12 @@ first: a daemon started with a token does not create a BMC user. Changes to them
 still need a restart, and a `BearerToken` in the mutable configuration overrides
 the system value, so rotate or remove it there too.
 
+## Session Key Rotation
+
+The file named by the `[redfish]` `SessionKeyFile` setting is read for each request,
+so a session that is replaced out of band does not need a daemon restart. A request
+made while the file cannot be read fails, rather than using other credentials.
+
 ## External Interface Access
 
 This requires HTTP access to a given URL.

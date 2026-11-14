@@ -75,7 +75,11 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	guint64 model_id = 0x0;
 	guint64 subsystem_vendor_id = 0x0;
 	guint64 subsystem_model_id = 0x0;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -151,9 +155,13 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					       GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) members_array = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -191,9 +199,13 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_pcie = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -371,7 +383,9 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self, GError **error)
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					fu_redfish_backend_get_push_uri_path(backend),
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -700,7 +714,9 @@ fu_redfish_device_verify_target_identity(FuRedfishDevice *self, GError **error)
 	reset_pending = fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 			fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 
-	request = fu_redfish_backend_request_new(priv->backend);
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					logical_id,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -928,9 +944,13 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	const gchar *state_tmp;
 	gint64 pc = 0;
 	g_autoptr(GString) message = g_string_new("Unknown failure");
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) json_msgs = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* create URI and poll */
 	if (!fu_redfish_request_perform(request,
