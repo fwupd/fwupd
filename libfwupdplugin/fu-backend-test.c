@@ -32,6 +32,7 @@ fu_backend_emulate_func(void)
 	g_autofree gchar *json3 = NULL;
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDeviceEvent) ev_parent = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
@@ -167,6 +168,23 @@ fu_backend_emulate_func(void)
 	device2 = fu_device_get_backend_parent_with_subsystem(device, "usb", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(device2);
+	g_clear_error(&error);
+
+	/* GetBackendParent:Subsystem=pci, validation keeps the recorded ID */
+	ev_parent = fu_device_event_new("GetBackendParent:Subsystem=pci");
+	fu_device_event_set_str(ev_parent, "GType", "FuUdevDevice");
+	fu_device_event_set_str(ev_parent, "DeviceId", "0123456789abcdef0123456789abcdef01234567");
+	fu_device_event_set_str(ev_parent, "BackendId", "/sys/devices/pci0000:00");
+	fu_device_event_set_str(ev_parent, "PhysicalId", "PCI_SLOT_NAME=0000:00:00.0");
+	fu_device_add_event(device, ev_parent);
+	device2 = fu_device_get_backend_parent_with_subsystem(device, "pci", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device2);
+	g_assert_cmpstr(fu_device_get_physical_id(device2), ==, "PCI_SLOT_NAME=0000:00:00.0");
+	ret = fu_device_ensure_id(device2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_id(device2), ==, "0123456789abcdef0123456789abcdef01234567");
 
 	/* check version */
 	g_assert_false(fu_device_check_fwupd_version(device, "5.0.0"));
