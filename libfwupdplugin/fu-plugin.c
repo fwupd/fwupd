@@ -1435,11 +1435,14 @@ gboolean
 fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	return fu_plugin_runner_device_array_generic(self,
-						     devices,
-						     "fu_plugin_composite_prepare",
-						     vfuncs->composite_prepare,
-						     error);
+	if (!fu_plugin_runner_device_array_generic(self,
+						   devices,
+						   "fu_plugin_composite_prepare",
+						   vfuncs->composite_prepare,
+						   error))
+		return FALSE;
+	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE);
+	return TRUE;
 }
 
 /**
@@ -1458,11 +1461,14 @@ gboolean
 fu_plugin_runner_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	return fu_plugin_runner_device_array_generic(self,
-						     devices,
-						     "fu_plugin_composite_cleanup",
-						     vfuncs->composite_cleanup,
-						     error);
+	if (!fu_plugin_runner_device_array_generic(self,
+						   devices,
+						   "fu_plugin_composite_cleanup",
+						   vfuncs->composite_cleanup,
+						   error))
+		return FALSE;
+	fu_plugin_remove_flag(self, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE);
+	return TRUE;
 }
 
 /**

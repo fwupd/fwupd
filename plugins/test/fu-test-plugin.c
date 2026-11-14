@@ -365,6 +365,13 @@ fu_test_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 static gboolean
 fu_test_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
+	if (fu_plugin_get_config_value_boolean(plugin, "CompositePrepareFail")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed as requested");
+		return FALSE;
+	}
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device = g_ptr_array_index(devices, i);
@@ -408,6 +415,7 @@ fu_test_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "AnotherWriteRequired", "false");
 	fu_plugin_set_config_default(plugin, "InstallLoopRestart", "false");
 	fu_plugin_set_config_default(plugin, "CompositeChild", "false");
+	fu_plugin_set_config_default(plugin, "CompositePrepareFail", "false");
 	fu_plugin_set_config_default(plugin, "DecompressDelay", "0");
 	fu_plugin_set_config_default(plugin, "NeedsActivation", "false");
 	fu_plugin_set_config_default(plugin, "NeedsReboot", "false");

@@ -3106,22 +3106,18 @@ fu_engine_codec_func(void)
 }
 
 static void
-fu_engine_plugin_composite_func(void)
+fu_engine_plugin_composite_setup(FuEngine *engine,
+				 FuEngineRequest *request,
+				 FuCabinet *cabinet,
+				 FuPlugin *plugin,
+				 GPtrArray *devices,
+				 GPtrArray *releases)
 {
-	FuDevice *dev_tmp;
 	gboolean ret;
-	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
-	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) components = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) releases =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* no metadata in daemon */
@@ -3198,7 +3194,6 @@ fu_engine_plugin_composite_func(void)
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
 			 G_CALLBACK(fu_test_plugin_composite_device_added_cb),
@@ -3257,6 +3252,26 @@ fu_engine_plugin_composite_func(void)
 		}
 	}
 	g_assert_cmpint(releases->len, ==, 3);
+}
+
+static void
+fu_engine_plugin_composite_func(void)
+{
+	FuDevice *dev_tmp;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) releases =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	fu_engine_plugin_composite_setup(engine, request, cabinet, plugin, devices, releases);
 
 	/* sort these by version, forcing fu_engine_install_releases() to sort by device order */
 	g_ptr_array_sort(releases, fu_plugin_composite_release_sort_cb);
@@ -3315,6 +3330,7 @@ fu_engine_plugin_composite_func(void)
 		metadata = fu_device_get_metadata(device, "frombulator");
 		g_assert_cmpstr(metadata, ==, "1");
 	}
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
 
 	/* retry this with composite-single-payload set */
 	for (guint i = 0; i < 3; i++) {
@@ -3341,6 +3357,94 @@ fu_engine_plugin_composite_func(void)
 	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
 	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
+}
+
+static void
+fu_engine_plugin_composite_prepare_fail_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuPlugin) plugin_fail = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) releases =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	fu_engine_plugin_composite_setup(engine, request, cabinet, plugin, devices, releases);
+
+	/* add another plugin that fails composite-prepare */
+	fu_plugin_set_name(plugin_fail, "test_fail");
+	fu_plugin_runner_init(plugin_fail);
+	ret = fu_plugin_set_config_value(plugin_fail, "CompositePrepareFail", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_engine_add_plugin(engine, plugin_fail);
+
+	/* install the cab, which should fail */
+	ret = fu_engine_install_releases(engine,
+					 request,
+					 releases,
+					 progress,
+					 FWUPD_INSTALL_FLAG_NONE,
+					 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+
+	/* verify cleanup ran for the plugin that prepared successfully */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_assert_cmpstr(fu_device_get_metadata(device, "frimbulator"), ==, "1");
+		g_assert_cmpstr(fu_device_get_metadata(device, "frombulator"), ==, "1");
+	}
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	g_assert_false(fu_plugin_has_flag(plugin_fail, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+}
+
+static void
+fu_engine_plugin_composite_flag_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = g_ptr_array_new();
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	g_ptr_array_add(devices, device);
+
+	/* prepare sets the flag, cleanup clears it */
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	ret = fu_plugin_runner_composite_prepare(plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	ret = fu_plugin_runner_composite_cleanup(plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+
+	/* failed prepare returns the error and does not set the flag */
+	ret = fu_plugin_set_config_value(plugin, "CompositePrepareFail", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_composite_prepare(plugin, devices, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
 }
 
 static void
@@ -3832,6 +3936,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/plugin/mutable", fu_engine_test_plugin_mutable_enumeration);
 	g_test_add_func("/fwupd/engine/esp-location", fu_engine_esp_location_func);
 	g_test_add_func("/fwupd/engine/plugin/composite", fu_engine_plugin_composite_func);
+	g_test_add_func("/fwupd/engine/plugin/composite-flag",
+			fu_engine_plugin_composite_flag_func);
+	g_test_add_func("/fwupd/engine/plugin/composite-prepare-fail",
+			fu_engine_plugin_composite_prepare_fail_func);
 	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
 			fu_engine_plugin_composite_multistep_func);
 	g_test_add_func("/fwupd/engine/write-bios-attrs", fu_engine_modify_bios_settings_func);

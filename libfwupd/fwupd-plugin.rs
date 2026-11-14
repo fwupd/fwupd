@@ -71,6 +71,9 @@ enum FwupdPluginFlags {
     // stop working while probing.
     // Since: 2.0.12
     MutableEnumeration = 1 << 19,
+    // The plugin has run ->composite_prepare().
+    // Since: 2.2.1
+    CompositeDone = 1 << 20,
     // The plugin flag is unknown.
     // This is usually caused by a mismatched libfwupdplugin and daemon.
     Unknown = u64::MAX,
