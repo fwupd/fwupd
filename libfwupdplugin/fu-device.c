@@ -8414,7 +8414,7 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(target == NULL || FU_IS_DEVICE(target));
 	g_return_if_fail(self != target);
-	g_return_if_fail(self != fu_device_get_target(target));
+	g_return_if_fail(target == NULL || self != fu_device_get_target(target));
 
 	if (target != NULL)
 		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
