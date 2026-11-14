@@ -8381,6 +8381,10 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_return_if_fail(self != target);
 	g_return_if_fail(target == NULL || self != fu_device_get_target(target));
 
+	/* not changed */
+	if (priv->target == target)
+		return;
+
 	if (target != NULL)
 		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
 	g_set_object(&priv->target, target);
