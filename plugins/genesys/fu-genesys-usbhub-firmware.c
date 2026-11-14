@@ -2,6 +2,8 @@
  * Copyright 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
  * Copyright 2021 Gaël PORTAY <gael.portay@collabora.com>
  *
+ * nocheck:magic-defines=20 -- constants are per-model offsets
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
@@ -17,6 +19,7 @@
 struct _FuGenesysUsbhubFirmware {
 	FuFirmware parent_instance;
 	FuStructGenesysTsStatic *st_static_ts;
+	FuStructGenesysTsBrandProject *st_project_ts;
 	FuGenesysChip chip;
 };
 
@@ -34,6 +37,12 @@ G_DEFINE_TYPE(FuGenesysUsbhubFirmware, fu_genesys_usbhub_firmware, FU_TYPE_FIRMW
 #define GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590	    0x241
 #define GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525	    0x251
 #define GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525_V2  0x1E1
+
+#define GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3523     0x281
+#define GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3523PLUS 0x291
+#define GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3590     0x2E1
+#define GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525     0x2B1
+#define GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525_V2  0x331
 
 static gboolean
 fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
@@ -259,6 +268,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
+	guint32 project_ts_offset = 0;
 	g_autoptr(FuInputStream) stream_trunc = NULL;
 
 	/* get chip */
@@ -292,10 +302,13 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 					     error))
 			return FALSE;
 		if (configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT ||
-		    configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT_V2)
+		    configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT_V2) {
 			static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525_V2;
-		else
+			project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525_V2;
+		} else {
 			static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525;
+			project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525;
+		}
 		break;
 	}
 	default:
@@ -305,6 +318,18 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	    fu_struct_genesys_ts_static_parse_stream(stream, static_ts_offset, error);
 	if (self->st_static_ts == NULL)
 		return FALSE;
+	if (project_ts_offset != 0 &&
+	    fu_struct_genesys_ts_static_get_tool_string_version(self->st_static_ts) >=
+		FU_GENESYS_TS_VERSION_BRAND_PROJECT) {
+		self->st_project_ts =
+		    fu_struct_genesys_ts_brand_project_parse_stream(stream,
+								    project_ts_offset,
+								    error);
+		if (self->st_project_ts == NULL) {
+			g_prefix_error_literal(error, "failed to parse project tool string: ");
+			return FALSE;
+		}
+	}
 
 	/* deduce code size */
 	switch (self->chip.model) {
@@ -560,6 +585,8 @@ fu_genesys_usbhub_firmware_finalize(GObject *object)
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(object);
 	if (self->st_static_ts != NULL)
 		fu_struct_genesys_ts_static_unref(self->st_static_ts);
+	if (self->st_project_ts != NULL)
+		fu_struct_genesys_ts_brand_project_unref(self->st_project_ts);
 	G_OBJECT_CLASS(fu_genesys_usbhub_firmware_parent_class)->finalize(object);
 }
 
