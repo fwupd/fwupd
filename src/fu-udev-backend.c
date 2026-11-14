@@ -935,6 +935,83 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 }
 
 static FuDevice *
+fu_udev_backend_get_device_child(FuBackend *backend,
+				 FuDevice *device,
+				 const gchar *subsystem,
+				 GError **error)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	const gchar *basename;
+	const gchar *sysfs_path;
+	g_autoptr(GDir) dir = NULL;
+
+	sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	if (sysfs_path == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs path undefined");
+		return NULL;
+	}
+	if (!g_file_test(sysfs_path, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "sysfs path '%s' doesn't exist, perhaps a transient device.",
+			    sysfs_path);
+		return NULL;
+	}
+	dir = g_dir_open(sysfs_path, 0, error);
+	if (dir == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	while ((basename = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *sysfs_child = NULL;
+		g_autofree gchar *sysfs_uevent = NULL;
+		g_autoptr(FuUdevDevice) device_new = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* children are not always prefixed by the parent, e.g. 0003:093A:2862.0001 */
+		sysfs_child = g_build_filename(sysfs_path, basename, NULL);
+		if (g_file_test(sysfs_child, G_FILE_TEST_IS_SYMLINK))
+			continue;
+		if (!g_file_test(sysfs_child, G_FILE_TEST_IS_DIR))
+			continue;
+
+		/* ignore attribute groups such as power */
+		sysfs_uevent = g_build_filename(sysfs_child, "uevent", NULL);
+		if (!g_file_test(sysfs_uevent, G_FILE_TEST_EXISTS))
+			continue;
+
+		/* check has matching subsystem and devtype */
+		g_debug("potential child: %s", sysfs_child);
+		device_new = fu_udev_backend_create_device(self, sysfs_child, NULL, &error_local);
+		if (device_new != NULL) {
+			if (fu_udev_device_match_subsystem(device_new, subsystem)) {
+				if (subsystem != NULL) {
+					g_auto(GStrv) split = g_strsplit(subsystem, ":", 2);
+					fu_udev_device_set_subsystem(device_new, split[0]);
+				}
+				return FU_DEVICE(g_steal_pointer(&device_new));
+			}
+		} else {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
+			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+				g_warning("failed to create device: %s", error_local->message);
+		}
+	}
+
+	/* failed */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no child with subsystem %s",
+		    subsystem);
+	return NULL;
+}
+
+static FuDevice *
 fu_udev_backend_create_device_impl(FuBackend *backend, const gchar *backend_id, GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
@@ -979,6 +1056,7 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	backend_class->setup = fu_udev_backend_setup;
 	backend_class->to_string = fu_udev_backend_to_string;
 	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
+	backend_class->get_device_child = fu_udev_backend_get_device_child;
 	backend_class->create_device = fu_udev_backend_create_device_impl;
 	backend_class->create_device_for_donor = fu_udev_backend_create_device_for_donor;
 }
