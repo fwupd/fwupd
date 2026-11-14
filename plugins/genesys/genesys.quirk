@@ -8,7 +8,60 @@ GType = FuGenesysUsbhubDevice
 Plugin = genesys
 GType = FuGenesysUsbhubDevice
 
+# Lenovo P34WD-40 USB2.0 Hubs (L1 1121 > L2 1122 > L3 1123)
+# Each Hub is bound only to the HID that hangs below it (require-hid-proxy), and the PROJECT/IC check
+# is strict.
+# dual-image picks the bank to write from the pre-read bank versions (bank1 unless it is newer
+# than bank2); the bank1-newer branch ran on hardware for 1122 and 1123 (backup to bank2, then write
+# bank1), the same branch on 1121 (write bank2) is not yet measured. RemoveDelay is 40 s: the hub took
+# about 11 s to reappear, the default is 5 s.
+# hid-transport is set on all three Hubs like the vendor CLI: the flash part of setup runs through
+# the bound HID. Verified on hardware for all three Hubs, see the README.
+# A wrong GenesysHidProxyPid only keeps the Hub inhibited.
+# 1121 (GL3525) runs its newest bank: an image older than the other bank is refused before any write.
+# 1122/1123 (GL3523) booted the written lower bank1.
+# single-hid-proxy: a second live HID below the same Hub unbinds the proxy and blocks the Hub until it is
+# replugged; a removed HID is replaced normally.
+# GenesysParentHubPid is the Hub that must be the direct upstream parent (L2 below L1, L3 below L2);
+# it is checked before the first read in setup and before every state-changing entry.
+# 1121 has none: its parent is the host side (a root hub as captured) and has no fixed PID.
+[USB\VID_17EF&PID_1121]
+Plugin = genesys
+GType = FuGenesysUsbhubDevice
+Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image
+GenesysHidProxyPid = 0xF00F
+RemoveDelay = 40000
+
+[USB\VID_17EF&PID_1122]
+Plugin = genesys
+GType = FuGenesysUsbhubDevice
+Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image
+GenesysHidProxyPid = 0x4C41
+GenesysParentHubPid = 0x1121
+RemoveDelay = 40000
+
+[USB\VID_17EF&PID_1123]
+Plugin = genesys
+GType = FuGenesysUsbhubDevice
+Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image
+GenesysHidProxyPid = 0x4C42
+GenesysParentHubPid = 0x1122
+RemoveDelay = 40000
+
 # Genesys Logic USB Hubs' HID
+
+# Lenovo P34WD-40: the GLI HID of each hub (L1 f00f, L2 4c41, L3 4c42)
+[USB\VID_17EF&PID_F00F]
+Plugin = genesys
+GType = FuGenesysHubhidDevice
+
+[USB\VID_17EF&PID_4C41]
+Plugin = genesys
+GType = FuGenesysHubhidDevice
+
+[USB\VID_17EF&PID_4C42]
+Plugin = genesys
+GType = FuGenesysHubhidDevice
 
 [USB\VID_05E3&PID_0102]
 Plugin = genesys
