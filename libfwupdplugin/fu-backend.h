@@ -50,6 +50,10 @@ struct _FuBackendClass {
 				       FuDevice *device,
 				       const gchar *subsystem,
 				       GError **error)G_GNUC_WARN_UNUSED_RESULT;
+	FuDevice *(*get_device_child)(FuBackend *self,
+				      FuDevice *device,
+				      const gchar *subsystem,
+				      GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	FuDevice *(*create_device)(FuBackend *self,
 				   const gchar *backend_id,
 				   GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -95,6 +99,11 @@ fu_backend_get_device_parent(FuBackend *self,
 			     FuDevice *device,
 			     const gchar *subsystem,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
+FuDevice *
+fu_backend_get_device_child(FuBackend *self,
+			    FuDevice *device,
+			    const gchar *subsystem,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
 FuDevice *
 fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
     G_GNUC_NON_NULL(1, 2);

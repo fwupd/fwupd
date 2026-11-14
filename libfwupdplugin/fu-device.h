@@ -1028,6 +1028,9 @@ fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **error)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
