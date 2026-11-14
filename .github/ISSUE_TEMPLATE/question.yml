@@ -1,0 +1,29 @@
+name: Question
+description: Ask a question about the project or how to do something
+labels: ["question"]
+body:
+  - type: checkboxes
+    id: human
+    attributes:
+      label: Human confirmation
+      description: Issues are for people to discuss with people.
+      options:
+        - label: I am a human filing this issue myself, and it was not generated or submitted by an automated tool or AI agent.
+          required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Describe the question
+      description: A clear and concise description of what you are wondering about.
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: fwupd version information
+      description: |
+        Please provide the version of the daemon and client if applicable to your current installation of `fwupd`.
+        ```shell
+        fwupdtool get-report-metadata
+        ```
+      render: shell
