@@ -100,6 +100,12 @@ USB Hub Write Request value.
 
 Since 1.7.6.
 
+### GenesysUsbhubHidProxyId
+
+The optional filter to use when finding the HID proxy, e.g. `USB\VID_273F&PID_1001`
+
+Since 2.2.1
+
 ### GenesysScalerDeviceTransferSize
 
 Scaler Block size to use for transfers.
