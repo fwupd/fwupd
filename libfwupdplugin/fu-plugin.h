@@ -364,13 +364,20 @@ struct _FuPluginClass {
 	 * composite_cleanup
 	 * @self: a #FuPlugin
 	 * @devices: (element-type FuDevice): array of devices
+	 * @update_state: a #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_FAILED
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function run after updating group of composite devices.
 	 *
-	 * Since: 1.7.2
+	 * The @update_state is %FWUPD_UPDATE_STATE_SUCCESS if all the devices were updated, or
+	 * %FWUPD_UPDATE_STATE_FAILED if the composite prepare or any device update failed.
+	 *
+	 * Since: 2.2.1
 	 **/
-	gboolean (*composite_cleanup)(FuPlugin *self, GPtrArray *devices, GError **error);
+	gboolean (*composite_cleanup)(FuPlugin *self,
+				      GPtrArray *devices,
+				      FwupdUpdateState update_state,
+				      GError **error);
 	/**
 	 * load
 	 * @ctx: a #FuContext

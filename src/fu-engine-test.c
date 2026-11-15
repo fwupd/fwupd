@@ -3432,7 +3432,8 @@ fu_engine_plugin_composite_flag_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_true(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
-	ret = fu_plugin_runner_composite_cleanup(plugin, devices, &error);
+	ret =
+	    fu_plugin_runner_composite_cleanup(plugin, devices, FWUPD_UPDATE_STATE_SUCCESS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));

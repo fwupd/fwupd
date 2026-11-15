@@ -102,7 +102,10 @@ fu_logind_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError 
 }
 
 static gboolean
-fu_logind_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_logind_plugin_composite_cleanup(FuPlugin *plugin,
+				   GPtrArray *devices,
+				   FwupdUpdateState update_state,
+				   GError **error)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(plugin);
 	if (self->logind_fd < 0)

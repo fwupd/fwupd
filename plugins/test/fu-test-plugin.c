@@ -382,7 +382,10 @@ fu_test_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **
 }
 
 static gboolean
-fu_test_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_test_plugin_composite_cleanup(FuPlugin *plugin,
+				 GPtrArray *devices,
+				 FwupdUpdateState update_state,
+				 GError **error)
 {
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		for (guint i = 0; i < devices->len; i++) {
