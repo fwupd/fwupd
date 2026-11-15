@@ -164,7 +164,10 @@ fu_powerd_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError 
 }
 
 static gboolean
-fu_powerd_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_powerd_plugin_composite_cleanup(FuPlugin *plugin,
+				   GPtrArray *devices,
+				   FwupdUpdateState update_state,
+				   GError **error)
 {
 	FuPowerdPlugin *self = FU_POWERD_PLUGIN(plugin);
 	return fu_powerd_plugin_delete_suspend_file(self, error);

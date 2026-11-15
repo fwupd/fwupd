@@ -268,7 +268,10 @@ fu_dell_dock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GErr
 }
 
 static gboolean
-fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin,
+				      GPtrArray *devices,
+				      FwupdUpdateState update_state,
+				      GError **error)
 {
 	FuDellDockEc *parent = fu_dell_dock_plugin_get_ec(devices);
 	FuDevice *dev = NULL;

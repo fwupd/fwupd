@@ -430,7 +430,10 @@ fu_systemd_pcrlock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices
 }
 
 static gboolean
-fu_systemd_pcrlock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_systemd_pcrlock_plugin_composite_cleanup(FuPlugin *plugin,
+					    GPtrArray *devices,
+					    FwupdUpdateState update_state,
+					    GError **error)
 {
 	FuSystemdPcrlockPlugin *self = FU_SYSTEMD_PCRLOCK_PLUGIN(plugin);
 	const gchar *address = g_getenv("FWUPD_SYSTEMD_PCRLOCK_VARLINK_ADDRESS");
