@@ -446,9 +446,15 @@ fu_systemd_pcrlock_plugin_composite_cleanup(FuPlugin *plugin,
 	if (self->unlocked->len == 0)
 		return TRUE;
 
-	/* Only re-lock the measurements whose update failed, keeping the loosened policy for
-	 * the ones that succeeded. Classify each failed device the same way as
-	 * composite_prepare did when deciding what to unlock. */
+	/* a prepare abort leaves device states unchanged, so restore all unlocked measurements */
+	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN) {
+		relock_firmware = TRUE;
+		relock_secureboot = TRUE;
+	}
+
+	/* for device update failures, only re-lock the affected measurements, keeping the
+	 * loosened policy for the ones that succeeded; classify each failed device the same
+	 * way as composite_prepare did when deciding what to unlock */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		FwupdUpdateState state;
@@ -482,8 +488,8 @@ fu_systemd_pcrlock_plugin_composite_cleanup(FuPlugin *plugin,
 		return TRUE;
 	}
 
-	/* Re-lock the measurements belonging to the failed updates and regenerate the policy
-	 * to restore the protection that was in place before the update. */
+	/* re-lock the measurements and regenerate the policy to restore the protection that
+	 * was in place before the aborted or failed update */
 	if (address == NULL)
 		address = FU_SYSTEMD_PCRLOCK_VARLINK_ADDRESS;
 	r = sd_varlink_connect_address(&vl, address);
