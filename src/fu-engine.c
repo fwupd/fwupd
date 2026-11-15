@@ -2691,7 +2691,7 @@ fu_engine_install_releases(FuEngine *self,
 		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 		if (!fu_engine_composite_cleanup(self,
 						 devices,
-						 FWUPD_UPDATE_STATE_FAILED,
+						 FWUPD_UPDATE_STATE_UNKNOWN,
 						 &error_local)) {
 			g_warning("failed to cleanup after failed prepare composite action: %s",
 				  error_local->message);

@@ -370,7 +370,8 @@ struct _FuPluginClass {
 	 * Function run after updating group of composite devices.
 	 *
 	 * The @update_state is %FWUPD_UPDATE_STATE_SUCCESS if all the devices were updated, or
-	 * %FWUPD_UPDATE_STATE_FAILED if the composite prepare or any device update failed.
+	 * %FWUPD_UPDATE_STATE_FAILED if any device update failed. If composite prepare failed
+	 * before any device updates were attempted, @update_state is %FWUPD_UPDATE_STATE_UNKNOWN.
 	 *
 	 * Since: 2.2.1
 	 **/
