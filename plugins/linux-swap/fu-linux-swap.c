@@ -8,7 +8,19 @@
 
 #include <fwupdplugin.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <glib/gstdio.h>
+#include <sys/ioctl.h>
 #include <sys/sysmacros.h>
+
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+#ifdef HAVE_LINUX_BTRFS_H
+#include <linux/btrfs.h>
+#include <linux/magic.h>
+#endif
 
 #include "fu-linux-swap.h"
 
@@ -138,6 +150,112 @@ fu_linux_swap_block_name_for_devnum(FuPathStore *pstore, guint32 devnum, GError 
 	return g_path_get_basename(target);
 }
 
+/* encrypted only if every device of the btrfs filesystem has a crypt layer below
+ * it, as a filesystem can span several devices and any of them can hold swap */
+gboolean
+fu_linux_swap_btrfs_has_crypt(FuPathStore *pstore,
+			      const gchar *fsid,
+			      gboolean *encrypted,
+			      GError **error)
+{
+	const gchar *name;
+	guint devices_cnt = 0;
+	g_autofree gchar *devices_path = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	g_return_val_if_fail(pstore != NULL, FALSE);
+	g_return_val_if_fail(fsid != NULL, FALSE);
+	g_return_val_if_fail(encrypted != NULL, FALSE);
+
+	*encrypted = FALSE;
+	devices_path = fu_path_store_build_filename(pstore,
+						    error,
+						    FU_PATH_KIND_SYSFSDIR,
+						    "fs",
+						    "btrfs",
+						    fsid,
+						    "devices",
+						    NULL);
+	if (devices_path == NULL)
+		return FALSE;
+	dir = g_dir_open(devices_path, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((name = g_dir_read_name(dir)) != NULL) {
+		gboolean encrypted_below = FALSE;
+		if (!fu_linux_swap_block_has_crypt_below(pstore, name, 0, &encrypted_below, error))
+			return FALSE;
+		if (!encrypted_below) {
+			g_debug("btrfs %s device %s is unencrypted", fsid, name);
+			return TRUE;
+		}
+		devices_cnt++;
+	}
+	*encrypted = devices_cnt > 0;
+	return TRUE;
+}
+
+/* btrfs subvolumes have anonymous device numbers without a block device, so ask
+ * btrfs for the fsid that /sys/fs/btrfs lists the devices of the filesystem under */
+static gchar *
+fu_linux_swap_btrfs_fsid_for_file(const gchar *fn, GError **error)
+{
+#if defined(HAVE_LINUX_BTRFS_H) && defined(HAVE_SYS_VFS_H)
+	struct btrfs_ioctl_fs_info_args args = {0};
+	struct statfs buf = {0};
+	gint rc;
+	g_autofd gint fd = -1;
+
+	if (statfs(fn, &buf) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to get the filesystem of %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	if ((guint32)buf.f_type != BTRFS_SUPER_MAGIC) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is not on btrfs",
+			    fn);
+		return NULL;
+	}
+
+	/* the ioctl reports the filesystem of the opened file, so open the swap file itself:
+	 * its directory can be on another filesystem, e.g. for a bind-mounted swap file */
+	fd = open(fn, O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to open %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	rc = ioctl(fd, BTRFS_IOC_FS_INFO, &args); /* nocheck:blocked */
+	if (rc != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to get the btrfs fsid of %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	return fwupd_guid_to_string((const fwupd_guid_t *)args.fsid, FWUPD_GUID_FLAG_NONE);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "btrfs is not supported");
+	return NULL;
+#endif
+}
+
 static gboolean
 fu_linux_swap_verify_partition(FuLinuxSwap *self,
 			       FuPathStore *pstore,
@@ -214,12 +332,14 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 {
 	gboolean encrypted_below = FALSE;
 	guint32 devnum;
+	g_autofree gchar *fsid = NULL;
 	g_autofree gchar *name = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GError) error_volume = NULL;
 	g_autoptr(GError) error_name = NULL;
+	g_autoptr(GError) error_fsid = NULL;
 	g_autoptr(GError) error_walk = NULL;
 
 	/* get the device number for the file */
@@ -246,9 +366,22 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 	/* walk the backing block device for a CRYPT- node */
 	name = fu_linux_swap_block_name_for_devnum(pstore, devnum, &error_name);
 	if (name == NULL) {
-		g_debug("no kernel block name resolved for %s: %s; skipping dm walk",
-			fn,
-			error_name->message);
+		g_debug("no kernel block name resolved for %s: %s", fn, error_name->message);
+		fsid = fu_linux_swap_btrfs_fsid_for_file(fn, &error_fsid);
+		if (fsid == NULL) {
+			g_debug("no btrfs fsid for %s: %s; skipping dm walk",
+				fn,
+				error_fsid->message);
+		} else if (!fu_linux_swap_btrfs_has_crypt(pstore,
+							  fsid,
+							  &encrypted_below,
+							  &error_walk)) {
+			g_debug("btrfs device walk failed for %s: %s", fn, error_walk->message);
+		} else if (encrypted_below) {
+			g_debug("%s file is encrypted via all devices of btrfs %s", fn, fsid);
+			self->encrypted_cnt++;
+			return TRUE;
+		}
 	} else if (!fu_linux_swap_block_has_crypt_below(pstore,
 							name,
 							0,

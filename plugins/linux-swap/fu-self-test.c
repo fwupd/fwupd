@@ -174,6 +174,58 @@ fu_linux_swap_dm_walker_plain_func(void)
 	g_assert_false(encrypted);
 }
 
+/* a btrfs filesystem on a single dm-crypt device */
+static void
+fu_linux_swap_btrfs_encrypted_func(void)
+{
+	gboolean encrypted = FALSE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "btrfs", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_btrfs_has_crypt(pstore,
+					    "0d2b6c1e-5a4f-4a3b-9c8d-7e6f5a4b3c2d",
+					    &encrypted,
+					    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(encrypted);
+}
+
+/* a btrfs filesystem spanning a dm-crypt device and a plain partition */
+static void
+fu_linux_swap_btrfs_mixed_func(void)
+{
+	gboolean encrypted = TRUE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "btrfs", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_btrfs_has_crypt(pstore,
+					    "f1e2d3c4-b5a6-4978-8695-a4b3c2d1e0f9",
+					    &encrypted,
+					    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(encrypted);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -187,5 +239,7 @@ main(int argc, char **argv)
 			fu_linux_swap_dm_walker_lvm_on_luks_func);
 	g_test_add_func("/linux-swap/dm-walker/direct", fu_linux_swap_dm_walker_direct_func);
 	g_test_add_func("/linux-swap/dm-walker/plain", fu_linux_swap_dm_walker_plain_func);
+	g_test_add_func("/linux-swap/btrfs/encrypted", fu_linux_swap_btrfs_encrypted_func);
+	g_test_add_func("/linux-swap/btrfs/mixed", fu_linux_swap_btrfs_mixed_func);
 	return g_test_run();
 }

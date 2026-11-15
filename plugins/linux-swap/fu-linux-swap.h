@@ -23,3 +23,8 @@ fu_linux_swap_block_has_crypt_below(FuPathStore *pstore,
 				    guint depth,
 				    gboolean *encrypted,
 				    GError **error);
+gboolean
+fu_linux_swap_btrfs_has_crypt(FuPathStore *pstore,
+			      const gchar *fsid,
+			      gboolean *encrypted,
+			      GError **error);
