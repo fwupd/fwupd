@@ -351,7 +351,7 @@ fu_backend_func(void)
 
 	/* defaults */
 	g_assert_null(fu_backend_get_name(backend));
-	g_assert_true(fu_backend_get_enabled(backend));
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED));
 
 	/* load */
 	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
