@@ -774,3 +774,36 @@ class TestResolveFiles:
             with patch.object(printer, "warning") as mock_warning:
                 repo.resolve_files(["src/foo.c"])
                 mock_warning.assert_not_called()
+
+
+class TestUntrackedFiles:
+    @pytest.fixture
+    def repo(self, tmp_path):
+        root = tmp_path / "repo"
+        root.mkdir()
+        return GitRepo(root=root)
+
+    def test_parses_nul_separated_output(self, repo):
+        """untracked_files parses the NUL-separated ls-files output."""
+        mock_cmd = MagicMock()
+        mock_cmd.stdout = "rust/foo.rs\0rust/bar.rs\0"
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd) as mock_runcmd:
+            assert repo.untracked_files == [Path("rust/foo.rs"), Path("rust/bar.rs")]
+            mock_runcmd.assert_called_once_with(
+                [
+                    "git",
+                    "ls-files",
+                    "--others",
+                    "--exclude-standard",
+                    "-z",
+                ],
+                cwd=repo.root,
+                check=True,
+            )
+
+    def test_empty_output(self, repo):
+        """An empty repo has no untracked files."""
+        mock_cmd = MagicMock()
+        mock_cmd.stdout = ""
+        with patch("fwupbuild.git.RunCmd", return_value=mock_cmd):
+            assert repo.untracked_files == []
