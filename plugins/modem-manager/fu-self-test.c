@@ -81,12 +81,18 @@ static const gchar *fu_mm_test_mixed_order_rawprogram_xml =
     "<program label=\"f_dev_pack\" filename=\"\"/>"
     "</data>";
 
+static const gchar *fu_mm_test_ordered_rawprogram_xml =
+    "<data>"
+    "<program filename=\"boot.img\" label=\"boot\"/>"
+    "<program filename=\"\" label=\"f_dev_pack\"/>"
+    "</data>";
+
 static void
 fu_mm_mhi_firehose_dev_image_func(void)
 {
 	gboolean ret;
 	gsize rawprogram_sz = 0;
-	const guint8 *rawprogram_data;
+	const gchar *rawprogram_data;
 	const gchar *product_ids[] = {"UNKNOWN", "MODEL-A", NULL};
 	g_autofree gchar *rawprogram = NULL;
 	g_autoptr(GBytes) dev_image = NULL;
@@ -129,6 +135,45 @@ fu_mm_mhi_firehose_dev_image_ambiguous_func(void)
 			     fu_mm_test_ambiguous_mapping_xml);
 	g_assert_false(fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_manifest_order_func(void)
+{
+	gsize rawprogram_sz = 0;
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	const gchar *rawprogram_data;
+	g_autofree gchar *rawprogram = NULL;
+	g_autoptr(GBytes) rawprogram_blob = NULL;
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(FuFirmware) selected_rawprogram = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_mapping_xml);
+	fu_mm_test_add_image(firmware, "DEV_OTA_PACKAGE/dev-a/devicepack.ubi", "IMAGE-A");
+	fu_mm_test_add_image(firmware, "rawprogram_0.xml", fu_mm_test_ordered_rawprogram_xml);
+	fu_mm_test_add_image(firmware,
+			     "firehose-rawprogram.xml",
+			     fu_mm_test_ordered_rawprogram_xml);
+
+	g_assert_true(
+	    fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_no_error(error);
+
+	/* Preparation must select the same image as the Firehose writer. */
+	selected_rawprogram =
+	    fu_firmware_get_image_by_id(firmware,
+					"firehose-rawprogram.xml|rawprogram_*.xml",
+					&error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(fu_firmware_get_id(selected_rawprogram), ==, "rawprogram_0.xml");
+	rawprogram_blob = fu_firmware_get_bytes(selected_rawprogram, &error);
+	g_assert_no_error(error);
+	rawprogram_data = g_bytes_get_data(rawprogram_blob, &rawprogram_sz);
+	rawprogram = g_strndup(rawprogram_data, rawprogram_sz);
+	g_assert_nonnull(g_strstr_len(rawprogram, rawprogram_sz, "filename=\"devicepack.ubi\""));
 }
 
 static void
@@ -277,6 +322,8 @@ main(int argc, char **argv)
 	g_test_add_func("/mm/firehose/dev-image", fu_mm_mhi_firehose_dev_image_func);
 	g_test_add_func("/mm/firehose/dev-image-ambiguous",
 			fu_mm_mhi_firehose_dev_image_ambiguous_func);
+	g_test_add_func("/mm/firehose/dev-image-manifest-order",
+			fu_mm_mhi_firehose_dev_image_manifest_order_func);
 	g_test_add_func("/mm/firehose/dev-image-multiple-firmware",
 			fu_mm_mhi_firehose_dev_image_multiple_firmware_func);
 	g_test_add_func("/mm/firehose/dev-image-mixed-order",

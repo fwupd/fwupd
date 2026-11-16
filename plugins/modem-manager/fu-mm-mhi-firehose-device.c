@@ -11,6 +11,8 @@
 #define FU_MM_MHI_FIREHOSE_DEV_IMAGE_MAPPING_ID \
 	"DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml"
 #define FU_MM_MHI_FIREHOSE_DEV_PARTITION_LABEL "f_dev_pack"
+#define FU_MM_MHI_FIREHOSE_RAWPROGRAM_GLOB \
+	"firehose-rawprogram.xml|rawprogram_*.xml"
 
 struct _FuMmMhiFirehoseDevice {
 	FuMmDevice parent_instance;
@@ -152,7 +154,7 @@ fu_mm_mhi_firehose_patch_rawprogram(GBytes *rawprogram_blob,
 				    GError **error)
 {
 	gsize rawprogram_sz = 0;
-	const guint8 *rawprogram_data;
+	const gchar *rawprogram_data;
 	g_autofree gchar *rawprogram = NULL;
 	g_autofree gchar *replacement1 = NULL;
 	g_autofree gchar *replacement2 = NULL;
@@ -256,10 +258,10 @@ fu_mm_mhi_firehose_prepare_dev_image(FuFirmware *firmware,
 			return FALSE;
 	}
 
-	/* PoC assumption: the package exposes the intended manifest under this glob. */
-	rawprogram = fu_firmware_get_image_by_id(firmware, "firehose-rawprogram.xml", NULL);
-	if (rawprogram == NULL)
-		rawprogram = fu_firmware_get_image_by_id(firmware, "rawprogram_*.xml", error);
+	/* Use the same lookup rule as qc-firehose so preparation and write agree. */
+	rawprogram = fu_firmware_get_image_by_id(firmware,
+						 FU_MM_MHI_FIREHOSE_RAWPROGRAM_GLOB,
+						 error);
 	if (rawprogram == NULL)
 		return FALSE;
 	{
