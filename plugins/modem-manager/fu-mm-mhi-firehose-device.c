@@ -104,30 +104,33 @@ fu_mm_mhi_firehose_resolve_dev_file(GBytes *mapping_blob,
 	}
 	for (guint i = 0; i < configs->len; i++) {
 		XbNode *config = g_ptr_array_index(configs, i);
-		XbNode *firmware = NULL;
-		const gchar *dev_file_tmp = NULL;
+		g_autoptr(GPtrArray) firmwares = NULL;
 
 		if (g_strcmp0(xb_node_get_attr(config, "ID"), config_id) != 0)
 			continue;
-		firmware = xb_node_query_first(config, "Standard/DEVFirmware", NULL);
-		if (firmware == NULL)
+		firmwares = xb_node_query(config, "Standard/DEVFirmware", 0, NULL);
+		if (firmwares == NULL)
 			continue;
-		dev_file_tmp = xb_node_get_attr(firmware, "File");
-		if (dev_file_tmp == NULL || dev_file_tmp[0] == '\0') {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "DEV configuration has no image directory");
-			return FALSE;
-		}
-		if (dev_file == NULL) {
-			dev_file = dev_file_tmp;
-		} else if (g_strcmp0(dev_file, dev_file_tmp) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "DEV configuration maps to multiple images");
-			return FALSE;
+		for (guint j = 0; j < firmwares->len; j++) {
+			XbNode *firmware = g_ptr_array_index(firmwares, j);
+			const gchar *dev_file_tmp = xb_node_get_attr(firmware, "File");
+
+			if (dev_file_tmp == NULL || dev_file_tmp[0] == '\0') {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "DEV configuration has no image directory");
+				return FALSE;
+			}
+			if (dev_file == NULL) {
+				dev_file = dev_file_tmp;
+			} else if (g_strcmp0(dev_file, dev_file_tmp) != 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "DEV configuration maps to multiple images");
+				return FALSE;
+			}
 		}
 	}
 	if (dev_file == NULL) {
@@ -149,6 +152,7 @@ fu_mm_mhi_firehose_patch_rawprogram(GBytes *rawprogram_blob,
 				    GError **error)
 {
 	gsize rawprogram_sz = 0;
+	const guint8 *rawprogram_data;
 	g_autofree gchar *rawprogram = NULL;
 	g_autofree gchar *replacement1 = NULL;
 	g_autofree gchar *replacement2 = NULL;
@@ -156,8 +160,8 @@ fu_mm_mhi_firehose_patch_rawprogram(GBytes *rawprogram_blob,
 	guint replaced;
 
 	/* This intentionally handles only the canonical PoC package format. */
-	rawprogram =
-	    g_strndup(g_bytes_get_data(rawprogram_blob, &rawprogram_sz), rawprogram_sz);
+	rawprogram_data = g_bytes_get_data(rawprogram_blob, &rawprogram_sz);
+	rawprogram = g_strndup(rawprogram_data, rawprogram_sz);
 	xml = g_string_new(rawprogram);
 	replacement1 =
 	    g_strdup_printf("filename=\"%s\" label=\"%s\"", filename,
@@ -170,17 +174,15 @@ fu_mm_mhi_firehose_patch_rawprogram(GBytes *rawprogram_blob,
 				    "filename=\"\" label=\"" FU_MM_MHI_FIREHOSE_DEV_PARTITION_LABEL "\"",
 				    replacement1,
 				    0);
-	if (replaced == 0) {
-		replaced = g_string_replace(
-		    xml,
-		    "label=\"" FU_MM_MHI_FIREHOSE_DEV_PARTITION_LABEL "\" filename=\"\"",
-		    replacement2,
-		    0);
-	}
+	replaced += g_string_replace(
+	    xml,
+	    "label=\"" FU_MM_MHI_FIREHOSE_DEV_PARTITION_LABEL "\" filename=\"\"",
+	    replacement2,
+	    0);
 	if (replaced != 1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
+			    replaced == 0 ? FWUPD_ERROR_NOT_FOUND : FWUPD_ERROR_INVALID_DATA,
 			    "expected one empty %s filename, found %u",
 			    FU_MM_MHI_FIREHOSE_DEV_PARTITION_LABEL,
 			    replaced);
