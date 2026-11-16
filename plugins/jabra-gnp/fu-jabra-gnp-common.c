@@ -107,6 +107,22 @@ fu_jabra_gnp_get_report_size(FuDevice *device, guint32 *report_size, GError **er
 	return TRUE;
 }
 
+gchar *
+fu_jabra_gnp_parse_string(const guint8 *buf, gsize bufsz, GError **error)
+{
+	guint8 length = 0;
+	gsize datasz = 0;
+	const guint8 *data = NULL;
+	g_autoptr(FuStructJabraGnpStringResponse) st =
+	    fu_struct_jabra_gnp_string_response_parse(buf, bufsz, 0x0, error);
+
+	if (st == NULL)
+		return NULL;
+	length = fu_struct_jabra_gnp_string_response_get_length(st);
+	data = fu_struct_jabra_gnp_string_response_get_data(st, &datasz);
+	return fu_memstrsafe(data, datasz, 0x0, length, error);
+}
+
 /* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
@@ -150,11 +166,7 @@ fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **
 				  &rx_data,
 				  error))
 		return FALSE;
-	name = fu_memstrsafe(rx_data.rxbuf,
-			     sizeof(rx_data.rxbuf),
-			     0x8,
-			     sizeof(rx_data.rxbuf) - 8,
-			     error);
+	name = fu_jabra_gnp_parse_string(rx_data.rxbuf, sizeof(rx_data.rxbuf), error);
 	if (name == NULL)
 		return FALSE;
 	fu_device_set_name(device, name);
@@ -312,12 +324,7 @@ fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError
 				  error))
 		return FALSE;
 
-	version = fu_memstrsafe(rx_data.rxbuf,
-				sizeof(rx_data.rxbuf),
-				0x8,
-				sizeof(rx_data.rxbuf) - 8,
-				error);
-
+	version = fu_jabra_gnp_parse_string(rx_data.rxbuf, sizeof(rx_data.rxbuf), error);
 	if (version == NULL)
 		return FALSE;
 
