@@ -224,7 +224,7 @@ fu_processor_device_probe_manufacturer_id(FuProcessorDevice *self, GError **erro
 	/* convert to something sane and get the quirked vendor name */
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "VEN", str);
 	return fu_device_build_instance_id_full(FU_DEVICE(self),
-						FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						error,
 						"CPUID",
 						"VEN",

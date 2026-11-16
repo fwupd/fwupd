@@ -156,7 +156,7 @@ fu_logitech_hidpp_runtime_vid_pid_notify_cb(FuDevice *device, GParamSpec *pspec,
 
 	/* for vendor */
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "USB",
 					 "VID",

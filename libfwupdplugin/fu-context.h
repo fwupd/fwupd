@@ -99,6 +99,7 @@ fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
 				   const gchar *key,
 				   FuContextLookupIter iter_cb,
+				   FuContextLookupFlags flags,
 				   gpointer user_data) G_GNUC_NON_NULL(1, 2);
 void
 fu_context_add_quirk_key(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);

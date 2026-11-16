@@ -158,7 +158,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 
 	/* for quirk matches */
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "PCI",
 					 "VEN",
@@ -171,7 +171,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 					 "DEV",
 					 NULL);
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "PCI",
 					 "DRIVER",

@@ -2787,6 +2787,7 @@ fu_device_quirks_iter_cb(FuContext *ctx,
 static void
 fu_device_add_guid_quirks(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
 {
+	FuContextLookupFlags lookup_flag = FU_CONTEXT_LOOKUP_FLAG_NONE;
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceQuirksIterHelper helper = {.self = self, .flags = flags};
 
@@ -2800,10 +2801,13 @@ fu_device_add_guid_quirks(FuDevice *self, const gchar *guid, FuDeviceInstanceFla
 	}
 
 	/* run the query */
+	if (flags & FU_DEVICE_INSTANCE_FLAG_USE_CACHE)
+		lookup_flag |= FU_CONTEXT_LOOKUP_FLAG_ALLOW_CACHE;
 	fu_context_lookup_quirk_by_id_iter(priv->ctx,
 					   guid,
 					   NULL,
 					   fu_device_quirks_iter_cb,
+					   lookup_flag,
 					   &helper);
 }
 
