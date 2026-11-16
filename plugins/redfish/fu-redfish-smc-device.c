@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuRedfishSmcDevice, fu_redfish_smc_device, FU_TYPE_REDFISH_DEVICE)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
-static const gchar *
+static gchar *
 fu_redfish_smc_device_get_task(FwupdJsonObject *json_obj)
 {
 	const gchar *msgid;
@@ -46,7 +46,7 @@ fu_redfish_smc_device_get_task(FwupdJsonObject *json_obj)
 		return NULL;
 	if (fwupd_json_array_get_size(json_array_msgargs) != 1)
 		return NULL;
-	return fwupd_json_array_get_string(json_array_msgargs, 0, NULL);
+	return g_strdup(fwupd_json_array_get_string(json_array_msgargs, 0, NULL));
 }
 
 static GString *
@@ -85,7 +85,7 @@ fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progres
 {
 	FuRedfishBackend *backend;
 	CURL *curl;
-	const gchar *location = NULL;
+	g_autofree gchar *location = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -136,7 +136,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	CURL *curl;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	curl_mimepart *part;
-	const gchar *location = NULL;
+	g_autofree gchar *location = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
