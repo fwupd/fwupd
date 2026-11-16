@@ -158,8 +158,7 @@ fu_path_store_set_path(FuPathStore *self, FuPathKind kind, const gchar *path)
 {
 	g_return_if_fail(FU_IS_PATH_STORE(self));
 	g_return_if_fail(kind < FU_PATH_KIND_LAST);
-	g_free(self->paths[kind]);
-	self->paths[kind] = g_strdup(path);
+	g_set_str(&self->paths[kind], path);
 }
 
 /**
