@@ -242,6 +242,8 @@ fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHf
 	}
 
 	/* save buffer for later */
+	if (self->hfsts[idx] == hfsts)
+		return;
 	if (self->hfsts[idx] != NULL)
 		fu_struct_intel_me_hfsts_unref(self->hfsts[idx]);
 	self->hfsts[idx] = fu_struct_intel_me_hfsts_ref(hfsts);
