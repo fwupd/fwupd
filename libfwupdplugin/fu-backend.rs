@@ -13,4 +13,6 @@ enum FuBackendFlags {
     CanInvalidate = 1 << 1,
     // The backend been setup.
     DoneSetup = 1 << 2,
+    // The backend been coldplug and all the devices have been added.
+    DoneColdplug = 1 << 3,
 }
