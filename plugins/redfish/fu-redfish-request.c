@@ -97,12 +97,12 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 		const gchar *id;
 		const gchar *msg;
 		g_autoptr(FwupdJsonArray) json_error_array = NULL;
+		g_autoptr(FwupdJsonObject) json_error2 = NULL;
 
 		/* extended error present */
 		json_error_array =
 		    fwupd_json_object_get_array(json_error, "@Message.ExtendedInfo", NULL);
 		if (json_error_array != NULL && fwupd_json_array_get_size(json_error_array) > 0) {
-			g_autoptr(FwupdJsonObject) json_error2 = NULL;
 			json_error2 = fwupd_json_array_get_object(json_error_array, 0, error);
 			if (json_error2 == NULL)
 				return FALSE;
