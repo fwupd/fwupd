@@ -38,6 +38,41 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.10" date="2026-11-15">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Bound netlink string reads by the attribute length</li>
+          <li>Check the INFO_UF2.TXT contents were read correctly</li>
+          <li>Do not allow modified XML files to spoof metadata trust</li>
+          <li>Do not auto-start Bluez when setting up the backend</li>
+          <li>Do not fall back to the BIOS setting when the plugin undid the attribute</li>
+          <li>Do not leak a byte array when duplicating an SREC record</li>
+          <li>Do not leak the Aver HID CX3 chunk array</li>
+          <li>Fix a client crash when the server returns with an empty HTTP body</li>
+          <li>Fix an inverted Jabra GNP empty buffer check</li>
+          <li>Format Redfish IPv6 addresses with 16 bit groups</li>
+          <li>Only inhibit on BootOrder lock when fwupd-efi is needed</li>
+          <li>Only show supported entries in MOTD</li>
+          <li>Read the ACPI table OEM revision as little endian</li>
+          <li>Read the FDT BIOS version from the firmware-versions node</li>
+          <li>Read the firmware version from the TI TPS6598x payload</li>
+          <li>Read the Intel CVS status struct size when checking the status</li>
+          <li>Remove the now-unused shutdown delayed activation</li>
+          <li>Restore the Intel GSC PCI power policy after updating</li>
+          <li>Send the correct size for each TPM upgrade data chunk</li>
+          <li>Set the BNR DP error when the factory data strings are missing</li>
+          <li>Set the error when no Jabra HID interface is found</li>
+          <li>Set the error when the Huddly USB device returns a failure</li>
+          <li>Use the correct icon name for a CPU processor</li>
+          <li>Validate the Lenovo accessory opcode when parsing HID reports</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Synaptics 96F1 touchpad</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.9" date="2026-10-23">
       <description>
         <p>
