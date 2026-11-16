@@ -226,6 +226,59 @@ fu_linux_swap_btrfs_mixed_func(void)
 	g_assert_false(encrypted);
 }
 
+/* a btrfs filesystem on LVM on a single dm-crypt device */
+static void
+fu_linux_swap_btrfs_lvm_on_luks_func(void)
+{
+	gboolean encrypted = FALSE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "btrfs", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_btrfs_has_crypt(pstore,
+					    "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+					    &encrypted,
+					    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(encrypted);
+}
+
+/* a btrfs filesystem on a device-mapper device joining a dm-crypt device and a
+ * plain partition */
+static void
+fu_linux_swap_btrfs_mixed_below_func(void)
+{
+	gboolean encrypted = TRUE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "btrfs", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_btrfs_has_crypt(pstore,
+					    "3a4b5c6d-7e8f-4a1b-9c2d-3e4f5a6b7c8d",
+					    &encrypted,
+					    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(encrypted);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -241,5 +294,7 @@ main(int argc, char **argv)
 	g_test_add_func("/linux-swap/dm-walker/plain", fu_linux_swap_dm_walker_plain_func);
 	g_test_add_func("/linux-swap/btrfs/encrypted", fu_linux_swap_btrfs_encrypted_func);
 	g_test_add_func("/linux-swap/btrfs/mixed", fu_linux_swap_btrfs_mixed_func);
+	g_test_add_func("/linux-swap/btrfs/lvm-on-luks", fu_linux_swap_btrfs_lvm_on_luks_func);
+	g_test_add_func("/linux-swap/btrfs/mixed-below", fu_linux_swap_btrfs_mixed_below_func);
 	return g_test_run();
 }
