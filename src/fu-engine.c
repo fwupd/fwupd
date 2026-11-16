@@ -8981,7 +8981,7 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 		FuBackend *backend = g_ptr_array_index(backends, i);
 		g_autoptr(GError) error_backend = NULL;
 
-		if (!fu_backend_get_enabled(backend)) {
+		if (!fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED)) {
 			fu_progress_step_done(progress);
 			continue;
 		}
