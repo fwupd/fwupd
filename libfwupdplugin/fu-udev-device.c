@@ -414,7 +414,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (subsystem != NULL) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -422,7 +422,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -444,7 +444,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 			fu_device_add_instance_strup(device, "CLASS", cls);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -455,7 +455,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "TYPE", devtype);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "TYPE",
@@ -465,7 +465,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(device, "DRIVER", priv->driver);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "DRIVER",

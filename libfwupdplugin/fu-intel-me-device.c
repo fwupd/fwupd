@@ -763,7 +763,7 @@ fu_intel_me_device_constructed(GObject *obj)
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(obj);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "PCI\\VEN_8086",
-				       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+				       FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE);
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_intel_me_device_parent_class)->constructed(obj);

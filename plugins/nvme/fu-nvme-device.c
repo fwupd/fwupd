@@ -436,7 +436,7 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "NVME",
 					      "VEN",

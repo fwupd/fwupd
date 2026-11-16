@@ -40,7 +40,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", 0x1234);
 		fu_device_add_instance_u16(device, "DEV", 0x5678);
 		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "BLOCK",
 						 "VEN",
@@ -62,7 +62,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(usb_device));
 		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(usb_device));
 		if (!fu_device_build_instance_id_full(device,
-						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						      error,
 						      "BLOCK",
 						      "VEN",

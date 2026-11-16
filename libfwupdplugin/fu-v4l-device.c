@@ -91,7 +91,7 @@ fu_v4l_device_usb_probe(FuV4lDevice *self, FuDevice *usb_device, GError **error)
 				   "VID",
 				   fu_device_get_instance_str(usb_device, "VID"));
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "USB",
 					      "VID",

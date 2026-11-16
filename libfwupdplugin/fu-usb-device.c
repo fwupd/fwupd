@@ -1222,7 +1222,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "USB",
 					 "VID",
@@ -1262,14 +1262,14 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u8(device, "PROT", fu_usb_interface_get_protocol(intf));
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "USB",
 						 "CLASS",
 						 NULL);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "USB",
 						 "CLASS",
@@ -1277,7 +1277,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 						 NULL);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "USB",
 						 "CLASS",
