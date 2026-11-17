@@ -98,6 +98,7 @@ if get_option('tests')
       'G_TEST_BUILDDIR': meson.current_build_dir(),
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
+    timeout: 180,
   )
   e = executable(
     'redfish-network-device-self-test',

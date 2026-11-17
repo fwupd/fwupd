@@ -25,6 +25,7 @@ HARDCODED_USERNAMES = {
 }
 HARDCODED_PASSWORD = "password2"
 HARDCODED_BEARER_TOKEN = "token2"
+HARDCODED_SESSION_KEY = "1234eabcdeabcdeabcdeabcdeabc1234"
 
 app._percentage545: int = 0
 app._percentage546: int = 0
@@ -46,6 +47,16 @@ def _failure(msg: str, status=400):
     )
 
 
+def _username():
+    # a session created out of band acts as the default user
+    if (
+        request.authorization is None
+        and request.headers.get("X-Auth-Token") == HARDCODED_SESSION_KEY
+    ):
+        return HARDCODED_USERNAME
+    return request.authorization["username"]
+
+
 @app.route("/redfish/v1/")
 def index():
     # reset counter
@@ -59,9 +70,15 @@ def index():
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
 
+    # a session created out of band is used instead of a username and password
+    if request.authorization is None and "X-Auth-Token" in request.headers:
+        if request.headers["X-Auth-Token"] != HARDCODED_SESSION_KEY:
+            return _failure("unauthorised", status=401)
+        username = HARDCODED_USERNAME
+
     # a bearer token is used instead of a username and password, e.g. when talking
     # to a proxy that injects the real BMC credentials
-    if request.authorization is not None and request.authorization.type == "bearer":
+    elif request.authorization is not None and request.authorization.type == "bearer":
         if request.authorization.token != HARDCODED_BEARER_TOKEN:
             return _failure("unauthorised", status=401)
         username = HARDCODED_USERNAME
@@ -120,7 +137,7 @@ def system():
         "@odata.type": "#ComputerSystem.v1_20_1.ComputerSystem",
     }
 
-    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+    if _username() == HARDCODED_DELL_USERNAME:
         res["Oem"] = {
             "Dell": {
                 "DellSystem": {
@@ -150,21 +167,21 @@ def update_service():
         "ServiceEnabled": True,
     }
 
-    if request.authorization["username"] == HARDCODED_UNL_USERNAME:
+    if _username() == HARDCODED_UNL_USERNAME:
         res["MultipartHttpPushUri"] = "/FWUpdate-unlicensed"
         res["Actions"] = {
             "#UpdateService.StartUpdate": {
                 "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
             }
         }
-    elif request.authorization["username"] == HARDCODED_SMC_USERNAME:
+    elif _username() == HARDCODED_SMC_USERNAME:
         res["MultipartHttpPushUri"] = "/FWUpdate-smc"
         res["Actions"] = {
             "#UpdateService.StartUpdate": {
                 "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
             }
         }
-    elif request.authorization["username"] == HARDCODED_HPE_USERNAME:
+    elif _username() == HARDCODED_HPE_USERNAME:
         res["Oem"] = {"Hpe": {"State": app._hpeupdatestate}}
         if app._hpeupdateresult is not None:
             res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
@@ -219,7 +236,7 @@ def firmware_inventory_bmc():
         "Version": "11A-1.02",
         "ReleaseDate": "2019-03-15T00:00:00",
     }
-    if request.authorization["username"] in {
+    if _username() in {
         HARDCODED_UNL_USERNAME,
         HARDCODED_SMC_USERNAME,
     }:
@@ -227,7 +244,7 @@ def firmware_inventory_bmc():
     else:
         res["Manufacturer"] = "Lenovo"
 
-    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+    if _username() == HARDCODED_DELL_USERNAME:
         res["Oem"] = {"Dell": {"DellSoftwareInventory": {"Status": "Installed"}}}
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
@@ -294,7 +311,7 @@ def firmware_inventory_bios():
         "Version": "P79 v1.45",
         "ReleaseDate": "2019-03-15T00:00:00Z",
     }
-    if request.authorization["username"] in {
+    if _username() in {
         HARDCODED_UNL_USERNAME,
         HARDCODED_SMC_USERNAME,
     }:
@@ -325,13 +342,13 @@ def session_service_sessions():
         json.dumps(res),
         status=200,
         mimetype="application/json",
-        headers={"X-Auth-Token": "1234eabcdeabcdeabcdeabcdeabc1234"},
+        headers={"X-Auth-Token": HARDCODED_SESSION_KEY},
     )
 
 
 @app.route("/redfish/v1/SessionService/Sessions/<session_id>", methods=["DELETE"])
 def session_service_session_delete(session_id):
-    if request.headers.get("X-Auth-Token") != "1234eabcdeabcdeabcdeabcdeabc1234":
+    if request.headers.get("X-Auth-Token") != HARDCODED_SESSION_KEY:
         return _failure("unauthorised", status=401)
     return Response(status=200)
 

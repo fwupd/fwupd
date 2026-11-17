@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-backend.rs', # fuzzing
   'fu-cbor.rs', # fuzzing
   'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing

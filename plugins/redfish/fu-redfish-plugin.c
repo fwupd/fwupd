@@ -73,7 +73,9 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 	}
 
 	/* now use Redfish to change the temporary password to the actual password */
-	request = fu_redfish_backend_request_new(self->backend);
+	request = fu_redfish_backend_request_new(self->backend, error);
+	if (request == NULL)
+		return FALSE;
 	fwupd_json_object_add_string(json_obj, "Password", password_new);
 	if (!fu_redfish_request_perform_full(request,
 					     uri,
@@ -101,6 +103,7 @@ fu_redfish_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 		/* did the user password expire? we cannot refresh a password that we do
 		 * not authenticate with */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED) &&
+		    fu_redfish_backend_get_session_key_file(self->backend) == NULL &&
 		    !fu_redfish_backend_has_bearer_token(self->backend)) {
 			if (!fu_redfish_plugin_change_expired(plugin, error))
 				return FALSE;
@@ -402,7 +405,9 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 		user_id -= 1;
 
 	/* now use Redfish to change the temporary password to the actual password */
-	request = fu_redfish_backend_request_new(self->backend);
+	request = fu_redfish_backend_request_new(self->backend, error);
+	if (request == NULL)
+		return FALSE;
 	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id);
 	fwupd_json_object_add_string(json_obj, "Password", password_new);
 	if (!fu_redfish_request_perform_full(request,
@@ -452,8 +457,12 @@ fu_redfish_plugin_ensure_ipmi_user(FuPlugin *plugin,
 	/* test if the existing credentials work */
 	user_uri = fu_plugin_get_config_value(plugin, "UserUri");
 	if (username != NULL && password != NULL && user_uri != NULL) {
-		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
+		g_autoptr(FuRedfishRequest) request = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		request = fu_redfish_backend_request_new(self->backend, error);
+		if (request == NULL)
+			return FALSE;
 		if (!fu_redfish_request_perform(request,
 						user_uri,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -577,9 +586,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
-	/* a bearer token replaces the BMC user account entirely, so there is
-	 * nothing to verify or create over IPMI */
-	if (!fu_redfish_backend_has_bearer_token(self->backend)) {
+	/* a bearer token or a session key replaces the BMC user account entirely, so
+	 * there is nothing to verify or create over IPMI */
+	if (!fu_redfish_backend_has_bearer_token(self->backend) && session_key_file == NULL) {
 		if (!fu_redfish_plugin_ensure_ipmi_user(plugin, username, password, error))
 			return FALSE;
 	}
@@ -626,7 +635,7 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	guint64 reset_timeout = 0;
 	g_autofree gchar *restart_timeout_str = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* nothing to do */
@@ -646,6 +655,9 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "recoldplug");
 
 	/* ask the BMC to reboot */
+	request = fu_redfish_backend_request_new(self->backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST)) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_json_object_add_string(json_obj, "ResetType", "ForceRestart");

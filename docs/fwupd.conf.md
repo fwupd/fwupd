@@ -343,6 +343,9 @@ The `[redfish]` section can contain the following parameters:
   Instead of storing a password as `Password=`, the plugin can reuse a Redfish `X-Auth-Token`
   created out of band.
 
+  When set, the key is sent as `X-Auth-Token` with every request instead of `Username=` and
+  `Password=`, and the plugin will not create or modify a BMC user account using IPMI.
+
   The file should live on tmpfs and be readable only by root so that the secret is not written to
   persistent storage.
 
