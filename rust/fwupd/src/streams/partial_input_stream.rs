@@ -10,7 +10,8 @@
 //! stream. All reads and seeks are translated relative to the slice offset and
 //! clamped to the slice bounds.
 
-use crate::streams::{IsSeekable, Searchable, Stream, StreamError, StreamImpl};
+use crate::io::Searchable;
+use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
 

@@ -10,7 +10,8 @@
 //! into a single logical stream. Reads are dispatched to the appropriate
 //! sub-stream based on the current position.
 
-use crate::streams::{IsSeekable, Searchable, Stream, StreamError, StreamImpl};
+use crate::io::Searchable;
+use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
 

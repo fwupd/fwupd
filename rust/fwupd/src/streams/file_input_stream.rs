@@ -10,7 +10,8 @@
 //! disk. Delegates [`Read`] and [`Seek`]
 //! directly to the underlying [`std::fs::File`].
 
-use crate::streams::{IsSeekable, Searchable, StreamError};
+use crate::io::Searchable;
+use crate::streams::{IsSeekable, StreamError};
 
 use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom};

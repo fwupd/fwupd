@@ -37,7 +37,6 @@
 //! provided as facility for implementing debugging tools.
 
 use std::fmt;
-use std::io::{Read, Seek, SeekFrom};
 
 mod archive;
 pub use archive::{Archive, FileEntry, ParserFlag, ParserFlags};
@@ -111,85 +110,15 @@ impl From<CabError> for crate::Error {
     }
 }
 
-/// Extension trait that adds `read_bytes_at()` to any [`Read`] + [`Seek`] implementation.
-pub(super) trait ReadBytesAtExt: Read + Seek {
-    fn read_bytes_at(&mut self, offset: usize, count: usize) -> Result<Vec<u8>, CabError>;
-}
-
-impl<T: Read + Seek> ReadBytesAtExt for T {
-    fn read_bytes_at(&mut self, offset: usize, count: usize) -> Result<Vec<u8>, CabError> {
-        self.seek(SeekFrom::Start(offset as u64))
-            .map_err(|e| CabError::Format(format!("seek to 0x{offset:x} failed: {e}")))?;
-        let mut buf = vec![0u8; count];
-        self.read_exact(&mut buf).map_err(|e| {
-            CabError::Format(format!(
-                "short read at offset 0x{offset:x}: need {count} bytes: {e}"
-            ))
-        })?;
-        Ok(buf)
+impl From<std::io::Error> for CabError {
+    fn from(e: std::io::Error) -> Self {
+        CabError::IO(e)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
-
-    // -----------------------------------------------------------------------
-    // read_bytes_at tests
-    // -----------------------------------------------------------------------
-    #[test]
-    fn read_bytes_at_u16_le_at_ok() {
-        let data: &[u8] = &[0x34, 0x12];
-        let b = Cursor::new(data).read_bytes_at(0, 2).unwrap();
-        assert_eq!(u16::from_le_bytes([b[0], b[1]]), 0x1234);
-    }
-
-    #[test]
-    fn read_bytes_at_u16_le_at_oob() {
-        let data: &[u8] = &[0x34];
-        assert!(Cursor::new(data).read_bytes_at(0, 2).is_err());
-    }
-
-    #[test]
-    fn read_bytes_at_u32_le_at_ok() {
-        let data: &[u8] = &[0x78, 0x56, 0x34, 0x12];
-        let b = Cursor::new(data).read_bytes_at(0, 4).unwrap();
-        assert_eq!(u32::from_le_bytes([b[0], b[1], b[2], b[3]]), 0x12345678);
-    }
-
-    #[test]
-    fn read_bytes_at_u32_le_at_oob() {
-        let data: &[u8] = &[0x78, 0x56, 0x34];
-        assert!(Cursor::new(data).read_bytes_at(0, 4).is_err());
-    }
-
-    #[test]
-    fn read_bytes_at_u32_le_at_offset() {
-        let data: &[u8] = &[0xFF, 0x78, 0x56, 0x34, 0x12];
-        let b = Cursor::new(data).read_bytes_at(1, 4).unwrap();
-        assert_eq!(u32::from_le_bytes([b[0], b[1], b[2], b[3]]), 0x12345678);
-    }
-
-    #[test]
-    fn read_bytes_at_ok() {
-        let data: &[u8] = &[0x01, 0x02, 0x03, 0x04];
-        let result = Cursor::new(data).read_bytes_at(1, 2).unwrap();
-        assert_eq!(result, vec![0x02, 0x03]);
-    }
-
-    #[test]
-    fn read_bytes_at_oob() {
-        let data: &[u8] = &[0x01, 0x02];
-        assert!(Cursor::new(data).read_bytes_at(0, 5).is_err());
-    }
-
-    #[test]
-    fn read_bytes_at_empty() {
-        let data: &[u8] = &[0x01, 0x02];
-        let result = Cursor::new(data).read_bytes_at(0, 0).unwrap();
-        assert_eq!(result, [] as [u8; 0]);
-    }
 
     // -----------------------------------------------------------------------
     // CabError Display
