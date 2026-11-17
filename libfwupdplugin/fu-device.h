@@ -1007,6 +1007,15 @@ fu_device_new(FuContext *ctx);
 #define FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE                                                   \
 	(FU_DEVICE_INSTANCE_FLAG_QUIRKS | FU_DEVICE_INSTANCE_FLAG_USE_CACHE)
 
+/**
+ * FU_DEVICE_FILTER_NONE:
+ *
+ * Use no filter when getting backend devices.
+ *
+ * Since: 2.2.1
+ */
+#define FU_DEVICE_FILTER_NONE NULL
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
@@ -1039,8 +1048,10 @@ FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **error)
-    G_GNUC_NON_NULL(1);
+fu_device_get_backend_child(FuDevice *self,
+			    const gchar *subsystem,
+			    const gchar *filter,
+			    GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
