@@ -19,9 +19,9 @@
 
 use super::wire;
 use super::wire::{CFCompressionType, CFFolderIndex, CFHeaderFlags, FixedSizeIO};
-use super::ReadBytesAtExt;
 use super::{CabError, CabPath};
 use super::{MsDosDate, MsDosFileAttrs, MsDosTime};
+use crate::io::ReadSeekExt;
 use std::io::Read;
 use std::str::Utf8Error;
 use std::sync::{Arc, Mutex};
@@ -131,7 +131,7 @@ impl CFHeader {
             }
 
             // Skip over per-cabinet reserved data after CFHeader
-            // let _ = src.read_bytes_at(offset, sz_header)?;
+            // let _ = src.read_exact_at(offset, sz_header)?;
             off += sz_header;
             Some(raw_reserve)
         } else {
@@ -240,7 +240,7 @@ impl CFFolder {
         let (raw, nbytes) = wire::CFFolder::read(src, offset)?;
         off += nbytes;
 
-        // let _ = src.read_bytes_at(off, cffolder_reserved_size)
+        // let _ = src.read_exact_at(off, cffolder_reserved_size)
         off += cffolder_reserved_size as usize;
 
         let size_on_disk = off - offset;
@@ -279,7 +279,7 @@ impl CFString {
         let mut buf = Vec::with_capacity(256.min(max));
         let mut len = 0;
         loop {
-            let b = src.read_bytes_at(offset + len, 1)?;
+            let b = src.read_exact_at(offset + len, 1)?;
             len += 1;
             if b[0] == 0 {
                 let cstr =
@@ -476,13 +476,13 @@ impl CFData {
         let (raw, nbytes) = wire::CFData::read(src, offset)?;
         off += nbytes;
 
-        // let _ = src.read_bytes_at(off, cfdata_reserved_size)
+        // let _ = src.read_exact_at(off, cfdata_reserved_size)
         off += cfdata_reserved_size as usize;
 
         let nbytes_payload = raw.cbData.get() as usize;
 
         if verify_checksum {
-            let payload = src.read_bytes_at(off, nbytes_payload)?;
+            let payload = src.read_exact_at(off, nbytes_payload)?;
             CFData::checksum(raw, &payload).map_err(|cs| {
                 CabError::Format(format!(
                     "Invalid checksum 0x{cs:08x}, stored checksum is 0x{:08x}",

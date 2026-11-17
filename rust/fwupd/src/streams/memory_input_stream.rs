@@ -9,7 +9,8 @@
 //! Provides [`MemoryInputStream`], an input stream backed by a `Vec<u8>` byte
 //! buffer.
 
-use crate::streams::{IsSeekable, Searchable, StreamError};
+use crate::io::Searchable;
+use crate::streams::{IsSeekable, StreamError};
 
 use std::io::{self, Read, Seek, SeekFrom};
 

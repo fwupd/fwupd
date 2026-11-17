@@ -22,9 +22,10 @@ use zerocopy::byteorder::little_endian::{U16 as U16LE, U32 as U32LE};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 use crate::declare_bitflags;
+use crate::io::ReadSeekExt;
 use crate::streams::ReadSeek;
 
-use super::{CabError, ReadBytesAtExt};
+use super::CabError;
 use super::{MsDosDate, MsDosTime};
 
 /// Cabinet header magic: "MSCF" as little-endian u32.
@@ -71,7 +72,7 @@ pub trait FixedSizeIO {
         Self: Sized + FromBytes + KnownLayout,
     {
         let nbytes = Self::size_in_bytes();
-        let data = src.read_bytes_at(offset, nbytes)?;
+        let data = src.read_exact_at(offset, nbytes)?;
         let value = Self::read_from_bytes(&data)
             .map_err(|e| CabError::Format(format!("size mismatch reading wire struct: {e}")))?;
         Ok((value, nbytes))
