@@ -605,9 +605,11 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		}
 	}
 
-	/* used for quirking and parenting */
+	/* used for matching, quirking and parenting */
 	fu_device_build_instance_id_full(dev,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
 					 "REDFISH",
 					 "VENDOR",
