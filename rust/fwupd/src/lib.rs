@@ -13,6 +13,7 @@ pub mod io;
 pub mod json;
 pub mod slice;
 pub mod streams;
+pub mod types;
 pub mod units;
 
 pub use crate::bitflags::{BitflagIter, Bitflags, InvalidBitflag};
