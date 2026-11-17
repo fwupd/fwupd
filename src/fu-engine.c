@@ -1701,8 +1701,8 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 
 	/* prepare query with bound GUID parameter */
 	query = xb_query_new_full(self->silo,
-				  "components/component[@type='firmware']/"
-				  "provides/firmware[@type='flashed'][text()=?]/"
+				  "components/component/"
+				  "provides/firmware[text()=?]/"
 				  "../../releases/release",
 				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
 				  error);
@@ -4248,7 +4248,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	g_autoptr(GError) error_tag_by_guid_version = NULL;
 
 	/* print what we've got */
-	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
+	components = xb_silo_query(self->silo, "components/component", 0, NULL);
 	if (components == NULL)
 		return TRUE;
 	g_info("%u components now in silo", components->len);
@@ -4265,13 +4265,6 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		return FALSE;
 	}
 	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       "type",
-				       error)) {
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-	if (!xb_silo_query_build_index(self->silo,
 				       "components/component/provides/firmware",
 				       NULL,
 				       error)) {
@@ -4279,7 +4272,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		return FALSE;
 	}
 	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/tags/tag",
+				       "components/component/tags/tag",
 				       "namespace",
 				       error)) {
 		fwupd_error_convert(error);
@@ -4289,7 +4282,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	/* create prepared queries to save time later */
 	self->query_component_by_guid =
 	    xb_query_new_full(self->silo,
-			      "components/component/provides/firmware[@type=$'flashed'][text()=?]/"
+			      "components/component/provides/firmware[text()=?]/"
 			      "../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      error);
@@ -4301,7 +4294,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	/* old-style <checksum target="container"> and new-style <artifact> */
 	self->query_container_checksum1 =
 	    xb_query_new_full(self->silo,
-			      "components/component[@type='firmware']/releases/release/"
+			      "components/component/releases/release/"
 			      "checksum[@target='container'][text()=?]/..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum1);
@@ -4309,7 +4302,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		g_debug("ignoring prepared query: %s", error_container_checksum1->message);
 	self->query_container_checksum2 =
 	    xb_query_new_full(self->silo,
-			      "components/component[@type='firmware']/releases/release/"
+			      "components/component/releases/release/"
 			      "artifacts/artifact[@type='binary']/checksum[text()=?]/"
 			      "../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
@@ -5193,7 +5186,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(XbQuery) query = NULL;
 
 	dev = fu_device_new(self->ctx);
-	provides = xb_node_query(component, "provides/firmware[@type=$'flashed']", 0, &error_local);
+	provides = xb_node_query(component, "provides/firmware", 0, &error_local);
 	if (provides == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
