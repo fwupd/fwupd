@@ -1,149 +1,166 @@
-# Devices that do "replug" and thus don't change VID:PID to the bootloader
-# need to have an extra GUID of WacomAES or WacomEMR added so that the flash
-# constants are set correctly.
-
 # This device has USB I/F
 [HIDRAW\VEN_056A&DEV_5315]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 Flags = requires-wait-for-replug
 CounterpartGuid = HIDRAW\VEN_056A&DEV_0094
 
 # Lenovo X1 Yoga Gen7 5308
 [HIDRAW\VEN_056A&DEV_5308]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 5309
 [HIDRAW\VEN_056A&DEV_5309]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 530A
 [HIDRAW\VEN_056A&DEV_530A]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 530B
 [HIDRAW\VEN_056A&DEV_530B]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 530E
 [HIDRAW\VEN_056A&DEV_530E]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 52B5
 [HIDRAW\VEN_056A&DEV_52B5]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Lenovo X1 Yoga Gen7 52C4
 [HIDRAW\VEN_056A&DEV_52C4]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell Chromebook Enterprise 5300
 [HIDRAW\VEN_2D1F&DEV_4946]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Moffet 14-LGD-TPK
 [HIDRAW\VEN_2D1F&DEV_4970]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 Flags = self-recovery
 
 # Moffet 14-Sharp-HH
 [HIDRAW\VEN_2D1F&DEV_4971]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 Flags = self-recovery
 
 # Moffet 14-Sharp-VIA
 [HIDRAW\VEN_2D1F&DEV_4972]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 Flags = self-recovery
 
 # Dell Latitude 5175
 [HIDRAW\VEN_056A&DEV_4807]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell XPS 12 9250
 [HIDRAW\VEN_056A&DEV_4822]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell Venue 8 Pro 5855
 [HIDRAW\VEN_056A&DEV_4824]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell XPS 13 9365
 [HIDRAW\VEN_056A&DEV_4831]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell Latitude 5285
 [HIDRAW\VEN_056A&DEV_484C]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell Latitude 7390 2-in-1
 [HIDRAW\VEN_056A&DEV_4841]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell XPS-15 9575
 [HIDRAW\VEN_056A&DEV_4875]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell Latitude 7400 2-in-1
 [HIDRAW\VEN_056A&DEV_48C9]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell XPS-15 9570
 [HIDRAW\VEN_056A&DEV_488F]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # Dell XPS 13 7390 2-in-1
 [HIDRAW\VEN_056A&DEV_48ED]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 
 # AES bootloader mode
 [HIDRAW\VEN_056A&DEV_0094]
 Plugin = wacom_raw
-Guid[quirk] = WacomAES
+Guid[quirk] = WACOM\MPUTYPE_01
 Flags = is-bootloader
 
 # EMR bootloader mode
 [HIDRAW\VEN_056A&DEV_012B]
 Plugin = wacom_raw
-Guid[quirk] = WacomEMR
+GType = FuWacomRawEmrDevice
 Flags = is-bootloader
 
-[WacomEMR_W9013]
-WacomI2cFlashBlockSize = 64
-WacomI2cFlashBaseAddr = 0x2000
-FirmwareSizeMax = 0x1e000
-
-[WacomEMR_W9021]
-WacomI2cFlashBlockSize = 256
-WacomI2cFlashBaseAddr = 0x3000
-FirmwareSizeMax = 0x3c000
-
-[WacomEMR]
-GType = FuWacomRawEmrDevice
-
-[WacomAES]
+# G14T (W9017)
+[WACOM\MPUTYPE_01]
 GType = FuWacomRawAesDevice
 WacomI2cFlashBlockSize = 128
 WacomI2cFlashBaseAddr = 0x8000
 FirmwareSizeMax = 0x28000
+
+# EMR W9013
+[WACOM\MPUTYPE_2E]
+WacomI2cFlashBlockSize = 64
+WacomI2cFlashBaseAddr = 0x2000
+FirmwareSizeMax = 0x1e000
+
+# EMR W9021
+[WACOM\MPUTYPE_45]
+WacomI2cFlashBlockSize = 256
+WacomI2cFlashBaseAddr = 0x3000
+FirmwareSizeMax = 0x3c000
+
+# G15T (W9023)
+[WACOM\MPUTYPE_78]
+GType = FuWacomRawAesDevice
+WacomI2cFlashBlockSize = 128
+WacomI2cFlashBaseAddr = 0x8000
+FirmwareSizeMax = 0x30000
+
+# G15TP (W9024)
+[WACOM\MPUTYPE_79]
+GType = FuWacomRawAesDevice
+WacomI2cFlashBlockSize = 128
+WacomI2cFlashBaseAddr = 0x8000
+FirmwareSizeMax = 0x38000
+
+# G16T (W9025)
+[WACOM\MPUTYPE_81]
+GType = FuWacomRawAesDevice
+WacomI2cFlashBlockSize = 128
+WacomI2cFlashBaseAddr = 0x8000
+FirmwareSizeMax = 0x38000

@@ -14,6 +14,13 @@ The HID DeviceInstanceId values are used, e.g. `HIDRAW\VEN_056A&DEV_4875`.
 To recover panels that have been flashed with the wrong firmware version, the panel may have a
 parent device with GUID constructed from the EDID, e.g. `DRM\VEN_BOE&DEV_086E`.
 
+Devices that "replug" and thus don't change the VID and PID to the bootloader need to have an extra
+GUID added so that the flash constants are set correctly. This is built from the MPU type, for
+example:
+
+ * `WACOM\MPUTYPE_01` (AES)
+ * `WACOM\MPUTYPE_2E` (EMR)
+
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
