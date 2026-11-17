@@ -166,7 +166,7 @@ fu_mei_device_probe_func(void)
 	fu_device_add_event(dev, ev_pci);
 
 	/* GetBackendParent (no subsystem) -> the immediate parent for interfaces */
-	ev_parent = fu_device_event_new("GetBackendParent:Subsystem=(null)");
+	ev_parent = fu_device_event_new("GetBackendParent");
 	fu_device_event_set_str(ev_parent, "GType", "FuUdevDevice");
 	fu_device_event_set_str(ev_parent,
 				"BackendId",

@@ -815,6 +815,42 @@ fu_device_sleep_idle(FuDevice *self, guint duration_ms, FuProgress *progress)
 	fu_progress_sleep_idle(progress, fu_context_get_main_context(priv->ctx), duration_ms);
 }
 
+static gchar *
+fu_device_build_event_id(const gchar *title, ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1);
+
+static gchar *
+fu_device_build_event_id(const gchar *title, ...)
+{
+	va_list args;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(title != NULL, NULL);
+
+	/* convert varargs to GStrv */
+	va_start(args, title);
+	for (;;) {
+		const gchar *key;
+		const gchar *value;
+
+		key = va_arg(args, const gchar *);
+		if (key == NULL)
+			break;
+		value = va_arg(args, const gchar *);
+		if (value != NULL) {
+			if (str->len > 0)
+				g_string_append_c(str, ',');
+			g_string_append_printf(str, "%s=%s", key, value);
+		}
+	}
+	va_end(args);
+
+	/* title */
+	if (str->len > 0)
+		g_string_prepend_c(str, ':');
+	g_string_prepend(str, title);
+	return g_string_free_and_steal(g_steal_pointer(&str));
+}
+
 /**
  * fu_device_set_contents:
  * @self: a #FuDevice
@@ -853,7 +889,7 @@ fu_device_set_contents(FuDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("SetContents:Filename=%s", filename);
+		event_id = fu_device_build_event_id("SetContents", "Filename", filename, NULL);
 	}
 
 	/* emulated */
@@ -988,7 +1024,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("GetContents:Filename=%s", filename);
+		event_id = fu_device_build_event_id("GetContents", "Filename", filename, NULL);
 	}
 
 	/* emulated */
@@ -1054,7 +1090,7 @@ fu_device_get_contents(FuDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("GetContents:Filename=%s", filename);
+		event_id = fu_device_build_event_id("GetContents", "Filename", filename, NULL);
 	}
 
 	/* emulated */
@@ -1191,7 +1227,7 @@ fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exi
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("FileExists:Filename=%s", filename);
+		event_id = fu_device_build_event_id("FileExists", "Filename", filename, NULL);
 	}
 
 	/* emulated */
@@ -4503,7 +4539,15 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("GetBackendParent:Subsystem=%s", subsystem);
+		if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+		    fu_device_check_fwupd_version(self, "2.2.1")) {
+			event_id = fu_device_build_event_id("GetBackendParent",
+							    "Subsystem",
+							    subsystem,
+							    NULL);
+		} else {
+			event_id = g_strdup_printf("GetBackendParent:Subsystem=%s", subsystem);
+		}
 	}
 
 	/* emulated */
