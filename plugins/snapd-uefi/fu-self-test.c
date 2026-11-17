@@ -387,7 +387,8 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	devices = g_ptr_array_new();
 	g_ptr_array_add(devices, uefi_device);
 
-	ret = fu_plugin_runner_composite_cleanup(plugin, devices, &error);
+	ret =
+	    fu_plugin_runner_composite_cleanup(plugin, devices, FWUPD_UPDATE_STATE_SUCCESS, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -471,7 +472,8 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	devices = g_ptr_array_new();
 	g_ptr_array_add(devices, uefi_device);
 
-	ret = fu_plugin_runner_composite_cleanup(plugin, devices, &error);
+	ret =
+	    fu_plugin_runner_composite_cleanup(plugin, devices, FWUPD_UPDATE_STATE_SUCCESS, &error);
 	if (g_str_equal(tc->mock_snapd_scenario, "failed-cleanup")) {
 		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 		g_assert_nonnull(tc->expected_error_message);

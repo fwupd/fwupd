@@ -334,7 +334,10 @@ fu_engine_gtypes_func(void)
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) devices = g_ptr_array_new();
 		g_ptr_array_add(devices, device_nop);
-		if (!fu_plugin_runner_composite_cleanup(plugin, devices, &error_local))
+		if (!fu_plugin_runner_composite_cleanup(plugin,
+							devices,
+							FWUPD_UPDATE_STATE_SUCCESS,
+							&error_local))
 			g_debug("ignoring: %s", error_local->message);
 	}
 

@@ -146,8 +146,10 @@ gboolean
 fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+fu_engine_composite_cleanup(FuEngine *self,
+			    GPtrArray *devices,
+			    FwupdUpdateState update_state,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,

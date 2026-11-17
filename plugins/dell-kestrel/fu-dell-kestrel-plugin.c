@@ -339,7 +339,10 @@ fu_dell_kestrel_plugin_get_ec_from_devices(GPtrArray *devices)
 }
 
 static gboolean
-fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin,
+					 GPtrArray *devices,
+					 FwupdUpdateState update_state,
+					 GError **error)
 {
 	FuDevice *ec_dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;

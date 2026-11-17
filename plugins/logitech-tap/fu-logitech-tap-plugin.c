@@ -21,7 +21,10 @@ struct _FuLogitechTapPlugin {
 G_DEFINE_TYPE(FuLogitechTapPlugin, fu_logitech_tap_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
-fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin,
+					 GPtrArray *devices,
+					 FwupdUpdateState update_state,
+					 GError **error)
 {
 	FuLogitechTapPlugin *self = FU_LOGITECH_TAP_PLUGIN(plugin);
 
