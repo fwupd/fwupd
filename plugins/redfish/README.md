@@ -44,7 +44,11 @@ Additionally, this Instance ID is added for matching, quirks and parent matching
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
 
 On the NVIDIA DGX Station GB300 each device is a child of the BMC, which is the inventory member
-that the manager reports as its `ActiveSoftwareImage`.
+that the manager reports as its `ActiveSoftwareImage`. A component that comes in board variants
+also gets this Instance ID for each PCIe function of its board, read from the PCIe devices of its
+related chassis:
+
+* `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}&VEN_${PciVendor}&DEV_${PciDevice}&SUBSYS_${PciSubsysVendor}${PciSubsys}`
 
 ## Update Behavior
 
@@ -105,6 +109,14 @@ Use unsigned development builds.
 ### `Flags=manager-reset`
 
 Reset the manager (typically the BMC) after updating this device.
+
+### `Flags=related-chassis-pcie`
+
+Read the PCI IDs from the PCIe devices of a related chassis, and add the vendor and `Id` Instance ID
+with the PCI IDs of each function. This is only correct when the chassis holds a single component
+rather than the whole system.
+
+Since: 2.2.1
 
 ## Setting Service IP Manually
 

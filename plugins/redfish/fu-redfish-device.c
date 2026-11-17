@@ -176,6 +176,20 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self,
 				    key_subsys,
 				    NULL);
 
+	/* a component that comes in board variants takes a different image on each */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE)) {
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    "REDFISH",
+					    "VENDOR",
+					    "ID",
+					    key_ven,
+					    key_dev,
+					    key_subsys,
+					    NULL);
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -235,6 +249,60 @@ static gboolean
 fu_redfish_device_probe_related_item(FuRedfishDevice *self,
 				     const gchar *uri,
 				     const gchar *namespace,
+				     GError **error);
+
+static gboolean
+fu_redfish_device_probe_related_pcie_devices(FuRedfishDevice *self,
+					     const gchar *uri,
+					     const gchar *namespace,
+					     GError **error)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonArray) members_array = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
+
+	/* get URI */
+	if (!fu_redfish_request_perform(request,
+					uri,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
+					error))
+		return FALSE;
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
+	members_array = fwupd_json_object_get_array(json_obj, "Members", NULL);
+	if (members_array == NULL)
+		return TRUE;
+	for (guint i = 0; i < fwupd_json_array_get_size(members_array); i++) {
+		const gchar *id;
+		g_autoptr(FwupdJsonObject) json_obj_member = NULL;
+		g_autofree gchar *namespace_new = NULL;
+
+		json_obj_member = fwupd_json_array_get_object(members_array, i, error);
+		if (json_obj_member == NULL)
+			return FALSE;
+		id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
+		if (id == NULL)
+			continue;
+		namespace_new = fu_redfish_device_build_namespace(namespace, "Devs");
+		if (!fu_redfish_device_probe_related_item(self, id, namespace_new, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_device_probe_related_item(FuRedfishDevice *self,
+				     const gchar *uri,
+				     const gchar *namespace,
 				     GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
@@ -284,6 +352,24 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self,
 									    namespace,
 									    error))
 				return FALSE;
+		}
+	}
+
+	/* a chassis lists its PCIe devices, but can also be the whole system */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE)) {
+		g_autoptr(FwupdJsonObject) json_devices =
+		    fwupd_json_object_get_object(json_obj, "PCIeDevices", NULL);
+		if (json_devices != NULL) {
+			const gchar *id =
+			    fwupd_json_object_get_string(json_devices, "@odata.id", NULL);
+			if (id != NULL) {
+				if (!fu_redfish_device_probe_related_pcie_devices(self,
+										  id,
+										  namespace,
+										  error))
+					return FALSE;
+			}
 		}
 	}
 	return TRUE;
@@ -1273,6 +1359,7 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE);
 	fu_device_register_private_flag(device_class,
 					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 

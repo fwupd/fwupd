@@ -213,6 +213,7 @@ def firmware_inventory():
         res["Members"] = [
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"},
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0"},
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0"},
         ]
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
@@ -242,6 +243,93 @@ def firmware_inventory_fw_cpu_0():
         "SoftwareId": "0x0038",
         "Updateable": True,
         "Version": "02.00.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0")
+def firmware_inventory_fw_gpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_GPU_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "RelatedItem": [{"@odata.id": "/redfish/v1/Chassis/GPU_0"}],
+        "Updateable": True,
+        "Version": "03.00.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0")
+def chassis_gpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "GPU_0",
+        "PCIeDevices": {"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices"},
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices")
+def chassis_gpu_0_pcie_devices():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices",
+        "Members": [{"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0"}],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0")
+def chassis_gpu_0_pcie_device():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0",
+        "@odata.type": "#PCIeDevice.v1_14_0.PCIeDevice",
+        "Id": "GPU_0",
+        "PCIeFunctions": {
+            "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions"
+        },
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions")
+def chassis_gpu_0_pcie_functions():
+    res = {
+        "Members": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1"
+            },
+        ],
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0")
+def chassis_gpu_0_pcie_function_0():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0",
+        "DeviceClass": "ProcessingAccelerators",
+        "DeviceId": "0x1234",
+        "SubsystemId": "0x5678",
+        "SubsystemVendorId": "0x10DE",
+        "VendorId": "0x10DE",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1")
+def chassis_gpu_0_pcie_function_1():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1",
+        "DeviceId": "0x2345",
+        "VendorId": "0x10DE",
     }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 

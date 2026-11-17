@@ -22,6 +22,7 @@ struct _FuRedfishDeviceClass {
 #define FU_REDFISH_DEVICE_FLAG_MANAGER_RESET		"manager-reset"
 #define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS		"wildcard-targets"
 #define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST "no-manager-reset-request"
+#define FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE	"related-chassis-pcie"
 
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self, GError **error);
