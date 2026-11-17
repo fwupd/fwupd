@@ -263,6 +263,7 @@ fu_backend_get_device_parent(FuBackend *self,
  * @self: a #FuBackend
  * @device: a #FuDevice
  * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @filter: (nullable): an ID or GUID filter, e.g. "USB\VID_273F&PID_1001" or %FU_DEVICE_FILTER_NONE
  * @error: (nullable): optional return location for an error
  *
  * Asks the backend to create the child device (of the correct type) for a given device subsystem.
@@ -275,6 +276,7 @@ FuDevice *
 fu_backend_get_device_child(FuBackend *self,
 			    FuDevice *device,
 			    const gchar *subsystem,
+			    const gchar *filter,
 			    GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
@@ -292,7 +294,7 @@ fu_backend_get_device_child(FuBackend *self,
 			    G_OBJECT_TYPE_NAME(self));
 		return NULL;
 	}
-	child = klass->get_device_child(self, device, subsystem, error);
+	child = klass->get_device_child(self, device, subsystem, filter, error);
 	if (child == NULL)
 		return NULL;
 	fu_device_set_backend(child, self);

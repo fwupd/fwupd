@@ -207,11 +207,13 @@ fu_backend_device_child_func(void)
 	g_autoptr(FuDeviceEvent) ev_missing = NULL;
 	g_autoptr(FuDeviceEvent) ev_invalid = NULL;
 	g_autoptr(FuDeviceEvent) ev_unrelated = NULL;
+	g_autoptr(FuDeviceEvent) ev_filter = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* no backend set */
 	device = g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, NULL);
-	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	child =
+	    fu_device_get_backend_child(device, "usb:usb_interface", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(child);
 	g_clear_error(&error);
@@ -225,12 +227,17 @@ fu_backend_device_child_func(void)
 			       "device-gtype",
 			       FU_TYPE_UDEV_DEVICE,
 			       NULL);
-	child = fu_backend_get_device_child(backend, device, "usb:usb_interface", &error);
+	child = fu_backend_get_device_child(backend,
+					    device,
+					    "usb:usb_interface",
+					    FU_DEVICE_FILTER_NONE,
+					    &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(child);
 	g_clear_error(&error);
 	fu_device_set_backend(device, backend);
-	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	child =
+	    fu_device_get_backend_child(device, "usb:usb_interface", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(child);
 	g_clear_error(&error);
@@ -274,8 +281,20 @@ fu_backend_device_child_func(void)
 	fu_device_event_set_str(ev_unrelated, "GType", "FuBackend");
 	fu_device_add_event(device, ev_unrelated);
 
+	/* filter success */
+	ev_filter = fu_device_event_new(
+	    "GetBackendChild:Subsystem=usb:usb_interface,Filter=USB\\VID_273F&PID_1001");
+	fu_device_event_set_str(ev_filter, "GType", "FuUdevDevice");
+	fu_device_event_set_str(ev_filter, "DeviceId", "0123456789abcdef0123456789abcdef01234567");
+	fu_device_event_set_str(ev_filter, "BackendId", "/sys/devices/usb1/1-1/1-1:1.0");
+	fu_device_event_set_str(ev_filter, "PhysicalId", "1-1:1.0");
+	fu_device_event_set_i64(ev_filter, "Vid", 0x273F);
+	fu_device_event_set_i64(ev_filter, "Pid", 0x1001);
+	fu_device_add_event(device, ev_filter);
+
 	/* success */
-	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	child =
+	    fu_device_get_backend_child(device, "usb:usb_interface", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(child);
 	g_assert_true(FU_IS_UDEV_DEVICE(child));
@@ -308,33 +327,43 @@ fu_backend_device_child_func(void)
 	g_clear_object(&child);
 
 	/* saved error */
-	child = fu_device_get_backend_child(device, "hid", &error);
+	child = fu_device_get_backend_child(device, "hid", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(child);
 	g_clear_error(&error);
 
 	/* no GType */
-	child = fu_device_get_backend_child(device, "video4linux", &error);
+	child = fu_device_get_backend_child(device, "video4linux", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(child);
 	g_clear_error(&error);
 
 	/* invalid GType */
-	child = fu_device_get_backend_child(device, "nvme", &error);
+	child = fu_device_get_backend_child(device, "nvme", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(child);
 	g_clear_error(&error);
 
 	/* GType not derived from FuDevice */
-	child = fu_device_get_backend_child(device, "drm", &error);
+	child = fu_device_get_backend_child(device, "drm", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(child);
 	g_clear_error(&error);
 
 	/* missing event */
-	child = fu_device_get_backend_child(device, "usb:usb_device", &error);
+	child =
+	    fu_device_get_backend_child(device, "usb:usb_device", FU_DEVICE_FILTER_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* success with filter */
+	child = fu_device_get_backend_child(device,
+					    "usb:usb_interface",
+					    "USB\\VID_273F&PID_1001",
+					    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(child);
 }
 
 static void

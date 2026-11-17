@@ -924,10 +924,19 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 	return NULL;
 }
 
+static gboolean
+fu_udev_backend_device_match_filter(FuUdevDevice *self, const gchar *filter)
+{
+	if (filter == FU_DEVICE_FILTER_NONE)
+		return TRUE;
+	return fu_device_has_instance_id(FU_DEVICE(self), filter, FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+}
+
 static FuDevice *
 fu_udev_backend_get_device_child(FuBackend *backend,
 				 FuDevice *device,
 				 const gchar *subsystem,
+				 const gchar *filter,
 				 GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
@@ -978,7 +987,8 @@ fu_udev_backend_get_device_child(FuBackend *backend,
 		g_debug("potential child: %s", sysfs_child);
 		device_new = fu_udev_backend_create_device(self, sysfs_child, NULL, &error_local);
 		if (device_new != NULL) {
-			if (fu_udev_device_match_subsystem(device_new, subsystem)) {
+			if (fu_udev_backend_device_match_filter(device_new, filter) &&
+			    fu_udev_device_match_subsystem(device_new, subsystem)) {
 				if (subsystem != NULL) {
 					g_auto(GStrv) split = g_strsplit(subsystem, ":", 2);
 					fu_udev_device_set_subsystem(device_new, split[0]);

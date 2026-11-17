@@ -4358,6 +4358,7 @@ fu_device_set_backend(FuDevice *self, FuBackend *backend)
  * fu_device_get_backend_child:
  * @self: a #FuDevice
  * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @filter: (nullable): an ID or GUID filter, e.g. "USB\VID_273F&PID_1001" or %FU_DEVICE_FILTER_NONE
  * @error: (nullable): optional return location for an error
  *
  * Creates a device child (of the correct type) using the current backend for a given device kind.
@@ -4369,7 +4370,10 @@ fu_device_set_backend(FuDevice *self, FuBackend *backend)
  * Since: 2.2.1
  **/
 FuDevice *
-fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **error)
+fu_device_get_backend_child(FuDevice *self,
+			    const gchar *subsystem,
+			    const gchar *filter,
+			    GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
@@ -4393,7 +4397,12 @@ fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **err
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("GetBackendChild:Subsystem=%s", subsystem);
+		event_id = fu_device_build_event_id("GetBackendChild",
+						    "Subsystem",
+						    subsystem,
+						    "Filter",
+						    filter,
+						    NULL);
 	}
 
 	/* emulated */
@@ -4458,7 +4467,7 @@ fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **err
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* call into the backend */
-	child = fu_backend_get_device_child(priv->backend, self, subsystem, &error_local);
+	child = fu_backend_get_device_child(priv->backend, self, subsystem, filter, &error_local);
 	if (child == NULL) {
 		if (event != NULL)
 			fu_device_event_set_error(event, error_local);
