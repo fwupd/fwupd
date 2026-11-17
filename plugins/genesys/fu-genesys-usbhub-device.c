@@ -26,6 +26,9 @@
 
 #define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER "has-mstar-scaler"
 #define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY	"has-public-key"
+#define FU_GENESYS_USBHUB_FLAG_IS_GL352350	"is-gl352350" /* unique codesigning */
+#define FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN	"has-codesign"
+#define FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN	"has-hw-codesign"
 
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
@@ -98,8 +101,6 @@ struct _FuGenesysUsbhubDevice {
 	FuGenesysFwStatus running_bank;
 	guint8 bonding;
 
-	gboolean is_gl352350; /* model with unique codesign mechanism */
-
 	FuCfiDevice *cfi_device;
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
@@ -125,8 +126,6 @@ struct _FuGenesysUsbhubDevice {
 	GBytes *hub_fw_bank1_data; /* restore hub bank1 fw for backup */
 
 	/* codesign info */
-	gboolean has_codesign;
-	gboolean has_hw_codesign;
 	FuGenesysVsCodesignCheck codesign_check;
 	FuGenesysFwCodesign codesign;
 	GByteArray *st_codesign; /* codesign info, may need to backup for GL352350 */
@@ -680,7 +679,7 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 static gboolean
 fu_genesys_usbhub_device_enter_isp_mode(FuGenesysUsbhubDevice *self, GError **error)
 {
-	if (self->has_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN)) {
 		if (!fu_genesys_usbhub_device_authenticate(self, error))
 			return FALSE;
 	}
@@ -958,7 +957,7 @@ fu_genesys_usbhub_device_ensure_public_key(FuGenesysUsbhubDevice *self,
 	}
 
 	/* validate and parse public-key */
-	if (self->has_hw_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN)) {
 		/* initiator device has ECDSA key and signature only */
 		if (fu_struct_genesys_fw_ecdsa_public_key_validate(buf, bufsz, 0, NULL)) {
 			self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
@@ -1114,7 +1113,10 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 			self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3523_PLUS;
 		} else {
 			self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3523;
-			self->is_gl352350 = self->spec.chip.revision == 50;
+			if (self->spec.chip.revision == 50) {
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_GENESYS_USBHUB_FLAG_IS_GL352350);
+			}
 		}
 	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
 		self->spec.chip.model = FU_GENESYS_ISP_MODEL_HUB_GL3590;
@@ -1318,8 +1320,11 @@ fu_genesys_usbhub_device_get_info_from_vendor_ts(FuGenesysUsbhubDevice *self,
 		self->vcs.req_switch = 0xA1;
 		self->vcs.req_read = 0xA2;
 		self->vcs.req_write = 0xA3;
-		self->has_codesign = TRUE;
-		self->has_hw_codesign = self->codesign_check == FU_GENESYS_VS_CODESIGN_CHECK_HW;
+		fu_device_add_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
+		if (self->codesign_check == FU_GENESYS_VS_CODESIGN_CHECK_HW) {
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN);
+		}
 	}
 
 	/* success */
@@ -1646,7 +1651,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
-		self->has_codesign = TRUE;
+		fu_device_add_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
 
 	/* enter isp mode */
 	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
@@ -1668,7 +1673,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	    MIN(self->spec.fw_data_max_count, fu_cfi_device_get_size(self->cfi_device)));
 
 	/* has codesign */
-	if (self->has_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN)) {
 		FuGenesysFwBank bank = FW_BANK_1;
 		switch (self->running_bank) {
 		case FU_GENESYS_FW_STATUS_BANK1:
@@ -1818,7 +1823,8 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 			continue;
 
 		if (i == FU_GENESYS_FW_TYPE_CODESIGN) {
-			if (self->has_codesign)
+			if (fu_device_has_private_flag(FU_DEVICE(self),
+						       FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN))
 				fu_genesys_usbhub_device_codesign_to_string(self, idt + 1, str);
 			continue;
 		}
@@ -2190,7 +2196,7 @@ fu_genesys_usbhub_device_check_firmware(FuDevice *device,
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 
 	/* has codesign */
-	if (self->has_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN)) {
 		g_autoptr(FuFirmware) img = NULL;
 
 		if (self->st_public_key == NULL) {
@@ -2384,7 +2390,8 @@ fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *sel
 		return FALSE;
 	}
 
-	if (self->is_gl352350 && self->has_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_IS_GL352350) &&
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN)) {
 		/* merge hub fw and codesign info for GL352350 */
 		gsize code_size = 0;
 		const guint8 *code_data = g_bytes_get_data(self->hub_fw_bank1_data, &code_size);
@@ -2498,11 +2505,13 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 
 	if (fu_firmware_get_idx(firmware) == FU_GENESYS_FW_TYPE_CODESIGN) {
 		/* already erase at FU_GENESYS_FW_TYPE_HUB before */
-		if (self->is_gl352350)
+		if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_IS_GL352350))
 			skip_erase = TRUE;
 
 		/* jump ECDSA hash on HW codesign */
-		if (self->has_hw_codesign && self->codesign == FU_GENESYS_FW_CODESIGN_ECDSA) {
+		if (fu_device_has_private_flag(FU_DEVICE(self),
+					       FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN) &&
+		    self->codesign == FU_GENESYS_FW_CODESIGN_ECDSA) {
 			if (bufsz != FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -2563,7 +2572,7 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	fu_progress_step_done(progress);
 
 	/* verify */
-	if (!self->has_hw_codesign) { /* skip specific codesign verification */
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN)) {
 		if (!fu_genesys_usbhub_device_compare_flash_data(self,
 								 start_addr,
 								 buf,
@@ -2977,7 +2986,7 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 				     100,
 				     fu_firmware_get_id(img));
 	}
-	if (self->has_hw_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN)) {
 		fu_progress_add_step(progress,
 				     FWUPD_STATUS_DEVICE_VERIFY,
 				     100,
@@ -3014,7 +3023,7 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 	}
 
 	/* examine codesign */
-	if (self->has_hw_codesign) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN)) {
 		if (!fu_genesys_usbhub_device_examine_fw_codesign_hw(
 			self,
 			firmware,
@@ -3238,9 +3247,6 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->flash_write_delay = 500;	/* 500ms */
 	self->flash_block_size = 64 * FU_KB;
 	self->flash_sector_size = 4 * FU_KB;
-	self->is_gl352350 = FALSE;
-	self->has_codesign = FALSE;
-	self->has_hw_codesign = FALSE;
 	self->codesign_check = FU_GENESYS_VS_CODESIGN_CHECK_UNSUPPORTED;
 	self->codesign = FU_GENESYS_FW_CODESIGN_NONE;
 }
@@ -3294,4 +3300,7 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	device_class->set_quirk_kv = fu_genesys_usbhub_device_set_quirk_kv;
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_IS_GL352350);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN);
 }
