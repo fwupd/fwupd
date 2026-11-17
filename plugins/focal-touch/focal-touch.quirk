@@ -12,3 +12,8 @@ FocalTouchVerifyId = 0x5822
 Plugin = focal_touch
 Flags = enforce-requires
 FocalTouchVerifyId = 0x5456
+
+[HIDRAW\VEN_2808&DEV_0512]
+Plugin = focal_touch
+Flags = enforce-requires
+FocalTouchVerifyId = 0x5456
