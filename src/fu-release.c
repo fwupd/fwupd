@@ -677,7 +677,7 @@ fu_release_check_requirements(FuRelease *self,
 	g_autoptr(GPtrArray) provides = NULL;
 
 	/* does this component provide a GUID the device has */
-	provides = xb_node_query(component, "provides/firmware[@type='flashed']", 0, &error_local);
+	provides = xb_node_query(component, "provides/firmware", 0, &error_local);
 	if (provides == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
