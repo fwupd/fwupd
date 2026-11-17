@@ -665,7 +665,7 @@ fu_redfish_nvidia_devices_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	devices = fu_plugin_get_devices(plugin);
-	g_assert_cmpint(devices->len, ==, 2);
+	g_assert_cmpint(devices->len, ==, 3);
 
 	/* the BMC */
 	dev = g_ptr_array_index(devices, 0);
@@ -680,6 +680,17 @@ fu_redfish_nvidia_devices_func(void)
 	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
 	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW CPU 0");
 	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_CPU_0"));
+	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
+
+	/* a component that comes in board variants */
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW GPU 0");
+	g_assert_true(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_NVIDIA&ID_FW_GPU_0&VEN_10DE&DEV_1234&SUBSYS_10DE5678"));
+	g_assert_false(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_NVIDIA&ID_FW_GPU_0&VEN_10DE&DEV_2345&SUBSYS_10DE5678"));
 	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
 }
 

@@ -36,7 +36,9 @@ Flags = manager-reset,no-manager-reset-request
 RedfishResetPreDelay = 120000
 
 # NVIDIA DGX Station GB300, which reports either product name
+# HardwareID-09 of "NVIDIA&GB300 DGX Station"
 [c3cf31f2-8b8a-531d-bcf4-636a0aaa9ffc]
 RedfishDeviceGType = FuRedfishNvidiaDevice
+# HardwareID-09 of "NVIDIA&DGX Station GB300"
 [ce9dc2f6-faf4-578c-94f3-89e1edf5ec55]
 RedfishDeviceGType = FuRedfishNvidiaDevice

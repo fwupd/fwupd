@@ -127,6 +127,7 @@ static void
 fu_redfish_nvidia_device_init(FuRedfishNvidiaDevice *self)
 {
 	fu_device_set_summary(FU_DEVICE(self), "Redfish NVIDIA device");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE);
 }
 
 static void
