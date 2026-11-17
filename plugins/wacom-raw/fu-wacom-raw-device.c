@@ -52,6 +52,7 @@ fu_wacom_raw_device_get_block_sz(FuWacomRawDevice *self)
 gboolean
 fu_wacom_raw_device_check_mpu(FuWacomRawDevice *self, GError **error)
 {
+	FuWacomRawDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 rsp_value = 0;
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 
@@ -67,30 +68,27 @@ fu_wacom_raw_device_check_mpu(FuWacomRawDevice *self, GError **error)
 		g_prefix_error_literal(error, "failed to get MPU type: ");
 		return FALSE;
 	}
-
-	/* W9013 */
-	if (rsp_value == 0x2e) {
-		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       "WacomEMR_W9013",
-					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-		return TRUE;
-	}
-
-	/* W9021 */
-	if (rsp_value == 0x45) {
-		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       "WacomEMR_W9021",
-					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-		return TRUE;
-	}
+	fu_device_add_instance_u8(FU_DEVICE(self), "MPUTYPE", rsp_value);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "WACOM",
+					      "MPUTYPE",
+					      NULL))
+		return FALSE;
 
 	/* unsupported */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "MPU is not W9013 or W9021: 0x%x",
-		    rsp_value);
-	return FALSE;
+	if (priv->flash_block_size == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "MPU is not supported: 0x%02x",
+			    rsp_value);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
