@@ -35,6 +35,11 @@ fwupd_json_object_get_nodes(FwupdJsonObject *self) G_GNUC_NON_NULL(1) G_GNUC_WAR
 GRefString *
 fwupd_json_object_get_string(FwupdJsonObject *self, const gchar *key, GError **error)
     G_GNUC_NON_NULL(1, 2);
+gboolean
+fwupd_json_object_get_string_optional(FwupdJsonObject *self,
+				      const gchar *key,
+				      const gchar **value,
+				      GError **error) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fwupd_json_object_get_string_with_default(FwupdJsonObject *self,
 					  const gchar *key,

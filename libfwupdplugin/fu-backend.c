@@ -23,9 +23,7 @@
 typedef struct {
 	FuContext *ctx;
 	gchar *name;
-	gboolean enabled;
-	gboolean done_setup;
-	gboolean can_invalidate;
+	FuBackendFlags flags;
 	GType device_gtype;
 	GHashTable *devices; /* device_id : * FuDevice */
 	GThread *thread_init;
@@ -33,7 +31,15 @@ typedef struct {
 
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
-enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_DEVICE_GTYPE, PROP_LAST };
+enum {
+	PROP_0,
+	PROP_NAME,
+	PROP_CAN_INVALIDATE,
+	PROP_CONTEXT,
+	PROP_DEVICE_GTYPE,
+	PROP_FLAGS,
+	PROP_LAST,
+};
 
 static guint signals[SIGNAL_LAST] = {0};
 
@@ -48,6 +54,69 @@ G_DEFINE_TYPE_EXTENDED(FuBackend,
 			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_backend_codec_iface_init));
 
 #define GET_PRIVATE(o) (fu_backend_get_instance_private(o))
+
+/**
+ * fu_backend_add_flag:
+ * @self: a #FuBackend
+ * @flag: the #FuBackendFlags
+ *
+ * Adds a specific flag to the backend.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_backend_add_flag(FuBackend *self, FuBackendFlags flag)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_BACKEND(self));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) > 0)
+		return;
+	priv->flags |= flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fu_backend_remove_flag:
+ * @self: a #FuBackend
+ * @flag: the #FuBackendFlags
+ *
+ * Removes a specific flag to the backend.
+ *
+ * Since: 2.2.1
+ **/
+void
+fu_backend_remove_flag(FuBackend *self, FuBackendFlags flag)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_BACKEND(self));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) == 0)
+		return;
+	priv->flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fu_backend_has_flag:
+ * @self: a #FuBackend
+ * @flag: a backend flag
+ *
+ * Finds if the backend has a specific backend flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fu_backend_has_flag(FuBackend *self, FuBackendFlags flag)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
+	return (priv->flags & flag) > 0;
+}
 
 /**
  * fu_backend_device_added:
@@ -190,6 +259,47 @@ fu_backend_get_device_parent(FuBackend *self,
 }
 
 /**
+ * fu_backend_get_device_child:
+ * @self: a #FuBackend
+ * @device: a #FuDevice
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create the child device (of the correct type) for a given device subsystem.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.2.1
+ **/
+FuDevice *
+fu_backend_get_device_child(FuBackend *self,
+			    FuDevice *device,
+			    const gchar *subsystem,
+			    GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	g_autoptr(FuDevice) child = NULL;
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->get_device_child == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "->get_device_child is not implemented in %s",
+			    G_OBJECT_TYPE_NAME(self));
+		return NULL;
+	}
+	child = klass->get_device_child(self, device, subsystem, error);
+	if (child == NULL)
+		return NULL;
+	fu_device_set_backend(child, self);
+	return g_steal_pointer(&child);
+}
+
+/**
  * fu_backend_create_device:
  * @self: a #FuBackend
  * @backend_id: a backend ID, typically a sysfs path
@@ -272,7 +382,7 @@ fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **er
  * Calling this method causes the next requests to [method@FuBackend.setup] to actually probe the
  * hardware.
  *
- * Only subclassed backends setting `can-invalidate=TRUE` at construction time can use this
+ * Only subclassed backends with %FU_BACKEND_FLAG_CAN_INVALIDATE set can use this
  * method, as it is not always safe to call for backends shared between multiple plugins.
  *
  * This should be done in case the backing information source has changed, for instance if
@@ -287,12 +397,11 @@ void
 fu_backend_invalidate(FuBackend *self)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
-	FuBackendPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_BACKEND(self));
-	g_return_if_fail(priv->can_invalidate);
+	g_return_if_fail(fu_backend_has_flag(self, FU_BACKEND_FLAG_CAN_INVALIDATE));
 
-	priv->done_setup = FALSE;
+	fu_backend_remove_flag(self, FU_BACKEND_FLAG_DONE_SETUP);
 	if (klass->invalidate != NULL)
 		klass->invalidate(self);
 }
@@ -312,12 +421,11 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *flags = fu_backend_flags_to_string(priv->flags);
 
 	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
 	fwupd_codec_string_append(str, idt + 1, "Name", priv->name);
-	fwupd_codec_string_append_bool(str, idt + 1, "Enabled", priv->enabled);
-	fwupd_codec_string_append_bool(str, idt + 1, "DoneSetup", priv->done_setup);
-	fwupd_codec_string_append_bool(str, idt + 1, "CanInvalidate", priv->can_invalidate);
+	fwupd_codec_string_append(str, idt + 1, "Flags", flags);
 
 	/* subclassed */
 	if (klass->to_string != NULL)
@@ -342,20 +450,19 @@ gboolean
 fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
-	FuBackendPrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (priv->done_setup)
+	if (fu_backend_has_flag(self, FU_BACKEND_FLAG_DONE_SETUP))
 		return TRUE;
 	if (klass->setup != NULL) {
 		if (!klass->setup(self, flags, progress, error)) {
-			priv->enabled = FALSE;
+			fu_backend_remove_flag(self, FU_BACKEND_FLAG_ENABLED);
 			return FALSE;
 		}
 	}
-	priv->done_setup = TRUE;
+	fu_backend_add_flag(self, FU_BACKEND_FLAG_DONE_SETUP);
 	return TRUE;
 }
 
@@ -417,7 +524,11 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		}
 
 		/* get the GType */
-		device_gtypestr = fwupd_json_object_get_string(object_tmp, "GType", NULL);
+		if (!fwupd_json_object_get_string_optional(object_tmp,
+							   "GType",
+							   &device_gtypestr,
+							   error))
+			return FALSE;
 		if (device_gtypestr == NULL)
 			device_gtypestr = "FuUsbDevice";
 		if (g_strcmp0(device_gtypestr, "FuBluezDevice") == 0)
@@ -631,41 +742,6 @@ fu_backend_get_config_str(FuBackend *self, const gchar *key)
 }
 
 /**
- * fu_backend_get_enabled:
- * @self: a #FuBackend
- *
- * Return the boolean value of a key if it's been configured
- *
- * Returns: %TRUE if the backend is enabled
- *
- * Since: 1.6.1
- **/
-gboolean
-fu_backend_get_enabled(FuBackend *self)
-{
-	FuBackendPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
-	return priv->enabled;
-}
-
-/**
- * fu_backend_set_enabled:
- * @self: a #FuBackend
- * @enabled: enabled state
- *
- * Sets the backend enabled state.
- *
- * Since: 1.6.1
- **/
-void
-fu_backend_set_enabled(FuBackend *self, gboolean enabled)
-{
-	FuBackendPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_BACKEND(self));
-	priv->enabled = FALSE;
-}
-
-/**
  * fu_backend_lookup_by_id:
  * @self: a #FuBackend
  * @backend_id: a device backend ID
@@ -729,14 +805,14 @@ fu_backend_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_NAME:
 		g_value_set_string(value, priv->name);
 		break;
-	case PROP_CAN_INVALIDATE:
-		g_value_set_boolean(value, priv->can_invalidate);
-		break;
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
 	case PROP_DEVICE_GTYPE:
 		g_value_set_gtype(value, priv->device_gtype);
+		break;
+	case PROP_FLAGS:
+		g_value_set_uint64(value, priv->flags);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -753,14 +829,14 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	case PROP_NAME:
 		priv->name = g_value_dup_string(value);
 		break;
-	case PROP_CAN_INVALIDATE:
-		priv->can_invalidate = g_value_get_boolean(value);
-		break;
 	case PROP_CONTEXT:
 		g_set_object(&priv->ctx, g_value_get_object(value));
 		break;
 	case PROP_DEVICE_GTYPE:
 		priv->device_gtype = g_value_get_gtype(value);
+		break;
+	case PROP_FLAGS:
+		priv->flags = g_value_get_uint64(value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -779,7 +855,7 @@ static void
 fu_backend_init(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
-	priv->enabled = TRUE;
+	priv->flags = FU_BACKEND_FLAG_ENABLED;
 	priv->device_gtype = FU_TYPE_DEVICE;
 	priv->thread_init = g_thread_self();
 	priv->devices =
@@ -833,19 +909,20 @@ fu_backend_class_init(FuBackendClass *klass)
 	g_object_class_install_property(object_class, PROP_NAME, pspec);
 
 	/**
-	 * FuBackend:can-invalidate:
+	 * FuBackend:flags:
 	 *
-	 * If the backend can be invalidated.
+	 * The backend flags.
 	 *
-	 * Since: 1.8.0
+	 * Since: 2.2.1
 	 */
-	pspec =
-	    g_param_spec_boolean("can-invalidate",
-				 NULL,
-				 NULL,
-				 FALSE,
-				 G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_CAN_INVALIDATE, pspec);
+	pspec = g_param_spec_uint64("flags",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
 	 * FuBackend:context:

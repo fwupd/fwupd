@@ -75,7 +75,10 @@ fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 }
 
 static gboolean
-fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin,
+					GPtrArray *devices,
+					FwupdUpdateState update_state,
+					GError **error)
 {
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);

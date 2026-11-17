@@ -81,15 +81,22 @@ impl JsonObject {
     ///
     /// Returns `Ok(None)` if the key is not found or the value is null.
     ///
+    /// A string value with a `0x` prefix is also accepted, e.g. `"0x1F"`, and is
+    /// parsed as an unsigned 64 bit hexadecimal number.
+    ///
     /// # Errors
     ///
-    /// Returns [`JsonError::WrongType`] if the value is not a raw node, or
-    /// [`JsonError::InvalidData`] if the raw value cannot be parsed as an integer.
+    /// Returns [`JsonError::WrongType`] if the value is not a raw node or a
+    /// `0x`-prefixed string, or [`JsonError::InvalidData`] if the value cannot be
+    /// parsed as an integer.
     pub fn get_integer(&self, key: &str) -> Result<Option<i64>, JsonError> {
         match self.entries.iter().find(|(k, _)| &**k == key) {
-            Some((_, node)) => match node.as_ref().get_raw()? {
-                Some(raw) => parse_integer(raw).map(Some),
-                None => Ok(None),
+            Some((_, node)) => match node.as_ref() {
+                JsonNode::Str(s) if s.starts_with("0x") => parse_integer_hex(s).map(Some),
+                other => match other.get_raw()? {
+                    Some(raw) => parse_integer(raw).map(Some),
+                    None => Ok(None),
+                },
             },
             None => Ok(None),
         }
@@ -288,6 +295,21 @@ fn parse_integer(s: &str) -> Result<i64, JsonError> {
     Ok(value)
 }
 
+/// Parse an integer from a `0x`-prefixed hexadecimal JSON string.
+///
+/// Values larger than `i64::MAX` are reinterpreted as negative, so that all unsigned
+/// 64 bit values can be represented.
+fn parse_integer_hex(s: &str) -> Result<i64, JsonError> {
+    let hex = s.strip_prefix("0x").unwrap_or(s);
+    if hex.is_empty() || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err(JsonError::InvalidData(format!("cannot parse {s}")));
+    }
+    let value = u64::from_str_radix(hex, 16)
+        .map_err(|_| JsonError::InvalidData(format!("cannot parse {s} due to overflow")))?;
+    #[allow(clippy::cast_possible_wrap)]
+    Ok(value as i64)
+}
+
 /// Parse a boolean from a raw JSON string.
 fn parse_boolean(s: &str) -> Result<bool, JsonError> {
     if s.eq_ignore_ascii_case("true") {
@@ -318,6 +340,10 @@ mod object_tests {
         ));
         assert!(matches!(
             super::parse_integer("12.5"),
+            Err(JsonError::InvalidData(_))
+        ));
+        assert!(matches!(
+            super::parse_integer("0x1F"),
             Err(JsonError::InvalidData(_))
         ));
         assert!(matches!(
@@ -362,6 +388,52 @@ mod object_tests {
         assert!(matches!(
             super::parse_boolean(""),
             Err(JsonError::InvalidData(_))
+        ));
+    }
+
+    #[test]
+    fn parse_integer_hex() {
+        assert_eq!(super::parse_integer_hex("0x0").unwrap(), 0);
+        assert_eq!(super::parse_integer_hex("0x1F").unwrap(), 0x1F);
+        assert_eq!(super::parse_integer_hex("0x1f").unwrap(), 0x1F);
+        assert_eq!(super::parse_integer_hex("0xFFFFFFFFFFFFFFFF").unwrap(), -1);
+        #[allow(clippy::cast_sign_loss)]
+        {
+            assert_eq!(
+                super::parse_integer_hex("0x7FFFFFFFFFFFFFFF").unwrap() as u64,
+                0x7FFF_FFFF_FFFF_FFFF
+            );
+            assert_eq!(
+                super::parse_integer_hex("0x8000000000000000").unwrap() as u64,
+                0x8000_0000_0000_0000
+            );
+        }
+        for bad in ["0x", "0xG1", "0x-1", "0x1 ", "0x10000000000000000"] {
+            assert!(
+                matches!(
+                    super::parse_integer_hex(bad),
+                    Err(JsonError::InvalidData(_))
+                ),
+                "{bad} should be invalid"
+            );
+        }
+    }
+
+    #[test]
+    fn get_integer_hex_string() {
+        let mut obj = JsonObject::new();
+        obj.add_string("hex", "0x1F");
+        obj.add_string("bad", "0xZZ");
+        obj.add_string("str", "31");
+        assert_eq!(obj.get_integer("hex").unwrap(), Some(31));
+        assert!(matches!(
+            obj.get_integer("bad"),
+            Err(JsonError::InvalidData(_))
+        ));
+        // only 0x-prefixed strings are accepted
+        assert!(matches!(
+            obj.get_integer("str"),
+            Err(JsonError::WrongType(_))
         ));
     }
 

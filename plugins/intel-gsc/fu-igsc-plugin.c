@@ -63,7 +63,10 @@ fu_igsc_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **
 }
 
 static gboolean
-fu_igsc_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_igsc_plugin_composite_cleanup(FuPlugin *plugin,
+				 GPtrArray *devices,
+				 FwupdUpdateState update_state,
+				 GError **error)
 {
 	FuIgscDevice *device_igsc = NULL;
 	for (guint i = 0; i < devices->len; i++) {

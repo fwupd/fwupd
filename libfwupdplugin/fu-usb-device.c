@@ -2841,7 +2841,8 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 	g_autoptr(FwupdJsonArray) json_array_ifaces = NULL;
 
 	/* optional properties */
-	tmp = fwupd_json_object_get_string(json_obj, "PlatformId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "PlatformId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_physical_id(FU_DEVICE(self), tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "IdVendor", &value, 0x0, error))

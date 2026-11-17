@@ -1,0 +1,81 @@
+name: Bug report (General)
+description: Create a report to help us improve
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: human
+    attributes:
+      label: Human confirmation
+      description: Issues are for people to discuss with people.
+      options:
+        - label: I am a human filing this issue myself, and it was not generated or submitted by an automated tool or AI agent.
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: fwupd version information
+      description: |
+        Please provide the version of the daemon and client by running the following and pasting the output.
+        ```shell
+        fwupdtool get-report-metadata
+        fwupdtool hwids
+        ```
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: install-method
+    attributes:
+      label: Installation method
+      description: How did you install fwupd (`apt`, `dnf`, `pacman`, source, etc)?
+    validations:
+      required: true
+  - type: textarea
+    id: devices
+    attributes:
+      label: fwupd device information
+      description: |
+        Please provide the output of the  fwupd devices recognized in your system.
+        ```shell
+        fwupdmgr get-devices --show-all-devices
+        ```
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+    validations:
+      required: true
+  - type: dropdown
+    id: rebooted
+    attributes:
+      label: Have you tried rebooting?
+      options: ["Yes", "No"]
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Is this a regression?
+      options: ["Yes", "No", "Not sure"]

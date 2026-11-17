@@ -308,7 +308,10 @@ fu_snapd_uefi_plugin_cleanup(FuSnapPlugin *self, FuDevice *device, GError **erro
 }
 
 static gboolean
-fu_snapd_uefi_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_snapd_uefi_plugin_composite_cleanup(FuPlugin *plugin,
+				       GPtrArray *devices,
+				       FwupdUpdateState update_state,
+				       GError **error)
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
 

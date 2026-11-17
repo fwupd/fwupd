@@ -4329,6 +4329,150 @@ fu_device_set_backend(FuDevice *self, FuBackend *backend)
 }
 
 /**
+ * fu_device_get_backend_child:
+ * @self: a #FuDevice
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates a device child (of the correct type) using the current backend for a given device kind.
+ *
+ * NOTE: The backend must implement `FuBackendClass->get_device_child` for this method to work.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.2.1
+ **/
+FuDevice *
+fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuDevice) child = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (priv->backend == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no backend set for device");
+		return NULL;
+	}
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetBackendChild:Subsystem=%s", subsystem);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		GType gtype;
+		const gchar *gtype_str;
+		const gchar *id;
+
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
+			return NULL;
+
+		/* missing GType is 'no child found' */
+		gtype_str = fu_device_event_get_str(event, "GType", NULL);
+		if (gtype_str == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no child with subsystem %s",
+				    subsystem);
+			return NULL;
+		}
+		gtype = g_type_from_name(gtype_str);
+		if (gtype == G_TYPE_INVALID || !g_type_is_a(gtype, FU_TYPE_DEVICE)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no FuDevice GType %s",
+				    gtype_str);
+			return NULL;
+		}
+		child =
+		    g_object_new(gtype, "context", fu_device_get_context(FU_DEVICE(self)), NULL);
+		fu_device_set_backend(child, priv->backend);
+		fu_device_add_flag(child, FWUPD_DEVICE_FLAG_EMULATED);
+		if (priv->fwupd_version != NULL)
+			fu_device_set_fwupd_version(child, priv->fwupd_version);
+		id = fu_device_event_get_str(event, "BackendId", NULL);
+		if (id != NULL)
+			fu_device_set_backend_id(child, id);
+		id = fu_device_event_get_str(event, "PhysicalId", NULL);
+		if (id != NULL)
+			fu_device_set_physical_id(child, id);
+
+		/* set last as the backend and physical ID setters invalidate the device ID */
+		id = fu_device_event_get_str(event, "DeviceId", NULL);
+		if (id != NULL)
+			fu_device_set_id(child, id);
+		if (fu_device_event_get_i64(event, "Vid", NULL) != G_MAXINT64)
+			fu_device_set_vid(child, fu_device_event_get_i64(event, "Vid", NULL));
+		if (fu_device_event_get_i64(event, "Pid", NULL) != G_MAXINT64)
+			fu_device_set_pid(child, fu_device_event_get_i64(event, "Pid", NULL));
+		if (child != self)
+			fu_device_set_target(child, self);
+		return g_steal_pointer(&child);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* call into the backend */
+	child = fu_backend_get_device_child(priv->backend, self, subsystem, &error_local);
+	if (child == NULL) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return NULL;
+	}
+	if (!fu_device_probe(child, &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return NULL;
+	}
+
+	/* save response */
+	if (event != NULL) {
+		fu_device_event_set_str(event, "GType", G_OBJECT_TYPE_NAME(child));
+		if (fu_device_get_id(child) != NULL)
+			fu_device_event_set_str(event, "DeviceId", fu_device_get_id(child));
+		if (fu_device_get_backend_id(child) != NULL) {
+			fu_device_event_set_str(event,
+						"BackendId",
+						fu_device_get_backend_id(child));
+		}
+		if (fu_device_get_physical_id(child) != NULL) {
+			fu_device_event_set_str(event,
+						"PhysicalId",
+						fu_device_get_physical_id(child));
+		}
+		if (fu_device_get_vid(child) != 0x0)
+			fu_device_event_set_i64(event, "Vid", fu_device_get_vid(child));
+		if (fu_device_get_pid(child) != 0x0)
+			fu_device_event_set_i64(event, "Pid", fu_device_get_pid(child));
+	}
+
+	if (child != self)
+		fu_device_set_target(child, self);
+	return g_steal_pointer(&child);
+}
+
+/**
  * fu_device_get_backend_parent_with_subsystem:
  * @self: a #FuDevice
  * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
@@ -4422,15 +4566,17 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		parent =
 		    g_object_new(gtype, "context", fu_device_get_context(FU_DEVICE(self)), NULL);
 		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_EMULATED);
-		id = fu_device_event_get_str(event, "DeviceId", NULL);
-		if (id != NULL)
-			fu_device_set_id(parent, id);
 		id = fu_device_event_get_str(event, "BackendId", NULL);
 		if (id != NULL)
 			fu_device_set_backend_id(parent, id);
 		id = fu_device_event_get_str(event, "PhysicalId", NULL);
 		if (id != NULL)
 			fu_device_set_physical_id(parent, id);
+
+		/* set last as the backend and physical ID setters invalidate the device ID */
+		id = fu_device_event_get_str(event, "DeviceId", NULL);
+		if (id != NULL)
+			fu_device_set_id(parent, id);
 		if (fu_device_event_get_i64(event, "Vid", NULL) != G_MAXINT64)
 			fu_device_set_vid(parent, fu_device_event_get_i64(event, "Vid", NULL));
 		if (fu_device_event_get_i64(event, "Pid", NULL) != G_MAXINT64)
@@ -6255,6 +6401,15 @@ fu_device_open(FuDevice *self, GError **error)
 		return fu_device_ensure_id(self, error);
 	}
 
+	/* probe */
+	if (!fu_device_probe(self, error)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_prefix_error(error,
+			       "failed to probe %s: ",
+			       id_display != NULL ? id_display : "device");
+		return FALSE;
+	}
+
 	/* use proxy */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
@@ -7146,6 +7301,41 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_add_guid_quirks(self, guid, FU_DEVICE_INSTANCE_FLAG_NONE);
 		}
 	}
+}
+
+/**
+ * fu_device_incorporate_from_donor:
+ * @gtype: a #GType
+ * @donor: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Create a device of a specific GType and copy all the properties from the donor object.
+ *
+ * Returns: (transfer full): a #FuDevice, or %NULL on error
+ *
+ * Since: 2.2.1
+ **/
+FuDevice *
+fu_device_incorporate_from_donor(GType gtype, FuDevice *donor, GError **error)
+{
+	g_autoptr(FuDevice) self = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(donor), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (!g_type_is_a(gtype, G_OBJECT_TYPE(donor))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device GType %s is not a superset of %s",
+			    g_type_name(gtype),
+			    G_OBJECT_TYPE_NAME(donor));
+		return NULL;
+	}
+	self = g_object_new(gtype, NULL);
+	fu_device_incorporate(self, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
+	return g_steal_pointer(&self);
 }
 
 /**
@@ -8398,7 +8588,11 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(target == NULL || FU_IS_DEVICE(target));
 	g_return_if_fail(self != target);
-	g_return_if_fail(self != fu_device_get_target(target));
+	g_return_if_fail(target == NULL || self != fu_device_get_target(target));
+
+	/* not changed */
+	if (priv->target == target)
+		return;
 
 	if (target != NULL)
 		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
@@ -8465,7 +8659,8 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Created", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
 #if GLIB_CHECK_VERSION(2, 80, 0)

@@ -74,7 +74,8 @@ fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GEr
 		return FALSE;
 
 	/* optional properties */
-	tmp = fwupd_json_object_get_string(json_obj, "DetachAt", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "DetachAt", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_mm_fastboot_device_set_detach_at(self, tmp);
 
