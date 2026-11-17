@@ -99,6 +99,9 @@ fu_test_engine_udev_usb(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuUdevDevice) udev_device2 = NULL;
+	g_autoptr(FuUdevDevice) udev_device3 = NULL;
+	g_autoptr(FuUdevDevice) udev_device4 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up test harness */
@@ -135,6 +138,30 @@ fu_test_engine_udev_usb(void)
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "hughski_colorhug");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "1-1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+
+	/* get child, both specified */
+	udev_device2 =
+	    FU_UDEV_DEVICE(fu_device_get_backend_child(device, "usb:usb_interface", &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device2);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device2), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device2), ==, "usb_interface");
+	g_assert_true(g_str_has_suffix(fu_udev_device_get_sysfs_path(udev_device2), "/1-1_1.1"));
+
+	/* grandchild is not a direct child */
+	udev_device3 = FU_UDEV_DEVICE(fu_device_get_backend_child(device, "hid", &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(udev_device3);
+	g_clear_error(&error);
+
+	/* child is not prefixed with the parent name */
+	udev_device4 =
+	    FU_UDEV_DEVICE(fu_device_get_backend_child(FU_DEVICE(udev_device2), "hid", &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device4);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device4), ==, "hid");
+	g_assert_true(
+	    g_str_has_suffix(fu_udev_device_get_sysfs_path(udev_device4), "/0003_093A_2862.0076"));
 }
 
 static void

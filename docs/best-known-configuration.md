@@ -136,3 +136,5 @@ Many BKCs are vendor and customer-specific, but some are "well known" and may be
 generic deployments that auto-deploy firmware to workstations using `fwupdmgr sync`.
 
 * `uefi-secure-boot`: A UEFI system with all the latest db certificates and dbx revocations.
+  These updates change the TPM measurements that seal disk encryption keys, so ensure volume
+  recovery keys are available.

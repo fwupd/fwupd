@@ -1028,6 +1028,9 @@ fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_child(FuDevice *self, const gchar *subsystem, GError **error)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1049,6 +1052,8 @@ void
 fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_proxy_with_fallback(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_target(FuDevice *self, FuDevice *target) G_GNUC_NON_NULL(1);
 const gchar *
 fu_device_get_metadata(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gboolean
@@ -1242,6 +1247,10 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags flag)
     G_GNUC_NON_NULL(1, 2);
+FuDevice *
+fu_device_incorporate_from_donor(GType gtype,
+				 FuDevice *donor,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 void
 fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
     G_GNUC_NON_NULL(1);

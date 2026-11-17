@@ -8956,6 +8956,7 @@ fu_engine_backends_coldplug_backend(FuEngine *self,
 	fu_progress_step_done(progress);
 
 	/* success */
+	fu_backend_add_flag(backend, FU_BACKEND_FLAG_DONE_COLDPLUG);
 	g_signal_connect(FU_BACKEND(backend),
 			 "device-added",
 			 G_CALLBACK(fu_engine_backend_device_added_cb),
@@ -8981,7 +8982,7 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 		FuBackend *backend = g_ptr_array_index(backends, i);
 		g_autoptr(GError) error_backend = NULL;
 
-		if (!fu_backend_get_enabled(backend)) {
+		if (!fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED)) {
 			fu_progress_step_done(progress);
 			continue;
 		}

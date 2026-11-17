@@ -95,8 +95,6 @@ fu_device_get_parent_internal(FuDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 void
 fu_device_clear_events(FuDevice *self);
-void
-fu_device_set_target(FuDevice *self, FuDevice *target);
 
 FuBackend *
 fu_device_get_backend(FuDevice *self) G_GNUC_PURE;
