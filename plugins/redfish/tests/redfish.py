@@ -16,12 +16,14 @@ HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
 HARDCODED_DELL_USERNAME = "dell_username"
+HARDCODED_NVIDIA_USERNAME = "nvidia_username"
 HARDCODED_USERNAMES = {
     HARDCODED_USERNAME,
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
     HARDCODED_DELL_USERNAME,
+    HARDCODED_NVIDIA_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
 HARDCODED_BEARER_TOKEN = "token2"
@@ -107,6 +109,9 @@ def index():
 
     if username == HARDCODED_DELL_USERNAME:
         res["Vendor"] = "Dell"
+
+    if username == HARDCODED_NVIDIA_USERNAME:
+        res["Vendor"] = "NVIDIA"
 
     if username in (
         HARDCODED_SMC_USERNAME,
@@ -203,6 +208,67 @@ def firmware_inventory():
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BIOS"},
         ],
         "Members@odata.count": 2,
+    }
+    if _username() == HARDCODED_NVIDIA_USERNAME:
+        res["Members"] = [
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"},
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0"},
+        ]
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0")
+def firmware_inventory_fw_bmc_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_BMC_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "Updateable": True,
+        "Version": "GB300-1.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0")
+def firmware_inventory_fw_cpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_CPU_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "SoftwareId": "0x0038",
+        "Updateable": True,
+        "Version": "02.00.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Managers")
+def redfish_managers():
+    res = {
+        "@odata.id": "/redfish/v1/Managers",
+        "@odata.type": "#ManagerCollection.ManagerCollection",
+        "Members": [{"@odata.id": "/redfish/v1/Managers/BMC_0"}],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Managers/BMC_0")
+def redfish_managers_bmc_0():
+    res = {
+        "@odata.id": "/redfish/v1/Managers/BMC_0",
+        "@odata.type": "#Manager.v1_14_0.Manager",
+        "Id": "BMC_0",
+        "ManagerType": "BMC",
+        "Links": {
+            "ActiveSoftwareImage": {
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"
+            },
+        },
     }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
