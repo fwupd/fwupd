@@ -1,13 +1,35 @@
-# Lenovo ThinkPad Thunderbolt 5 Smart Dock 7500
+# Lenovo ThinkPad Thunderbolt 5 Smart Dock 7500 - 40BA
 [USB\VID_17EF&PID_310D]
 Plugin = ccgx_dmc
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_17EF&PID_310D
 GType = FuCcgxDmcDevice
-Name = ThinkPad Thunderbolt 5 Smart Dock 7500
+Name = ThinkPad Thunderbolt 5 Smart Dock 7500 - 40BA
 CcgxDmcTriggerCode = 0x01
 InstallDuration = 1200
-RemoveDelay = 4800000
+RemoveDelay = 900000
+
+# Lenovo ThinkPad Thunderbolt 5 Smart Dock 7500 - 40BH
+[USB\VID_17EF&PID_3121]
+Plugin = ccgx_dmc
+Summary = Dock Management Controller Device
+ParentGuid = USB\VID_17EF&PID_3121
+GType = FuCcgxDmcDevice
+Name = ThinkPad Thunderbolt 5 Smart Dock 7500 - 40BH
+CcgxDmcTriggerCode = 0x01
+InstallDuration = 1200
+RemoveDelay = 900000
+
+# Lenovo ThinkPad Thunderbolt 5 Dock 7500 - 40BJ
+[USB\VID_17EF&PID_3122]
+Plugin = ccgx_dmc
+Summary = Dock Management Controller Device
+ParentGuid = USB\VID_17EF&PID_3122
+GType = FuCcgxDmcDevice
+Name = ThinkPad Thunderbolt 5 Dock 7500 - 40BJ
+CcgxDmcTriggerCode = 0x01
+InstallDuration = 1200
+RemoveDelay = 900000
 
 # Lenovo ThinkPad Universal USB-C Dock
 [USB\VID_17EF&PID_30A9]
