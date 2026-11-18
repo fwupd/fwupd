@@ -10,6 +10,7 @@ plugin_builtin_pixart_tp = static_library(
   rustgen.process(
     'fu-pixart-tp.rs',
     'fu-pixart-tp-ndt.rs',
+    'fu-pixart-tp-tf.rs',
   ),
   sources: [
     'fu-pixart-tp-pjp360-device.c',

@@ -11,6 +11,7 @@
 #include "fu-pixart-tp-haptic-device.h"
 #include "fu-pixart-tp-section.h"
 #include "fu-pixart-tp-struct.h"
+#include "fu-pixart-tp-tf-struct.h"
 
 struct _FuPixartTpHapticDevice {
 	FuDevice parent_instance;
