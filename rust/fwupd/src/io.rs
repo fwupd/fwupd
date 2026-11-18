@@ -46,8 +46,75 @@ pub trait ReadExt: Read {
     fn read_exact_or_remaining(&mut self, count: usize) -> std::io::Result<Vec<u8>> {
         read_exact_or_remaining(self, count)
     }
+
+    /// Read up to `count` bytes and return the (optionally) NUL-terminated
+    /// UTF8 string contained therein. The returned string has a length of
+    /// `count` bytes unless EOF is encountered. If the string contains a NUL-byte,
+    /// the returned string is the string up to excluding that NUL-byte.
+    ///
+    /// A string containing only a NUL-byte returns the empty string.
+    ///
+    /// <div class="warning">
+    /// This function always reads `count` bytes (or until EOF, whichever
+    /// happens earlier).
+    /// </div>
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use fwupd::io::ReadExt;
+    ///
+    /// let mut stream = Cursor::new(b"FW\0UPD\0".to_vec());
+    /// // WARNING: reads up to including the `U` but only returns FW
+    /// assert_eq!(stream.read_nul_terminated_string(4).unwrap(), "FW");
+    /// assert_eq!(stream.read_nul_terminated_string(4).unwrap(), "PD");
+    /// ```
+    /// Note how the `U` disappears - four bytes are being read and
+    /// the stream offset after the first read is at the `P`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`std::io::ErrorKind::InvalidData`] if the string is not
+    /// valid UTF8. If the stream ends before `count` bytes are read,
+    /// the short string is returned without an error.
+    fn read_nul_terminated_string(&mut self, count: usize) -> std::io::Result<String> {
+        let buf = self.read_exact_or_remaining(count)?;
+        let nul = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
+        String::from_utf8(buf[..nul].to_vec())
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}")))
+    }
+
+    /// Read a UTF8 string with a length of up to `count` bytes.
+    ///
+    /// The returned string has a length of `count` bytes unless
+    /// EOF is encountered.
+    ///
+    /// If reading a null-terminated string, use
+    /// [`Self::read_nul_terminated_string`].
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use fwupd::io::ReadExt;
+    ///
+    /// let mut stream = Cursor::new(b"fwupd".to_vec());
+    /// assert_eq!(stream.read_string(3).unwrap(), "fwu");
+    /// assert_eq!(stream.read_string(2).unwrap(), "pd");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`std::io::ErrorKind::InvalidData`] if the string is not
+    /// valid UTF8. If the stream ends before `count` bytes are read,
+    /// the short string is returned without an error.
+    fn read_string(&mut self, count: usize) -> std::io::Result<String> {
+        let buf = self.read_exact_or_remaining(count)?;
+        String::from_utf8(buf)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{e}")))
+    }
 }
 
+impl<R: Read + ?Sized> ReadExt for R {}
+
+/// Extension trait that adds helpers to any [`Read`] + [`Seek`]
 /// implementation.
 pub trait ReadSeekExt: Read + Seek {
     /// Reads exactly `count` bytes from the stream starting
@@ -86,6 +153,35 @@ pub trait ReadSeekExt: Read + Seek {
     ) -> std::io::Result<Vec<u8>> {
         self.seek(SeekFrom::Start(offset as u64))?;
         read_exact_or_remaining(self, count)
+    }
+
+    /// Read an (optionally) NUL-terminated UTF8 string with a maximum
+    /// length of `count` bytes from the stream at `offset`, see
+    /// [`ReadExt::read_nul_terminated_string`].
+    ///
+    /// # Errors
+    ///
+    /// In addition to the errors of [`ReadExt::read_nul_terminated_string`],
+    /// this returns an error if the seek to `offset` fails.
+    fn read_nul_terminated_string_at(
+        &mut self,
+        offset: usize,
+        count: usize,
+    ) -> std::io::Result<String> {
+        self.seek(SeekFrom::Start(offset as u64))?;
+        self.read_nul_terminated_string(count)
+    }
+
+    /// Read a UTF8 string with a length of up to `count` bytes from the
+    /// stream at `offset`, see [`ReadExt::read_string`].
+    ///
+    /// # Errors
+    ///
+    /// In addition to the errors of [`ReadExt::read_string`], this
+    /// returns an error if the seek to `offset` fails.
+    fn read_string_at(&mut self, offset: usize, count: usize) -> std::io::Result<String> {
+        self.seek(SeekFrom::Start(offset as u64))?;
+        self.read_string(count)
     }
 }
 
@@ -337,5 +433,110 @@ mod tests {
         let data: &[u8] = &[0x01, 0x02];
         let result = Cursor::new(data).read_exact_at(0, 0).unwrap();
         assert_eq!(result, [] as [u8; 0]);
+    }
+
+    #[test]
+    fn string_read_full_buffer() {
+        // No NUL byte: all `count` bytes are returned.
+        let mut stream = Cursor::new(b"fwupd".to_vec());
+        let s = stream.read_nul_terminated_string(5).unwrap();
+        assert_eq!(s, "fwupd");
+    }
+
+    #[test]
+    fn string_read_nul_terminated() {
+        // NUL in the middle: bytes up to but excluding the NUL are returned,
+        // trailing bytes after the NUL are consumed but discarded.
+        let mut stream = Cursor::new(b"fwupd\0xyz".to_vec());
+        let s = stream.read_nul_terminated_string(9).unwrap();
+        assert_eq!(s, "fwupd");
+    }
+
+    #[test]
+    fn string_read_empty() {
+        // A buffer of only a NUL byte returns the empty string.
+        let mut stream = Cursor::new(b"\0".to_vec());
+        let s = stream.read_nul_terminated_string(1).unwrap();
+        assert_eq!(s, "");
+
+        // NUL first, garbage after: still the empty string.
+        let mut stream = Cursor::new(b"\0xyz".to_vec());
+        let s = stream.read_nul_terminated_string(4).unwrap();
+        assert_eq!(s, "");
+    }
+
+    #[test]
+    fn string_read_padding() {
+        // NUL-padded fixed-width field, common in firmware headers.
+        let mut stream = Cursor::new(b"1.2.3\0\0\0\0\0\0\0\0\0\0\0\0".to_vec());
+        let s = stream.read_nul_terminated_string(16).unwrap();
+        assert_eq!(s, "1.2.3");
+    }
+
+    #[test]
+    fn string_read_utf8() {
+        let mut stream = Cursor::new("héllo\0".as_bytes().to_vec());
+        let s = stream.read_nul_terminated_string(7).unwrap();
+        assert_eq!(s, "héllo");
+    }
+
+    #[test]
+    fn string_read_invalid_utf8() {
+        let mut stream = Cursor::new(vec![0xff, 0xfe, 0xfd]);
+        let err = stream.read_nul_terminated_string(3).unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
+    }
+
+    #[test]
+    fn string_read_truncated_stream() {
+        // Requesting more bytes than the stream contains: the short
+        // string is returned, no error.
+        let mut stream = Cursor::new(b"abc\0".to_vec());
+        let s = stream.read_nul_terminated_string(8).unwrap();
+        assert_eq!(s, "abc");
+
+        // EOF right at the start: empty string.
+        let mut stream = Cursor::new(Vec::new());
+        let s = stream.read_nul_terminated_string(4).unwrap();
+        assert_eq!(s, "");
+    }
+
+    #[test]
+    fn string_read_zero_count() {
+        // Degenerate case: reading zero bytes yields the empty string
+        // without consuming anything.
+        let mut stream = Cursor::new(b"abc".to_vec());
+        let s = stream.read_nul_terminated_string(0).unwrap();
+        assert_eq!(s, "");
+        let mut rest = vec![0u8; 1];
+        let _ = stream.read(&mut rest).unwrap();
+        assert_eq!(rest[0], b'a');
+    }
+
+    #[test]
+    fn string_read_at_correct_offset() {
+        let data = b"\x00\x00fwupd\0extra";
+        let mut stream = Cursor::new(data.to_vec());
+        let s = stream.read_nul_terminated_string_at(2, 5).unwrap();
+        assert_eq!(s, "fwupd");
+        let s = stream.read_string_at(2, 5).unwrap();
+        assert_eq!(s, "fwupd");
+    }
+
+    #[test]
+    fn string_read_at_invalid_utf8() {
+        let data = b"\x00\xff\xfe\xfd";
+        let mut stream = Cursor::new(data.to_vec());
+        assert!(stream.read_nul_terminated_string_at(1, 3).is_err());
+        assert!(stream.read_string_at(1, 3).is_err());
+    }
+
+    #[test]
+    fn string_read_at_truncated_stream() {
+        // Requesting more bytes than available returns a short string.
+        let data = b"\x00hello";
+        let mut stream = Cursor::new(data.to_vec());
+        let s = stream.read_nul_terminated_string_at(1, 100).unwrap();
+        assert_eq!(s, "hello");
     }
 }
