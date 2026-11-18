@@ -5421,13 +5421,12 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		}
 	}
 	if (priv->instance_hash != NULL) {
-		GHashTableIter iter;
-		gpointer key;
-		gpointer value;
-		g_hash_table_iter_init(&iter, priv->instance_hash);
-		while (g_hash_table_iter_next(&iter, &key, &value)) {
-			g_autofree gchar *title =
-			    g_strdup_printf("InstanceKey[%s]", (const gchar *)key);
+		g_autoptr(GList) keys = g_list_sort(g_hash_table_get_keys(priv->instance_hash),
+						    (GCompareFunc)g_strcmp0);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup(priv->instance_hash, key);
+			g_autofree gchar *title = g_strdup_printf("InstanceKey[%s]", key);
 			fwupd_codec_string_append(str, idt, title, value);
 		}
 	}
