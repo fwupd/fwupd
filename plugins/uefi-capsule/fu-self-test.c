@@ -1040,6 +1040,7 @@ fu_uefi_update_info_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuUefiUpdateInfo) info2 = fu_uefi_update_info_new();
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
+	g_autoptr(FuUefiUpdateInfo) info3 = NULL;
 	g_autoptr(GBytes) info2_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1099,6 +1100,28 @@ fu_uefi_update_info_func(void)
 	g_assert_cmpstr(fu_uefi_update_info_get_capsule_fn(info),
 			==,
 			"/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
+
+	/* clear the status */
+	ret = fu_uefi_capsule_device_clear_status(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	info3 = fu_uefi_capsule_device_load_update_info(dev, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(info3);
+	g_assert_cmpint(fu_uefi_update_info_get_status(info3),
+			==,
+			FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
+
+	/* nothing to clear if the variable was already deleted */
+	ret = fu_efivars_delete(efivars,
+				FU_EFIVARS_GUID_FWUPDATE,
+				"fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0",
+				&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_uefi_capsule_device_clear_status(dev, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void

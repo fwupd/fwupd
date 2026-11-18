@@ -344,6 +344,10 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* already deleted by the post-reboot cleanup */
+	if (!fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, varname))
+		return TRUE;
+
 	/* get the existing status */
 	if (!fu_efivars_get_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
