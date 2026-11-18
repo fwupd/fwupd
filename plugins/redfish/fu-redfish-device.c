@@ -65,8 +65,19 @@ fu_redfish_device_set_device_class(FuRedfishDevice *self, const gchar *tmp)
 	g_debug("no icon mapping for %s", tmp);
 }
 
+static gchar *
+fu_redfish_device_build_namespace(const gchar *namespace, const gchar *id)
+{
+	if (namespace == NULL)
+		return g_strdup(id);
+	return g_strdup_printf("%s>%s", namespace, id);
+}
+
 static gboolean
-fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *uri, GError **error)
+fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self,
+					  const gchar *uri,
+					  const gchar *namespace,
+					  GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
@@ -75,6 +86,11 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	guint64 model_id = 0x0;
 	guint64 subsystem_vendor_id = 0x0;
 	guint64 subsystem_model_id = 0x0;
+	g_autofree gchar *key_ven = NULL;
+	g_autofree gchar *key_dev = NULL;
+	g_autofree gchar *key_subsys = NULL;
+	g_autofree gchar *namespace_new = NULL;
+	g_autofree gchar *namespace_id = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 
 	request = fu_redfish_backend_request_new(priv->backend, error);
@@ -131,19 +147,34 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
 
 	/* add more instance IDs if possible */
+	namespace_id = g_strdup_printf("VEN_%04X&DEV_%04X&SUBSYS_%04X%04X",
+				       (guint)vendor_id,
+				       (guint)model_id,
+				       (guint)subsystem_vendor_id,
+				       (guint)subsystem_model_id);
+	namespace_new = fu_redfish_device_build_namespace(namespace, namespace_id);
+	key_ven = g_strdup_printf("%s\\VEN", namespace_new);
+	key_dev = g_strdup_printf("%s\\DEV", namespace_new);
+	key_subsys = g_strdup_printf("%s\\SUBSYS", namespace_new);
 	if (vendor_id != 0x0)
-		fu_device_add_instance_u16(FU_DEVICE(self), "VEN", vendor_id);
+		fu_device_add_instance_u16(FU_DEVICE(self), key_ven, vendor_id);
 	if (model_id != 0x0)
-		fu_device_add_instance_u16(FU_DEVICE(self), "DEV", model_id);
+		fu_device_add_instance_u16(FU_DEVICE(self), key_dev, model_id);
 	if (subsystem_vendor_id != 0x0 && subsystem_model_id != 0x0) {
 		g_autofree gchar *subsys = NULL;
 		subsys = g_strdup_printf("%04X%04X",
 					 (guint)subsystem_vendor_id,
 					 (guint)subsystem_model_id);
-		fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
+		fu_device_add_instance_str(FU_DEVICE(self), key_subsys, subsys);
 	}
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", NULL);
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", key_ven, key_dev, NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "PCI",
+				    key_ven,
+				    key_dev,
+				    key_subsys,
+				    NULL);
 
 	/* success */
 	return TRUE;
@@ -152,6 +183,7 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 static gboolean
 fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					       const gchar *uri,
+					       const gchar *namespace,
 					       GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
@@ -184,7 +216,12 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 				return FALSE;
 			id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
 			if (id != NULL) {
-				if (!fu_redfish_device_probe_related_pcie_item(self, id, error))
+				g_autofree gchar *namespace_new =
+				    fu_redfish_device_build_namespace(namespace, "Func");
+				if (!fu_redfish_device_probe_related_pcie_item(self,
+									       id,
+									       namespace_new,
+									       error))
 					return FALSE;
 			}
 		}
@@ -195,7 +232,10 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 }
 
 static gboolean
-fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GError **error)
+fu_redfish_device_probe_related_item(FuRedfishDevice *self,
+				     const gchar *uri,
+				     const gchar *namespace,
+				     GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
@@ -239,7 +279,10 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 	if (json_pcie != NULL) {
 		const gchar *id = fwupd_json_object_get_string(json_pcie, "@odata.id", NULL);
 		if (id != NULL) {
-			if (!fu_redfish_device_probe_related_pcie_functions(self, id, error))
+			if (!fu_redfish_device_probe_related_pcie_functions(self,
+									    id,
+									    namespace,
+									    error))
 				return FALSE;
 		}
 	}
@@ -401,6 +444,42 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self, GError **error)
 }
 
 static gboolean
+fu_redfish_device_probe_oem_hpe_targets(FuRedfishDevice *self,
+					FwupdJsonArray *json_arr,
+					const gchar *device_class,
+					GError **error)
+{
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		const gchar *tmp = fwupd_json_array_get_string(json_arr, i, NULL);
+		if (tmp == NULL)
+			continue;
+		fu_device_add_instance_id(FU_DEVICE(self), tmp);
+
+		/* neither is unique on its own: the target is shared with other devices
+		 * of the board and the class with other platforms, so also add the pair */
+		if (device_class != NULL) {
+			g_autofree gchar *target = g_ascii_strdown(tmp, -1);
+			g_autofree gchar *key_vendor = g_strdup_printf("HPE-%u\\VENDOR", i);
+			g_autofree gchar *key_class = g_strdup_printf("HPE-%u\\CLASS", i);
+			g_autofree gchar *key_target = g_strdup_printf("HPE-%u\\TARGET", i);
+
+			fu_device_add_instance_str(FU_DEVICE(self), key_vendor, "HPE");
+			fu_device_add_instance_str(FU_DEVICE(self), key_class, device_class);
+			fu_device_add_instance_str(FU_DEVICE(self), key_target, target);
+			if (!fu_device_build_instance_id(FU_DEVICE(self),
+							 error,
+							 "REDFISH",
+							 key_vendor,
+							 key_class,
+							 key_target,
+							 NULL))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
 {
 	const gchar *tmp;
@@ -414,29 +493,8 @@ fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj
 	}
 	json_arr = fwupd_json_object_get_array(json_obj, "Targets", NULL);
 	if (json_arr != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
-			tmp = fwupd_json_array_get_string(json_arr, i, NULL);
-			if (tmp == NULL)
-				continue;
-			fu_device_add_instance_id(FU_DEVICE(self), tmp);
-
-			/* neither is unique on its own: the target is shared with other devices
-			 * of the board and the class with other platforms, so also add the pair */
-			if (device_class != NULL) {
-				g_autofree gchar *target = g_ascii_strdown(tmp, -1);
-				fu_device_add_instance_str(FU_DEVICE(self), "VENDOR", "HPE");
-				fu_device_add_instance_str(FU_DEVICE(self), "CLASS", device_class);
-				fu_device_add_instance_str(FU_DEVICE(self), "TARGET", target);
-				if (!fu_device_build_instance_id(FU_DEVICE(self),
-								 error,
-								 "REDFISH",
-								 "VENDOR",
-								 "CLASS",
-								 "TARGET",
-								 NULL))
-					return FALSE;
-			}
-		}
+		if (!fu_redfish_device_probe_oem_hpe_targets(self, json_arr, device_class, error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -664,7 +722,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 								   NULL);
 				if (tmp == NULL)
 					continue;
-				if (!fu_redfish_device_probe_related_item(self, tmp, error))
+				if (!fu_redfish_device_probe_related_item(self, tmp, NULL, error))
 					return FALSE;
 			}
 		}
