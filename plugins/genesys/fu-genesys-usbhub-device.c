@@ -1427,6 +1427,10 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	if (fu_usb_device_get_class(FU_USB_DEVICE(device)) != FU_USB_CLASS_HUB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
