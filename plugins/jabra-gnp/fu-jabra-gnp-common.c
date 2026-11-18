@@ -902,12 +902,17 @@ fu_jabra_gnp_get_config_mode_permission(FuDevice *device,
 	    .command = FU_JABRA_GNP_PACKET_CMD_GET_CONFIG_MODE_PERMISSION,
 	    .check_sequence_number = TRUE,
 	};
+	guint32 report_size;
+
+	if (!fu_jabra_gnp_get_report_size(device, &report_size, error))
+		return FALSE;
 
 	/* set up request */
 	fu_struct_jabra_gnp_packet_set_dst(st, address);
 	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
 	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_CONFIG_MODE_PERMISSION);
-	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, report_size, 0x0);
+
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
@@ -953,13 +958,18 @@ fu_jabra_gnp_end_config_mode(FuDevice *device, guint8 address, guint8 seq, GErro
 	    .check_sequence_number = TRUE,
 	    .check_ack = TRUE,
 	};
+	guint32 report_size;
+
+	if (!fu_jabra_gnp_get_report_size(device, &report_size, error))
+		return FALSE;
 
 	/* set up request */
 	fu_struct_jabra_gnp_packet_set_dst(st, address);
 	fu_struct_jabra_gnp_packet_set_sequence_number(st, (guint8)(seq + 1));
 	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
 	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_END_CONFIG_MODE);
-	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, report_size, 0x0);
+
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
@@ -1010,12 +1020,16 @@ fu_jabra_gnp_get_tunes_pack_version(FuDevice *device, guint8 address, guint8 seq
 	    .command = FU_JABRA_GNP_PACKET_CMD_GET_TUNES_PACK_VERSION,
 	    .check_sequence_number = TRUE,
 	};
+	guint32 report_size;
+
+	if (!fu_jabra_gnp_get_report_size(device, &report_size, error))
+		return NULL;
 
 	/* set up request */
 	fu_struct_jabra_gnp_packet_set_dst(st, address);
 	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
 	fu_struct_jabra_gnp_packet_set_cmd(st, FU_JABRA_GNP_PACKET_CMD_GET_TUNES_PACK_VERSION);
-	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, report_size, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
