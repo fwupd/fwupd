@@ -330,13 +330,14 @@ pub trait Searchable: Read + Seek {
         let mut readbuf = [0u8; ByteCount::<usize>::from_kb(4).count()];
         loop {
             while buffer.len() < bytes.len() {
-                let nbytes = self.read(&mut readbuf)?;
-                // EOF and we have fewer than bytes.len() so
-                // it cannot be a match
-                if nbytes == 0 {
-                    return Ok(None);
+                match self.read(&mut readbuf) {
+                    // EOF and we have fewer than bytes.len() so
+                    // it cannot be a match
+                    Ok(0) => return Ok(None),
+                    Ok(nbytes) => buffer.extend(&readbuf[..nbytes]),
+                    Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                    Err(e) => return Err(e),
                 }
-                buffer.extend(&readbuf[..nbytes]);
             }
 
             let contiguous = buffer.make_contiguous();
