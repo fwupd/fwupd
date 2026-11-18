@@ -22,10 +22,6 @@ pub trait ReadSeekExt: Read + Seek {
     ///
     /// This function returns an error if the seek fails
     /// or the stream has insufficient bytes.
-    fn read_exact_at(&mut self, offset: usize, count: usize) -> Result<Vec<u8>, std::io::Error>;
-}
-
-impl<T: Read + Seek> ReadSeekExt for T {
     fn read_exact_at(&mut self, offset: usize, count: usize) -> Result<Vec<u8>, std::io::Error> {
         self.seek(SeekFrom::Start(offset as u64))?;
         let mut buf = vec![0u8; count];
@@ -33,6 +29,8 @@ impl<T: Read + Seek> ReadSeekExt for T {
         Ok(buf)
     }
 }
+
+impl<T: Read + Seek> ReadSeekExt for T {}
 
 pub trait Searchable: Read + Seek {
     /// Find the first occurrence of `bytes` within the stream and
