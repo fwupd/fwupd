@@ -29,6 +29,7 @@
 #define FU_GENESYS_USBHUB_FLAG_IS_GL352350	"is-gl352350" /* unique codesigning */
 #define FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN	"has-codesign"
 #define FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN	"has-hw-codesign"
+#define FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED	"proxy-required"
 
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
@@ -1453,6 +1454,13 @@ fu_genesys_usbhub_device_ensure_hid_proxy(FuGenesysUsbhubDevice *self, GError **
 }
 
 static gboolean
+fu_genesys_usbhub_device_ensure_hid_proxy_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+	return fu_genesys_usbhub_device_ensure_hid_proxy(self, error);
+}
+
+static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
@@ -1485,8 +1493,20 @@ fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* can we find a HID proxy to use? */
-	if (!fu_genesys_usbhub_device_ensure_hid_proxy(self, &error_local))
-		g_debug("no suitable HID proxy: %s", error_local->message);
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED)) {
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_genesys_usbhub_device_ensure_hid_proxy_cb,
+					  5,
+					  100,
+					  NULL,
+					  error)) {
+			g_prefix_error_literal(error, "no suitable HID proxy: ");
+			return FALSE;
+		}
+	} else {
+		if (!fu_genesys_usbhub_device_ensure_hid_proxy(self, &error_local))
+			g_debug("no suitable HID proxy: %s", error_local->message);
+	}
 
 	/* success */
 	return TRUE;
@@ -3303,4 +3323,5 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_IS_GL352350);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED);
 }
