@@ -251,6 +251,13 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 			    priv->hdrver);
 		return NULL;
 	}
+	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_VENDOR) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "vendor compression is not supported");
+		return NULL;
+	}
 
 	/* generate early so we know the size */
 	for (guint i = 0; i < images->len; i++) {

@@ -414,7 +414,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (subsystem != NULL) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -422,7 +422,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -444,7 +444,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 			fu_device_add_instance_strup(device, "CLASS", cls);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -455,7 +455,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "TYPE", devtype);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "TYPE",
@@ -465,7 +465,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(device, "DRIVER", priv->driver);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "DRIVER",
@@ -2501,22 +2501,28 @@ fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	const gchar *tmp;
 	gint64 tmp64 = 0;
 
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Subsystem", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Subsystem", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_subsystem(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Devtype", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Devtype", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_devtype(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Driver", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Driver", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_driver(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BindId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BindId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_bind_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "DeviceFile", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "DeviceFile", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_device_file(self, tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "Vendor", &tmp64, 0x0, error))

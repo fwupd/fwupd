@@ -1195,6 +1195,11 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
+		"srec-addr32.builder.xml",
+		"a5ae7449b0a64e8b7466de312b062b72ef63dadf",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
 		"ihex.builder.xml",
 		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -1295,6 +1300,16 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
+		"ifd-no-bios.builder.xml",
+		"e5ea653f2df18cb02cf1c13647da5ed4b0bfcb2f",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
+		"ifd-bios.builder.xml",
+		"e1d05d4dffea640f4d38c584a06c08f0523cb760",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
 		"cfu-offer.builder.xml",
 		"c10223887ff6cdf4475ad07c65b1f0f3a2d0d5ca",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -1352,6 +1367,11 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		"uswid.builder.xml",
 		"a6ad8ca91c0f2d18dc419ecd45fc09336d1089bc",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"coswid.builder.xml",
+		"cbc2d95e841942bfc938dd8f9d8dde26a0c79b9a",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {

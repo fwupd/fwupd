@@ -1039,6 +1039,13 @@ fu_himax_tp_hid_device_check_firmware(FuDevice *device,
 	}
 
 	/* check CID high byte match */
+	if (self->st_info == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FuStructHimaxTpHidInfo");
+		return FALSE;
+	}
 	if (((fu_struct_himax_tp_hid_info_get_cid(self->st_info) & 0xFF00) >> 8) !=
 	    (fu_himax_tp_firmware_get_cid(FU_HIMAX_TP_FIRMWARE(firmware)) >> 8)) {
 		g_set_error_literal(error,

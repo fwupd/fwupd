@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-backend-struct.h"
 #include "fu-context.h"
 #include "fu-device.h"
 
@@ -50,6 +51,10 @@ struct _FuBackendClass {
 				       FuDevice *device,
 				       const gchar *subsystem,
 				       GError **error)G_GNUC_WARN_UNUSED_RESULT;
+	FuDevice *(*get_device_child)(FuBackend *self,
+				      FuDevice *device,
+				      const gchar *subsystem,
+				      GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	FuDevice *(*create_device)(FuBackend *self,
 				   const gchar *backend_id,
 				   GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -62,10 +67,14 @@ const gchar *
 fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 FuContext *
 fu_backend_get_context(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+gchar *
+fu_backend_get_config_str(FuBackend *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_backend_get_enabled(FuBackend *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+fu_backend_has_flag(FuBackend *self, FuBackendFlags flag) G_GNUC_NON_NULL(1);
 void
-fu_backend_set_enabled(FuBackend *self, gboolean enabled) G_GNUC_NON_NULL(1);
+fu_backend_add_flag(FuBackend *self, FuBackendFlags flag) G_GNUC_NON_NULL(1);
+void
+fu_backend_remove_flag(FuBackend *self, FuBackendFlags flag) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_backend_get_devices(FuBackend *self) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -93,6 +102,11 @@ fu_backend_get_device_parent(FuBackend *self,
 			     FuDevice *device,
 			     const gchar *subsystem,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
+FuDevice *
+fu_backend_get_device_child(FuBackend *self,
+			    FuDevice *device,
+			    const gchar *subsystem,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
 FuDevice *
 fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
     G_GNUC_NON_NULL(1, 2);

@@ -12,7 +12,12 @@
 #include <android/binder_auto_utils.h>
 #include <android/binder_process.h>
 
+#include <chrono>
+#include <condition_variable>
 #include <dlfcn.h>
+#include <memory>
+#include <mutex>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -20,6 +25,9 @@
 #include "fu-binder-common.h"
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
+
+#define FU_BINDER_SERVICE_NAME		   "org.freedesktop.fwupd.IFwupd/default"
+#define FU_BINDER_SERVICE_WAIT_TIMEOUT_SEC 60
 
 /* define the listener object: converts incoming Binder events back into
  * FwupdClient signals so they flow through the same event path as the D-Bus
@@ -107,7 +115,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 AIBinder *
 fu_binder_cli_bridge_get_service_handle(GError **error)
 {
-	void *handle = dlopen("libbinder_ndk.so", RTLD_NOW | RTLD_LOCAL);
+	static void *handle = dlopen("libbinder_ndk.so", RTLD_NOW | RTLD_LOCAL);
 	if (handle == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -116,9 +124,62 @@ fu_binder_cli_bridge_get_service_handle(GError **error)
 		return NULL;
 	}
 
+	ABinderProcess_startThreadPool();
+	auto check_svc = (AIBinder * (*)(const char *))
+	    dlsym(handle, "AServiceManager_checkService");
+	auto is_declared = (bool (*)(const char *))dlsym(handle, "AServiceManager_isDeclared");
+	auto wait_svc = (AIBinder * (*)(const char *))
+	    dlsym(handle, "AServiceManager_waitForService");
 	auto get_svc = (AIBinder * (*)(const char *)) dlsym(handle, "AServiceManager_getService");
-	AIBinder *binder = get_svc ? get_svc("org.freedesktop.fwupd.IFwupd/default") : NULL;
-	dlclose(handle);
+	AIBinder *binder = NULL;
+	bool wait_timed_out = false;
+
+	/* fast path if the daemon is already running */
+	if (check_svc != NULL)
+		binder = check_svc(FU_BINDER_SERVICE_NAME);
+
+	/* trigger on-demand lazy startup when VINTF-declared, bounded so a broken daemon
+	 * cannot hang indefinitely while allowing slow USB/wireless peripheral coldplugs */
+	if (binder == NULL && wait_svc != NULL &&
+	    (is_declared == NULL || is_declared(FU_BINDER_SERVICE_NAME))) {
+		struct WaitState {
+			std::mutex mtx;
+			std::condition_variable cv;
+			AIBinder *result = NULL;
+			bool done = false;
+			bool timed_out = false;
+		};
+		auto state = std::make_shared<WaitState>();
+		std::thread([state, wait_svc]() {
+			AIBinder *res = wait_svc(FU_BINDER_SERVICE_NAME);
+			bool release = false;
+			{
+				std::lock_guard<std::mutex> lock(state->mtx);
+				if (state->timed_out) {
+					release = true;
+				} else {
+					state->result = res;
+					state->done = true;
+				}
+			}
+			if (release && res != NULL)
+				AIBinder_decStrong(res);
+			state->cv.notify_one();
+		}).detach();
+
+		std::unique_lock<std::mutex> lock(state->mtx);
+		if (state->cv.wait_for(lock,
+				       std::chrono::seconds(FU_BINDER_SERVICE_WAIT_TIMEOUT_SEC),
+				       [&state]() { return state->done; })) {
+			binder = state->result;
+		} else {
+			state->timed_out = true;
+			wait_timed_out = true;
+		}
+	}
+
+	if (binder == NULL && !wait_timed_out && get_svc != NULL)
+		binder = get_svc(FU_BINDER_SERVICE_NAME);
 
 	if (binder == NULL) {
 		g_set_error(error,

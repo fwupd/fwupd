@@ -18,6 +18,7 @@
 #include "fu-redfish-device.h"
 #include "fu-redfish-hpe-device.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
 #include "fu-redfish-struct.h"
@@ -309,6 +310,7 @@ fu_redfish_backend_session_key_missing_func(void)
 	g_assert_nonnull(tmpdir);
 	fn = fu_temporary_directory_build(tmpdir, "does-not-exist", NULL);
 	fu_redfish_backend_set_session_key_file(backend, fn);
+	g_assert_cmpstr(fu_redfish_backend_get_session_key_file(backend), ==, fn);
 	session_key = fu_redfish_backend_get_session_key(backend, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(session_key);
@@ -510,6 +512,175 @@ fu_redfish_bearer_token_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* a rotated token is used by new requests */
+	fu_config_set_value_internal(fu_context_get_config(ctx),
+				     "redfish",
+				     "BearerToken",
+				     "invalid-token");
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* removing the token restores basic authentication */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "redfish", "BearerToken", NULL);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_redfish_session_key_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *conf = NULL;
+	g_autofree gchar *conf_fn = NULL;
+	g_autofree gchar *key_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness, using an empty sysfs directory so that the session key is the
+	 * only credential the plugin can find */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	key_fn = fu_temporary_directory_build(tmpdir, "session-key", NULL);
+	ret = g_file_set_contents(key_fn, "1234eabcdeabcdeabcdeabcdeabc1234\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	conf_fn = fu_temporary_directory_build(tmpdir, "redfish-session-key-fwupd.conf", NULL);
+	conf = g_strdup_printf("[redfish]\nUri=http://localhost:4661\nSessionKeyFile=%s\n", key_fn);
+	ret = g_file_set_contents(conf_fn, conf, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+	fu_context_set_path(ctx,
+			    FU_PATH_KIND_SYSCONFDIR_PKG,
+			    fu_temporary_directory_get_path(tmpdir));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-session-key-fwupd.conf");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the session replaces the BMC user account, so this should not fail trying to
+	 * verify or create one using IPMI */
+	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* every request uses the key */
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_plugin_get_devices(plugin)->len, ==, 2);
+
+	/* a rotated key is used by new requests */
+	ret = g_file_set_contents(key_fn, "invalid-key\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = g_file_set_contents(key_fn, "1234eabcdeabcdeabcdeabcdeabc1234\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* a key that cannot be read fails the request rather than using other credentials */
+	fu_redfish_plugin_set_credentials(plugin, "username2", "password2");
+	ret = g_file_set_contents(key_fn, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
+static void
+fu_redfish_nvidia_devices_func(void)
+{
+	FuDevice *dev;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a NVIDIA system */
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuRedfishNvidiaDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_redfish_plugin_set_credentials(plugin, "nvidia_username", "password2");
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 2);
+
+	/* the BMC */
+	dev = g_ptr_array_index(devices, 0);
+	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW BMC 0");
+	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_BMC_0"));
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true(fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN));
+
+	/* a component behind the BMC */
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW CPU 0");
+	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_CPU_0"));
+	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
 }
 
 static void
@@ -1200,6 +1371,8 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/backend/device-gtype/invalid",
 			fu_redfish_backend_device_gtype_invalid_func);
 	g_test_add_func("/redfish/bearer-token", fu_redfish_bearer_token_func);
+	g_test_add_func("/redfish/session-key", fu_redfish_session_key_func);
+	g_test_add_func("/redfish/nvidia/devices", fu_redfish_nvidia_devices_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);

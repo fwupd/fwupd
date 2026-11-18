@@ -317,7 +317,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	/* USB\\VID_1234 */
 	fu_device_add_instance_u16(FU_DEVICE(self), "VID", fu_device_get_vid(device));
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "USB",
 					 "VID",
@@ -326,7 +326,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", fu_device_get_pid(device));
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "HIDRAW",
 					 "VEN",

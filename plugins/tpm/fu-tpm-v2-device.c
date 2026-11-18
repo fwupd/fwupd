@@ -294,7 +294,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device, "MOD", model);
 	fu_device_add_instance_str(device, "VER", family);
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "TPM",
 					 "VEN",

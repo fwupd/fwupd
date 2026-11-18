@@ -11,6 +11,7 @@
 #include "fu-pixart-tp-haptic-device.h"
 #include "fu-pixart-tp-section.h"
 #include "fu-pixart-tp-struct.h"
+#include "fu-pixart-tp-tf-struct.h"
 
 struct _FuPixartTpHapticDevice {
 	FuDevice parent_instance;
@@ -858,8 +859,8 @@ fu_pixart_tp_haptic_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	/* find the TF_FORCE section image by ID */
-	return fu_firmware_get_image_by_id(firmware, "tf-force", error);
+	/* find the TF_FORCE section image by update type */
+	return fu_firmware_get_image_by_idx(firmware, FU_PIXART_TP_UPDATE_TYPE_TF_FORCE, error);
 }
 
 static gboolean
@@ -1027,11 +1028,11 @@ fu_pixart_tp_haptic_device_init(FuPixartTpHapticDevice *self)
 	fu_device_add_instance_str(FU_DEVICE(self), "COMPONENT", "tf");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_logical_id(FU_DEVICE(self), "tf");
-	fu_device_set_name(FU_DEVICE(self), "Touchpad Haptic");
+	fu_device_set_name(FU_DEVICE(self), "Haptic");
 	fu_device_set_summary(FU_DEVICE(self), "Force/haptic controller for touchpad");
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_DEVICE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_SECTION);
-	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 }
 
 FuPixartTpHapticDevice *

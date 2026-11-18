@@ -28,6 +28,7 @@ plugin_builtin_redfish = static_library(
     'fu-redfish-hpe-device.c',
     'fu-redfish-multipart-device.c',
     'fu-redfish-network.c',
+    'fu-redfish-nvidia-device.c',
     'fu-redfish-network-device.c',
     'fu-redfish-request.c',
     'fu-redfish-smbios.c', # fuzzing
@@ -98,6 +99,7 @@ if get_option('tests')
       'G_TEST_BUILDDIR': meson.current_build_dir(),
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
+    timeout: 180,
   )
   e = executable(
     'redfish-network-device-self-test',

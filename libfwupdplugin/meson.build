@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-backend.rs', # fuzzing
   'fu-cbor.rs', # fuzzing
   'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
@@ -38,6 +39,7 @@ fwupdplugin_structs = [
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
   'fu-protobuf.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
@@ -519,6 +521,7 @@ if get_option('tests')
     'bytes',
     'cab-firmware',
     'cbor',
+    'cfu-offer',
     'chunk-array',
     'common',
     'compressor-stream',
@@ -528,6 +531,7 @@ if get_option('tests')
     'device',
     'device-event',
     'device-locker',
+    'dpaux-device',
     'dump',
     'efi',
     'efivars',
@@ -536,6 +540,7 @@ if get_option('tests')
     'hid-descriptor',
     'hidraw-device',
     'hwids',
+    'i2c-device',
     'ihex-firmware',
     'input-stream',
     'intel-me',
@@ -559,6 +564,7 @@ if get_option('tests')
     'quirks',
     'sbatlevel-section',
     'secure-bytes',
+    'serio-device',
     'security-attrs',
     'smbios',
     'srec-firmware',

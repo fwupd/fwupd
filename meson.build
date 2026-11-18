@@ -325,6 +325,9 @@ if build_standalone
     version: '>= 0.3.19',
     fallback: ['libxmlb', 'libxmlb_dep'],
   )
+  if libxmlb.version().version_compare('< 0.3.30')
+    warning('libxmlb >= 0.3.30 is strongly recommended for speed and security')
+  endif
   if libxmlb.get_variable('zstd') == 'true'
     lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'

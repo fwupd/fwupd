@@ -81,6 +81,7 @@ struct _FuQuirks {
 	XbQuery *query_vs;
 	gboolean verbose;
 	gboolean loaded;
+	GHashTable *cache; /* of utf8:GPtrArray */
 #ifdef HAVE_SQLITE
 	sqlite3 *db;
 #endif
@@ -369,6 +370,9 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	if (self->silo != NULL && xb_silo_is_valid(self->silo))
 		return TRUE;
 
+	/* no longer valid */
+	g_hash_table_remove_all(self->cache);
+
 	/* system datadir */
 	builder = xb_builder_new();
 	datadir = fu_context_get_path(self->ctx, FU_PATH_KIND_DATADIR_QUIRKS, NULL);
@@ -533,6 +537,21 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 	return xb_node_get_text(n);
 }
 
+typedef struct {
+	//	gchar *guid;
+	gchar *key;
+	gchar *value;
+	FuContextQuirkSource source;
+} FuQuirksCacheItem;
+
+static void
+fu_quirks_cache_item_free(FuQuirksCacheItem *item)
+{
+	g_free(item->key);
+	g_free(item->value);
+	g_free(item);
+}
+
 /**
  * fu_quirks_lookup_by_id_iter:
  * @self: a #FuQuirks
@@ -540,20 +559,23 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
  * @key: (nullable): an ID to match the entry, e.g. `Name`, or %NULL for all keys
  * @iter_cb: (scope call) (closure user_data): a function to call for each result
  * @user_data: user data passed to @iter_cb
+ * @flags: some #FuQuirksLookupFlags, e.g. #FU_QUIRKS_LOOKUP_FLAG_ALLOW_CACHE
  *
  * Looks up all entries in the hardware database using a GUID value.
  *
  * Returns: %TRUE if the ID was found, and @iter was called
  *
- * Since: 1.3.3
+ * Since: 2.1.1
  **/
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
 			    const gchar *key,
 			    FuQuirksIter iter_cb,
+			    FuQuirksLookupFlags flags,
 			    gpointer user_data)
 {
+	GPtrArray *cache_items = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
@@ -562,6 +584,29 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_return_val_if_fail(self->loaded, FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
+
+	/* ensure up to date */
+	if (!fu_quirks_check_silo(self, &error)) {
+		g_warning("failed to build silo: %s", error->message);
+		return FALSE;
+	}
+
+	/* only for no key */
+	if (key == NULL && (flags & FU_QUIRKS_LOOKUP_FLAG_ALLOW_CACHE) > 0) {
+		cache_items = g_hash_table_lookup(self->cache, guid);
+		if (cache_items != NULL) {
+			if (cache_items->len == 0)
+				return FALSE;
+			for (guint i = 0; i < cache_items->len; i++) {
+				FuQuirksCacheItem *item = g_ptr_array_index(cache_items, i);
+				iter_cb(self, item->key, item->value, item->source, user_data);
+			}
+			return TRUE;
+		}
+		cache_items =
+		    g_ptr_array_new_with_free_func((GDestroyNotify)fu_quirks_cache_item_free);
+		g_hash_table_insert(self->cache, g_strdup(guid), cache_items);
+	}
 
 #ifdef HAVE_SQLITE
 	/* this is generated from usb.ids and other static sources */
@@ -594,15 +639,16 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			const gchar *key_tmp = (const gchar *)sqlite3_column_text(stmt, 0);
 			const gchar *value = (const gchar *)sqlite3_column_text(stmt, 1);
 			iter_cb(self, key_tmp, value, FU_CONTEXT_QUIRK_SOURCE_DB, user_data);
+			if (cache_items != NULL) {
+				FuQuirksCacheItem *item = g_new0(FuQuirksCacheItem, 1);
+				item->key = g_strdup(key_tmp);
+				item->value = g_strdup(value);
+				item->source = FU_CONTEXT_QUIRK_SOURCE_DB;
+				g_ptr_array_add(cache_items, item);
+			}
 		}
 	}
 #endif
-
-	/* ensure up to date */
-	if (!fu_quirks_check_silo(self, &error)) {
-		g_warning("failed to build silo: %s", error->message);
-		return FALSE;
-	}
 
 	/* no quirk data */
 	if (self->query_vs == NULL)
@@ -634,6 +680,13 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			xb_node_get_text(n),
 			FU_CONTEXT_QUIRK_SOURCE_FILE,
 			user_data);
+		if (cache_items != NULL) {
+			FuQuirksCacheItem *item = g_new0(FuQuirksCacheItem, 1);
+			item->key = g_strdup(xb_node_get_attr(n, "key"));
+			item->value = g_strdup(xb_node_get_text(n));
+			item->source = FU_CONTEXT_QUIRK_SOURCE_FILE;
+			g_ptr_array_add(cache_items, item);
+		}
 	}
 
 	return TRUE;
@@ -1115,6 +1168,10 @@ fu_quirks_init(FuQuirks *self)
 {
 	self->possible_keys = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->invalid_keys = g_ptr_array_new_with_free_func(g_free);
+	self->cache = g_hash_table_new_full(g_str_hash,
+					    g_str_equal,
+					    g_free,
+					    (GDestroyNotify)g_ptr_array_unref);
 
 	/* built in */
 	fu_quirks_add_possible_key(self, FU_QUIRKS_BRANCH);
@@ -1179,6 +1236,7 @@ fu_quirks_finalize(GObject *obj)
 		sqlite3_close(self->db);
 #endif
 	g_hash_table_unref(self->possible_keys);
+	g_hash_table_unref(self->cache);
 	g_ptr_array_unref(self->invalid_keys);
 	G_OBJECT_CLASS(fu_quirks_parent_class)->finalize(obj);
 }

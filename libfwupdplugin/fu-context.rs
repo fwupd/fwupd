@@ -54,3 +54,8 @@ enum FuContextQuirkSource {
     Db,         // populated from usb.ids and pci.ids
     Fallback,   // perhaps from the PCI class information
 }
+
+enum FuContextLookupFlags {
+    None = 0,
+    AllowCache = 1 << 0,
+}

@@ -49,6 +49,8 @@ fu_jabra_gnp_calculate_crc(GBytes *bytes);
 gboolean
 fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
+gchar *
+fu_jabra_gnp_parse_string(const guint8 *buf, gsize bufsz, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);

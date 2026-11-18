@@ -12,6 +12,15 @@
     <reserved>01090e0a0000000000000000</reserved>
   </firmware>
   <firmware gtype="FuPixartTpSection">
+    <id>ndt-force</id>
+    <!-- 72 byte NDT header (sw_version 44.90.3.0, valid_data_len 12) + "ndt payload!" -->
+    <data>AAAAAAAAAAAhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANaLAAQAAEMAAAAbmR0IHBheWxvYWQh</data> <!-- base64 -->
+    <filename>ndt.bin</filename>
+    <update_type>ndt-force</update_type>
+    <flags>valid</flags>
+    <reserved>000000000000000000000000</reserved>
+  </firmware>
+  <firmware gtype="FuPixartTpSection">
     <id>parameter</id>
     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
     <update_type>param</update_type>

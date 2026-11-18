@@ -125,6 +125,21 @@ class GitRepo:
         cmd = RunCmd(["git", "ls-files", "-z"], cwd=self.root, check=True)
         return [Path(p) for p in cmd.stdout.split("\0") if p]
 
+    @cached_property
+    def untracked_files(self) -> list[Path]:
+        """
+        Returns the list of files present locally but not added to git,
+        as paths relative to the repository root.
+
+        Files listed in .gitignore are not included in this list.
+        """
+        cmd = RunCmd(
+            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+            cwd=self.root,
+            check=True,
+        )
+        return [Path(p) for p in cmd.stdout.split("\0") if p]
+
     def find_files(
         self,
         *,

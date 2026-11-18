@@ -22,7 +22,6 @@ struct _FuRedfishBackend {
 	gchar *hostname;
 	gchar *username;
 	gchar *password;
-	gchar *bearer_token;
 	gchar *session_key_file;
 	gchar *session_key;
 	gchar *session_uri;
@@ -45,9 +44,6 @@ struct _FuRedfishBackend {
 
 G_DEFINE_TYPE(FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
 
-typedef struct curl_slist _curl_slist;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
-
 const gchar *
 fu_redfish_backend_get_vendor(FuRedfishBackend *self)
 {
@@ -66,20 +62,42 @@ fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 	return self->uuid;
 }
 
-FuRedfishRequest *
-fu_redfish_backend_request_new(FuRedfishBackend *self)
+/* read on demand so that a rotated token is used by the next request */
+static gchar *
+fu_redfish_backend_get_bearer_token(FuRedfishBackend *self)
 {
-	FuRedfishRequest *request = g_object_new(FU_TYPE_REDFISH_REQUEST, NULL);
+	return fu_backend_get_config_str(FU_BACKEND(self), "BearerToken");
+}
+
+FuRedfishRequest *
+fu_redfish_backend_request_new(FuRedfishBackend *self, GError **error)
+{
+	g_autoptr(FuRedfishRequest) request = NULL;
 	CURL *curl;
 #if CURL_AT_LEAST_VERSION(7, 63, 0)
 	CURLU *uri;
+	CURLUcode rc;
 #else
 	g_autofree gchar *uri = NULL;
 #endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
+	g_autofree gchar *bearer_token = NULL;
+
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (self->hostname == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no hostname set");
+		return NULL;
+	}
 
 	/* set the cache location */
+	request = g_object_new(FU_TYPE_REDFISH_REQUEST, NULL);
 	fu_redfish_request_set_cache(request, self->request_cache);
 	fu_redfish_request_set_curlsh(request, self->curlsh);
 	if (self->path_prefix != NULL)
@@ -89,9 +107,35 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	curl = fu_redfish_request_get_curl(request);
 #if CURL_AT_LEAST_VERSION(7, 63, 0)
 	uri = fu_redfish_request_get_uri(request);
-	(void)curl_url_set(uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
-	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
-	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
+	rc = curl_url_set(uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
+	if (rc != CURLUE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to set URI scheme: 0x%x",
+			    (guint)rc);
+		return NULL;
+	}
+	rc = curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
+	if (rc != CURLUE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to set URI host %s: 0x%x",
+			    self->hostname,
+			    (guint)rc);
+		return NULL;
+	}
+	rc = curl_url_set(uri, CURLUPART_PORT, port, 0);
+	if (rc != CURLUE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to set URI port %s: 0x%x",
+			    port,
+			    (guint)rc);
+		return NULL;
+	}
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
 #else
 	uri =
@@ -100,11 +144,18 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 #endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
-	if (self->bearer_token != NULL) {
+	bearer_token = fu_redfish_backend_get_bearer_token(self);
+
+	if (self->session_key_file != NULL) {
+		g_autofree gchar *session_key = fu_redfish_backend_get_session_key(self, error);
+		if (session_key == NULL)
+			return NULL;
+		fu_redfish_request_set_auth_token(request, session_key);
+	} else if (bearer_token != NULL) {
 		/* Some custom implementation require special authentication through bearer token.
 		 * Let's use that if configured to do so. */
 		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
-		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
+		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, bearer_token);
 	} else {
 		/* Here is the common auth scenario, when no specific bearer token is configured.
 		 * since DSP0266 makes Basic Authorization a requirement,
@@ -124,7 +175,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	}
 
 	/* success */
-	return request;
+	return g_steal_pointer(&request);
 }
 
 static gboolean
@@ -190,9 +241,13 @@ fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
 		return FALSE;
 	for (guint i = 0; i < fwupd_json_array_get_size(json_arr_members); i++) {
 		const gchar *member_uri;
-		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+		g_autoptr(FuRedfishRequest) request = NULL;
 		g_autoptr(FwupdJsonObject) json_obj_member = NULL;
 		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		request = fu_redfish_backend_request_new(self, error);
+		if (request == NULL)
+			return FALSE;
 
 		json_obj_member = fwupd_json_array_get_object(json_arr_members, i, error);
 		if (json_obj_member == NULL)
@@ -205,8 +260,10 @@ fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
 		if (!fu_redfish_request_perform(request,
 						member_uri,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-						error))
+						error)) {
+			g_prefix_error(error, "failed to coldplug %s: ", member_uri);
 			return FALSE;
+		}
 		json_obj_tmp = fu_redfish_request_get_json_object(request, error);
 		if (json_obj_tmp == NULL)
 			return FALSE;
@@ -222,8 +279,12 @@ fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self,
 				      GError **error)
 {
 	const gchar *collection_uri;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
 
 	collection_uri = fwupd_json_object_get_string(json_inventory, "@odata.id", error);
 	if (collection_uri == NULL)
@@ -231,8 +292,10 @@ fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self,
 	if (!fu_redfish_request_perform(request,
 					collection_uri,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to coldplug %s: ", collection_uri);
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -298,7 +361,7 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 {
 	const gchar *session_uri;
 	g_autofree gchar *session_key = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(FwupdJsonObject) json_obj_resp = NULL;
 
@@ -309,6 +372,9 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 	fwupd_json_object_add_string(json_obj, "UserName", self->username);
 	fwupd_json_object_add_string(json_obj, "Password", self->password);
 
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
 	(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, self);
 	(void)curl_easy_setopt(fu_redfish_request_get_curl(request),
 			       CURLOPT_HEADERFUNCTION,
@@ -320,8 +386,10 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 					     "POST",
 					     json_obj,
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					     error))
+					     error)) {
+		g_prefix_error_literal(error, "failed to create session: ");
 		return FALSE;
+	}
 
 	/* check this was set */
 	session_key = fu_redfish_backend_get_session_key(self, error);
@@ -362,9 +430,7 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 {
-	g_autofree gchar *auth_header = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(_curl_slist) hs = NULL;
 	CURL *curl;
 
 	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
@@ -382,12 +448,12 @@ fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
 		return FALSE;
 	}
 
-	request = fu_redfish_backend_request_new(self);
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
+	fu_redfish_request_set_auth_token(request, self->session_key);
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	auth_header = g_strconcat("X-Auth-Token: ", self->session_key, NULL);
-	hs = curl_slist_append(hs, auth_header);
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
 	if (!fu_redfish_request_perform(request, self->session_uri, 0, error)) {
 		g_prefix_error_literal(error, "failed to delete session: ");
 		return FALSE;
@@ -482,7 +548,7 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
 	gboolean service_enabled = FALSE;
 	gint64 max_image_size = 0;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_firmware = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonObject) json_software = NULL;
@@ -494,11 +560,16 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	}
 
 	/* get the update service */
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					self->update_uri_path,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to coldplug %s: ", self->update_uri_path);
 		return FALSE;
+	}
 
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
@@ -587,17 +658,23 @@ fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
 				     GError **error)
 {
 	gint64 system_id = 0;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonObject) json_oem_dell = NULL;
 	g_autoptr(FwupdJsonObject) json_oem_dell_system = NULL;
 	g_autoptr(FwupdJsonObject) json_oem = NULL;
 
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
+
 	if (!fu_redfish_request_perform(request,
 					member_uri,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error(error, "failed to setup dell member %s: ", member_uri);
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -632,16 +709,22 @@ static gboolean
 fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
 {
 	const gchar *member_uri;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) json_arr_members = NULL;
 	g_autoptr(FwupdJsonObject) json_obj_member = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
+
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/Systems",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error_literal(error, "failed to setup dell: ");
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -675,7 +758,7 @@ fu_redfish_backend_setup(FuBackend *backend,
 	g_autoptr(FwupdJsonObject) json_update_service = NULL;
 	const gchar *data_id;
 	const gchar *version = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
 
 	/* sanity check */
 	if (self->port == 0 || self->port > G_MAXUINT16) {
@@ -688,11 +771,16 @@ fu_redfish_backend_setup(FuBackend *backend,
 	}
 
 	/* try to connect */
+	request = fu_redfish_backend_request_new(self, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request, error);
 	if (json_obj == NULL)
 		return FALSE;
@@ -784,13 +872,6 @@ fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 	g_set_str(&self->password, password);
 }
 
-void
-fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
-{
-	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
-	g_set_str(&self->bearer_token, bearer_token);
-}
-
 /**
  * fu_redfish_backend_has_bearer_token:
  * @self: a #FuRedfishBackend
@@ -803,8 +884,11 @@ fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_
 gboolean
 fu_redfish_backend_has_bearer_token(FuRedfishBackend *self)
 {
+	g_autofree gchar *bearer_token = NULL;
+
 	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
-	return self->bearer_token != NULL;
+	bearer_token = fu_redfish_backend_get_bearer_token(self);
+	return bearer_token != NULL;
 }
 
 void
@@ -812,6 +896,13 @@ fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *ses
 {
 	g_return_if_fail(FU_IS_REDFISH_BACKEND(self));
 	g_set_str(&self->session_key_file, session_key_file);
+}
+
+const gchar *
+fu_redfish_backend_get_session_key_file(FuRedfishBackend *self)
+{
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), NULL);
+	return self->session_key_file;
 }
 
 const gchar *
@@ -854,10 +945,11 @@ static void
 fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
+	g_autofree gchar *bearer_token = fu_redfish_backend_get_bearer_token(self);
 	fwupd_codec_string_append(str, idt, "Hostname", self->hostname);
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
-	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
+	fwupd_codec_string_append_bool(str, idt, "BearerToken", bearer_token != NULL);
 	fwupd_codec_string_append(str, idt, "SessionKeyFile", self->session_key_file);
 	fwupd_codec_string_append_bool(str, idt, "SessionKey", self->session_key != NULL);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
@@ -885,7 +977,6 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);
-	g_free(self->bearer_token);
 	g_free(self->session_key_file);
 	g_free(self->session_key);
 	g_free(self->session_uri);
@@ -911,6 +1002,7 @@ fu_redfish_backend_class_init(FuRedfishBackendClass *klass)
 static void
 fu_redfish_backend_init(FuRedfishBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_CAN_INVALIDATE);
 	self->use_https = TRUE;
 	self->device_gtype = FU_TYPE_REDFISH_DEVICE;
 	self->request_cache = g_hash_table_new_full(g_str_hash,
@@ -926,12 +1018,6 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 FuRedfishBackend *
 fu_redfish_backend_new(FuContext *ctx)
 {
-	return FU_REDFISH_BACKEND(g_object_new(FU_REDFISH_TYPE_BACKEND,
-					       "name",
-					       "redfish",
-					       "can-invalidate",
-					       TRUE,
-					       "context",
-					       ctx,
-					       NULL));
+	return FU_REDFISH_BACKEND(
+	    g_object_new(FU_REDFISH_TYPE_BACKEND, "name", "redfish", "context", ctx, NULL));
 }

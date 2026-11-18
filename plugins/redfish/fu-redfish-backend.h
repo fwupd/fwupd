@@ -30,10 +30,10 @@ const gchar *
 fu_redfish_backend_get_username(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password);
-void
-fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token);
 gboolean
 fu_redfish_backend_has_bearer_token(FuRedfishBackend *self);
+const gchar *
+fu_redfish_backend_get_session_key_file(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file);
 void
@@ -59,4 +59,4 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
 gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *
-fu_redfish_backend_request_new(FuRedfishBackend *self);
+fu_redfish_backend_request_new(FuRedfishBackend *self, GError **error);

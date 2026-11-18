@@ -40,7 +40,8 @@ fu_usb_hid_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 	FuUsbHidDescriptor *self = FU_USB_HID_DESCRIPTOR(codec);
 	const gchar *tmp;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Data", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Data", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(tmp, &bufsz);
@@ -142,6 +143,8 @@ void
 fu_usb_hid_descriptor_set_blob(FuUsbHidDescriptor *self, GBytes *blob)
 {
 	g_return_if_fail(FU_IS_USB_HID_DESCRIPTOR(self));
+	if (self->blob == blob)
+		return;
 	if (self->blob != NULL)
 		g_bytes_unref(self->blob);
 	self->blob = g_bytes_ref(blob);

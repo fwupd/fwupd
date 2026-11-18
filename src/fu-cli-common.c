@@ -338,6 +338,11 @@ fu_cli_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: a display that can detect touch input from a user */
 			return g_strdup_printf(_("%s Touchscreen Update"), name);
 		}
+		if (g_strcmp0(cat, "X-ExpansionCard") == 0) {
+			/* TRANSLATORS: a specific part of hardware,
+			 * the first %s is the device type, e.g. 'HDMI` */
+			return g_strdup_printf(_("%s Expansion Card"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release

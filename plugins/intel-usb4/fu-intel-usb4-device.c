@@ -310,8 +310,10 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 		fu_struct_intel_usb4_metadata_nvm_read_set_address(
 		    st,
 		    NVM_OFFSET_TO_METADATA(fu_chunk_get_address(chk)));
+		/* length field in dwords, note 0 means 16 dwords */
 		fu_struct_intel_usb4_metadata_nvm_read_set_length(st,
-								  fu_chunk_get_data_sz(chk) / 4);
+								  (fu_chunk_get_data_sz(chk) / 4) &
+								      0xf);
 		if (!fu_intel_usb4_device_operation(self,
 						    FU_INTEL_USB4_OPCODE_NVM_READ,
 						    st->buf->data,

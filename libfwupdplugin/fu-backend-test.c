@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-test.h"
@@ -31,6 +32,7 @@ fu_backend_emulate_func(void)
 	g_autofree gchar *json3 = NULL;
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDeviceEvent) ev_parent = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
@@ -166,10 +168,173 @@ fu_backend_emulate_func(void)
 	device2 = fu_device_get_backend_parent_with_subsystem(device, "usb", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(device2);
+	g_clear_error(&error);
+
+	/* GetBackendParent:Subsystem=pci, validation keeps the recorded ID */
+	ev_parent = fu_device_event_new("GetBackendParent:Subsystem=pci");
+	fu_device_event_set_str(ev_parent, "GType", "FuUdevDevice");
+	fu_device_event_set_str(ev_parent, "DeviceId", "0123456789abcdef0123456789abcdef01234567");
+	fu_device_event_set_str(ev_parent, "BackendId", "/sys/devices/pci0000:00");
+	fu_device_event_set_str(ev_parent, "PhysicalId", "PCI_SLOT_NAME=0000:00:00.0");
+	fu_device_add_event(device, ev_parent);
+	device2 = fu_device_get_backend_parent_with_subsystem(device, "pci", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device2);
+	g_assert_cmpstr(fu_device_get_physical_id(device2), ==, "PCI_SLOT_NAME=0000:00:00.0");
+	ret = fu_device_ensure_id(device2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_id(device2), ==, "0123456789abcdef0123456789abcdef01234567");
 
 	/* check version */
 	g_assert_false(fu_device_check_fwupd_version(device, "5.0.0"));
 	g_assert_true(fu_device_check_fwupd_version(device, "1.9.19"));
+}
+
+static void
+fu_backend_device_child_func(void)
+{
+	gboolean ret;
+	gsize bytes_read = 0;
+	guint8 buf[4] = {0x0};
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) child = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceEvent) ev_child = NULL;
+	g_autoptr(FuDeviceEvent) ev_read = NULL;
+	g_autoptr(FuDeviceEvent) ev_error = NULL;
+	g_autoptr(FuDeviceEvent) ev_missing = NULL;
+	g_autoptr(FuDeviceEvent) ev_invalid = NULL;
+	g_autoptr(FuDeviceEvent) ev_unrelated = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* no backend set */
+	device = g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, NULL);
+	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* vfunc not implemented */
+	backend = g_object_new(FU_TYPE_BACKEND,
+			       "context",
+			       ctx,
+			       "name",
+			       "udev",
+			       "device-gtype",
+			       FU_TYPE_UDEV_DEVICE,
+			       NULL);
+	child = fu_backend_get_device_child(backend, device, "usb:usb_interface", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(child);
+	g_clear_error(&error);
+	fu_device_set_backend(device, backend);
+	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* emulated */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_set_fwupd_version(device, PACKAGE_VERSION);
+
+	/* GetBackendChild:Subsystem=usb:usb_interface */
+	ev_child = fu_device_event_new("GetBackendChild:Subsystem=usb:usb_interface");
+	fu_device_event_set_str(ev_child, "GType", "FuUdevDevice");
+	fu_device_event_set_str(ev_child, "DeviceId", "0123456789abcdef0123456789abcdef01234567");
+	fu_device_event_set_str(ev_child, "BackendId", "/sys/devices/usb1/1-1/1-1:1.0");
+	fu_device_event_set_str(ev_child, "PhysicalId", "1-1:1.0");
+	fu_device_event_set_i64(ev_child, "Vid", 0x093a);
+	fu_device_event_set_i64(ev_child, "Pid", 0x2862);
+	fu_device_add_event(device, ev_child);
+
+	/* Read:Length=0x4,Offset=0x0 -> on the child, redirected to the parent */
+	ev_read = fu_device_event_new("Read:Length=0x4,Offset=0x0");
+	fu_device_event_set_data(ev_read, "Data", (const guint8 *)"abcd", 4);
+	fu_device_add_event(device, ev_read);
+
+	/* GetBackendChild:Subsystem=hid -> backend error */
+	ev_error = fu_device_event_new("GetBackendChild:Subsystem=hid");
+	fu_device_event_set_i64(ev_error, "Error", FWUPD_ERROR_NOT_FOUND);
+	fu_device_event_set_str(ev_error, "ErrorMsg", "no child with subsystem hid");
+	fu_device_add_event(device, ev_error);
+
+	/* GetBackendChild:Subsystem=video4linux -> no GType */
+	ev_missing = fu_device_event_new("GetBackendChild:Subsystem=video4linux");
+	fu_device_add_event(device, ev_missing);
+
+	/* GetBackendChild:Subsystem=nvme -> unknown GType */
+	ev_invalid = fu_device_event_new("GetBackendChild:Subsystem=nvme");
+	fu_device_event_set_str(ev_invalid, "GType", "FuDoesNotExistDevice");
+	fu_device_add_event(device, ev_invalid);
+
+	/* GetBackendChild:Subsystem=drm -> registered GType that is not a FuDevice */
+	ev_unrelated = fu_device_event_new("GetBackendChild:Subsystem=drm");
+	fu_device_event_set_str(ev_unrelated, "GType", "FuBackend");
+	fu_device_add_event(device, ev_unrelated);
+
+	/* success */
+	child = fu_device_get_backend_child(device, "usb:usb_interface", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(child);
+	g_assert_true(FU_IS_UDEV_DEVICE(child));
+	g_assert_true(fu_device_has_flag(child, FWUPD_DEVICE_FLAG_EMULATED));
+	g_assert_true(fu_device_get_backend(child) == backend);
+	g_assert_cmpstr(fu_device_get_backend_id(child), ==, "/sys/devices/usb1/1-1/1-1:1.0");
+	g_assert_cmpstr(fu_device_get_physical_id(child), ==, "1-1:1.0");
+	g_assert_cmpint(fu_device_get_vid(child), ==, 0x093a);
+	g_assert_cmpint(fu_device_get_pid(child), ==, 0x2862);
+	g_assert_true(fu_device_check_fwupd_version(child, PACKAGE_VERSION));
+
+	/* validation keeps the recorded ID rather than recomputing it */
+	ret = fu_device_ensure_id(child, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_id(child), ==, "0123456789abcdef0123456789abcdef01234567");
+
+	/* replayed read uses the recording version of the parent */
+	ret = fu_udev_device_read(FU_UDEV_DEVICE(child),
+				  buf,
+				  sizeof(buf),
+				  &bytes_read,
+				  0,
+				  FU_IO_CHANNEL_FLAG_NONE,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(bytes_read, ==, sizeof(buf));
+	g_assert_cmpint(memcmp(buf, "abcd", sizeof(buf)), ==, 0);
+	g_clear_object(&child);
+
+	/* saved error */
+	child = fu_device_get_backend_child(device, "hid", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* no GType */
+	child = fu_device_get_backend_child(device, "video4linux", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* invalid GType */
+	child = fu_device_get_backend_child(device, "nvme", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* GType not derived from FuDevice */
+	child = fu_device_get_backend_child(device, "drm", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child);
+	g_clear_error(&error);
+
+	/* missing event */
+	child = fu_device_get_backend_child(device, "usb:usb_device", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child);
 }
 
 static void
@@ -186,7 +351,7 @@ fu_backend_func(void)
 
 	/* defaults */
 	g_assert_null(fu_backend_get_name(backend));
-	g_assert_true(fu_backend_get_enabled(backend));
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED));
 
 	/* load */
 	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
@@ -221,11 +386,32 @@ fu_backend_func(void)
 	g_assert_true(dev == dev1);
 }
 
+static void
+fu_backend_config_func(void)
+{
+	g_autofree gchar *value_none = NULL;
+	g_autofree gchar *value_backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuBackend) backend = NULL;
+
+	backend = g_object_new(FU_TYPE_BACKEND, "context", ctx, "name", "foo", NULL);
+	value_none = fu_backend_get_config_str(backend, "Key");
+	g_assert_null(value_none);
+
+	/* only the section named after the backend is used */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "bar", "Key", "wrong");
+	fu_config_set_value_internal(fu_context_get_config(ctx), "foo", "Key", "right");
+	value_backend = fu_backend_get_config_str(backend, "Key");
+	g_assert_cmpstr(value_backend, ==, "right");
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
+	g_test_add_func("/fwupd/backend/config", fu_backend_config_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
+	g_test_add_func("/fwupd/backend/device-child", fu_backend_device_child_func);
 	return g_test_run();
 }

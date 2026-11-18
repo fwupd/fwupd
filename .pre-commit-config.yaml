@@ -152,6 +152,12 @@ repos:
       - id: gitleaks
   - repo: local
     hooks:
+      - id: check-rust
+        name: check rust files for common issues
+        language: system
+        entry: ./fwupbuild check-rust
+        pass_filenames: false
+        types: [rust]
       - id: rustfmt
         name: rustfmt
         entry: rustfmt --check

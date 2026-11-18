@@ -2,6 +2,11 @@
   <id>SBOM</id>
   <firmware gtype="FuAcpiSbomEntry">
     <format>cyclonedx</format>
+    <compression>vendor</compression>
+    <data>dmVuZG9yIGRhdGE=</data>
+  </firmware>
+  <firmware gtype="FuAcpiSbomEntry">
+    <format>cyclonedx</format>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
 </firmware>

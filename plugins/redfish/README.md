@@ -39,9 +39,12 @@ Additionally, on Dell hardware the SystemID is also used:
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID_${RedfishSoftwareId}`
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID` (only-quirks)
 
-Additionally, this Instance ID is added for quirk and parent matching:
+Additionally, this Instance ID is added for matching, quirks and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
+
+On the NVIDIA DGX Station GB300 each device is a child of the BMC, which is the inventory member
+that the manager reports as its `ActiveSoftwareImage`.
 
 ## Update Behavior
 
@@ -152,6 +155,21 @@ or
 ```shell
 curl -k https://192.168.0.133:443/redfish/v1/
 ```
+
+## Bearer Token Rotation
+
+The `[redfish]` `BearerToken` setting is reloaded when `fwupd.conf` changes, so
+a rotated token does not need a daemon restart. Removing the setting restores
+username/password authentication, so `Username` and `Password` must be configured
+first: a daemon started with a token does not create a BMC user. Changes to them
+still need a restart, and a `BearerToken` in the mutable configuration overrides
+the system value, so rotate or remove it there too.
+
+## Session Key Rotation
+
+The file named by the `[redfish]` `SessionKeyFile` setting is read for each request,
+so a session that is replaced out of band does not need a daemon restart. A request
+made while the file cannot be read fails, rather than using other credentials.
 
 ## External Interface Access
 

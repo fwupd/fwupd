@@ -10,6 +10,7 @@
 #include "fu-pixart-tp-device.h"
 #include "fu-pixart-tp-firmware.h"
 #include "fu-pixart-tp-haptic-device.h"
+#include "fu-pixart-tp-ndt-haptic-device.h"
 #include "fu-pixart-tp-pjp360-device.h"
 #include "fu-pixart-tp-plp239-device.h"
 #include "fu-pixart-tp-plugin.h"
@@ -40,6 +41,7 @@ fu_pixart_tp_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_TP_PLP239_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_TP_PJP360_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_TP_HAPTIC_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_TP_NDT_HAPTIC_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_PIXART_TP_FIRMWARE);
 
 	/* chain up to parent */
