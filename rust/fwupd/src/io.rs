@@ -12,7 +12,42 @@ use std::{
     io::{Read, Seek, SeekFrom},
 };
 
-/// Extension trait that adds helpers to any [`Read`] + [`Seek`]
+fn read_exact_or_remaining<R: Read + ?Sized>(r: &mut R, count: usize) -> std::io::Result<Vec<u8>> {
+    let mut buf = vec![0u8; count];
+    let mut offset = 0;
+    while offset < count {
+        match r.read(&mut buf[offset..]) {
+            Ok(0) => break,
+            Ok(nbytes) => offset += nbytes,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(e) => return Err(e),
+        }
+    }
+    buf.truncate(offset);
+    Ok(buf)
+}
+
+/// Extension trait that adds helpers to any [`Read`]
+/// implementation.
+pub trait ReadExt: Read {
+    /// Read exactly `count` bytes unless EOF is encountered.
+    ///
+    /// # Errors
+    ///
+    /// If this function encounters an error of the kind
+    /// [`std::io::ErrorKind::Interrupted`] then the error is ignored and the operation
+    /// will continue.
+    ///
+    /// If this function encounters an "end of file" before completely filling
+    /// the buffer, only the available bytes are returned.
+    ///
+    /// If any other read error is encountered then this function immediately
+    /// returns.
+    fn read_exact_or_remaining(&mut self, count: usize) -> std::io::Result<Vec<u8>> {
+        read_exact_or_remaining(self, count)
+    }
+}
+
 /// implementation.
 pub trait ReadSeekExt: Read + Seek {
     /// Reads exactly `count` bytes from the stream starting
@@ -27,6 +62,30 @@ pub trait ReadSeekExt: Read + Seek {
         let mut buf = vec![0u8; count];
         self.read_exact(&mut buf)?;
         Ok(buf)
+    }
+
+    /// Read exactly `count` bytes unless EOF is encountered.
+    /// See [`ReadExt::read_exact_or_remaining`] for details, this
+    /// function takes an extra `offset` argument.
+    ///
+    /// # Errors
+    ///
+    /// If this function encounters an error of the kind
+    /// [`std::io::ErrorKind::Interrupted`] then the error is ignored and the operation
+    /// will continue.
+    ///
+    /// If this function encounters an "end of file" before completely filling
+    /// the buffer, only the available bytes are returned.
+    ///
+    /// If any other read error is encountered then this function immediately
+    /// returns.
+    fn read_exact_or_remaining_at(
+        &mut self,
+        offset: usize,
+        count: usize,
+    ) -> std::io::Result<Vec<u8>> {
+        self.seek(SeekFrom::Start(offset as u64))?;
+        read_exact_or_remaining(self, count)
     }
 }
 
