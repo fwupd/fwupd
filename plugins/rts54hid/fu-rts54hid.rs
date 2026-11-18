@@ -29,7 +29,7 @@ enum FuRts54hidExt {
 
 #[repr(C, packed)]
 #[derive(New)]
-struct FuRts54HidCmdBuffer {
+struct FuRts54hidCmdBuffer {
     cmd: FuRts54hidCmd,
     ext: FuRts54hidExt,
     dwregaddr: u32le,

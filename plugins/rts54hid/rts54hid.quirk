@@ -2,10 +2,10 @@
 [USB\VID_0BDA&PID_5A00]
 Plugin = rts54hid
 Flags = enforce-requires
-GType = FuRts54HidDevice
+GType = FuRts54hidDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
-Children = FuRts54HidModule|USB\VID_0BDA&PID_5A00&I2C_01
+Children = FuRts54hidModule|USB\VID_0BDA&PID_5A00&I2C_01
 
 # this is a fictitious example...
 [USB\VID_0BDA&PID_5A00&I2C_01]

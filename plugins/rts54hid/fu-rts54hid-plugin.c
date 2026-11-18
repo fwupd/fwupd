@@ -10,14 +10,14 @@
 #include "fu-rts54hid-module.h"
 #include "fu-rts54hid-plugin.h"
 
-struct _FuRts54HidPlugin {
+struct _FuRts54hidPlugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuRts54HidPlugin, fu_rts54hid_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuRts54hidPlugin, fu_rts54hid_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_rts54hid_plugin_init(FuRts54HidPlugin *self)
+fu_rts54hid_plugin_init(FuRts54hidPlugin *self)
 {
 	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
@@ -39,7 +39,7 @@ fu_rts54hid_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_rts54hid_plugin_class_init(FuRts54HidPluginClass *klass)
+fu_rts54hid_plugin_class_init(FuRts54hidPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_rts54hid_plugin_constructed;

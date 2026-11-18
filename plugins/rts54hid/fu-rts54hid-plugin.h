@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuRts54HidPlugin, fu_rts54hid_plugin, FU, RTS54HID_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuRts54hidPlugin, fu_rts54hid_plugin, FU, RTS54HID_PLUGIN, FuPlugin)

@@ -11,39 +11,39 @@
 #include "fu-rts54hid-module.h"
 #include "fu-rts54hid-struct.h"
 
-struct _FuRts54HidModule {
+struct _FuRts54hidModule {
 	FuDevice parent_instance;
 	guint8 target_addr;
 	guint8 i2c_speed;
 	guint8 register_addr_len;
 };
 
-G_DEFINE_TYPE(FuRts54HidModule, fu_rts54hid_module, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuRts54hidModule, fu_rts54hid_module, FU_TYPE_DEVICE)
 
 static void
 fu_rts54hid_module_to_string(FuDevice *module, guint idt, GString *str)
 {
-	FuRts54HidModule *self = FU_RTS54HID_MODULE(module);
+	FuRts54hidModule *self = FU_RTS54HID_MODULE(module);
 	fwupd_codec_string_append_hex(str, idt, "TargetAddr", self->target_addr);
 	fwupd_codec_string_append_hex(str, idt, "I2cSpeed", self->i2c_speed);
 	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", self->register_addr_len);
 }
 
 static gboolean
-fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
+fu_rts54hid_module_i2c_write(FuRts54hidModule *self,
 			     const guint8 *data,
 			     guint8 data_sz,
 			     GError **error)
 {
 	FuDevice *proxy;
-	g_autoptr(FuRts54HidCmdBuffer) st = fu_rts54_hid_cmd_buffer_new();
+	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
-	fu_rts54_hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
-	fu_rts54_hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_WRITE);
-	fu_rts54_hid_cmd_buffer_set_bufferlen(st, data_sz);
-	fu_rts54_hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
-	fu_rts54_hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
-	fu_rts54_hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
+	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_WRITE);
+	fu_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 128, FALSE);
@@ -78,22 +78,22 @@ fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
 }
 
 static gboolean
-fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
+fu_rts54hid_module_i2c_read(FuRts54hidModule *self,
 			    guint32 cmd,
 			    guint8 *data,
 			    guint8 data_sz,
 			    GError **error)
 {
 	FuDevice *proxy;
-	g_autoptr(FuRts54HidCmdBuffer) st = fu_rts54_hid_cmd_buffer_new();
+	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
-	fu_rts54_hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
-	fu_rts54_hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_READ);
-	fu_rts54_hid_cmd_buffer_set_dwregaddr(st, cmd);
-	fu_rts54_hid_cmd_buffer_set_bufferlen(st, data_sz);
-	fu_rts54_hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
-	fu_rts54_hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
-	fu_rts54_hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
+	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_READ);
+	fu_rts54hid_cmd_buffer_set_dwregaddr(st, cmd);
+	fu_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 192, FALSE);
@@ -140,7 +140,7 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 				const gchar *value,
 				GError **error)
 {
-	FuRts54HidModule *self = FU_RTS54HID_MODULE(device);
+	FuRts54hidModule *self = FU_RTS54HID_MODULE(device);
 	guint64 tmp = 0;
 
 	/* load target address from quirks */
@@ -187,7 +187,7 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	FuRts54HidModule *self = FU_RTS54HID_MODULE(module);
+	FuRts54hidModule *self = FU_RTS54HID_MODULE(module);
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -239,7 +239,7 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 }
 
 static void
-fu_rts54hid_module_init(FuRts54HidModule *self)
+fu_rts54hid_module_init(FuRts54hidModule *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
@@ -248,7 +248,7 @@ fu_rts54hid_module_init(FuRts54HidModule *self)
 }
 
 static void
-fu_rts54hid_module_sync_parent_proxy(FuRts54HidModule *self)
+fu_rts54hid_module_sync_parent_proxy(FuRts54hidModule *self)
 {
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
 	if (FU_IS_RTS54HID_DEVICE(parent))
@@ -258,14 +258,14 @@ fu_rts54hid_module_sync_parent_proxy(FuRts54HidModule *self)
 static void
 fu_rts54hid_module_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuRts54HidModule *self = FU_RTS54HID_MODULE(device);
+	FuRts54hidModule *self = FU_RTS54HID_MODULE(device);
 	fu_rts54hid_module_sync_parent_proxy(self);
 }
 
 static void
 fu_rts54hid_module_constructed(GObject *object)
 {
-	FuRts54HidModule *self = FU_RTS54HID_MODULE(object);
+	FuRts54hidModule *self = FU_RTS54HID_MODULE(object);
 
 	fu_rts54hid_module_sync_parent_proxy(self);
 	g_signal_connect(FU_DEVICE(self),
@@ -276,7 +276,7 @@ fu_rts54hid_module_constructed(GObject *object)
 }
 
 static void
-fu_rts54hid_module_class_init(FuRts54HidModuleClass *klass)
+fu_rts54hid_module_class_init(FuRts54hidModuleClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
