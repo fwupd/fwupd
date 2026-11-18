@@ -413,8 +413,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					 "ICTYPE",
 					 NULL);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
-	fu_device_add_instance_str(device, "DRIVER", "HID");
-	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "DRIVER", NULL);
+	fu_device_add_instance_str(device, "ELAN\\DRIVER", "HID");
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "ELAN\\DRIVER", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {

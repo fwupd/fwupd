@@ -249,6 +249,91 @@ fu_device_strsafe_func(void)
 }
 
 static void
+fu_device_instance_id_namespace_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* namespaced keys do not pollute the global keys */
+	fu_device_add_instance_u16(dev, "PCI\\VID", 0x1234);
+	fu_device_add_instance_u16(dev, "PCI\\PID", 0x5678);
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PCI\\VID"), ==, "1234");
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PCI\\PID"), ==, "5678");
+	g_assert_null(fu_device_get_instance_str(dev, "VID"));
+	g_assert_null(fu_device_get_instance_str(dev, "PID"));
+
+	/* global keys are separate */
+	fu_device_add_instance_u16(dev, "VID", 0xAAAA);
+	fu_device_add_instance_u16(dev, "PID", 0xBBBB);
+	fu_device_add_instance_u16(dev, "\\REV", 0xCCCC);
+
+	/* the namespace prefix is dropped from the instance ID */
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "PCI\\VID", "PCI\\PID", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "VID", "PID", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "VID", "PID", "REV", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* missing namespaced key */
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "USB\\VID", NULL);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_1234&PID_5678",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_AAAA&PID_BBBB",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_AAAA&PID_BBBB&REV_CCCC",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_false(fu_device_has_instance_id(dev,
+						 "NVME\\PCI:VID_1234&PCI:PID_5678",
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+static void
+fu_device_instance_id_namespace_empty_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = fu_device_new(ctx);
+
+	/* the global key is not affected by the empty namespace */
+	fu_device_add_instance_u16(dev, "VID", 0x1234);
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "VID"), ==, "1234");
+
+	/* an empty namespace can be overwritten without a critical, e.g. in a loop */
+	for (guint16 i = 0; i < 3; i++) {
+		gboolean ret;
+		g_autoptr(GError) error = NULL;
+
+		fu_device_add_instance_u16(dev, "\\PID", 0x5670 + i);
+		ret = fu_device_build_instance_id(dev, &error, "USB", "VID", "PID", NULL);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PID"), ==, "5672");
+
+	/* the empty namespace prefix is dropped from the instance ID */
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5670",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5671",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5672",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+static void
 fu_device_inhibit_children_func(void)
 {
 	g_autoptr(FuDevice) parent = fu_device_new(NULL);
@@ -1098,6 +1183,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/possible-plugin", fu_device_possible_plugin_func);
 	g_test_add_func("/fwupd/device/vfuncs", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device/instance-ids", fu_device_instance_ids_func);
+	g_test_add_func("/fwupd/device/instance-id-namespace",
+			fu_device_instance_id_namespace_func);
+	g_test_add_func("/fwupd/device/instance-id-namespace-empty",
+			fu_device_instance_id_namespace_empty_func);
 	g_test_add_func("/fwupd/device/composite-id", fu_device_composite_id_func);
 	g_test_add_func("/fwupd/device/flags", fu_device_flags_func);
 	g_test_add_func("/fwupd/device/private-flags", fu_device_custom_flags_func);

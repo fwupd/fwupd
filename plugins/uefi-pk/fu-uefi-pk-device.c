@@ -89,9 +89,14 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 		subject_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 
 	/* the O= key may not exist */
-	fu_device_add_instance_strsafe(FU_DEVICE(self), "VENDOR", subject_vendor);
-	fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", subject_name);
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "UEFI", "VENDOR", "NAME", NULL);
+	fu_device_add_instance_strsafe(FU_DEVICE(self), "SUBJECT\\VENDOR", subject_vendor);
+	fu_device_add_instance_strsafe(FU_DEVICE(self), "SUBJECT\\NAME", subject_name);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "UEFI",
+				    "SUBJECT\\VENDOR",
+				    "SUBJECT\\NAME",
+				    NULL);
 	fu_device_set_name(FU_DEVICE(self), subject_name != NULL ? subject_name : "Unknown");
 	fu_device_set_vendor(FU_DEVICE(self), subject_vendor != NULL ? subject_vendor : "Unknown");
 	fu_device_set_version_raw(FU_DEVICE(self), fu_firmware_get_version_raw(FU_FIRMWARE(sig)));

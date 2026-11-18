@@ -729,12 +729,12 @@ fu_parade_lspcon_device_set_ieee_oui(FuParadeLspconDevice *self, guint32 ieee_ou
 {
 	g_autofree gchar *vid = g_strdup_printf("%06X", ieee_oui);
 	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", vid);
-	fu_device_add_instance_str(FU_DEVICE(self), "VID", vid);
+	fu_device_add_instance_str(FU_DEVICE(self), "OUI\\VID", vid);
 	return fu_device_build_instance_id_full(FU_DEVICE(self),
 						FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						error,
 						"OUI",
-						"VID",
+						"OUI\\VID",
 						NULL);
 }
 
