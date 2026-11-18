@@ -76,6 +76,12 @@ Use I2C ch0.
 
 Since 1.7.6
 
+### `Flags=proxy-required`
+
+A HID proxy must be found to use the USB hub device.
+
+Since 2.1.1
+
 ### GenesysUsbhubSwitchRequest
 
 USB Hub Switch Request value.
