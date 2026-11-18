@@ -10,7 +10,6 @@
 //! into a single logical stream. Reads are dispatched to the appropriate
 //! sub-stream based on the current position.
 
-use crate::io::Searchable;
 use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
@@ -183,11 +182,10 @@ impl Seek for CompositeInputStream {
     }
 }
 
-impl Searchable for CompositeInputStream {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::io::Searchable;
     use crate::slice::NonEmptySlice;
     use crate::streams::{IntoStream, MemoryInputStream};
     use std::io::ErrorKind;

@@ -10,7 +10,6 @@
 //! stream. All reads and seeks are translated relative to the slice offset and
 //! clamped to the slice bounds.
 
-use crate::io::Searchable;
 use crate::streams::{IsSeekable, Stream, StreamError, StreamImpl};
 
 use std::io::{self, Read, Seek, SeekFrom};
@@ -151,11 +150,10 @@ impl IsSeekable for PartialInputStream {
     }
 }
 
-impl Searchable for PartialInputStream {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::io::Searchable;
     use crate::slice::NonEmptySlice;
     use crate::streams::{IntoStream, MemoryInputStream};
 

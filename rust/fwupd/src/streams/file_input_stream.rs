@@ -10,7 +10,6 @@
 //! disk. Delegates [`Read`] and [`Seek`]
 //! directly to the underlying [`std::fs::File`].
 
-use crate::io::Searchable;
 use crate::streams::{IsSeekable, StreamError};
 
 use std::fs::File;
@@ -88,11 +87,10 @@ impl Seek for FileInputStream {
     }
 }
 
-impl Searchable for FileInputStream {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::io::Searchable;
     use crate::slice::NonEmptySlice;
 
     #[test]
