@@ -57,7 +57,7 @@ fu_uefi_dbx_device_set_checksum(FuUefiDbxDevice *self, const gchar *csum, GError
 	fu_device_add_checksum(FU_DEVICE(self), csum);
 
 	/* for operating offline, with no /usr/share/fwupd/remotes.d archives */
-	fu_device_add_instance_strup(FU_DEVICE(self), "CSUM", csum);
+	fu_device_add_instance_strup(FU_DEVICE(self), "\\CSUM", csum);
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -229,7 +229,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		checksum = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, error);
 		if (checksum == NULL)
 			return FALSE;
-		fu_device_add_instance_strup(device, "CRT", checksum);
+		fu_device_add_instance_strup(device, "\\CRT", checksum);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						 NULL,

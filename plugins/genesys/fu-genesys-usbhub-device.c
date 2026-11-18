@@ -1142,12 +1142,12 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 
 	/* add IC product instance and load quirk kv */
 	project_ic = g_strndup(project_ic_type, 4);
-	fu_device_add_instance_str(FU_DEVICE(self), "IC", project_ic);
+	fu_device_add_instance_str(FU_DEVICE(self), "GENESYS_USBHUB\\IC", project_ic);
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
 					      "GENESYS_USBHUB",
-					      "IC",
+					      "GENESYS_USBHUB\\IC",
 					      NULL))
 		return FALSE;
 

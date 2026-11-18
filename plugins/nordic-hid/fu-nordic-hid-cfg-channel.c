@@ -1289,8 +1289,15 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 	 * the dongle.
 	 */
 	if ((self->vid != 0x00 && self->pid != 0x00) || (self->peer_id != SELF_PEER_ID)) {
-		fu_device_add_instance_u16(device, "VEN", self->vid);
-		fu_device_add_instance_u16(device, "DEV", self->pid);
+		fu_device_add_instance_u16(device, "DEVINFO\\VEN", self->vid);
+		fu_device_add_instance_u16(device, "DEVINFO\\DEV", self->pid);
+	} else {
+		fu_device_add_instance_u16(device,
+					   "DEVINFO\\VEN",
+					   fu_device_get_vid(FU_DEVICE(self)));
+		fu_device_add_instance_u16(device,
+					   "DEVINFO\\DEV",
+					   fu_device_get_pid(FU_DEVICE(self)));
 	}
 
 	/* For the default generation, generate GUID without the generation parameter.
@@ -1300,8 +1307,8 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 		if (!fu_device_build_instance_id(device,
 						 error,
 						 "HIDRAW",
-						 "VEN",
-						 "DEV",
+						 "DEVINFO\\VEN",
+						 "DEVINFO\\DEV",
 						 "BOARD",
 						 "BL",
 						 NULL)) {
@@ -1313,8 +1320,8 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 	if (!fu_device_build_instance_id(device,
 					 error,
 					 "HIDRAW",
-					 "VEN",
-					 "DEV",
+					 "DEVINFO\\VEN",
+					 "DEVINFO\\DEV",
 					 "BOARD",
 					 "BL",
 					 "GEN",

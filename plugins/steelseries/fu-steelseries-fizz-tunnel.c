@@ -213,24 +213,30 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_str(device, "PROTOCOL", "FIZZ_TUNNEL");
-	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(proxy));
-	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(proxy));
-	fu_device_add_instance_u16(device, "REV", release);
+	fu_device_add_instance_u16(device, "TUNNEL\\VID", fu_device_get_vid(proxy));
+	fu_device_add_instance_u16(device, "TUNNEL\\PID", fu_device_get_pid(proxy));
+	fu_device_add_instance_u16(device, "TUNNEL\\REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
 					 "STEELSERIES",
-					 "VID",
+					 "TUNNEL\\VID",
 					 "PROTOCOL",
 					 NULL);
-	fu_device_build_instance_id(device, NULL, "STEELSERIES", "VID", "PID", "PROTOCOL", NULL);
+	fu_device_build_instance_id(device,
+				    NULL,
+				    "STEELSERIES",
+				    "TUNNEL\\VID",
+				    "TUNNEL\\PID",
+				    "PROTOCOL",
+				    NULL);
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id(device,
 					    NULL,
 					    "STEELSERIES",
-					    "VID",
-					    "PID",
-					    "REV",
+					    "TUNNEL\\VID",
+					    "TUNNEL\\PID",
+					    "TUNNEL\\REV",
 					    "PROTOCOL",
 					    NULL);
 	}

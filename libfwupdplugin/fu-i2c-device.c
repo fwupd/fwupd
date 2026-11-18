@@ -117,7 +117,7 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
 		for (guint i = 0; i < hwid_guids->len; i++) {
 			const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
-			fu_device_add_instance_str(device, "HWID", hwid_guid);
+			fu_device_add_instance_str(device, "\\HWID", hwid_guid);
 			fu_device_build_instance_id_full(
 			    device,
 			    FU_DEVICE_INSTANCE_FLAG_GENERIC |
