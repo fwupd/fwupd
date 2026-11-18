@@ -357,6 +357,8 @@ pub trait Searchable: Read + Seek {
     }
 }
 
+impl<R: Read + Seek + ?Sized> Searchable for R {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
