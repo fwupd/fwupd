@@ -696,7 +696,7 @@ def task_status_nvidia(task_id: int):
         res["TaskStatus"] = "Critical"
     elif app._nvidia_polls > 1:
         # the task is removed once it is done
-        if task_id == 602:
+        if task_id in [602, 604]:
             return _failure("not found", status=404)
         res["PercentComplete"] = 100
         res["TaskState"] = "Completed"
@@ -705,6 +705,17 @@ def task_status_nvidia(task_id: int):
 
 @app.route("/redfish/v1/TaskService/Tasks/<int:task_id>/Monitor")
 def task_monitor_nvidia(task_id: int):
+    # the task is gone, but the monitor still reports that it failed
+    if task_id == 604:
+        res = {
+            "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
+            "@odata.type": "#Task.v1_4_3.Task",
+            "Id": str(task_id),
+            "TaskState": "Exception",
+            "TaskStatus": "Critical",
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
+
     # once the task is done the monitor answers with an empty body
     return Response(status=200)
 
@@ -899,13 +910,19 @@ def fwupdate_nvidia():
         res = {"@odata.id": 601}
         return Response(json.dumps(res), status=202, mimetype="application/json")
     if contents == "reaped":
+        # only the Location header gives the task monitor
+        res = {"TaskState": "Running"}
         location = "/redfish/v1/TaskService/Tasks/602/Monitor"
     elif contents == "failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/603"}
         location = "/redfish/v1/TaskService/Tasks/603/Monitor"
+    elif contents == "monitor-failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/604"}
+        location = "/redfish/v1/TaskService/Tasks/604/Monitor"
     else:
         return _failure("data invalid")
     return Response(
-        json.dumps({"@odata.id": location}),
+        json.dumps(res),
         status=202,
         mimetype="application/json",
         headers={"Location": location},

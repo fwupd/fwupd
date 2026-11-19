@@ -614,20 +614,23 @@ fu_redfish_session_key_func(void)
 static FuPlugin *
 fu_redfish_nvidia_plugin_new(FuTemporaryDirectory *tmpdir, GError **error)
 {
+	gboolean ret;
 	g_autofree gchar *quirk_fn = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error_local = NULL;
 
 	/* write a quirk for a NVIDIA system */
 	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
-	if (!g_file_set_contents(quirk_fn,
-				 "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
-				 "RedfishDeviceGType = FuRedfishNvidiaDevice\n",
-				 -1,
-				 error))
-		return NULL;
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuRedfishNvidiaDevice\n",
+				  -1,
+				  &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
@@ -635,17 +638,21 @@ fu_redfish_nvidia_plugin_new(FuTemporaryDirectory *tmpdir, GError **error)
 	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
 	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
 	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
-	if (!fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, error))
-		return NULL;
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
 
+	/* only a failed startup means that redfish.py is not running */
 	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	if (!fu_plugin_runner_startup(plugin, progress, error))
 		return NULL;
 	fu_redfish_plugin_set_credentials(plugin, "nvidia_username", "password2");
-	if (!fu_redfish_plugin_reload(plugin, progress, error))
-		return NULL;
-	if (!fu_plugin_runner_coldplug(plugin, progress, error))
-		return NULL;
+	ret = fu_redfish_plugin_reload(plugin, progress, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
 	return g_steal_pointer(&plugin);
 }
 
@@ -785,6 +792,29 @@ fu_redfish_nvidia_update_failed_func(void)
 	g_assert_no_error(error);
 
 	ret = fu_redfish_nvidia_write_payload(plugin, "failed", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+	g_assert_false(ret);
+}
+
+static void
+fu_redfish_nvidia_update_monitor_failed_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+
+	/* the task is removed, but its monitor still reports a failure */
+	ret = fu_redfish_nvidia_write_payload(plugin, "monitor-failed", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
 	g_assert_false(ret);
 }
@@ -1505,6 +1535,8 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/nvidia/update", fu_redfish_nvidia_update_func);
 	g_test_add_func("/redfish/nvidia/update-reaped", fu_redfish_nvidia_update_reaped_func);
 	g_test_add_func("/redfish/nvidia/update-failed", fu_redfish_nvidia_update_failed_func);
+	g_test_add_func("/redfish/nvidia/update-monitor-failed",
+			fu_redfish_nvidia_update_monitor_failed_func);
 	g_test_add_func("/redfish/nvidia/update-no-task", fu_redfish_nvidia_update_no_task_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);

@@ -684,6 +684,11 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	g_debug("TaskMonitor location: %s", location);
 	fu_progress_step_done(progress);
 
+	/* the bundle has been uploaded, so free it before the long wait */
+	g_clear_object(&request);
+	g_clear_pointer(&mime, curl_mime_free);
+	g_clear_pointer(&fw, g_bytes_unref);
+
 	/* wait for the BMC to apply the bundle */
 	if (!fu_redfish_nvidia_device_poll_task(FU_REDFISH_NVIDIA_DEVICE(device),
 						backend,
