@@ -155,6 +155,9 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 	if (fu_device_get_backend_id(device) != NULL)
 		fu_device_set_name(device, fu_device_get_backend_id(device));
 
+	/* firmware for the station declares every version as a plain string */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+
 	/* every other component is a child of the BMC */
 	return fu_redfish_nvidia_device_ensure_parent(FU_REDFISH_NVIDIA_DEVICE(device), error);
 }
@@ -601,7 +604,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "upload");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 95, "bmc-apply");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "bmc-apply");
 
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)

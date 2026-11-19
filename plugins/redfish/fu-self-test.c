@@ -706,6 +706,9 @@ fu_redfish_nvidia_devices_func(void)
 	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_CPU_0"));
 	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
 
+	/* a numeric version is still a plain string */
+	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_PLAIN);
+
 	/* a component that comes in board variants */
 	dev = g_ptr_array_index(devices, 2);
 	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW GPU 0");
