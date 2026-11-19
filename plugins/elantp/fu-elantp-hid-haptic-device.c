@@ -532,7 +532,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 					 "ICTYPE",
 					 NULL);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "DRIVERIC", "MOD", NULL);
-	fu_device_add_instance_str(device, "ELAN\\DRIVER", "ELAN\\HID");
+	fu_device_add_instance_str(device, "ELAN\\DRIVER", "HID");
 	fu_device_build_instance_id(device,
 				    NULL,
 				    "ELANTP",
