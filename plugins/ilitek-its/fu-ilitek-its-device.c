@@ -726,8 +726,8 @@ fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 	if (fu_edid_get_pnp_id(edid) == NULL)
 		return TRUE;
 
-	fu_device_add_instance_str(FU_DEVICE(self), "PNPID", fu_edid_get_pnp_id(edid));
-	fu_device_add_instance_u16(FU_DEVICE(self), "PCODE", fu_edid_get_product_code(edid));
+	fu_device_add_instance_str(FU_DEVICE(self), "\\PNPID", fu_edid_get_pnp_id(edid));
+	fu_device_add_instance_u16(FU_DEVICE(self), "\\PCODE", fu_edid_get_product_code(edid));
 	if (!fu_device_build_instance_id(FU_DEVICE(self),
 					 error,
 					 "HIDRAW",

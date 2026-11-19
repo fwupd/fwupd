@@ -66,12 +66,23 @@ fu_wacom_raw_aes_device_add_recovery_hwid(FuWacomRawAesDevice *self, GError **er
 	}
 
 	/* add recovery IDs */
-	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", 0x2D1F);
-	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", pid);
-	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VID", "PID", NULL))
+	fu_device_add_instance_u16(FU_DEVICE(self), "RECOVERY1\\VEN", 0x2D1F);
+	fu_device_add_instance_u16(FU_DEVICE(self), "RECOVERY1\\DEV", pid);
+	if (!fu_device_build_instance_id(FU_DEVICE(self),
+					 error,
+					 "HIDRAW",
+					 "RECOVERY1\\VEN",
+					 "RECOVERY1\\DEV",
+					 NULL))
 		return FALSE;
-	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", 0x056A);
-	return fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VID", "PID", NULL);
+	fu_device_add_instance_u16(FU_DEVICE(self), "RECOVERY2\\VEN", 0x056A);
+	fu_device_add_instance_u16(FU_DEVICE(self), "RECOVERY2\\DEV", pid);
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "HIDRAW",
+					   "RECOVERY2\\VEN",
+					   "RECOVERY2\\DEV",
+					   NULL);
 }
 
 static gboolean

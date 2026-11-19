@@ -1302,6 +1302,7 @@ fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
  * @guid: GUID to lookup
  * @key: (nullable): an ID to match the entry, e.g. `Name`, or %NULL for all keys
  * @iter_cb: (scope call) (closure user_data): a function to call for each result
+ * @flags: some #FuContextLookupFlags, e.g. #FU_CONTEXT_LOOKUP_FLAG_ALLOW_CACHE
  * @user_data: user data passed to @iter_cb
  *
  * Looks up all entries in the hardware database using a GUID value.
@@ -1315,23 +1316,29 @@ fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
 				   const gchar *key,
 				   FuContextLookupIter iter_cb,
+				   FuContextLookupFlags flags,
 				   gpointer user_data)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuQuirksLookupFlags lookup_flags = FU_QUIRKS_LOOKUP_FLAG_NONE;
 	FuContextQuirkLookupHelper helper = {
 	    .self = self,
 	    .iter_cb = iter_cb,
 	    .user_data = user_data,
 	};
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 	if (priv->flags & FU_CONTEXT_FLAG_NO_QUIRKS)
 		return TRUE;
+	if (flags & FU_CONTEXT_LOOKUP_FLAG_ALLOW_CACHE)
+		lookup_flags |= FU_QUIRKS_LOOKUP_FLAG_ALLOW_CACHE;
 	return fu_quirks_lookup_by_id_iter(priv->quirks,
 					   guid,
 					   key,
 					   fu_context_lookup_quirk_by_id_iter_cb,
+					   lookup_flags,
 					   &helper);
 }
 
@@ -1692,6 +1699,7 @@ fu_context_load_host_bkcs(FuContext *self, GError **error)
 						   guid,
 						   FU_QUIRKS_HOST_BKC,
 						   fu_context_host_bkc_quirk_cb,
+						   FU_CONTEXT_LOOKUP_FLAG_NONE,
 						   NULL);
 	}
 
@@ -1811,6 +1819,7 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 						   guid,
 						   FU_QUIRKS_FLAGS,
 						   fu_context_hwid_quirk_cb,
+						   FU_CONTEXT_LOOKUP_FLAG_NONE,
 						   NULL);
 	}
 	fu_progress_step_done(progress);

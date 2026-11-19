@@ -46,6 +46,10 @@ Flags = has-haptic
 Plugin = pixart_tp
 Flags = has-haptic
 
+[HIDRAW\VEN_093A&DEV_4F13]
+Plugin = pixart_tp
+Flags = has-ndt-haptic
+
 [PIXARTTP\PARTID_0274]
 PixartTpSramSelect = 0x08
 

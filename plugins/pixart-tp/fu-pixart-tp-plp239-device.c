@@ -1114,6 +1114,16 @@ fu_pixart_tp_plp239_device_verify_extend_flash(FuPixartTpPlp239Device *self,
 }
 
 static gboolean
+fu_pixart_tp_plp239_device_is_tp_update_type(FuPixartTpDevice *self,
+					     FuPixartTpUpdateType update_type)
+{
+	return update_type == FU_PIXART_TP_UPDATE_TYPE_GENERAL ||
+	       update_type == FU_PIXART_TP_UPDATE_TYPE_FW_SECTION ||
+	       update_type == FU_PIXART_TP_UPDATE_TYPE_PARAM ||
+	       update_type == FU_PIXART_TP_UPDATE_TYPE_HID_DESCRIPTOR;
+}
+
+static gboolean
 fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 					 FuPixartTpSection *section,
 					 FuProgress *progress,
@@ -1135,11 +1145,9 @@ fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 	if (fu_firmware_get_size(FU_FIRMWARE(section)) == 0)
 		return TRUE;
 
+	/* already checked in ->check_firmware(), but be paranoid */
 	update_type = fu_pixart_tp_section_get_update_type(section);
-	if (update_type != FU_PIXART_TP_UPDATE_TYPE_GENERAL &&
-	    update_type != FU_PIXART_TP_UPDATE_TYPE_FW_SECTION &&
-	    update_type != FU_PIXART_TP_UPDATE_TYPE_PARAM &&
-	    update_type != FU_PIXART_TP_UPDATE_TYPE_HID_DESCRIPTOR) {
+	if (!fu_pixart_tp_plp239_device_is_tp_update_type(FU_PIXART_TP_DEVICE(self), update_type)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -1393,7 +1401,6 @@ fu_pixart_tp_plp239_device_write_sections(FuPixartTpPlp239Device *self,
 
 	for (guint i = 0; i < sections->len; i++) {
 		FuPixartTpSection *section = g_ptr_array_index(sections, i);
-		FuPixartTpUpdateType update_type = fu_pixart_tp_section_get_update_type(section);
 
 		/* skip non-updatable sections */
 		if (!fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_VALID) ||
@@ -1403,8 +1410,9 @@ fu_pixart_tp_plp239_device_write_sections(FuPixartTpPlp239Device *self,
 			continue;
 		}
 
-		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE) {
-			g_debug("skip TF_FORCE section %u for TP parent device", i);
+		/* skip sections written by a child device using its own image */
+		if (fu_pixart_tp_device_section_is_for_child(FU_PIXART_TP_DEVICE(self), section)) {
+			g_debug("skip child device section %u for TP parent device", i);
 			fu_progress_step_done(progress);
 			continue;
 		}
@@ -1456,20 +1464,17 @@ fu_pixart_tp_plp239_device_write_firmware(FuDevice *device,
 
 	/* calculate total bytes for valid internal TP sections
 	 * NOTE:
-	 * - TF_FORCE sections are skipped here; they are handled by the
-	 * TF/haptic child-device using its own firmware image.
+	 * - sections for a child device, e.g. TF_FORCE, are skipped here; they are
+	 * handled by the child device using its own firmware image.
 	 */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPixartTpSection *section = g_ptr_array_index(sections, i);
 		guint32 section_length = 0;
-		FuPixartTpUpdateType update_type;
 
 		if (!fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_VALID) ||
 		    fu_pixart_tp_section_has_flag(section, FU_PIXART_TP_FIRMWARE_FLAG_IS_EXTERNAL))
 			continue;
-
-		update_type = fu_pixart_tp_section_get_update_type(section);
-		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE)
+		if (fu_pixart_tp_device_section_is_for_child(FU_PIXART_TP_DEVICE(self), section))
 			continue;
 
 		section_length = fu_firmware_get_size(FU_FIRMWARE(section));
@@ -1500,7 +1505,7 @@ fu_pixart_tp_plp239_device_write_firmware(FuDevice *device,
 			return FALSE;
 	}
 
-	/* program all TP sections (TF_FORCE handled by child device) */
+	/* program all TP sections (child device sections are handled by the child) */
 	if (!fu_pixart_tp_plp239_device_write_sections(self,
 						       sections,
 						       fu_progress_get_child(progress),
@@ -1592,6 +1597,8 @@ static void
 fu_pixart_tp_plp239_device_class_init(FuPixartTpPlp239DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuPixartTpDeviceClass *tp_class = FU_PIXART_TP_DEVICE_CLASS(klass);
+	tp_class->is_tp_update_type = fu_pixart_tp_plp239_device_is_tp_update_type;
 	device_class->setup = fu_pixart_tp_plp239_device_setup;
 	device_class->write_firmware = fu_pixart_tp_plp239_device_write_firmware;
 	device_class->attach = fu_pixart_tp_plp239_device_attach;

@@ -9,6 +9,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-pixart-tp-section.h"
 #include "fu-pixart-tp-struct.h"
 
 #define FU_TYPE_PIXART_TP_DEVICE (fu_pixart_tp_device_get_type())
@@ -21,7 +22,13 @@ G_DECLARE_DERIVABLE_TYPE(FuPixartTpDevice,
 
 struct _FuPixartTpDeviceClass {
 	FuHidrawDeviceClass parent_class;
+	/* the update types written by the TP itself, rather than a child device */
+	gboolean (*is_tp_update_type)(FuPixartTpDevice *self, FuPixartTpUpdateType update_type);
 };
+
+gboolean
+fu_pixart_tp_device_section_is_for_child(FuPixartTpDevice *self, FuPixartTpSection *section)
+    G_GNUC_NON_NULL(1, 2);
 
 gboolean
 fu_pixart_tp_device_ensure_vendor_reports(FuPixartTpDevice *self, GError **error)

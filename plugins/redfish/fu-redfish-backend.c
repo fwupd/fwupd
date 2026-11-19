@@ -1002,6 +1002,7 @@ fu_redfish_backend_class_init(FuRedfishBackendClass *klass)
 static void
 fu_redfish_backend_init(FuRedfishBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_CAN_INVALIDATE);
 	self->use_https = TRUE;
 	self->device_gtype = FU_TYPE_REDFISH_DEVICE;
 	self->request_cache = g_hash_table_new_full(g_str_hash,
@@ -1017,12 +1018,6 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 FuRedfishBackend *
 fu_redfish_backend_new(FuContext *ctx)
 {
-	return FU_REDFISH_BACKEND(g_object_new(FU_REDFISH_TYPE_BACKEND,
-					       "name",
-					       "redfish",
-					       "can-invalidate",
-					       TRUE,
-					       "context",
-					       ctx,
-					       NULL));
+	return FU_REDFISH_BACKEND(
+	    g_object_new(FU_REDFISH_TYPE_BACKEND, "name", "redfish", "context", ctx, NULL));
 }

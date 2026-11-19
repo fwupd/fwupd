@@ -8,6 +8,7 @@
 #pragma once
 
 #include "fu-context.h"
+#include "fu-quirks-struct.h"
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
 			    const gchar *key,
 			    FuQuirksIter iter_cb,
+			    FuQuirksLookupFlags flags,
 			    gpointer user_data) G_GNUC_NON_NULL(1, 2);
 void
 fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON_NULL(1, 2);

@@ -239,7 +239,7 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id, GError **
 
 	/* add all possible instance IDs */
 	fu_device_build_instance_id_full(FU_DEVICE(self),
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 subsys_instancestr[0],
 					 "VID",

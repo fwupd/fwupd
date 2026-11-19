@@ -39,9 +39,12 @@ Additionally, on Dell hardware the SystemID is also used:
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID_${RedfishSoftwareId}`
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID` (only-quirks)
 
-Additionally, this Instance ID is added for quirk and parent matching:
+Additionally, this Instance ID is added for matching, quirks and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
+
+On the NVIDIA DGX Station GB300 each device is a child of the BMC, which is the inventory member
+that the manager reports as its `ActiveSoftwareImage`.
 
 ## Update Behavior
 

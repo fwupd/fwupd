@@ -85,7 +85,7 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
 	fu_device_build_instance_id_full(FU_DEVICE(self),
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 subsystem,
 					 "VID",

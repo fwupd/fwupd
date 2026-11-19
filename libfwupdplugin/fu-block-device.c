@@ -40,7 +40,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", 0x1234);
 		fu_device_add_instance_u16(device, "DEV", 0x5678);
 		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "BLOCK",
 						 "VEN",
@@ -59,16 +59,21 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		/* copy the VID and PID, and reconstruct compatible IDs */
 		if (!fu_device_probe(usb_device, error))
 			return FALSE;
-		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(usb_device));
-		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(usb_device));
+		fu_device_add_instance_u16(device, "USB\\VEN", fu_device_get_vid(usb_device));
+		fu_device_add_instance_u16(device, "USB\\DEV", fu_device_get_pid(usb_device));
 		if (!fu_device_build_instance_id_full(device,
-						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						      error,
 						      "BLOCK",
-						      "VEN",
+						      "USB\\VEN",
 						      NULL))
 			return FALSE;
-		if (!fu_device_build_instance_id(device, error, "BLOCK", "VEN", "DEV", NULL))
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "BLOCK",
+						 "USB\\VEN",
+						 "USB\\DEV",
+						 NULL))
 			return FALSE;
 		fu_device_incorporate(device,
 				      usb_device,

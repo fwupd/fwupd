@@ -242,6 +242,8 @@ fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHf
 	}
 
 	/* save buffer for later */
+	if (self->hfsts[idx] == hfsts)
+		return;
 	if (self->hfsts[idx] != NULL)
 		fu_struct_intel_me_hfsts_unref(self->hfsts[idx]);
 	self->hfsts[idx] = fu_struct_intel_me_hfsts_ref(hfsts);
@@ -763,7 +765,7 @@ fu_intel_me_device_constructed(GObject *obj)
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(obj);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "PCI\\VEN_8086",
-				       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+				       FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE);
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_intel_me_device_parent_class)->constructed(obj);

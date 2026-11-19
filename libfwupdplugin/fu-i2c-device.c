@@ -60,7 +60,7 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						  FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "I2C",
 					      "NAME",
@@ -117,15 +117,16 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
 		for (guint i = 0; i < hwid_guids->len; i++) {
 			const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
-			fu_device_add_instance_str(device, "HWID", hwid_guid);
-			fu_device_build_instance_id_full(device,
-							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-							     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-							 NULL,
-							 "I2C",
-							 "NAME",
-							 "HWID",
-							 NULL);
+			fu_device_add_instance_str(device, "\\HWID", hwid_guid);
+			fu_device_build_instance_id_full(
+			    device,
+			    FU_DEVICE_INSTANCE_FLAG_GENERIC |
+				FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
+			    NULL,
+			    "I2C",
+			    "NAME",
+			    "HWID",
+			    NULL);
 		}
 	}
 

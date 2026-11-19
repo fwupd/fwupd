@@ -1723,8 +1723,8 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 
 	/* prepare query with bound GUID parameter */
 	query = xb_query_new_full(self->silo,
-				  "components/component[@type='firmware']/"
-				  "provides/firmware[@type='flashed'][text()=?]/"
+				  "components/component/"
+				  "provides/firmware[text()=?]/"
 				  "../../releases/release",
 				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
 				  error);
@@ -2467,6 +2467,7 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
  * fu_engine_composite_cleanup:
  * @self: a #FuEngine
  * @devices: (element-type #FuDevice): devices that will be updated
+ * @update_state: a #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_FAILED
  * @error: (nullable): optional return location for an error
  *
  * Calls into the plugin loader, informing each plugin of the pending upgrade(s).
@@ -2474,7 +2475,10 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
+fu_engine_composite_cleanup(FuEngine *self,
+			    GPtrArray *devices,
+			    FwupdUpdateState update_state,
+			    GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	gboolean any_emulated = FALSE;
@@ -2496,7 +2500,9 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
-		if (!fu_plugin_runner_composite_cleanup(plugin_tmp, devices, error))
+		if (!fu_plugin_has_flag(plugin_tmp, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE))
+			continue;
+		if (!fu_plugin_runner_composite_cleanup(plugin_tmp, devices, update_state, error))
 			return FALSE;
 	}
 
@@ -2681,6 +2687,15 @@ fu_engine_install_releases(FuEngine *self,
 	}
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
+		g_autoptr(GError) error_local = NULL;
+		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
+		if (!fu_engine_composite_cleanup(self,
+						 devices,
+						 FWUPD_UPDATE_STATE_UNKNOWN,
+						 &error_local)) {
+			g_warning("failed to cleanup after failed prepare composite action: %s",
+				  error_local->message);
+		}
 		g_prefix_error_literal(error, "failed to prepare composite action: ");
 		return FALSE;
 	}
@@ -2721,7 +2736,10 @@ fu_engine_install_releases(FuEngine *self,
 					       flags,
 					       error)) {
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
+			if (!fu_engine_composite_cleanup(self,
+							 devices,
+							 FWUPD_UPDATE_STATE_FAILED,
+							 &error_local)) {
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
@@ -2756,7 +2774,7 @@ fu_engine_install_releases(FuEngine *self,
 
 	/* notify the plugins about the composite action */
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
-	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
+	if (!fu_engine_composite_cleanup(self, devices_new, FWUPD_UPDATE_STATE_SUCCESS, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
 		fu_engine_update_motd_reset(self);
 		return FALSE;
@@ -4410,7 +4428,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	g_autoptr(GError) error_tag_by_guid_version = NULL;
 
 	/* print what we've got */
-	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
+	components = xb_silo_query(self->silo, "components/component", 0, NULL);
 	if (components == NULL)
 		return TRUE;
 	g_info("%u components now in silo", components->len);
@@ -4427,13 +4445,6 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		return FALSE;
 	}
 	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       "type",
-				       error)) {
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-	if (!xb_silo_query_build_index(self->silo,
 				       "components/component/provides/firmware",
 				       NULL,
 				       error)) {
@@ -4441,7 +4452,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		return FALSE;
 	}
 	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/tags/tag",
+				       "components/component/tags/tag",
 				       "namespace",
 				       error)) {
 		fwupd_error_convert(error);
@@ -4451,7 +4462,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	/* create prepared queries to save time later */
 	self->query_component_by_guid =
 	    xb_query_new_full(self->silo,
-			      "components/component/provides/firmware[@type=$'flashed'][text()=?]/"
+			      "components/component/provides/firmware[text()=?]/"
 			      "../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      error);
@@ -4463,7 +4474,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	/* old-style <checksum target="container"> and new-style <artifact> */
 	self->query_container_checksum1 =
 	    xb_query_new_full(self->silo,
-			      "components/component[@type='firmware']/releases/release/"
+			      "components/component/releases/release/"
 			      "checksum[@target='container'][text()=?]/..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum1);
@@ -4471,7 +4482,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		g_debug("ignoring prepared query: %s", error_container_checksum1->message);
 	self->query_container_checksum2 =
 	    xb_query_new_full(self->silo,
-			      "components/component[@type='firmware']/releases/release/"
+			      "components/component/releases/release/"
 			      "artifacts/artifact[@type='binary']/checksum[text()=?]/"
 			      "../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
@@ -5297,7 +5308,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(XbQuery) query = NULL;
 
 	dev = fu_device_new(self->ctx);
-	provides = xb_node_query(component, "provides/firmware[@type=$'flashed']", 0, &error_local);
+	provides = xb_node_query(component, "provides/firmware", 0, &error_local);
 	if (provides == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -8956,6 +8967,7 @@ fu_engine_backends_coldplug_backend(FuEngine *self,
 	fu_progress_step_done(progress);
 
 	/* success */
+	fu_backend_add_flag(backend, FU_BACKEND_FLAG_DONE_COLDPLUG);
 	g_signal_connect(FU_BACKEND(backend),
 			 "device-added",
 			 G_CALLBACK(fu_engine_backend_device_added_cb),
@@ -8981,7 +8993,7 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 		FuBackend *backend = g_ptr_array_index(backends, i);
 		g_autoptr(GError) error_backend = NULL;
 
-		if (!fu_backend_get_enabled(backend)) {
+		if (!fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED)) {
 			fu_progress_step_done(progress);
 			continue;
 		}

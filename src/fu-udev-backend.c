@@ -28,7 +28,6 @@ struct _FuUdevBackend {
 	GHashTable *coldplug_cache; /* of str:FuUdevBackendColdplugCacheItem */
 	GPtrArray *dpaux_devices;   /* of FuDpauxDevice */
 	GSource *dpaux_devices_rescan_source;
-	gboolean done_coldplug;
 };
 
 typedef struct {
@@ -57,7 +56,7 @@ fu_udev_backend_coldplug_cache_add_device(FuUdevBackend *self,
 					  const gchar *fn,
 					  FuUdevDevice *udev_device)
 {
-	if (!self->done_coldplug) {
+	if (!fu_backend_has_flag(FU_BACKEND(self), FU_BACKEND_FLAG_DONE_COLDPLUG)) {
 		FuUdevBackendColdplugCacheItem *item = g_new0(FuUdevBackendColdplugCacheItem, 1);
 		item->udev_device = g_object_ref(udev_device);
 		g_hash_table_insert(self->coldplug_cache, g_strdup(fn), item);
@@ -67,18 +66,11 @@ fu_udev_backend_coldplug_cache_add_device(FuUdevBackend *self,
 static void
 fu_udev_backend_coldplug_cache_add_error(FuUdevBackend *self, const gchar *fn, GError *error)
 {
-	if (!self->done_coldplug) {
+	if (!fu_backend_has_flag(FU_BACKEND(self), FU_BACKEND_FLAG_DONE_COLDPLUG)) {
 		FuUdevBackendColdplugCacheItem *item = g_new0(FuUdevBackendColdplugCacheItem, 1);
 		item->error = g_error_copy(error);
 		g_hash_table_insert(self->coldplug_cache, g_strdup(fn), item);
 	}
-}
-
-static void
-fu_udev_backend_to_string(FuBackend *backend, guint idt, GString *str)
-{
-	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	fwupd_codec_string_append_bool(str, idt, "DoneColdplug", self->done_coldplug);
 }
 
 static void
@@ -296,7 +288,7 @@ fu_udev_backend_create_device(FuUdevBackend *self,
 	g_autoptr(GError) error_local = NULL;
 
 	/* query the cache to avoid scanning parent devices multiple times */
-	if (!self->done_coldplug) {
+	if (!fu_backend_has_flag(FU_BACKEND(self), FU_BACKEND_FLAG_DONE_COLDPLUG)) {
 		FuUdevBackendColdplugCacheItem *item =
 		    g_hash_table_lookup(self->coldplug_cache, fn);
 		if (item != NULL) {
@@ -352,7 +344,7 @@ fu_udev_backend_device_add_from_device(FuUdevBackend *self, FuUdevDevice *device
 
 		/* open -- this might seem redundant, but it means the device is added at daemon
 		 * coldplug rather than a few seconds later */
-		if (!self->done_coldplug) {
+		if (!fu_backend_has_flag(FU_BACKEND(self), FU_BACKEND_FLAG_DONE_COLDPLUG)) {
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
@@ -813,8 +805,6 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 	}
 
 	/* success */
-	g_hash_table_remove_all(self->coldplug_cache);
-	self->done_coldplug = TRUE;
 	return TRUE;
 }
 
@@ -1035,8 +1025,19 @@ fu_udev_backend_finalize(GObject *object)
 }
 
 static void
+fu_udev_backend_notify_flags_cb(FuBackend *backend, GParamSpec *pspec, FuUdevBackend *self)
+{
+	if (fu_backend_has_flag(backend, FU_BACKEND_FLAG_DONE_COLDPLUG))
+		g_hash_table_remove_all(self->coldplug_cache);
+}
+
+static void
 fu_udev_backend_init(FuUdevBackend *self)
 {
+	g_signal_connect(FU_BACKEND(self),
+			 "notify::flags",
+			 G_CALLBACK(fu_udev_backend_notify_flags_cb),
+			 self);
 	self->map_paths = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->coldplug_cache =
 	    g_hash_table_new_full(g_str_hash,
@@ -1054,7 +1055,6 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	object_class->finalize = fu_udev_backend_finalize;
 	backend_class->coldplug = fu_udev_backend_coldplug;
 	backend_class->setup = fu_udev_backend_setup;
-	backend_class->to_string = fu_udev_backend_to_string;
 	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
 	backend_class->get_device_child = fu_udev_backend_get_device_child;
 	backend_class->create_device = fu_udev_backend_create_device_impl;

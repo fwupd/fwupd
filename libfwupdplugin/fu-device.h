@@ -997,6 +997,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_ICON_PROCESSOR "processor"
 
+/**
+ * FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE:
+ *
+ * A combination of using quirks and the cache, provided as a convenience for plugins.
+ *
+ * Since: 2.2.1
+ */
+#define FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE                                                   \
+	(FU_DEVICE_INSTANCE_FLAG_QUIRKS | FU_DEVICE_INSTANCE_FLAG_USE_CACHE)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

@@ -9,6 +9,7 @@ enum FuDeviceInstanceFlags {
     Generic = 1 << 2, // added by a baseclass
     Counterpart = 1 << 3,
     Deprecated = 1 << 4,
+    UseCache = 1 << 5,
 }
 
 // Flags to use when incorporating a device instance.

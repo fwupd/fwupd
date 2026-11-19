@@ -55,9 +55,9 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 		if (serialnum != NULL && strlen(serialnum) >= 14) {
 			if (g_str_has_prefix(serialnum, "1S40B0ZDZA3") ||
 			    g_str_has_prefix(serialnum, "1S40B0ZDZA4")) {
-				fu_device_add_instance_u16(parent, "REV", 0x40);
+				fu_device_add_instance_u16(parent, "PCB\\REV", 0x40);
 			} else {
-				fu_device_add_instance_u16(parent, "REV", 0x42);
+				fu_device_add_instance_u16(parent, "PCB\\REV", 0x42);
 			}
 			if (!fu_device_build_instance_id(parent,
 							 &error,
@@ -65,7 +65,7 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 							 "VID",
 							 "PID",
 							 "CID",
-							 "REV",
+							 "PCB\\REV",
 							 NULL)) {
 				g_warning("failed to build ID: %s", error->message);
 				return;

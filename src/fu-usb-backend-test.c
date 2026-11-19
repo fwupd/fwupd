@@ -106,7 +106,7 @@ fu_usb_backend_func(void)
 
 	/* load the JSON into the backend */
 	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
-	g_assert_true(fu_backend_get_enabled(backend));
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED));
 	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
 	g_assert_cmpint(cnt_added, ==, 0);
 	g_assert_cmpint(cnt_removed, ==, 0);

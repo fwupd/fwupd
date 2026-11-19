@@ -18,6 +18,7 @@
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smbios.h"
 #include "fu-redfish-smc-device.h"
@@ -779,6 +780,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_HPE_DEVICE);	      /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_LEGACY_DEVICE);    /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_MULTIPART_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_NVIDIA_DEVICE);    /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_IPMI_DEVICE);	      /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_SMC_DEVICE);	      /* coverage */
 

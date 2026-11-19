@@ -441,14 +441,14 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 
 	/* add extra DEV GUID too */
 	fu_device_add_instance_strup(FU_DEVICE(self),
-				     "DEV",
+				     "VLI\\DEV",
 				     fu_vli_device_kind_to_string(priv->kind));
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "USB", "VID", "PID", "DEV", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "USB", "VID", "PID", "VLI\\DEV", NULL);
 	fu_device_build_instance_id_full(FU_DEVICE(self),
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
 					 "VLI",
-					 "DEV",
+					 "VLI\\DEV",
 					 NULL);
 }
 

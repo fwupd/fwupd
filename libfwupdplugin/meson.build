@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-backend.rs', # fuzzing
   'fu-cbor.rs', # fuzzing
   'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
@@ -38,6 +39,7 @@ fwupdplugin_structs = [
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
   'fu-protobuf.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing

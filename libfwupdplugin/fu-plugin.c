@@ -1435,17 +1435,21 @@ gboolean
 fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	return fu_plugin_runner_device_array_generic(self,
-						     devices,
-						     "fu_plugin_composite_prepare",
-						     vfuncs->composite_prepare,
-						     error);
+	if (!fu_plugin_runner_device_array_generic(self,
+						   devices,
+						   "fu_plugin_composite_prepare",
+						   vfuncs->composite_prepare,
+						   error))
+		return FALSE;
+	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE);
+	return TRUE;
 }
 
 /**
  * fu_plugin_runner_composite_cleanup:
  * @self: a #FuPlugin
  * @devices: (element-type FuDevice): an array of devices
+ * @update_state: a #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_FAILED
  * @error: (nullable): optional return location for an error
  *
  * Runs the composite_cleanup routine for the plugin
@@ -1455,14 +1459,42 @@ fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **
  * Since: 1.0.9
  **/
 gboolean
-fu_plugin_runner_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **error)
+fu_plugin_runner_composite_cleanup(FuPlugin *self,
+				   GPtrArray *devices,
+				   FwupdUpdateState update_state,
+				   GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	return fu_plugin_runner_device_array_generic(self,
-						     devices,
-						     "fu_plugin_composite_cleanup",
-						     vfuncs->composite_cleanup,
-						     error);
+	g_autoptr(GError) error_local = NULL;
+
+	/* not enabled */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
+		return TRUE;
+
+	/* optional */
+	if (vfuncs->composite_cleanup != NULL) {
+		g_debug("composite_cleanup(%s, %s)",
+			fu_plugin_get_name(self),
+			fwupd_update_state_to_string(update_state));
+		if (!vfuncs->composite_cleanup(self, devices, update_state, &error_local)) {
+			if (error_local == NULL) {
+				g_critical("unset plugin error in for composite_cleanup(%s)",
+					   fu_plugin_get_name(self));
+				g_set_error_literal(&error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INTERNAL,
+						    "unspecified error");
+				/* nocheck:error-false-return */
+			}
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to composite_cleanup using %s: ",
+						   fu_plugin_get_name(self));
+			return FALSE;
+		}
+	}
+	fu_plugin_remove_flag(self, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE);
+	return TRUE;
 }
 
 /**

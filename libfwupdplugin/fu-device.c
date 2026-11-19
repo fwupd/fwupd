@@ -2787,6 +2787,7 @@ fu_device_quirks_iter_cb(FuContext *ctx,
 static void
 fu_device_add_guid_quirks(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
 {
+	FuContextLookupFlags lookup_flag = FU_CONTEXT_LOOKUP_FLAG_NONE;
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceQuirksIterHelper helper = {.self = self, .flags = flags};
 
@@ -2800,10 +2801,13 @@ fu_device_add_guid_quirks(FuDevice *self, const gchar *guid, FuDeviceInstanceFla
 	}
 
 	/* run the query */
+	if (flags & FU_DEVICE_INSTANCE_FLAG_USE_CACHE)
+		lookup_flag |= FU_CONTEXT_LOOKUP_FLAG_ALLOW_CACHE;
 	fu_context_lookup_quirk_by_id_iter(priv->ctx,
 					   guid,
 					   NULL,
 					   fu_device_quirks_iter_cb,
+					   lookup_flag,
 					   &helper);
 }
 
@@ -6929,7 +6933,7 @@ fu_device_unbind_driver(FuDevice *self, GError **error)
 /**
  * fu_device_get_instance_str:
  * @self: a #FuDevice
- * @key: (not nullable): a key, e.g. `REV`
+ * @key: (not nullable): a key, e.g. `REV`, optionally prefixed with a `NAMESPACE\`
  *
  * Looks up an instance ID by a key.
  *
@@ -7852,13 +7856,47 @@ fu_device_ensure_instance_hash(FuDevice *self)
 	priv->instance_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
+static gchar *
+fu_device_instance_key_strip(const gchar *key)
+{
+	if (g_str_has_prefix(key, "\\"))
+		return g_strdup(key + 1);
+	return g_strdup(key);
+}
+
+static void
+fu_device_instance_key_validate(FuDevice *self, const gchar *key, const gchar *value)
+{
+#ifndef SUPPORTED_BUILD
+	const gchar *value_old;
+
+	if (g_str_has_prefix(key, "\\"))
+		return;
+	value_old = fu_device_get_instance_str(self, key);
+	if (value_old == NULL)
+		return;
+	if (g_strcmp0(value_old, value) != 0) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_critical("%s setting %s=%s which is already set as %s=%s!",
+			   id_display,
+			   key,
+			   value,
+			   key,
+			   value_old);
+	}
+#endif
+}
+
 /**
  * fu_device_add_instance_str:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: (nullable): value
  *
  * Assign a value for the @key.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -7869,7 +7907,10 @@ fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
-	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup(value));
+	fu_device_instance_key_validate(self, key, value);
+	g_hash_table_insert(priv->instance_hash,
+			    fu_device_instance_key_strip(key),
+			    g_strdup(value));
 }
 
 static gboolean
@@ -7937,10 +7978,13 @@ fu_device_strsafe_instance_id(const gchar *str)
 /**
  * fu_device_add_instance_strsafe:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: (nullable): value
  *
  * Assign a sanitized value for the @key.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -7948,21 +7992,28 @@ void
 fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
+	value_str = fu_device_strsafe_instance_id(value);
+	fu_device_instance_key_validate(self, key, value_str);
 	g_hash_table_insert(priv->instance_hash,
-			    g_strdup(key),
-			    fu_device_strsafe_instance_id(value));
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_add_instance_strup:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: (nullable): value
  *
  * Assign a uppercase value for the @key.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -7970,21 +8021,28 @@ void
 fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
+	value_str = value != NULL ? g_utf8_strup(value, -1) : NULL;
+	fu_device_instance_key_validate(self, key, value_str);
 	g_hash_table_insert(priv->instance_hash,
-			    g_strdup(key),
-			    value != NULL ? g_utf8_strup(value, -1) : NULL);
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_add_instance_u4:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: value
  *
  * Assign a value to the @key, which is padded as %1X.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -7992,19 +8050,28 @@ void
 fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
-	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%01X", value));
+	value_str = g_strdup_printf("%01X", value);
+	fu_device_instance_key_validate(self, key, value_str);
+	g_hash_table_insert(priv->instance_hash,
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_add_instance_u8:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: value
  *
  * Assign a value to the @key, which is padded as %2X.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -8012,19 +8079,28 @@ void
 fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
-	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%02X", value));
+	value_str = g_strdup_printf("%02X", value);
+	fu_device_instance_key_validate(self, key, value_str);
+	g_hash_table_insert(priv->instance_hash,
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_add_instance_u16:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: value
  *
  * Assign a value to the @key, which is padded as %4X.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -8032,19 +8108,29 @@ void
 fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+
 	fu_device_ensure_instance_hash(self);
-	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%04X", value));
+	value_str = g_strdup_printf("%04X", value);
+	fu_device_instance_key_validate(self, key, value_str);
+	g_hash_table_insert(priv->instance_hash,
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_add_instance_u32:
  * @self: a #FuDevice
- * @key: (not nullable): string
+ * @key: (not nullable): string, optionally prefixed with a `NAMESPACE\`
  * @value: value
  *
  * Assign a value to the @key, which is padded as %8X.
+ *
+ * NOTE: If the @key has a empty namespace (for example, `\VID`) then it is not checked
+ * to ensure it has not been set before. Use this is building instance IDs in a loop.
  *
  * Since: 1.7.7
  **/
@@ -8052,17 +8138,23 @@ void
 fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value_str = NULL;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	fu_device_ensure_instance_hash(self);
-	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%08X", value));
+	value_str = g_strdup_printf("%08X", value);
+	fu_device_instance_key_validate(self, key, value_str);
+	g_hash_table_insert(priv->instance_hash,
+			    fu_device_instance_key_strip(key),
+			    g_steal_pointer(&value_str));
 }
 
 /**
  * fu_device_build_instance_id_strv:
  * @self: a #FuDevice
  * @subsystem: (not nullable): subsystem, e.g. `NVME`
- * @keys: (nullable): %NULL terminated array of string keys
+ * @keys: (nullable): %NULL terminated array of string keys, optionally prefixed with a `NAMESPACE\`
  * @error: (nullable): optional return location for an error
  *
  * Creates an instance ID from a prefix and an array of key values.
@@ -8071,10 +8163,21 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
  * If any of the key values remain unset then no instance ID is added.
  *
  *	fu_device_add_instance_str(dev, "VID", "1234");
- *	fu_device_add_instance_u16(dev, "PID", 5678);
+ *	fu_device_add_instance_u16(dev, "PID", 0x5678);
  *	const gchar *keys[] = {"VID", "PID", NULL};
  *	if (!fu_device_build_instance_id_strv(dev, "NVME", keys, &error))
  *		g_warning("failed to add ID: %s", error->message);
+ *
+ * The key values may be prefixed with a lookup namespace, but only the last part of the key is
+ * used. For instance, devices might want to do the above, and then also something like this:
+ *
+ *     fu_device_add_instance_u16(dev, "PCI\\VID", 0x1234);
+ *     fu_device_add_instance_u16(dev, "PCI\\PID", 0x5678);
+ *     if (!fu_device_build_instance_id(dev, &error, "NVME", "PCI\\VID", "PCI\\PID", NULL))
+ *             g_warning("failed to add ID: %s", error->message);
+ *
+ * This would build the instance ID `NVME\VID_1234&PID_5678` but without polluting the "global"
+ * VID and PID for use later.
  *
  * Returns: %TRUE if the instance ID was added.
  *
@@ -8096,6 +8199,7 @@ fu_device_build_instance_id_strv(FuDevice *self,
 	for (guint i = 0; keys != NULL && keys[i] != NULL; i++) {
 		const gchar *key = keys[i];
 		const gchar *value;
+		const gchar *key_namespace;
 
 		value = fu_device_get_instance_str(self, key);
 		if (value == NULL && parent != NULL)
@@ -8111,7 +8215,14 @@ fu_device_build_instance_id_strv(FuDevice *self,
 			return FALSE;
 		}
 		g_string_append(str, i == 0 ? "\\" : "&");
-		g_string_append_printf(str, "%s_%s", key, value);
+
+		/* advance over optional prefix */
+		key_namespace = g_strstr_len(key, -1, "\\");
+		if (key_namespace != NULL) {
+			g_string_append_printf(str, "%s_%s", key_namespace + 1, value);
+		} else {
+			g_string_append_printf(str, "%s_%s", key, value);
+		}
 	}
 
 	/* success */
@@ -8132,9 +8243,20 @@ fu_device_build_instance_id_strv(FuDevice *self,
  * If any of the key values remain unset then no instance ID is added.
  *
  *	fu_device_add_instance_str(dev, "VID", "1234");
- *	fu_device_add_instance_u16(dev, "PID", 5678);
+ *	fu_device_add_instance_u16(dev, "PID", 0x5678);
  *	if (!fu_device_build_instance_id(dev, &error, "NVME", "VID", "PID", NULL))
  *		g_warning("failed to add ID: %s", error->message);
+ *
+ * The key values may be prefixed with a lookup namespace, but only the last part of the key is
+ * used. For instance, devices might want to do the above, and then also something like this:
+ *
+ *	fu_device_add_instance_u16(dev, "PCI\\VID", 0x1234);
+ *	fu_device_add_instance_u16(dev, "PCI\\PID", 0x5678);
+ *	if (!fu_device_build_instance_id(dev, &error, "NVME", "PCI\\VID", "PCI\\PID", NULL))
+ *		g_warning("failed to add ID: %s", error->message);
+ *
+ * This would build the instance ID `NVME\VID_1234&PID_5678` but without polluting the "global"
+ * VID and PID for use later.
  *
  * Returns: %TRUE if the instance ID was added.
  *
@@ -8205,7 +8327,9 @@ fu_device_build_instance_id_full(FuDevice *self,
 	va_start(args, subsystem);
 	for (guint i = 0;; i++) {
 		const gchar *key = va_arg(args, const gchar *);
+		const gchar *key_namespace;
 		const gchar *value;
+
 		if (key == NULL)
 			break;
 		value = g_hash_table_lookup(priv->instance_hash, key);
@@ -8219,7 +8343,14 @@ fu_device_build_instance_id_full(FuDevice *self,
 			break;
 		}
 		g_string_append(str, i == 0 ? "\\" : "&");
-		g_string_append_printf(str, "%s_%s", key, value);
+
+		/* advance over optional prefix */
+		key_namespace = g_strstr_len(key, -1, "\\");
+		if (key_namespace != NULL) {
+			g_string_append_printf(str, "%s_%s", key_namespace + 1, value);
+		} else {
+			g_string_append_printf(str, "%s_%s", key, value);
+		}
 	}
 	va_end(args);
 
