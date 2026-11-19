@@ -36,3 +36,16 @@ _g_clear_fd_ignore_error(int *fd_ptr)
 }
 
 #define g_autofd _GLIB_CLEANUP(_g_clear_fd_ignore_error)
+
+static inline gboolean
+g_set_str(char **str_pointer, const char *new_str)
+{
+	char *copy;
+	if (*str_pointer == new_str ||
+	    (*str_pointer && new_str && strcmp(*str_pointer, new_str) == 0))
+		return FALSE;
+	copy = g_strdup(new_str);
+	g_free(*str_pointer);
+	*str_pointer = copy;
+	return TRUE;
+}
