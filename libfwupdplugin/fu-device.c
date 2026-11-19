@@ -63,7 +63,7 @@ typedef struct {
 	gchar *proxy_guid;
 	gchar *name;
 	FuDevice *proxy;    /* noref */
-	FuDevice *target;   /* ref */
+	FuDevice *target;   /* weak */
 	FuBackend *backend; /* noref */
 	FuContext *ctx;
 	gint64 created_usec;
@@ -8760,7 +8760,13 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 
 	if (target != NULL)
 		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
-	g_set_object(&priv->target, target);
+
+	/* there is no ref on target to prevent a loop */
+	if (priv->target != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(priv->target), (gpointer *)&priv->target);
+	if (target != NULL)
+		g_object_add_weak_pointer(G_OBJECT(target), (gpointer *)&priv->target);
+	priv->target = target; /* no ref */
 }
 
 static void
@@ -8884,7 +8890,10 @@ fu_device_dispose(GObject *object)
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_clear_object(&priv->ctx);
-	g_clear_object(&priv->target);
+	if (priv->target != NULL) {
+		g_object_remove_weak_pointer(G_OBJECT(priv->target), (gpointer *)&priv->target);
+		priv->target = NULL;
+	}
 	G_OBJECT_CLASS(fu_device_parent_class)->dispose(object);
 }
 
