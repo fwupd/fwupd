@@ -76,6 +76,12 @@ Use I2C ch0.
 
 Since 1.7.6
 
+### `Flags=proxy-required`
+
+A HID proxy must be found to use the USB hub device.
+
+Since 2.1.1
+
 ### GenesysUsbhubSwitchRequest
 
 USB Hub Switch Request value.
@@ -99,6 +105,12 @@ USB Hub Write Request value.
 * HP Mxfd FHD Monitors: `0xA3`
 
 Since 1.7.6.
+
+### GenesysUsbhubHidProxyId
+
+The optional filter to use when finding the HID proxy, e.g. `USB\VID_273F&PID_1001`
+
+Since 2.2.1
 
 ### GenesysScalerDeviceTransferSize
 

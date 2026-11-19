@@ -10,7 +10,8 @@ plugin_quirks += files(
 plugin_builtins += static_library(
   'fu_plugin_genesys',
   rustgen.process(
-    'fu-genesys-usbhub.rs' # fuzzing
+    'fu-genesys.rs', # fuzzing
+    'fu-genesys-usbhub.rs', # fuzzing
   ),
   sources: [
     'fu-genesys-scaler-firmware.c', # fuzzing
@@ -32,7 +33,6 @@ plugin_builtins += static_library(
 device_tests += files(
   'tests/genesys-evb-gl352510.json',
   'tests/genesys-evb-gl352530.json',
-  #  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
   'tests/genesys-servo-dock.json',
   'tests/genesys-zdn-chromebook.json',
 )

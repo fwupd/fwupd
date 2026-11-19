@@ -209,7 +209,7 @@ struct FuStructGenesysTsVendorSupport {
     reserved3: [char; 15],
 }
 
-#[derive(Parse)]
+#[derive(Parse, ParseStream)]
 #[repr(C, packed)]
 struct FuStructGenesysTsBrandProject {
     project: [char; 15],
