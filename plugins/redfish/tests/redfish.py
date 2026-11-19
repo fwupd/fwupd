@@ -38,6 +38,7 @@ app._bmc_reassigned: bool = False
 app._empty_bmc: bool = False
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
+app._nvidia_polls: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -191,6 +192,8 @@ def update_service():
         if app._hpeupdateresult is not None:
             res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
         res["HttpPushUri"] = "/FWUpdate-hpe"
+    elif _username() == HARDCODED_NVIDIA_USERNAME:
+        res["MultipartHttpPushUri"] = "/FWUpdate-nvidia"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
 
@@ -719,6 +722,47 @@ def task_status_548():
     return Response(response=json.dumps(res), status=200, mimetype="application/json")
 
 
+@app.route("/redfish/v1/TaskService/Tasks/<int:task_id>")
+def task_status_nvidia(task_id: int):
+    app._nvidia_polls += 1
+    res = {
+        "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
+        "@odata.type": "#Task.v1_4_3.Task",
+        "Id": str(task_id),
+        "PercentComplete": 50,
+        "TaskState": "Running",
+        "TaskStatus": "OK",
+    }
+    if task_id == 603:
+        # a component failed to update
+        res["TaskState"] = "Exception"
+        res["TaskStatus"] = "Critical"
+    elif app._nvidia_polls > 1:
+        # the task is removed once it is done
+        if task_id in [602, 604]:
+            return _failure("not found", status=404)
+        res["PercentComplete"] = 100
+        res["TaskState"] = "Completed"
+    return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/<int:task_id>/Monitor")
+def task_monitor_nvidia(task_id: int):
+    # the task is gone, but the monitor still reports that it failed
+    if task_id == 604:
+        res = {
+            "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
+            "@odata.type": "#Task.v1_4_3.Task",
+            "Id": str(task_id),
+            "TaskState": "Exception",
+            "TaskStatus": "Critical",
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
+
+    # once the task is done the monitor answers with an empty body
+    return Response(status=200)
+
+
 @app.route("/FWUpdate-unlicensed", methods=["GET"])
 def fwupdate_unlicensed():
     res = {
@@ -880,6 +924,46 @@ def fwupdate():
         "TaskMonitor": "/redfish/v1/TaskService/999",
     }
     # Location set to the URI of a task monitor.
+    return Response(
+        json.dumps(res),
+        status=202,
+        mimetype="application/json",
+        headers={"Location": location},
+    )
+
+
+@app.route("/FWUpdate-nvidia", methods=["POST"])
+def fwupdate_nvidia():
+    data = json.loads(request.form["UpdateParameters"])
+    if data["Targets"]:
+        return _failure("targets invalid")
+    if data["ForceUpdate"] is not True:
+        return _failure("force invalid")
+    if data["@Redfish.OperationApplyTime"] != "Immediate":
+        return _failure("apply invalid")
+    fileitem = request.files["UpdateFile"]
+    if fileitem.filename != "firmware.bin":
+        return _failure("filename invalid")
+    contents = fileitem.read().decode()
+    app._nvidia_polls = 0
+    if contents == "completed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/601/Monitor"}
+        return Response(json.dumps(res), status=202, mimetype="application/json")
+    if contents == "no-task":
+        res = {"@odata.id": 601}
+        return Response(json.dumps(res), status=202, mimetype="application/json")
+    if contents == "reaped":
+        # only the Location header gives the task monitor
+        res = {"TaskState": "Running"}
+        location = "/redfish/v1/TaskService/Tasks/602/Monitor"
+    elif contents == "failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/603"}
+        location = "/redfish/v1/TaskService/Tasks/603/Monitor"
+    elif contents == "monitor-failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/604"}
+        location = "/redfish/v1/TaskService/Tasks/604/Monitor"
+    else:
+        return _failure("data invalid")
     return Response(
         json.dumps(res),
         status=202,
