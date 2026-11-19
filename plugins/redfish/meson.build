@@ -15,7 +15,8 @@ endif
 plugin_builtin_redfish = static_library(
   'fu_plugin_redfish',
   rustgen.process(
-    'fu-redfish.rs' # fuzzing
+    'fu-redfish.rs', # fuzzing
+    'fu-redfish-nvidia.rs',
   ),
   sources: [
     'fu-redfish-plugin.c',
