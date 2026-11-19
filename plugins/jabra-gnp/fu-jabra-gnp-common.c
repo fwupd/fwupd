@@ -723,6 +723,7 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 			  GError **error)
 {
 	gboolean failed_chunk = FALSE;
+	guint retries = 0;
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
@@ -781,10 +782,22 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 			} else {
 				chunk_number--;
 				failed_chunk = TRUE;
+				if (++retries > FU_JABRA_GNP_MAX_RETRIES) {
+					g_set_error(
+					    error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "chunk 0x%02x not acknowledged after %u retries",
+					    (guint)(chunk_number + 1),
+					    retries);
+					return FALSE;
+				}
 			}
 		}
-		if (!failed_chunk)
+		if (!failed_chunk) {
+			retries = 0;
 			fu_progress_step_done(progress);
+		}
 	}
 
 	/* success */
