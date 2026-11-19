@@ -27,6 +27,8 @@ G_DEFINE_TYPE(FuPixartTpHapticDevice, fu_pixart_tp_haptic_device, FU_TYPE_DEVICE
 
 #define FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN 64
 
+#define FU_PIXART_TP_TF_WRITE_CHUNK_SZ 32
+
 static void
 fu_pixart_tp_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -609,7 +611,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       32,
+					       FU_PIXART_TP_TF_WRITE_CHUNK_SZ,
 					       error);
 	if (chunks == NULL)
 		return FALSE;
@@ -686,25 +688,6 @@ fu_pixart_tp_haptic_device_tf_write_firmware_process(FuPixartTpHapticDevice *sel
 
 	if (!fu_pixart_tp_haptic_device_tf_exit_upgrade_mode(self, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
-
-	if (g_bytes_get_size(blob) < 128) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid firmware file: size too small for header check");
-		return FALSE;
-	}
-	for (guint i = 6; i < 128; i++) {
-		const guint8 *data = g_bytes_get_data(blob, NULL);
-		if (data[i] != 0) {
-			g_set_error_literal(
-			    error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid firmware file, non-zero data in header region");
-			return FALSE;
-		}
-	}
 
 	return fu_pixart_tp_haptic_device_tf_write_firmware(self,
 							    send_interval,
@@ -854,13 +837,46 @@ fu_pixart_tp_haptic_device_prepare_firmware(FuDevice *device,
 					    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_pixart_tp_firmware_new();
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(FuInputStream) img_stream = NULL;
 
 	/* parse the TP FWHD firmware */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* find the TF_FORCE section image by update type */
-	return fu_firmware_get_image_by_idx(firmware, FU_PIXART_TP_UPDATE_TYPE_TF_FORCE, error);
+	img = fu_firmware_get_image_by_idx(firmware, FU_PIXART_TP_UPDATE_TYPE_TF_FORCE, error);
+	if (img == NULL)
+		return NULL;
+	if (fu_firmware_get_size(img) > (gsize)G_MAXUINT16 * FU_PIXART_TP_TF_WRITE_CHUNK_SZ) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware blob too large for the TF protocol: 0x%zx bytes",
+			    fu_firmware_get_size(img));
+		return NULL;
+	}
+
+	/* sanity check the header */
+	img_stream = fu_firmware_get_stream(img, error);
+	if (img_stream == NULL)
+		return NULL;
+	for (guint i = 6; i < 128; i++) {
+		guint8 data = 0;
+		if (!fu_input_stream_read_u8(img_stream, i, &data, error))
+			return NULL;
+		if (data != 0x0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid firmware file, non-zero data in header @0x%x",
+				    i);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&img);
 }
 
 static gboolean
