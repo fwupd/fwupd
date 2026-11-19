@@ -634,6 +634,9 @@ endif
 if cc.has_header('sys/vfs.h')
   conf.set('HAVE_SYS_VFS_H', '1')
 endif
+if cc.has_header('linux/btrfs.h')
+  conf.set('HAVE_LINUX_BTRFS_H', '1')
+endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif

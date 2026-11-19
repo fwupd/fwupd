@@ -8,7 +8,19 @@
 
 #include <fwupdplugin.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <glib/gstdio.h>
+#include <sys/ioctl.h>
 #include <sys/sysmacros.h>
+
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+#ifdef HAVE_LINUX_BTRFS_H
+#include <linux/btrfs.h>
+#include <linux/magic.h>
+#endif
 
 #include "fu-linux-swap.h"
 
@@ -31,6 +43,42 @@ fu_linux_swap_strip_spaces(const gchar *line)
 	return g_string_free_and_steal(str);
 }
 
+/* whether the device is a dm-crypt device, by its dm/uuid prefix of CRYPT- */
+static gboolean
+fu_linux_swap_block_is_crypt(FuPathStore *pstore,
+			     const gchar *name,
+			     gboolean *is_crypt,
+			     GError **error)
+{
+	g_autofree gchar *uuid = NULL;
+	g_autofree gchar *uuid_path = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	*is_crypt = FALSE;
+	uuid_path = fu_path_store_build_filename(pstore,
+						 error,
+						 FU_PATH_KIND_SYSFSDIR,
+						 "class",
+						 "block",
+						 name,
+						 "dm",
+						 "uuid",
+						 NULL);
+	if (uuid_path == NULL)
+		return FALSE;
+	if (!g_file_get_contents(uuid_path, &uuid, NULL, &error_local)) {
+		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+			g_debug("no dm/uuid for %s", name);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	g_strstrip(uuid);
+	*is_crypt = g_str_has_prefix(uuid, "CRYPT-");
+	return TRUE;
+}
+
 /* walk device-mapper dependencies and report encrypted if any layer has a
  * dm/uuid prefix of CRYPT-; udisks only sees the topmost layer. missing
  * sysfs paths are treated as "no encryption found" */
@@ -42,9 +90,8 @@ fu_linux_swap_block_has_crypt_below(FuPathStore *pstore,
 				    GError **error)
 {
 	const gchar *child;
+	gboolean is_crypt = FALSE;
 	g_autofree gchar *slaves_path = NULL;
-	g_autofree gchar *uuid = NULL;
-	g_autofree gchar *uuid_path = NULL;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -57,29 +104,11 @@ fu_linux_swap_block_has_crypt_below(FuPathStore *pstore,
 		return TRUE;
 	}
 
-	uuid_path = fu_path_store_build_filename(pstore,
-						 error,
-						 FU_PATH_KIND_SYSFSDIR,
-						 "class",
-						 "block",
-						 name,
-						 "dm",
-						 "uuid",
-						 NULL);
-	if (uuid_path == NULL)
+	if (!fu_linux_swap_block_is_crypt(pstore, name, &is_crypt, error))
 		return FALSE;
-	if (g_file_get_contents(uuid_path, &uuid, NULL, &error_local)) {
-		g_strstrip(uuid);
-		if (g_str_has_prefix(uuid, "CRYPT-")) {
-			*encrypted = TRUE;
-			return TRUE;
-		}
-	} else if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-		g_debug("no dm/uuid for %s", name);
-		g_clear_error(&error_local);
-	} else {
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
+	if (is_crypt) {
+		*encrypted = TRUE;
+		return TRUE;
 	}
 
 	slaves_path = fu_path_store_build_filename(pstore,
@@ -136,6 +165,179 @@ fu_linux_swap_block_name_for_devnum(FuPathStore *pstore, guint32 devnum, GError 
 	if (target == NULL)
 		return NULL;
 	return g_path_get_basename(target);
+}
+
+/* like fu_linux_swap_block_has_crypt_below(), but encrypted only if every branch
+ * below the device has a crypt layer, as a device-mapper or md device can join an
+ * encrypted and a plain device, and either can hold swap */
+static gboolean
+fu_linux_swap_block_has_crypt_on_all(FuPathStore *pstore,
+				     const gchar *name,
+				     guint depth,
+				     gboolean *encrypted,
+				     GError **error)
+{
+	const gchar *child;
+	gboolean is_crypt = FALSE;
+	guint children_cnt = 0;
+	g_autofree gchar *slaves_path = NULL;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	*encrypted = FALSE;
+	if (depth > FU_LINUX_SWAP_DM_MAX_DEPTH) {
+		g_debug("sysfs slaves walk hit max depth at %s", name);
+		return TRUE;
+	}
+
+	if (!fu_linux_swap_block_is_crypt(pstore, name, &is_crypt, error))
+		return FALSE;
+	if (is_crypt) {
+		*encrypted = TRUE;
+		return TRUE;
+	}
+
+	slaves_path = fu_path_store_build_filename(pstore,
+						   error,
+						   FU_PATH_KIND_SYSFSDIR,
+						   "class",
+						   "block",
+						   name,
+						   "slaves",
+						   NULL);
+	if (slaves_path == NULL)
+		return FALSE;
+	dir = g_dir_open(slaves_path, 0, &error_local);
+	if (dir == NULL) {
+		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+			g_debug("no slaves dir for %s", name);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	while ((child = g_dir_read_name(dir)) != NULL) {
+		gboolean encrypted_child = FALSE;
+		if (!fu_linux_swap_block_has_crypt_on_all(pstore,
+							  child,
+							  depth + 1,
+							  &encrypted_child,
+							  error))
+			return FALSE;
+		if (!encrypted_child) {
+			g_debug("%s has no crypt layer below %s", name, child);
+			return TRUE;
+		}
+		children_cnt++;
+	}
+	*encrypted = children_cnt > 0;
+	return TRUE;
+}
+
+/* encrypted only if every device of the btrfs filesystem has a crypt layer below
+ * it, as a filesystem can span several devices and any of them can hold swap */
+gboolean
+fu_linux_swap_btrfs_has_crypt(FuPathStore *pstore,
+			      const gchar *fsid,
+			      gboolean *encrypted,
+			      GError **error)
+{
+	const gchar *name;
+	guint devices_cnt = 0;
+	g_autofree gchar *devices_path = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	g_return_val_if_fail(pstore != NULL, FALSE);
+	g_return_val_if_fail(fsid != NULL, FALSE);
+	g_return_val_if_fail(encrypted != NULL, FALSE);
+
+	*encrypted = FALSE;
+	devices_path = fu_path_store_build_filename(pstore,
+						    error,
+						    FU_PATH_KIND_SYSFSDIR,
+						    "fs",
+						    "btrfs",
+						    fsid,
+						    "devices",
+						    NULL);
+	if (devices_path == NULL)
+		return FALSE;
+	dir = g_dir_open(devices_path, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((name = g_dir_read_name(dir)) != NULL) {
+		gboolean encrypted_below = FALSE;
+		if (!fu_linux_swap_block_has_crypt_on_all(pstore, name, 0, &encrypted_below, error))
+			return FALSE;
+		if (!encrypted_below) {
+			g_debug("btrfs %s device %s is unencrypted", fsid, name);
+			return TRUE;
+		}
+		devices_cnt++;
+	}
+	*encrypted = devices_cnt > 0;
+	return TRUE;
+}
+
+/* btrfs subvolumes have anonymous device numbers without a block device, so ask
+ * btrfs for the fsid that /sys/fs/btrfs lists the devices of the filesystem under */
+static gchar *
+fu_linux_swap_btrfs_fsid_for_file(const gchar *fn, GError **error)
+{
+#if defined(HAVE_LINUX_BTRFS_H) && defined(HAVE_SYS_VFS_H)
+	struct btrfs_ioctl_fs_info_args args = {0};
+	struct statfs buf = {0};
+	gint rc;
+	g_autofd gint fd = -1;
+
+	if (statfs(fn, &buf) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to get the filesystem of %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	if ((guint32)buf.f_type != BTRFS_SUPER_MAGIC) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is not on btrfs",
+			    fn);
+		return NULL;
+	}
+
+	/* the ioctl reports the filesystem of the opened file, so open the swap file itself:
+	 * its directory can be on another filesystem, e.g. for a bind-mounted swap file */
+	fd = open(fn, O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to open %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	rc = ioctl(fd, BTRFS_IOC_FS_INFO, &args); /* nocheck:blocked */
+	if (rc != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to get the btrfs fsid of %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
+		return NULL;
+	}
+	return fwupd_guid_to_string((const fwupd_guid_t *)args.fsid, FWUPD_GUID_FLAG_NONE);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "btrfs is not supported");
+	return NULL;
+#endif
 }
 
 static gboolean
@@ -214,12 +416,14 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 {
 	gboolean encrypted_below = FALSE;
 	guint32 devnum;
+	g_autofree gchar *fsid = NULL;
 	g_autofree gchar *name = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GError) error_volume = NULL;
 	g_autoptr(GError) error_name = NULL;
+	g_autoptr(GError) error_fsid = NULL;
 	g_autoptr(GError) error_walk = NULL;
 
 	/* get the device number for the file */
@@ -246,9 +450,22 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, FuPathStore *pstore, const gchar *f
 	/* walk the backing block device for a CRYPT- node */
 	name = fu_linux_swap_block_name_for_devnum(pstore, devnum, &error_name);
 	if (name == NULL) {
-		g_debug("no kernel block name resolved for %s: %s; skipping dm walk",
-			fn,
-			error_name->message);
+		g_debug("no kernel block name resolved for %s: %s", fn, error_name->message);
+		fsid = fu_linux_swap_btrfs_fsid_for_file(fn, &error_fsid);
+		if (fsid == NULL) {
+			g_debug("no btrfs fsid for %s: %s; skipping dm walk",
+				fn,
+				error_fsid->message);
+		} else if (!fu_linux_swap_btrfs_has_crypt(pstore,
+							  fsid,
+							  &encrypted_below,
+							  &error_walk)) {
+			g_debug("btrfs device walk failed for %s: %s", fn, error_walk->message);
+		} else if (encrypted_below) {
+			g_debug("%s file is encrypted via all devices of btrfs %s", fn, fsid);
+			self->encrypted_cnt++;
+			return TRUE;
+		}
 	} else if (!fu_linux_swap_block_has_crypt_below(pstore,
 							name,
 							0,
