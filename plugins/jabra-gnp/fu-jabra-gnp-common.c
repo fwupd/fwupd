@@ -1050,7 +1050,7 @@ fu_jabra_gnp_get_tunes_pack_version(FuDevice *device, guint8 address, guint8 seq
 				  error))
 		return NULL;
 
-	return fu_memstrsafe(rx_data.rxbuf, sizeof(rx_data.rxbuf), 0x8, 5, error);
+	return fu_jabra_gnp_parse_string(rx_data.rxbuf, sizeof(rx_data.rxbuf), error);
 }
 
 /* nocheck:name */
