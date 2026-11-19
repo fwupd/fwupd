@@ -17,6 +17,7 @@
 struct _FuGenesysUsbhubFirmware {
 	FuFirmware parent_instance;
 	FuStructGenesysTsStatic *st_static_ts;
+	FuStructGenesysTsBrandProject *st_project_ts;
 	FuGenesysChip chip;
 };
 
@@ -226,6 +227,25 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 	return TRUE;
 }
 
+GBytes *
+fu_genesys_usbhub_firmware_get_project_bytes(FuGenesysUsbhubFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_FIRMWARE(self), NULL);
+	if (self->st_project_ts == NULL)
+		return NULL;
+	return g_bytes_new(self->st_project_ts->buf->data,
+			   GENESYS_USBHUB_PROJECT_TOOL_STRING_LENGTH);
+}
+
+gchar *
+fu_genesys_usbhub_firmware_get_mask_project_ic_type(FuGenesysUsbhubFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_FIRMWARE(self), NULL);
+	if (self->st_static_ts == NULL)
+		return NULL;
+	return fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
+}
+
 static gboolean
 fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 				    FuInputStream *stream,
@@ -246,6 +266,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
+	guint32 project_ts_offset = 0;
+	guint8 project_buf[GENESYS_USBHUB_PROJECT_TOOL_STRING_LENGTH] = {0};
 	g_autoptr(FuInputStream) stream_trunc = NULL;
 
 	/* get chip */
@@ -264,12 +286,15 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case ISP_MODEL_HUB_GL3523:
 		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523;
+		project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3523;
 		break;
 	case ISP_MODEL_HUB_GL3523PLUS:
 		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523PLUS;
+		project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3523PLUS;
 		break;
 	case ISP_MODEL_HUB_GL3590:
 		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590;
+		project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3590;
 		break;
 	case ISP_MODEL_HUB_GL3525: {
 		guint8 configuration = 0;
@@ -279,10 +304,13 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 					     error))
 			return FALSE;
 		if (configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT ||
-		    configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT_V2)
+		    configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT_V2) {
 			static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525_V2;
-		else
+			project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525_V2;
+		} else {
 			static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525;
+			project_ts_offset = GENESYS_USBHUB_PROJECT_TOOL_STRING_OFFSET_GL3525;
+		}
 		break;
 	}
 	default:
@@ -292,6 +320,26 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	    fu_struct_genesys_ts_static_parse_stream(stream, static_ts_offset, error);
 	if (self->st_static_ts == NULL)
 		return FALSE;
+	if (project_ts_offset != 0 &&
+	    fu_struct_genesys_ts_static_get_tool_string_version(self->st_static_ts) >=
+		FU_GENESYS_TS_VERSION_BRAND_PROJECT) {
+		if (!fu_input_stream_read_safe(stream,
+					       project_buf,
+					       sizeof(project_buf),
+					       0,
+					       project_ts_offset,
+					       sizeof(project_buf),
+					       error))
+			return FALSE;
+		self->st_project_ts = fu_struct_genesys_ts_brand_project_parse(project_buf,
+									       sizeof(project_buf),
+									       0,
+									       error);
+		if (self->st_project_ts == NULL) {
+			g_prefix_error_literal(error, "failed to parse project tool string: ");
+			return FALSE;
+		}
+	}
 
 	/* deduce code size */
 	switch (self->chip.model) {
@@ -547,6 +595,8 @@ fu_genesys_usbhub_firmware_finalize(GObject *object)
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(object);
 	if (self->st_static_ts != NULL)
 		fu_struct_genesys_ts_static_unref(self->st_static_ts);
+	if (self->st_project_ts != NULL)
+		fu_struct_genesys_ts_brand_project_unref(self->st_project_ts);
 	G_OBJECT_CLASS(fu_genesys_usbhub_firmware_parent_class)->finalize(object);
 }
 

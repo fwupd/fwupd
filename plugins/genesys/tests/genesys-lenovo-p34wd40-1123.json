@@ -1,0 +1,26 @@
+{
+  "name": "Lenovo P34WD-40 hub 1123 and HID",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/genesys-lenovo-p34wd40-1123-setup.json",
+      "components": [
+        {
+          "version": "88.17",
+          "guids": [
+            "902a9f13-d633-5b5a-8b97-38f577769599",
+            "9f60fec6-b8f6-5171-bcd3-d2e34452d6cc",
+            "ec4aa0c3-473f-59f1-96dc-200f12a9c46e",
+            "9a0bece0-69e7-5489-a218-6645fb94f72d"
+          ]
+        },
+        {
+          "version": "1.0",
+          "guids": [
+            "ed47cd1b-2e2d-54c5-9d23-25a0922dfb63"
+          ]
+        }
+      ]
+    }
+  ]
+}
