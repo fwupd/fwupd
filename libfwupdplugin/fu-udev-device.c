@@ -1948,6 +1948,7 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 	g_autofree gchar *value = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	g_return_val_if_fail(attr != NULL, NULL);
@@ -1964,6 +1965,8 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
 			return NULL;
 		return g_strdup(fu_device_event_get_str(event, "Data", error));
 	}
@@ -1988,9 +1991,12 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 					    -1,
 					    timeout_ms,
 					    FU_IO_CHANNEL_FLAG_NONE,
-					    error);
+					    &error_local);
 	if (buf == NULL) {
-		g_prefix_error(error, "failed read of %s: ", path);
+		g_prefix_error(&error_local, "failed read of %s: ", path);
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
 	}
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
