@@ -10,31 +10,50 @@
 #include "fu-rts54hid-device.h"
 #include "fu-rts54hid-struct.h"
 
-struct _FuRts54hidDevice {
-	FuHidDevice parent_instance;
+typedef struct {
+	FuRts54hidType hid_type;
+	gboolean reset_after_update;
 	gboolean fw_auth;
 	gboolean dual_bank;
-};
+} FuRts54hidDevicePrivate;
 
-G_DEFINE_TYPE(FuRts54hidDevice, fu_rts54hid_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuRts54hidDevice, fu_rts54hid_device, FU_TYPE_HID_DEVICE)
+
+#define GET_PRIVATE(o) (fu_rts54hid_device_get_instance_private(o))
 
 static void
 fu_rts54hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRts54hidDevice *self = FU_RTS54HID_DEVICE(device);
-	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
-	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append_bool(str, idt, "FwAuth", priv->fw_auth);
+	fwupd_codec_string_append_bool(str, idt, "DualBank", priv->dual_bank);
 }
 
 static gboolean
 fu_rts54hid_device_set_clock_mode(FuRts54hidDevice *self, gboolean enable, GError **error)
 {
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
 	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
 	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_MCUMODIFYCLOCK);
 	fu_rts54hid_cmd_buffer_set_dwregaddr(st, (guint8)enable);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
+
+	switch (priv->hid_type) {
+	case FU_RTS54HID_TYPE_HUB:
+		break;
+	case FU_RTS54HID_TYPE_PD:
+		return TRUE;
+	case FU_RTS54HID_TYPE_UNKNOWN:
+	default:
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "RTS54 HID type is not configured");
+		return FALSE;
+	}
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
@@ -122,6 +141,7 @@ fu_rts54hid_device_write_flash(FuRts54hidDevice *self,
 static gboolean
 fu_rts54hid_device_verify_update_fw(FuRts54hidDevice *self, FuProgress *progress, GError **error)
 {
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
 	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
@@ -130,7 +150,6 @@ fu_rts54hid_device_verify_update_fw(FuRts54hidDevice *self, FuProgress *progress
 	fu_rts54hid_cmd_buffer_set_bufferlen(st, 1);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
-	/* set then get */
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
 				      st->buf->data,
@@ -139,6 +158,22 @@ fu_rts54hid_device_verify_update_fw(FuRts54hidDevice *self, FuProgress *progress
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
 		return FALSE;
+
+	switch (priv->hid_type) {
+	case FU_RTS54HID_TYPE_HUB:
+		break;
+	case FU_RTS54HID_TYPE_PD:
+		return TRUE;
+	case FU_RTS54HID_TYPE_UNKNOWN:
+	default:
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "RTS54 HID type is not configured");
+		return FALSE;
+	}
+
+	/* set then get */
 	fu_device_sleep_full(FU_DEVICE(self), 4000, progress); /* ms */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x0,
@@ -162,12 +197,27 @@ fu_rts54hid_device_verify_update_fw(FuRts54hidDevice *self, FuProgress *progress
 static gboolean
 fu_rts54hid_device_erase_spare_bank(FuRts54hidDevice *self, GError **error)
 {
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
 	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
 	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_ERASEBANK);
 	fu_rts54hid_cmd_buffer_set_dwregaddr(st, 0x100);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
+
+	switch (priv->hid_type) {
+	case FU_RTS54HID_TYPE_HUB:
+		break;
+	case FU_RTS54HID_TYPE_PD:
+		return TRUE;
+	case FU_RTS54HID_TYPE_UNKNOWN:
+	default:
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "RTS54 HID type is not configured");
+		return FALSE;
+	}
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
@@ -185,8 +235,34 @@ fu_rts54hid_device_erase_spare_bank(FuRts54hidDevice *self, GError **error)
 }
 
 static gboolean
+fu_rts54hid_device_vendor_cmd_enable(FuRts54hidDevice *self, guint8 value, GError **error)
+{
+	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
+
+	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
+	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_VDCMDENABLE);
+	fu_rts54hid_cmd_buffer_set_dwregaddr(st, 0x0bda0000 | value);
+	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
+
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      0x0,
+				      st->buf->data,
+				      st->buf->len,
+				      FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				      FU_HID_DEVICE_FLAG_NONE,
+				      error)) {
+		g_prefix_error_literal(error, "failed to enable vdcmd: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_rts54hid_device_ensure_status(FuRts54hidDevice *self, GError **error)
 {
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
 
@@ -214,11 +290,27 @@ fu_rts54hid_device_ensure_status(FuRts54hidDevice *self, GError **error)
 		return FALSE;
 
 	/* check the hardware capabilities */
-	self->dual_bank = (st->buf->data[7] & 0xf0) == 0x80;
-	self->fw_auth = (st->buf->data[13] & 0x02) > 0;
-
 	/* hub version is more accurate than bcdVersion */
-	version = g_strdup_printf("%x.%x", st->buf->data[10], st->buf->data[11]);
+	switch (priv->hid_type) {
+	case FU_RTS54HID_TYPE_HUB:
+		priv->dual_bank = (st->buf->data[7] & 0xf0) == 0x80;
+		priv->fw_auth = (st->buf->data[13] & 0x02) > 0;
+		version = g_strdup_printf("%x.%x", st->buf->data[10], st->buf->data[11]);
+		break;
+	case FU_RTS54HID_TYPE_PD:
+		priv->dual_bank = TRUE;
+		priv->fw_auth = (st->buf->data[13] & 0x03) > 0;
+		version = g_strdup_printf("%x.%x", st->buf->data[3], st->buf->data[4]);
+		break;
+	case FU_RTS54HID_TYPE_UNKNOWN:
+	default:
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "RTS54 HID type is not configured");
+		return FALSE;
+	}
+
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
@@ -227,6 +319,7 @@ static gboolean
 fu_rts54hid_device_setup(FuDevice *device, GError **error)
 {
 	FuRts54hidDevice *self = FU_RTS54HID_DEVICE(device);
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_rts54hid_device_parent_class)->setup(device, error))
@@ -237,9 +330,9 @@ fu_rts54hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* both conditions must be set */
-	if (!self->fw_auth) {
+	if (!priv->fw_auth) {
 		fu_device_set_update_error(device, "device does not support authentication");
-	} else if (!self->dual_bank) {
+	} else if (!priv->dual_bank) {
 		fu_device_set_update_error(device, "device does not support dual-bank updating");
 	} else {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -255,11 +348,49 @@ fu_rts54hid_device_close(FuDevice *device, GError **error)
 	FuRts54hidDevice *self = FU_RTS54HID_DEVICE(device);
 
 	/* set MCU to normal clock rate */
-	if (!fu_rts54hid_device_set_clock_mode(self, FALSE, error))
-		return FALSE;
+	fu_rts54hid_device_set_clock_mode(self, FALSE, error);
 
 	/* FuHidDevice->close */
 	return FU_DEVICE_CLASS(fu_rts54hid_device_parent_class)->close(device, error);
+}
+
+static gboolean
+fu_rts54hid_device_set_quirk_kv(FuDevice *device,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	FuRts54hidDevice *self = FU_RTS54HID_DEVICE(device);
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (g_strcmp0(key, "Rts54HidType") == 0) {
+		priv->hid_type = fu_rts54hid_type_from_string(value);
+		if (priv->hid_type == FU_RTS54HID_TYPE_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "unsupported Rts54HidType: %s",
+				    value);
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	if (g_strcmp0(key, "Rts54ResetAfterUpdate") == 0) {
+		if (g_strcmp0(value, "false") == 0) {
+			priv->reset_after_update = FALSE;
+		} else {
+			priv->reset_after_update = TRUE;
+		}
+		return TRUE;
+	}
+
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "unsupported quirk key: %s",
+		    key);
+	return FALSE;
 }
 
 static gboolean
@@ -270,6 +401,7 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuRts54hidDevice *self = FU_RTS54HID_DEVICE(device);
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -283,6 +415,12 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
+		return FALSE;
+
+	/* set MCU vendor cmd enable */
+	if (!fu_rts54hid_device_vendor_cmd_enable(self, 1, error))
+		return FALSE;
+	if (!fu_rts54hid_device_vendor_cmd_enable(self, 3, error))
 		return FALSE;
 
 	/* set MCU to high clock rate for better ISP performance */
@@ -331,8 +469,9 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send software reset to run available flash code */
-	if (!fu_rts54hid_device_reset_to_flash(self, error))
-		return FALSE;
+	if (priv->reset_after_update)
+		if (!fu_rts54hid_device_reset_to_flash(self, error))
+			return FALSE;
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -354,9 +493,11 @@ fu_rts54hid_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_rts54hid_device_init(FuRts54hidDevice *self)
 {
+	FuRts54hidDevicePrivate *priv = GET_PRIVATE(self);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	priv->reset_after_update = TRUE;
 }
 
 static void
@@ -368,4 +509,5 @@ fu_rts54hid_device_class_init(FuRts54hidDeviceClass *klass)
 	device_class->setup = fu_rts54hid_device_setup;
 	device_class->close = fu_rts54hid_device_close;
 	device_class->set_progress = fu_rts54hid_device_set_progress;
+	device_class->set_quirk_kv = fu_rts54hid_device_set_quirk_kv;
 }

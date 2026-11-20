@@ -7,6 +7,8 @@
 #include "config.h"
 
 #include "fu-rts54hid-device.h"
+// #include "fu-rts54hid-hub-device.h"
+// #include "fu-rts54hid-pd-device.h"
 #include "fu-rts54hid-module.h"
 #include "fu-rts54hid-plugin.h"
 
@@ -30,6 +32,8 @@ fu_rts54hid_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "Rts54TargetAddr");
 	fu_context_add_quirk_key(ctx, "Rts54I2cSpeed");
 	fu_context_add_quirk_key(ctx, "Rts54RegisterAddrLen");
+	fu_context_add_quirk_key(ctx, "Rts54HidType");
+	fu_context_add_quirk_key(ctx, "Rts54ResetAfterUpdate");
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HID_MODULE);

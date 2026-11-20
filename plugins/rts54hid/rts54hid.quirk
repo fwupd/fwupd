@@ -3,6 +3,7 @@
 Plugin = rts54hid
 Flags = enforce-requires
 GType = FuRts54hidDevice
+Rts54HidType = hub
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
 Children = FuRts54hidModule|USB\VID_0BDA&PID_5A00&I2C_01
@@ -16,3 +17,13 @@ FirmwareSize = 0x20000
 Rts54TargetAddr = 0x00
 Rts54I2cSpeed = 0x00
 Rts54RegisterAddrLen = 0x04
+
+# Lenove CCB
+[USB\VID_0BDA&PID_1299]
+Plugin = rts54hid
+GType = FuRts54hidDevice
+Rts54HidType = pd
+Rts54ResetAfterUpdate = false
+Name = Realtek CCB PD
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
