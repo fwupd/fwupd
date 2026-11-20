@@ -12,9 +12,6 @@
 
 struct _FuRealtekRts54hubDevice {
 	FuUsbDevice parent_instance;
-	gboolean fw_auth;
-	gboolean dual_bank;
-	gboolean running_on_flash;
 	FuRealtekRts54hubVendorCmd vendor_cmd;
 	guint64 block_sz;
 };
@@ -32,16 +29,13 @@ G_DEFINE_TYPE(FuRealtekRts54hubDevice, fu_realtek_rts54hub_device, FU_TYPE_USB_D
 #define FU_REALTEK_RTS54HUB_I2C_WRITE_REQUEST  0xC6
 #define FU_REALTEK_RTS54HUB_I2C_READ_REQUEST   0xD6
 
-#define FU_REALTEK_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED "not-supported"
+#define FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH "fw-auth"
 
 static void
 fu_realtek_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
 	g_autofree gchar *vendor_cmd = fu_realtek_rts54hub_vendor_cmd_to_string(self->vendor_cmd);
-	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
-	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
-	fwupd_codec_string_append_bool(str, idt, "RunningOnFlash", self->running_on_flash);
 	fwupd_codec_string_append(str, idt, "VendorCmd", vendor_cmd);
 	fwupd_codec_string_append_int(str, idt, "BlockSz", self->block_sz);
 }
@@ -377,10 +371,14 @@ fu_realtek_rts54hub_device_ensure_status(FuRealtekRts54hubDevice *self, GError *
 	}
 
 	/* check the hardware capabilities */
-	self->dual_bank = (data[7] & 0x80) == 0x80;
-	self->fw_auth = (data[13] & 0x02) > 0;
-	self->running_on_flash = (data[15] & 0x02) > 0;
-
+	if ((data[7] & 0x80) == 0x80)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	if ((data[13] & 0x02) > 0) {
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH);
+	}
+	if ((data[15] & 0x02) == 0)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -404,20 +402,16 @@ fu_realtek_rts54hub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* all three conditions must be set */
-	if (!self->running_on_flash) {
-		fu_device_inhibit(device,
-				  FU_REALTEK_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device is abnormally running from ROM");
-	} else if (!self->fw_auth) {
-		fu_device_inhibit(device,
-				  FU_REALTEK_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device does not support authentication");
-	} else if (!self->dual_bank) {
-		fu_device_inhibit(device,
-				  FU_REALTEK_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device does not support dual-bank updating");
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+	} else if (!fu_device_has_private_flag(FU_DEVICE(self),
+					       FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+	} else if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
 	} else {
-		fu_device_uninhibit(device, FU_REALTEK_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
 	}
 
 	/* success */
@@ -597,4 +591,5 @@ fu_realtek_rts54hub_device_class_init(FuRealtekRts54hubDeviceClass *klass)
 	device_class->close = fu_realtek_rts54hub_device_close;
 	device_class->set_progress = fu_realtek_rts54hub_device_set_progress;
 	device_class->set_quirk_kv = fu_realtek_rts54hub_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH);
 }
