@@ -4935,15 +4935,41 @@ fu_cli_upload_security(FuCli *self, GPtrArray *attrs, GError **error)
 	return TRUE;
 }
 
-static void
-fu_cli_security_as_json(FuCli *self, GPtrArray *attrs, GPtrArray *events, GPtrArray *devices)
+static gboolean
+fu_cli_security_as_json(FuCli *self,
+			GPtrArray *attrs,
+			GPtrArray *events,
+			GPtrArray *devices,
+			GVariant *weighted_report,
+			GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) devices_issues = NULL;
+	g_autoptr(GPtrArray) original_attrs = NULL;
+	g_autoptr(GVariant) attrs_tuple = NULL;
+	g_autoptr(GVariant) attrs_variant = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* attrs */
 	fwupd_codec_array_to_json(attrs, "SecurityAttributes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (weighted_report != NULL) {
+		if (!g_variant_lookup(weighted_report, "Attributes", "@aa{sv}", &attrs_variant)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid weighted security report");
+			return FALSE;
+		}
+		attrs_tuple = g_variant_new_tuple(&attrs_variant, 1);
+		original_attrs =
+		    fwupd_codec_array_from_variant(attrs_tuple, FWUPD_TYPE_SECURITY_ATTR, error);
+		if (original_attrs == NULL)
+			return FALSE;
+		fwupd_codec_array_to_json(original_attrs,
+					  "SecurityAttributesOriginal",
+					  json_obj,
+					  FWUPD_CODEC_FLAG_TRUSTED);
+	}
 
 	/* events */
 	if (events != NULL && events->len > 0) {
@@ -4969,6 +4995,7 @@ fu_cli_security_as_json(FuCli *self, GPtrArray *attrs, GPtrArray *events, GPtrAr
 					  FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	fu_cli_print_json_object(priv->console, json_obj);
+	return TRUE;
 }
 
 static gboolean
@@ -5140,6 +5167,62 @@ fu_cli_security_fix_attr(FuCli *self, FuSecurityAttr *attr, GError **error)
 }
 
 static gboolean
+fu_cli_security_weighted_as_json(FuCli *self, GVariant *report, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdJsonObject) json_obj = fu_cli_security_report_to_json(report, error);
+	if (json_obj == NULL)
+		return FALSE;
+	fu_cli_print_json_object(priv->console, json_obj);
+	return TRUE;
+}
+
+static gboolean
+fu_cli_security_weighted(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GVariant) report = NULL;
+	g_auto(GStrv) failed = NULL;
+	guint score;
+	guint level;
+	guint ceiling;
+
+	if (values != NULL && g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	report = fwupd_client_get_host_security_report(priv->client, 1, priv->cancellable, error);
+	if (report == NULL)
+		return FALSE;
+	if (!g_variant_lookup(report, "Score", "u", &score) ||
+	    !g_variant_lookup(report, "Level", "u", &level) ||
+	    !g_variant_lookup(report, "Ceiling", "u", &ceiling)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid weighted security report");
+		return FALSE;
+	}
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON))
+		return fu_cli_security_weighted_as_json(self, report, error);
+	/* TRANSLATORS: the maximum weighted HSI level allowed by failed checks */
+	fu_console_print(priv->console,
+			 _("Experimental weighted HSI: %u (score %u, maximum level %u)"),
+			 level,
+			 score,
+			 ceiling);
+	if (g_variant_lookup(report, "Failed", "^as", &failed)) {
+		for (guint i = 0; failed[i] != NULL; i++)
+			fu_console_print(priv->console, "  %s", failed[i]);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_cli_security(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
@@ -5149,6 +5232,7 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	g_autoptr(GPtrArray) events = NULL;
 	g_autoptr(GError) error_devices = NULL;
 	g_autoptr(GError) error_events = NULL;
+	g_autoptr(GVariant) weighted_report = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* the "why" */
@@ -5181,8 +5265,23 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 
 	/* not for human consumption */
 	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
-		fu_cli_security_as_json(self, attrs, events, devices);
-		return TRUE;
+		g_autoptr(GError) error_weighted = NULL;
+
+		weighted_report = fwupd_client_get_host_security_report(priv->client,
+									1,
+									priv->cancellable,
+									&error_weighted);
+		if (weighted_report == NULL &&
+		    !g_error_matches(error_weighted, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_weighted));
+			return FALSE;
+		}
+		return fu_cli_security_as_json(self,
+					       attrs,
+					       events,
+					       devices,
+					       weighted_report,
+					       error);
 	}
 
 	fu_console_print(priv->console,
@@ -7277,6 +7376,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: command description */
 			     _("Gets the host security attributes"),
 			     fu_cli_security);
+	fu_cli_cmd_array_add(self,
+			     "security-weighted",
+			     NULL,
+			     /* TRANSLATORS: command description */
+			     _("Gets the weighted host security report"),
+			     fu_cli_security_weighted);
 	fu_cli_cmd_array_add(self,
 			     "sync,sync-bkc",
 			     NULL,

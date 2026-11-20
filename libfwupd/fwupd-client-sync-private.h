@@ -94,6 +94,12 @@ fwupd_client_sync_impl_get_host_security_attrs(FwupdClient *self,
 					       gpointer user_data,
 					       GCancellable *cancellable,
 					       GError **error);
+GVariant *
+fwupd_client_sync_impl_get_host_security_report(FwupdClient *self,
+						guint schema,
+						gpointer user_data,
+						GCancellable *cancellable,
+						GError **error);
 GPtrArray *
 fwupd_client_sync_impl_get_host_security_events(FwupdClient *self,
 						guint limit,
