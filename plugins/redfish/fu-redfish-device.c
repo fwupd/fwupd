@@ -585,8 +585,61 @@ fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj
 	return TRUE;
 }
 
+/* Dell reports the PCI identity of a device as hex strings without a prefix, e.g. "1344" */
 static gboolean
-fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
+fu_redfish_device_dell_get_u16(FwupdJsonObject *json_obj, const gchar *key, guint16 *value)
+{
+	const gchar *tmp = fwupd_json_object_get_string(json_obj, key, NULL);
+	guint64 tmp64 = 0;
+
+	if (tmp == NULL || tmp[0] == '\0')
+		return FALSE;
+	if (!fu_strtoull(tmp, &tmp64, 0x1, G_MAXUINT16, FU_INTEGER_BASE_16, NULL))
+		return FALSE;
+	*value = (guint16)tmp64;
+	return TRUE;
+}
+
+/* Some Dell devices, e.g. disks, report a SoftwareId of "0" and a ComponentID of "0", which
+ * does not tell one device from another. The PCI identity they report in DellSoftwareInventory
+ * does, and is the same as the PCIInfo of the device in the Dell catalog. */
+static void
+fu_redfish_device_probe_oem_dell_pci_id(FuRedfishDevice *self, FwupdJsonObject *software_info)
+{
+	guint16 vendor_id = 0;
+	guint16 device_id = 0;
+	guint16 subvendor_id = 0;
+	guint16 subdevice_id = 0;
+	g_autofree gchar *subsys = NULL;
+
+	if (!fu_redfish_device_dell_get_u16(software_info, "VendorID", &vendor_id) ||
+	    !fu_redfish_device_dell_get_u16(software_info, "DeviceID", &device_id) ||
+	    !fu_redfish_device_dell_get_u16(software_info, "SubVendorID", &subvendor_id) ||
+	    !fu_redfish_device_dell_get_u16(software_info, "SubDeviceID", &subdevice_id))
+		return;
+
+	subsys = g_strdup_printf("%04X%04X", subvendor_id, subdevice_id);
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", vendor_id);
+	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", device_id);
+	fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
+
+	/* the same device needs different firmware in different systems */
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "REDFISH",
+				    "VENDOR",
+				    "SYSTEMID",
+				    "VEN",
+				    "DEV",
+				    "SUBSYS",
+				    NULL);
+}
+
+static gboolean
+fu_redfish_device_probe_oem_dell(FuRedfishDevice *self,
+				 FwupdJsonObject *json_obj,
+				 gboolean has_software_id,
+				 GError **error)
 {
 	const gchar *tmp;
 	g_autoptr(FwupdJsonObject) software_info = NULL;
@@ -626,6 +679,13 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 					      "SYSTEMID",
 					      NULL))
 		return FALSE;
+
+	/* identify the device by what it is, as the SoftwareId may not be usable */
+	fu_redfish_device_probe_oem_dell_pci_id(self, software_info);
+
+	/* there is no SOFTWAREID to build from when the device does not report a useful one */
+	if (!has_software_id)
+		return TRUE;
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -728,6 +788,11 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
 	software_id = fwupd_json_object_get_string(priv->json_obj_member, "SoftwareId", NULL);
+	if (g_strcmp0(software_id, "0") == 0) {
+		/* Dell reports "0" for devices that have none, like disks: every one of them would
+		 * share an instance ID, so a firmware for one would match them all */
+		software_id = NULL;
+	}
 	if (software_id != NULL)
 		fu_redfish_device_set_software_id(self, software_id);
 
@@ -744,7 +809,10 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		}
 		json_dell = fwupd_json_object_get_object(json_oem, "Dell", NULL);
 		if (json_dell != NULL) {
-			if (!fu_redfish_device_probe_oem_dell(self, json_dell, error))
+			if (!fu_redfish_device_probe_oem_dell(self,
+							      json_dell,
+							      software_id != NULL,
+							      error))
 				return FALSE;
 		}
 	}
