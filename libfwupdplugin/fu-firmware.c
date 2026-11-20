@@ -981,38 +981,79 @@ fu_firmware_validate_with_magic(FuFirmware *self,
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize offset_lowest = G_MAXSIZE;
+	gsize streamsz = 0;
+
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 
 	for (guint i = 0; i < priv->magic->len; i++) {
 		FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
-		gsize offset_tmp = 0;
-		g_autoptr(GError) error_local = NULL;
+		const guint8 *magic = g_bytes_get_data(patch->blob, NULL);
+		gsize magic_sz = g_bytes_get_size(patch->blob);
+		gsize offset_read = offset;
+		gsize window_offset = offset;
+		gboolean found_magic = FALSE;
+		g_autoptr(GByteArray) window = g_byte_array_new();
 
-		g_debug("searching for 0x%zx bytes of magic", g_bytes_get_size(patch->blob));
-		if (!fu_input_stream_find(stream,
-					  g_bytes_get_data(patch->blob, NULL),
-					  g_bytes_get_size(patch->blob),
-					  offset,
-					  &offset_tmp,
-					  &error_local)) {
-			g_debug("ignoring: %s", error_local->message);
-			continue;
-		}
+		g_debug("searching for 0x%zx bytes of magic", magic_sz);
+		while (offset_read < streamsz) {
+			gsize count = MIN((gsize)0x10000, streamsz - offset_read);
+			gsize offset_search = 0;
+			gsize preserve;
+			g_autoptr(GByteArray) buf = NULL;
 
-		/* ensure magic found at or after expected offset */
-		if (offset_tmp < patch->offset) {
-			g_debug("magic at 0x%zx but expected >= 0x%zx", offset_tmp, patch->offset);
-			continue;
-		}
-		offset_tmp -= patch->offset;
-		g_debug("found magic at 0x%zx", offset_tmp);
-		if (!klass->validate(self, stream, offset_tmp, &error_local)) {
-			g_debug("ignoring: %s", error_local->message);
-			continue;
-		}
+			buf = fu_input_stream_read_byte_array(stream,
+							      offset_read,
+							      count,
+							      NULL,
+							      error);
+			if (buf == NULL)
+				return FALSE;
+			g_byte_array_append(window, buf->data, buf->len);
+			offset_read += buf->len;
 
-		/* any better? */
-		if (offset_tmp < offset_lowest)
-			offset_lowest = offset_tmp;
+			while (offset_search + magic_sz <= window->len) {
+				gsize offset_magic = 0;
+				gsize offset_tmp;
+				g_autoptr(GError) error_local = NULL;
+
+				if (!fu_memmem_safe(window->data + offset_search,
+						    window->len - offset_search,
+						    magic,
+						    magic_sz,
+						    &offset_magic,
+						    NULL))
+					break;
+				offset_magic += window_offset + offset_search;
+				offset_search = (offset_magic - window_offset) + 1;
+
+				/* ensure magic found at or after expected offset */
+				if (offset_magic < patch->offset ||
+				    offset_magic - patch->offset < offset) {
+					g_debug(
+					    "magic at 0x%zx resolves before requested offset 0x%zx",
+					    offset_magic,
+					    offset);
+					continue;
+				}
+				offset_tmp = offset_magic - patch->offset;
+				g_debug("found magic at 0x%zx", offset_tmp);
+				if (!klass->validate(self, stream, offset_tmp, &error_local)) {
+					g_debug("ignoring: %s", error_local->message);
+					continue;
+				}
+				offset_lowest = MIN(offset_lowest, offset_tmp);
+				found_magic = TRUE;
+				break;
+			}
+			if (found_magic)
+				break;
+
+			/* the memmem fallback does not check the final possible offset */
+			preserve = MIN(window->len, magic_sz);
+			window_offset += window->len - preserve;
+			g_byte_array_remove_range(window, 0, window->len - preserve);
+		}
 	}
 	if (offset_lowest == G_MAXSIZE) {
 		g_set_error_literal(error,
