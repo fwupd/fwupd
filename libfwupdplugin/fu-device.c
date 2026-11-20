@@ -2250,9 +2250,8 @@ fu_device_add_child_by_kv(FuDevice *self, const gchar *str, GError **error)
 	g_auto(GStrv) split = g_strsplit(str, "|", -1);
 
 	/* type same as parent */
-	if (g_strv_length(split) == 1) {
-		return fu_device_add_child_by_type_guid(self, G_OBJECT_TYPE(self), split[1], error);
-	}
+	if (g_strv_length(split) == 1)
+		return fu_device_add_child_by_type_guid(self, G_OBJECT_TYPE(self), split[0], error);
 
 	/* type specified */
 	if (g_strv_length(split) == 2) {
