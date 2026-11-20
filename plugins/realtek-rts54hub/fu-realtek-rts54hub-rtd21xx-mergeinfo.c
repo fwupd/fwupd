@@ -10,42 +10,44 @@
 
 #include <stdio.h>
 
-#include "fu-rts54hub-device.h"
-#include "fu-rts54hub-rtd21xx-mergeinfo.h"
-#include "fu-rts54hub-struct.h"
+#include "fu-realtek-rts54hub-device.h"
+#include "fu-realtek-rts54hub-rtd21xx-mergeinfo.h"
+#include "fu-realtek-rts54hub-struct.h"
 
-struct _FuRts54hubRtd21xxMergeinfo {
-	FuRts54hubRtd21xxDevice parent_instance;
+struct _FuRealtekRts54hubRtd21xxMergeinfo {
+	FuRealtekRts54hubRtd21xxDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuRts54hubRtd21xxMergeinfo,
-	      fu_rts54hub_rtd21xx_mergeinfo,
-	      FU_TYPE_RTS54HUB_RTD21XX_DEVICE)
+G_DEFINE_TYPE(FuRealtekRts54hubRtd21xxMergeinfo,
+	      fu_realtek_rts54hub_rtd21xx_mergeinfo,
+	      FU_TYPE_REALTEK_RTS54HUB_RTD21XX_DEVICE)
 
-#define FU_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET 0x6A
-#define FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET 0x6E
+#define FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET 0x6A
+#define FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET 0x6E
 
-#define FU_RTS54HUB_MERGEINFO_OPCODE_CHANGE_TO_DDCCI_MODE 0x71
+#define FU_REALTEK_RTS54HUB_MERGEINFO_OPCODE_CHANGE_TO_DDCCI_MODE 0x71
 
-#define FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM 0x71
-#define FU_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK  0x23
+#define FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM 0x71
+#define FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK  0x23
 
-#define FU_RTS54HUB_MERGEINFO_VERSION_BUFSZ 4
+#define FU_REALTEK_RTS54HUB_MERGEINFO_VERSION_BUFSZ 4
 
-#define FU_RTS54HUB_MERGEINFO_DDCCI_CHECK_TARGET_VALUE 0x90
+#define FU_REALTEK_RTS54HUB_MERGEINFO_DDCCI_CHECK_TARGET_VALUE 0x90
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(FuRts54hubRtd21xxMergeinfo *self, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_ddcci_mode(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						 GError **error)
 {
 	guint8 temp = 0x01;
 
 	/* change debug mode to DDC/CI mode */
-	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  FU_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET,
-						  FU_RTS54HUB_MERGEINFO_OPCODE_CHANGE_TO_DDCCI_MODE,
-						  &temp,
-						  sizeof(temp),
-						  error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_i2c_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_OPCODE_CHANGE_TO_DDCCI_MODE,
+		&temp,
+		sizeof(temp),
+		error)) {
 		g_prefix_error_literal(error, "failed to change debug mode to DDC/CI mode: ");
 		return FALSE;
 	}
@@ -53,12 +55,13 @@ fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(FuRts54hubRtd21xxMergeinfo *self, GErro
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 
-	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						 FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						 FU_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK,
-						 &temp,
-						 sizeof(temp),
-						 error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_i2c_read(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK,
+		&temp,
+		sizeof(temp),
+		error)) {
 		g_prefix_error_literal(error, "failed to change debug mode to DDC/CI mode: ");
 		return FALSE;
 	}
@@ -68,7 +71,8 @@ fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(FuRts54hubRtd21xxMergeinfo *self, GErro
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						  GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
 	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
@@ -78,12 +82,13 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 	    st,
 	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_COMMUNICATION);
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						    FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						    FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						    st->buf->data,
-						    st->buf->len,
-						    error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		st->buf->data,
+		st->buf->len,
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -91,17 +96,18 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						   FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						   FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						   buf_reply,
-						   sizeof(buf_reply),
-						   error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_read(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		buf_reply,
+		sizeof(buf_reply),
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
-	if (buf_reply[4] != FU_RTS54HUB_MERGEINFO_DDCCI_CHECK_TARGET_VALUE) {
+	if (buf_reply[4] != FU_REALTEK_RTS54HUB_MERGEINFO_DDCCI_CHECK_TARGET_VALUE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -114,7 +120,8 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						     GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
 	guint32 version_raw = 0;
@@ -125,12 +132,13 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 	    st,
 	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION);
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						    FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						    FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						    st->buf->data,
-						    st->buf->len,
-						    error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		st->buf->data,
+		st->buf->len,
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -138,12 +146,13 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						   FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						   FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						   buf_reply,
-						   sizeof(buf_reply),
-						   error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_read(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		buf_reply,
+		sizeof(buf_reply),
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -164,10 +173,10 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
-					   guint8 *buf_version,
-					   gsize buf_version_sz,
-					   GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_read_version(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						   guint8 *buf_version,
+						   gsize buf_version_sz,
+						   GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
 	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
@@ -177,12 +186,13 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 	    st,
 	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION);
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						    FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						    FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						    st->buf->data,
-						    st->buf->len,
-						    error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		st->buf->data,
+		st->buf->len,
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -190,12 +200,13 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						   FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						   FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						   buf_reply,
-						   sizeof(buf_reply),
-						   error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_read(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		buf_reply,
+		sizeof(buf_reply),
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -217,15 +228,15 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
-					    const guint8 *buf_version,
-					    gsize buf_version_sz,
-					    GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_write_version(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						    const guint8 *buf_version,
+						    gsize buf_version_sz,
+						    GError **error)
 {
 	g_autoptr(FuStructRts54HubDdcWriteMergeInfoPkt) st =
 	    fu_struct_rts54_hub_ddc_write_merge_info_pkt_new();
 
-	if (buf_version_sz != FU_RTS54HUB_MERGEINFO_VERSION_BUFSZ) {
+	if (buf_version_sz != FU_REALTEK_RTS54HUB_MERGEINFO_VERSION_BUFSZ) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -242,12 +253,13 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_patch_version(st, buf_version[2]);
 	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_build_version(st, buf_version[3]);
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						    FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						    FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						    st->buf->data,
-						    st->buf->len,
-						    error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		st->buf->data,
+		st->buf->len,
+		error)) {
 		g_prefix_error_literal(error, "failed to write merge fw version: ");
 		return FALSE;
 	}
@@ -257,7 +269,8 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_restore_state(FuRealtekRts54hubRtd21xxMergeinfo *self,
+						    GError **error)
 {
 	guint8 temp = 0;
 	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
@@ -266,12 +279,13 @@ fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GE
 	    st,
 	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_DDCCI_TO_DEBUG);
 
-	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						    FU_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
-						    FU_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
-						    st->buf->data,
-						    st->buf->len,
-						    error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_ddcci_write(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DDCCI_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_DDCCI_COMM,
+		st->buf->data,
+		st->buf->len,
+		error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
@@ -279,12 +293,13 @@ fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GE
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 500); /* ms */
 
-	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						 FU_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET,
-						 FU_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK,
-						 &temp,
-						 1,
-						 error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_device_i2c_read(
+		FU_REALTEK_RTS54HUB_RTD21XX_DEVICE(self),
+		FU_REALTEK_RTS54HUB_MERGEINFO_ADDR_DEBUG_TARGET,
+		FU_REALTEK_RTS54HUB_MERGEINFO_SUB_ADDR_CHECK_ACK,
+		&temp,
+		1,
+		error)) {
 		g_prefix_error_literal(error, "failed to change to debug target addr: ");
 		return FALSE;
 	}
@@ -294,17 +309,19 @@ fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GE
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_detach_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_detach_cb(FuDevice *device,
+						gpointer user_data,
+						GError **error)
 {
-	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
+	FuRealtekRts54hubRtd21xxMergeinfo *self = FU_REALTEK_RTS54HUB_RTD21XX_MERGEINFO(device);
 
 	/* wait for device ready */
-	if (!fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(self, error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_ddcci_mode(self, error)) {
 		g_prefix_error_literal(error, "change to DDC/CI mode fail: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
-	if (!fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(self, error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_check_ddcci(self, error)) {
 		g_prefix_error_literal(error, "check DDC/CI mode fail: ");
 		return FALSE;
 	}
@@ -315,10 +332,10 @@ fu_rts54hub_rtd21xx_mergeinfo_detach_cb(FuDevice *device, gpointer user_data, GE
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	return fu_device_retry_full(device,
-				    fu_rts54hub_rtd21xx_mergeinfo_detach_cb,
+				    fu_realtek_rts54hub_rtd21xx_mergeinfo_detach_cb,
 				    10,
 				    300,
 				    NULL,
@@ -326,11 +343,11 @@ fu_rts54hub_rtd21xx_mergeinfo_detach(FuDevice *device, FuProgress *progress, GEr
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
+	FuRealtekRts54hubRtd21xxMergeinfo *self = FU_REALTEK_RTS54HUB_RTD21XX_MERGEINFO(device);
 
-	if (!fu_rts54hub_rtd21xx_mergeinfo_restore_state(self, error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_restore_state(self, error)) {
 		g_prefix_error_literal(error, "failed to restore state in attach: ");
 		return FALSE;
 	}
@@ -343,11 +360,11 @@ fu_rts54hub_rtd21xx_mergeinfo_attach(FuDevice *device, FuProgress *progress, GEr
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_exit_cb(FuDevice *device, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_exit_cb(FuDevice *device, GError **error)
 {
-	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
+	FuRealtekRts54hubRtd21xxMergeinfo *self = FU_REALTEK_RTS54HUB_RTD21XX_MERGEINFO(device);
 
-	if (!fu_rts54hub_rtd21xx_mergeinfo_restore_state(self, error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_restore_state(self, error)) {
 		g_prefix_error_literal(error, "failed to restore state in attach: ");
 		return FALSE;
 	}
@@ -357,20 +374,20 @@ fu_rts54hub_rtd21xx_mergeinfo_exit_cb(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_setup(FuDevice *device, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_setup(FuDevice *device, GError **error)
 {
-	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
+	FuRealtekRts54hubRtd21xxMergeinfo *self = FU_REALTEK_RTS54HUB_RTD21XX_MERGEINFO(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* get version */
-	locker =
-	    fu_device_locker_new_full(device,
-				      (FuDeviceLockerFunc)fu_device_detach,
-				      (FuDeviceLockerFunc)fu_rts54hub_rtd21xx_mergeinfo_exit_cb,
-				      error);
+	locker = fu_device_locker_new_full(
+	    device,
+	    (FuDeviceLockerFunc)fu_device_detach,
+	    (FuDeviceLockerFunc)fu_realtek_rts54hub_rtd21xx_mergeinfo_exit_cb,
+	    error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_rts54hub_rtd21xx_mergeinfo_ensure_version(self, error))
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_ensure_version(self, error))
 		return FALSE;
 
 	/* success */
@@ -378,21 +395,21 @@ fu_rts54hub_rtd21xx_mergeinfo_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_reload(FuDevice *device, GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_reload(FuDevice *device, GError **error)
 {
-	return fu_rts54hub_rtd21xx_mergeinfo_setup(device, error);
+	return fu_realtek_rts54hub_rtd21xx_mergeinfo_setup(device, error);
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
-					     FuFirmware *firmware,
-					     FuProgress *progress,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
+						     FuFirmware *firmware,
+						     FuProgress *progress,
+						     FwupdInstallFlags flags,
+						     GError **error)
 {
-	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
-	guint8 buf[FU_RTS54HUB_MERGEINFO_VERSION_BUFSZ] = {0x0};
-	guint8 buf_version[FU_RTS54HUB_MERGEINFO_VERSION_BUFSZ] = {0x00};
+	FuRealtekRts54hubRtd21xxMergeinfo *self = FU_REALTEK_RTS54HUB_RTD21XX_MERGEINFO(device);
+	guint8 buf[FU_REALTEK_RTS54HUB_MERGEINFO_VERSION_BUFSZ] = {0x0};
+	guint8 buf_version[FU_REALTEK_RTS54HUB_MERGEINFO_VERSION_BUFSZ] = {0x00};
 	const gchar *version_str = NULL;
 
 	/* progress */
@@ -434,10 +451,10 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	}
 
 	/* write version*/
-	if (!fu_rts54hub_rtd21xx_mergeinfo_write_version(self,
-							 buf_version,
-							 sizeof(buf_version),
-							 error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_write_version(self,
+								 buf_version,
+								 sizeof(buf_version),
+								 error)) {
 		g_prefix_error_literal(error, "failed to write merge version: ");
 		return FALSE;
 	}
@@ -446,7 +463,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 	fu_progress_step_done(progress);
 
-	if (!fu_rts54hub_rtd21xx_mergeinfo_read_version(self, buf, sizeof(buf), error)) {
+	if (!fu_realtek_rts54hub_rtd21xx_mergeinfo_read_version(self, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to read merge version: ");
 		return FALSE;
 	}
@@ -456,7 +473,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 			    buf_version,
 			    sizeof(buf_version),
 			    0x0,
-			    FU_RTS54HUB_MERGEINFO_VERSION_BUFSZ,
+			    FU_REALTEK_RTS54HUB_MERGEINFO_VERSION_BUFSZ,
 			    error)) {
 		g_prefix_error_literal(error, "failed to compare merge version: ");
 		return FALSE;
@@ -468,26 +485,26 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 }
 
 static gchar *
-fu_rts54hub_rtd21xx_mergeinfo_convert_version(FuDevice *device, guint64 version_raw)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_convert_version(FuDevice *device, guint64 version_raw)
 {
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static void
-fu_rts54hub_rtd21xx_mergeinfo_init(FuRts54hubRtd21xxMergeinfo *self)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_init(FuRealtekRts54hubRtd21xxMergeinfo *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
-fu_rts54hub_rtd21xx_mergeinfo_class_init(FuRts54hubRtd21xxMergeinfoClass *klass)
+fu_realtek_rts54hub_rtd21xx_mergeinfo_class_init(FuRealtekRts54hubRtd21xxMergeinfoClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->setup = fu_rts54hub_rtd21xx_mergeinfo_setup;
-	device_class->reload = fu_rts54hub_rtd21xx_mergeinfo_reload;
-	device_class->attach = fu_rts54hub_rtd21xx_mergeinfo_attach;
-	device_class->detach = fu_rts54hub_rtd21xx_mergeinfo_detach;
-	device_class->write_firmware = fu_rts54hub_rtd21xx_mergeinfo_write_firmware;
-	device_class->convert_version = fu_rts54hub_rtd21xx_mergeinfo_convert_version;
+	device_class->setup = fu_realtek_rts54hub_rtd21xx_mergeinfo_setup;
+	device_class->reload = fu_realtek_rts54hub_rtd21xx_mergeinfo_reload;
+	device_class->attach = fu_realtek_rts54hub_rtd21xx_mergeinfo_attach;
+	device_class->detach = fu_realtek_rts54hub_rtd21xx_mergeinfo_detach;
+	device_class->write_firmware = fu_realtek_rts54hub_rtd21xx_mergeinfo_write_firmware;
+	device_class->convert_version = fu_realtek_rts54hub_rtd21xx_mergeinfo_convert_version;
 }

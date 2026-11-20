@@ -8,57 +8,51 @@
 
 #include <string.h>
 
-#include "fu-rts54hub-device.h"
+#include "fu-realtek-rts54hub-device.h"
 
-struct _FuRts54hubDevice {
+struct _FuRealtekRts54hubDevice {
 	FuUsbDevice parent_instance;
-	gboolean fw_auth;
-	gboolean dual_bank;
-	gboolean running_on_flash;
-	FuRts54hubVendorCmd vendor_cmd;
+	FuRealtekRts54hubVendorCmd vendor_cmd;
 	guint64 block_sz;
 };
 
-G_DEFINE_TYPE(FuRts54hubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuRealtekRts54hubDevice, fu_realtek_rts54hub_device, FU_TYPE_USB_DEVICE)
 
-#define FU_RTS54HUB_DEVICE_TIMEOUT	 1000  /* ms */
-#define FU_RTS54HUB_DEVICE_TIMEOUT_RW	 1000  /* ms */
-#define FU_RTS54HUB_DEVICE_TIMEOUT_ERASE 5000  /* ms */
-#define FU_RTS54HUB_DEVICE_TIMEOUT_AUTH	 10000 /* ms */
-#define FU_RTS54HUB_DEVICE_BLOCK_SIZE	 4096
-#define FU_RTS54HUB_DEVICE_STATUS_LEN	 24
+#define FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT	 1000  /* ms */
+#define FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_RW	 1000  /* ms */
+#define FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_ERASE 5000  /* ms */
+#define FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_AUTH	 10000 /* ms */
+#define FU_REALTEK_RTS54HUB_DEVICE_BLOCK_SIZE	 4096
+#define FU_REALTEK_RTS54HUB_DEVICE_STATUS_LEN	 24
 
-#define FU_RTS54HUB_I2C_CONFIG_REQUEST 0xF6
-#define FU_RTS54HUB_I2C_WRITE_REQUEST  0xC6
-#define FU_RTS54HUB_I2C_READ_REQUEST   0xD6
+#define FU_REALTEK_RTS54HUB_I2C_CONFIG_REQUEST 0xF6
+#define FU_REALTEK_RTS54HUB_I2C_WRITE_REQUEST  0xC6
+#define FU_REALTEK_RTS54HUB_I2C_READ_REQUEST   0xD6
 
-#define FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED "not-supported"
+#define FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH "fw-auth"
 
 static void
-fu_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_realtek_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
-	g_autofree gchar *vendor_cmd = fu_rts54hub_vendor_cmd_to_string(self->vendor_cmd);
-	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
-	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
-	fwupd_codec_string_append_bool(str, idt, "RunningOnFlash", self->running_on_flash);
+	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
+	g_autofree gchar *vendor_cmd = fu_realtek_rts54hub_vendor_cmd_to_string(self->vendor_cmd);
 	fwupd_codec_string_append(str, idt, "VendorCmd", vendor_cmd);
 	fwupd_codec_string_append_int(str, idt, "BlockSz", self->block_sz);
 }
 
 static gboolean
-fu_rts54hub_device_set_quirk_kv(FuDevice *device,
-				const gchar *key,
-				const gchar *value,
-				GError **error)
+fu_realtek_rts54hub_device_set_quirk_kv(FuDevice *device,
+					const gchar *key,
+					const gchar *value,
+					GError **error)
 {
-	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
+	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
 
 	if (g_strcmp0(key, "Rts54BlockSize") == 0) {
 		return fu_strtoull(value,
 				   &self->block_sz,
 				   0,
-				   FU_RTS54HUB_DEVICE_BLOCK_SIZE,
+				   FU_REALTEK_RTS54HUB_DEVICE_BLOCK_SIZE,
 				   FU_INTEGER_BASE_AUTO,
 				   error);
 	}
@@ -73,11 +67,11 @@ fu_rts54hub_device_set_quirk_kv(FuDevice *device,
 }
 
 gboolean
-fu_rts54hub_device_i2c_config(FuRts54hubDevice *self,
-			      guint8 target_addr,
-			      guint8 sub_length,
-			      FuRts54hubI2cSpeed speed,
-			      GError **error)
+fu_realtek_rts54hub_device_i2c_config(FuRealtekRts54hubDevice *self,
+				      guint8 target_addr,
+				      guint8 sub_length,
+				      FuRealtekRts54hubI2cSpeed speed,
+				      GError **error)
 {
 	guint16 value = 0;
 	guint16 index = 0x8080;
@@ -88,13 +82,13 @@ fu_rts54hub_device_i2c_config(FuRts54hubDevice *self,
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
-					    FU_RTS54HUB_I2C_CONFIG_REQUEST,
+					    FU_REALTEK_RTS54HUB_I2C_CONFIG_REQUEST,
 					    value, /* value */
 					    index, /* idx */
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error(error, "failed to issue i2c Conf cmd 0x%02x: ", target_addr);
 		return FALSE;
@@ -103,11 +97,11 @@ fu_rts54hub_device_i2c_config(FuRts54hubDevice *self,
 }
 
 gboolean
-fu_rts54hub_device_i2c_write(FuRts54hubDevice *self,
-			     guint32 sub_addr,
-			     const guint8 *data,
-			     gsize datasz,
-			     GError **error)
+fu_realtek_rts54hub_device_i2c_write(FuRealtekRts54hubDevice *self,
+				     guint32 sub_addr,
+				     const guint8 *data,
+				     gsize datasz,
+				     GError **error)
 {
 	g_autofree guint8 *datarw = fu_memdup_safe(data, datasz, error);
 	if (datarw == NULL)
@@ -116,13 +110,13 @@ fu_rts54hub_device_i2c_write(FuRts54hubDevice *self,
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
-					    FU_RTS54HUB_I2C_WRITE_REQUEST,
+					    FU_REALTEK_RTS54HUB_I2C_WRITE_REQUEST,
 					    sub_addr, /* value */
 					    0x0000,   /* idx */
 					    datarw,
 					    datasz, /* data */
 					    NULL,
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error_literal(error, "failed to write I2C: ");
 		return FALSE;
@@ -131,23 +125,23 @@ fu_rts54hub_device_i2c_write(FuRts54hubDevice *self,
 }
 
 gboolean
-fu_rts54hub_device_i2c_read(FuRts54hubDevice *self,
-			    guint32 sub_addr,
-			    guint8 *data,
-			    gsize datasz,
-			    GError **error)
+fu_realtek_rts54hub_device_i2c_read(FuRealtekRts54hubDevice *self,
+				    guint32 sub_addr,
+				    guint8 *data,
+				    gsize datasz,
+				    GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
-					    FU_RTS54HUB_I2C_READ_REQUEST,
+					    FU_REALTEK_RTS54HUB_I2C_READ_REQUEST,
 					    0x0000,
 					    sub_addr,
 					    data,
 					    datasz,
 					    NULL,
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
@@ -156,7 +150,9 @@ fu_rts54hub_device_i2c_read(FuRts54hubDevice *self,
 }
 
 static gboolean
-fu_rts54hub_device_highclockmode(FuRts54hubDevice *self, guint16 value, GError **error)
+fu_realtek_rts54hub_device_highclockmode(FuRealtekRts54hubDevice *self,
+					 guint16 value,
+					 GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -168,7 +164,7 @@ fu_rts54hub_device_highclockmode(FuRts54hubDevice *self, guint16 value, GError *
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error_literal(error, "failed to set highclockmode: ");
 		return FALSE;
@@ -177,7 +173,7 @@ fu_rts54hub_device_highclockmode(FuRts54hubDevice *self, guint16 value, GError *
 }
 
 static gboolean
-fu_rts54hub_device_reset_flash(FuRts54hubDevice *self, GError **error)
+fu_realtek_rts54hub_device_reset_flash(FuRealtekRts54hubDevice *self, GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -189,7 +185,7 @@ fu_rts54hub_device_reset_flash(FuRts54hubDevice *self, GError **error)
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error_literal(error, "failed to reset flash: ");
 		return FALSE;
@@ -198,11 +194,11 @@ fu_rts54hub_device_reset_flash(FuRts54hubDevice *self, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
-			       guint32 addr,
-			       const guint8 *data,
-			       gsize datasz,
-			       GError **error)
+fu_realtek_rts54hub_device_write_flash(FuRealtekRts54hubDevice *self,
+				       guint32 addr,
+				       const guint8 *data,
+				       gsize datasz,
+				       GError **error)
 {
 	gsize actual_len = 0;
 	g_autofree guint8 *datarw = NULL;
@@ -222,7 +218,7 @@ fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
 					    datarw,
 					    datasz, /* data */
 					    &actual_len,
-					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_RW,
 					    error)) {
 		g_prefix_error_literal(error, "failed to write flash: ");
 		return FALSE;
@@ -240,7 +236,7 @@ fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
 
 #if 0
 static gboolean
-fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
+fu_realtek_rts54hub_device_read_flash (FuRealtekRts54hubDevice *self,
 			       guint32 addr,
 			       guint8 *data,
 			       gsize datasz,
@@ -256,7 +252,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 					    addr / (1 << 16),	/* idx */
 					    data, datasz,	/* data */
 					    &actual_len,
-					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_RW,
 					    error)) {
 		g_prefix_error_literal(error, "failed to read flash: ");
 		return FALSE;
@@ -271,7 +267,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 #endif
 
 static gboolean
-fu_rts54hub_device_flash_authentication(FuRts54hubDevice *self, GError **error)
+fu_realtek_rts54hub_device_flash_authentication(FuRealtekRts54hubDevice *self, GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -283,7 +279,7 @@ fu_rts54hub_device_flash_authentication(FuRts54hubDevice *self, GError **error)
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT_AUTH,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_AUTH,
 					    error)) {
 		g_prefix_error_literal(error, "failed to authenticate: ");
 		return FALSE;
@@ -292,7 +288,9 @@ fu_rts54hub_device_flash_authentication(FuRts54hubDevice *self, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_erase_flash(FuRts54hubDevice *self, guint8 erase_type, GError **error)
+fu_realtek_rts54hub_device_erase_flash(FuRealtekRts54hubDevice *self,
+				       guint8 erase_type,
+				       GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -304,7 +302,7 @@ fu_rts54hub_device_erase_flash(FuRts54hubDevice *self, guint8 erase_type, GError
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT_ERASE,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT_ERASE,
 					    error)) {
 		g_prefix_error_literal(error, "failed to erase flash: ");
 		return FALSE;
@@ -313,9 +311,9 @@ fu_rts54hub_device_erase_flash(FuRts54hubDevice *self, guint8 erase_type, GError
 }
 
 gboolean
-fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self,
-			      FuRts54hubVendorCmd vendor_cmd,
-			      GError **error)
+fu_realtek_rts54hub_device_vendor_cmd(FuRealtekRts54hubDevice *self,
+				      FuRealtekRts54hubVendorCmd vendor_cmd,
+				      GError **error)
 {
 	/* don't set something that's already set */
 	if (self->vendor_cmd == vendor_cmd) {
@@ -332,9 +330,9 @@ fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self,
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
-		g_autofree gchar *str = fu_rts54hub_vendor_cmd_to_string(vendor_cmd);
+		g_autofree gchar *str = fu_realtek_rts54hub_vendor_cmd_to_string(vendor_cmd);
 		g_prefix_error(error, "failed to issue vendor cmd %s: ", str);
 		return FALSE;
 	}
@@ -343,9 +341,9 @@ fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self,
 }
 
 static gboolean
-fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
+fu_realtek_rts54hub_device_ensure_status(FuRealtekRts54hubDevice *self, GError **error)
 {
-	guint8 data[FU_RTS54HUB_DEVICE_STATUS_LEN] = {0};
+	guint8 data[FU_REALTEK_RTS54HUB_DEVICE_STATUS_LEN] = {0};
 	gsize actual_len = 0;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
@@ -358,12 +356,12 @@ fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
 					    data,
 					    sizeof(data),
 					    &actual_len, /* actual */
-					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    FU_REALTEK_RTS54HUB_DEVICE_TIMEOUT,
 					    error)) {
 		g_prefix_error_literal(error, "failed to get status: ");
 		return FALSE;
 	}
-	if (actual_len != FU_RTS54HUB_DEVICE_STATUS_LEN) {
+	if (actual_len != FU_REALTEK_RTS54HUB_DEVICE_STATUS_LEN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -373,45 +371,47 @@ fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
 	}
 
 	/* check the hardware capabilities */
-	self->dual_bank = (data[7] & 0x80) == 0x80;
-	self->fw_auth = (data[13] & 0x02) > 0;
-	self->running_on_flash = (data[15] & 0x02) > 0;
-
+	if ((data[7] & 0x80) == 0x80)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	if ((data[13] & 0x02) > 0) {
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH);
+	}
+	if ((data[15] & 0x02) == 0)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
 static gboolean
-fu_rts54hub_device_setup(FuDevice *device, GError **error)
+fu_realtek_rts54hub_device_setup(FuDevice *device, GError **error)
 {
-	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
+	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_rts54hub_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_realtek_rts54hub_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* check this device is correct */
-	if (!fu_rts54hub_device_vendor_cmd(self, FU_RTS54HUB_VENDOR_CMD_ENABLE, error)) {
+	if (!fu_realtek_rts54hub_device_vendor_cmd(self,
+						   FU_REALTEK_RTS54HUB_VENDOR_CMD_ENABLE,
+						   error)) {
 		g_prefix_error_literal(error, "failed to vendor enable: ");
 		return FALSE;
 	}
-	if (!fu_rts54hub_device_ensure_status(self, error))
+	if (!fu_realtek_rts54hub_device_ensure_status(self, error))
 		return FALSE;
 
 	/* all three conditions must be set */
-	if (!self->running_on_flash) {
-		fu_device_inhibit(device,
-				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device is abnormally running from ROM");
-	} else if (!self->fw_auth) {
-		fu_device_inhibit(device,
-				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device does not support authentication");
-	} else if (!self->dual_bank) {
-		fu_device_inhibit(device,
-				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
-				  "Device does not support dual-bank updating");
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+	} else if (!fu_device_has_private_flag(FU_DEVICE(self),
+					       FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+	} else if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
 	} else {
-		fu_device_uninhibit(device, FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
 	}
 
 	/* success */
@@ -419,30 +419,32 @@ fu_rts54hub_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_close(FuDevice *device, GError **error)
+fu_realtek_rts54hub_device_close(FuDevice *device, GError **error)
 {
-	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
+	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
 
 	/* disable vendor commands */
-	if (self->vendor_cmd != FU_RTS54HUB_VENDOR_CMD_NONE) {
-		if (!fu_rts54hub_device_vendor_cmd(self, FU_RTS54HUB_VENDOR_CMD_NONE, error)) {
+	if (self->vendor_cmd != FU_REALTEK_RTS54HUB_VENDOR_CMD_NONE) {
+		if (!fu_realtek_rts54hub_device_vendor_cmd(self,
+							   FU_REALTEK_RTS54HUB_VENDOR_CMD_NONE,
+							   error)) {
 			g_prefix_error_literal(error, "failed to disable vendor command: ");
 			return FALSE;
 		}
 	}
 
 	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_rts54hub_device_parent_class)->close(device, error);
+	return FU_DEVICE_CLASS(fu_realtek_rts54hub_device_parent_class)->close(device, error);
 }
 
 static gboolean
-fu_rts54hub_device_write_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_realtek_rts54hub_device_write_firmware(FuDevice *device,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
-	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
+	FuRealtekRts54hubDevice *self = FU_REALTEK_RTS54HUB_DEVICE(device);
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -459,27 +461,27 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* enable vendor commands */
-	if (!fu_rts54hub_device_vendor_cmd(self,
-					   FU_RTS54HUB_VENDOR_CMD_ENABLE |
-					       FU_RTS54HUB_VENDOR_CMD_ACCESS_FLASH,
-					   error)) {
+	if (!fu_realtek_rts54hub_device_vendor_cmd(self,
+						   FU_REALTEK_RTS54HUB_VENDOR_CMD_ENABLE |
+						       FU_REALTEK_RTS54HUB_VENDOR_CMD_ACCESS_FLASH,
+						   error)) {
 		g_prefix_error_literal(error, "failed to cmd enable: ");
 		return FALSE;
 	}
 
 	/* erase spare flash bank only if it is not empty */
-	if (!fu_rts54hub_device_erase_flash(self, 1, error))
+	if (!fu_realtek_rts54hub_device_erase_flash(self, 1, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* set MCU clock to high clock mode */
-	if (!fu_rts54hub_device_highclockmode(self, 0x0001, error)) {
+	if (!fu_realtek_rts54hub_device_highclockmode(self, 0x0001, error)) {
 		g_prefix_error_literal(error, "failed to enable MCU clock: ");
 		return FALSE;
 	}
 
 	/* set SPI controller clock to high clock mode */
-	if (!fu_rts54hub_device_highclockmode(self, 0x0101, error)) {
+	if (!fu_realtek_rts54hub_device_highclockmode(self, 0x0101, error)) {
 		g_prefix_error_literal(error, "failed to enable SPI clock: ");
 		return FALSE;
 	}
@@ -501,11 +503,11 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		/* write chunk */
-		if (!fu_rts54hub_device_write_flash(self,
-						    fu_chunk_get_address(chk),
-						    fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk),
-						    error))
+		if (!fu_realtek_rts54hub_device_write_flash(self,
+							    fu_chunk_get_address(chk),
+							    fu_chunk_get_data(chk),
+							    fu_chunk_get_data_sz(chk),
+							    error))
 			return FALSE;
 
 		/* update progress */
@@ -516,17 +518,17 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* get device to authenticate the firmware */
-	if (!fu_rts54hub_device_flash_authentication(self, error))
+	if (!fu_realtek_rts54hub_device_flash_authentication(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* send software reset to run available flash code */
-	if (!fu_rts54hub_device_reset_flash(self, error))
+	if (!fu_realtek_rts54hub_device_reset_flash(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* don't reset the vendor command enable, the device will be rebooted */
-	self->vendor_cmd = FU_RTS54HUB_VENDOR_CMD_NONE;
+	self->vendor_cmd = FU_REALTEK_RTS54HUB_VENDOR_CMD_NONE;
 
 	/* success! */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -534,11 +536,11 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 }
 
 static FuFirmware *
-fu_rts54hub_device_prepare_firmware(FuDevice *device,
-				    FuInputStream *stream,
-				    FuProgress *progress,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
+fu_realtek_rts54hub_device_prepare_firmware(FuDevice *device,
+					    FuInputStream *stream,
+					    FuProgress *progress,
+					    FuFirmwareParseFlags flags,
+					    GError **error)
 {
 	guint8 tmp = 0;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -558,7 +560,7 @@ fu_rts54hub_device_prepare_firmware(FuDevice *device,
 }
 
 static void
-fu_rts54hub_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_realtek_rts54hub_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -569,24 +571,25 @@ fu_rts54hub_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static void
-fu_rts54hub_device_init(FuRts54hubDevice *self)
+fu_realtek_rts54hub_device_init(FuRealtekRts54hubDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	self->block_sz = FU_RTS54HUB_DEVICE_BLOCK_SIZE;
+	self->block_sz = FU_REALTEK_RTS54HUB_DEVICE_BLOCK_SIZE;
 }
 
 static void
-fu_rts54hub_device_class_init(FuRts54hubDeviceClass *klass)
+fu_realtek_rts54hub_device_class_init(FuRealtekRts54hubDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_rts54hub_device_write_firmware;
-	device_class->setup = fu_rts54hub_device_setup;
-	device_class->to_string = fu_rts54hub_device_to_string;
-	device_class->prepare_firmware = fu_rts54hub_device_prepare_firmware;
-	device_class->close = fu_rts54hub_device_close;
-	device_class->set_progress = fu_rts54hub_device_set_progress;
-	device_class->set_quirk_kv = fu_rts54hub_device_set_quirk_kv;
+	device_class->write_firmware = fu_realtek_rts54hub_device_write_firmware;
+	device_class->setup = fu_realtek_rts54hub_device_setup;
+	device_class->to_string = fu_realtek_rts54hub_device_to_string;
+	device_class->prepare_firmware = fu_realtek_rts54hub_device_prepare_firmware;
+	device_class->close = fu_realtek_rts54hub_device_close;
+	device_class->set_progress = fu_realtek_rts54hub_device_set_progress;
+	device_class->set_quirk_kv = fu_realtek_rts54hub_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_REALTEK_RTS54HUB_DEVICE_FLAG_FW_AUTH);
 }
