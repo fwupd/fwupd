@@ -197,6 +197,9 @@ def update_service():
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
+DELL_NVME_ID = "Installed-0-1.0.1__Disk.Bay.0:Enclosure.Internal.0-4"
+
+
 @app.route("/redfish/v1/UpdateService/FirmwareInventory")
 def firmware_inventory():
     res = {
@@ -215,7 +218,47 @@ def firmware_inventory():
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0"},
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0"},
         ]
+    if _username() == HARDCODED_DELL_USERNAME:
+        res["Members"].append(
+            {"@odata.id": f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}"}
+        )
+        res["Members@odata.count"] = 3
     return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route(f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}")
+def firmware_inventory_dell_nvme():
+    """a Dell disk: SoftwareId and ComponentID are "0", only the PCI identity tells it apart"""
+    return Response(
+        json.dumps(
+            {
+                "@odata.id": f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}",
+                "@odata.type": "#SoftwareInventory.v1_10_2.SoftwareInventory",
+                "Id": DELL_NVME_ID,
+                "Name": "PCIe SSD in Slot 0 in Bay 4",
+                "Oem": {
+                    "Dell": {
+                        "DellSoftwareInventory": {
+                            "ComponentID": "0",
+                            "ComponentType": "FRMW",
+                            "DeviceID": "51C3",
+                            "Id": "DCIM:INSTALLED_0x23_304_C_Disk.Bay.0:Enclosure.Internal.0-4",
+                            "IdentityInfoValue": ["DCIM:firmware:1344:51C3:1028:2278"],
+                            "Status": "Installed",
+                            "SubDeviceID": "2278",
+                            "SubVendorID": "1028",
+                            "VendorID": "1344",
+                        }
+                    }
+                },
+                "SoftwareId": "0",
+                "Updateable": True,
+                "Version": "1.0.1",
+            }
+        ),
+        status=200,
+        mimetype="application/json",
+    )
 
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0")

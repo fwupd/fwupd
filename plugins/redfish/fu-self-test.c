@@ -947,12 +947,21 @@ fu_redfish_dell_devices_func(gconstpointer user_data)
 		g_test_skip("no redfish support");
 		return;
 	}
-	g_assert_cmpint(devices->len, ==, 2);
+	g_assert_cmpint(devices->len, ==, 3);
 
 	dev = g_ptr_array_index(devices, 1);
 	g_assert_true(FU_IS_REDFISH_DEVICE(dev));
 	g_assert_true(
 	    fu_device_has_guid(dev, "REDFISH\\VENDOR_Lenovo&SYSTEMID_0C60&SOFTWAREID_UEFI-AFE1-6"));
+
+	/* a disk that reports a SoftwareId of "0" is identified by its PCI IDs, as the Dell
+	 * catalog gives them in PCIInfo, and not by a SOFTWAREID shared by every disk */
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_true(FU_IS_REDFISH_DEVICE(dev));
+	g_assert_true(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_Dell&SYSTEMID_0C60&VEN_1344&DEV_51C3&SUBSYS_10282278"));
+	g_assert_false(fu_device_has_guid(dev, "REDFISH\\VENDOR_Dell&SYSTEMID_0C60&SOFTWAREID_0"));
 }
 
 static void
