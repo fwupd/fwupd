@@ -777,6 +777,78 @@ fu_device_children_func(void)
 }
 
 static void
+fu_device_children_quirk_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	GPtrArray *children;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) parent = g_object_new(FU_TYPE_SELF_TEST_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	/* ensure registered so that g_type_from_name() works */
+	g_type_ensure(FU_TYPE_SELF_TEST_DEVICE);
+	g_type_ensure(FU_TYPE_FIRMWARE);
+	fu_device_set_physical_id(parent, "dummy");
+
+	/* type same as parent */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "b84ed8ed-a7b1-502f-83f6-90132e68adef",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	children = fu_device_get_children(parent);
+	g_assert_cmpint(children->len, ==, 1);
+	child = g_ptr_array_index(children, 0);
+	g_assert_cmpstr(G_OBJECT_TYPE_NAME(child), ==, "FuSelfTestDevice");
+	g_assert_cmpstr(fu_device_get_logical_id(child),
+			==,
+			"b84ed8ed-a7b1-502f-83f6-90132e68adef");
+	g_assert_cmpstr(fu_device_get_physical_id(child), ==, "dummy");
+	g_assert_true(fu_device_has_guid(child, "b84ed8ed-a7b1-502f-83f6-90132e68adef"));
+
+	/* type specified */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuDevice|3b55d37a-0636-53a0-84db-a92ba3f6302c",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(children->len, ==, 2);
+	child = g_ptr_array_index(children, 1);
+	g_assert_cmpstr(G_OBJECT_TYPE_NAME(child), ==, "FuDevice");
+	g_assert_cmpstr(fu_device_get_logical_id(child),
+			==,
+			"3b55d37a-0636-53a0-84db-a92ba3f6302c");
+
+	/* unknown GType */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuNotARealDevice|88e57a95-5647-5d9d-a363-604f22a0bb26",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* too many sections */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuDevice|88e57a95-5647-5d9d-a363-604f22a0bb26|extra",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* none of the failures added a child */
+	g_assert_cmpint(children->len, ==, 2);
+}
+
+static void
 fu_device_children_instance_ids_func(void)
 {
 	const gchar *guid_generic = "88e57a95-5647-5d9d-a363-604f22a0bb26";
@@ -1194,6 +1266,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/inhibit-updateable", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device/parent", fu_device_parent_func);
 	g_test_add_func("/fwupd/device/children", fu_device_children_func);
+	g_test_add_func("/fwupd/device/children-quirk", fu_device_children_quirk_func);
 	g_test_add_func("/fwupd/device/children-instance-ids",
 			fu_device_children_instance_ids_func);
 	g_test_add_func("/fwupd/device/incorporate", fu_device_incorporate_func);
