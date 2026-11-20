@@ -1,14 +1,6 @@
 // Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(FromString)]
-enum FuRts54hidType {
-    Unknown,
-    Hub,
-    Pd,
-    Dmc,
-}
-
 #[repr(u8)]
 enum FuRts54hidI2cSpeed {
     250K,
