@@ -121,7 +121,7 @@ fu_rts54hid_hub_device_ensure_status(FuRts54hidHubDevice *self, GError **error)
 
 	/* check the hardware capabilities */
 	if ((st->buf->data[7] & 0xf0) == 0x80)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_RTS54HID_DEVICE_FLAG_DUAL_BANK);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	if ((st->buf->data[13] & 0x02) > 0)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_RTS54HID_DEVICE_FLAG_FW_AUTH);
 
@@ -146,12 +146,12 @@ fu_rts54hid_hub_device_setup(FuDevice *device, GError **error)
 
 	/* both conditions must be set */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_RTS54HID_DEVICE_FLAG_FW_AUTH)) {
-		fu_device_set_update_error(device, "device does not support authentication");
-	} else if (!fu_device_has_private_flag(FU_DEVICE(self),
-					       FU_RTS54HID_DEVICE_FLAG_DUAL_BANK)) {
-		fu_device_set_update_error(device, "device does not support dual-bank updating");
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+	} else if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
 	} else {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
 	}
 
 	/* success */
@@ -267,6 +267,7 @@ fu_rts54hid_hub_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_rts54hid_hub_device_init(FuRts54hidHubDevice *self)
 {
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void

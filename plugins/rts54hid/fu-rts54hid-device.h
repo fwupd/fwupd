@@ -17,8 +17,7 @@ struct _FuRts54hidDeviceClass {
 
 #define FU_RTS54HID_DEVICE_TIMEOUT 1000 /* ms */
 
-#define FU_RTS54HID_DEVICE_FLAG_FW_AUTH	  "fw-auth"
-#define FU_RTS54HID_DEVICE_FLAG_DUAL_BANK "dual-bank"
+#define FU_RTS54HID_DEVICE_FLAG_FW_AUTH "fw-auth"
 
 gboolean
 fu_rts54hid_device_get_report(FuRts54hidDevice *self, GByteArray *buf, GError **error);

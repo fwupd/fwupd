@@ -79,5 +79,4 @@ fu_rts54hid_device_class_init(FuRts54hidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	fu_device_register_private_flag(device_class, FU_RTS54HID_DEVICE_FLAG_FW_AUTH);
-	fu_device_register_private_flag(device_class, FU_RTS54HID_DEVICE_FLAG_DUAL_BANK);
 }
