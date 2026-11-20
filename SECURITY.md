@@ -66,6 +66,12 @@ the actual CVSS scoring may be modified at the fwupd maintainers discretion.
 So-called "low severity" security bugs or "hardening enhancements" will be treated as normal issues
 and will be fixed as part of the next tarball release with no coordinated disclosure process.
 
+Furthermore, DoS "denial of service" crashes requiring local physical access will not be considered
+as security bugs unless code execution or trust bypass can also be demonstrated.
+The logic being that a user plugging in a fake USB keyboard that just emits repeated keycodes
+of `Ctrl+Alt+Delete` or `Ctrl+L` or would not be a system security issue either.
+Also consider: users can also just unplug the power cord to the machine for the ultimate DoS.
+
 ## Threat Modeling
 
 ### Who We Trust
