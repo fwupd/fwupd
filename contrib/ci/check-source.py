@@ -823,6 +823,7 @@ class Checker:
             "g_ascii_strtoll": "Use fu_strtoll() instead",
             "g_find_program_in_path": "Use fu_path_store_find_program() instead",
             "g_strerror": "Use fwupd_strerror() instead",
+            "g_type_from_name": "Use fu_gtype_from_name() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
             "g_base64_encode": "Use fu_base64_encode() instead",
             "g_spawn_command_line_sync": "Do not call out to external tools",

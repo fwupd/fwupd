@@ -97,15 +97,9 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 		g_autofree gchar *guid = fwupd_guid_hash_string(device_ids[i]);
 		const gchar *gtypestr = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_GTYPE);
 		if (gtypestr != NULL) {
-			GType gtype = g_type_from_name(gtypestr);
-			if (gtype == G_TYPE_INVALID) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "unknown GType name %s",
-					    gtypestr);
+			GType gtype = G_TYPE_INVALID;
+			if (!fu_gtype_from_name(gtypestr, &gtype, FU_TYPE_MM_DEVICE, error))
 				return NULL;
-			}
 			return g_object_new(gtype, "context", ctx, NULL);
 		}
 	}
@@ -114,7 +108,7 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 	device_ids_str = g_strjoinv(", ", (gchar **)device_ids);
 	g_set_error(error,
 		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "no explicit GType for %s",
 		    device_ids_str);
 	return NULL;
@@ -276,7 +270,7 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 	/* create device and probe */
 	device = fu_mm_backend_probe_gtype(self, omodem, &error_local);
 	if (device == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring, and trying legacy fallback: %s", error_local->message);
 			device = fu_mm_backend_probe_gtype_fallback(self, omodem, error);
 			if (device == NULL)
