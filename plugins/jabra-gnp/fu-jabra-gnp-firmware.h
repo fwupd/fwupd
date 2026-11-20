@@ -16,9 +16,16 @@ struct _FuJabraGnpFirmware {
 	FuFirmware parent_instance;
 	guint16 dfu_pid;
 	FuJabraGnpVersionData version_data;
+	guint8 fwu_protocol;
 };
 
 guint16
 fu_jabra_gnp_firmware_get_dfu_pid(FuJabraGnpFirmware *self);
 FuJabraGnpVersionData *
 fu_jabra_gnp_firmware_get_version_data(FuJabraGnpFirmware *self);
+
+FuFirmware *
+fu_jabra_gnp_firmware_new(void);
+
+void
+fu_jabra_gnp_firmware_set_protocol_id(FuJabraGnpFirmware *self, guint8 fwu_protocol);

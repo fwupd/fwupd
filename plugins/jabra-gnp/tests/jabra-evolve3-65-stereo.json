@@ -1,0 +1,21 @@
+{
+  "name": "Jabra Evolve3 65 Stereo",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "a3097ad9c067b7b51b154e932bb179c45fd1ba09156faf0db31e97ee6e423b03-jabra-evolve3-65-stereo-1.0.1.cab",
+      "emulation-url": "6996c59e8d6058252199e400fd4079b0cf71fb87593fc8f74d1b8ca23737a85e-jabra-evolve3-65-stereo-emulation.zip",
+      "components": [
+        {
+          "version": "1.0.1",
+          "protocol": "com.jabra.gnp",
+          "guids": [
+            "8fdeefb8-ac7c-54bf-be88-e5878652ea29",
+            "2b55dd69-c36a-5889-818c-00531f46cc3e",
+            "af260bfc-a162-5f12-a599-9539030273b0"
+          ]
+        }
+      ]
+    }
+  ]
+}
