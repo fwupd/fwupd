@@ -8,6 +8,218 @@
 
 #include "fu-context-private.h"
 #include "fu-mm-device.h"
+#include "fu-mm-mhi-firehose-device.h"
+
+static void
+fu_mm_test_add_image(FuFirmware *firmware, const gchar *id, const gchar *data)
+{
+	g_autoptr(FuFirmware) image = fu_zip_file_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_id(image, id);
+	fu_firmware_set_bytes(image, g_bytes_new_static(data, strlen(data)));
+	g_assert_true(fu_firmware_add_image(firmware, image, &error));
+	g_assert_no_error(error);
+}
+
+static const gchar *fu_mm_test_mapping_xml =
+    "<TableList>"
+    "<WwanDeviceConfigureIDTable>"
+    "<UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-a\" ProductID=\"MODEL-A\"/>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-a\" ProductID=\"MODEL-A\"/>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-b\" ProductID=\"MODEL-B\"/>"
+    "</UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "</WwanDeviceConfigureIDTable>"
+    "<WwanDeviceConfigureIDToImageMappingTable>"
+    "<WwanDeviceConfigID ID=\"dev-a\">"
+    "<Standard><DEVFirmware File=\"dev-a\"/></Standard>"
+    "</WwanDeviceConfigID>"
+    "<WwanDeviceConfigID ID=\"dev-b\">"
+    "<Standard><DEVFirmware File=\"dev-b\"/></Standard>"
+    "</WwanDeviceConfigID>"
+    "</WwanDeviceConfigureIDToImageMappingTable>"
+    "</TableList>";
+
+static const gchar *fu_mm_test_ambiguous_mapping_xml =
+    "<TableList>"
+    "<WwanDeviceConfigureIDTable>"
+    "<UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-a\" ProductID=\"MODEL-A\"/>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-b\" ProductID=\"MODEL-A\"/>"
+    "</UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "</WwanDeviceConfigureIDTable>"
+    "<WwanDeviceConfigureIDToImageMappingTable/>"
+    "</TableList>";
+
+static const gchar *fu_mm_test_rawprogram_xml =
+    "<data>"
+    "<program filename=\"boot.img\" label=\"boot\"/>"
+    "<program filename=\"\" label=\"f_dev_pack\"/>"
+    "</data>";
+
+static const gchar *fu_mm_test_multiple_firmware_mapping_xml =
+    "<TableList>"
+    "<WwanDeviceConfigureIDTable>"
+    "<UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "<UniqueSkuID WwanDeviceConfigID=\"dev-a\" ProductID=\"MODEL-A\"/>"
+    "</UniqueSkuIDToWwanDeviceConfigureIDMappingTable>"
+    "</WwanDeviceConfigureIDTable>"
+    "<WwanDeviceConfigureIDToImageMappingTable>"
+    "<WwanDeviceConfigID ID=\"dev-a\">"
+    "<Standard>"
+    "<DEVFirmware File=\"dev-a\"/>"
+    "<DEVFirmware File=\"dev-b\"/>"
+    "</Standard>"
+    "</WwanDeviceConfigID>"
+    "</WwanDeviceConfigureIDToImageMappingTable>"
+    "</TableList>";
+
+static const gchar *fu_mm_test_mixed_order_rawprogram_xml =
+    "<data>"
+    "<program filename=\"\" label=\"f_dev_pack\"/>"
+    "<program label=\"f_dev_pack\" filename=\"\"/>"
+    "</data>";
+
+static const gchar *fu_mm_test_ordered_rawprogram_xml =
+    "<data>"
+    "<program filename=\"boot.img\" label=\"boot\"/>"
+    "<program filename=\"\" label=\"f_dev_pack\"/>"
+    "</data>";
+
+static void
+fu_mm_mhi_firehose_dev_image_func(void)
+{
+	gboolean ret;
+	gsize rawprogram_sz = 0;
+	const gchar *rawprogram_data;
+	const gchar *product_ids[] = {"UNKNOWN", "MODEL-A", NULL};
+	g_autofree gchar *rawprogram = NULL;
+	g_autoptr(GBytes) dev_image = NULL;
+	g_autoptr(GBytes) dev_image_expected = g_bytes_new_static("IMAGE-A", 7);
+	g_autoptr(GBytes) rawprogram_blob = NULL;
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_mapping_xml);
+	fu_mm_test_add_image(firmware, "DEV_OTA_PACKAGE/dev-a/devicepack.ubi", "IMAGE-A");
+	fu_mm_test_add_image(firmware, "DEV_OTA_PACKAGE/dev-b/devicepack.ubi", "IMAGE-B");
+	fu_mm_test_add_image(firmware, "firehose-rawprogram.xml", fu_mm_test_rawprogram_xml);
+
+	ret = fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	dev_image = fu_firmware_get_image_by_id_bytes(firmware, "devicepack.ubi", &error);
+	g_assert_no_error(error);
+	g_assert_true(g_bytes_equal(dev_image, dev_image_expected));
+	rawprogram_blob =
+	    fu_firmware_get_image_by_id_bytes(firmware, "firehose-rawprogram.xml", &error);
+	g_assert_no_error(error);
+	rawprogram_data = g_bytes_get_data(rawprogram_blob, &rawprogram_sz);
+	rawprogram = g_strndup(rawprogram_data, rawprogram_sz);
+	g_assert_nonnull(g_strstr_len(rawprogram, rawprogram_sz, "filename=\"devicepack.ubi\""));
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_ambiguous_func(void)
+{
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_ambiguous_mapping_xml);
+	g_assert_false(fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_manifest_order_func(void)
+{
+	gsize rawprogram_sz = 0;
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	const gchar *rawprogram_data;
+	g_autofree gchar *rawprogram = NULL;
+	g_autoptr(GBytes) rawprogram_blob = NULL;
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(FuFirmware) selected_rawprogram = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_mapping_xml);
+	fu_mm_test_add_image(firmware, "DEV_OTA_PACKAGE/dev-a/devicepack.ubi", "IMAGE-A");
+	fu_mm_test_add_image(firmware, "rawprogram_0.xml", fu_mm_test_ordered_rawprogram_xml);
+	fu_mm_test_add_image(firmware,
+			     "firehose-rawprogram.xml",
+			     fu_mm_test_ordered_rawprogram_xml);
+
+	g_assert_true(
+	    fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_no_error(error);
+
+	/* Preparation must select the same image as the Firehose writer. */
+	selected_rawprogram =
+	    fu_firmware_get_image_by_id(firmware,
+					"firehose-rawprogram.xml|rawprogram_*.xml",
+					&error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(fu_firmware_get_id(selected_rawprogram), ==, "rawprogram_0.xml");
+	rawprogram_blob = fu_firmware_get_bytes(selected_rawprogram, &error);
+	g_assert_no_error(error);
+	rawprogram_data = g_bytes_get_data(rawprogram_blob, &rawprogram_sz);
+	rawprogram = g_strndup(rawprogram_data, rawprogram_sz);
+	g_assert_nonnull(g_strstr_len(rawprogram, rawprogram_sz, "filename=\"devicepack.ubi\""));
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_multiple_firmware_func(void)
+{
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_multiple_firmware_mapping_xml);
+	g_assert_false(fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_mixed_order_func(void)
+{
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware,
+			     "DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml",
+			     fu_mm_test_mapping_xml);
+	fu_mm_test_add_image(firmware, "DEV_OTA_PACKAGE/dev-a/devicepack.ubi", "IMAGE-A");
+	fu_mm_test_add_image(firmware, "firehose-rawprogram.xml",
+			     fu_mm_test_mixed_order_rawprogram_xml);
+	g_assert_false(fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+}
+
+static void
+fu_mm_mhi_firehose_dev_image_legacy_func(void)
+{
+	const gchar *product_ids[] = {"MODEL-A", NULL};
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_mm_test_add_image(firmware, "firehose-rawprogram.xml", fu_mm_test_rawprogram_xml);
+	g_assert_true(
+	    fu_mm_mhi_firehose_prepare_dev_image(firmware, product_ids, &error));
+	g_assert_no_error(error);
+	g_assert_null(fu_firmware_get_image_by_id(firmware, "devicepack.ubi", NULL));
+}
 
 static void
 fu_mm_device_func(void)
@@ -107,5 +319,16 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/mm/device", fu_mm_device_func);
+	g_test_add_func("/mm/firehose/dev-image", fu_mm_mhi_firehose_dev_image_func);
+	g_test_add_func("/mm/firehose/dev-image-ambiguous",
+			fu_mm_mhi_firehose_dev_image_ambiguous_func);
+	g_test_add_func("/mm/firehose/dev-image-manifest-order",
+			fu_mm_mhi_firehose_dev_image_manifest_order_func);
+	g_test_add_func("/mm/firehose/dev-image-multiple-firmware",
+			fu_mm_mhi_firehose_dev_image_multiple_firmware_func);
+	g_test_add_func("/mm/firehose/dev-image-mixed-order",
+			fu_mm_mhi_firehose_dev_image_mixed_order_func);
+	g_test_add_func("/mm/firehose/dev-image-legacy",
+			fu_mm_mhi_firehose_dev_image_legacy_func);
 	return g_test_run();
 }

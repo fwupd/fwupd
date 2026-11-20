@@ -48,6 +48,14 @@ The system firmware path to use during the mhi driver switch to EDL (Emergency D
 
 Since: 2.1.9
 
+### ModemManagerWwanDeviceId
+
+Optional machine product ID used with the package-provided
+`DEV_OTA_PACKAGE/WwanDeviceIdImageMappingTable.xml` file. If unset, fwupd tries the DMI
+product SKU, product name, and baseboard product in that order.
+
+Since: 2.2.1
+
 ### `Flags=use-branch`
 
 Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade
