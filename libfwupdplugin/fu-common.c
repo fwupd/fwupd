@@ -551,7 +551,7 @@ fu_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError *
 {
 	GType gtype_tmp;
 
-	gtype_tmp = g_type_from_name(name);
+	gtype_tmp = g_type_from_name(name); /* nocheck:blocked */
 	if (gtype_tmp == G_TYPE_INVALID) {
 		g_set_error(error,
 			    FWUPD_ERROR,

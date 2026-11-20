@@ -88,15 +88,8 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	/* simple properties */
 	tmp = xb_node_query_text(n, "image_gtype", NULL);
 	if (tmp != NULL) {
-		priv->image_gtype = g_type_from_name(tmp);
-		if (priv->image_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "GType %s not registered",
-				    tmp);
+		if (!fu_gtype_from_name(tmp, &priv->image_gtype, FU_TYPE_FIRMWARE, error))
 			return FALSE;
-		}
 	}
 
 	/* success */

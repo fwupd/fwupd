@@ -504,9 +504,9 @@ fu_redfish_backend_ensure_device_gtype(FuRedfishBackend *self, GError **error)
 		tmp = fu_context_lookup_quirk_by_id(ctx, hwid, "RedfishDeviceGType");
 		if (tmp == NULL)
 			continue;
-		gtype = g_type_from_name(tmp);
-		if (gtype == FU_TYPE_REDFISH_DEVICE ||
-		    !g_type_is_a(gtype, FU_TYPE_REDFISH_DEVICE)) {
+		if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_REDFISH_DEVICE, error))
+			return FALSE;
+		if (gtype == FU_TYPE_REDFISH_DEVICE) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
