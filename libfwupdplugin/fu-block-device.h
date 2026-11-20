@@ -28,6 +28,14 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 			       gsize bufsz,
 			       GError **error) G_GNUC_NON_NULL(1, 2, 4);
 gboolean
+fu_block_device_sg_io_cmd_read_full(FuBlockDevice *self,
+				    const guint8 *cdb,
+				    gsize cdbsz,
+				    guint8 *buf,
+				    gsize bufsz,
+				    gsize *bufsz_out,
+				    GError **error) G_GNUC_NON_NULL(1, 2, 4);
+gboolean
 fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 				const guint8 *cdb,
 				gsize cdbsz,

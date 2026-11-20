@@ -1,0 +1,17 @@
+{
+  "name": "Dell PSB",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/dell-psb-setup.json",
+      "components": [
+        {
+          "version": "4.160.3.0",
+          "guids": [
+            "21d2b83e-b650-5c94-9067-0a672f874e30"
+          ]
+        }
+      ]
+    }
+  ]
+}
