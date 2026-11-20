@@ -786,7 +786,7 @@ fu_device_children_quirk_func(void)
 	g_autoptr(FuDevice) parent = g_object_new(FU_TYPE_SELF_TEST_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 
-	/* ensure registered so that g_type_from_name() works */
+	/* ensure registered so that fu_gtype_from_name() works */
 	g_type_ensure(FU_TYPE_SELF_TEST_DEVICE);
 	g_type_ensure(FU_TYPE_FIRMWARE);
 	fu_device_set_physical_id(parent, "dummy");
@@ -834,6 +834,16 @@ fu_device_children_quirk_func(void)
 	g_assert_false(ret);
 	g_clear_error(&error);
 
+	/* GType that is not a FuDevice */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuFirmware|88e57a95-5647-5d9d-a363-604f22a0bb26",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
 	/* too many sections */
 	ret = fu_device_set_quirk_kv(parent,
 				     "Children",
@@ -846,6 +856,55 @@ fu_device_children_quirk_func(void)
 
 	/* none of the failures added a child */
 	g_assert_cmpint(children->len, ==, 2);
+}
+
+static void
+fu_device_gtype_quirk_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	g_type_ensure(FU_TYPE_FIRMWARE);
+
+	/* unregistered GType, e.g. from a plugin that is not loaded */
+	ret = fu_device_set_quirk_kv(device,
+				     "GType",
+				     "FuNotARealDevice",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* registered GType of the wrong parent is a quirk bug */
+	ret = fu_device_set_quirk_kv(device,
+				     "GType",
+				     "FuFirmware",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_device_set_quirk_kv(device,
+				     "FirmwareGType",
+				     "FuDevice",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* success */
+	ret = fu_device_set_quirk_kv(device,
+				     "FirmwareGType",
+				     "FuFirmware",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_device_get_firmware_gtype(device), ==, FU_TYPE_FIRMWARE);
 }
 
 static void
@@ -1267,6 +1326,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/parent", fu_device_parent_func);
 	g_test_add_func("/fwupd/device/children", fu_device_children_func);
 	g_test_add_func("/fwupd/device/children-quirk", fu_device_children_quirk_func);
+	g_test_add_func("/fwupd/device/gtype-quirk", fu_device_gtype_quirk_func);
 	g_test_add_func("/fwupd/device/children-instance-ids",
 			fu_device_children_instance_ids_func);
 	g_test_add_func("/fwupd/device/incorporate", fu_device_incorporate_func);
