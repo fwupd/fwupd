@@ -408,13 +408,18 @@ fu_linux_fw_upload_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* empty on success */
+	/* the kernel reports success as an empty file, which the reader returns as a timeout */
 	err_str = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
 					    "error",
 					    FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					    error);
-	if (err_str == NULL)
-		return FALSE;
+					    &error_local);
+	if (err_str == NULL) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		return TRUE;
+	}
 	if (err_str[0] == '\0')
 		return TRUE;
 	return fu_linux_fw_upload_device_set_error_from_kernel(err_str, error);
