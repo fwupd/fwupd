@@ -150,6 +150,10 @@ gboolean
 fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **perror)
     G_GNUC_NON_NULL(1);
 
+gboolean
+fu_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError **error)
+    G_GNUC_NON_NULL(1);
+
 GByteArray *
 fu_common_get_random(guint bufsz, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gchar *

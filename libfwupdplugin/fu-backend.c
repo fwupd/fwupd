@@ -410,15 +410,8 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		device_gtypestr = fwupd_json_object_get_string(object_tmp, "GType", NULL);
 		if (device_gtypestr == NULL)
 			device_gtypestr = "FuUsbDevice";
-		device_gtype = g_type_from_name(device_gtypestr);
-		if (device_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unknown GType name %s",
-				    device_gtypestr);
+		if (!fu_gtype_from_name(device_gtypestr, &device_gtype, FU_TYPE_DEVICE, error))
 			return FALSE;
-		}
 		if (!g_type_is_a(device_gtype, priv->device_gtype)) {
 			g_debug("ignoring device backend GType %s",
 				g_type_name(priv->device_gtype));

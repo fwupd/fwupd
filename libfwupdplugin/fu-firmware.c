@@ -1488,15 +1488,9 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			g_autoptr(FuFirmware) img = NULL;
 			tmp = xb_node_get_attr(xb_image, "gtype");
 			if (tmp != NULL) {
-				GType gtype = g_type_from_name(tmp);
-				if (gtype == G_TYPE_INVALID) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_FOUND,
-						    "GType %s not registered",
-						    tmp);
+				GType gtype = G_TYPE_INVALID;
+				if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_FIRMWARE, error))
 					return FALSE;
-				}
 				img = g_object_new(gtype, NULL);
 			} else {
 				img = fu_firmware_new();
@@ -1600,15 +1594,8 @@ fu_firmware_new_from_xml(const gchar *xml, GError **error)
 				    "expected gtype for <firmware>");
 		return NULL;
 	}
-	gtype = g_type_from_name(gtypestr);
-	if (gtype == G_TYPE_INVALID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "GType %s not registered",
-			    gtypestr);
+	if (!fu_gtype_from_name(gtypestr, &gtype, FU_TYPE_FIRMWARE, error))
 		return NULL;
-	}
 	self = g_object_new(gtype, NULL);
 	if (!fu_firmware_build(self, n, error))
 		return NULL;
