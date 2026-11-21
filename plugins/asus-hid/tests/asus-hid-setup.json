@@ -165,12 +165,20 @@
           "DataOut": "WtEBAQEA"
         },
         {
-          "Id": "Ioctl:Request=0xc0104806,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
-          "DataOut": "WkFTVVNUZWNoLkluYy4AAA=="
+          "Id": "Ioctl:Request=0xc0064806,Data=WgUDMQAg,Length=0x6",
+          "DataOut": "WgUDMQAg"
         },
         {
           "Id": "Ioctl:Request=0xc0204807,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
-          "DataOut": "WkFTVVNUZWNoLkluYy4AAFJDNzFMTS4zMTkAAgAYAAA="
+          "DataOut": "WgUDMQAaE0ZHQTgwMTAwLlJDNzFMUy4zMTkAAgAYAAA="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0104806,Data=WkFTVVMgVGVjaC5JbmMuAA==,Length=0x10",
+          "DataOut": "WkFTVVMgVGVjaC5JbmMuAA=="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0204807,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "DataOut": "WkFTVVMgVGVjaC5JbmMuAFJDNzFMTS4zMTkAAgAYAAA="
         },
         {
           "Id": "Ioctl:Request=0xc0064806,Data=WgUDMQAg,Length=0x6",
@@ -181,12 +189,12 @@
           "DataOut": "WgUDMQAaE0ZHQTgwMTAwLlJDNzFMUy4zMTkAAgAYAAA="
         },
         {
-          "Id": "Ioctl:Request=0xc0104806,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
-          "DataOut": "WkFTVVNUZWNoLkluYy4AAA=="
+          "Id": "Ioctl:Request=0xc0104806,Data=WkFTVVMgVGVjaC5JbmMuAA==,Length=0x10",
+          "DataOut": "WkFTVVMgVGVjaC5JbmMuAA=="
         },
         {
           "Id": "Ioctl:Request=0xc0204807,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
-          "DataOut": "WkFTVVNUZWNoLkluYy4AAFJDNzFMUy4zMTkAAgAYAAA="
+          "DataOut": "WkFTVVMgVGVjaC5JbmMuAFJDNzFMUy4zMTkAAgAYAAA="
         },
         {
           "Id": "Ioctl:Request=0xc0064806,Data=WgUEMQAg,Length=0x6",
