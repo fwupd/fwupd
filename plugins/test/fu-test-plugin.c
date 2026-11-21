@@ -363,6 +363,15 @@ fu_test_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_test_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	fu_device_set_metadata_integer(device,
+				       "nr-clear",
+				       fu_device_get_metadata_integer(device, "nr-clear") + 1);
+	return TRUE;
+}
+
+static gboolean
 fu_test_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositePrepareFail")) {
@@ -451,6 +460,7 @@ fu_test_plugin_class_init(FuTestPluginClass *klass)
 	plugin_class->composite_cleanup = fu_test_plugin_composite_cleanup;
 	plugin_class->composite_prepare = fu_test_plugin_composite_prepare;
 	plugin_class->get_results = fu_test_plugin_get_results;
+	plugin_class->clear_results = fu_test_plugin_clear_results;
 	plugin_class->activate = fu_test_plugin_activate;
 	plugin_class->write_firmware = fu_test_plugin_write_firmware;
 	plugin_class->verify = fu_test_plugin_verify;

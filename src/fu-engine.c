@@ -6628,6 +6628,7 @@ gboolean
 fu_engine_clear_results(FuEngine *self, const gchar *device_id, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_live = NULL;
 	FuPlugin *plugin;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -6648,11 +6649,15 @@ fu_engine_clear_results(FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	}
 
-	/* call into the plugin if it still exists */
-	plugin =
-	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
-	if (plugin != NULL) {
-		if (!fu_plugin_runner_clear_results(plugin, device, error))
+	/* call into the plugin if the device still exists, as the history device has no context */
+	device_live = fu_device_list_get_by_id(self->device_list, fu_device_get_id(device), NULL);
+	if (device_live != NULL) {
+		plugin = fu_plugin_list_find_by_name(self->plugin_list,
+						     fu_device_get_plugin(device_live),
+						     error);
+		if (plugin == NULL)
+			return FALSE;
+		if (!fu_plugin_runner_clear_results(plugin, device_live, error))
 			return FALSE;
 	}
 
