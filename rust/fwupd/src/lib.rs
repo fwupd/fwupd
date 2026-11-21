@@ -11,6 +11,7 @@ pub mod cab;
 pub mod compressor;
 pub mod io;
 pub mod json;
+pub mod path;
 pub mod slice;
 pub mod streams;
 pub mod types;
