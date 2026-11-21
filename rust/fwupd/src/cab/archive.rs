@@ -272,7 +272,7 @@ impl CFString {
     ///
     /// Returns an error if the read or validation fails
     pub fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
+        src: &mut (impl ReadSeek + ?Sized),
         offset: usize,
         max: usize,
     ) -> Result<(Self, usize), CabError> {
@@ -467,7 +467,7 @@ impl CFData {
     ///
     /// Returns an error if the read or validation of the checksum failed.
     pub fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
+        src: &mut (impl ReadSeek + ?Sized),
         offset: usize,
         cfdata_reserved_size: u8,
         verify_checksum: bool,

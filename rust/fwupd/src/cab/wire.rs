@@ -64,10 +64,7 @@ pub trait FixedSizeIO {
     /// # Errors
     ///
     /// Returns an error if the read fails.
-    fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
-        offset: usize,
-    ) -> Result<(Self, usize), CabError>
+    fn read(src: &mut (impl ReadSeek + ?Sized), offset: usize) -> Result<(Self, usize), CabError>
     where
         Self: Sized + FromBytes + KnownLayout,
     {
