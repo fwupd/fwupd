@@ -312,11 +312,7 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 	}
 
 	if (flags & FU_SECURITY_ATTRS_FLAG_ADD_VERSION) {
-		g_string_append_printf(str,
-				       " (v%d.%d.%d)",
-				       FWUPD_MAJOR_VERSION,
-				       FWUPD_MINOR_VERSION,
-				       FWUPD_MICRO_VERSION);
+		g_string_append_printf(str, " (v%d.%d)", FWUPD_MAJOR_VERSION, FWUPD_MINOR_VERSION);
 	}
 
 	return g_string_free_and_steal(g_steal_pointer(&str));

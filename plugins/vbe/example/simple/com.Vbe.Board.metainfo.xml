@@ -32,7 +32,7 @@
 
   <!-- older versions of fwupd do not give each board its own GUID -->
   <requires>
-    <id compare="ge" version="2.2.1">org.freedesktop.fwupd</id>
+    <id compare="ge" version="2027.0">org.freedesktop.fwupd</id>
   </requires>
 
 </component>

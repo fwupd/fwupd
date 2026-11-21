@@ -185,10 +185,8 @@ fu_security_attrs_hsi_func(void)
 	fu_security_attr_set_url(attr, "http://test");
 	fu_security_attrs_append(attrs, attr);
 	hsi9 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
-	expected_hsi9 = g_strdup_printf("HSI:3! (v%d.%d.%d)",
-					FWUPD_MAJOR_VERSION,
-					FWUPD_MINOR_VERSION,
-					FWUPD_MICRO_VERSION);
+	expected_hsi9 =
+	    g_strdup_printf("HSI:3! (v%d.%d)", FWUPD_MAJOR_VERSION, FWUPD_MINOR_VERSION);
 	g_assert_cmpstr(hsi9, ==, expected_hsi9);
 	g_clear_object(&attr);
 }

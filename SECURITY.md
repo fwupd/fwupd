@@ -8,31 +8,41 @@ If you have any concerns please [let us know](https://github.com/fwupd/fwupd/sec
 The `main` and `2_1_X` branches are fully supported by the upstream authors and releases are
 tagged approximately monthly.
 
-Additionally, the `2_0_X` and `1_9_X` branches are supported just for security fixes, although it
-is unlikely further releases will be tagged.
+Additionally, the `2_0_X` branch is supported just for security fixes, although it is unlikely
+further releases will be tagged.
 
-| Version | Supported          | EOL        |
-| ------- | ------------------ | ---------- |
-| 2.2.x   | :heavy_check_mark: | 2029-01-01 |
-| 2.1.x   | :heavy_check_mark: | 2029-01-01 |
-| 2.0.x   | :white_check_mark: | 2028-01-01 |
-| 1.9.x   | :white_check_mark: | 2027-01-01 |
-| 1.8.x   | :x:                | 2026-01-01 |
-| 1.7.x   | :x:                | 2024-06-01 |
-| 1.6.x   | :x:                | 2024-01-01 |
-| 1.5.x   | :x:                | 2022-01-01 |
-| 1.4.x   | :x:                | 2021-05-01 |
-| 1.3.x   | :x:                | 2020-07-01 |
-| 1.2.x   | :x:                | 2019-12-01 |
-| 1.1.x   | :x:                | 2018-11-01 |
-| 1.0.x   | :x:                | 2018-10-01 |
-| 0.9.x   | :x:                | 2018-02-01 |
+| Branch  | Version | Supported          | EOL        |
+| ------- | ------- | ------------------ | ---------- |
+| main    | 2027.x  | :heavy_check_mark: | 2029-01-01 |
+| 2_1_X   | 2.1.x   | :heavy_check_mark: | 2029-01-01 |
+| 2_0_X   | 2.0.x   | :white_check_mark: | 2028-01-01 |
+| 1_9_X   | 1.9.x   | :x:                | 2027-01-01 |
+| 1_8_X   | 1.8.x   | :x:                | 2026-01-01 |
+| 1_7_X   | 1.7.x   | :x:                | 2024-06-01 |
+| 1_6_X   | 1.6.x   | :x:                | 2024-01-01 |
+| 1_5_X   | 1.5.x   | :x:                | 2022-01-01 |
+| 1_4_X   | 1.4.x   | :x:                | 2021-05-01 |
+| 1_3_X   | 1.3.x   | :x:                | 2020-07-01 |
+| 1_2_X   | 1.2.x   | :x:                | 2019-12-01 |
+| 1_1_X   | 1.1.x   | :x:                | 2018-11-01 |
+| 1_0_X   | 1.0.x   | :x:                | 2018-10-01 |
+| 0_9_X   | 0.9.x   | :x:                | 2018-02-01 |
 
 Older releases than this are unsupported by upstream but may be supported by
 your distributor or distribution. If you open an issue with one of these older
 releases the very first question from us is going to be asking if it's fixed on
 a supported branch. You can use the flatpak or snap packages if your distributor
 is unwilling to update to a supported version.
+
+# Project Release Policy
+
+* New public API for `libfwupd` should only go into `main`.
+* Plugins should always be included into `main` before being cherry-picked into other branches.
+* New internal API (including new plugins) can be added to any supported branch.
+* Branch `main` for the first release made in the new year.
+* The libfwupd soname will only be bumped (if needed) for the first `.0` post-branch release.
+* Aim to release from `main` usually once per month, as workload allows.
+* Allow releases from other supported branches as needed.
 
 ## Reporting a Vulnerability
 

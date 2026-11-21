@@ -153,7 +153,7 @@ fwupd_stream_input_stream_init(FwupdStreamInputStream *self)
  *
  * Returns: (transfer full): a #FwupdStreamInputStream, or %NULL on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdStreamInputStream *
 fwupd_stream_input_stream_new(GInputStream *stream)

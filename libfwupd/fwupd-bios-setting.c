@@ -405,7 +405,7 @@ fwupd_bios_setting_set_name(FwupdBiosSetting *self, const gchar *name)
  *
  * Sets the parent group for this BIOS setting.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_bios_setting_set_parent(FwupdBiosSetting *self, const gchar *parent)
@@ -700,7 +700,7 @@ fwupd_bios_setting_get_name(FwupdBiosSetting *self)
  *
  * Returns: (nullable): the parent group, or %NULL if unset
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 const gchar *
 fwupd_bios_setting_get_parent(FwupdBiosSetting *self)

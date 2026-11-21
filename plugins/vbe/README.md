@@ -430,4 +430,4 @@ version 1.2.4.
 
 This plugin has been available since fwupd version `1.8.2`.
 The `VBE\COMPATIBLE_xxx` instance ID for each board has been available since
-fwupd version `2.2.1`, as has the `vbe-abrec` method.
+fwupd version `2027.0`, as has the `vbe-abrec` method.

@@ -23,11 +23,12 @@ def _get_last_release() -> str:
 
 
 def _get_next_release(last_tag: str) -> str:
-    try:
-        triplet: list[str] = last_tag.split(".")
-        return f"{triplet[0]}.{triplet[1]}.{int(triplet[2]) + 1}"
-    except IndexError:
-        return last_tag
+    parts: list[str] = last_tag.split(".")
+    if len(parts) == 3:
+        return f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+    if len(parts) == 2:
+        return f"{parts[0]}.{int(parts[1]) + 1}"
+    return f"{int(last_tag) + 1}"
 
 
 def _get_appstream_date() -> str:

@@ -578,7 +578,7 @@ G_BEGIN_DECLS
  *
  * The BIOS setting parent group.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_PARENT "BiosSettingParent"
 /**

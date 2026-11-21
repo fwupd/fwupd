@@ -187,8 +187,9 @@ fu_backend_emulate_func(void)
 	g_assert_cmpstr(fu_device_get_id(device2), ==, "0123456789abcdef0123456789abcdef01234567");
 
 	/* check version */
-	g_assert_false(fu_device_check_fwupd_version(device, "5.0.0"));
+	g_assert_false(fu_device_check_fwupd_version(device, "3000.0"));
 	g_assert_true(fu_device_check_fwupd_version(device, "1.9.19"));
+	g_assert_true(fu_device_check_fwupd_version(device, "2026.12"));
 }
 
 static void

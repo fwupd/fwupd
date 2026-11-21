@@ -293,7 +293,7 @@ fwupd_json_object_get_string(FwupdJsonObject *self, const gchar *key, GError **e
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_json_object_get_string_optional(FwupdJsonObject *self,

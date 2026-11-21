@@ -442,7 +442,6 @@ def _build(bld: Builder) -> None:
         {
             "FWUPD_MAJOR_VERSION": 0,
             "FWUPD_MINOR_VERSION": 0,
-            "FWUPD_MICRO_VERSION": 0,
         },
     )
     bld.write_header(

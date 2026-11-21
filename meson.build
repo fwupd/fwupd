@@ -2,7 +2,7 @@ project(
   'fwupd',
   'c',
   'rust',
-  version: '2.2.1',
+  version: '2027.0',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
@@ -21,12 +21,10 @@ fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
 fwupd_minor_version = varr[1]
-fwupd_micro_version = varr[2]
 
 conf = configuration_data()
 conf.set('MAJOR_VERSION', fwupd_major_version)
 conf.set('MINOR_VERSION', fwupd_minor_version)
-conf.set('MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # get source version, falling back to package version

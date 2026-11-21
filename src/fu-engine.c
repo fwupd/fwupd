@@ -7472,11 +7472,10 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
 
 	/* only x86_64 has enough attributes for an aggregate *number* to make sense */
 	if (g_strcmp0(HOST_CPU_FAMILY, "x86_64") != 0) {
-		return g_strdup_printf("HSI:INVALID:arch[%s] (v%d.%d.%d)",
+		return g_strdup_printf("HSI:INVALID:arch[%s] (v%d.%d)",
 				       HOST_CPU_FAMILY,
 				       FWUPD_MAJOR_VERSION,
-				       FWUPD_MINOR_VERSION,
-				       FWUPD_MICRO_VERSION);
+				       FWUPD_MINOR_VERSION);
 	}
 
 	/* if emulating, force the chassis type to be valid */
@@ -7515,11 +7514,10 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
 		break;
 	}
 
-	return g_strdup_printf("HSI:INVALID:chassis[%s] (v%d.%d.%d)",
+	return g_strdup_printf("HSI:INVALID:chassis[%s] (v%d.%d)",
 			       fu_smbios_chassis_kind_to_string(chassis_kind),
 			       FWUPD_MAJOR_VERSION,
-			       FWUPD_MINOR_VERSION,
-			       FWUPD_MICRO_VERSION);
+			       FWUPD_MINOR_VERSION);
 }
 
 static gboolean

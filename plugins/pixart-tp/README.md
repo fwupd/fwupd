@@ -92,7 +92,7 @@ Whether this TP has an NDT haptic child IC (alternative haptic solution to the T
 
 **Default**: `false`.
 
-Since: 2.2.1
+Since: 2027.0
 
 > Note: `has-haptic` and `has-ndt-haptic` are mutually exclusive as a TP only has one
 > haptic solution. If both are set the TP device fails to probe and is not added.
