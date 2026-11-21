@@ -16,7 +16,7 @@ pub mod streams;
 pub mod types;
 pub mod units;
 
-pub use crate::bitflags::{BitflagIter, Bitflags, InvalidBitflag};
+pub use crate::bitflags::{BitflagIter, Bitflags, InvalidBitflag, NonEmptyBitflags};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
