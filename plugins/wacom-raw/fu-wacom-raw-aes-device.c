@@ -126,6 +126,10 @@ fu_wacom_raw_aes_device_setup(FuDevice *device, GError **error)
 		/* get the recovery PID if supported */
 		if (!fu_wacom_raw_aes_device_add_recovery_hwid(self, &error_local))
 			g_debug("failed to get HwID: %s", error_local->message);
+
+		/* check MPU type */
+		if (!fu_wacom_raw_device_check_mpu(FU_WACOM_RAW_DEVICE(self), error))
+			return FALSE;
 	} else if (mode == FU_WACOM_RAW_OPERATION_MODE_RUNTIME) {
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuStructWacomRawFwStatusRequest) st_req =
