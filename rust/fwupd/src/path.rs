@@ -29,6 +29,8 @@ declare_bitflags! {
 
 /// A trait for various path-related functionality.
 pub trait PathExt {
+    type Basename: Sized;
+
     /// Validates the path, returns `true` if none of the
     /// [`PathValidationFlag`] checks fail or `false` otherwise.
     ///
@@ -63,9 +65,23 @@ pub trait PathExt {
     /// assert!("dir\\file.bin".validate_path(msdos_ok));
     /// ```
     fn validate_path(&self, flags: PathValidationFlags) -> bool;
+
+    /// Return self as a path that is safe to use as a basename (i.e. filename).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use fwupd::path::PathExt;
+    ///
+    /// assert_eq!(".what/is/../that?".to_safe_basename().unwrap(),
+    ///            "_what_is___that?");
+    /// ```
+    fn to_safe_basename(&self) -> Option<Self::Basename>;
 }
 
 impl PathExt for str {
+    type Basename = String;
+
     fn validate_path(&self, flags: PathValidationFlags) -> bool {
         let flag = PathValidationFlag::DisallowEmptyPath;
 
@@ -111,9 +127,20 @@ impl PathExt for str {
 
         true
     }
+
+    fn to_safe_basename(&self) -> Option<String> {
+        let s = self.replace(['/', '\\'], "_").replace("..", "_");
+        if s.starts_with('.') {
+            Some(s.replacen('.', "_", 1))
+        } else {
+            Some(s)
+        }
+    }
 }
 
 impl PathExt for std::path::Path {
+    type Basename = String;
+
     fn validate_path(&self, flags: PathValidationFlags) -> bool {
         // A non-UTF-8 path cannot be checked for separators, traversal,
         // etc. without a lossy conversion mangling the raw bytes. If the
@@ -123,6 +150,10 @@ impl PathExt for std::path::Path {
             Some(s) => s.validate_path(flags),
             None => !flags.contains(PathValidationFlag::DisallowNonAscii),
         }
+    }
+
+    fn to_safe_basename(&self) -> Option<Self::Basename> {
+        self.to_str()?.to_safe_basename()
     }
 }
 
@@ -225,6 +256,86 @@ mod tests {
 
         // without the flag drive letters are allowed
         assert!("C:/windows/system32".validate_path(PathValidationFlags::empty()));
+    }
+
+    #[test]
+    fn to_safe_basename() {
+        // already a safe basename, unchanged
+        assert_eq!(
+            "firmware.bin".to_safe_basename().as_deref(),
+            Some("firmware.bin")
+        );
+        assert_eq!(
+            "file-1.2.bin".to_safe_basename().as_deref(),
+            Some("file-1.2.bin")
+        );
+
+        // separators are replaced, so the result can no longer escape the
+        // extraction directory
+        assert_eq!(
+            "dir/file.bin".to_safe_basename().as_deref(),
+            Some("dir_file.bin")
+        );
+        assert_eq!(
+            "dir\\file.bin".to_safe_basename().as_deref(),
+            Some("dir_file.bin")
+        );
+        assert_eq!(
+            "../etc/passwd".to_safe_basename().as_deref(),
+            Some("__etc_passwd")
+        );
+        assert_eq!(
+            "C:\\evil.bin".to_safe_basename().as_deref(),
+            Some("C:_evil.bin")
+        );
+
+        // `..` components collapse into a single `_` each
+        assert_eq!("a..b".to_safe_basename().as_deref(), Some("a_b"));
+        assert_eq!("..".to_safe_basename().as_deref(), Some("_"));
+        assert_eq!(".".to_safe_basename().as_deref(), Some("_"));
+
+        // leading dots are hidden files, mangle them too
+        assert_eq!(".hidden".to_safe_basename().as_deref(), Some("_hidden"));
+        assert_eq!(
+            ".ssh/authorized_keys".to_safe_basename().as_deref(),
+            Some("_ssh_authorized_keys")
+        );
+
+        // colons are left alone, they are not special on unix
+        assert_eq!(
+            "dir/foo:bar.bin".to_safe_basename().as_deref(),
+            Some("dir_foo:bar.bin")
+        );
+
+        // empty stays empty
+        assert_eq!("".to_safe_basename().as_deref(), Some(""));
+    }
+
+    #[test]
+    fn to_safe_basename_path_type() {
+        use std::path::{Path, PathBuf};
+
+        // delegates to the str impl
+        assert_eq!(
+            Path::new("dir/file.bin").to_safe_basename().as_deref(),
+            Some("dir_file.bin")
+        );
+        assert_eq!(
+            Path::new("../etc/passwd").to_safe_basename().as_deref(),
+            Some("__etc_passwd")
+        );
+
+        // PathBuf works through Deref<Target = Path>
+        let pathbuf = PathBuf::from(".hidden");
+        assert_eq!(pathbuf.to_safe_basename().as_deref(), Some("_hidden"));
+
+        // non-UTF-8 paths have no safe basename
+        #[cfg(unix)]
+        {
+            use std::os::unix::ffi::OsStrExt;
+            let path = Path::new(std::ffi::OsStr::from_bytes(b"f\xe4rware.bin"));
+            assert_eq!(path.to_safe_basename(), None);
+        }
     }
 
     #[test]
