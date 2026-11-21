@@ -583,8 +583,13 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		fu_udev_backend_device_add_from_device(self, device_actual);
 	}
 #else
-	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
+	g_auto(GStrv) split = NULL;
 
+	if (g_bytes_get_size(blob) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "empty uevent");
+		return FALSE;
+	}
+	split = fu_strsplit_bytes(blob, "@", 2);
 	if (g_strv_length(split) != 2) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
