@@ -245,7 +245,8 @@ fu_quirks_convert_keyfile_to_xml(FuQuirks *self, GBytes *bytes, GError **error)
 	/* split into lines */
 	helper->root = xb_builder_node_new("quirk");
 	helper->group = g_string_new(NULL);
-	if (!fu_strsplit_full((const gchar *)g_bytes_get_data(bytes, NULL),
+	if (g_bytes_get_size(bytes) > 0 &&
+	    !fu_strsplit_full((const gchar *)g_bytes_get_data(bytes, NULL),
 			      g_bytes_get_size(bytes),
 			      "\n",
 			      fu_quirks_convert_keyfile_to_xml_cb,
