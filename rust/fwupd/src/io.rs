@@ -290,7 +290,7 @@ pub trait ReadSeekExt: Read + Seek {
     }
 }
 
-impl<T: Read + Seek> ReadSeekExt for T {}
+impl<T: Read + Seek + ?Sized> ReadSeekExt for T {}
 
 pub trait Searchable: Read + Seek {
     /// Find the first occurrence of `bytes` within the stream and
