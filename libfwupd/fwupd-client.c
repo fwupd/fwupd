@@ -454,7 +454,7 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
  *
  * Sets the string that represents the host vendor.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
@@ -471,7 +471,7 @@ fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
  *
  * Sets the string that represents the host product.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
@@ -488,7 +488,7 @@ fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
  *
  * Sets the string that represents the host machine ID.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
@@ -558,7 +558,7 @@ fwupd_client_download_set_retries(FwupdClient *self, guint retries)
  *
  * Sets the string that represents the host BKC.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
@@ -580,7 +580,7 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
  *
  * Sets the client status. This is thread-safe and can be called from any thread.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
@@ -600,7 +600,7 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
  *
  * Sets the client percentage. This is thread-safe and can be called from any thread.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
@@ -621,7 +621,7 @@ fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
  *
  * Sets the system battery level in percent.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
@@ -641,7 +641,7 @@ fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
  *
  * Sets the system battery threshold in percent.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
@@ -799,7 +799,7 @@ fwupd_client_name_owner_changed_cb(GDBusProxy *proxy, GParamSpec *pspec, FwupdCl
  *
  * Emits a `::device-request` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
@@ -830,7 +830,7 @@ fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
  *
  * Emits a `::device-added` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
@@ -849,7 +849,7 @@ fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-removed` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
@@ -868,7 +868,7 @@ fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-changed` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev)
@@ -1190,7 +1190,7 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
@@ -4124,7 +4124,7 @@ fwupd_client_install_finish(FwupdClient *self, GAsyncResult *res, GError **error
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_write_blob_async(FwupdClient *self,
@@ -4182,7 +4182,7 @@ fwupd_client_write_blob_async(FwupdClient *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_write_blob_finish(FwupdClient *self, GAsyncResult *res, GError **error)
@@ -5023,7 +5023,7 @@ fwupd_client_get_only_trusted(FwupdClient *self)
  *
  * Returns: %TRUE if the daemon is checking signatures
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_get_pending_reboot(FwupdClient *self)
@@ -5040,7 +5040,7 @@ fwupd_client_get_pending_reboot(FwupdClient *self)
  *
  * Sets if system changes are pending a reboot.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_pending_reboot(FwupdClient *self, gboolean pending_reboot)
@@ -6953,7 +6953,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
@@ -7006,7 +7006,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 GBytes *
 fwupd_client_download_bytes2_finish(FwupdClient *self, GAsyncResult *res, GError **error)
@@ -8393,7 +8393,7 @@ fwupd_client_build_report_security(FwupdClient *self,
  * Adds a function to run after the connection has been completed. For example, checking that
  * the client version matches the daemon version.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_add_connect_func(FwupdClient *self,
@@ -8871,7 +8871,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	 *
 	 * If the daemon is waiting for a reboot to apply changes.
 	 *
-	 * Since: 2.2.1
+	 * Since: 2027.0
 	 */
 	pspec = g_param_spec_boolean("pending-reboot",
 				     NULL,

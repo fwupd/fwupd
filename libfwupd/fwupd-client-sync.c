@@ -2140,7 +2140,7 @@ fwupd_client_sync_impl_write_blob(FwupdClient *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_write_blob(FwupdClient *self,
@@ -3459,7 +3459,7 @@ fwupd_client_download_bytes2_cb(GObject *source, GAsyncResult *res, gpointer use
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 GBytes *
 fwupd_client_download_bytes2(FwupdClient *self,

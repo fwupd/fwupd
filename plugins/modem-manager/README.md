@@ -40,7 +40,7 @@ modem from MBIM mode into bootloader mode for firmware update.
 
 Possible values are `fibocom` or `qdu-quectel` (the default).
 
-Since: 2.2.1
+Since: 2027.0
 
 ### ModemManagerLibFirmwarePath
 

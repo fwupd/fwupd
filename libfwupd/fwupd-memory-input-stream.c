@@ -159,7 +159,7 @@ fwupd_memory_input_stream_init(FwupdMemoryInputStream *self)
  *
  * Returns: (transfer full): a #FwupdMemoryInputStream
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdMemoryInputStream *
 fwupd_memory_input_stream_new_from_bytes(GBytes *bytes)
@@ -194,7 +194,7 @@ fwupd_memory_input_stream_new_from_bytes(GBytes *bytes)
  *
  * Returns: (transfer full): a #FwupdMemoryInputStream
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdMemoryInputStream *
 fwupd_memory_input_stream_new_from_data(const void *data, gssize len, GDestroyNotify destroy)
@@ -221,7 +221,7 @@ fwupd_memory_input_stream_new_from_data(const void *data, gssize len, GDestroyNo
  *
  * Returns: (transfer full): a #FwupdMemoryInputStream, or %NULL on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdMemoryInputStream *
 fwupd_memory_input_stream_new_from_filename(const gchar *filename, GError **error)

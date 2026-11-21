@@ -20,7 +20,7 @@ G_DECLARE_DERIVABLE_TYPE(FwupdInputStream, fwupd_input_stream, FWUPD, INPUT_STRE
  *
  * An opaque pointer to an underlying stream implementation.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  */
 typedef gpointer FwupdInputStreamImpl;
 

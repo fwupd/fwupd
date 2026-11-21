@@ -1215,7 +1215,7 @@ LIBFWUPD_2.1.7 {
   local: *;
 } LIBFWUPD_2.1.6;
 
-LIBFWUPD_2.2.1 {
+LIBFWUPD_2027.0 {
   global:
     fwupd_bios_setting_get_parent;
     fwupd_bios_setting_set_parent;

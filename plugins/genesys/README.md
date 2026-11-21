@@ -110,7 +110,7 @@ Since 1.7.6.
 
 The optional filter to use when finding the HID proxy, e.g. `USB\VID_273F&PID_1001`
 
-Since 2.2.1
+Since 2027.0
 
 ### GenesysScalerDeviceTransferSize
 

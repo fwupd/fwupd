@@ -147,7 +147,7 @@ fwupd_input_stream_init(FwupdInputStream *self)
  *
  * Returns: number of bytes read, 0 for end of stream, or -1 on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gssize
 fwupd_input_stream_read(FwupdInputStream *stream,
@@ -183,7 +183,7 @@ fwupd_input_stream_read(FwupdInputStream *stream,
  *
  * Returns: %TRUE on success, %FALSE on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_input_stream_read_all(FwupdInputStream *stream,
@@ -233,7 +233,7 @@ fwupd_input_stream_read_all(FwupdInputStream *stream,
  *
  * Returns: (transfer full): an opaque #FwupdInputStreamImpl, free with fu_stream_impl_free()
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdInputStreamImpl
 fwupd_input_stream_get_impl(FwupdInputStream *stream)

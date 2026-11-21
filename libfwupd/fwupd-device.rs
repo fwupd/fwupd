@@ -149,10 +149,10 @@ enum FwupdDeviceFlags {
     InstallSkipVersionCheck = 1 << 53,
     // The device is a "raw" target written using a standalone programmer, e.g. a SPI flash chip
     // connected to a CH341A, and so the device version is not expected to be known.
-    // Since: 2.2.1
+    // Since: 2027.0
     IsProgrammerTarget = 1 << 54,
     // Do not deploy the composite device firmware multiple times if the firmware basename matches.
-    // Since: 2.2.1
+    // Since: 2027.0
     CompositeSinglePayload = 1 << 55,
     // This flag is not defined, this typically will happen from mismatched fwupd library and
     // clients.

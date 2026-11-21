@@ -22,8 +22,7 @@ G_DEFINE_TYPE(FuUsbDeviceFwDs20, fu_usb_device_fw_ds20, FU_TYPE_USB_DEVICE_DS20)
 
 #define DS20_VERSION_LOWEST ((1u << 16) | (8u << 8) | 5u)
 #define DS20_VERSION_CURRENT                                                                       \
-	((((guint32)FWUPD_MAJOR_VERSION) << 16) | (((guint32)FWUPD_MINOR_VERSION) << 8) |          \
-	 ((guint)FWUPD_MICRO_VERSION))
+	((((guint32)FWUPD_MAJOR_VERSION) << 16) | (((guint32)FWUPD_MINOR_VERSION) << 8))
 
 static gboolean
 fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,

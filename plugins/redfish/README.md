@@ -82,7 +82,7 @@ The device type to create for each inventory member on a system matched by a CHI
 `FuRedfishHpeDevice`. It replaces the type the plugin would otherwise choose from the update
 service and the vendor, which allows a vendor-specific device to be used on an OEM-branded system.
 
-Since: 2.2.1
+Since: 2027.0
 
 ### `Flags=wildcard-targets`
 
@@ -116,7 +116,7 @@ Read the PCI IDs from the PCIe devices of a related chassis, and add the vendor 
 with the PCI IDs of each function. This is only correct when the chassis holds a single component
 rather than the whole system.
 
-Since: 2.2.1
+Since: 2027.0
 
 ## Setting Service IP Manually
 
