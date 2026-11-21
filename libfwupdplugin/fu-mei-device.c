@@ -191,6 +191,10 @@ fu_mei_device_get_multiline_attr(FuMeiDevice *self, const gchar *attr, guint idx
 	blob = fu_udev_device_read_sysfs_bytes(FU_UDEV_DEVICE(self), attr, -1, 500, error);
 	if (blob == NULL)
 		return NULL;
+	if (g_bytes_get_size(blob) == 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s is empty", attr);
+		return NULL;
+	}
 	lines = fu_strsplit_bytes(blob, "\n", -1);
 	if (g_strv_length(lines) <= idx) {
 		g_set_error(error,
