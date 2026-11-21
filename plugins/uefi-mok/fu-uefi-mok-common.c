@@ -13,7 +13,11 @@ static FuUefiMokHsiKey
 fu_uefi_mok_attr_parse(GBytes *blob)
 {
 	FuUefiMokHsiKey key_all = FU_UEFI_MOK_HSI_KEY_NONE;
-	g_auto(GStrv) lines = fu_strsplit_bytes(blob, "\n", -1);
+	g_auto(GStrv) lines = NULL;
+
+	if (g_bytes_get_size(blob) == 0)
+		return key_all;
+	lines = fu_strsplit_bytes(blob, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		g_auto(GStrv) kv = NULL;
 		if (lines[i][0] == '\0')
@@ -40,6 +44,13 @@ fu_uefi_mok_attr_nx_new(FuPlugin *plugin, GBytes *blob)
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 
+	/* no data */
+	if (g_bytes_get_size(blob) == 0) {
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return g_steal_pointer(&attr);
+	}
+
 	/* is this valid? */
 	key_all = fu_uefi_mok_attr_parse(blob);
 	if ((key_all & FU_UEFI_MOK_HSI_KEY_SHIM_HAS_NX_COMPAT_SET) == 0) {
@@ -63,6 +74,13 @@ fu_uefi_mok_attr_fw_new(FuPlugin *plugin, GBytes *blob)
 	fu_security_attr_set_plugin(attr, "uefi_mok");
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+
+	/* no data */
+	if (g_bytes_get_size(blob) == 0) {
+		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		return g_steal_pointer(&attr);
+	}
 
 	/* is this valid? */
 	key_all = fu_uefi_mok_attr_parse(blob);
