@@ -2010,10 +2010,11 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} kvs[] = {{"ProductName:", "DistroName"},
-		   {"ProductVersion:", FWUPD_RESULT_KEY_DISTRO_VERSION},
-		   {"BuildVersion:", FWUPD_RESULT_KEY_DISTRO_VARIANT},
-		   {NULL, NULL}};
+	} kvs[] = {
+	    {"ProductName:", "DistroName"},
+	    {"ProductVersion:", FWUPD_RESULT_KEY_DISTRO_VERSION},
+	    {"BuildVersion:", FWUPD_RESULT_KEY_DISTRO_VARIANT},
+	};
 
 	/* macOS */
 	sw_vers = fu_path_store_find_program(pstore, "sw_vers", error);
@@ -2029,7 +2030,7 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 		return FALSE;
 	split = g_strsplit(stdout, "\n", -1);
 	for (guint j = 0; split[j] != NULL; j++) {
-		for (guint i = 0; kvs[i].key != NULL; i++) {
+		for (guint i = 0; i < G_N_ELEMENTS(kvs); i++) {
 			if (g_str_has_prefix(split[j], kvs[i].key)) {
 				g_autofree gchar *tmp = g_strdup(split[j] + strlen(kvs[i].key));
 				g_hash_table_insert(hash,
@@ -2057,15 +2058,16 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} distro_kv[] = {{G_OS_INFO_KEY_ID, FWUPD_RESULT_KEY_DISTRO_ID},
-			 {G_OS_INFO_KEY_NAME, "DistroName"},
-			 {G_OS_INFO_KEY_PRETTY_NAME, "DistroPrettyName"},
-			 {G_OS_INFO_KEY_VERSION_ID, FWUPD_RESULT_KEY_DISTRO_VERSION},
-			 {"VARIANT_ID", FWUPD_RESULT_KEY_DISTRO_VARIANT},
-			 {NULL, NULL}};
+	} distro_kv[] = {
+	    {G_OS_INFO_KEY_ID, FWUPD_RESULT_KEY_DISTRO_ID},
+	    {G_OS_INFO_KEY_NAME, "DistroName"},
+	    {G_OS_INFO_KEY_PRETTY_NAME, "DistroPrettyName"},
+	    {G_OS_INFO_KEY_VERSION_ID, FWUPD_RESULT_KEY_DISTRO_VERSION},
+	    {"VARIANT_ID", FWUPD_RESULT_KEY_DISTRO_VARIANT},
+	};
 
 	/* get all required os-release keys */
-	for (guint i = 0; distro_kv[i].key != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(distro_kv); i++) {
 		g_autofree gchar *tmp = g_get_os_info(distro_kv[i].key);
 		if (tmp != NULL) {
 			g_hash_table_insert(hash,
@@ -2120,15 +2122,16 @@ fu_engine_get_report_metadata_lsb_release(GHashTable *hash, GError **error)
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} distro_kv[] = {{"CHROMEOS_RELEASE_TRACK", "DistroReleaseTrack"},
-			 {"CHROMEOS_RELEASE_BOARD", "DistroReleaseBoard"},
-			 {NULL, NULL}};
+	} distro_kv[] = {
+	    {"CHROMEOS_RELEASE_TRACK", "DistroReleaseTrack"},
+	    {"CHROMEOS_RELEASE_BOARD", "DistroReleaseBoard"},
+	};
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
 		return TRUE;
 	os_release = fu_engine_load_os_release(fn, error);
 	if (os_release == NULL)
 		return FALSE;
-	for (guint i = 0; distro_kv[i].key != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(distro_kv); i++) {
 		const gchar *tmp = g_hash_table_lookup(os_release, distro_kv[i].key);
 		if (tmp != NULL)
 			g_hash_table_insert(hash, g_strdup(distro_kv[i].val), g_strdup(tmp));
@@ -2306,22 +2309,23 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		struct {
 			const gchar *hwid;
 			const gchar *name;
-		} keys[] = {{FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, "HostBaseboardManufacturer"},
-			    {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "HostBaseboardProduct"},
-			    {FU_HWIDS_KEY_BIOS_MAJOR_RELEASE, "HostBiosMajorRelease"},
-			    {FU_HWIDS_KEY_BIOS_MINOR_RELEASE, "HostBiosMinorRelease"},
-			    {FU_HWIDS_KEY_BIOS_VENDOR, "HostBiosVendor"},
-			    {FU_HWIDS_KEY_BIOS_VERSION, "HostBiosVersion"},
-			    {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "HostBiosReleaseDate"},
-			    {FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE, "HostFirmwareMajorRelease"},
-			    {FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE, "HostFirmwareMinorRelease"},
-			    {FU_HWIDS_KEY_ENCLOSURE_KIND, "HostEnclosureKind"},
-			    {FU_HWIDS_KEY_FAMILY, "HostFamily"},
-			    {FU_HWIDS_KEY_MANUFACTURER, "HostVendor"},
-			    {FU_HWIDS_KEY_PRODUCT_NAME, "HostProduct"},
-			    {FU_HWIDS_KEY_PRODUCT_SKU, "HostSku"},
-			    {NULL, NULL}};
-		for (guint i = 0; keys[i].hwid != NULL; i++) {
+		} keys[] = {
+		    {FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, "HostBaseboardManufacturer"},
+		    {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "HostBaseboardProduct"},
+		    {FU_HWIDS_KEY_BIOS_MAJOR_RELEASE, "HostBiosMajorRelease"},
+		    {FU_HWIDS_KEY_BIOS_MINOR_RELEASE, "HostBiosMinorRelease"},
+		    {FU_HWIDS_KEY_BIOS_VENDOR, "HostBiosVendor"},
+		    {FU_HWIDS_KEY_BIOS_VERSION, "HostBiosVersion"},
+		    {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "HostBiosReleaseDate"},
+		    {FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE, "HostFirmwareMajorRelease"},
+		    {FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE, "HostFirmwareMinorRelease"},
+		    {FU_HWIDS_KEY_ENCLOSURE_KIND, "HostEnclosureKind"},
+		    {FU_HWIDS_KEY_FAMILY, "HostFamily"},
+		    {FU_HWIDS_KEY_MANUFACTURER, "HostVendor"},
+		    {FU_HWIDS_KEY_PRODUCT_NAME, "HostProduct"},
+		    {FU_HWIDS_KEY_PRODUCT_SKU, "HostSku"},
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(keys); i++) {
 			tmp = fu_context_get_hwid_value(self->ctx, keys[i].hwid);
 			if (tmp != NULL)
 				g_hash_table_insert(hash, g_strdup(keys[i].name), g_strdup(tmp));

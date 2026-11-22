@@ -215,9 +215,8 @@ fu_efi_section_freeform_subtype_guid_to_string(const gchar *guid)
 	    {"d46346ca-82a1-4cde-9546-77c86f893888", "?Oprom"},
 	    {"e095affe-d4cd-4289-9b48-28f64e3d781d", "IntelRstOprom"},
 	    {"fe612b72-203c-47b1-8560-a66d946eb371", "setupdata"},
-	    {NULL, NULL},
 	};
-	for (guint i = 0; freeform_guids[i].guid != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(freeform_guids); i++) {
 		if (g_strcmp0(guid, freeform_guids[i].guid) == 0)
 			return freeform_guids[i].str;
 	}

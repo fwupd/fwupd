@@ -67,15 +67,16 @@ fu_strpassmask_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"foo https://test.com/auth bar", "foo https://test.com/auth bar"},
-		    {"foo https://user%40host:SECRET@test.com/auth bar",
-		     "foo https://user%40host:XXXXXX@test.com/auth bar"},
-		    {"foo https://user1%40host:SECRET@test.com/auth "
-		     "https://user2%40host:SECRET2@test.com/auth bar",
-		     "foo https://user1%40host:XXXXXX@test.com/auth "
-		     "https://user2%40host:XXXXXXX@test.com/auth bar"},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	} strs[] = {
+	    {"foo https://test.com/auth bar", "foo https://test.com/auth bar"},
+	    {"foo https://user%40host:SECRET@test.com/auth bar",
+	     "foo https://user%40host:XXXXXX@test.com/auth bar"},
+	    {"foo https://user1%40host:SECRET@test.com/auth "
+	     "https://user2%40host:SECRET2@test.com/auth bar",
+	     "foo https://user1%40host:XXXXXX@test.com/auth "
+	     "https://user2%40host:XXXXXXX@test.com/auth bar"},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_strpassmask(strs[i].in);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
@@ -150,20 +151,21 @@ fu_strstrip_func(void)
 	struct {
 		const gchar *old;
 		const gchar *new;
-	} map[] = {{"same", "same"},
-		   {" leading", "leading"},
-		   {"tailing ", "tailing"},
-		   {"  b  ", "b"},
-		   {"  ", ""},
-		   {"\tboth\n", "both"},
-		   {"\n", ""},
-		   {"  \n", ""},
-		   {NULL, NULL}};
-	for (guint i = 0; map[i].old != NULL; i++) {
+	} map[] = {
+	    {"same", "same"},
+	    {" leading", "leading"},
+	    {"tailing ", "tailing"},
+	    {"  b  ", "b"},
+	    {"  ", ""},
+	    {"\tboth\n", "both"},
+	    {"\n", ""},
+	    {"  \n", ""},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autofree gchar *tmp = fu_strstrip(map[i].old);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
-	for (guint i = 0; map[i].old != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autoptr(GString) str = g_string_new(map[i].old);
 		fu_string_strip(str);
 		g_assert_cmpstr(str->str, ==, map[i].new);

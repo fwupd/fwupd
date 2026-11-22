@@ -227,7 +227,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 	    {"bcdVersion",
 	     FU_USI_DOCK_FIRMWARE_IDX_NONE,
 	     FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_BCDVERSION},
-	    {NULL, 0, 0}};
+	};
 
 	/* assume DP and NIC in-use */
 	if (!fu_usi_dock_mcu_device_txrx(self,
@@ -239,7 +239,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 					 error))
 		return FALSE;
 
-	for (guint i = 0; components[i].name != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(components); i++) {
 		const guint8 *val = outbuf + components[i].offset;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDevice) child = NULL;

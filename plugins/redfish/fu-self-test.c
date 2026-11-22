@@ -731,11 +731,12 @@ fu_redfish_common_version_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"1.2.3", "1.2.3"},
-		    {"P50 v1.2.3 PROD", "1.2.3"},
-		    {"P50 1.2.3 DEV", "1.2.3"},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	} strs[] = {
+	    {"1.2.3", "1.2.3"},
+	    {"P50 v1.2.3 PROD", "1.2.3"},
+	    {"P50 1.2.3 DEV", "1.2.3"},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_redfish_common_fix_version(strs[i].in);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
@@ -749,14 +750,15 @@ fu_redfish_common_lenovo_func(void)
 		gboolean ret;
 		const gchar *build;
 		const gchar *version;
-	} values[] = {{"11A-1.02", TRUE, "11A", "1.02"},
-		      {"11A-0.00", TRUE, "11A", "0.00"},
-		      {"99Z-9.99", TRUE, "99Z", "9.99"},
-		      {"9-9-9.99", FALSE, NULL, NULL},
-		      {"999-9.99", FALSE, NULL, NULL},
-		      {"ACB-9.99", FALSE, NULL, NULL},
-		      {NULL, FALSE, NULL, NULL}};
-	for (guint i = 0; values[i].in != NULL; i++) {
+	} values[] = {
+	    {"11A-1.02", TRUE, "11A", "1.02"},
+	    {"11A-0.00", TRUE, "11A", "0.00"},
+	    {"99Z-9.99", TRUE, "99Z", "9.99"},
+	    {"9-9-9.99", FALSE, NULL, NULL},
+	    {"999-9.99", FALSE, NULL, NULL},
+	    {"ACB-9.99", FALSE, NULL, NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(values); i++) {
 		gboolean ret;
 		g_autofree gchar *build = NULL;
 		g_autofree gchar *version = NULL;

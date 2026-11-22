@@ -51,15 +51,16 @@ fu_version_semver_func(void)
 		const gchar *old;
 		const gchar *new;
 		FwupdVersionFormat fmt;
-	} map[] = {{"1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1.2.3.4", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1.2", "0.1.2", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1", "0.0.1", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"CBET1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"4.11-1190-g12d8072e6b-dirty", "4.11.1190", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_PAIR},
-		   {NULL, NULL}};
-	for (guint i = 0; map[i].old != NULL; i++) {
+	} map[] = {
+	    {"1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"1.2.3.4", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"1.2", "0.1.2", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"1", "0.0.1", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"CBET1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"4.11-1190-g12d8072e6b-dirty", "4.11.1190", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_PAIR},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autofree gchar *tmp = fu_version_ensure_semver(map[i].old, map[i].fmt);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}

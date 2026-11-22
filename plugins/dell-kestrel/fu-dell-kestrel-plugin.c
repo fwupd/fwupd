@@ -142,10 +142,9 @@ fu_dell_kestrel_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_devi
 	    {DELL_VID, DELL_KESTREL_USB_RTS0_G2_PID},
 	    {DELL_VID, DELL_KESTREL_USB_RTS5_G2_PID},
 	    {DELL_VID, DELL_KESTREL_USB_RMM_PID},
-	    {0},
 	};
 
-	for (guint i = 0; hw_dev_ids[i].pid != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(hw_dev_ids); i++) {
 		FuDevice *device;
 		g_autofree gchar *key = NULL;
 

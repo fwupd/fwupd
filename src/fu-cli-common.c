@@ -1996,150 +1996,151 @@ fu_cli_security_event_to_string(FuSecurityAttr *attr)
 		FwupdSecurityAttrResult result_old;
 		FwupdSecurityAttrResult result_new;
 		const gchar *text;
-	} items[] = {{FWUPD_SECURITY_ATTR_ID_IOMMU,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("IOMMU device protection enabled")},
-		     {FWUPD_SECURITY_ATTR_ID_IOMMU,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
-		      /* TRANSLATORS: HSI event title */
-		      _("IOMMU device protection disabled")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
-		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
-		      NULL},
-		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
-		      NULL},
-		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
-		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      NULL},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Kernel is no longer tainted")},
-		     {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
-		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Kernel is tainted")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Kernel lockdown disabled")},
-		     {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Kernel lockdown enabled")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Pre-boot DMA protection is disabled")},
-		     {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Pre-boot DMA protection is enabled")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Secure Boot disabled")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("Secure Boot enabled")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
-		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("All TPM PCRs are valid")},
-		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("A TPM PCR is now an invalid value")},
-		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("All TPM PCRs are now valid")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("TPM PCR0 reconstruction is invalid")},
-		     {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("TPM PCR0 reconstruction is now valid")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
-		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection is now locked")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection is now unlocked")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI NX bootloader protection is now enabled")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI NX bootloader protection is now disabled")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("The UEFI certificate store is now up to date")},
-		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("The UEFI certificate store no longer contains a test key")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("The UEFI certificate store now contains a test key")},
-		     {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
-		      /* TRANSLATORS: HSI event title */
-		      _("HP SureStart is enabled")},
-		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
-		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("AMD microcode signature vulnerability fixed")},
-		     {NULL, 0, 0, NULL}};
+	} items[] = {
+	    {FWUPD_SECURITY_ATTR_ID_IOMMU,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("IOMMU device protection enabled")},
+	    {FWUPD_SECURITY_ATTR_ID_IOMMU,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+	     /* TRANSLATORS: HSI event title */
+	     _("IOMMU device protection disabled")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
+	     FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+	     NULL},
+	    {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+	     NULL},
+	    {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
+	     FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     NULL},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Kernel is no longer tainted")},
+	    {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+	     FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Kernel is tainted")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Kernel lockdown disabled")},
+	    {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Kernel lockdown enabled")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Pre-boot DMA protection is disabled")},
+	    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Pre-boot DMA protection is enabled")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Secure Boot disabled")},
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("Secure Boot enabled")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
+	     FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("All TPM PCRs are valid")},
+	    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("A TPM PCR is now an invalid value")},
+	    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("All TPM PCRs are now valid")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("TPM PCR0 reconstruction is invalid")},
+	    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("TPM PCR0 reconstruction is now valid")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+	     FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+	     /* TRANSLATORS: HSI event title */
+	     _("UEFI memory protection is now locked")},
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+	     FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+	     /* TRANSLATORS: HSI event title */
+	     _("UEFI memory protection is now unlocked")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("UEFI NX bootloader protection is now enabled")},
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("UEFI NX bootloader protection is now disabled")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_MS_UEFI,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("The UEFI certificate store is now up to date")},
+	    /* ------------------------------------------*/
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("The UEFI certificate store no longer contains a test key")},
+	    {FWUPD_SECURITY_ATTR_ID_UEFI_DB_PRODUCTION,
+	     FWUPD_SECURITY_ATTR_RESULT_VALID,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	     /* TRANSLATORS: HSI event title */
+	     _("The UEFI certificate store now contains a test key")},
+	    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	     FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	     /* TRANSLATORS: HSI event title */
+	     _("HP SureStart is enabled")},
+	    {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+	     FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+	     FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+	     /* TRANSLATORS: HSI event title */
+	     _("AMD microcode signature vulnerability fixed")},
+	};
 
 	/* sanity check */
 	if (fu_security_attr_get_appstream_id(attr) == NULL)
@@ -2149,7 +2150,7 @@ fu_cli_security_event_to_string(FuSecurityAttr *attr)
 		return NULL;
 
 	/* look for prepared text */
-	for (guint i = 0; items[i].appstream_id != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(items); i++) {
 		if (g_strcmp0(fu_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
 			0 &&
 		    fu_security_attr_get_result(attr) == items[i].result_new &&

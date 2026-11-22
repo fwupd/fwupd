@@ -97,9 +97,10 @@ fu_bcm57xx_veritem_new(const guint8 *buf, gsize bufsz)
 		const gchar *prefix;
 		const gchar *branch;
 		FwupdVersionFormat verfmt;
-	} data[] = {{"5719-v", BCM_FW_BRANCH_UNKNOWN, FWUPD_VERSION_FORMAT_PAIR},
-		    {"stage1-", BCM_FW_BRANCH_OSS_FIRMWARE, FWUPD_VERSION_FORMAT_TRIPLET},
-		    {NULL, NULL, 0}};
+	} data[] = {
+	    {"5719-v", BCM_FW_BRANCH_UNKNOWN, FWUPD_VERSION_FORMAT_PAIR},
+	    {"stage1-", BCM_FW_BRANCH_OSS_FIRMWARE, FWUPD_VERSION_FORMAT_TRIPLET},
+	};
 
 	/* do not assume this is NUL terminated */
 	tmp = g_strndup((const gchar *)buf, bufsz);
@@ -107,7 +108,7 @@ fu_bcm57xx_veritem_new(const guint8 *buf, gsize bufsz)
 		return NULL;
 
 	/* use prefix to define object */
-	for (guint i = 0; data[i].prefix != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
 		if (g_str_has_prefix(tmp, data[i].prefix)) {
 			veritem->version = g_strdup(tmp + strlen(data[i].prefix));
 			veritem->branch = g_strdup(data[i].branch);

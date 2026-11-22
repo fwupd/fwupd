@@ -967,23 +967,11 @@ fu_volume_kind_convert_to_gpt(const gchar *kind)
 	struct {
 		const gchar *gpt;
 		const gchar *mbrs[6];
-	} typeguids[] = {{FU_VOLUME_KIND_ESP,
-			  {
-			      "0xef",
-			      "efi",
-			      NULL,
-			  }},
-			 {FU_VOLUME_KIND_BDP,
-			  {
-			      "0x0b",
-			      "0x06",
-			      "vfat",
-			      "fat32",
-			      "fat32lba",
-			      NULL,
-			  }},
-			 {NULL, {NULL}}};
-	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
+	} typeguids[] = {
+	    {FU_VOLUME_KIND_ESP, {"0xef", "efi", NULL}},
+	    {FU_VOLUME_KIND_BDP, {"0x0b", "0x06", "vfat", "fat32", "fat32lba", NULL}},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(typeguids); i++) {
 		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
 			if (g_strcmp0(kind, typeguids[i].mbrs[j]) == 0)
 				return typeguids[i].gpt;

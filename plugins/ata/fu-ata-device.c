@@ -182,106 +182,85 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 		const gchar *prefix; /* in CAPS */
 		guint16 vid;
 		const gchar *name;
-	} map_name[] = {/* vendor matches */
-			{"ADATA*", 0x1cc1, "ADATA"},
-			{"APACER*", 0x0000, "Apacer"}, /* not in pci.ids */
-			{"APPLE*", 0x106b, "Apple"},
-			{"CORSAIR*", 0x1987, "Corsair"}, /* identifies as Phison */
-			{"CRUCIAL*", 0xc0a9, "Crucial"},
-			{"FUJITSU*", 0x10cf, "Fujitsu"},
-			{"GIGABYTE*", 0x1458, "Gigabyte"},
-			{"HGST*", 0x101c, "Western Digital"},
-			{"HITACHI*", 0x101c, "Western Digital"}, /* was acquired by WD */
-			{"HITACHI*", 0x1054, "Hitachi"},
-			{"HP SSD*", 0x103c, "HP"},
-			{"INTEL*", 0x8086, "Intel"},
-			{"KINGSPEC*", 0x0000, "KingSpec"}, /* not in pci.ids */
-			{"KINGSTON*", 0x2646, "Kingston"},
-			{"LITEON*", 0x14a4, "LITE-ON"},
-			{"MAXTOR*", 0x115f, "Maxtor"},
-			{"MICRON*", 0x1344, "Micron"},
-			{"OCZ*", 0x1179, "Toshiba"},
-			{"PNY*", 0x196e, "PNY"},
-			{"QEMU*", 0x1b36, "QEMU"}, /* identifies as Red Hat! */
-			{"SAMSUNG*", 0x144d, "Samsung"},
-			{"SANDISK*", 0x15b7, "SanDisk"},
-			{"SEAGATE*", 0x1bb1, "Seagate"},
-			{
-			    "SK HYNIX*",
-			    0x1c5c,
-			    "SK hynix",
-			},
-			{"SUPERMICRO*", 0x15d9, "SuperMicro"},
-			{"TOSHIBA*", 0x1179, "Toshiba"},
-			{"WDC*", 0x101c, "Western Digital"},
-			{NULL, 0x0000, NULL}};
+	} map_name[] = {
+	    /* vendor matches */
+	    {"ADATA*", 0x1cc1, "ADATA"},
+	    {"APACER*", 0x0000, "Apacer"}, /* not in pci.ids */
+	    {"APPLE*", 0x106b, "Apple"},
+	    {"CORSAIR*", 0x1987, "Corsair"}, /* identifies as Phison */
+	    {"CRUCIAL*", 0xc0a9, "Crucial"},
+	    {"FUJITSU*", 0x10cf, "Fujitsu"},
+	    {"GIGABYTE*", 0x1458, "Gigabyte"},
+	    {"HGST*", 0x101c, "Western Digital"},
+	    {"HITACHI*", 0x101c, "Western Digital"}, /* was acquired by WD */
+	    {"HITACHI*", 0x1054, "Hitachi"},
+	    {"HP SSD*", 0x103c, "HP"},
+	    {"INTEL*", 0x8086, "Intel"},
+	    {"KINGSPEC*", 0x0000, "KingSpec"}, /* not in pci.ids */
+	    {"KINGSTON*", 0x2646, "Kingston"},
+	    {"LITEON*", 0x14a4, "LITE-ON"},
+	    {"MAXTOR*", 0x115f, "Maxtor"},
+	    {"MICRON*", 0x1344, "Micron"},
+	    {"OCZ*", 0x1179, "Toshiba"},
+	    {"PNY*", 0x196e, "PNY"},
+	    {"QEMU*", 0x1b36, "QEMU"}, /* identifies as Red Hat! */
+	    {"SAMSUNG*", 0x144d, "Samsung"},
+	    {"SANDISK*", 0x15b7, "SanDisk"},
+	    {"SEAGATE*", 0x1bb1, "Seagate"},
+	    {"SK HYNIX*", 0x1c5c, "SK hynix"},
+	    {"SUPERMICRO*", 0x15d9, "SuperMicro"},
+	    {"TOSHIBA*", 0x1179, "Toshiba"},
+	    {"WDC*", 0x101c, "Western Digital"},
+	};
 	struct {
 		const gchar *prefix; /* in CAPS */
 		guint16 vid;
 		const gchar *name;
-	} map_fuzzy[] = {/* fuzzy name matches -- also see legacy list at:
-			  * https://github.com/linuxhw/hw-probe/blob/master/hw-probe.pl#L647 */
-			 {"001-*", 0x1bb1, "Seagate"},
-			 {"726060*", 0x101c, "Western Digital"},
-			 {"CT*", 0xc0a9, "Crucial"},
-			 {"DT0*", 0x1179, "Toshiba"},
-			 {"EK0*", 0x1590, "HPE"},
-			 {"EZEX*", 0x101c, "Western Digital"},
-			 {"GB0*", 0x1590, "HPE"},
-			 {"GOODRAM*", 0x1987, "Phison"},
-			 {"H??54*", 0x101c, "Western Digital"},
-			 {"H??72?0*", 0x101c, "Western Digital"},
-			 {"HDWG*", 0x1179, "Toshiba"},
-			 {"M?0??CA*", 0x1179, "Toshiba"}, /* enterprise */
-			 {"M4-CT*", 0xc0a9, "Crucial"},
-			 {
-			     "MA*",
-			     0x10cf,
-			     "Fujitsu",
-			 },
-			 {
-			     "MB*",
-			     0x10cf,
-			     "Fujitsu",
-			 },
-			 {"MK0*", 0x1590, "HPE"},
-			 {"MTFDDAK*", 0x1344, "Micron"},
-			 {
-			     "NIM*",
-			     0x0000,
-			     "Nimbus",
-			 }, /* no PCI ID */
-			 {
-			     "SATADOM*",
-			     0x0000,
-			     "Innodisk",
-			 }, /* no PCI ID */
-			 {"SSD 860*", 0x144d, "Samsung"},
-			 {"SSDPR*", 0x1987, "Phison"},
-			 {"SSDSC?K*", 0x8086, "Intel"},
-			 {
-			     "ST*",
-			     0x1bb1,
-			     "Seagate",
-			 },
-			 {"TEAM*", 0x0000, "Team Group"}, /* not in pci.ids */
-			 {"TS*", 0x8564, "Transcend"},
-			 {"VK0*", 0x1590, "HPE"},
-			 {"WD*", 0x101c, "Western Digital"},
-			 {NULL, 0x0000, NULL}};
+	} map_fuzzy[] = {
+	    /* fuzzy name matches -- also see legacy list at:
+	     * https://github.com/linuxhw/hw-probe/blob/master/hw-probe.pl#L647 */
+	    {"001-*", 0x1bb1, "Seagate"},
+	    {"726060*", 0x101c, "Western Digital"},
+	    {"CT*", 0xc0a9, "Crucial"},
+	    {"DT0*", 0x1179, "Toshiba"},
+	    {"EK0*", 0x1590, "HPE"},
+	    {"EZEX*", 0x101c, "Western Digital"},
+	    {"GB0*", 0x1590, "HPE"},
+	    {"GOODRAM*", 0x1987, "Phison"},
+	    {"H??54*", 0x101c, "Western Digital"},
+	    {"H??72?0*", 0x101c, "Western Digital"},
+	    {"HDWG*", 0x1179, "Toshiba"},
+	    {"M?0??CA*", 0x1179, "Toshiba"}, /* enterprise */
+	    {"M4-CT*", 0xc0a9, "Crucial"},
+	    {"MA*", 0x10cf, "Fujitsu"},
+	    {"MB*", 0x10cf, "Fujitsu"},
+	    {"MK0*", 0x1590, "HPE"},
+	    {"MTFDDAK*", 0x1344, "Micron"},
+	    {"NIM*", 0x0000, "Nimbus"},	      /* no PCI ID */
+	    {"SATADOM*", 0x0000, "Innodisk"}, /* no PCI ID */
+	    {"SSD 860*", 0x144d, "Samsung"},
+	    {"SSDPR*", 0x1987, "Phison"},
+	    {"SSDSC?K*", 0x8086, "Intel"},
+	    {"ST*", 0x1bb1, "Seagate"},
+	    {"TEAM*", 0x0000, "Team Group"}, /* not in pci.ids */
+	    {"TS*", 0x8564, "Transcend"},
+	    {"VK0*", 0x1590, "HPE"},
+	    {"WD*", 0x101c, "Western Digital"},
+	};
 	struct {
 		const gchar *prefix; /* in CAPS */
 		guint16 vid;
 		const gchar *name;
-	} map_version[] = {/* fuzzy version matches */
-			   {"CS2111*", 0x196e, "PNY"},
-			   {"S?FM*", 0x1987, "Phison"},
-			   {NULL, 0x0000, NULL}};
+	} map_version[] = {
+	    /* fuzzy version matches */
+	    {"CS2111*", 0x196e, "PNY"},
+	    {"S?FM*", 0x1987, "Phison"},
+	};
 	guint16 vid = 0;
 	g_autofree gchar *name_up = g_ascii_strup(name, -1);
 
 	/* find match */
-	for (guint i = 0; map_name[i].prefix != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(map_name); i++) {
 		if (g_pattern_match_simple(map_name[i].prefix, name_up)) {
 			name += strlen(map_name[i].prefix) - 1;
 			fu_device_set_vendor(FU_DEVICE(self), map_name[i].name);
@@ -292,7 +271,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 
 	/* fall back to fuzzy match */
 	if (vid == 0x0) {
-		for (guint i = 0; map_fuzzy[i].prefix != NULL; i++) {
+		for (guint i = 0; i < G_N_ELEMENTS(map_fuzzy); i++) {
 			if (g_pattern_match_simple(map_fuzzy[i].prefix, name_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_fuzzy[i].name);
 				vid = map_fuzzy[i].vid;
@@ -305,7 +284,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 	if (vid == 0x0) {
 		g_autofree gchar *version_up =
 		    g_ascii_strup(fu_device_get_version(FU_DEVICE(self)), -1);
-		for (guint i = 0; map_version[i].prefix != NULL; i++) {
+		for (guint i = 0; i < G_N_ELEMENTS(map_version); i++) {
 			if (g_pattern_match_simple(map_version[i].prefix, version_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_version[i].name);
 				vid = map_version[i].vid;
