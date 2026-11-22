@@ -18,10 +18,10 @@
 //!
 
 use super::wire;
-use super::wire::{CFCompressionType, CFFolderIndex, CFHeaderFlags, FixedSizeIO};
+use super::wire::{CFCompressionType, CFFolderIndex, CFHeaderFlags};
 use super::{CabError, CabPath};
 use super::{MsDosDate, MsDosFileAttrs, MsDosTime};
-use crate::io::ReadSeekExt;
+use crate::io::{FixedSizeStruct, ReadSeekExt};
 use std::io::Read;
 use std::str::Utf8Error;
 use std::sync::{Arc, Mutex};
@@ -97,8 +97,8 @@ impl CFHeader {
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
 
-        let (raw_header, nbytes) = wire::CFHeader::read(src, offset)?;
-        off += nbytes;
+        let raw_header: wire::CFHeader = src.read_type_at(offset)?;
+        off += wire::CFHeader::size_in_bytes();
 
         if raw_header.signature.get() != wire::CF_SIGNATURE {
             return Err(CabError::Format(format!(
@@ -120,8 +120,8 @@ impl CFHeader {
         // Process optional reserve header
         let header_flags = CFHeaderFlags::from_bits(raw_header.flags.get());
         let reserve = if header_flags.contains(wire::CFHeaderFlag::HasReserve) {
-            let (raw_reserve, nbytes) = wire::CFHeaderReserve::read(src, off)?;
-            off += nbytes;
+            let raw_reserve: wire::CFHeaderReserve = src.read_type_at(off)?;
+            off += wire::CFHeaderReserve::size_in_bytes();
 
             let sz_header = raw_reserve.cbCFHeader.get() as usize;
             if sz_header > max_reserved_size {
@@ -237,8 +237,8 @@ impl CFFolder {
         cffolder_reserved_size: u8,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFFolder::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFFolder = src.read_type_at(offset)?;
+        off += wire::CFFolder::size_in_bytes();
 
         // let _ = src.read_exact_at(off, cffolder_reserved_size)
         off += cffolder_reserved_size as usize;
@@ -418,8 +418,8 @@ impl CFFile {
         offset: usize,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFFile::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFFile = src.read_type_at(offset)?;
+        off += wire::CFFile::size_in_bytes();
 
         let (name, nbytes) = CFString::read(src, off, 1024)?;
         off += nbytes;
@@ -473,8 +473,8 @@ impl CFData {
         verify_checksum: bool,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFData::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFData = src.read_type_at(offset)?;
+        off += wire::CFData::size_in_bytes();
 
         // let _ = src.read_exact_at(off, cfdata_reserved_size)
         off += cfdata_reserved_size as usize;
