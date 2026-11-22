@@ -39,10 +39,9 @@ fu_uefi_device_set_guid(FuUefiDevice *self, const gchar *guid)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
 
-	/* same */
-	if (g_strcmp0(priv->guid, guid) == 0)
+	/* not changed */
+	if (!g_set_str(&priv->guid, guid))
 		return;
-	g_set_str(&priv->guid, guid);
 	if (guid != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "GUID", guid);
 }
@@ -63,10 +62,9 @@ fu_uefi_device_set_name(FuUefiDevice *self, const gchar *name)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
 
-	/* same */
-	if (g_strcmp0(priv->name, name) == 0)
+	/* not changed */
+	if (!g_set_str(&priv->name, name))
 		return;
-	g_set_str(&priv->name, name);
 	if (name != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "NAME", name);
 }

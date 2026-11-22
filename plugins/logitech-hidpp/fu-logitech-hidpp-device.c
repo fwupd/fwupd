@@ -71,8 +71,6 @@ static void
 fu_logitech_hidpp_device_set_model_id(FuLogitechHidppDevice *self, const gchar *model_id)
 {
 	g_return_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self));
-	if (g_strcmp0(self->model_id, model_id) == 0)
-		return;
 	g_set_str(&self->model_id, model_id);
 }
 
