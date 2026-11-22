@@ -69,8 +69,6 @@ void
 fu_efi_x509_signature_set_issuer(FuEfiX509Signature *self, const gchar *issuer)
 {
 	g_return_if_fail(FU_IS_EFI_X509_SIGNATURE(self));
-	if (g_strcmp0(issuer, self->issuer) == 0)
-		return;
 	g_set_str(&self->issuer, issuer);
 }
 
@@ -148,9 +146,8 @@ void
 fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject)
 {
 	g_return_if_fail(FU_IS_EFI_X509_SIGNATURE(self));
-	if (g_strcmp0(subject, self->subject) == 0)
+	if (!g_set_str(&self->subject, subject))
 		return;
-	g_set_str(&self->subject, subject);
 
 	/* parse out two keys things we need */
 	if (subject != NULL) {

@@ -65,8 +65,6 @@ fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_me
 {
 	g_return_if_fail(FU_IS_REMOTE_LIST(self));
 	g_return_if_fail(lvfs_metadata_format != NULL);
-	if (g_strcmp0(lvfs_metadata_format, self->lvfs_metadata_format) == 0)
-		return;
 	g_set_str(&self->lvfs_metadata_format, lvfs_metadata_format);
 }
 

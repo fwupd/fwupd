@@ -676,8 +676,6 @@ fu_config_set_basename(FuConfig *self, const gchar *basename)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONFIG(self));
-	if (g_strcmp0(priv->basename, basename) == 0)
-		return;
 	g_set_str(&priv->basename, basename);
 }
 

@@ -55,8 +55,6 @@ void
 fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->pnp_id, pnp_id) == 0)
-		return;
 	g_set_str(&self->pnp_id, pnp_id);
 }
 
@@ -90,8 +88,6 @@ void
 fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->eisa_id, eisa_id) == 0)
-		return;
 	g_set_str(&self->eisa_id, eisa_id);
 }
 
@@ -126,8 +122,6 @@ void
 fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->serial_number, serial_number) == 0)
-		return;
 	g_set_str(&self->serial_number, serial_number);
 }
 
@@ -161,8 +155,6 @@ void
 fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->product_name, product_name) == 0)
-		return;
 	g_set_str(&self->product_name, product_name);
 }
 

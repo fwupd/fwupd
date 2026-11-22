@@ -33,8 +33,6 @@ fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const
 {
 	g_return_if_fail(FU_IS_REDFISH_MULTIPART_DEVICE(self));
 	g_return_if_fail(apply_time != NULL);
-	if (g_strcmp0(self->apply_time, apply_time) == 0)
-		return;
 	g_set_str(&self->apply_time, apply_time);
 }
 
