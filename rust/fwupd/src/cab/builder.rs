@@ -14,12 +14,12 @@ use zerocopy::byteorder::little_endian::{U16 as U16LE, U32 as U32LE};
 use super::archive::CFString;
 use super::path::CabPath;
 use super::wire::{
-    CFCompressionType, CFData, CFFile, CFFolder, CFHeader, FixedSizeIO, CF_MAJOR_VERSION,
-    CF_MINOR_VERSION, CF_SIGNATURE,
+    CFCompressionType, CFData, CFFile, CFFolder, CFHeader, CF_MAJOR_VERSION, CF_MINOR_VERSION,
+    CF_SIGNATURE,
 };
 use super::{Checksum, MsDosDate, MsDosFileAttr, MsDosFileAttrs, MsDosTime};
 use crate::compressor::{MszipBlock, MszipCompressor};
-use crate::io::WriteExt;
+use crate::io::{FixedSizeStruct, WriteExt};
 use crate::streams::{IntoStream, MemoryInputStream, Stream, StreamImpl};
 use crate::units::ByteCount;
 use crate::Bitflags;
