@@ -142,7 +142,11 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 		XbNode *n = g_ptr_array_index(files, i);
 		g_autoptr(FuJabraGnpImage) img = fu_jabra_gnp_image_new();
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_jabra_gnp_image_parse(img, n, firmware_archive, &error_local)) {
+		if (!fu_jabra_gnp_image_parse(img,
+					      n,
+					      firmware_archive,
+					      &error_local,
+					      self->fwu_protocol)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				g_debug("ignoring image 0x%x: %s", i, error_local->message);
 				continue;
@@ -172,10 +176,23 @@ fu_jabra_gnp_firmware_get_version_data(FuJabraGnpFirmware *self)
 	return &self->version_data;
 }
 
+void
+fu_jabra_gnp_firmware_set_protocol_id(FuJabraGnpFirmware *self, guint8 fwu_protocol)
+{
+	g_return_if_fail(FU_IS_JABRA_GNP_FIRMWARE(self));
+	self->fwu_protocol = fwu_protocol;
+}
+
 static void
 fu_jabra_gnp_firmware_init(FuJabraGnpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+}
+
+FuFirmware *
+fu_jabra_gnp_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_JABRA_GNP_FIRMWARE, NULL));
 }
 
 static void
