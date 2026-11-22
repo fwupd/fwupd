@@ -985,6 +985,7 @@ mod tests {
         CFCompressionType, CFData, CFFile, CFFolder, CFHeader, FixedSizeIO, CF_SIGNATURE,
     };
     use crate::cab::{Checksum, MsDosFileAttr};
+    use crate::io::WriteExt;
     use crate::streams::IntoStream;
     use crate::Bitflags;
     use std::io::{Cursor, Read};
@@ -1122,8 +1123,7 @@ mod tests {
             attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
         };
         fhdr.write(&mut out).unwrap();
-        out.extend_from_slice(filename.as_bytes());
-        out.push(0);
+        out.write_nul_terminated_string(filename).unwrap();
 
         let dh = CFData {
             csum: U32LE::new(0),
@@ -1190,8 +1190,7 @@ mod tests {
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
             fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         let dh = CFData {
@@ -1473,8 +1472,7 @@ mod tests {
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
             fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         let dh = CFData {
@@ -1561,8 +1559,7 @@ mod tests {
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
             fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         // one data block per file, consecutively

@@ -19,6 +19,7 @@ use super::wire::{
 };
 use super::{Checksum, MsDosDate, MsDosFileAttr, MsDosFileAttrs, MsDosTime};
 use crate::compressor::{MszipBlock, MszipCompressor};
+use crate::io::WriteExt;
 use crate::streams::{IntoStream, MemoryInputStream, Stream, StreamImpl};
 use crate::units::ByteCount;
 use crate::Bitflags;
@@ -468,7 +469,7 @@ impl ArchiveBuilder<HasFiles> {
             } else {
                 file.attributes | MsDosFileAttr::NameIsUtf
             };
-            let name = CFString::from(&file.path);
+            let name = file.path.as_ref();
             let cffile = CFFile {
                 cbFile: U32LE::new(file.uncompressed_size),
                 uoffFolderStart: U32LE::new(file.offset_in_folder),
@@ -478,7 +479,7 @@ impl ArchiveBuilder<HasFiles> {
                 attribs: U16LE::new(attrs.bits()),
             };
             cffile.write(writer)?;
-            writer.write_all(name.as_bytes_with_nul())?;
+            writer.write_nul_terminated_string(name)?;
         }
 
         for file in &outfiles {
