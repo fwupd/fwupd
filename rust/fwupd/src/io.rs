@@ -9,9 +9,10 @@
 use crate::{slice::NonEmptySlice, units::ByteCount};
 use std::{
     collections::VecDeque,
-    io::{Read, Seek, SeekFrom},
+    io::{Read, Seek, SeekFrom, Write},
+    num::NonZeroUsize,
 };
-use zerocopy::FromBytes;
+use zerocopy::{FromBytes, Immutable, IntoBytes};
 
 fn read_exact_or_remaining<R: Read + ?Sized>(r: &mut R, count: usize) -> std::io::Result<Vec<u8>> {
     let mut buf = vec![0u8; count];
@@ -292,6 +293,213 @@ pub trait ReadSeekExt: Read + Seek {
 
 impl<T: Read + Seek + ?Sized> ReadSeekExt for T {}
 
+pub trait WriteExt: Write {
+    /// Write the given string as NUL-terminated string.
+    ///
+    /// The empty string writes exactly one NUL-byte, the return value
+    /// is thus always greater than zero.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use fwupd::io::WriteExt;
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_nul_terminated_string("FW").unwrap();
+    /// assert_eq!(count, 3);
+    /// assert_eq!(stream.into_inner(), b"FW\0");
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_nul_terminated_string("").unwrap();
+    /// assert_eq!(count, 1);
+    /// assert_eq!(stream.into_inner(), b"\0");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns the IO error, if any.
+    fn write_nul_terminated_string(&mut self, s: &str) -> std::io::Result<usize> {
+        self.write_all(s.as_bytes())?;
+        self.write_all(&[0])?;
+        Ok(s.len() + 1)
+    }
+
+    /// Writes a nul-terminated string, padding out to `count` with NUL bytes
+    /// if necessary. If count is less than the string length, the string
+    /// is truncated at `count - 1`. The written string is guaranteed to
+    /// always have a terminating NUL byte.
+    ///
+    /// Note: truncation happens on byte level and may split multi-byte
+    /// UTF-8 characters.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use std::num::NonZeroUsize;
+    /// use fwupd::io::WriteExt;
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_nul_terminated_padded_string("FW", NonZeroUsize::new(4).unwrap()).unwrap();
+    /// assert_eq!(count, 4);
+    /// assert_eq!(stream.into_inner(), b"FW\0\0");
+    ///
+    /// // string truncated to fit the NUL-terminator
+    /// let mut stream = Cursor::new(vec![]);
+    /// stream.write_nul_terminated_padded_string("FWUPD", NonZeroUsize::new(4).unwrap()).unwrap();
+    /// assert_eq!(stream.into_inner(), b"FWU\0");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns the IO error, if any.
+    fn write_nul_terminated_padded_string(
+        &mut self,
+        s: &str,
+        count: NonZeroUsize,
+    ) -> std::io::Result<usize> {
+        let count = count.get();
+        let s = &s.as_bytes()[..s.len().min(count - 1)];
+        self.write_all(s)?;
+        self.write_all(&vec![0; count - s.len()])?;
+        Ok(count)
+    }
+
+    /// Write the given string without a nul-terminator.
+    ///
+    /// The empty string writes zero bytes, and the return value is thus
+    /// zero.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use fwupd::io::WriteExt;
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_string("FW").unwrap();
+    /// assert_eq!(count, 2);
+    /// assert_eq!(stream.into_inner(), b"FW");
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_string("").unwrap();
+    /// assert_eq!(count, 0);
+    /// assert!(stream.into_inner().is_empty());
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns the IO error, if any.
+    fn write_string(&mut self, s: &str) -> std::io::Result<usize> {
+        self.write_all(s.as_bytes())?;
+        Ok(s.len())
+    }
+
+    /// Write the given string, padding with `\0` bytes up to `count` if necessary.
+    ///
+    /// If the string length exceeds `count`, the string is truncated at
+    /// `count` bytes (on byte level, possibly splitting multi-byte UTF-8
+    /// characters). If the string length is exactly `count`, no NUL-byte
+    /// is written. Use [`WriteExt::write_nul_terminated_padded_string`] for
+    /// NUL-terminated strings.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use fwupd::io::WriteExt;
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_padded_string("FW", 4).unwrap();
+    /// assert_eq!(count, 4);
+    /// assert_eq!(stream.into_inner(), b"FW\0\0");
+    ///
+    /// // exactly filling the buffer, no NUL byte appended
+    /// let mut stream = Cursor::new(vec![]);
+    /// stream.write_padded_string("FW", 2).unwrap();
+    /// assert_eq!(stream.into_inner(), b"FW");
+    ///
+    /// // string truncated to `count` bytes
+    /// let mut stream = Cursor::new(vec![]);
+    /// stream.write_padded_string("FWUPD", 3).unwrap();
+    /// assert_eq!(stream.into_inner(), b"FWU");
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_padded_string("FW", 0).unwrap();
+    /// assert_eq!(count, 0);
+    /// assert!(stream.into_inner().is_empty());
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns the IO error, if any.
+    fn write_padded_string(&mut self, s: &str, count: usize) -> std::io::Result<usize> {
+        let s = &s.as_bytes()[..s.len().min(count)];
+        self.write_all(s)?;
+        self.write_all(&vec![0; count - s.len()])?;
+        Ok(count)
+    }
+
+    /// Write a value of type `T` to the stream.
+    ///
+    /// Returns the number of bytes written.
+    ///
+    /// This is just a convenience wrapper around [`zerocopy::IntoBytes::write_to_io`].
+    ///
+    /// ## Writing primitive types
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::byteorder::little_endian::U16;
+    /// use fwupd::io::WriteExt;
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let count = stream.write_type(U16::new(0x3412)).unwrap();
+    /// assert_eq!(count, 2);
+    /// assert_eq!(stream.into_inner(), vec![0x12, 0x34]);
+    /// ```
+    /// ## Writing custom structs
+    ///
+    /// This also works for custom `#[derive(IntoBytes)]` structs, e.g.
+    /// multi-field firmware headers, as long as they are `#[repr(C)]`
+    /// (or `#[repr(C, packed)]` combined with `Unaligned`):
+    ///
+    /// ```
+    /// use std::io::Cursor;
+    /// use zerocopy::{IntoBytes, Immutable, Unaligned};
+    /// use zerocopy::byteorder::little_endian::{U16, U32};
+    /// use fwupd::io::WriteExt;
+    ///
+    /// #[repr(C, packed)]
+    /// #[derive(Debug, IntoBytes, Immutable, Unaligned)]
+    /// struct Header {
+    ///     magic: U32,
+    ///     version: U16,
+    /// }
+    ///
+    /// let mut stream = Cursor::new(vec![]);
+    /// let header = Header { magic: U32::new(0x5746), version: U16::new(1) };
+    /// let count = stream.write_type(header).unwrap();
+    /// assert_eq!(count, 6);
+    /// assert_eq!(stream.into_inner(), vec![0x46, 0x57, 0x00, 0x00, 0x01, 0x00]);
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns the Io error, if any.
+    fn write_type<T>(&mut self, value: T) -> std::io::Result<usize>
+    where
+        T: IntoBytes + Immutable + Sized,
+    {
+        value
+            .write_to_io(&mut *self)
+            .and(Ok(std::mem::size_of::<T>()))
+    }
+}
+
+impl<W: Write + ?Sized> WriteExt for W {}
+
 pub trait Searchable: Read + Seek {
     /// Find the first occurrence of `bytes` within the stream and
     /// return the offset, starting at offset `0`.
@@ -359,6 +567,22 @@ pub trait Searchable: Read + Seek {
 
 impl<R: Read + Seek + ?Sized> Searchable for R {}
 
+/// Marker trait for fixed-size structs, `repr(C, packed)` structs
+/// that have fixed size. This Is just a convenience trait
+/// around `std::mem::size_of::<Self>()`
+pub trait FixedSizeStruct {
+    /// Returns the size of this struct in bytes
+    #[must_use]
+    fn size_in_bytes() -> usize
+    where
+        Self: Sized,
+    {
+        std::mem::size_of::<Self>()
+    }
+}
+
+impl<S: FromBytes> FixedSizeStruct for S {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,6 +595,88 @@ mod tests {
         let mut stream = MemoryInputStream::from_data(haystack.to_vec());
         let needle = NonEmptySlice::new(needle).expect("needle must be non-empty");
         stream.find_from_offset(needle, offset)
+    }
+
+    #[test]
+    fn writeext_string() {
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_string("FW").unwrap(), 2);
+        assert_eq!(stream.into_inner(), b"FW");
+
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_string("").unwrap(), 0);
+        assert_eq!(stream.into_inner(), [] as [u8; 0]);
+    }
+
+    #[test]
+    fn writeext_nul_terminated_string() {
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_nul_terminated_string("FW").unwrap(), 3);
+        assert_eq!(stream.into_inner(), b"FW\0");
+
+        // the empty string still writes the NUL terminator
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_nul_terminated_string("").unwrap(), 1);
+        assert_eq!(stream.into_inner(), b"\0");
+    }
+
+    #[test]
+    fn writeext_nul_terminated_padded_string() {
+        let nz = NonZeroUsize::new;
+
+        // padded with NUL bytes
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(
+            stream
+                .write_nul_terminated_padded_string("FW", nz(4).unwrap())
+                .unwrap(),
+            4
+        );
+        assert_eq!(stream.into_inner(), b"FW\0\0");
+
+        // exactly fits, last byte is the NUL terminator
+        let mut stream = Cursor::new(vec![]);
+        stream
+            .write_nul_terminated_padded_string("FW", nz(3).unwrap())
+            .unwrap();
+        assert_eq!(stream.into_inner(), b"FW\0");
+
+        // string truncated to count - 1 so the NUL terminator always fits
+        let mut stream = Cursor::new(vec![]);
+        stream
+            .write_nul_terminated_padded_string("FWUPD", nz(4).unwrap())
+            .unwrap();
+        assert_eq!(stream.into_inner(), b"FWU\0");
+
+        // count of one writes just the NUL terminator
+        let mut stream = Cursor::new(vec![]);
+        stream
+            .write_nul_terminated_padded_string("FWUPD", nz(1).unwrap())
+            .unwrap();
+        assert_eq!(stream.into_inner(), b"\0");
+    }
+
+    #[test]
+    fn writeext_padded_string() {
+        // padded with NUL bytes
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_padded_string("FW", 4).unwrap(), 4);
+        assert_eq!(stream.into_inner(), b"FW\0\0");
+
+        // exactly filling the buffer, no NUL byte appended
+        let mut stream = Cursor::new(vec![]);
+        stream.write_padded_string("FW", 2).unwrap();
+        assert_eq!(stream.into_inner(), b"FW");
+
+        // string truncated to `count` bytes
+        let mut stream = Cursor::new(vec![]);
+        stream.write_padded_string("FWUPD", 3).unwrap();
+        assert_eq!(stream.into_inner(), b"FWU");
+
+        // zero count writes nothing
+        let mut stream = Cursor::new(vec![]);
+        assert_eq!(stream.write_padded_string("FW", 0).unwrap(), 0);
+        assert_eq!(stream.into_inner(), [] as [u8; 0]);
     }
 
     #[test]
