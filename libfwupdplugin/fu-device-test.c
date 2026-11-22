@@ -220,12 +220,13 @@ fu_device_strsafe_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"dave123", "dave123"},
-		    {"dave123XXX", "dave123"},
-		    {"dave\x03XXX", "dave.XX"},
-		    {"dave\x03\x04XXX", "dave..X"},
-		    {"\x03\x03", NULL},
-		    {NULL, NULL}};
+	} strs[] = {
+	    {"dave123", "dave123"},
+	    {"dave123XXX", "dave123"},
+	    {"dave\x03XXX", "dave.XX"},
+	    {"dave\x03\x04XXX", "dave..X"},
+	    {"\x03\x03", NULL},
+	};
 	GPtrArray *instance_ids;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -242,7 +243,7 @@ fu_device_strsafe_func(void)
 	g_assert_cmpint(instance_ids->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(instance_ids, 0), ==, "SUB\\KEY_LEN-VO");
 
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_strsafe(strs[i].in, 7);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}

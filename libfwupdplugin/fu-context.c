@@ -1742,13 +1742,14 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 		const gchar *name;
 		FuContextLoadFlags flag;
 		FuContextHwidsSetupFunc func;
-	} hwids_setup_map[] = {{"config", FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, fu_hwids_config_setup},
-			       {"smbios", FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS, fu_hwids_smbios_setup},
-			       {"fdt", FU_CONTEXT_LOAD_FLAG_HWID_FDT, fu_hwids_fdt_setup},
-			       {"kenv", FU_CONTEXT_LOAD_FLAG_HWID_KENV, fu_hwids_kenv_setup},
-			       {"dmi", FU_CONTEXT_LOAD_FLAG_HWID_DMI, fu_hwids_dmi_setup},
-			       {"darwin", FU_CONTEXT_LOAD_FLAG_HWID_DARWIN, fu_hwids_darwin_setup},
-			       {NULL, FU_CONTEXT_LOAD_FLAG_NONE, NULL}};
+	} hwids_setup_map[] = {
+	    {"config", FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, fu_hwids_config_setup},
+	    {"smbios", FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS, fu_hwids_smbios_setup},
+	    {"fdt", FU_CONTEXT_LOAD_FLAG_HWID_FDT, fu_hwids_fdt_setup},
+	    {"kenv", FU_CONTEXT_LOAD_FLAG_HWID_KENV, fu_hwids_kenv_setup},
+	    {"dmi", FU_CONTEXT_LOAD_FLAG_HWID_DMI, fu_hwids_dmi_setup},
+	    {"darwin", FU_CONTEXT_LOAD_FLAG_HWID_DARWIN, fu_hwids_darwin_setup},
+	};
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -1785,7 +1786,7 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	g_signal_connect(priv->config, "changed", G_CALLBACK(fu_context_config_changed_cb), self);
 
 	/* run all the HWID setup funcs */
-	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(hwids_setup_map); i++) {
 		if ((flags & hwids_setup_map[i].flag) > 0) {
 			g_autoptr(GError) error_local = NULL;
 			if (!hwids_setup_map[i].func(self, priv->hwids, &error_local)) {

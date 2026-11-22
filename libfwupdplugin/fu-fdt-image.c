@@ -42,26 +42,27 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 	struct {
 		const gchar *key;
 		const gchar *format;
-	} key_format_map[] = {{"#address-cells", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"algo", FU_FDT_IMAGE_FORMAT_STR},
-			      {"arch", FU_FDT_IMAGE_FORMAT_STR},
-			      {"compatible", FU_FDT_IMAGE_FORMAT_STRLIST},
-			      {"compression", FU_FDT_IMAGE_FORMAT_STR},
-			      {"creator", FU_FDT_IMAGE_FORMAT_STR},
-			      {"data-offset", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"data-position", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"data-size", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"default", FU_FDT_IMAGE_FORMAT_STR},
-			      {"description", FU_FDT_IMAGE_FORMAT_STR},
-			      {"entry", FU_FDT_IMAGE_FORMAT_STR},
-			      {"firmware", FU_FDT_IMAGE_FORMAT_STR},
-			      {"load", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"os", FU_FDT_IMAGE_FORMAT_STR},
-			      {"timestamp", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"type", FU_FDT_IMAGE_FORMAT_STR},
-			      {"version", FU_FDT_IMAGE_FORMAT_STR},
-			      {NULL, NULL}};
-	for (guint i = 0; key_format_map[i].key != NULL; i++) {
+	} key_format_map[] = {
+	    {"#address-cells", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"algo", FU_FDT_IMAGE_FORMAT_STR},
+	    {"arch", FU_FDT_IMAGE_FORMAT_STR},
+	    {"compatible", FU_FDT_IMAGE_FORMAT_STRLIST},
+	    {"compression", FU_FDT_IMAGE_FORMAT_STR},
+	    {"creator", FU_FDT_IMAGE_FORMAT_STR},
+	    {"data-offset", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"data-position", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"data-size", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"default", FU_FDT_IMAGE_FORMAT_STR},
+	    {"description", FU_FDT_IMAGE_FORMAT_STR},
+	    {"entry", FU_FDT_IMAGE_FORMAT_STR},
+	    {"firmware", FU_FDT_IMAGE_FORMAT_STR},
+	    {"load", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"os", FU_FDT_IMAGE_FORMAT_STR},
+	    {"timestamp", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"type", FU_FDT_IMAGE_FORMAT_STR},
+	    {"version", FU_FDT_IMAGE_FORMAT_STR},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(key_format_map); i++) {
 		if (g_strcmp0(key, key_format_map[i].key) == 0)
 			return key_format_map[i].format;
 	}

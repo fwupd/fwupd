@@ -103,17 +103,18 @@ fu_bcm57xx_dict_image_ensure_id(FuBcm57xxDictImage *self)
 		guint8 target;
 		guint8 kind;
 		const gchar *id;
-	} ids[] = {{0x00, 0x00, "pxe"},
-		   {0x0D, 0x00, "ape"},
-		   {0x09, 0x00, "iscsi1"},
-		   {0x05, 0x00, "iscsi2"},
-		   {0x0b, 0x00, "iscsi3"},
-		   {0x00, 0x01, "cfg1000"},
-		   {0x04, 0x01, "vpd2"},
-		   {0xff, 0xff, NULL}};
+	} ids[] = {
+	    {0x00, 0x00, "pxe"},
+	    {0x0D, 0x00, "ape"},
+	    {0x09, 0x00, "iscsi1"},
+	    {0x05, 0x00, "iscsi2"},
+	    {0x0b, 0x00, "iscsi3"},
+	    {0x00, 0x01, "cfg1000"},
+	    {0x04, 0x01, "vpd2"},
+	};
 	if (self->target == 0xff || self->kind == 0xff)
 		return;
-	for (guint i = 0; ids[i].id != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(ids); i++) {
 		if (self->target == ids[i].target && self->kind == ids[i].kind) {
 			g_debug("using %s for %02x:%02x", ids[i].id, self->target, self->kind);
 			fu_firmware_set_id(FU_FIRMWARE(self), ids[i].id);

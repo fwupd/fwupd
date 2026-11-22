@@ -376,29 +376,30 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		guint gen;
 		FuIntelThunderboltNvmFamily family;
 		guint ports;
-	} hw_info_arr[] = {{0x156D, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 2},
-			   {0x156B, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 1},
-			   {0x157E, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_WIN_RIDGE, 1},
-			   {0x1578, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 2},
-			   {0x1576, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
-			   {0x15C0, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
-			   {0x15D3, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 2},
-			   {0x15DA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 1},
-			   {0x15E7, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 1},
-			   {0x15EA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
-			   {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
-			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
-			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
-			   {0x5786, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE, 2},
-			   {0x0D9C, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE, 0},
-			   /* Maple ridge devices
-			    * NOTE: These are expected to be flashed via UEFI capsules *not*
-			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
-			    * work. They're left here only for parsing the binaries
-			    */
-			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
-			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
-			   {0}};
+	} hw_info_arr[] = {
+	    {0x156D, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 2},
+	    {0x156B, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 1},
+	    {0x157E, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_WIN_RIDGE, 1},
+	    {0x1578, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 2},
+	    {0x1576, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
+	    {0x15C0, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
+	    {0x15D3, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 2},
+	    {0x15DA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 1},
+	    {0x15E7, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 1},
+	    {0x15EA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
+	    {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
+	    {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
+	    {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
+	    {0x5786, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE, 2},
+	    {0x0D9C, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE, 0},
+	    /* Maple ridge devices
+	     * NOTE: These are expected to be flashed via UEFI capsules *not*
+	     * Thunderbolt plugin Flashing via fwupd will require matching kernel
+	     * work. They're left here only for parsing the binaries
+	     */
+	    {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
+	    {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
+	};
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	gsize streamsz = 0;
 
@@ -445,7 +446,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 
 	/* this is best-effort */
-	for (guint i = 0; hw_info_arr[i].device_id != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(hw_info_arr); i++) {
 		if (hw_info_arr[i].device_id == priv->device_id) {
 			priv->family = hw_info_arr[i].family;
 			priv->gen = hw_info_arr[i].gen;

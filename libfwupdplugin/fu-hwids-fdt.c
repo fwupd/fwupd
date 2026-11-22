@@ -60,13 +60,14 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 		struct {
 			FuSmbiosChassisKind chassis_kind;
 			const gchar *dt;
-		} chassis_map[] = {{FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE, "convertible"},
-				   {FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC, "embedded"},
-				   {FU_SMBIOS_CHASSIS_KIND_HAND_HELD, "handset"},
-				   {FU_SMBIOS_CHASSIS_KIND_LAPTOP, "laptop"},
-				   {FU_SMBIOS_CHASSIS_KIND_TABLET, "tablet"},
-				   {FU_SMBIOS_CHASSIS_KIND_UNKNOWN, NULL}};
-		for (guint i = 0; chassis_map[i].dt != NULL; i++) {
+		} chassis_map[] = {
+		    {FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE, "convertible"},
+		    {FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC, "embedded"},
+		    {FU_SMBIOS_CHASSIS_KIND_HAND_HELD, "handset"},
+		    {FU_SMBIOS_CHASSIS_KIND_LAPTOP, "laptop"},
+		    {FU_SMBIOS_CHASSIS_KIND_TABLET, "tablet"},
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(chassis_map); i++) {
 			if (g_strcmp0(chassis_type, chassis_map[i].dt) == 0) {
 				fu_context_set_chassis_kind(ctx, chassis_map[i].chassis_kind);
 				break;

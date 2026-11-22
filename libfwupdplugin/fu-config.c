@@ -174,32 +174,33 @@ fu_config_migrate_keyfile(FuConfig *self)
 		const gchar *group;
 		const gchar *key;
 		const gchar *value;
-	} key_values[] = {{"fwupd", "ApprovedFirmware", NULL},
-			  {"fwupd", "ArchiveSizeMax", "0"},
-			  {"fwupd", "DisabledDevices", NULL},
-			  {"fwupd", "EnumerateAllDevices", NULL},
-			  {"fwupd", "EspLocation", NULL},
-			  {"fwupd", "HostBkc", NULL},
-			  {"fwupd", "IdleTimeout", "7200"},
-			  {"fwupd", "IdleTimeout", NULL},
-			  {"fwupd", "IgnorePower", NULL},
-			  {"fwupd", "ShowDevicePrivate", NULL},
-			  {"fwupd", "TrustedUids", NULL},
-			  {"fwupd", "UpdateMotd", NULL},
-			  {"fwupd", "UriSchemes", NULL},
-			  {"fwupd", "VerboseDomains", NULL},
-			  {"fwupd", "OnlyTrusted", NULL},
-			  {"fwupd", "IgnorePower", NULL},
-			  {"fwupd", "RequireImmutableEnumeration", NULL},
-			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
-			  {"fwupd", "DisabledPlugins", "test;test_ble"},
-			  {"redfish", "IpmiDisableCreateUser", NULL},
-			  {"redfish", "ManagerResetTimeout", NULL},
-			  {"msr", "MinimumSmeKernelVersion", NULL},
-			  {"thunderbolt", "MinimumKernelVersion", NULL},
-			  {"thunderbolt", "DelayedActivation", NULL},
-			  {NULL, NULL, NULL}};
-	for (guint i = 0; key_values[i].group != NULL; i++) {
+	} key_values[] = {
+	    {"fwupd", "ApprovedFirmware", NULL},
+	    {"fwupd", "ArchiveSizeMax", "0"},
+	    {"fwupd", "DisabledDevices", NULL},
+	    {"fwupd", "EnumerateAllDevices", NULL},
+	    {"fwupd", "EspLocation", NULL},
+	    {"fwupd", "HostBkc", NULL},
+	    {"fwupd", "IdleTimeout", "7200"},
+	    {"fwupd", "IdleTimeout", NULL},
+	    {"fwupd", "IgnorePower", NULL},
+	    {"fwupd", "ShowDevicePrivate", NULL},
+	    {"fwupd", "TrustedUids", NULL},
+	    {"fwupd", "UpdateMotd", NULL},
+	    {"fwupd", "UriSchemes", NULL},
+	    {"fwupd", "VerboseDomains", NULL},
+	    {"fwupd", "OnlyTrusted", NULL},
+	    {"fwupd", "IgnorePower", NULL},
+	    {"fwupd", "RequireImmutableEnumeration", NULL},
+	    {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
+	    {"fwupd", "DisabledPlugins", "test;test_ble"},
+	    {"redfish", "IpmiDisableCreateUser", NULL},
+	    {"redfish", "ManagerResetTimeout", NULL},
+	    {"msr", "MinimumSmeKernelVersion", NULL},
+	    {"thunderbolt", "MinimumKernelVersion", NULL},
+	    {"thunderbolt", "DelayedActivation", NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(key_values); i++) {
 		const gchar *default_value;
 		g_autofree gchar *value = NULL;
 		g_auto(GStrv) keys = NULL;

@@ -755,13 +755,14 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 	struct {
 		GChecksumType kind;
 		FuCoswidHashAlg alg_id;
-	} csum_kinds[] = {{G_CHECKSUM_SHA256, FU_COSWID_HASH_ALG_SHA256},
-			  {G_CHECKSUM_SHA384, FU_COSWID_HASH_ALG_SHA384},
-			  {G_CHECKSUM_SHA512, FU_COSWID_HASH_ALG_SHA512},
-			  {0, FU_COSWID_HASH_ALG_UNKNOWN}};
+	} csum_kinds[] = {
+	    {G_CHECKSUM_SHA256, FU_COSWID_HASH_ALG_SHA256},
+	    {G_CHECKSUM_SHA384, FU_COSWID_HASH_ALG_SHA384},
+	    {G_CHECKSUM_SHA512, FU_COSWID_HASH_ALG_SHA512},
+	};
 
 	/* convert to FuCoswidHashAlg */
-	for (guint i = 0; csum_kinds[i].kind != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(csum_kinds); i++) {
 		if (csum_kinds[i].kind == csum_kind) {
 			alg_id = csum_kinds[i].alg_id;
 			break;
