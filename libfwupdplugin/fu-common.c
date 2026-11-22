@@ -410,6 +410,8 @@ fu_common_get_memory_size(void)
 gchar *
 fu_common_get_kernel_cmdline(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return fu_common_get_kernel_cmdline_impl(error);
 }
 

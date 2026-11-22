@@ -1083,6 +1083,8 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* progress */
 	fu_progress_set_name(progress, fu_plugin_get_name(self));
@@ -1137,6 +1139,8 @@ fu_plugin_runner_ready(FuPlugin *self, FuProgress *progress, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* progress */
 	fu_progress_set_name(progress, fu_plugin_get_name(self));
@@ -1375,6 +1379,8 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* progress */
 	if (fu_plugin_get_name(self) != NULL)
@@ -1435,6 +1441,10 @@ gboolean
 fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(devices != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_plugin_runner_device_array_generic(self,
 						   devices,
 						   "fu_plugin_composite_prepare",
@@ -1466,6 +1476,10 @@ fu_plugin_runner_composite_cleanup(FuPlugin *self,
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(devices != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -1519,6 +1533,11 @@ fu_plugin_runner_prepare(FuPlugin *self,
 			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
 						       progress,
@@ -1550,6 +1569,11 @@ fu_plugin_runner_cleanup(FuPlugin *self,
 			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
 						       progress,
@@ -1576,6 +1600,11 @@ gboolean
 fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_plugin_runner_device_generic_progress(
 	    self,
 	    device,
@@ -1602,6 +1631,11 @@ gboolean
 fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_plugin_runner_device_generic_progress(
 	    self,
 	    device,
@@ -1628,6 +1662,9 @@ fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -1656,6 +1693,10 @@ gboolean
 fu_plugin_runner_reboot_cleanup(FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -2715,6 +2756,10 @@ gboolean
 fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional */
 	if (vfuncs->modify_config == NULL) {

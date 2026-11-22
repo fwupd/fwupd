@@ -51,6 +51,9 @@ fu_kernel_search_path_get_current(FuPathStore *pstore, GError **error)
 	gsize sz = 0;
 	g_autofree gchar *contents = NULL;
 
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	sys_fw_search_path = fu_path_store_get_path(pstore, FU_PATH_KIND_FIRMWARE_SEARCH, error);
 	if (sys_fw_search_path == NULL)
 		return NULL;

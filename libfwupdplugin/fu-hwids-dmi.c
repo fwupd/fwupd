@@ -34,6 +34,10 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    {FU_HWIDS_KEY_ENCLOSURE_KIND, "chassis_type"},
 	};
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* the values the kernel parsed; these are world-readable */
 	path = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, error);
 	if (path == NULL)

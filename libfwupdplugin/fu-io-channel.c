@@ -164,6 +164,10 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 {
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(bytes, &bufsz);
+
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(bytes != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_io_channel_write_raw(self, buf, bufsz, timeout_ms, flags, error);
 }
 
@@ -236,6 +240,10 @@ fu_io_channel_write_byte_array(FuIOChannel *self,
 			       FuIoChannelFlags flags,
 			       GError **error)
 {
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fu_io_channel_write_raw(self, buf->data, buf->len, timeout_ms, flags, error);
 }
 
@@ -374,8 +382,12 @@ fu_io_channel_read_bytes(FuIOChannel *self,
 			 FuIoChannelFlags flags,
 			 GError **error)
 {
-	g_autoptr(GByteArray) buf =
-	    fu_io_channel_read_byte_array(self, count, timeout_ms, flags, error);
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_io_channel_read_byte_array(self, count, timeout_ms, flags, error);
 	if (buf == NULL)
 		return NULL;
 	return g_bytes_new(buf->data, buf->len);
@@ -410,6 +422,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	g_autoptr(GByteArray) buf_tmp = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* a temp buf of 1k or smaller size */
 	g_byte_array_set_size(buf_tmp, count >= 0 ? MIN(count, 1024) : 1024);
@@ -558,6 +571,7 @@ fu_io_channel_read_raw(FuIOChannel *self,
 	g_autoptr(GByteArray) tmp = NULL;
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	tmp = fu_io_channel_read_byte_array(self, bufsz, timeout_ms, flags, error);
 	if (tmp == NULL)

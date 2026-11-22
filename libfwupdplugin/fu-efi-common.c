@@ -88,6 +88,10 @@ fu_efi_parse_sections(FuFirmware *firmware,
 {
 	gsize streamsz = 0;
 
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {

@@ -30,6 +30,10 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    {FU_HWIDS_KEY_PRODUCT_NAME, "model"},
 	};
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* adds compatible GUIDs */
 	fdt = fu_context_get_fdt(ctx, error);
 	if (fdt == NULL)

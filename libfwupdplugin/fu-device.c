@@ -732,6 +732,9 @@ fu_device_retry(FuDevice *self,
 		GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_retry_full(self, func, count, priv->retry_delay, user_data, error);
 }
 
@@ -3843,6 +3846,7 @@ fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (device_class->convert_version == NULL) {
 		g_set_error_literal(error,
@@ -6157,6 +6161,9 @@ gboolean
 fu_device_detach(FuDevice *self, GError **error)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_detach_full(self, progress, error);
 }
 
@@ -6206,6 +6213,9 @@ gboolean
 fu_device_attach(FuDevice *self, GError **error)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_attach_full(self, progress, error);
 }
 
@@ -8247,6 +8257,7 @@ fu_device_build_instance_id_strv(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	for (guint i = 0; keys != NULL && keys[i] != NULL; i++) {
 		const gchar *key = keys[i];
@@ -8323,6 +8334,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* convert varargs to GStrv */
 	va_start(args, subsystem);
@@ -8368,6 +8380,7 @@ fu_device_build_instance_id_full(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (priv->instance_hash == NULL) {
 		g_set_error_literal(error,
@@ -8822,6 +8835,10 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonArray) json_array_events = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(json_obj != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fwupd_json_object_get_string_optional(json_obj, "Created", &tmp, error))
 		return FALSE;

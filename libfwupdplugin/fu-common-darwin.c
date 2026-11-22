@@ -15,6 +15,8 @@
 GPtrArray *
 fu_common_get_block_devices(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -37,6 +39,9 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 {
 	gchar cmdline[1024] = {0};
 	gsize cmdlinesz = sizeof(cmdline);
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	sysctlbyname("kern.bootargs", cmdline, &cmdlinesz, NULL, 0);
 	return g_strndup(cmdline, sizeof(cmdline));
 }
@@ -44,6 +49,9 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 gchar *
 fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

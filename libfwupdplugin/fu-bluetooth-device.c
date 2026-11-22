@@ -332,7 +332,13 @@ fu_bluetooth_device_read(FuBluetoothDevice *self, const gchar *uuid, GError **er
 gchar *
 fu_bluetooth_device_read_string(FuBluetoothDevice *self, const gchar *uuid, GError **error)
 {
-	g_autoptr(GByteArray) buf = fu_bluetooth_device_read(self, uuid, error);
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(FU_IS_BLUETOOTH_DEVICE(self), NULL);
+	g_return_val_if_fail(uuid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_bluetooth_device_read(self, uuid, error);
 	if (buf == NULL)
 		return NULL;
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {

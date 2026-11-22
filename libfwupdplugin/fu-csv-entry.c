@@ -105,6 +105,9 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 {
 	const gchar *str_value = fu_csv_entry_get_value_by_column_id(self, column_id);
 
+	g_return_val_if_fail(FU_IS_CSV_ENTRY(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (str_value == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "value not found");
 		return FALSE;

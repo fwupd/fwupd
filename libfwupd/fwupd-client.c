@@ -1197,6 +1197,9 @@ fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	for (guint i = 0; i < priv->connect_items->len; i++) {
 		FwupdClientConnectItem *item = g_ptr_array_index(priv->connect_items, i);
 		if (!item->func(self, item->user_data, error))

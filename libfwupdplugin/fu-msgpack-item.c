@@ -544,6 +544,8 @@ gboolean
 fu_msgpack_item_append(FuMsgpackItem *self, GByteArray *buf, GError **error)
 {
 	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (self->kind == FU_MSGPACK_ITEM_KIND_NIL) {
 		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_NIL);
@@ -617,6 +619,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 
 	g_return_val_if_fail(buf != NULL, NULL);
 	g_return_val_if_fail(offset != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* first byte, normally a command */
 	if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &cmd, error))

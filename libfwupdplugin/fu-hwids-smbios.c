@@ -123,6 +123,10 @@ fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error)
 	     fu_hwids_smbios_convert_string_table_cb},
 	};
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (!fu_smbios_setup(smbios, error))
 		return FALSE;
 

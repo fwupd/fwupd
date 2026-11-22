@@ -65,7 +65,13 @@ fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed)
 gboolean
 fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
-	guint32 tmp = *checksum;
+	guint32 tmp;
+
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
+	g_return_val_if_fail(checksum != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	tmp = *checksum;
 	while (bufsz != 0) {
 		if (G_UNLIKELY(bufsz == 1)) {
 			/* 0 */

@@ -2452,6 +2452,7 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
 	g_autofree gchar *event_id = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0x0);
 
 	/* build event key either for load or save */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||

@@ -35,6 +35,9 @@ fu_input_stream_read(FuInputStream *stream,
 		     GCancellable *cancellable,
 		     GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), -1);
+	g_return_val_if_fail(error == NULL || *error == NULL, -1);
+
 	return fwupd_input_stream_read(stream, buffer, count, cancellable, error);
 }
 
@@ -65,6 +68,9 @@ fu_input_stream_read_all(FuInputStream *stream,
 			 GCancellable *cancellable,
 			 GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fwupd_input_stream_read_all(stream, buffer, count, bytes_read, cancellable, error);
 }
 

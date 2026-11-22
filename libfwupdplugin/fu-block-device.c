@@ -150,8 +150,13 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -192,6 +197,10 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -232,8 +241,14 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -278,6 +293,11 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -318,8 +338,14 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -364,6 +390,11 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
