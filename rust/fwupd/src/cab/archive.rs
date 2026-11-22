@@ -981,9 +981,7 @@ impl Archive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cab::wire::{
-        CFCompressionType, CFData, CFFile, CFFolder, CFHeader, FixedSizeIO, CF_SIGNATURE,
-    };
+    use crate::cab::wire::{CFCompressionType, CFData, CFFile, CFFolder, CFHeader, CF_SIGNATURE};
     use crate::cab::{Checksum, MsDosFileAttr};
     use crate::io::WriteExt;
     use crate::streams::IntoStream;
@@ -1105,14 +1103,14 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         let folder = CFFolder {
             coffCabStart: U32LE::new(off_cfdata),
             cCFData: U16LE::new(1),
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
-        folder.write(&mut out).unwrap();
+        out.write_type(folder).unwrap();
 
         let fhdr = CFFile {
             cbFile: U32LE::new(data.len().try_into().unwrap()),
@@ -1122,7 +1120,7 @@ mod tests {
             time: 0x4800.into(),
             attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
         };
-        fhdr.write(&mut out).unwrap();
+        out.write_type(fhdr).unwrap();
         out.write_nul_terminated_string(filename).unwrap();
 
         let dh = CFData {
@@ -1130,7 +1128,7 @@ mod tests {
             cbData: U16LE::new(data.len().try_into().unwrap()),
             cbUncomp: U16LE::new(data.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(data);
 
         assert_eq!(out.len(), sz_cabinet as usize);
@@ -1171,14 +1169,14 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         let folder = CFFolder {
             coffCabStart: U32LE::new(off_cfdata),
             cCFData: U16LE::new(1),
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
-        folder.write(&mut out).unwrap();
+        out.write_type(folder).unwrap();
 
         for (i, (name, data)) in files.iter().enumerate() {
             let fhdr = CFFile {
@@ -1189,7 +1187,7 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
+            out.write_type(fhdr).unwrap();
             out.write_nul_terminated_string(name).unwrap();
         }
 
@@ -1198,7 +1196,7 @@ mod tests {
             cbData: U16LE::new(all_data.len().try_into().unwrap()),
             cbUncomp: U16LE::new(all_data.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(&all_data);
 
         out
@@ -1451,7 +1449,7 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         for _ in 0..files.len() {
             let folder = CFFolder {
@@ -1459,7 +1457,7 @@ mod tests {
                 cCFData: U16LE::new(1),
                 typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
             };
-            folder.write(&mut out).unwrap();
+            out.write_type(folder).unwrap();
         }
 
         for (i, (name, data)) in files.iter().enumerate() {
@@ -1471,7 +1469,7 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
+            out.write_type(fhdr).unwrap();
             out.write_nul_terminated_string(name).unwrap();
         }
 
@@ -1480,7 +1478,7 @@ mod tests {
             cbData: U16LE::new(files[0].1.len().try_into().unwrap()),
             cbUncomp: U16LE::new(files[0].1.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(files[0].1);
 
         assert_eq!(out.len(), sz_cabinet as usize);
@@ -1535,7 +1533,7 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         // folder headers: each folder starts at its own data block
         let mut block_off = off_cfdata;
@@ -1545,7 +1543,7 @@ mod tests {
                 cCFData: U16LE::new(1),
                 typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
             };
-            folder.write(&mut out).unwrap();
+            out.write_type(folder).unwrap();
             block_off += u32::try_from(CFDATA_SIZE as usize + data.len()).unwrap();
         }
 
@@ -1558,7 +1556,7 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
+            out.write_type(fhdr).unwrap();
             out.write_nul_terminated_string(name).unwrap();
         }
 
@@ -1569,7 +1567,7 @@ mod tests {
                 cbData: U16LE::new(data.len().try_into().unwrap()),
                 cbUncomp: U16LE::new(data.len().try_into().unwrap()),
             };
-            dh.write(&mut out).unwrap();
+            out.write_type(dh).unwrap();
             out.extend_from_slice(data);
         }
 

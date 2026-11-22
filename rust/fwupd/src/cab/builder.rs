@@ -447,7 +447,7 @@ impl ArchiveBuilder<HasFiles> {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        cfheader.write(writer)?;
+        writer.write_type(cfheader)?;
         // No reserve data needed
 
         let mut off_cfdata = offset_cffile + u32::try_from(sz_file_headers)?;
@@ -457,7 +457,7 @@ impl ArchiveBuilder<HasFiles> {
                 cCFData: U16LE::new(u16::try_from(file.block_info.len())?),
                 typeCompress: U16LE::new(file.compression_type.into()),
             };
-            cffolder.write(writer)?;
+            writer.write_type(cffolder)?;
             off_cfdata += u32::try_from(
                 CFData::size_in_bytes() * file.block_info.len() + file.compressed_size as usize,
             )?;
@@ -478,7 +478,7 @@ impl ArchiveBuilder<HasFiles> {
                 time: file.time,
                 attribs: U16LE::new(attrs.bits()),
             };
-            cffile.write(writer)?;
+            writer.write_type(cffile)?;
             writer.write_nul_terminated_string(name)?;
         }
 
@@ -490,7 +490,7 @@ impl ArchiveBuilder<HasFiles> {
                         cbData: U16LE::new(0),
                         cbUncomp: U16LE::new(0),
                     };
-                    cfdata.write(writer)?;
+                    writer.write_type(cfdata)?;
                     continue;
                 }
 
@@ -514,7 +514,7 @@ impl ArchiveBuilder<HasFiles> {
                 let mut csum = Checksum::new_from_cfdata(&cfdata);
                 csum.update(&data);
                 cfdata.csum = U32LE::new(csum.checksum());
-                cfdata.write(writer)?;
+                writer.write_type(cfdata)?;
                 writer.write_all(&data)?;
             }
         }

@@ -17,7 +17,6 @@
 //! responsible for correct reading of this optional and/or variable-length
 //! data.
 
-use std::io::Write;
 use zerocopy::byteorder::little_endian::{U16 as U16LE, U32 as U32LE};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
@@ -73,23 +72,6 @@ pub trait FixedSizeIO {
         let value = Self::read_from_bytes(&data)
             .map_err(|e| CabError::Format(format!("size mismatch reading wire struct: {e}")))?;
         Ok((value, nbytes))
-    }
-
-    /// Write `Self` to the given destination buffer.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the destination buffer is insufficiently large.
-    fn write(&self, dst: &mut impl Write) -> std::io::Result<usize>
-    where
-        Self: Sized + IntoBytes + Immutable,
-    {
-        let nbytes = Self::size_in_bytes();
-
-        let bytes: &[u8] = IntoBytes::as_bytes(self);
-        dst.write_all(bytes)?;
-
-        Ok(nbytes)
     }
 }
 
@@ -360,6 +342,8 @@ impl FixedSizeIO for CFData {}
 
 #[cfg(test)]
 mod tests {
+    use crate::io::WriteExt;
+
     use super::*;
     use std::io::Cursor;
 
@@ -406,7 +390,7 @@ mod tests {
             iCabinet: U16LE::new(0),
         };
         let mut buf: Vec<u8> = Vec::new();
-        hdr.write(&mut buf).unwrap();
+        buf.write_type(hdr).unwrap();
         assert_eq!(buf.len(), CFHEADER_SIZE);
 
         let (parsed, _) = CFHeader::read(&mut Cursor::new(&buf), 0).unwrap();
@@ -448,7 +432,7 @@ mod tests {
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
         let mut buf: Vec<u8> = Vec::new();
-        folder.write(&mut buf).unwrap();
+        buf.write_type(folder).unwrap();
         assert_eq!(buf.len(), CFFOLDER_SIZE);
 
         let (parsed, _) = CFFolder::read(&mut Cursor::new(&buf), 0).unwrap();
@@ -481,7 +465,7 @@ mod tests {
             cbUncomp: U16LE::new(128),
         };
         let mut buf: Vec<u8> = Vec::new();
-        dh.write(&mut buf).unwrap();
+        buf.write_type(dh).unwrap();
         assert_eq!(buf.len(), CFDATA_SIZE);
 
         let (parsed, _) = CFData::read(&mut Cursor::new(&buf), 0).unwrap();
@@ -518,7 +502,7 @@ mod tests {
             attribs: U16LE::new(0x20),
         };
         let mut buf: Vec<u8> = Vec::new();
-        fhdr.write(&mut buf).unwrap();
+        buf.write_type(fhdr).unwrap();
 
         let (parsed, _) = CFFile::read(&mut Cursor::new(&buf), 0).unwrap();
         assert_eq!(parsed.cbFile.get(), 500);
