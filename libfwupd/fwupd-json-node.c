@@ -205,6 +205,7 @@ fwupd_json_node_get_object(FwupdJsonNode *self, GError **error)
 	FwupdRsJsonObject *rs;
 
 	g_return_val_if_fail(self != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	rs = fwupd_rs_json_node_get_object(self->rs, error);
 	if (rs == NULL)
@@ -229,6 +230,7 @@ fwupd_json_node_get_array(FwupdJsonNode *self, GError **error)
 	FwupdRsJsonArray *rs;
 
 	g_return_val_if_fail(self != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	rs = fwupd_rs_json_node_get_array(self->rs, error);
 	if (rs == NULL)
@@ -251,6 +253,7 @@ GRefString *
 fwupd_json_node_get_raw(FwupdJsonNode *self, GError **error)
 {
 	g_return_val_if_fail(self != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (self->raw == NULL)
 		self->raw = fwupd_rs_json_node_get_raw(self->rs, error);
@@ -272,6 +275,7 @@ GRefString *
 fwupd_json_node_get_string(FwupdJsonNode *self, GError **error)
 {
 	g_return_val_if_fail(self != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (self->string == NULL)
 		self->string = fwupd_rs_json_node_get_string(self->rs, error);

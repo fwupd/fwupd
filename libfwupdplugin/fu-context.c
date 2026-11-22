@@ -545,6 +545,7 @@ fu_context_get_smbios_string(FuContext *self,
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return NULL;
@@ -571,6 +572,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 type, guint8 length, GError *
 	FuContextPrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* must be valid and non-zero length */
 	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
@@ -607,6 +609,7 @@ fu_context_get_smbios_integer(FuContext *self,
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT);
+	g_return_val_if_fail(error == NULL || *error == NULL, G_MAXUINT);
 	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return G_MAXUINT;
@@ -1034,6 +1037,7 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(subsystem != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* add the base subsystem first */
 	subsystem_devtype = g_strsplit(subsystem, ":", 2);
@@ -2392,6 +2396,9 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 	g_autoptr(GPtrArray) esp_volumes = NULL;
 	const gchar *user_esp_location = fu_context_get_esp_location(self);
 
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* show which volumes we're choosing from */
 	esp_volumes = fu_context_get_esp_volumes(self, error);
 	if (esp_volumes == NULL)
@@ -2900,6 +2907,7 @@ fu_context_get_path(FuContext *self, FuPathKind kind, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return fu_path_store_get_path(priv->pstore, kind, error);
 }
 
@@ -2926,6 +2934,7 @@ fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
 	const gchar *path_prefix = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	path_prefix = fu_path_store_get_path(priv->pstore, kind, error);
 	if (path_prefix == NULL)

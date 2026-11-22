@@ -29,6 +29,10 @@ fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error)
 	g_autofree gchar *standard_output = NULL;
 	g_auto(GStrv) lines = NULL;
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* parse the profiler output: nocheck:blocked */
 	if (!g_spawn_command_line_sync("system_profiler SPHardwareDataType",
 				       &standard_output,

@@ -32,6 +32,8 @@ fu_common_get_block_devices(GError **error)
 	g_autoptr(GVariantIter) obj_iter = NULL;
 	g_autoptr(GDBusConnection) connection = NULL;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
 		g_prefix_error_literal(error, "failed to get system bus: ");
@@ -116,12 +118,17 @@ fu_common_get_memory_size_impl(void)
 gchar *
 fu_common_get_kernel_cmdline_impl(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return fu_kenv_get_string("kernel_options", error);
 }
 
 gchar *
 fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

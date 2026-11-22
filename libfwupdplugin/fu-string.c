@@ -42,6 +42,8 @@ fu_strtoull(const gchar *str,
 	gchar *endptr = NULL;
 	guint64 value_tmp;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
@@ -148,6 +150,8 @@ fu_strtoll(const gchar *str,
 	gchar *endptr = NULL;
 	gint64 value_tmp;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
@@ -240,6 +244,8 @@ fu_strtoll(const gchar *str,
 gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,

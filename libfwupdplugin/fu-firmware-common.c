@@ -36,6 +36,9 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 {
 	gchar buffer[2] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -79,6 +82,9 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 {
 	gchar buffer[3] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -122,6 +128,9 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 {
 	gchar buffer[5] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -165,6 +174,9 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 {
 	gchar buffer[7] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -208,6 +220,9 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 {
 	gchar buffer[9] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */

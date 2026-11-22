@@ -17,6 +17,10 @@ fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error)
 {
 	g_autoptr(GPtrArray) keys = fu_hwids_get_keys(self);
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* all keys are optional */
 	for (guint i = 0; i < keys->len; i++) {
 		const gchar *key = g_ptr_array_index(keys, i);

@@ -64,6 +64,7 @@ fu_efi_load_option_get_metadata(FuEfiLoadOption *self, const gchar *key, GError 
 
 	g_return_val_if_fail(FU_IS_EFI_LOAD_OPTION(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	value = g_hash_table_lookup(self->metadata, key);
 	if (value == NULL) {

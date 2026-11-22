@@ -79,10 +79,14 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 	gint desc_size = 0;
 	struct hidraw_report_descriptor rpt_desc = {0x0};
 	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* get report descriptor size */
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	if (!fu_ioctl_execute(ioctl,
 			      HIDIOCGRDESCSIZE,
 			      (guint8 *)&desc_size,
@@ -114,6 +118,9 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 		return NULL;
 	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
 #else
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

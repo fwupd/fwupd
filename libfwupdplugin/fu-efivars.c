@@ -318,6 +318,7 @@ fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GE
 	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (efivars_class->get_monitor == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");

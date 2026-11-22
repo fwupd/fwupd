@@ -296,6 +296,8 @@ fu_path_get_symlink_target(const gchar *filename, GError **error)
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	file = g_file_new_for_path(filename);
 	info = g_file_query_info(file,
 				 G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET,

@@ -560,6 +560,8 @@ fu_memmem_safe(const guint8 *haystack,
 guint8 *
 fu_memdup_safe(const guint8 *src, gsize n, GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* sanity check */
 	if (n > 0x40000000) {
 		g_set_error(error,
@@ -1014,6 +1016,9 @@ GString *
 fu_memread_string_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(buf != NULL || bufsz == 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* validate offset is within buffer bounds */
 	if (offset >= bufsz) {

@@ -560,6 +560,9 @@ fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target, FuCrcKind *kind,
 {
 	FuCrcKind kind_tmp = FU_CRC_KIND_UNKNOWN;
 	guint match_cnt = 0;
+
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	for (guint i = 0; i < G_N_ELEMENTS(crc_map); i++) {
 		if (crc_map[i].bitwidth == 32) {
 			if (crc_target == fu_crc32(crc_map[i].kind, buf, bufsz)) {
