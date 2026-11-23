@@ -140,8 +140,6 @@ fu_usb_device_fw_ds20_init(FuUsbDeviceFwDs20 *self)
  * Creates a new #FuUsbDeviceFwDs20.
  *
  * Returns: (transfer full): a #FuFirmware
- *
- * Since: 1.8.5
  **/
 FuFirmware *
 fu_usb_device_fw_ds20_new(void)

@@ -324,8 +324,6 @@ fu_efi_file_class_init(FuEfiFileClass *klass)
  * fu_efi_file_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 2.0.0
  **/
 FuFirmware *
 fu_efi_file_new(void)

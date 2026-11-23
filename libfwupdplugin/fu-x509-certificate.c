@@ -76,8 +76,6 @@ fu_x509_certificate_export(FuFirmware *firmware,
  * Returns the certificate issuer.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.9
  **/
 const gchar *
 fu_x509_certificate_get_issuer(FuX509Certificate *self)
@@ -92,8 +90,6 @@ fu_x509_certificate_get_issuer(FuX509Certificate *self)
  * @issuer: the certificate issuer
  *
  * Sets the certificate issuer.
- *
- * Since: 2.1.5
  **/
 void
 fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
@@ -108,8 +104,6 @@ fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
  * @subject: the certificate subject
  *
  * Sets the certificate subject.
- *
- * Since: 2.0.13
  **/
 void
 fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
@@ -124,8 +118,6 @@ fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
  * @activation_time: the activation time as a UNIX epoch
  *
  * Sets the certificate activation time.
- *
- * Since: 2.1.5
  **/
 void
 fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
@@ -143,8 +135,6 @@ fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activati
  * Returns the certificate subject.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.9
  **/
 const gchar *
 fu_x509_certificate_get_subject(FuX509Certificate *self)
@@ -160,8 +150,6 @@ fu_x509_certificate_get_subject(FuX509Certificate *self)
  * Returns the certificate activation time.
  *
  * Returns: (transfer full): a #GDateTime, or %NULL for unset
- *
- * Since: 2.0.11
  **/
 GDateTime *
 fu_x509_certificate_get_activation_time(FuX509Certificate *self)
@@ -452,8 +440,6 @@ fu_x509_certificate_class_init(FuX509CertificateClass *klass)
  * Creates a new #FuX509Certificate.
  *
  * Returns: (transfer full): object
- *
- * Since: 2.0.9
  **/
 FuX509Certificate *
 fu_x509_certificate_new(void)

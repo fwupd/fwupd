@@ -33,8 +33,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
  * Gets if the cabinet archive should be compressed.
  *
  * Returns: boolean
- *
- * Since: 1.9.7
  **/
 gboolean
 fu_cab_firmware_get_compressed(FuCabFirmware *self)
@@ -50,8 +48,6 @@ fu_cab_firmware_get_compressed(FuCabFirmware *self)
  * @compressed: boolean
  *
  * Sets if the cabinet archive should be compressed.
- *
- * Since: 1.9.7
  **/
 void
 fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed)
@@ -343,8 +339,6 @@ fu_cab_firmware_init(FuCabFirmware *self)
  * fu_cab_firmware_new:
  *
  * Returns: (transfer full): a #FuCabFirmware
- *
- * Since: 1.9.7
  **/
 FuCabFirmware *
 fu_cab_firmware_new(void)

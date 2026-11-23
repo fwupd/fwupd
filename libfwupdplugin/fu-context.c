@@ -180,8 +180,6 @@ fu_context_get_fdt_file(FuContext *self, GError **error)
  * returns the pre-parsed object.
  *
  * Returns: (transfer full): a #FuFdtFirmware, or %NULL
- *
- * Since: 1.8.10
  **/
 FuFirmware *
 fu_context_get_fdt(FuContext *self, GError **error)
@@ -218,8 +216,6 @@ fu_context_get_fdt(FuContext *self, GError **error)
  * Gets the EFI variable store.
  *
  * Returns: (transfer none): a #FuEfivars
- *
- * Since: 2.0.0
  **/
 FuEfivars *
 fu_context_get_efivars(FuContext *self)
@@ -238,8 +234,6 @@ fu_context_get_efivars(FuContext *self)
  * Checks for a given amount of free space in the EFI NVRAM variable store.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.12
  **/
 gboolean
 fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
@@ -278,8 +272,6 @@ fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error
  * Gets the SMBIOS store.
  *
  * Returns: (transfer none): a #FuSmbios
- *
- * Since: 1.8.10
  **/
 FuSmbios *
 fu_context_get_smbios(FuContext *self)
@@ -295,8 +287,6 @@ fu_context_get_smbios(FuContext *self)
  * @smbios: a #FuSmbios
  *
  * Sets the SMBIOS store. This is only required by self test code.
- *
- * Since: 2.1.1
  **/
 void
 fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
@@ -315,8 +305,6 @@ fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
  * Gets the main context.
  *
  * Returns: (transfer none): a #GMainContextm or %NULL if unset
- *
- * Since: 2.1.8
  **/
 GMainContext *
 fu_context_get_main_context(FuContext *self)
@@ -336,8 +324,6 @@ fu_context_get_main_context(FuContext *self)
  * Creates a new timeout source and attaches it to the main context.
  *
  * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
- *
- * Since: 2.1.8
  **/
 GSource *
 fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc function, gpointer data)
@@ -364,8 +350,6 @@ fu_context_add_timeout_seconds(FuContext *self, guint interval, GSourceFunc func
  * Creates a new timeout source and attaches it to the main context.
  *
  * Returns: (transfer full): the #GSource, which must be removed with g_source_unref()
- *
- * Since: 2.1.8
  **/
 GSource *
 fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function, gpointer data)
@@ -388,8 +372,6 @@ fu_context_add_timeout(FuContext *self, guint interval_ms, GSourceFunc function,
  * @main_ctx: (nullable): a #GMainContext
  *
  * Sets or clears the main context. This is only required by fwupdtool.
- *
- * Since: 2.1.8
  **/
 void
 fu_context_set_main_context(FuContext *self, GMainContext *main_ctx)
@@ -410,8 +392,6 @@ fu_context_set_main_context(FuContext *self, GMainContext *main_ctx)
  * Gets the HWIDs store.
  *
  * Returns: (transfer none): a #FuHwids
- *
- * Since: 1.8.10
  **/
 FuHwids *
 fu_context_get_hwids(FuContext *self)
@@ -428,8 +408,6 @@ fu_context_get_hwids(FuContext *self)
  * Gets the system config.
  *
  * Returns: (transfer none): a #FuHwids
- *
- * Since: 1.9.1
  **/
 FuConfig *
 fu_context_get_config(FuContext *self)
@@ -447,8 +425,6 @@ fu_context_get_config(FuContext *self)
  * Return the value of a config key, falling back to the default value if missing.
  *
  * Returns: (transfer full) (nullable): string value
- *
- * Since: 2.1.5
  **/
 gchar *
 fu_context_get_config_str(FuContext *self, const gchar *key)
@@ -467,8 +443,6 @@ fu_context_get_config_str(FuContext *self, const gchar *key)
  * Return the value of a config key, falling back to the default value if missing.
  *
  * Returns: (transfer full) (nullable): string array value
- *
- * Since: 2.1.5
  **/
 gchar **
 fu_context_get_config_strv(FuContext *self, const gchar *key)
@@ -487,8 +461,6 @@ fu_context_get_config_strv(FuContext *self, const gchar *key)
  * Return the value of a config key, falling back to the default value if missing.
  *
  * Returns: boolean value
- *
- * Since: 2.1.5
  **/
 gboolean
 fu_context_get_config_bool(FuContext *self, const gchar *key)
@@ -507,8 +479,6 @@ fu_context_get_config_bool(FuContext *self, const gchar *key)
  * Return the value of a config key, falling back to the default value if missing.
  *
  * Returns: integer key value
- *
- * Since: 2.1.5
  **/
 guint64
 fu_context_get_config_u64(FuContext *self, const gchar *key)
@@ -533,8 +503,6 @@ fu_context_get_config_u64(FuContext *self, const gchar *key)
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: a string, or %NULL
- *
- * Since: 2.0.7
  **/
 const gchar *
 fu_context_get_smbios_string(FuContext *self,
@@ -563,8 +531,6 @@ fu_context_get_smbios_string(FuContext *self,
  * Gets all hardware SMBIOS data for a specific type.
  *
  * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if not found
- *
- * Since: 2.0.7
  **/
 GPtrArray *
 fu_context_get_smbios_data(FuContext *self, guint8 type, guint8 length, GError **error)
@@ -597,8 +563,6 @@ fu_context_get_smbios_data(FuContext *self, guint8 type, guint8 length, GError *
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: an integer, or %G_MAXUINT if invalid or not found
- *
- * Since: 2.0.7
  **/
 guint
 fu_context_get_smbios_integer(FuContext *self,
@@ -624,8 +588,6 @@ fu_context_get_smbios_integer(FuContext *self,
  * Returns all the firmware attributes defined in the system.
  *
  * Returns: (transfer full) (element-type FuBiosSetting): an array
- *
- * Since: 2.1.8
  **/
 GPtrArray *
 fu_context_get_bios_settings(FuContext *self)
@@ -643,8 +605,6 @@ fu_context_get_bios_settings(FuContext *self)
  * Finds out if a system supports a given BIOS setting.
  *
  * Returns: (transfer none): #FuBiosSetting if the attr exists.
- *
- * Since: 1.8.4
  **/
 FuBiosSetting *
 fu_context_get_bios_setting(FuContext *self, const gchar *name)
@@ -673,8 +633,6 @@ fu_context_get_bios_setting(FuContext *self, const gchar *name)
  * This is a public API for plugins to register custom BIOS settings.
  *
  * Returns: TRUE if the setting was registered successfully
- *
- * Since: 2.1.8
  **/
 gboolean
 fu_context_add_bios_setting(FuContext *self, FuBiosSetting *attr, GError **error)
@@ -713,8 +671,6 @@ fu_context_add_bios_setting(FuContext *self, FuBiosSetting *attr, GError **error
  * Gets the chassis kind, if known.
  *
  * Returns: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_LAPTOP
- *
- * Since: 1.8.10
  **/
 FuSmbiosChassisKind
 fu_context_get_chassis_kind(FuContext *self)
@@ -730,8 +686,6 @@ fu_context_get_chassis_kind(FuContext *self)
  * @chassis_kind: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_TABLET
  *
  * Sets the chassis kind.
- *
- * Since: 1.8.10
  **/
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
@@ -749,8 +703,6 @@ fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
  * Finds out if a hardware GUID exists.
  *
  * Returns: %TRUE if the GUID exists
- *
- * Since: 1.6.0
  **/
 gboolean
 fu_context_has_hwid_guid(FuContext *self, const gchar *guid)
@@ -772,8 +724,6 @@ fu_context_has_hwid_guid(FuContext *self, const gchar *guid)
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
  * Returns: (transfer none) (element-type utf8): an array of GUIDs
- *
- * Since: 1.6.0
  **/
 GPtrArray *
 fu_context_get_hwid_guids(FuContext *self)
@@ -796,8 +746,6 @@ fu_context_get_hwid_guids(FuContext *self)
  * for display.
  *
  * Returns: the string, e.g. `1.2.3`, or %NULL if not found
- *
- * Since: 1.6.0
  **/
 const gchar *
 fu_context_get_hwid_value(FuContext *self, const gchar *key)
@@ -822,8 +770,6 @@ fu_context_get_hwid_value(FuContext *self, const gchar *key)
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
  * Returns: (transfer full): a string, or %NULL for error.
- *
- * Since: 1.6.0
  **/
 gchar *
 fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **error)
@@ -849,8 +795,6 @@ fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **e
  * @version: a version string, e.g. `1.2.3`
  *
  * Sets a runtime version of a specific dependency.
- *
- * Since: 1.6.0
  **/
 void
 fu_context_add_runtime_version(FuContext *self, const gchar *component_id, const gchar *version)
@@ -874,8 +818,6 @@ fu_context_add_runtime_version(FuContext *self, const gchar *component_id, const
  * Sets a runtime version of a specific dependency.
  *
  * Returns: a version string, e.g. `1.2.3`, or %NULL
- *
- * Since: 1.9.10
  **/
 const gchar *
 fu_context_get_runtime_version(FuContext *self, const gchar *component_id)
@@ -897,8 +839,6 @@ fu_context_get_runtime_version(FuContext *self, const gchar *component_id)
  * Gets the runtime versions for the context.
  *
  * Returns: (transfer none) (element-type utf8 utf8): dictionary of versions
- *
- * Since: 1.9.10
  **/
 GHashTable *
 fu_context_get_runtime_versions(FuContext *self)
@@ -915,8 +855,6 @@ fu_context_get_runtime_versions(FuContext *self)
  * @version: a version string, e.g. `1.2.3`
  *
  * Sets a compile-time version of a specific dependency.
- *
- * Since: 1.6.0
  **/
 void
 fu_context_add_compile_version(FuContext *self, const gchar *component_id, const gchar *version)
@@ -939,8 +877,6 @@ fu_context_add_compile_version(FuContext *self, const gchar *component_id, const
  * Gets the compile time versions for the context.
  *
  * Returns: (transfer none) (element-type utf8 utf8): dictionary of versions
- *
- * Since: 1.9.10
  **/
 GHashTable *
 fu_context_get_compile_versions(FuContext *self)
@@ -967,8 +903,6 @@ fu_context_udev_plugin_names_sort_cb(gconstpointer a, gconstpointer b)
  * Registers the udev subsystem to be watched by the daemon.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.6.0
  **/
 void
 fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name)
@@ -1022,8 +956,6 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
  * Gets the plugins which registered for a specific subsystem.
  *
  * Returns: (transfer container) (element-type utf8): List of plugin names
- *
- * Since: 1.9.3
  **/
 GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
@@ -1076,8 +1008,6 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
  * Gets the udev subsystems required by all plugins.
  *
  * Returns: (transfer container) (element-type utf8): List of subsystems
- *
- * Since: 1.6.0
  **/
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self)
@@ -1134,8 +1064,6 @@ fu_context_convert_firmware_gtype_to_id(GType gtype)
  * Adds a firmware #GType which is used when creating devices.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 2.1.1
  **/
 void
 fu_context_add_firmware_gtype(FuContext *self, GType gtype)
@@ -1159,8 +1087,6 @@ fu_context_add_firmware_gtype(FuContext *self, GType gtype)
  * Returns the #GType using the firmware @id.
  *
  * Returns: a #GType, or %G_TYPE_INVALID
- *
- * Since: 1.6.0
  **/
 GType
 fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id)
@@ -1186,8 +1112,6 @@ fu_context_gtypes_sort_cb(gconstpointer a, gconstpointer b)
  * Returns all the firmware #GType IDs.
  *
  * Returns: (transfer container) (element-type utf8): firmware IDs
- *
- * Since: 1.6.0
  **/
 GPtrArray *
 fu_context_get_firmware_gtype_ids(FuContext *self)
@@ -1213,8 +1137,6 @@ fu_context_get_firmware_gtype_ids(FuContext *self)
  * Returns all the firmware #GType's.
  *
  * Returns: (transfer container) (element-type GType): Firmware types
- *
- * Since: 1.9.1
  **/
 GArray *
 fu_context_get_firmware_gtypes(FuContext *self)
@@ -1241,8 +1163,6 @@ fu_context_get_firmware_gtypes(FuContext *self)
  * using the plugin name, where possible.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.6.0
  **/
 void
 fu_context_add_quirk_key(FuContext *self, const gchar *key)
@@ -1264,8 +1184,6 @@ fu_context_add_quirk_key(FuContext *self, const gchar *key)
  * Looks up an entry in the hardware database using a string value.
  *
  * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.6.0
  **/
 const gchar *
 fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *key)
@@ -1312,8 +1230,6 @@ fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
  * Looks up all entries in the hardware database using a GUID value.
  *
  * Returns: %TRUE if the ID was found, and @iter was called
- *
- * Since: 1.6.0
  **/
 gboolean
 fu_context_lookup_quirk_by_id_iter(FuContext *self,
@@ -1351,8 +1267,6 @@ fu_context_lookup_quirk_by_id_iter(FuContext *self,
  * @self: a #FuContext
  *
  * Informs the daemon that the HSI state may have changed.
- *
- * Since: 1.6.0
  **/
 void
 fu_context_security_changed(FuContext *self)
@@ -1366,8 +1280,6 @@ fu_context_security_changed(FuContext *self)
  * @self: a #FuContext
  *
  * Performs any housekeeping maintenance when the daemon is idle.
- *
- * Since: 2.0.0
  **/
 void
 fu_context_housekeeping(FuContext *self)
@@ -1586,8 +1498,6 @@ fu_context_load_boot_entries(FuContext *self, GError **error)
  * Gets the list of host BKCs.
  *
  * Returns: (transfer none) (element-type utf8): a #GPtrArray
- *
- * Since: 2.1.8
  **/
 GPtrArray *
 fu_context_get_host_bkcs(FuContext *self)
@@ -1604,8 +1514,6 @@ fu_context_get_host_bkcs(FuContext *self)
  * Gets the list of host BKCs.
  *
  * Returns: a string representing the host BKCs.
- *
- * Since: 2.1.8
  **/
 gchar *
 fu_context_get_host_bkcs_as_str(FuContext *self)
@@ -1626,8 +1534,6 @@ fu_context_get_host_bkcs_as_str(FuContext *self)
  * @host_bkc: a host BKC, e.g. `uefi-secure-boot`
  *
  * Adds a host BKC if it does not already exist.
- *
- * Since: 2.1.8
  **/
 void
 fu_context_add_host_bkc(FuContext *self, const gchar *host_bkc)
@@ -1727,8 +1633,6 @@ fu_context_config_changed_cb(FuConfig *config, FuContext *self)
  * Loads all hardware information and quirks into the context.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.5
  **/
 gboolean
 fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
@@ -1874,8 +1778,6 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
  * Returns if a HwId custom flag exists, typically added from a DMI quirk.
  *
  * Returns: %TRUE if the flag exists
- *
- * Since: 1.7.2
  **/
 gboolean
 fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
@@ -1893,8 +1795,6 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
  * Gets if the system is on battery power, e.g. UPS or laptop battery.
  *
  * Returns: a power state, e.g. %FU_POWER_STATE_BATTERY_DISCHARGING
- *
- * Since: 1.8.11
  **/
 FuPowerState
 fu_context_get_power_state(FuContext *self)
@@ -1910,8 +1810,6 @@ fu_context_get_power_state(FuContext *self)
  * @power_state: a power state, e.g. %FU_POWER_STATE_BATTERY_DISCHARGING
  *
  * Sets if the system is on battery power, e.g. UPS or laptop battery.
- *
- * Since: 1.8.11
  **/
 void
 fu_context_set_power_state(FuContext *self, FuPowerState power_state)
@@ -1932,8 +1830,6 @@ fu_context_set_power_state(FuContext *self, FuPowerState power_state)
  * Gets the laptop lid state, if applicable.
  *
  * Returns: a lid state, e.g. %FU_LID_STATE_CLOSED
- *
- * Since: 1.7.4
  **/
 FuLidState
 fu_context_get_lid_state(FuContext *self)
@@ -1949,8 +1845,6 @@ fu_context_get_lid_state(FuContext *self)
  * @lid_state: a lid state, e.g. %FU_LID_STATE_CLOSED
  *
  * Sets the laptop lid state, if applicable.
- *
- * Since: 1.7.4
  **/
 void
 fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
@@ -1971,8 +1865,6 @@ fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
  * Gets the display state, if applicable.
  *
  * Returns: a display state, e.g. %FU_DISPLAY_STATE_CONNECTED
- *
- * Since: 1.9.6
  **/
 FuDisplayState
 fu_context_get_display_state(FuContext *self)
@@ -1988,8 +1880,6 @@ fu_context_get_display_state(FuContext *self)
  * @display_state: a display state, e.g. %FU_DISPLAY_STATE_CONNECTED
  *
  * Sets the display state, if applicable.
- *
- * Since: 1.9.6
  **/
 void
 fu_context_set_display_state(FuContext *self, FuDisplayState display_state)
@@ -2010,8 +1900,6 @@ fu_context_set_display_state(FuContext *self, FuDisplayState display_state)
  * Gets the system battery level in percent.
  *
  * Returns: percentage value, or %FWUPD_BATTERY_LEVEL_INVALID for unknown
- *
- * Since: 1.6.0
  **/
 guint
 fu_context_get_battery_level(FuContext *self)
@@ -2027,8 +1915,6 @@ fu_context_get_battery_level(FuContext *self)
  * @battery_level: value
  *
  * Sets the system battery level in percent.
- *
- * Since: 1.6.0
  **/
 void
 fu_context_set_battery_level(FuContext *self, guint battery_level)
@@ -2050,8 +1936,6 @@ fu_context_set_battery_level(FuContext *self, guint battery_level)
  * Gets the system battery threshold in percent.
  *
  * Returns: percentage value, or %FWUPD_BATTERY_LEVEL_INVALID for unknown
- *
- * Since: 1.6.0
  **/
 guint
 fu_context_get_battery_threshold(FuContext *self)
@@ -2067,8 +1951,6 @@ fu_context_get_battery_threshold(FuContext *self)
  * @battery_threshold: value
  *
  * Sets the system battery threshold in percent.
- *
- * Since: 1.6.0
  **/
 void
 fu_context_set_battery_threshold(FuContext *self, guint battery_threshold)
@@ -2089,8 +1971,6 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold)
  * @flag: the context flag
  *
  * Adds a specific flag to the context.
- *
- * Since: 1.8.5
  **/
 void
 fu_context_add_flag(FuContext *context, FuContextFlags flag)
@@ -2109,8 +1989,6 @@ fu_context_add_flag(FuContext *context, FuContextFlags flag)
  * @flag: the context flag
  *
  * Removes a specific flag from the context.
- *
- * Since: 1.8.10
  **/
 void
 fu_context_remove_flag(FuContext *context, FuContextFlags flag)
@@ -2131,8 +2009,6 @@ fu_context_remove_flag(FuContext *context, FuContextFlags flag)
  * Finds if the context has a specific flag.
  *
  * Returns: %TRUE if the flag is set
- *
- * Since: 1.8.5
  **/
 gboolean
 fu_context_has_flag(FuContext *context, FuContextFlags flag)
@@ -2154,8 +2030,6 @@ fu_context_esp_write_file_cb(FuVolume *volume, const gchar *filename, FuContext 
  * @volume: a #FuVolume
  *
  * Adds an ESP volume location.
- *
- * Since: 1.8.5
  **/
 void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
@@ -2224,8 +2098,6 @@ fu_context_get_esp_location(FuContext *self)
  * The volumes are cached and so subsequent calls to this function will be much faster.
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if no ESP was found
- *
- * Since: 1.8.5
  **/
 GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error)
@@ -2386,8 +2258,6 @@ fu_context_sort_esp_score_cb(gconstpointer a, gconstpointer b, gpointer user_dat
  * use for accessing storing data.
  *
  * Returns: (transfer full): a volume, or %NULL if no ESP was found
- *
- * Since: 2.0.0
  **/
 FuVolume *
 fu_context_get_default_esp(FuContext *self, GError **error)
@@ -2518,8 +2388,6 @@ fu_context_get_default_esp(FuContext *self, GError **error)
  * Gets a volume that matches the EFI device path
  *
  * Returns: (transfer full): a volume, or %NULL if it was not found
- *
- * Since: 2.0.0
  **/
 FuVolume *
 fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
@@ -2750,8 +2618,6 @@ fu_context_get_esp_files_for_entry(FuContext *self,
  * Gets the PE files for all the entries listed in `BootOrder`.
  *
  * Returns: (transfer full) (element-type FuPefileFirmware): PE firmware data
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
@@ -2794,8 +2660,6 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
  * Gets all the possible backends used by all plugins.
  *
  * Returns: (transfer none) (element-type FuBackend): List of backends
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_context_get_backends(FuContext *self)
@@ -2813,8 +2677,6 @@ fu_context_get_backends(FuContext *self)
  * Adds a backend to the context.
  *
  * Returns: (transfer full): a #FuBackend, or %NULL on error
- *
- * Since: 2.0.0
  **/
 void
 fu_context_add_backend(FuContext *self, FuBackend *backend)
@@ -2834,8 +2696,6 @@ fu_context_add_backend(FuContext *self, FuBackend *backend)
  * Gets a specific backend added to the context.
  *
  * Returns: (transfer full): a #FuBackend, or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuBackend *
 fu_context_get_backend_by_name(FuContext *self, const gchar *name, GError **error)
@@ -2899,8 +2759,6 @@ fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
  * Gets a well-known path.
  *
  * Returns: (transfer full): a #FuBackend, or %NULL on error
- *
- * Since: 2.1.1
  **/
 const gchar *
 fu_context_get_path(FuContext *self, FuPathKind kind, GError **error)
@@ -2922,8 +2780,6 @@ fu_context_get_path(FuContext *self, FuPathKind kind, GError **error)
  * environment variables, for instance %FWUPD_DATADIR.
  *
  * Returns: a system path, or %NULL if invalid
- *
- * Since: 2.1.1
  **/
 gchar *
 fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
@@ -2953,8 +2809,6 @@ fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
  * @kind: a #FuPathKind
  *
  * Sets a well-known path.
- *
- * Since: 2.1.1
  **/
 void
 fu_context_set_path(FuContext *self, FuPathKind kind, const gchar *dirname)
@@ -2970,8 +2824,6 @@ fu_context_set_path(FuContext *self, FuPathKind kind, const gchar *dirname)
  * @tmpdir: (not nullable): a #FuTemporaryDirectory
  *
  * Sets the @kind to a temporary path.
- *
- * Since: 2.1.1
  **/
 void
 fu_context_set_tmpdir(FuContext *self, FuPathKind kind, FuTemporaryDirectory *tmpdir)
@@ -2990,8 +2842,6 @@ fu_context_set_tmpdir(FuContext *self, FuPathKind kind, FuTemporaryDirectory *tm
  * Gets the well-known path store.
  *
  * Returns: (transfer none): a #FuPathStore, or %NULL if not set
- *
- * Since: 2.1.1
  **/
 FuPathStore *
 fu_context_get_path_store(FuContext *self)
@@ -3008,8 +2858,6 @@ fu_context_get_path_store(FuContext *self)
  * Uses CPUID to discover the CPU vendor.
  *
  * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
- *
- * Since: 2.1.5
  **/
 FuCpuVendor
 fu_context_get_cpu_vendor(FuContext *self)
@@ -3155,8 +3003,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:power-state:
 	 *
 	 * The system power state.
-	 *
-	 * Since: 1.8.11
 	 */
 	pspec = g_param_spec_uint("power-state",
 				  NULL,
@@ -3171,8 +3017,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:lid-state:
 	 *
 	 * The system lid state.
-	 *
-	 * Since: 1.7.4
 	 */
 	pspec = g_param_spec_uint("lid-state",
 				  NULL,
@@ -3187,8 +3031,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:display-state:
 	 *
 	 * The display state.
-	 *
-	 * Since: 1.9.6
 	 */
 	pspec = g_param_spec_uint("display-state",
 				  NULL,
@@ -3203,8 +3045,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:battery-level:
 	 *
 	 * The system battery level in percent.
-	 *
-	 * Since: 1.6.0
 	 */
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,
@@ -3219,8 +3059,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:battery-threshold:
 	 *
 	 * The system battery threshold in percent.
-	 *
-	 * Since: 1.6.0
 	 */
 	pspec = g_param_spec_uint("battery-threshold",
 				  NULL,
@@ -3235,8 +3073,6 @@ fu_context_class_init(FuContextClass *klass)
 	 * FuContext:flags:
 	 *
 	 * The context flags.
-	 *
-	 * Since: 1.8.10
 	 */
 	pspec = g_param_spec_uint64("flags",
 				    NULL,
@@ -3253,8 +3089,6 @@ fu_context_class_init(FuContextClass *klass)
 	 *
 	 * The ::security-changed signal is emitted when some system state has changed that could
 	 * have affected the security level.
-	 *
-	 * Since: 1.6.0
 	 **/
 	signals[SIGNAL_SECURITY_CHANGED] =
 	    g_signal_new("security-changed",
@@ -3272,8 +3106,6 @@ fu_context_class_init(FuContextClass *klass)
 	 *
 	 * The ::housekeeping signal is emitted when helper objects should do house-keeping actions
 	 * when the daemon is idle.
-	 *
-	 * Since: 2.0.0
 	 **/
 	signals[SIGNAL_HOUSEKEEPING] = g_signal_new("housekeeping",
 						    G_TYPE_FROM_CLASS(object_class),
@@ -3292,8 +3124,6 @@ fu_context_class_init(FuContextClass *klass)
 	 *
 	 * The ::esp-write signal is emitted when plugins should be notified of a write to a
 	 * specific ESP volume.
-	 *
-	 * Since: 2.1.8
 	 **/
 	signals[SIGNAL_ESP_WRITE] = g_signal_new("esp-write",
 						 G_TYPE_FROM_CLASS(object_class),
@@ -3349,8 +3179,6 @@ fu_context_new_full(FuContextFlags flags)
  * Creates a new #FuContext
  *
  * Returns: (transfer full): the object
- *
- * Since: 1.6.0
  **/
 FuContext *
 fu_context_new(void)

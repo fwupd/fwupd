@@ -54,8 +54,6 @@ fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_dat
  * Gets an optional attribute.
  *
  * Returns: UTF-8 string, or %NULL
- *
- * Since: 2.0.0
  **/
 const gchar *
 fu_efi_load_option_get_metadata(FuEfiLoadOption *self, const gchar *key, GError **error)
@@ -87,8 +85,6 @@ fu_efi_load_option_get_metadata(FuEfiLoadOption *self, const gchar *key, GError 
  * Gets the loadopt kind.
  *
  * Returns: a #FuEfiLoadOptionKind, e.g. %FU_EFI_LOAD_OPTION_KIND_HIVE
- *
- * Since: 2.0.6
  **/
 FuEfiLoadOptionKind
 fu_efi_load_option_get_kind(FuEfiLoadOption *self)
@@ -103,8 +99,6 @@ fu_efi_load_option_get_kind(FuEfiLoadOption *self)
  * @kind: a #FuEfiLoadOptionKind, e.g. %FU_EFI_LOAD_OPTION_KIND_HIVE
  *
  * Sets the loadopt kind.
- *
- * Since: 2.0.6
  **/
 void
 fu_efi_load_option_set_kind(FuEfiLoadOption *self, FuEfiLoadOptionKind kind)
@@ -124,8 +118,6 @@ fu_efi_load_option_set_kind(FuEfiLoadOption *self, FuEfiLoadOptionKind kind)
  *
  * NOTE: When the key is `Path`, any leading backslash will be stripped automatically and added
  * back as-required on export.
- *
- * Since: 2.0.0
  **/
 void
 fu_efi_load_option_set_metadata(FuEfiLoadOption *self, const gchar *key, const gchar *value)
@@ -663,8 +655,6 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
  * fu_efi_load_option_new:
  *
  * Returns: (transfer full): a #FuEfiLoadOption
- *
- * Since: 1.9.3
  **/
 FuEfiLoadOption *
 fu_efi_load_option_new(void)

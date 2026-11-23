@@ -41,8 +41,6 @@ G_DEFINE_TYPE(FuEfiVariableAuthentication2,
  * Returns the certificates that signed the variable.
  *
  * Returns: (transfer full) (element-type FuX509Certificate): certificates
- *
- * Since: 2.0.9
  **/
 GPtrArray *
 fu_efi_variable_authentication2_get_signers(FuEfiVariableAuthentication2 *self)

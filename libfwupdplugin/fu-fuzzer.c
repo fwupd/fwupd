@@ -24,8 +24,6 @@ fu_fuzzer_default_init(FuFuzzerInterface *iface)
  * Calls the implementation with the contents of a fuzzing buffer.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.8
  */
 gboolean
 fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error)
@@ -54,8 +52,6 @@ fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error)
  * Builds a sample corpus used for fuzzing.
  *
  * Returns: (transfer full): a #GBytes on success
- *
- * Since: 2.1.8
  */
 GByteArray *
 fu_fuzzer_build_example(FuFuzzer *self, GBytes *blob, GError **error)

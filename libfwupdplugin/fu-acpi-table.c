@@ -58,8 +58,6 @@ fu_acpi_table_export(FuFirmware *firmware,
  * Gets the revision of the table.
  *
  * Returns: integer, default 0x0
- *
- * Since: 1.8.11
  **/
 guint8
 fu_acpi_table_get_revision(FuAcpiTable *self)
@@ -76,8 +74,6 @@ fu_acpi_table_get_revision(FuAcpiTable *self)
  * Gets an optional OEM ID.
  *
  * Returns: a string, or %NULL
- *
- * Since: 1.8.11
  **/
 const gchar *
 fu_acpi_table_get_oem_id(FuAcpiTable *self)
@@ -94,8 +90,6 @@ fu_acpi_table_get_oem_id(FuAcpiTable *self)
  * Gets an optional OEM table ID.
  *
  * Returns: a string, or %NULL
- *
- * Since: 1.8.11
  **/
 const gchar *
 fu_acpi_table_get_oem_table_id(FuAcpiTable *self)
@@ -112,8 +106,6 @@ fu_acpi_table_get_oem_table_id(FuAcpiTable *self)
  * Gets the OEM revision.
  *
  * Returns: integer, default 0x0
- *
- * Since: 1.8.11
  **/
 guint32
 fu_acpi_table_get_oem_revision(FuAcpiTable *self)
@@ -130,8 +122,6 @@ fu_acpi_table_get_oem_revision(FuAcpiTable *self)
  * Gets the payload after the ACPI header. This function will fail if there is no payload.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.1.3
  **/
 FuInputStream *
 fu_acpi_table_get_payload(FuAcpiTable *self, GError **error)
@@ -152,8 +142,6 @@ fu_acpi_table_get_payload(FuAcpiTable *self, GError **error)
  * @revision: an integer
  *
  * Sets the revision of the table.
- *
- * Since: 2.2.1
  **/
 void
 fu_acpi_table_set_revision(FuAcpiTable *self, guint8 revision)
@@ -169,8 +157,6 @@ fu_acpi_table_set_revision(FuAcpiTable *self, guint8 revision)
  * @oem_id: a string
  *
  * Sets the OEM ID.
- *
- * Since: 2.2.1
  **/
 void
 fu_acpi_table_set_oem_id(FuAcpiTable *self, const gchar *oem_id)
@@ -186,8 +172,6 @@ fu_acpi_table_set_oem_id(FuAcpiTable *self, const gchar *oem_id)
  * @oem_table_id: a string
  *
  * Sets the OEM table ID.
- *
- * Since: 2.2.1
  **/
 void
 fu_acpi_table_set_oem_table_id(FuAcpiTable *self, const gchar *oem_table_id)
@@ -203,8 +187,6 @@ fu_acpi_table_set_oem_table_id(FuAcpiTable *self, const gchar *oem_table_id)
  * @oem_revision: an integer
  *
  * Sets the OEM revision.
- *
- * Since: 2.2.1
  **/
 void
 fu_acpi_table_set_oem_revision(FuAcpiTable *self, guint32 oem_revision)
@@ -220,8 +202,6 @@ fu_acpi_table_set_oem_revision(FuAcpiTable *self, guint32 oem_revision)
  * @payload: (nullable): a #FuInputStream
  *
  * Sets the payload after the ACPI header.
- *
- * Since: 2.2.1
  **/
 void
 fu_acpi_table_set_payload(FuAcpiTable *self, FuInputStream *payload)
@@ -394,8 +374,6 @@ fu_acpi_table_class_init(FuAcpiTableClass *klass)
  * fu_acpi_table_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.8.11
  **/
 FuFirmware *
 fu_acpi_table_new(void)

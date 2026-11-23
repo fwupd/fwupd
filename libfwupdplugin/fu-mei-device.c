@@ -216,8 +216,6 @@ fu_mei_device_get_multiline_attr(FuMeiDevice *self, const gchar *attr, guint idx
  * Gets the firmware version for a specific index.
  *
  * Returns: string value
- *
- * Since: 1.8.7
  **/
 gchar *
 fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error)
@@ -236,8 +234,6 @@ fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error)
  * Gets the firmware status for a specific index.
  *
  * Returns: string value
- *
- * Since: 1.8.7
  **/
 gchar *
 fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
@@ -254,8 +250,6 @@ fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
  * Gets the maximum message length.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 gsize
 fu_mei_device_get_max_msg_length(FuMeiDevice *self)
@@ -272,8 +266,6 @@ fu_mei_device_get_max_msg_length(FuMeiDevice *self)
  * Gets the protocol version, or 0x for unset.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 guint8
 fu_mei_device_get_protocol_version(FuMeiDevice *self)
@@ -293,8 +285,6 @@ fu_mei_device_get_protocol_version(FuMeiDevice *self)
  * Connects to the MEI device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_connect(FuMeiDevice *self,
@@ -363,8 +353,6 @@ fu_mei_device_connect(FuMeiDevice *self,
  * @self: a #FuMeiDevice
  *
  * Disconnects from the MEI device.
- *
- * Since: 2.0.17
  **/
 void
 fu_mei_device_disconnect(FuMeiDevice *self)
@@ -385,8 +373,6 @@ fu_mei_device_disconnect(FuMeiDevice *self)
  * Read raw bytes from the device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_read(FuMeiDevice *self,
@@ -419,8 +405,6 @@ fu_mei_device_read(FuMeiDevice *self,
  * Write raw bytes to the device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_write(FuMeiDevice *self,

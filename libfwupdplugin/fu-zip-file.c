@@ -25,8 +25,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuZipFile, fu_zip_file, FU_TYPE_FIRMWARE)
  * Gets the archive compression type.
  *
  * Returns: a #FuZipCompression, e.g. #FU_ZIP_COMPRESSION_DEFLATE
- *
- * Since: 2.1.1
  **/
 FuZipCompression
 fu_zip_file_get_compression(FuZipFile *self)
@@ -42,8 +40,6 @@ fu_zip_file_get_compression(FuZipFile *self)
  * @compression: a #FuZipCompression, e.g. #FU_ZIP_COMPRESSION_DEFLATE
  *
  * Sets the archive compression type.
- *
- * Since: 2.1.1
  **/
 void
 fu_zip_file_set_compression(FuZipFile *self, FuZipCompression compression)
@@ -100,8 +96,6 @@ fu_zip_file_init(FuZipFile *self)
  * fu_zip_file_new:
  *
  * Returns: (transfer full): a #FuZipFile
- *
- * Since: 2.1.1
  **/
 FuFirmware *
 fu_zip_file_new(void)

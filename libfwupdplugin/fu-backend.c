@@ -61,8 +61,6 @@ G_DEFINE_TYPE_EXTENDED(FuBackend,
  * @flag: the #FuBackendFlags
  *
  * Adds a specific flag to the backend.
- *
- * Since: 2.2.1
  **/
 void
 fu_backend_add_flag(FuBackend *self, FuBackendFlags flag)
@@ -83,8 +81,6 @@ fu_backend_add_flag(FuBackend *self, FuBackendFlags flag)
  * @flag: the #FuBackendFlags
  *
  * Removes a specific flag to the backend.
- *
- * Since: 2.2.1
  **/
 void
 fu_backend_remove_flag(FuBackend *self, FuBackendFlags flag)
@@ -107,8 +103,6 @@ fu_backend_remove_flag(FuBackend *self, FuBackendFlags flag)
  * Finds if the backend has a specific backend flag.
  *
  * Returns: %TRUE if the flag is set
- *
- * Since: 2.2.1
  **/
 gboolean
 fu_backend_has_flag(FuBackend *self, FuBackendFlags flag)
@@ -124,8 +118,6 @@ fu_backend_has_flag(FuBackend *self, FuBackendFlags flag)
  * @device: a device
  *
  * Emits a signal that indicates the device has been added.
- *
- * Since: 1.6.1
  **/
 void
 fu_backend_device_added(FuBackend *self, FuDevice *device)
@@ -169,8 +161,6 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
  * @device: a device
  *
  * Emits a signal that indicates the device has been removed.
- *
- * Since: 1.6.1
  **/
 void
 fu_backend_device_removed(FuBackend *self, FuDevice *device)
@@ -189,8 +179,6 @@ fu_backend_device_removed(FuBackend *self, FuDevice *device)
  * @device: a device
  *
  * Emits a signal that indicates the device has been changed.
- *
- * Since: 1.6.1
  **/
 void
 fu_backend_device_changed(FuBackend *self, FuDevice *device)
@@ -209,8 +197,6 @@ fu_backend_device_changed(FuBackend *self, FuDevice *device)
  *
  * Calls the ->registered() vfunc for the backend. This allows the backend to perform shared
  * backend actions on superclassed devices.
- *
- * Since: 1.7.4
  **/
 void
 fu_backend_registered(FuBackend *self, FuDevice *device)
@@ -232,8 +218,6 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
  * Asks the backend to create the parent device (of the correct type) for a given device subsystem.
  *
  * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
- *
- * Since: 2.0.0
  **/
 FuDevice *
 fu_backend_get_device_parent(FuBackend *self,
@@ -269,8 +253,6 @@ fu_backend_get_device_parent(FuBackend *self,
  * Asks the backend to create the child device (of the correct type) for a given device subsystem.
  *
  * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
- *
- * Since: 2.2.1
  **/
 FuDevice *
 fu_backend_get_device_child(FuBackend *self,
@@ -310,8 +292,6 @@ fu_backend_get_device_child(FuBackend *self,
  * Asks the backend to create a device (of the correct type) for a given device backend ID.
  *
  * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
- *
- * Since: 2.0.0
  **/
 FuDevice *
 fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
@@ -349,8 +329,6 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
  * Asks the backend to create a device (of the correct type) for a given donor device.
  *
  * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
- *
- * Since: 2.0.0
  **/
 FuDevice *
 fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **error)
@@ -392,8 +370,6 @@ fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **er
  *
  * This also optionally calls the ->invalidate() vfunc for the backend. This allows the backend
  * to perform shared backend actions on superclassed devices.
- *
- * Since: 1.8.0
  **/
 void
 fu_backend_invalidate(FuBackend *self)
@@ -415,8 +391,6 @@ fu_backend_invalidate(FuBackend *self)
  * @str: a string to append to
  *
  * Add backend-specific device metadata to an existing string.
- *
- * Since: 1.8.4
  **/
 void
 fu_backend_add_string(FuBackend *self, guint idt, GString *str)
@@ -445,8 +419,6 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
  * function. No devices should be added or removed at this point.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.6.1
  **/
 gboolean
 fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
@@ -660,8 +632,6 @@ fu_backend_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlag
  * already been called then it is run before this function automatically.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.6.1
  **/
 gboolean
 fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
@@ -683,8 +653,6 @@ fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
  * Return the name of the backend, which is normally set by the subclass.
  *
  * Returns: backend name
- *
- * Since: 1.6.1
  **/
 const gchar *
 fu_backend_get_name(FuBackend *self)
@@ -701,8 +669,6 @@ fu_backend_get_name(FuBackend *self)
  * Gets the context for a backend.
  *
  * Returns: (transfer none): a #FuContext or %NULL if not set
- *
- * Since: 1.6.1
  **/
 FuContext *
 fu_backend_get_context(FuBackend *self)
@@ -720,8 +686,6 @@ fu_backend_get_context(FuBackend *self)
  * value if missing.
  *
  * Returns: (transfer full) (nullable): string value
- *
- * Since: 2.2.1
  **/
 gchar *
 fu_backend_get_config_str(FuBackend *self, const gchar *key)
@@ -744,8 +708,6 @@ fu_backend_get_config_str(FuBackend *self, const gchar *key)
  * Gets a device previously added by the backend.
  *
  * Returns: (transfer none): device, or %NULL if not found
- *
- * Since: 1.6.1
  **/
 FuDevice *
 fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id)
@@ -771,8 +733,6 @@ fu_backend_get_devices_sort_cb(gconstpointer a, gconstpointer b)
  * Gets all the devices added by the backend.
  *
  * Returns: (transfer container) (element-type FuDevice): devices
- *
- * Since: 1.6.1
  **/
 GPtrArray *
 fu_backend_get_devices(FuBackend *self)
@@ -892,8 +852,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * FuBackend:name:
 	 *
 	 * The backend name.
-	 *
-	 * Since: 1.6.1
 	 */
 	pspec =
 	    g_param_spec_string("name",
@@ -907,8 +865,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * FuBackend:flags:
 	 *
 	 * The backend flags.
-	 *
-	 * Since: 2.2.1
 	 */
 	pspec = g_param_spec_uint64("flags",
 				    NULL,
@@ -923,8 +879,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * FuBackend:context:
 	 *
 	 * The #FuContent to use.
-	 *
-	 * Since: 1.6.1
 	 */
 	pspec =
 	    g_param_spec_object("context",
@@ -938,8 +892,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * FuBackend:device-gtype:
 	 *
 	 * The #GType to use when creating emulated devices.
-	 *
-	 * Since: 2.0.0
 	 */
 	pspec = g_param_spec_gtype("device-gtype",
 				   NULL,
@@ -954,8 +906,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-added signal is emitted when a device has been added.
-	 *
-	 * Since: 1.6.1
 	 **/
 	signals[SIGNAL_ADDED] = g_signal_new("device-added",
 					     G_TYPE_FROM_CLASS(object_class),
@@ -973,8 +923,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-removed signal is emitted when a device has been removed.
-	 *
-	 * Since: 1.6.1
 	 **/
 	signals[SIGNAL_REMOVED] = g_signal_new("device-removed",
 					       G_TYPE_FROM_CLASS(object_class),
@@ -992,8 +940,6 @@ fu_backend_class_init(FuBackendClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-changed signal is emitted when a device has been changed.
-	 *
-	 * Since: 1.6.1
 	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("device-changed",
 					       G_TYPE_FROM_CLASS(object_class),

@@ -674,8 +674,6 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
  * fu_pefile_firmware_new:
  *
  * Creates a new #FuPefileFirmware
- *
- * Since: 1.8.10
  **/
 FuFirmware *
 fu_pefile_firmware_new(void)

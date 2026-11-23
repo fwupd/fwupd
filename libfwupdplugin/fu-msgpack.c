@@ -19,8 +19,6 @@
  * Parses a buffer into messagepack items.
  *
  * Returns: (transfer container) (element-type FuMsgpackItem): items, or %NULL on error
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_msgpack_parse(GByteArray *buf, GError **error)
@@ -52,8 +50,6 @@ fu_msgpack_parse(GByteArray *buf, GError **error)
  * Writes messagepack items into a buffer.
  *
  * Returns: (transfer container): buffer, or %NULL on error
- *
- * Since: 2.0.0
  **/
 GByteArray *
 fu_msgpack_write(GPtrArray *items, GError **error)
@@ -84,8 +80,6 @@ fu_msgpack_write(GPtrArray *items, GError **error)
  * with g_variant_lookup().
  *
  * Returns: (transfer full): a #FuMsgpackItem, or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_map_lookup(GPtrArray *items, guint idx, const gchar *key, GError **error)

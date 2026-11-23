@@ -147,8 +147,6 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJson
  * Gets all the attributes stored on the image.
  *
  * Returns: (transfer container) (element-type utf8): keys
- *
- * Since: 1.8.2
  **/
 GPtrArray *
 fu_fdt_image_get_attrs(FuFdtImage *self)
@@ -176,8 +174,6 @@ fu_fdt_image_get_attrs(FuFdtImage *self)
  * Gets a attribute from the image.
  *
  * Returns: (transfer full): blob
- *
- * Since: 1.8.2
  **/
 GBytes *
 fu_fdt_image_get_attr(FuFdtImage *self, const gchar *key, GError **error)
@@ -209,8 +205,6 @@ fu_fdt_image_get_attr(FuFdtImage *self, const gchar *key, GError **error)
  * Gets a uint32 attribute from the image.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_u32(FuFdtImage *self, const gchar *key, guint32 *val, GError **error)
@@ -249,8 +243,6 @@ fu_fdt_image_get_attr_u32(FuFdtImage *self, const gchar *key, guint32 *val, GErr
  * Gets a uint64 attribute from the image.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_u64(FuFdtImage *self, const gchar *key, guint64 *val, GError **error)
@@ -289,8 +281,6 @@ fu_fdt_image_get_attr_u64(FuFdtImage *self, const gchar *key, guint64 *val, GErr
  * Gets a stringlist attribute from the image. @val is always `NUL` terminated.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, GError **error)
@@ -353,8 +343,6 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
  * Gets a string attribute from the image. @val is always `NUL` terminated.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GError **error)
@@ -408,8 +396,6 @@ fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GErro
  * @blob: a #GBytes
  *
  * Sets a attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr(FuFdtImage *self, const gchar *key, GBytes *blob)
@@ -436,8 +422,6 @@ fu_fdt_image_set_attr_format(FuFdtImage *self, const gchar *key, const gchar *fo
  * @value: value to store
  *
  * Sets a uint32 attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_uint32(FuFdtImage *self, const gchar *key, guint32 value)
@@ -461,8 +445,6 @@ fu_fdt_image_set_attr_uint32(FuFdtImage *self, const gchar *key, guint32 value)
  * @value: value to store
  *
  * Sets a uint64 attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_uint64(FuFdtImage *self, const gchar *key, guint64 value)
@@ -486,8 +468,6 @@ fu_fdt_image_set_attr_uint64(FuFdtImage *self, const gchar *key, guint64 value)
  * @value: value to store
  *
  * Sets a string attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_str(FuFdtImage *self, const gchar *key, const gchar *value)
@@ -510,8 +490,6 @@ fu_fdt_image_set_attr_str(FuFdtImage *self, const gchar *key, const gchar *value
  * @value: values to store
  *
  * Sets a stringlist attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_strlist(FuFdtImage *self, const gchar *key, gchar **value)
@@ -709,8 +687,6 @@ fu_fdt_image_class_init(FuFdtImageClass *klass)
  * fu_fdt_image_new:
  *
  * Creates a new #FuFirmware of sub type FDT image
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_fdt_image_new(void)

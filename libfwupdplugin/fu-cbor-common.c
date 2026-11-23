@@ -474,8 +474,6 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
  * Parses a buffer into a CBOR map or array.
  *
  * Returns: (transfer full): root item, or %NULL on error
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_parse(FuInputStream *stream,

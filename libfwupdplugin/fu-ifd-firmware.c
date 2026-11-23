@@ -361,8 +361,6 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
  * Checks a JEDEC command to see if it has been put on the "illegal_jedec" list.
  *
  * Returns: %TRUE if the command is allowed
- *
- * Since: 1.6.2
  **/
 gboolean
 fu_ifd_firmware_check_jedec_cmd(FuIfdFirmware *self, guint8 cmd)
@@ -622,8 +620,6 @@ fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
  * fu_ifd_firmware_new:
  *
  * Creates a new #FuFirmware of sub type Ifd
- *
- * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_firmware_new(void)

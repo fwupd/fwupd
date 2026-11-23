@@ -228,8 +228,6 @@ fu_efi_hard_drive_device_path_class_init(FuEfiHardDriveDevicePathClass *klass)
  * Gets the DP partition signature.
  *
  * Returns: a #fwupd_guid_t
- *
- * Since: 2.0.0
  **/
 const fwupd_guid_t *
 fu_efi_hard_drive_device_path_get_partition_signature(FuEfiHardDriveDevicePath *self)
@@ -247,8 +245,6 @@ fu_efi_hard_drive_device_path_get_partition_signature(FuEfiHardDriveDevicePath *
  * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
  *
  * Returns: integer
- *
- * Since: 2.0.0
  **/
 guint64
 fu_efi_hard_drive_device_path_get_partition_size(FuEfiHardDriveDevicePath *self)
@@ -266,8 +262,6 @@ fu_efi_hard_drive_device_path_get_partition_size(FuEfiHardDriveDevicePath *self)
  * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
  *
  * Returns: integer
- *
- * Since: 2.0.0
  **/
 guint64
 fu_efi_hard_drive_device_path_get_partition_start(FuEfiHardDriveDevicePath *self)
@@ -283,8 +277,6 @@ fu_efi_hard_drive_device_path_get_partition_start(FuEfiHardDriveDevicePath *self
  * Gets the DP partition number.
  *
  * Returns: integer
- *
- * Since: 2.0.0
  **/
 guint32
 fu_efi_hard_drive_device_path_get_partition_number(FuEfiHardDriveDevicePath *self)
@@ -301,8 +293,6 @@ fu_efi_hard_drive_device_path_get_partition_number(FuEfiHardDriveDevicePath *sel
  * Compares two EFI HardDrive `DEVICE_PATH`s.
  *
  * Returns: %TRUE is considered equal
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efi_hard_drive_device_path_compare(FuEfiHardDriveDevicePath *dp1, FuEfiHardDriveDevicePath *dp2)
@@ -337,8 +327,6 @@ fu_efi_hard_drive_device_path_codec_iface_init(FwupdCodecInterface *iface)
  * Creates a new EFI `DEVICE_PATH`.
  *
  * Returns: (transfer full): a #FuEfiHardDriveDevicePath
- *
- * Since: 1.9.3
  **/
 FuEfiHardDriveDevicePath *
 fu_efi_hard_drive_device_path_new(void)
@@ -354,8 +342,6 @@ fu_efi_hard_drive_device_path_new(void)
  * Creates a new EFI `DEVICE_PATH` for a specific volume.
  *
  * Returns: (transfer full): a #FuEfiHardDriveDevicePath, or %NULL on error
- *
- * Since: 1.9.3
  **/
 FuEfiHardDriveDevicePath *
 fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)

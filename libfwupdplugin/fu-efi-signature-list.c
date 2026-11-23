@@ -38,8 +38,6 @@ G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
  * likely fail.
  *
  * Returns: %TRUE if there is exactly one signature with `FuEfiSignatureKind.External`.
- *
- * Since: 2.1.7
  **/
 gboolean
 fu_efi_signature_list_is_external(FuEfiSignatureList *self)
@@ -63,8 +61,6 @@ fu_efi_signature_list_is_external(FuEfiSignatureList *self)
  * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries.
  *
  * Returns: (transfer container) (element-type FuEfiSignature): signatures
- *
- * Since: 2.0.8
  **/
 GPtrArray *
 fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
@@ -448,8 +444,6 @@ fu_efi_signature_list_add_magic(FuFirmware *firmware)
  * fu_efi_signature_list_new:
  *
  * Creates a new #FuFirmware that can parse an EFI_SIGNATURE_LIST
- *
- * Since: 1.5.5
  **/
 FuFirmware *
 fu_efi_signature_list_new(void)

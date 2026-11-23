@@ -44,8 +44,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluetoothDevice, fu_bluetooth_device, FU_TYPE_DEVIC
  * @modalias: the modalias, e.g. `bluetooth:v000ApFFFFdFFFF`
  *
  * Sets the device modalias.
- *
- * Since: 2.1.8
  **/
 void
 fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
@@ -136,8 +134,6 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
  * @uuid: the UUID
  *
  * Emits a changed signal from the device with the given UUID.
- *
- * Since: 2.1.8
  **/
 void
 fu_bluetooth_device_emit_changed(FuBluetoothDevice *self, const gchar *uuid)
@@ -260,8 +256,6 @@ fu_bluetooth_device_reload(FuDevice *device, GError **error)
  * Reads from a UUID on the device.
  *
  * Returns: (transfer full): data, or %NULL for error
- *
- * Since: 1.5.7
  **/
 GByteArray *
 fu_bluetooth_device_read(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -326,8 +320,6 @@ fu_bluetooth_device_read(FuBluetoothDevice *self, const gchar *uuid, GError **er
  * Reads a string from a UUID on the device.
  *
  * Returns: (transfer full): NUL-terminated string, or %NULL for error
- *
- * Since: 1.5.7
  **/
 gchar *
 fu_bluetooth_device_read_string(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -362,8 +354,6 @@ fu_bluetooth_device_read_string(FuBluetoothDevice *self, const gchar *uuid, GErr
  * Writes to a UUID on the device.
  *
  * Returns: %TRUE if all the data was written
- *
- * Since: 1.5.7
  **/
 gboolean
 fu_bluetooth_device_write(FuBluetoothDevice *self,
@@ -429,8 +419,6 @@ fu_bluetooth_device_write(FuBluetoothDevice *self,
  * method).
  *
  * Returns: %TRUE if the method call completed successfully.
- *
- * Since: 1.5.8
  **/
 gboolean
 fu_bluetooth_device_notify_start(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -456,8 +444,6 @@ fu_bluetooth_device_notify_start(FuBluetoothDevice *self, const gchar *uuid, GEr
  * method).
  *
  * Returns: %TRUE if the method call completed successfully.
- *
- * Since: 1.5.8
  **/
 gboolean
 fu_bluetooth_device_notify_stop(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -484,8 +470,6 @@ fu_bluetooth_device_notify_stop(FuBluetoothDevice *self, const gchar *uuid, GErr
  * method). Closing IO channel releases the notify.
  *
  * Returns: (transfer full): a #FuIOChannel or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_bluetooth_device_notify_acquire(FuBluetoothDevice *self,
@@ -514,8 +498,6 @@ fu_bluetooth_device_notify_acquire(FuBluetoothDevice *self,
  * method). Closing IO channel releases the notify.
  *
  * Returns: (transfer full): a #FuIOChannel or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_bluetooth_device_write_acquire(FuBluetoothDevice *self,
@@ -636,8 +618,6 @@ fu_bluetooth_device_class_init(FuBluetoothDeviceClass *klass)
 	 * @uuid: the UUID that changed
 	 *
 	 * The ::changed signal is emitted when a service with a specific UUID changed.
-	 *
-	 * Since: 1.5.8
 	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),

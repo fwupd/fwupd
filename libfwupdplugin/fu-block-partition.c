@@ -113,8 +113,6 @@ fu_block_partition_incorporate(FuDevice *device, FuDevice *donor)
  * Returns the filesystem type, e.g. `msdos`.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.2
  **/
 const gchar *
 fu_block_partition_get_fs_type(FuBlockPartition *self)
@@ -131,8 +129,6 @@ fu_block_partition_get_fs_type(FuBlockPartition *self)
  * Returns the filesystem UUID.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.2
  **/
 const gchar *
 fu_block_partition_get_fs_uuid(FuBlockPartition *self)
@@ -149,8 +145,6 @@ fu_block_partition_get_fs_uuid(FuBlockPartition *self)
  * Returns the filesystem label.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.2
  **/
 const gchar *
 fu_block_partition_get_fs_label(FuBlockPartition *self)
@@ -168,8 +162,6 @@ fu_block_partition_get_fs_label(FuBlockPartition *self)
  * Returns the filesystem label.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.2
  **/
 gchar *
 fu_block_partition_get_mount_point(FuBlockPartition *self, GError **error)

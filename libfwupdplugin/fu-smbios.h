@@ -19,8 +19,6 @@ G_DECLARE_FINAL_TYPE(FuSmbios, fu_smbios, FU, SMBIOS, FuFirmware)
  * FU_SMBIOS_STRUCTURE_LENGTH_ANY:
  *
  * Accept any structure length.
- *
- * Since: 2.0.7
  **/
 #define FU_SMBIOS_STRUCTURE_LENGTH_ANY G_MAXUINT8
 

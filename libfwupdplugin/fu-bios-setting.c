@@ -235,8 +235,6 @@ fu_bios_setting_class_init(FuBiosSettingClass *klass)
 	 * FuBiosSetting:context:
 	 *
 	 * The #FuContext to use.
-	 *
-	 * Since: 2.1.8
 	 */
 	pspec =
 	    g_param_spec_object("context",

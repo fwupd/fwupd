@@ -60,8 +60,6 @@ enum { PROP_0, PROP_FLASH_ID, PROP_LAST };
  * This is typically set with the `FirmwareSizeMax` quirk key.
  *
  * Returns: size in bytes, or 0 if unknown
- *
- * Since: 1.7.1
  **/
 guint64
 fu_cfi_device_get_size(FuCfiDevice *self)
@@ -76,8 +74,6 @@ fu_cfi_device_get_size(FuCfiDevice *self)
  * @size: maximum size in bytes, or 0 if unknown
  *
  * Sets the chip maximum size.
- *
- * Since: 1.7.1
  **/
 void
 fu_cfi_device_set_size(FuCfiDevice *self, guint64 size)
@@ -93,8 +89,6 @@ fu_cfi_device_set_size(FuCfiDevice *self, guint64 size)
  * Gets the chip ID used to identify the device.
  *
  * Returns: the ID, or %NULL
- *
- * Since: 1.7.1
  **/
 const gchar *
 fu_cfi_device_get_flash_id(FuCfiDevice *self)
@@ -110,8 +104,6 @@ fu_cfi_device_get_flash_id(FuCfiDevice *self)
  * @flash_id: (nullable): The chip ID
  *
  * Sets the chip ID used to identify the device.
- *
- * Since: 1.7.1
  **/
 void
 fu_cfi_device_set_flash_id(FuCfiDevice *self, const gchar *flash_id)
@@ -319,8 +311,6 @@ fu_cfi_device_setup(FuDevice *device, GError **error)
  * Gets the self vendor code.
  *
  * Returns: %TRUE on success
- *
- * Since: 1.7.1
  **/
 gboolean
 fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GError **error)
@@ -359,8 +349,6 @@ fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GErr
  * This is typically set with the `CfiDevicePageSize` quirk key.
  *
  * Returns: page size in bytes
- *
- * Since: 1.7.3
  **/
 guint32
 fu_cfi_device_get_page_size(FuCfiDevice *self)
@@ -376,8 +364,6 @@ fu_cfi_device_get_page_size(FuCfiDevice *self)
  * @page_size: page size in bytes, or 0 if unknown
  *
  * Sets the chip page size. This is typically the largest writable block size.
- *
- * Since: 1.7.3
  **/
 void
 fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size)
@@ -396,8 +382,6 @@ fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size)
  * This is typically set with the `CfiDeviceSectorSize` quirk key.
  *
  * Returns: sector size in bytes
- *
- * Since: 1.7.3
  **/
 guint32
 fu_cfi_device_get_sector_size(FuCfiDevice *self)
@@ -413,8 +397,6 @@ fu_cfi_device_get_sector_size(FuCfiDevice *self)
  * @block_size: block size in bytes, or 0 if unknown
  *
  * Sets the chip block size. This is typically the largest erasable chunk size.
- *
- * Since: 1.7.4
  **/
 void
 fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size)
@@ -433,8 +415,6 @@ fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size)
  * This is typically set with the `CfiDeviceBlockSize` quirk key.
  *
  * Returns: block size in bytes
- *
- * Since: 1.7.4
  **/
 guint32
 fu_cfi_device_get_block_size(FuCfiDevice *self)
@@ -450,8 +430,6 @@ fu_cfi_device_get_block_size(FuCfiDevice *self)
  * @sector_size: sector size in bytes, or 0 if unknown
  *
  * Sets the chip sector size. This is typically the smallest erasable page size.
- *
- * Since: 1.7.3
  **/
 void
 fu_cfi_device_set_sector_size(FuCfiDevice *self, guint32 sector_size)
@@ -583,8 +561,6 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
  * Sends an unspecified command stream to the CFI device.
  *
  * Returns: %TRUE on success
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_cfi_device_send_command(FuCfiDevice *self,
@@ -624,8 +600,6 @@ fu_cfi_device_send_command(FuCfiDevice *self,
  * Sets the chip select value.
  *
  * Returns: %TRUE on success
- *
- * Since: 1.8.0
  **/
 gboolean
 fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
@@ -662,8 +636,6 @@ fu_cfi_device_chip_select_deassert_cb(FuDevice *device, GError **error)
  * Creates a custom device locker that asserts and deasserts the chip select signal.
  *
  * Returns: (transfer full): (nullable): a #FuDeviceLocker
- *
- * Since: 1.8.0
  **/
 FuDeviceLocker *
 fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error)
@@ -994,8 +966,6 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 	 * FuCfiDevice:flash-id:
 	 *
 	 * The CCI JEDEC flash ID.
-	 *
-	 * Since: 1.7.1
 	 */
 	pspec = g_param_spec_string("flash-id",
 				    NULL,
@@ -1012,8 +982,6 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
  * Creates a new #FuCfiDevice.
  *
  * Returns: (transfer full): a #FuCfiDevice
- *
- * Since: 2.1.1
  **/
 FuCfiDevice *
 fu_cfi_device_new(FuDevice *proxy, const gchar *flash_id)

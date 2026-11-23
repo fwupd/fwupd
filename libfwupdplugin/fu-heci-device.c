@@ -46,8 +46,6 @@ fu_heci_device_result_to_error(FuMkhiStatus result, GError **error)
  * Reads a file from the MFS.
  *
  * Returns: (transfer container): file data
- *
- * Since: 2.0.9
  **/
 GByteArray *
 fu_heci_device_read_file(FuHeciDevice *self, const gchar *filename, GError **error)
@@ -118,8 +116,6 @@ fu_heci_device_read_file(FuHeciDevice *self, const gchar *filename, GError **err
  * Reads a file from the MFS.
  *
  * Returns: (transfer container): file data
- *
- * Since: 2.0.9
  **/
 GByteArray *
 fu_heci_device_read_file_ex(FuHeciDevice *self,
@@ -192,8 +188,6 @@ fu_heci_device_read_file_ex(FuHeciDevice *self,
  * Reads the ARBH SVN for a specific usage ID.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.9
  **/
 gboolean
 fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,

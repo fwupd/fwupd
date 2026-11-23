@@ -62,24 +62,18 @@ struct _FuFirmwareClass {
  * FU_FIRMWARE_ID_PAYLOAD:
  *
  * The usual firmware ID string for the payload.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_PAYLOAD "payload"
 /**
  * FU_FIRMWARE_ID_SIGNATURE:
  *
  * The usual firmware ID string for the signature.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_SIGNATURE "signature"
 /**
  * FU_FIRMWARE_ID_HEADER:
  *
  * The usual firmware ID string for the header.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_HEADER "header"
 

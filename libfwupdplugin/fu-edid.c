@@ -32,8 +32,6 @@ G_DEFINE_TYPE(FuEdid, fu_edid, FU_TYPE_FIRMWARE)
  * Gets the PNP ID, e.g. `IBM`.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_pnp_id(FuEdid *self)
@@ -48,8 +46,6 @@ fu_edid_get_pnp_id(FuEdid *self)
  * @pnp_id: (nullable): three digit string value, or %NULL
  *
  * Sets the PNP ID, which has a length equal to or less than 3 ASCII characters.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
@@ -65,8 +61,6 @@ fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
  * Gets the EISA ID, e.g. `LTN154P2-L05`.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_eisa_id(FuEdid *self)
@@ -81,8 +75,6 @@ fu_edid_get_eisa_id(FuEdid *self)
  * @eisa_id: (nullable): string value, or %NULL
  *
  * Sets the EISA ID, which has to be equal to or less than 13 ASCII characters long.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
@@ -98,8 +90,6 @@ fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
  * Gets the serial number.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_serial_number(FuEdid *self)
@@ -115,8 +105,6 @@ fu_edid_get_serial_number(FuEdid *self)
  *
  * Sets the serial number, which can either be a unsigned 32 bit integer, or a string equal to or
  * less than 13 ASCII characters long.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
@@ -132,8 +120,6 @@ fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
  * Gets the product name.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_product_name(FuEdid *self)
@@ -148,8 +134,6 @@ fu_edid_get_product_name(FuEdid *self)
  * @product_name: (nullable): string value, or %NULL
  *
  * Sets the product name, e.g. `LG HDR WQHD`.
- *
- * Since: 2.0.14
  **/
 void
 fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
@@ -165,8 +149,6 @@ fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
  * Gets the product code.
  *
  * Returns: integer, or 0x0 for unset
- *
- * Since: 1.9.6
  **/
 guint16
 fu_edid_get_product_code(FuEdid *self)
@@ -181,8 +163,6 @@ fu_edid_get_product_code(FuEdid *self)
  * @product_code: integer, or 0x0 for unset
  *
  * Sets the product code.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_product_code(FuEdid *self, guint16 product_code)
@@ -486,8 +466,6 @@ fu_edid_init(FuEdid *self)
  * fu_edid_new:
  *
  * Returns: (transfer full): a #FuEdid
- *
- * Since: 1.9.6
  **/
 FuEdid *
 fu_edid_new(void)

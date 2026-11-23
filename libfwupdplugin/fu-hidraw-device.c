@@ -50,8 +50,6 @@ fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
  * Gets the bus type.
  *
  * Returns: a #FuHidBusType, e.g. %FU_HID_BUS_TYPE_USB
- *
- * Since: 2.0.14
  **/
 FuHidBusType
 fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
@@ -69,8 +67,6 @@ fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
  * Retrieves and parses the HID descriptor.
  *
  * Returns: (transfer full): a #FuHidDescriptor, or %NULL on error
- *
- * Since: 2.0.12
  **/
 FuHidDescriptor *
 fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
@@ -364,8 +360,6 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
  * Do a HID SetFeature request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,
@@ -417,8 +411,6 @@ fu_hidraw_device_set_feature(FuHidrawDevice *self,
  * Do a HID GetFeature request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_hidraw_device_get_feature(FuHidrawDevice *self,
@@ -471,8 +463,6 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
  * Do a HID GetInput request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.19
  **/
 gboolean
 fu_hidraw_device_get_input(FuHidrawDevice *self,
@@ -525,8 +515,6 @@ fu_hidraw_device_get_input(FuHidrawDevice *self,
  * Do a HID SetOutputReport request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.14
  **/
 gboolean
 fu_hidraw_device_set_report(FuHidrawDevice *self,
@@ -559,8 +547,6 @@ fu_hidraw_device_set_report(FuHidrawDevice *self,
  * Do a HID GetInputReport request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.14
  **/
 gboolean
 fu_hidraw_device_get_report(FuHidrawDevice *self,

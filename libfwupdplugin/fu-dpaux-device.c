@@ -182,8 +182,6 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
  * Gets the DPCD offset.
  *
  * Returns: integer
- *
- * Since: 2.1.1
  **/
 goffset
 fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self)
@@ -200,8 +198,6 @@ fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self)
  *
  * Sets the DPCD offset. Must be either %FU_DPAUX_DEVICE_DPCD_OFFSET_SOURCE_DEVICE,
  * %FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE, or %FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE.
- *
- * Since: 2.1.1
  **/
 void
 fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset)
@@ -223,8 +219,6 @@ fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset)
  * Gets the DPCD IEEE OUI.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 guint32
 fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self)
@@ -240,8 +234,6 @@ fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self)
  * @dpcd_ieee_oui: integer
  *
  * Sets the DPCD IEEE OUI.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui)
@@ -261,8 +253,6 @@ fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui)
  * Gets the DPCD hardware revision number.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 guint8
 fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self)
@@ -278,8 +268,6 @@ fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self)
  * @dpcd_hw_rev: integer
  *
  * Sets the DPCD hardware revision number.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev)
@@ -296,8 +284,6 @@ fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev)
  * Gets the DPCD device ID.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 const gchar *
 fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self)
@@ -313,8 +299,6 @@ fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self)
  * @dpcd_dev_id: integer
  *
  * Sets the DPCD device ID.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id)
@@ -334,8 +318,6 @@ fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id)
  * Write multiple bytes to the DP AUX device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.8
  **/
 gboolean
 fu_dpaux_device_write(FuDpauxDevice *self,
@@ -373,8 +355,6 @@ fu_dpaux_device_write(FuDpauxDevice *self,
  * Read multiple bytes from the DP AUX device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.8
  **/
 gboolean
 fu_dpaux_device_read(FuDpauxDevice *self,
@@ -541,8 +521,6 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	 * FuDpauxDevice:dpcd-ieee-oui:
 	 *
 	 * The DPCD IEEE OUI.
-	 *
-	 * Since: 1.9.11
 	 */
 	pspec = g_param_spec_uint("dpcd-ieee-oui",
 				  NULL,

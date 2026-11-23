@@ -590,8 +590,6 @@ fu_zip_firmware_init(FuZipFirmware *self)
  * fu_zip_firmware_new:
  *
  * Returns: (transfer full): a #FuZipFirmware
- *
- * Since: 2.1.1
  **/
 FuFirmware *
 fu_zip_firmware_new(void)

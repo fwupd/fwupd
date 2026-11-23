@@ -33,8 +33,6 @@ fu_version_ensure_semver_internal(const gchar *version);
  * Returns a dotted decimal version string from a 64 bit number.
  *
  * Returns: a version number, e.g. `1.2.3.4`, or %NULL if not supported
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_version_from_uint64(guint64 val, FwupdVersionFormat kind)
@@ -86,8 +84,6 @@ fu_version_from_uint64(guint64 val, FwupdVersionFormat kind)
  * Returns a dotted decimal version string from a 32 bit number.
  *
  * Returns: a version number, e.g. `1.0.3`, or %NULL if not supported
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
@@ -197,8 +193,6 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
  * Returns a dotted decimal hex string from a 32 bit number.
  *
  * Returns: a version number, e.g. `1a.0.d3`, or %NULL if not supported
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_version_from_uint32_hex(guint32 val, FwupdVersionFormat kind)
@@ -256,8 +250,6 @@ fu_version_from_uint32_hex(guint32 val, FwupdVersionFormat kind)
  * Returns a dotted decimal version string from a 24 bit number.
  *
  * Returns: a version number, e.g. `1.0.3`, or %NULL if not supported
- *
- * Since: 1.8.9
  **/
 gchar *
 fu_version_from_uint24(guint32 val, FwupdVersionFormat kind)
@@ -295,8 +287,6 @@ fu_version_from_uint24(guint32 val, FwupdVersionFormat kind)
  * Returns a dotted decimal version string from a 16 bit number.
  *
  * Returns: a version number, e.g. `1.3`, or %NULL if not supported
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
@@ -343,8 +333,6 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
  * Returns a dotted hex version string from a 16 bit number.
  *
  * Returns: a version number, e.g. `1a.f3`, or %NULL if not supported
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_version_from_uint16_hex(guint16 val, FwupdVersionFormat kind)
@@ -456,8 +444,6 @@ fu_version_format_number_sections(FwupdVersionFormat fmt)
  * the string will be split and a string in the correct format will be returned.
  *
  * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
- *
- * Since: 1.8.2
  */
 gchar *
 fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
@@ -560,8 +546,6 @@ fu_version_ensure_semver_internal(const gchar *version)
  * a string and returned without modification.
  *
  * Returns: a version number, e.g. `1.0.3`, or %NULL on error
- *
- * Since: 1.8.2
  */
 gchar *
 fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
@@ -600,8 +584,6 @@ fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
  * %FWUPD_VERSION_FORMAT_UNKNOWN constant is returned.
  *
  * Returns: a version format, e.g. %FWUPD_VERSION_FORMAT_QUAD
- *
- * Since: 1.8.2
  */
 FwupdVersionFormat
 fu_version_guess_format(const gchar *version)
@@ -668,8 +650,6 @@ fu_version_format_convert_base(FwupdVersionFormat fmt)
  * Verifies if a version matches the input format.
  *
  * Returns: TRUE or FALSE
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **error)
@@ -777,8 +757,6 @@ fu_version_compare_safe(const gchar *version_a, const gchar *version_b)
  * if required.
  *
  * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
- *
- * Since: 1.8.2
  */
 gint
 fu_version_compare(const gchar *version_a, const gchar *version_b, FwupdVersionFormat fmt)

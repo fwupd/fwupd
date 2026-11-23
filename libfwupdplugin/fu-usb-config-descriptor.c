@@ -85,8 +85,6 @@ fu_usb_config_descriptor_add_json(FwupdCodec *codec,
  * Gets the config descriptor configuration.
  *
  * Return value: integer
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_config_descriptor_get_configuration(FuUsbConfigDescriptor *self)
@@ -102,8 +100,6 @@ fu_usb_config_descriptor_get_configuration(FuUsbConfigDescriptor *self)
  * Gets the CONFIG descriptor configuration value.
  *
  * Return value: integer
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self)
@@ -156,8 +152,6 @@ fu_usb_config_descriptor_init(FuUsbConfigDescriptor *self)
  * fu_usb_config_descriptor_new:
  *
  * Return value: a new #FuUsbConfigDescriptor object.
- *
- * Since: 2.0.0
  **/
 FuUsbConfigDescriptor *
 fu_usb_config_descriptor_new(void)

@@ -113,8 +113,6 @@ fu_ifd_bios_class_init(FuIfdBiosClass *klass)
  * fu_ifd_bios_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_bios_new(void)

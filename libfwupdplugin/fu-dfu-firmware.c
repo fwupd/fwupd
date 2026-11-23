@@ -69,8 +69,6 @@ fu_dfu_firmware_get_footer_len(FuDfuFirmware *self)
  * Gets the vendor ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_vid(FuDfuFirmware *self)
@@ -87,8 +85,6 @@ fu_dfu_firmware_get_vid(FuDfuFirmware *self)
  * Gets the product ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_pid(FuDfuFirmware *self)
@@ -105,8 +101,6 @@ fu_dfu_firmware_get_pid(FuDfuFirmware *self)
  * Gets the device ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_release(FuDfuFirmware *self)
@@ -123,8 +117,6 @@ fu_dfu_firmware_get_release(FuDfuFirmware *self)
  * Gets the file format version with is 0x0100 by default.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_version(FuDfuFirmware *self)
@@ -140,8 +132,6 @@ fu_dfu_firmware_get_version(FuDfuFirmware *self)
  * @vid: vendor ID, or 0xffff if the firmware should match any vendor
  *
  * Sets the vendor ID.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_vid(FuDfuFirmware *self, guint16 vid)
@@ -157,8 +147,6 @@ fu_dfu_firmware_set_vid(FuDfuFirmware *self, guint16 vid)
  * @pid: product ID, or 0xffff if the firmware should match any product
  *
  * Sets the product ID.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_pid(FuDfuFirmware *self, guint16 pid)
@@ -174,8 +162,6 @@ fu_dfu_firmware_set_pid(FuDfuFirmware *self, guint16 pid)
  * @release: release, or 0xffff if the firmware should match any release
  *
  * Sets the release for the dfu firmware.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_release(FuDfuFirmware *self, guint16 release)
@@ -191,8 +177,6 @@ fu_dfu_firmware_set_release(FuDfuFirmware *self, guint16 release)
  * @version: integer
  *
  * Sets the file format version.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
@@ -451,8 +435,6 @@ fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
  * fu_dfu_firmware_new:
  *
  * Creates a new #FuFirmware of sub type Dfu
- *
- * Since: 1.3.3
  **/
 FuFirmware *
 fu_dfu_firmware_new(void)

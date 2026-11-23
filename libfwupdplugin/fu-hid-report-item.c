@@ -215,8 +215,6 @@ fu_hid_report_item_class_init(FuHidReportItemClass *klass)
  * Creates a new HID report item
  *
  * Returns: (transfer full): a #FuHidReportItem
- *
- * Since: 1.9.4
  **/
 FuHidReportItem *
 fu_hid_report_item_new(void)

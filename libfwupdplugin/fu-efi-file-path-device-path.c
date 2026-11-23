@@ -42,8 +42,6 @@ G_DEFINE_TYPE_EXTENDED(FuEfiFilePathDevicePath,
  * Any backslash characters are automatically converted to forward slashes.
  *
  * Returns: (transfer full): UTF-8 filename, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **error)
@@ -72,8 +70,6 @@ fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **er
  *
  * Sets the `DEVICE_PATH` name.
  * Any forward slash characters are automatically converted to backslashes.
- *
- * Since: 1.9.3
  **/
 gboolean
 fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
@@ -174,8 +170,6 @@ fu_efi_file_path_device_path_class_init(FuEfiFilePathDevicePathClass *klass)
  * Creates a new EFI `DEVICE_PATH`.
  *
  * Returns: (transfer full): a #FuEfiFilePathDevicePath
- *
- * Since: 1.9.3
  **/
 FuEfiFilePathDevicePath *
 fu_efi_file_path_device_path_new(void)

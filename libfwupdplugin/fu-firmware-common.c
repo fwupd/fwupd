@@ -24,8 +24,6 @@
  * The returned @value will range from 0 to 0xf.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint4_safe(const gchar *data,
@@ -70,8 +68,6 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
  * The returned @value will range from 0 to 0xff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint8_safe(const gchar *data,
@@ -116,8 +112,6 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint16_safe(const gchar *data,
@@ -162,8 +156,6 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint24_safe(const gchar *data,
@@ -208,8 +200,6 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffffffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint32_safe(const gchar *data,

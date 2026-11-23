@@ -49,8 +49,6 @@ fu_v4l_device_to_string(FuDevice *device, guint idt, GString *str)
  * Gets the video4linux device index.
  *
  * Returns: integer, or %G_MAXUINT8 on error
- *
- * Since: 2.0.0
  **/
 guint8
 fu_v4l_device_get_index(FuV4lDevice *self)
@@ -70,8 +68,6 @@ fu_v4l_device_get_index(FuV4lDevice *self)
  * during probe.
  *
  * Returns: integer, or 0 on error
- *
- * Since: 2.0.0
  **/
 FuV4lCap
 fu_v4l_device_get_caps(FuV4lDevice *self)

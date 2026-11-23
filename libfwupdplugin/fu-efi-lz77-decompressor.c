@@ -720,8 +720,6 @@ fu_efi_lz77_decompressor_class_init(FuEfiLz77DecompressorClass *klass)
  * fu_efi_lz77_decompressor_new:
  *
  * Creates a new #FuFirmware that can be used to decompress LZ77.
- *
- * Since: 2.0.0
  **/
 FuFirmware *
 fu_efi_lz77_decompressor_new(void)

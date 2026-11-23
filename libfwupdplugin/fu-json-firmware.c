@@ -35,8 +35,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuJsonFirmware, fu_json_firmware, FU_TYPE_FIRMWARE)
  * If the directory does not exist it is ignored
  *
  * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
- *
- * Since: 2.2.1
  **/
 FwupdJsonNode *
 fu_json_firmware_get_root(FuJsonFirmware *self)
@@ -176,8 +174,6 @@ fu_json_firmware_class_init(FuJsonFirmwareClass *klass)
  * Creates a generic JSON firmware.
  *
  * Returns: a #FuFirmware
- *
- * Since: 2.2.1
  **/
 FuFirmware *
 fu_json_firmware_new(void)

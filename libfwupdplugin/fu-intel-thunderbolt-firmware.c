@@ -128,8 +128,6 @@ fu_intel_thunderbolt_firmware_class_init(FuIntelThunderboltFirmwareClass *klass)
  * fu_intel_thunderbolt_firmware_new:
  *
  * Creates a new #FuFirmware of Intel NVM format
- *
- * Since: 1.8.5
  **/
 FuFirmware *
 fu_intel_thunderbolt_firmware_new(void)

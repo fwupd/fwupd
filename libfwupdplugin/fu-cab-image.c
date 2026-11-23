@@ -28,8 +28,6 @@ G_DEFINE_TYPE(FuCabImage, fu_cab_image, FU_TYPE_FIRMWARE)
  * firmware ID if required.
  *
  * Returns: filename, or %NULL
- *
- * Since: 1.9.7
  **/
 const gchar *
 fu_cab_image_get_win32_filename(FuCabImage *self)
@@ -54,8 +52,6 @@ fu_cab_image_get_win32_filename(FuCabImage *self)
  * @win32_filename: filename, or %NULL
  *
  * Sets the in-archive Windows filename, with a possible path component.
- *
- * Since: 1.9.7
  **/
 void
 fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename)
@@ -71,8 +67,6 @@ fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename)
  * Gets the created timestamp.
  *
  * Returns: (transfer none): a #GDateTime, or %NULL
- *
- * Since: 1.9.7
  **/
 GDateTime *
 fu_cab_image_get_created(FuCabImage *self)
@@ -87,8 +81,6 @@ fu_cab_image_get_created(FuCabImage *self)
  * @created: a #GDateTime, or %NULL
  *
  * Sets the created timestamp.
- *
- * Since: 1.9.7
  **/
 void
 fu_cab_image_set_created(FuCabImage *self, GDateTime *created)
@@ -183,8 +175,6 @@ fu_cab_image_init(FuCabImage *self)
  * fu_cab_image_new:
  *
  * Returns: (transfer full): a #FuCabImage
- *
- * Since: 1.9.7
  **/
 FuCabImage *
 fu_cab_image_new(void)

@@ -19,8 +19,6 @@
  * Converts a GUID to the known nice name.
  *
  * Returns: identifier string, or %NULL if unknown
- *
- * Since: 1.6.2
  **/
 const gchar *
 fu_efi_guid_to_name(const gchar *guid)
@@ -76,8 +74,6 @@ fu_efi_guid_to_name(const gchar *guid)
  * Parses a UEFI section.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
@@ -147,8 +143,6 @@ fu_efi_parse_sections(FuFirmware *firmware,
  * @json_object: a #FwupdJsonObject
  *
  * Exports an `EFI_TIME` to JSON.
- *
- * Since: 2.0.17
  **/
 void
 fu_efi_timestamp_export(FuStructEfiTime *st, FwupdJsonObject *json_object)
@@ -213,8 +207,6 @@ fu_efi_timestamp_build_value(FwupdJsonObject *json_object,
  * Imports an `EFI_TIME` from JSON. Missing members are ignored.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.17
  **/
 gboolean
 fu_efi_timestamp_build(FuStructEfiTime *st, FwupdJsonObject *json_object, GError **error)

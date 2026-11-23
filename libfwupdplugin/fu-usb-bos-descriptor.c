@@ -151,8 +151,6 @@ fu_usb_bos_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
  * Gets the BOS descriptor capability.
  *
  * Return value: capability
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
@@ -258,8 +256,6 @@ fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
  * @st_hdr: a #FuUsbBosHdr
  *
  * Return value: a new #FuUsbBosDescriptor object.
- *
- * Since: 2.1.1
  **/
 FuUsbBosDescriptor *
 fu_usb_bos_descriptor_new(FuUsbBosHdr *st_hdr)

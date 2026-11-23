@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // The CPU vendor.
-// Since: 1.5.5
 enum FuCpuVendor {
     Unknown,
     Intel,
@@ -16,7 +15,6 @@ enum FuCpuVendor {
 //
 // For example, it is perfectly correct to set %FU_POWER_STATE_AC if the system is connected to
 // AC power, but the battery cells are discharging for health or for other performance reasons.
-// Since: 1.8.11
 #[derive(ToString)]
 enum FuPowerState {
     Unknown,
@@ -25,7 +23,6 @@ enum FuPowerState {
 }
 
 // The device lid state.
-// Since: 1.7.4
 #[derive(ToString)]
 enum FuLidState {
     Unknown,
@@ -34,7 +31,6 @@ enum FuLidState {
 }
 
 // The device display state.
-// Since: 1.9.6
 #[derive(ToString, FromString)]
 enum FuDisplayState {
     Unknown,

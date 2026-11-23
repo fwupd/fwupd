@@ -801,8 +801,6 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
  * Gets the product name.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.12
  **/
 const gchar *
 fu_coswid_firmware_get_product(FuCoswidFirmware *self)
@@ -819,8 +817,6 @@ fu_coswid_firmware_get_product(FuCoswidFirmware *self)
  * Gets the persistent ID.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.17
  **/
 const gchar *
 fu_coswid_firmware_get_persistent_id(FuCoswidFirmware *self)
@@ -837,8 +833,6 @@ fu_coswid_firmware_get_persistent_id(FuCoswidFirmware *self)
  * Gets the device ID.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.17
  **/
 const gchar *
 fu_coswid_firmware_get_device_id(FuCoswidFirmware *self)
@@ -1438,8 +1432,6 @@ fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
  * fu_coswid_firmware_new:
  *
  * Creates a new #FuFirmware of sub type coSWID
- *
- * Since: 1.8.0
  **/
 FuFirmware *
 fu_coswid_firmware_new(void)

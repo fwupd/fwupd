@@ -96,8 +96,6 @@ fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyN
  * Return the hash of the event ID.
  *
  * Returns: (transfer full): string hash prefix
- *
- * Since: 2.0.3
  **/
 GRefString *
 fu_device_event_build_id(const gchar *id)
@@ -127,8 +125,6 @@ fu_device_event_build_id(const gchar *id)
  * object.
  *
  * Returns: (nullable): string
- *
- * Since: 2.0.0
  **/
 const gchar *
 fu_device_event_get_id(FuDeviceEvent *self)
@@ -144,8 +140,6 @@ fu_device_event_get_id(FuDeviceEvent *self)
  * @value: (nullable): a string
  *
  * Sets a string value on the event.
- *
- * Since: 2.0.0
  **/
 void
 fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *value)
@@ -163,8 +157,6 @@ fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *valu
  * @value: a string
  *
  * Sets an integer value on the string.
- *
- * Since: 2.0.0
  **/
 void
 fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
@@ -184,8 +176,6 @@ fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
  * @value: (not nullable): a #GBytes
  *
  * Sets a blob on the event. Note: blobs are stored internally as BASE-64 strings.
- *
- * Since: 2.0.0
  **/
 void
 fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
@@ -208,8 +198,6 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
  * @value: (not nullable): a #GByteArray
  *
  * Sets a blob on the event. Note: blobs are stored internally as BASE-64 strings.
- *
- * Since: 2.1.1
  **/
 void
 fu_device_event_set_byte_array(FuDeviceEvent *self, const gchar *key, GByteArray *value)
@@ -232,8 +220,6 @@ fu_device_event_set_byte_array(FuDeviceEvent *self, const gchar *key, GByteArray
  * @bufsz: size of @buf
  *
  * Sets a memory buffer on the event. Note: memory buffers are stored internally as BASE-64 strings.
- *
- * Since: 2.0.0
  **/
 void
 fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *buf, gsize bufsz)
@@ -251,8 +237,6 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
  * @error: (not nullable): a #GError with domain #FwupdError
  *
  * Sets an error on the event.
- *
- * Since: 2.0.6
  **/
 void
 fu_device_event_set_error(FuDeviceEvent *self, const GError *error)
@@ -272,8 +256,6 @@ fu_device_event_set_error(FuDeviceEvent *self, const GError *error)
  * Sets an error from the event if possible.
  *
  * Returns: %FALSE if @error was set
- *
- * Since: 2.0.6
  **/
 gboolean
 fu_device_event_check_error(FuDeviceEvent *self, GError **error)
@@ -337,8 +319,6 @@ fu_device_event_lookup(FuDeviceEvent *self, const gchar *key, GType gtype, GErro
  * Gets a string value from the event.
  *
  * Returns: (nullable): string, or %NULL on error
- *
- * Since: 2.0.0
  **/
 const gchar *
 fu_device_event_get_str(FuDeviceEvent *self, const gchar *key, GError **error)
@@ -358,8 +338,6 @@ fu_device_event_get_str(FuDeviceEvent *self, const gchar *key, GError **error)
  * Gets an integer value from the event.
  *
  * Returns: integer, or %G_MAXINT64 on error
- *
- * Since: 2.0.0
  **/
 gint64
 fu_device_event_get_i64(FuDeviceEvent *self, const gchar *key, GError **error)
@@ -383,8 +361,6 @@ fu_device_event_get_i64(FuDeviceEvent *self, const gchar *key, GError **error)
  * Gets a memory blob from the event.
  *
  * Returns: (transfer full) (nullable): byes data, or %NULL on error
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
@@ -415,8 +391,6 @@ fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
  * Gets a memory blob from the event.
  *
  * Returns: (transfer full) (nullable): a #GByteArray, or %NULL on error
- *
- * Since: 2.1.1
  **/
 GByteArray *
 fu_device_event_get_byte_array(FuDeviceEvent *self, const gchar *key, GError **error)
@@ -450,8 +424,6 @@ fu_device_event_get_byte_array(FuDeviceEvent *self, const gchar *key, GError **e
  * Copies memory from the event.
  *
  * Returns: %TRUE if the buffer was copied
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_device_event_copy_data(FuDeviceEvent *self,
@@ -634,8 +606,6 @@ fu_device_event_codec_iface_init(FwupdCodecInterface *iface)
  * @id: a cache key, which is converted to a truncated SHA1 hash if required
  *
  * Return value: (transfer full): a new #FuDeviceEvent object.
- *
- * Since: 2.0.0
  **/
 FuDeviceEvent *
 fu_device_event_new(const gchar *id)

@@ -119,8 +119,6 @@ fu_cfu_payload_class_init(FuCfuPayloadClass *klass)
  * fu_cfu_payload_new:
  *
  * Creates a new #FuFirmware for a CFU payload
- *
- * Since: 1.7.0
  **/
 FuFirmware *
 fu_cfu_payload_new(void)

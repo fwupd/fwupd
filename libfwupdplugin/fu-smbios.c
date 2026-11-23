@@ -178,8 +178,6 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
  * Reads all the SMBIOS values from a DMI blob.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_file(FuSmbios *self, const gchar *filename, GError **error)
@@ -291,8 +289,6 @@ fu_smbios_parse_ep64(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
  * Reads all the SMBIOS values from a specific path.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
@@ -395,8 +391,6 @@ fu_smbios_parse(FuFirmware *firmware,
  * Reads all the SMBIOS values from the hardware.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup(FuSmbios *self, GError **error)
@@ -617,8 +611,6 @@ fu_smbios_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **err
  * Reads all the SMBIOS data blobs of a specified type.
  *
  * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if invalid or not found
- *
- * Since: 2.0.7
  **/
 GPtrArray *
 fu_smbios_get_data(FuSmbios *self, guint8 type, guint8 length, GError **error)
@@ -663,8 +655,6 @@ fu_smbios_get_data(FuSmbios *self, guint8 type, guint8 length, GError **error)
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: an integer, or %G_MAXUINT if invalid or not found
- *
- * Since: 2.0.7
  **/
 guint
 fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
@@ -713,8 +703,6 @@ fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 length, guint8 offset,
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: a string, or %NULL if invalid or not found
- *
- * Since: 2.0.7
  **/
 const gchar *
 fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
@@ -795,8 +783,6 @@ fu_smbios_init(FuSmbios *self)
  * Creates a new object to parse SMBIOS data.
  *
  * Returns: a #FuSmbios
- *
- * Since: 1.0.0
  **/
 FuSmbios *
 fu_smbios_new(FuPathStore *pstore)

@@ -90,8 +90,6 @@ fu_uefi_device_get_name(FuUefiDevice *self)
  * Sets the data to a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.5
  **/
 gboolean
 fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
@@ -158,8 +156,6 @@ fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
  * Gets the data from a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
- *
- * Since: 2.0.5
  **/
 GBytes *
 fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
@@ -231,8 +227,6 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
  * Gets the data from a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL on error
- *
- * Since: 2.1.5
  **/
 FuFirmware *
 fu_uefi_device_read_default(FuUefiDevice *self,

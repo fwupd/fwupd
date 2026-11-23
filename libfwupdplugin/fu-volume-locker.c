@@ -37,8 +37,6 @@ G_DEFINE_TYPE(FuVolumeLocker, fu_volume_locker, G_TYPE_OBJECT)
  * and allows the caller to properly handle the error.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.15
  **/
 gboolean
 fu_volume_locker_close(FuVolumeLocker *self, GError **error)
@@ -100,8 +98,6 @@ fu_volume_locker_init(FuVolumeLocker *self)
  * already mounted then it is _not_ unmounted when the locker is closed.
  *
  * Returns: (transfer full): a volume locker if mounted, or %NULL
- *
- * Since: 2.0.15
  **/
 FuVolumeLocker *
 fu_volume_locker_new(FuVolume *volume, GError **error)

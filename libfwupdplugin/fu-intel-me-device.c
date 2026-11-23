@@ -29,8 +29,6 @@ G_DEFINE_TYPE(FuIntelMeDevice, fu_intel_me_device, FU_TYPE_DEVICE)
  * Gets the ME device family.
  *
  * Returns: a #FuIntelMeFamily, e.g. #FU_INTEL_ME_FAMILY_CSME11
- *
- * Since: 2.1.1
  **/
 FuIntelMeFamily
 fu_intel_me_device_get_family(FuIntelMeDevice *self)
@@ -46,8 +44,6 @@ fu_intel_me_device_get_family(FuIntelMeDevice *self)
  * Gets the ME device issue.
  *
  * Returns: a #FuIntelMeIssue, e.g. #FU_INTEL_ME_ISSUE_NOT_VULNERABLE
- *
- * Since: 2.1.1
  **/
 FuIntelMeIssue
 fu_intel_me_device_get_issue(FuIntelMeDevice *self)
@@ -204,8 +200,6 @@ fu_intel_me_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
  * Gets a HFSTSx register.
  *
  * Returns: (transfer none): a #FuStructIntelMeHfsts, or %NULL if unset
- *
- * Since: 2.1.1
  **/
 FuStructIntelMeHfsts *
 fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx)
@@ -223,8 +217,6 @@ fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx)
  * @hfsts: a #FuStructIntelMeHfsts
  *
  * Sets a HFSTSx register.
- *
- * Since: 2.1.1
  **/
 void
 fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHfsts *hfsts)
@@ -804,8 +796,6 @@ fu_intel_me_device_class_init(FuIntelMeDeviceClass *klass)
  * Creates a new Intel ME device.
  *
  * Returns: (transfer full): a #FuIntelMeDevice
- *
- * Since: 2.1.1
  **/
 FuIntelMeDevice *
 fu_intel_me_device_new(FuContext *ctx)

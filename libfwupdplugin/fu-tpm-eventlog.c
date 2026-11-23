@@ -22,8 +22,6 @@ G_DEFINE_TYPE(FuTpmEventlog, fu_tpm_eventlog, FU_TYPE_FIRMWARE)
  * Calculate the possible checksums for a given PCR.
  *
  * Returns: (element-type utf8) (transfer container): checksum strings
- *
- * Since: 2.1.1
  **/
 GPtrArray *
 fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self, guint8 pcr, GError **error)
