@@ -2,20 +2,20 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
-enum FuRts54hidI2cSpeed {
+enum FuRealtekRts54hidI2cSpeed {
     250K,
     400K,
     800K,
 }
 
 #[repr(u8)]
-enum FuRts54hidCmd {
+enum FuRealtekRts54hidCmd {
     ReadData        = 0xC0,
     WriteData       = 0x40,
 }
 
 #[repr(u8)]
-enum FuRts54hidExt {
+enum FuRealtekRts54hidExt {
     Mcumodifyclock  = 0x06,
     ReadStatus      = 0x09,
     I2cWrite        = 0xC6,
@@ -30,13 +30,13 @@ enum FuRts54hidExt {
 
 #[repr(C, packed)]
 #[derive(New)]
-struct FuRts54hidCmdBuffer {
-    cmd: FuRts54hidCmd,
-    ext: FuRts54hidExt,
+struct FuRealtekRts54hidCmdBuffer {
+    cmd: FuRealtekRts54hidCmd,
+    ext: FuRealtekRts54hidExt,
     dwregaddr: u32le,
     bufferlen: u16le,
     i2c_target_addr: u8,
     i2c_data_sz: u8,
-    i2c_speed: FuRts54hidI2cSpeed,
+    i2c_speed: FuRealtekRts54hidI2cSpeed,
     reserved: u8,
 }

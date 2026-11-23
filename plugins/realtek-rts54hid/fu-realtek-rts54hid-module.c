@@ -6,44 +6,44 @@
 
 #include "config.h"
 
-#include "fu-rts54hid-common.h"
-#include "fu-rts54hid-device.h"
-#include "fu-rts54hid-module.h"
-#include "fu-rts54hid-struct.h"
+#include "fu-realtek-rts54hid-common.h"
+#include "fu-realtek-rts54hid-device.h"
+#include "fu-realtek-rts54hid-module.h"
+#include "fu-realtek-rts54hid-struct.h"
 
-struct _FuRts54hidModule {
+struct _FuRealtekRts54hidModule {
 	FuDevice parent_instance;
 	guint8 target_addr;
 	guint8 i2c_speed;
 	guint8 register_addr_len;
 };
 
-G_DEFINE_TYPE(FuRts54hidModule, fu_rts54hid_module, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuRealtekRts54hidModule, fu_realtek_rts54hid_module, FU_TYPE_DEVICE)
 
 static void
-fu_rts54hid_module_to_string(FuDevice *module, guint idt, GString *str)
+fu_realtek_rts54hid_module_to_string(FuDevice *module, guint idt, GString *str)
 {
-	FuRts54hidModule *self = FU_RTS54HID_MODULE(module);
+	FuRealtekRts54hidModule *self = FU_REALTEK_RTS54HID_MODULE(module);
 	fwupd_codec_string_append_hex(str, idt, "TargetAddr", self->target_addr);
 	fwupd_codec_string_append_hex(str, idt, "I2cSpeed", self->i2c_speed);
 	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", self->register_addr_len);
 }
 
 static gboolean
-fu_rts54hid_module_i2c_write(FuRts54hidModule *self,
-			     const guint8 *data,
-			     guint8 data_sz,
-			     GError **error)
+fu_realtek_rts54hid_module_i2c_write(FuRealtekRts54hidModule *self,
+				     const guint8 *data,
+				     guint8 data_sz,
+				     GError **error)
 {
 	FuDevice *proxy;
-	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
+	g_autoptr(FuRealtekRts54hidCmdBuffer) st = fu_realtek_rts54hid_cmd_buffer_new();
 
-	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
-	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_WRITE);
-	fu_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
-	fu_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
-	fu_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
-	fu_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_realtek_rts54hid_cmd_buffer_set_cmd(st, FU_REALTEK_RTS54HID_CMD_WRITE_DATA);
+	fu_realtek_rts54hid_cmd_buffer_set_ext(st, FU_REALTEK_RTS54HID_EXT_I2C_WRITE);
+	fu_realtek_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 128, FALSE);
@@ -57,7 +57,7 @@ fu_rts54hid_module_i2c_write(FuRts54hidModule *self,
 
 	if (!fu_memcpy_safe(st->buf->data,
 			    st->buf->len,
-			    FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, /* dst */
+			    FU_REALTEK_RTS54HID_CMD_BUFFER_OFFSET_DATA, /* dst */
 			    data,
 			    data_sz,
 			    0x0, /* src */
@@ -68,7 +68,7 @@ fu_rts54hid_module_i2c_write(FuRts54hidModule *self,
 				      0x0,
 				      st->buf->data,
 				      st->buf->len,
-				      FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				      FU_REALTEK_RTS54HID_DEVICE_TIMEOUT * 2,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		g_prefix_error(error, "failed to write i2c @%04x: ", self->target_addr);
@@ -78,22 +78,22 @@ fu_rts54hid_module_i2c_write(FuRts54hidModule *self,
 }
 
 static gboolean
-fu_rts54hid_module_i2c_read(FuRts54hidModule *self,
-			    guint32 cmd,
-			    guint8 *data,
-			    guint8 data_sz,
-			    GError **error)
+fu_realtek_rts54hid_module_i2c_read(FuRealtekRts54hidModule *self,
+				    guint32 cmd,
+				    guint8 *data,
+				    guint8 data_sz,
+				    GError **error)
 {
 	FuDevice *proxy;
-	g_autoptr(FuRts54hidCmdBuffer) st = fu_rts54hid_cmd_buffer_new();
+	g_autoptr(FuRealtekRts54hidCmdBuffer) st = fu_realtek_rts54hid_cmd_buffer_new();
 
-	fu_rts54hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
-	fu_rts54hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_READ);
-	fu_rts54hid_cmd_buffer_set_dwregaddr(st, cmd);
-	fu_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
-	fu_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
-	fu_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
-	fu_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_realtek_rts54hid_cmd_buffer_set_cmd(st, FU_REALTEK_RTS54HID_CMD_WRITE_DATA);
+	fu_realtek_rts54hid_cmd_buffer_set_ext(st, FU_REALTEK_RTS54HID_EXT_I2C_READ);
+	fu_realtek_rts54hid_cmd_buffer_set_dwregaddr(st, cmd);
+	fu_realtek_rts54hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_realtek_rts54hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
 	fu_byte_array_set_size(st->buf, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 192, FALSE);
@@ -110,7 +110,7 @@ fu_rts54hid_module_i2c_read(FuRts54hidModule *self,
 				      0x0,
 				      st->buf->data,
 				      st->buf->len,
-				      FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				      FU_REALTEK_RTS54HID_DEVICE_TIMEOUT * 2,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		g_prefix_error(error, "failed to write i2c @%04x: ", self->target_addr);
@@ -120,7 +120,7 @@ fu_rts54hid_module_i2c_read(FuRts54hidModule *self,
 				      0x0,
 				      st->buf->data,
 				      st->buf->len,
-				      FU_RTS54HID_DEVICE_TIMEOUT,
+				      FU_REALTEK_RTS54HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
 		return FALSE;
@@ -129,18 +129,18 @@ fu_rts54hid_module_i2c_read(FuRts54hidModule *self,
 			      0x0,
 			      st->buf->data,
 			      st->buf->len,
-			      FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,
+			      FU_REALTEK_RTS54HID_CMD_BUFFER_OFFSET_DATA,
 			      data_sz,
 			      error);
 }
 
 static gboolean
-fu_rts54hid_module_set_quirk_kv(FuDevice *device,
-				const gchar *key,
-				const gchar *value,
-				GError **error)
+fu_realtek_rts54hid_module_set_quirk_kv(FuDevice *device,
+					const gchar *key,
+					const gchar *value,
+					GError **error)
 {
-	FuRts54hidModule *self = FU_RTS54HID_MODULE(device);
+	FuRealtekRts54hidModule *self = FU_REALTEK_RTS54HID_MODULE(device);
 	guint64 tmp = 0;
 
 	/* load target address from quirks */
@@ -156,7 +156,7 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value,
 				 &tmp,
 				 0,
-				 FU_RTS54HID_I2C_SPEED_LAST - 1,
+				 FU_REALTEK_RTS54HID_I2C_SPEED_LAST - 1,
 				 FU_INTEGER_BASE_AUTO,
 				 error))
 			return FALSE;
@@ -181,13 +181,13 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 }
 
 static gboolean
-fu_rts54hid_module_write_firmware(FuDevice *module,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_realtek_rts54hid_module_write_firmware(FuDevice *module,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
-	FuRts54hidModule *self = FU_RTS54HID_MODULE(module);
+	FuRealtekRts54hidModule *self = FU_REALTEK_RTS54HID_MODULE(module);
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -200,14 +200,14 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
-						FU_RTS54HID_TRANSFER_BLOCK_SIZE,
+						FU_REALTEK_RTS54HID_TRANSFER_BLOCK_SIZE,
 						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (0) {
-		if (!fu_rts54hid_module_i2c_read(self, 0x0000, NULL, 0, error))
+		if (!fu_realtek_rts54hid_module_i2c_read(self, 0x0000, NULL, 0, error))
 			return FALSE;
-		if (!fu_rts54hid_module_i2c_write(self, NULL, 0, error))
+		if (!fu_realtek_rts54hid_module_i2c_write(self, NULL, 0, error))
 			return FALSE;
 	}
 
@@ -222,10 +222,10 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 			return FALSE;
 
 		/* write chunk */
-		if (!fu_rts54hid_module_i2c_write(self,
-						  fu_chunk_get_data(chk),
-						  fu_chunk_get_data_sz(chk),
-						  error))
+		if (!fu_realtek_rts54hid_module_i2c_write(self,
+							  fu_chunk_get_data(chk),
+							  fu_chunk_get_data_sz(chk),
+							  error))
 			return FALSE;
 
 		/* update progress */
@@ -239,49 +239,49 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 }
 
 static void
-fu_rts54hid_module_init(FuRts54hidModule *self)
+fu_realtek_rts54hid_module_init(FuRealtekRts54hidModule *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_RTS54HID_DEVICE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_REALTEK_RTS54HID_DEVICE);
 }
 
 static void
-fu_rts54hid_module_sync_parent_proxy(FuRts54hidModule *self)
+fu_realtek_rts54hid_module_sync_parent_proxy(FuRealtekRts54hidModule *self)
 {
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
-	if (FU_IS_RTS54HID_DEVICE(parent))
+	if (FU_IS_REALTEK_RTS54HID_DEVICE(parent))
 		fu_device_set_proxy(FU_DEVICE(self), parent);
 }
 
 static void
-fu_rts54hid_module_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+fu_realtek_rts54hid_module_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuRts54hidModule *self = FU_RTS54HID_MODULE(device);
-	fu_rts54hid_module_sync_parent_proxy(self);
+	FuRealtekRts54hidModule *self = FU_REALTEK_RTS54HID_MODULE(device);
+	fu_realtek_rts54hid_module_sync_parent_proxy(self);
 }
 
 static void
-fu_rts54hid_module_constructed(GObject *object)
+fu_realtek_rts54hid_module_constructed(GObject *object)
 {
-	FuRts54hidModule *self = FU_RTS54HID_MODULE(object);
+	FuRealtekRts54hidModule *self = FU_REALTEK_RTS54HID_MODULE(object);
 
-	fu_rts54hid_module_sync_parent_proxy(self);
+	fu_realtek_rts54hid_module_sync_parent_proxy(self);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::parent",
-			 G_CALLBACK(fu_rts54hid_module_parent_notify_cb),
+			 G_CALLBACK(fu_realtek_rts54hid_module_parent_notify_cb),
 			 NULL);
-	G_OBJECT_CLASS(fu_rts54hid_module_parent_class)->constructed(object);
+	G_OBJECT_CLASS(fu_realtek_rts54hid_module_parent_class)->constructed(object);
 }
 
 static void
-fu_rts54hid_module_class_init(FuRts54hidModuleClass *klass)
+fu_realtek_rts54hid_module_class_init(FuRealtekRts54hidModuleClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_rts54hid_module_constructed;
-	device_class->write_firmware = fu_rts54hid_module_write_firmware;
-	device_class->to_string = fu_rts54hid_module_to_string;
-	device_class->set_quirk_kv = fu_rts54hid_module_set_quirk_kv;
+	object_class->constructed = fu_realtek_rts54hid_module_constructed;
+	device_class->write_firmware = fu_realtek_rts54hid_module_write_firmware;
+	device_class->to_string = fu_realtek_rts54hid_module_to_string;
+	device_class->set_quirk_kv = fu_realtek_rts54hid_module_set_quirk_kv;
 }
