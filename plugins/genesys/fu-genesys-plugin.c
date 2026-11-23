@@ -80,6 +80,8 @@ fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physica
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if (!FU_IS_GENESYS_USBHUB_DEVICE(dev))
 			continue;
+		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+			continue;
 		if (g_strcmp0(fu_device_get_physical_id(dev), physical_id) == 0)
 			return dev;
 	}
@@ -87,36 +89,51 @@ fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physica
 }
 
 /* the engine only links hubs it can match by physical ID, which does not work for cascaded hubs */
-static void
+static gboolean
 fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
 {
+	FuDevice *existing_parent;
 	FuDevice *parent;
 	guint16 parent_pid;
 	g_autoptr(FuDevice) usb_parent = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	if (fu_device_has_private_flag(hub, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+		return FALSE;
 	parent_pid = fu_genesys_usbhub_device_get_parent_hub_pid(FU_GENESYS_USBHUB_DEVICE(hub));
-	if (parent_pid == 0 || fu_device_get_parent(hub, NULL) != NULL)
-		return;
+	if (parent_pid == 0)
+		return FALSE;
+
+	/* drop a stale parent left behind after a replug before linking to the new one */
+	existing_parent = fu_device_get_parent(hub, NULL);
+	if (existing_parent != NULL) {
+		if (!fu_device_has_private_flag(existing_parent,
+						FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+			return FALSE;
+		fu_device_remove_child(existing_parent, hub);
+		g_object_set(hub, "parent", NULL, NULL);
+	}
+
 	usb_parent = fu_device_get_backend_parent(hub, &error_local);
 	if (usb_parent == NULL) {
 		g_warning("hub cannot find its upstream hub: %s", error_local->message);
-		return;
+		return FALSE;
 	}
 
 	/* the upstream hub may be added later, which links it from there */
 	parent = fu_genesys_plugin_get_device_by_physical_id(self,
 							     fu_device_get_physical_id(usb_parent));
 	if (parent == NULL || parent == hub)
-		return;
+		return FALSE;
 	if (!fu_genesys_usbhub_device_check_parent_hub(parent_pid,
 						       fu_device_get_vid(hub),
 						       parent,
 						       &error_local)) {
 		g_warning("hub not linked to its upstream hub: %s", error_local->message);
-		return;
+		return FALSE;
 	}
 	fu_device_add_child(parent, hub);
+	return TRUE;
 }
 
 static void
@@ -128,10 +145,39 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 	/* link hub to upstream hub, whichever of the two arrived first */
 	if (FU_IS_GENESYS_USBHUB_DEVICE(device)) {
 		GPtrArray *devices = fu_plugin_get_devices(self);
+		gboolean linked = FALSE;
+
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *dev = g_ptr_array_index(devices, i);
-			if (FU_IS_GENESYS_USBHUB_DEVICE(dev))
-				fu_genesys_plugin_link_hub(self, dev);
+			if (FU_IS_GENESYS_USBHUB_DEVICE(dev) &&
+			    fu_genesys_plugin_link_hub(self, dev))
+				linked = TRUE;
+		}
+
+		/* retry late flash setup for hubs whose HID arrived before the upstream chain */
+		if (linked) {
+			g_autoptr(GPtrArray) retried = g_ptr_array_new();
+			for (guint i = 0; i < devices->len; i++) {
+				FuDevice *dev = g_ptr_array_index(devices, i);
+				g_autoptr(GError) error_local = NULL;
+
+				if (!FU_IS_GENESYS_USBHUB_DEVICE(dev))
+					continue;
+				if (g_ptr_array_find(retried, dev, NULL))
+					continue;
+				g_ptr_array_add(retried, dev);
+				if (fu_device_has_private_flag(dev,
+							       FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+					continue;
+				if (fu_device_get_proxy(dev, NULL) == NULL)
+					continue;
+				if (!fu_genesys_usbhub_device_setup_flash_late(
+					FU_GENESYS_USBHUB_DEVICE(dev),
+					&error_local)) {
+					g_warning("failed to finish hub setup through the hid: %s",
+						  error_local->message);
+				}
+			}
 		}
 		return;
 	}

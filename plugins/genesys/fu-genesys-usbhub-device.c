@@ -314,6 +314,8 @@ fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
 		ancestor = fu_device_get_parent(ancestor, NULL);
 		if (ancestor == NULL)
 			break;
+		if (fu_device_has_private_flag(ancestor, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+			break;
 		if (fu_device_get_vid(ancestor) == hub_vid &&
 		    fu_device_get_pid(ancestor) == expected_root_pid)
 			return TRUE;

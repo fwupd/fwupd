@@ -11,15 +11,17 @@
 /*
  * The test vectors are literal hardware identifiers (PIDs, flash opcodes and offsets), so the
  * count of inline magic values is expected to be high.
- * nocheck:magic-inlines=290
+ * nocheck:magic-inlines=360
  */
 
 #include "fu-cfi-device.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-genesys-hubhid-device.h"
+#include "fu-genesys-plugin.h"
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
+#include "fu-plugin-private.h"
 
 /*
  * The quirk fixtures are found relative to G_TEST_SRCDIR so the installed test does not need the
@@ -1263,6 +1265,7 @@ fu_genesys_test_hub_pid_of(FuDevice *device, const gchar *key)
 	return pid;
 }
 
+/* nocheck:name */
 static guint64
 fu_genesys_test_parent_pid_of(FuDevice *device)
 {
@@ -2975,6 +2978,296 @@ fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func(void)
 	}
 }
 
+static void
+fu_genesys_test_set_backend_parent(FuContext *ctx, FuDevice *device, FuDevice *parent)
+{
+	g_autoptr(FuGenesysTestBackend) backend = g_object_new(FU_TYPE_GENESYS_TEST_BACKEND,
+							       "name",
+							       "genesys-test",
+							       "context",
+							       ctx,
+							       NULL);
+	if (parent != NULL) {
+		g_autoptr(FuDevice) usb_parent =
+		    fu_genesys_test_parent_new(fu_device_get_vid(parent),
+					       fu_device_get_pid(parent));
+		fu_device_set_physical_id(usb_parent, fu_device_get_physical_id(parent));
+		backend->parent = usb_parent;
+		g_object_set_data_full(G_OBJECT(backend),
+				       "genesys-test-usb-parent",
+				       g_steal_pointer(&usb_parent),
+				       g_object_unref);
+	}
+	fu_device_set_backend(device, FU_BACKEND(backend));
+	/* fu_device_set_backend() holds a weak ref, so keep the test backend alive with device */
+	g_object_set_data_full(G_OBJECT(device),
+			       "genesys-test-backend",
+			       g_steal_pointer(&backend),
+			       g_object_unref);
+}
+
+static void
+fu_genesys_test_plugin_add_device(FuPlugin *plugin, FuDevice *device)
+{
+	fu_plugin_add_device(plugin, device);
+	fu_plugin_runner_device_added(plugin, device);
+}
+
+/* plugin-level lifecycle: reverse arrival order, same-PID disambiguation by physical ID,
+ * wrong root hub fail-closed, HID replug, and stale parent cleanup on hub replug */
+static void
+fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+
+	/* 1. Reverse arrival: L3 -> L3 HID -> L2 -> L1.
+	 * L3 HID arrives before L1/L2, so late flash setup is refused with zero ISP_ENTER until
+	 * L1 completes the chain; once L1 arrives, L2->L1 and L3->L2 are linked and L3 passes
+	 * the hub chain gate. */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) l2 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		g_autoptr(FuDevice) hid_l3 = fu_genesys_test_hid_new(0x17EF, 0x4C42);
+		FuGenesysUsbhubDevice *l3_self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1, "dock-a-l1");
+		fu_device_set_id(l2, "dock-a-l2");
+		fu_device_set_id(l3, "dock-a-l3");
+		fu_device_set_id(hid_l3, "dock-a-hid-l3");
+		fu_device_set_physical_id(l1, "1-4");
+		fu_device_set_physical_id(l2, "1-4.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_device_set_physical_id(hid_l3, "1-4.1.2.4");
+		fu_genesys_test_set_backend_parent(ctx, l2, l1);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2);
+		fu_genesys_test_set_backend_parent(ctx, hid_l3, l3);
+		fu_genesys_usbhub_device_set_ctrl_hook(l3_self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(l3_self);
+		fu_genesys_usbhub_device_begin_flash_setup(l3_self);
+
+		/* L3 arrives alone: no parent link yet */
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_assert_null(fu_device_get_parent(l3, NULL));
+
+		/* L3 HID arrives before L1/L2: proxy binds, late setup is refused at hub chain */
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*not linked below 17ef:1121*");
+		fu_genesys_test_plugin_add_device(plugin, hid_l3);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_proxy(l3, NULL) == hid_l3);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(l3, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+
+		/* L2 arrives: L3 links to L2, retry still refused because L1 is missing */
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*not linked below 17ef:1121*");
+		fu_genesys_test_plugin_add_device(plugin, l2);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2);
+		g_assert_null(fu_device_get_parent(l2, NULL));
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+
+		/* L1 arrives: L2 links to L1, retry passes hub chain gate (and stops at fake USB
+		 * open in unit tests, proving it cleared ensure_hub_chain) */
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*failed to finish hub setup through the hid:*");
+		fu_genesys_test_plugin_add_device(plugin, l1);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_parent(l2, NULL) == l1);
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2);
+		g_assert_cmpstr(fu_device_get_composite_id(l3), ==, fu_device_get_id(l1));
+
+		/* opened path now clears the hub chain gate and reaches ISP_ENTER */
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+	}
+
+	/* 2. Same PID on different physical parents: L3 on 1-4.1.2 only links to 1-4.1, never
+	 * to another 17EF:1122 hub on 1-5.1 */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1_other = fu_genesys_test_parent_new(0x17EF, 0x1121);
+		g_autoptr(FuDevice) l1_own = fu_genesys_test_parent_new(0x17EF, 0x1121);
+		g_autoptr(FuDevice) l2_other =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l2_own =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+
+		fu_device_set_id(l2_other, "dock-b-l2");
+		fu_device_set_id(l2_own, "dock-a-l2");
+		fu_device_set_id(l3, "dock-a-l3");
+		fu_device_set_physical_id(l1_other, "1-5");
+		fu_device_set_physical_id(l1_own, "1-4");
+		fu_device_set_physical_id(l2_other, "1-5.1");
+		fu_device_set_physical_id(l2_own, "1-4.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_genesys_test_set_backend_parent(ctx, l2_other, l1_other);
+		fu_genesys_test_set_backend_parent(ctx, l2_own, l1_own);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2_own);
+
+		fu_genesys_test_plugin_add_device(plugin, l2_other);
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_assert_null(fu_device_get_parent(l3, NULL));
+
+		fu_genesys_test_plugin_add_device(plugin, l2_own);
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2_own);
+	}
+
+	/* 3. Abnormal topology (B model 1151 above L2): L2 refuses to link to 1151, L3 stays
+	 * inhibited with zero ISP_ENTER and zero reset */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1_b =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1151", 0x1151);
+		g_autoptr(FuDevice) l2 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		g_autoptr(FuDevice) hid_l3 = fu_genesys_test_hid_new(0x17EF, 0x4C42);
+		FuGenesysUsbhubDevice *l3_self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1_b, "dock-b-l1");
+		fu_device_set_id(l2, "dock-b-l2");
+		fu_device_set_id(l3, "dock-b-l3");
+		fu_device_set_id(hid_l3, "dock-b-hid-l3");
+		fu_device_set_physical_id(l1_b, "1-4");
+		fu_device_set_physical_id(l2, "1-4.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_device_set_physical_id(hid_l3, "1-4.1.2.4");
+		fu_genesys_test_set_backend_parent(ctx, l2, l1_b);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2);
+		fu_genesys_test_set_backend_parent(ctx, hid_l3, l3);
+		fu_genesys_usbhub_device_set_ctrl_hook(l3_self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(l3_self);
+		fu_genesys_usbhub_device_begin_flash_setup(l3_self);
+
+		fu_genesys_test_plugin_add_device(plugin, l2);
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*not linked below 17ef:1121*");
+		fu_genesys_test_plugin_add_device(plugin, hid_l3);
+		g_test_assert_expected_messages();
+
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*hub not linked to its upstream hub*");
+		fu_genesys_test_plugin_add_device(plugin, l1_b);
+		g_test_assert_expected_messages();
+		g_assert_null(fu_device_get_parent(l2, NULL));
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(l3, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+	}
+
+	/* 4. HID removal/replug and parent removal/re-enumeration:
+	 * disconnected ancestors are rejected, and re-enumerated parents replace stale links */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1_old =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) l1_new =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) l2 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		g_autoptr(FuDevice) hid1 = fu_genesys_test_hid_new(0x17EF, 0x4C42);
+		g_autoptr(FuDevice) hid2 = fu_genesys_test_hid_new(0x17EF, 0x4C42);
+		FuGenesysUsbhubDevice *l3_self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1_old, "replug-l1-old");
+		fu_device_set_id(l1_new, "replug-l1-new");
+		fu_device_set_id(l2, "replug-l2");
+		fu_device_set_id(l3, "replug-l3");
+		fu_device_set_id(hid1, "replug-hid1");
+		fu_device_set_id(hid2, "replug-hid2");
+		fu_device_set_physical_id(l1_old, "1-4");
+		fu_device_set_physical_id(l1_new, "1-4");
+		fu_device_set_physical_id(l2, "1-4.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_device_set_physical_id(hid1, "1-4.1.2.4");
+		fu_device_set_physical_id(hid2, "1-4.1.2.4");
+		fu_genesys_test_set_backend_parent(ctx, l2, l1_old);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2);
+		fu_genesys_test_set_backend_parent(ctx, hid1, l3);
+		fu_genesys_test_set_backend_parent(ctx, hid2, l3);
+		fu_genesys_usbhub_device_set_ctrl_hook(l3_self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(l3_self);
+		fu_genesys_usbhub_device_begin_flash_setup(l3_self);
+
+		fu_genesys_test_plugin_add_device(plugin, l1_old);
+		fu_genesys_test_plugin_add_device(plugin, l2);
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*failed to finish hub setup through the hid:*");
+		fu_genesys_test_plugin_add_device(plugin, hid1);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_parent(l2, NULL) == l1_old);
+		g_assert_true(fu_device_get_proxy(l3, NULL) == hid1);
+
+		/* HID unplug + replug switches proxy cleanly to hid2 */
+		fu_device_add_private_flag(hid1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*failed to finish hub setup through the hid:*");
+		fu_genesys_test_plugin_add_device(plugin, hid2);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_proxy(l3, NULL) == hid2);
+
+		/* L1 disconnects: stale parent is no longer accepted by check_root_hub */
+		fu_device_add_private_flag(l1_old, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_clear_error(&error);
+
+		/* new L1 arrives on same physical path: replaces stale l1_old parent */
+		fu_genesys_test_set_backend_parent(ctx, l2, l1_new);
+		g_test_expect_message("FuPluginGenesys",
+				      G_LOG_LEVEL_WARNING,
+				      "*failed to finish hub setup through the hid:*");
+		fu_genesys_test_plugin_add_device(plugin, l1_new);
+		g_test_assert_expected_messages();
+		g_assert_true(fu_device_get_parent(l2, NULL) == l1_new);
+		g_assert_true(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x17EF, l3, &error));
+		g_assert_no_error(error);
+	}
+}
+
 /* only a failed signature check says the bank is bad; any other failure says nothing */
 static void
 fu_genesys_usbhub_device_p34_bank_state_from_error_func(void)
@@ -3079,6 +3372,8 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_flash_setup_isp_leave_func);
 	g_test_add_func("/fwupd/genesys/p34/flash-setup-hub-chain",
 			fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func);
+	g_test_add_func("/fwupd/genesys/p34/plugin-hub-lifecycle",
+			fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func);
 	g_test_add_func("/fwupd/genesys/p34/bank-state-from-image",
 			fu_genesys_usbhub_device_p34_bank_state_from_image_func);
 	g_test_add_func("/fwupd/genesys/p34/select-update-bank",
