@@ -450,16 +450,13 @@ fu_chunk_array_new(const guint8 *data,
 			page = offset_next / page_sz;
 		}
 
-		/* cut the packet so it does not straddle multiple blocks */
-		if (page_sz != packet_sz && page_sz > 0) {
-			gsize chunksz_tmp;
-			gsize offset_next = offset;
+		/* cut the packet so it does not straddle multiple pages */
+		if (page_sz > 0) {
+			gsize offset_abs = offset;
 
-			if (!fu_size_checked_inc(&offset_next, packet_sz, error))
+			if (!fu_size_checked_inc(&offset_abs, addr_offset, error))
 				return NULL;
-			chunksz_tmp = MIN(chunksz, offset_next % page_sz);
-			if (chunksz_tmp != 0)
-				chunksz = chunksz_tmp;
+			chunksz = MIN(chunksz, page_sz - (offset_abs % page_sz));
 		}
 		g_ptr_array_add(chunks,
 				fu_chunk_new(chunks->len,
