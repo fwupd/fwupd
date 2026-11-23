@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware" priority="1">
+  <id>com.lenovo.P34WD40.L1.firmware</id>
+  <name>Lenovo P34WD-40 USB Hub Firmware (L1, 17EF:1121)</name>
+  <summary>L1 fingerprint USB hub firmware for the Lenovo P34WD-40 dock</summary>
+  <description>
+    <p>Updates the Genesys Logic L1 USB hub (17EF:1121) of the Lenovo P34WD-40 dock.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>
+  </provides>
+  <url type="homepage">https://www.lenovo.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer_name>Lenovo</developer_name>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <releases>
+    <release urgency="medium" version="86.25" date="2026-10-28">
+      <checksum filename="l1.bin" target="content"/>
+      <description>
+        <p>P34WD-40 L1 USB hub firmware.</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="2.0.0">org.freedesktop.fwupd</id>
+  </requires>
+  <custom>
+    <value key="LVFS::VersionFormat">pair</value>
+    <value key="LVFS::UpdateProtocol">com.genesys.usbhub</value>
+  </custom>
+</component>

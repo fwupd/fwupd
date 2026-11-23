@@ -72,4 +72,12 @@ if get_option('tests')
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
   )
+  test(
+    'genesys-p34-hub-cab-lint',
+    python3,
+    args: [
+      files('tests/p34-hub-cab/lint-p34-hub-cab.py'),
+      '--self-test',
+    ],
+  )
 endif

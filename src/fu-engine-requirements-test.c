@@ -1477,6 +1477,199 @@ fu_engine_requirements_child_device_func(void)
 	g_assert_true(ret);
 }
 
+static gboolean
+fu_engine_requirements_p34_check(const gchar *xml,
+				 guint target_idx,
+				 const gchar *const dev_guids[3],
+				 GError **error)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) l1 = fu_device_new(ctx);
+	g_autoptr(FuDevice) l2 = fu_device_new(ctx);
+	g_autoptr(FuDevice) l3 = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	FuDevice *devs[3] = {l1, l2, l3};
+	const gchar *ids[3] = {"p34-l1", "p34-l2", "p34-l3"};
+	const gchar *vers[3] = {"86.20", "87.10", "88.10"};
+
+	fu_engine_set_silo(engine, silo_empty);
+	for (guint i = 0; i < 3; i++) {
+		fu_device_set_id(devs[i], ids[i]);
+		fu_device_set_name(devs[i], ids[i]);
+		fu_device_build_vendor_id_u16(devs[i], "USB", 0x17EF);
+		fu_device_add_protocol(devs[i], "com.genesys.usbhub");
+		fu_device_set_version_format(devs[i], FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version(devs[i], vers[i]);
+		fu_device_add_flag(devs[i], FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag(devs[i], FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+		/* non-emulated L2/L3 enforce parent requirements; L1 is the fingerprint hub */
+		if (i > 0)
+			fu_device_add_private_flag(devs[i],
+						   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_instance_id(devs[i], dev_guids[i]);
+	}
+	fu_device_add_child(l1, l2);
+	fu_device_add_child(l2, l3);
+	fu_engine_add_device(engine, l1);
+
+	silo = xb_silo_new_from_xml(xml, error);
+	if (silo == NULL)
+		return FALSE;
+	component = xb_silo_query_first(silo, "component", error);
+	if (component == NULL)
+		return FALSE;
+
+	fu_release_set_device(release, devs[target_idx]);
+	fu_release_set_request(release, request);
+	if (!fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+	return fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, error);
+}
+
+static void
+fu_engine_requirements_p34_hub_chain_func(void)
+{
+	const gchar *model_a[3] = {
+	    "008d820f-ffc9-502d-8f25-f9313d04e8de", /* L1 17EF:1121 PROJECT */
+	    "7ea0761a-9e0c-5879-b808-e8d9b8beafae", /* L2 17EF:1122 PROJECT */
+	    "9a0bece0-69e7-5489-a218-6645fb94f72d", /* L3 17EF:1123 PROJECT */
+	};
+	const gchar *model_b[3] = {
+	    "00000000-0000-5000-8000-000000001151", /* L1 17EF:1151 (model B) */
+	    "7ea0761a-9e0c-5879-b808-e8d9b8beafae",
+	    "9a0bece0-69e7-5489-a218-6645fb94f72d",
+	};
+	const gchar *generic_vid_pid[3] = {
+	    "USB\\VID_17EF&PID_1121",
+	    "USB\\VID_17EF&PID_1122",
+	    "USB\\VID_17EF&PID_1123",
+	};
+	const gchar *xml_l1 =
+	    "<component type=\"firmware\" priority=\"1\">"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
+	    "  </provides>"
+	    "  <releases><release version=\"86.25\">"
+	    "    <checksum filename=\"l1.bin\" target=\"content\"/>"
+	    "  </release></releases>"
+	    "  <requires>"
+	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
+	    "  </requires>"
+	    "  <custom>"
+	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
+	    "  </custom>"
+	    "</component>";
+	const gchar *xml_l2 =
+	    "<component type=\"firmware\" priority=\"2\">"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
+	    "  </provides>"
+	    "  <releases><release version=\"87.16\">"
+	    "    <checksum filename=\"l2.bin\" target=\"content\"/>"
+	    "  </release></releases>"
+	    "  <requires>"
+	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
+	    "    <firmware depth=\"1\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
+	    "  </requires>"
+	    "  <custom>"
+	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
+	    "  </custom>"
+	    "</component>";
+	const gchar *xml_l3 =
+	    "<component type=\"firmware\" priority=\"3\">"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">9a0bece0-69e7-5489-a218-6645fb94f72d</firmware>"
+	    "  </provides>"
+	    "  <releases><release version=\"88.17\">"
+	    "    <checksum filename=\"l3.bin\" target=\"content\"/>"
+	    "  </release></releases>"
+	    "  <requires>"
+	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
+	    "    <firmware depth=\"1\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
+	    "    <firmware depth=\"2\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
+	    "  </requires>"
+	    "  <custom>"
+	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
+	    "  </custom>"
+	    "</component>";
+	const gchar *xml_l2_no_parent =
+	    "<component type=\"firmware\">"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
+	    "  </provides>"
+	    "  <releases><release version=\"87.16\">"
+	    "    <checksum filename=\"l2.bin\" target=\"content\"/>"
+	    "  </release></releases>"
+	    "  <requires>"
+	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
+	    "  </requires>"
+	    "  <custom>"
+	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
+	    "  </custom>"
+	    "</component>";
+	const gchar *xml_l3_wrong_depth2 =
+	    "<component type=\"firmware\">"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">9a0bece0-69e7-5489-a218-6645fb94f72d</firmware>"
+	    "  </provides>"
+	    "  <releases><release version=\"88.17\">"
+	    "    <checksum filename=\"l3.bin\" target=\"content\"/>"
+	    "  </release></releases>"
+	    "  <requires>"
+	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
+	    "    <firmware depth=\"1\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
+	    "    <firmware depth=\"2\">00000000-0000-5000-8000-000000001151</firmware>"
+	    "  </requires>"
+	    "  <custom>"
+	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
+	    "  </custom>"
+	    "</component>";
+	const gchar *valid_xmls[3] = {xml_l1, xml_l2, xml_l3};
+	g_autoptr(GError) error = NULL;
+
+	/* model A: all three hubs pass */
+	for (guint i = 0; i < 3; i++) {
+		g_assert_true(fu_engine_requirements_p34_check(valid_xmls[i], i, model_a, &error));
+		g_assert_no_error(error);
+	}
+
+	/* model B (L1 = 1151): L1 GUID does not match, L2/L3 fail parent GUID requirements */
+	for (guint i = 0; i < 3; i++) {
+		FwupdError expected = i == 0 ? FWUPD_ERROR_NOT_FOUND : FWUPD_ERROR_NOT_SUPPORTED;
+		g_assert_false(fu_engine_requirements_p34_check(valid_xmls[i], i, model_b, &error));
+		g_assert_error(error, FWUPD_ERROR, expected);
+		g_clear_error(&error);
+	}
+
+	/* L2 missing depth=1 parent requirement: rejected by enforce-requires */
+	g_assert_false(fu_engine_requirements_p34_check(xml_l2_no_parent, 1, model_a, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* L3 wrong depth=2 GUID: rejected by parent GUID check */
+	g_assert_false(fu_engine_requirements_p34_check(xml_l3_wrong_depth2, 2, model_a, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* third-party hubs sharing only generic VID/PID GUIDs must not match P34 updates */
+	for (guint i = 0; i < 3; i++) {
+		g_assert_false(
+		    fu_engine_requirements_p34_check(valid_xmls[i], i, generic_vid_pid, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+		g_clear_error(&error);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1527,5 +1720,7 @@ main(int argc, char **argv)
 			fu_engine_requirements_vercmp_glob_func);
 	g_test_add_func("/fwupd/engine/requirements/vercmp-glob-fallback",
 			fu_engine_requirements_vercmp_glob_fallback_func);
+	g_test_add_func("/fwupd/engine/requirements/p34-hub-chain",
+			fu_engine_requirements_p34_hub_chain_func);
 	return g_test_run();
 }

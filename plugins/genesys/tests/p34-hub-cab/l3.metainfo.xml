@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Priority 3 installs L3 first and may also be chosen as the primary UI card on LVFS -->
+<component type="firmware" priority="3">
+  <id>com.lenovo.P34WD40.L3.firmware</id>
+  <name>Lenovo P34WD-40 USB Hub Firmware (L3, 17EF:1123)</name>
+  <summary>USB hub firmware update for the Lenovo P34WD-40 dock (L3, 17EF:1123)</summary>
+  <description>
+    <p>Updates the Genesys Logic L3 USB hub (17EF:1123) of the Lenovo P34WD-40 dock.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">9a0bece0-69e7-5489-a218-6645fb94f72d</firmware>
+  </provides>
+  <url type="homepage">https://www.lenovo.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer_name>Lenovo</developer_name>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <releases>
+    <release urgency="medium" version="88.17" date="2026-10-28">
+      <checksum filename="l3.bin" target="content"/>
+      <description>
+        <p>P34WD-40 L3 USB hub firmware.</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="2.0.0">org.freedesktop.fwupd</id>
+    <firmware depth="1">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>
+    <firmware depth="2">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>
+  </requires>
+  <custom>
+    <value key="LVFS::VersionFormat">pair</value>
+    <value key="LVFS::UpdateProtocol">com.genesys.usbhub</value>
+  </custom>
+</component>

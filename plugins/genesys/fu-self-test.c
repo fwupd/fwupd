@@ -1485,6 +1485,25 @@ fu_genesys_usbhub_device_p34_parent_hub_entries_func(void)
 	g_assert_null(klass->dump_firmware(hub, progress, &error));
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "parent hub"));
+	g_clear_error(&error);
+
+	/* --ignore-requirements and --force must never bypass the plugin topology gate */
+	g_assert_false(
+	    klass->prepare(hub,
+			   progress,
+			   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS | FWUPD_INSTALL_FLAG_FORCE,
+			   &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "parent hub"));
+	g_clear_error(&error);
+	g_assert_false(
+	    klass->write_firmware(hub,
+				  firmware,
+				  progress,
+				  FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS | FWUPD_INSTALL_FLAG_FORCE,
+				  &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "parent hub"));
 }
 
 /* a backend that only answers "who is the parent of this device", as udev/libusb would */
