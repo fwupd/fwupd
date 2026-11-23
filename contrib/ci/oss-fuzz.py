@@ -315,7 +315,12 @@ class Builder:
         """create a zip file archive from a glob"""
         if not corpus:
             return
-        argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + corpus
+
+        # zip would otherwise update the existing archive, keeping stale entries
+        fn_zip = os.path.join(self.installdir, dst)
+        if os.path.exists(fn_zip):
+            os.unlink(fn_zip)
+        argv = ["zip", "--junk-paths", fn_zip] + corpus
         print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
