@@ -18,6 +18,10 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+[HIDRAW\VEN_04F3&DEV_33B4]
+Plugin = elantp
+GType = FuElantpHidDevice
+
 # usb-hid-bridge
 [HIDRAW\VEN_04F3&DEV_044A]
 Plugin = elantp
