@@ -1,0 +1,95 @@
+{
+  "FwupdVersion": "2.2.2",
+  "UsbDevices": [
+    {
+      "Created": "2026-11-06T12:00:00.000000Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:1d.0/0000:3b:00.0/host0/target0:0:0/0:0:0:0/scsi_generic/sg0",
+      "DeviceFile": "/dev/sg0",
+      "Subsystem": "scsi_generic",
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "scsi_generic"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "sg0"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:1d.0/0000:3b:00.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:3b:00.0",
+          "Vid": 4096,
+          "Pid": 178
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x1000"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x00b2"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x060400"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x060400"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x01"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x1028"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x2330"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:3b:00.0"
+        },
+        {
+          "Id": "Ioctl:Request=0x2285,DxferDirection=0xfffffffd,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x100,CdbData=PAEAAAAAAAEAAA==,CdbLength=0xa,SenseData=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,SenseLength=0x20",
+          "DataOut": "IgAA6gOl6lql6lqlMlqlQXdGdEEoAAAAHs5liwADoAQAAP8AAAD///7///88AAAAwEcAAEQFAADARwAAAAAAACD///9AKCMpUENJLTQuMTYwLjMuMCAwOS8yNy8yMDI0AAAAAAAAAAAg////QCgjKURlbGwgRnJ5ZXIgVS4yIFNXMQAAAAAAAAAAAAAAAAAA/18t6TyQn+UA0InlsE8Q7v8AFOMAAAAaxwAA+usAAPq4kE/iiIAf5QAgoOMJAKDhCHCJ4Df/L+EIkJ/lANCZ5f9fvege/y/h3ElwADAPMO4DABDjAACg4xUPBx4wDzDuBzQQ4qM7oOEcAAAKAKCg4w==",
+          "SenseDataOut": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      ]
+    }
+  ]
+}
