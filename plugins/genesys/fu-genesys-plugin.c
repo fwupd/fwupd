@@ -44,6 +44,7 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "GenesysSupportCodeSize");
 	fu_context_add_quirk_key(ctx, "GenesysHidProxyPid");
 	fu_context_add_quirk_key(ctx, "GenesysParentHubPid");
+	fu_context_add_quirk_key(ctx, "GenesysRootHubPid");
 	fu_context_add_quirk_key(ctx, "GenesysHubBank1Address");
 	fu_context_add_quirk_key(ctx, "GenesysHubBank2Address");
 	fu_context_add_quirk_key(ctx, "GenesysHubBankCapacity");
@@ -85,11 +86,55 @@ fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physica
 	return NULL;
 }
 
+/* the engine only links hubs it can match by physical ID, which does not work for cascaded hubs */
+static void
+fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
+{
+	FuDevice *parent;
+	guint16 parent_pid;
+	g_autoptr(FuDevice) usb_parent = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	parent_pid = fu_genesys_usbhub_device_get_parent_hub_pid(FU_GENESYS_USBHUB_DEVICE(hub));
+	if (parent_pid == 0 || fu_device_get_parent(hub, NULL) != NULL)
+		return;
+	usb_parent = fu_device_get_backend_parent(hub, &error_local);
+	if (usb_parent == NULL) {
+		g_warning("hub cannot find its upstream hub: %s", error_local->message);
+		return;
+	}
+
+	/* the upstream hub may be added later, which links it from there */
+	parent = fu_genesys_plugin_get_device_by_physical_id(self,
+							     fu_device_get_physical_id(usb_parent));
+	if (parent == NULL || parent == hub)
+		return;
+	if (!fu_genesys_usbhub_device_check_parent_hub(parent_pid,
+						       fu_device_get_vid(hub),
+						       parent,
+						       &error_local)) {
+		g_warning("hub not linked to its upstream hub: %s", error_local->message);
+		return;
+	}
+	fu_device_add_child(parent, hub);
+}
+
 static void
 fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 {
 	FuDevice *parent = NULL;
 	g_autoptr(FuDevice) usb_parent = NULL;
+
+	/* link hub to upstream hub, whichever of the two arrived first */
+	if (FU_IS_GENESYS_USBHUB_DEVICE(device)) {
+		GPtrArray *devices = fu_plugin_get_devices(self);
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *dev = g_ptr_array_index(devices, i);
+			if (FU_IS_GENESYS_USBHUB_DEVICE(dev))
+				fu_genesys_plugin_link_hub(self, dev);
+		}
+		return;
+	}
 
 	/* link hid to parent hub */
 	if (!FU_IS_GENESYS_HUBHID_DEVICE(device))

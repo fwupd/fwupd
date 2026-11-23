@@ -63,6 +63,15 @@ fu_genesys_usbhub_device_check_parent_hub(guint16 expected_parent_pid,
 					  GError **error);
 
 gboolean
+fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
+					guint16 hub_vid,
+					FuDevice *device,
+					GError **error);
+
+guint16
+fu_genesys_usbhub_device_get_parent_hub_pid(FuGenesysUsbhubDevice *self);
+
+gboolean
 fu_genesys_usbhub_device_check_hid_binding(const gchar *hub_physical_id,
 					   guint16 hub_vid,
 					   guint16 expected_hid_pid,

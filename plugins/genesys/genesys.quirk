@@ -24,7 +24,12 @@ GType = FuGenesysUsbhubDevice
 # replugged; a removed HID is replaced normally.
 # GenesysParentHubPid is the Hub that must be the direct upstream parent (L2 below L1, L3 below L2);
 # it is checked before the first read in setup and before every state-changing entry.
-# 1121 has none: its parent is the host side (a root hub as captured) and has no fixed PID.
+# GenesysRootHubPid is the fingerprint Hub that must be linked above (L3 below L1 through L2); the
+# plugin links each Hub to its GenesysParentHubPid Hub, and an unlinked chain refuses to write.
+# enforce-requires on 1122/1123: the CAB must name the Hub above them (<firmware depth=...>), so one
+# package cannot reach a dock of another model. 1121 has none: it is the fingerprint Hub itself, so
+# the CAB binds it with its own GUID and the plugin checks PROJECT/IC. Its parent is the host side
+# (a root hub as captured) and has no fixed PID.
 [USB\VID_17EF&PID_1121]
 Plugin = genesys
 GType = FuGenesysUsbhubDevice
@@ -35,7 +40,7 @@ RemoveDelay = 40000
 [USB\VID_17EF&PID_1122]
 Plugin = genesys
 GType = FuGenesysUsbhubDevice
-Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image
+Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image,enforce-requires
 GenesysHidProxyPid = 0x4C41
 GenesysParentHubPid = 0x1121
 RemoveDelay = 40000
@@ -43,9 +48,10 @@ RemoveDelay = 40000
 [USB\VID_17EF&PID_1123]
 Plugin = genesys
 GType = FuGenesysUsbhubDevice
-Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image
+Flags = strict-project-check,hid-transport,require-hid-proxy,single-hid-proxy,dual-image,enforce-requires
 GenesysHidProxyPid = 0x4C42
 GenesysParentHubPid = 0x1122
+GenesysRootHubPid = 0x1121
 RemoveDelay = 40000
 
 # Genesys Logic USB Hubs' HID

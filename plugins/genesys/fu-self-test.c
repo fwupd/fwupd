@@ -242,6 +242,7 @@ fu_genesys_test_context_new(void)
 	g_type_ensure(FU_TYPE_GENESYS_HUBHID_DEVICE);
 	fu_context_add_quirk_key(ctx, "GenesysHidProxyPid");
 	fu_context_add_quirk_key(ctx, "GenesysParentHubPid");
+	fu_context_add_quirk_key(ctx, "GenesysRootHubPid");
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, quirks_dir);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
@@ -1246,12 +1247,13 @@ fu_genesys_test_parent_new(guint16 vid, guint16 pid)
 
 /* the value is read back through to_string, the field is private; nocheck:name */
 static guint64
-fu_genesys_test_parent_pid_of(FuDevice *device)
+fu_genesys_test_hub_pid_of(FuDevice *device, const gchar *key)
 {
 	g_autofree gchar *str = fu_device_to_string(device);
 	g_autofree gchar *pid_str = NULL;
+	g_autofree gchar *pattern = g_strdup_printf("%s:\\s+0x([0-9a-f]+)", key);
 	g_autoptr(GMatchInfo) match = NULL;
-	g_autoptr(GRegex) re = g_regex_new("ParentHubPid:\\s+0x([0-9a-f]+)", 0, 0, NULL);
+	g_autoptr(GRegex) re = g_regex_new(pattern, 0, 0, NULL);
 	guint64 pid = 0;
 
 	if (!g_regex_match(re, str, 0, &match))
@@ -1259,6 +1261,12 @@ fu_genesys_test_parent_pid_of(FuDevice *device)
 	pid_str = g_match_info_fetch(match, 1);
 	g_assert_true(fu_strtoull(pid_str, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, NULL));
 	return pid;
+}
+
+static guint64
+fu_genesys_test_parent_pid_of(FuDevice *device)
+{
+	return fu_genesys_test_hub_pid_of(device, "ParentHubPid");
 }
 
 /* the Hub must sit directly below the expected Genesys Hub, not below a neighbour or a foreign
@@ -1306,6 +1314,45 @@ fu_genesys_usbhub_device_p34_parent_hub_func(void)
 	g_clear_error(&error);
 }
 
+/* the fingerprint Hub has to be linked above the hub, a skipped or missing link refuses */
+static void
+fu_genesys_usbhub_device_p34_root_hub_func(void)
+{
+	g_autoptr(FuDevice) l1 = fu_genesys_test_parent_new(0x17EF, 0x1121);
+	g_autoptr(FuDevice) l2 = fu_genesys_test_parent_new(0x17EF, 0x1122);
+	g_autoptr(FuDevice) l3 = fu_genesys_test_parent_new(0x17EF, 0x1123);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_id(l1, "l1");
+	fu_device_set_id(l2, "l2");
+	fu_device_set_id(l3, "l3");
+
+	/* nothing configured: nothing is checked */
+	g_assert_true(fu_genesys_usbhub_device_check_root_hub(0, 0x17EF, l3, &error));
+	g_assert_no_error(error);
+
+	/* configured but not linked at all: fails closed */
+	g_assert_false(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x17EF, l3, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* L3 below L2 only: the chain does not reach the fingerprint Hub */
+	fu_device_add_child(l2, l3);
+	g_assert_false(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x17EF, l3, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* L3 > L2 > L1 passes */
+	fu_device_add_child(l1, l2);
+	g_assert_true(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x17EF, l3, &error));
+	g_assert_no_error(error);
+
+	/* the same PID of another vendor is not the fingerprint Hub */
+	g_assert_false(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x05E3, l3, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+}
+
 /* the quirk sets the parent only on 1122 and 1123, never on 1121 or on a hub without a quirk */
 static void
 fu_genesys_usbhub_device_p34_parent_hub_quirk_func(void)
@@ -1315,17 +1362,28 @@ fu_genesys_usbhub_device_p34_parent_hub_quirk_func(void)
 		const gchar *instance_id;
 		guint16 pid;
 		guint64 expected_parent;
+		guint64 expected_root;
+		gboolean enforce_requires;
 	} hubs[] = {
-	    {"USB\\VID_17EF&PID_1121", 0x1121, 0},
-	    {"USB\\VID_17EF&PID_1122", 0x1122, 0x1121},
-	    {"USB\\VID_17EF&PID_1123", 0x1123, 0x1122},
-	    {"USB\\VID_17EF&PID_1159", 0x1159, 0},
+	    {"USB\\VID_17EF&PID_1121", 0x1121, 0, 0, FALSE},
+	    {"USB\\VID_17EF&PID_1122", 0x1122, 0x1121, 0, TRUE},
+	    {"USB\\VID_17EF&PID_1123", 0x1123, 0x1122, 0x1121, TRUE},
+	    {"USB\\VID_17EF&PID_1159", 0x1159, 0, 0, FALSE},
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(hubs); i++) {
 		g_autoptr(FuDevice) hub =
 		    fu_genesys_test_hub_new(ctx, hubs[i].instance_id, hubs[i].pid);
 		g_assert_cmpuint(fu_genesys_test_parent_pid_of(hub), ==, hubs[i].expected_parent);
+		g_assert_cmpuint(fu_genesys_test_hub_pid_of(hub, "RootHubPid"),
+				 ==,
+				 hubs[i].expected_root);
+
+		/* only the Hubs below the fingerprint Hub need the CAB to name the Hub above */
+		g_assert_cmpint(
+		    fu_device_has_private_flag(hub, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES),
+		    ==,
+		    hubs[i].enforce_requires);
 	}
 }
 
@@ -2847,6 +2905,7 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_single_hid_ambiguous_func);
 	g_test_add_func("/fwupd/genesys/p34/parent-hub",
 			fu_genesys_usbhub_device_p34_parent_hub_func);
+	g_test_add_func("/fwupd/genesys/p34/root-hub", fu_genesys_usbhub_device_p34_root_hub_func);
 	g_test_add_func("/fwupd/genesys/p34/parent-hub-quirk",
 			fu_genesys_usbhub_device_p34_parent_hub_quirk_func);
 	g_test_add_func("/fwupd/genesys/p34/parent-hub-entries",

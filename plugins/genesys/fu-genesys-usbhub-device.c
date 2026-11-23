@@ -103,8 +103,9 @@ struct _FuGenesysUsbhubDevice {
 	gboolean isp_enter_sent;      /* ISP_ENTER may have reached the hub since the setup began */
 	FuGenesysUsbhubCtrlHook ctrl_hook; /* tests only */
 	gpointer ctrl_hook_data;
-	guint16 hid_proxy_pid;	      /* the HID model that belongs to this hub, from the quirk */
-	guint16 parent_hub_pid;	      /* 0 = no check, else the upstream hub PID, from the quirk */
+	guint16 hid_proxy_pid;	/* the HID model that belongs to this hub, from the quirk */
+	guint16 parent_hub_pid; /* 0 = no check, else the upstream hub PID, from the quirk */
+	guint16 root_hub_pid;	/* 0 = no check, else a hub that must be above, from the quirk */
 	gboolean hid_proxy_ambiguous; /* single-hid-proxy: a second live HID showed up */
 
 	FuCfiDevice *cfi_device;
@@ -298,6 +299,55 @@ fu_genesys_usbhub_device_ensure_parent_hub(FuGenesysUsbhubDevice *self, GError *
 							 error);
 }
 
+/* every hub between this one and the root hub must be linked by the plugin, none is assumed */
+gboolean
+fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
+					guint16 hub_vid,
+					FuDevice *device,
+					GError **error)
+{
+	FuDevice *ancestor = device;
+
+	if (expected_root_pid == 0)
+		return TRUE;
+	for (guint depth = 0; depth < 4; depth++) {
+		ancestor = fu_device_get_parent(ancestor, NULL);
+		if (ancestor == NULL)
+			break;
+		if (fu_device_get_vid(ancestor) == hub_vid &&
+		    fu_device_get_pid(ancestor) == expected_root_pid)
+			return TRUE;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "hub %04x:%04x is not linked below %04x:%04x, topology cannot be verified",
+		    hub_vid,
+		    fu_device_get_pid(device),
+		    hub_vid,
+		    expected_root_pid);
+	return FALSE;
+}
+
+/* the upstream chain is only linked after setup, so this is for the state-changing entries */
+static gboolean
+fu_genesys_usbhub_device_ensure_hub_chain(FuGenesysUsbhubDevice *self, GError **error)
+{
+	if (!fu_genesys_usbhub_device_ensure_parent_hub(self, error))
+		return FALSE;
+	return fu_genesys_usbhub_device_check_root_hub(self->root_hub_pid,
+						       fu_device_get_vid(FU_DEVICE(self)),
+						       FU_DEVICE(self),
+						       error);
+}
+
+guint16
+fu_genesys_usbhub_device_get_parent_hub_pid(FuGenesysUsbhubDevice *self)
+{
+	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self), 0);
+	return self->parent_hub_pid;
+}
+
 /* the flash geometry is only known once the late setup succeeded */
 static gboolean
 fu_genesys_usbhub_device_ensure_flash_setup(FuGenesysUsbhubDevice *self, GError **error)
@@ -323,7 +373,7 @@ fu_genesys_usbhub_device_ensure_hid_proxy(FuGenesysUsbhubDevice *self, GError **
 	if (!fu_genesys_usbhub_device_ensure_flash_setup(self, error))
 		return FALSE;
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_REQUIRE_HID_PROXY))
-		return fu_genesys_usbhub_device_ensure_parent_hub(self, error);
+		return fu_genesys_usbhub_device_ensure_hub_chain(self, error);
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_SINGLE_HID_PROXY) &&
 	    self->hid_proxy_ambiguous) {
 		g_set_error_literal(error,
@@ -361,7 +411,7 @@ fu_genesys_usbhub_device_ensure_hid_proxy(FuGenesysUsbhubDevice *self, GError **
 						       fu_device_get_physical_id(hid_parent),
 						       error))
 		return FALSE;
-	return fu_genesys_usbhub_device_ensure_parent_hub(self, error);
+	return fu_genesys_usbhub_device_ensure_hub_chain(self, error);
 }
 
 gboolean
@@ -2358,6 +2408,7 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 		fwupd_codec_string_append(str, idt, "HidProxyPid", hid_proxy_pid);
 	}
 	fwupd_codec_string_append_hex(str, idt, "ParentHubPid", self->parent_hub_pid);
+	fwupd_codec_string_append_hex(str, idt, "RootHubPid", self->root_hub_pid);
 	fwupd_codec_string_append_bool(str, idt, "FlashSetupPending", self->flash_setup_pending);
 	fwupd_codec_string_append_int(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
 	fwupd_codec_string_append_int(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
@@ -3902,6 +3953,14 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->parent_hub_pid = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysRootHubPid") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->root_hub_pid = tmp;
 
 		/* success */
 		return TRUE;

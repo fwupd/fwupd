@@ -115,6 +115,13 @@ USB product ID of the Hub that must be the direct upstream parent of this Hub, f
 for the Lenovo P34WD-40 `1122` Hub. The check is done before the first read in setup and before every
 entry that changes the device state. A Hub without this quirk has no fixed upstream parent.
 
+### GenesysRootHubPid
+
+USB product ID of the Hub that must be linked above this Hub, directly or through other Hubs, for
+example `0x1121` for the Lenovo P34WD-40 `1123` Hub. The plugin links every Hub to the Hub named by
+`GenesysParentHubPid`, and the chain is checked before every entry that changes the device state. An
+unlinked chain refuses the entry. A Hub without this quirk has no fixed root Hub.
+
 ### GenesysUsbhubSwitchRequest
 
 USB Hub Switch Request value.
@@ -264,8 +271,27 @@ The binding is checked, not assumed:
 * with `single-hid-proxy` a second HID below the same Hub blocks the Hub instead of guessing;
 * with `GenesysParentHubPid` the Hub must hang directly below the expected Genesys Hub, which keeps the
   three cascaded Hubs (`1121` > `1122` > `1123`) from being mixed up;
+* with `GenesysRootHubPid` the linked Hub chain must reach the expected Hub, so the plugin only writes
+  when the `1123` > `1122` > `1121` topology is known;
 * a Hub that does not pass these checks is inhibited and its detach, prepare, write and dump entries
   refuse before any command is sent.
+
+## Firmware Requirements for the Lenovo P34WD-40
+
+The plugin links each Hub to the Hub above it, so a CAB can name the model through the Hubs above:
+
+| Hub | `provides` (PROJECT GUID) | `requires` |
+|-----|---------------------------|------------|
+| `1121` | its own | none, it is the fingerprint Hub |
+| `1122` | its own | `<firmware depth="1">` the `1121` GUID |
+| `1123` | its own | `<firmware depth="1">` the `1122` GUID, `<firmware depth="2">` the `1121` GUID |
+
+`1122` and `1123` have `enforce-requires`, so a CAB without such a requirement is refused. The GUIDs
+contain the Hub PID and the PROJECT string and differ between dock models, so a CAB of another model does
+not match. Read them with `fwupdtool --plugins genesys get-devices`. `--ignore-requirements` does not
+lift the checks the plugin does itself (`GenesysParentHubPid`, `GenesysRootHubPid`, HID proxy and PROJECT).
+Components can set `priority` to `3`, `2` and `1` for `1123`, `1122` and `1121`; the order of a composite
+install has to be checked in the install log.
 
 ## Update Behavior
 
