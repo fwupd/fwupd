@@ -247,13 +247,13 @@ fu_ioctl_execute(FuIoctl *self,
 		 GError **error)
 {
 	FuDeviceEvent *event = NULL;
+	gboolean emulated;
+	gboolean save_events;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) event_id = NULL;
-	gboolean emulated =
-	    fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
-	gboolean save_events =
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS);
+
+	g_return_val_if_fail(FU_IS_IOCTL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* for fuzzing */
 	if (fu_device_has_private_flag(FU_DEVICE(self->udev_device),
@@ -264,6 +264,9 @@ fu_ioctl_execute(FuIoctl *self,
 	}
 
 	/* need event ID */
+	emulated = fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
+	save_events = fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
+					  FU_CONTEXT_FLAG_SAVE_EVENTS);
 	if (emulated || save_events) {
 		event_id = g_string_new(self->event_id->str);
 		if (g_strcmp0(event_id->str, "Ioctl:") == 0) {

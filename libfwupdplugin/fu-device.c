@@ -732,6 +732,9 @@ fu_device_retry(FuDevice *self,
 		GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_retry_full(self, func, count, priv->retry_delay, user_data, error);
 }
 
@@ -2328,20 +2331,14 @@ fu_device_add_child_by_kv(FuDevice *self, const gchar *str, GError **error)
 	g_auto(GStrv) split = g_strsplit(str, "|", -1);
 
 	/* type same as parent */
-	if (g_strv_length(split) == 1) {
-		return fu_device_add_child_by_type_guid(self, G_OBJECT_TYPE(self), split[1], error);
-	}
+	if (g_strv_length(split) == 1)
+		return fu_device_add_child_by_type_guid(self, G_OBJECT_TYPE(self), split[0], error);
 
 	/* type specified */
 	if (g_strv_length(split) == 2) {
-		GType devtype = g_type_from_name(split[0]);
-		if (devtype == 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "no GType registered");
+		GType devtype = G_TYPE_INVALID;
+		if (!fu_gtype_from_name(split[0], &devtype, FU_TYPE_DEVICE, error))
 			return FALSE;
-		}
 		return fu_device_add_child_by_type_guid(self, devtype, split[1], error);
 	}
 
@@ -2377,6 +2374,26 @@ fu_device_set_quirk_inhibit_section(FuDevice *self, const gchar *value, GError *
 		fu_device_uninhibit(self, sections[0]);
 
 	/* success */
+	return TRUE;
+}
+
+/* a missing GType is likely a plugin that is not built or loaded, so use NOT_SUPPORTED as that
+ * is ignored by fu_device_quirks_iter_cb() -- but a GType of the wrong parent is a quirk bug */
+static gboolean
+fu_device_quirk_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_gtype_from_name(name, gtype, parent_gtype, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    error_local->message);
+			return FALSE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -2624,16 +2641,10 @@ fu_device_set_quirk_kv(FuDevice *self,
 				value);
 			return TRUE;
 		}
-		priv->specialized_gtype = g_type_from_name(value);
-		if (priv->specialized_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unknown GType name %s",
-				    value);
-			return FALSE;
-		}
-		return TRUE;
+		return fu_device_quirk_gtype_from_name(value,
+						       &priv->specialized_gtype,
+						       FU_TYPE_DEVICE,
+						       error);
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PROXY_GTYPE) == 0) {
 		if (priv->proxy_gtype != G_TYPE_INVALID) {
@@ -2642,16 +2653,10 @@ fu_device_set_quirk_kv(FuDevice *self,
 				value);
 			return TRUE;
 		}
-		priv->proxy_gtype = g_type_from_name(value);
-		if (priv->proxy_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unknown GType name %s",
-				    value);
-			return FALSE;
-		}
-		return TRUE;
+		return fu_device_quirk_gtype_from_name(value,
+						       &priv->proxy_gtype,
+						       FU_TYPE_DEVICE,
+						       error);
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_GTYPE) == 0) {
 		if (priv->firmware_gtype != G_TYPE_INVALID) {
@@ -2660,16 +2665,10 @@ fu_device_set_quirk_kv(FuDevice *self,
 				value);
 			return TRUE;
 		}
-		priv->firmware_gtype = g_type_from_name(value);
-		if (priv->firmware_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unknown GType name %s",
-				    value);
-			return FALSE;
-		}
-		return TRUE;
+		return fu_device_quirk_gtype_from_name(value,
+						       &priv->firmware_gtype,
+						       FU_TYPE_FIRMWARE,
+						       error);
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
@@ -3843,6 +3842,7 @@ fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (device_class->convert_version == NULL) {
 		g_set_error_literal(error,
@@ -4427,13 +4427,11 @@ fu_device_get_backend_child(FuDevice *self,
 				    subsystem);
 			return NULL;
 		}
-		gtype = g_type_from_name(gtype_str);
-		if (gtype == G_TYPE_INVALID || !g_type_is_a(gtype, FU_TYPE_DEVICE)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no FuDevice GType %s",
-				    gtype_str);
+		if (!fu_gtype_from_name(gtype_str, &gtype, FU_TYPE_DEVICE, &error_local)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    error_local->message);
 			return NULL;
 		}
 		child =
@@ -4597,15 +4595,8 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 				    subsystem);
 			return NULL;
 		}
-		gtype = g_type_from_name(gtype_str);
-		if (gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no GType %s",
-				    gtype_str);
+		if (!fu_gtype_from_name(gtype_str, &gtype, FU_TYPE_DEVICE, error))
 			return NULL;
-		}
 		parent =
 		    g_object_new(gtype, "context", fu_device_get_context(FU_DEVICE(self)), NULL);
 		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_EMULATED);
@@ -6157,6 +6148,9 @@ gboolean
 fu_device_detach(FuDevice *self, GError **error)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_detach_full(self, progress, error);
 }
 
@@ -6206,6 +6200,9 @@ gboolean
 fu_device_attach(FuDevice *self, GError **error)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_device_attach_full(self, progress, error);
 }
 
@@ -8247,6 +8244,7 @@ fu_device_build_instance_id_strv(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	for (guint i = 0; keys != NULL && keys[i] != NULL; i++) {
 		const gchar *key = keys[i];
@@ -8323,6 +8321,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* convert varargs to GStrv */
 	va_start(args, subsystem);
@@ -8368,6 +8367,7 @@ fu_device_build_instance_id_full(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (priv->instance_hash == NULL) {
 		g_set_error_literal(error,
@@ -8828,6 +8828,10 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonArray) json_array_events = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(json_obj != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fwupd_json_object_get_string_optional(json_obj, "Created", &tmp, error))
 		return FALSE;

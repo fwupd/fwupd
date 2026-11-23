@@ -18,6 +18,8 @@
 GPtrArray *
 fu_common_get_block_devices(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -37,6 +39,8 @@ fu_common_get_memory_size_impl(void)
 gchar *
 fu_common_get_kernel_cmdline_impl(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return g_strdup("");
 }
 
@@ -206,6 +210,9 @@ fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 	TIME_ZONE_INFORMATION tzinfo = {0};
 	gchar *suffix;
 	g_autofree gchar *name = NULL;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	rc = GetTimeZoneInformation(&tzinfo);
 	if (rc == TIME_ZONE_ID_INVALID) {

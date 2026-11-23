@@ -617,6 +617,7 @@ fu_volume_get_block_size(FuVolume *self, GError **error)
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), 0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0);
 
 	if (self->proxy_blk == NULL) {
 		g_set_error_literal(error,

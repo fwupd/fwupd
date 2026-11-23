@@ -505,6 +505,8 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
 	g_return_val_if_fail(priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION, NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (priv->possible_values->len == 0) {
 		g_set_error(error,

@@ -40,6 +40,9 @@ fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self, guint8 pcr, GError **error)
 	g_autoptr(GPtrArray) csums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GPtrArray) items = fu_firmware_get_images(FU_FIRMWARE(self));
 
+	g_return_val_if_fail(FU_IS_TPM_EVENTLOG(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* sanity check */
 	if (items->len == 0) {
 		g_set_error_literal(error,

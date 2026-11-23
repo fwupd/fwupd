@@ -150,6 +150,8 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 				      GError **error)
 {
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	g_return_val_if_fail(appstream_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (self->attrs->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

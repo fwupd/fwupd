@@ -2051,15 +2051,8 @@ fu_engine_cli_firmware_build(FuCli *cli, gchar **values, GError **error)
 	}
 	tmp = xb_node_get_attr(n, "gtype");
 	if (tmp != NULL) {
-		gtype = g_type_from_name(tmp);
-		if (gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "GType %s not registered",
-				    tmp);
+		if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_FIRMWARE, error))
 			return FALSE;
-		}
 	}
 	tmp = xb_node_get_attr(n, "id");
 	if (tmp != NULL) {

@@ -151,8 +151,12 @@ gboolean
 fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
 {
 #ifdef HAVE_I2C_DEV_H
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_I2C_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	if (!fu_ioctl_execute(ioctl,
 			      force ? I2C_SLAVE_FORCE : I2C_SLAVE,
 			      GUINT_TO_POINTER(address),
@@ -168,6 +172,9 @@ fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GEr
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_I2C_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -192,6 +199,10 @@ fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GEr
 gboolean
 fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
+	g_return_val_if_fail(FU_IS_I2C_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
@@ -211,6 +222,10 @@ fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **
 gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
+	g_return_val_if_fail(FU_IS_I2C_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
 

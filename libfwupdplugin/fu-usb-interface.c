@@ -242,9 +242,13 @@ fu_usb_interface_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCod
 FuUsbInterface *
 fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
 {
-	FuUsbInterface *self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
+	g_autoptr(FuUsbInterface) self = NULL;
+
+	g_return_val_if_fail(iface != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* copy the data */
+	self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 	memcpy(&self->iface, /* nocheck:blocked */
 	       iface,
 	       sizeof(struct libusb_interface_descriptor));
@@ -253,7 +257,7 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **e
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
 		g_ptr_array_add(self->endpoints, fu_usb_endpoint_new(&iface->endpoint[i]));
 
-	return FU_USB_INTERFACE(self);
+	return g_steal_pointer(&self);
 }
 
 /**

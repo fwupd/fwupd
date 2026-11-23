@@ -410,6 +410,8 @@ fu_common_get_memory_size(void)
 gchar *
 fu_common_get_kernel_cmdline(GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return fu_common_get_kernel_cmdline_impl(error);
 }
 
@@ -525,6 +527,53 @@ fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **
 	error->domain = FWUPD_ERROR;
 	error->code = FWUPD_ERROR_INTERNAL;
 	return FALSE;
+}
+
+/**
+ * fu_gtype_from_name:
+ * @name: (not nullable): the #GType name
+ * @gtype: (nullable) (out): the #GType
+ * @parent_gtype: the parent #GType, or %G_TYPE_INVALID
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a #GType of a defined parent type.
+ *
+ * If @name is not registered then %FWUPD_ERROR_NOT_FOUND is returned, which may happen if the
+ * plugin providing the type is not built or loaded. If @name is registered but does not derive
+ * from @parent_gtype then %FWUPD_ERROR_INVALID_DATA is returned.
+ *
+ * Returns: %TRUE if @name was valid
+ *
+ * Since: 2.2.1
+ **/
+gboolean
+fu_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError **error)
+{
+	GType gtype_tmp;
+
+	gtype_tmp = g_type_from_name(name); /* nocheck:blocked */
+	if (gtype_tmp == G_TYPE_INVALID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "GType %s not registered",
+			    name);
+		return FALSE;
+	}
+	if (parent_gtype != G_TYPE_INVALID) {
+		if (!g_type_is_a(gtype_tmp, parent_gtype)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "GType %s is not a %s",
+				    name,
+				    g_type_name(parent_gtype));
+			return FALSE;
+		}
+	}
+	if (gtype != NULL)
+		*gtype = gtype_tmp;
+	return TRUE;
 }
 
 static gboolean

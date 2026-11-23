@@ -598,6 +598,7 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (priv->bytes != NULL)
 		return g_bytes_ref(priv->bytes);
 	if (priv->stream != NULL) {
@@ -632,6 +633,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (priv->bytes == NULL) {
 		if (priv->stream != NULL)
@@ -701,6 +703,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
 	if (priv->bytes != NULL)
@@ -727,6 +730,7 @@ fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error)
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(stream == NULL || FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (stream != NULL) {
 		if (!fu_input_stream_size(stream, &priv->streamsz, error))
 			return FALSE;
@@ -1468,15 +1472,9 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			g_autoptr(FuFirmware) img = NULL;
 			tmp = xb_node_get_attr(xb_image, "gtype");
 			if (tmp != NULL) {
-				GType gtype = g_type_from_name(tmp);
-				if (gtype == G_TYPE_INVALID) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_FOUND,
-						    "GType %s not registered",
-						    tmp);
+				GType gtype = G_TYPE_INVALID;
+				if (!fu_gtype_from_name(tmp, &gtype, FU_TYPE_FIRMWARE, error))
 					return FALSE;
-				}
 				img = g_object_new(gtype, NULL);
 			} else {
 				img = fu_firmware_new();
@@ -1580,15 +1578,8 @@ fu_firmware_new_from_xml(const gchar *xml, GError **error)
 				    "expected gtype for <firmware>");
 		return NULL;
 	}
-	gtype = g_type_from_name(gtypestr);
-	if (gtype == G_TYPE_INVALID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "GType %s not registered",
-			    gtypestr);
+	if (!fu_gtype_from_name(gtypestr, &gtype, FU_TYPE_FIRMWARE, error))
 		return NULL;
-	}
 	self = g_object_new(gtype, NULL);
 	if (!fu_firmware_build(self, n, error))
 		return NULL;
@@ -2279,7 +2270,12 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 GBytes *
 fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_id(self, id, error);
+	g_autoptr(FuFirmware) img = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	img = fu_firmware_get_image_by_id(self, id, error);
 	if (img == NULL)
 		return NULL;
 	return fu_firmware_write(img, error);
@@ -2300,7 +2296,12 @@ fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **er
 FuInputStream *
 fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_id(self, id, error);
+	g_autoptr(FuFirmware) img = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	img = fu_firmware_get_image_by_id(self, id, error);
 	if (img == NULL)
 		return NULL;
 	return fu_firmware_get_stream(img, error);
@@ -2398,7 +2399,12 @@ fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GErro
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(self, idx, error);
+	g_autoptr(FuFirmware) img = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	img = fu_firmware_get_image_by_idx(self, idx, error);
 	if (img == NULL)
 		return NULL;
 	return fu_firmware_write(img, error);
@@ -2419,7 +2425,12 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
 FuInputStream *
 fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(self, idx, error);
+	g_autoptr(FuFirmware) img = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	img = fu_firmware_get_image_by_idx(self, idx, error);
 	if (img == NULL)
 		return NULL;
 	return fu_firmware_get_stream(img, error);
@@ -2440,7 +2451,12 @@ fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **erro
 GBytes *
 fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_gtype(self, gtype, error);
+	g_autoptr(FuFirmware) img = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	img = fu_firmware_get_image_by_gtype(self, gtype, error);
 	if (img == NULL)
 		return NULL;
 	return fu_firmware_write(img, error);
@@ -2687,6 +2703,9 @@ gchar *
 fu_firmware_export_to_xml(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	fu_firmware_export(self, flags, bn);
 	return xb_builder_node_export(bn,
 				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |

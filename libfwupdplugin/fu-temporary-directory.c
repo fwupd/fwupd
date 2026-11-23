@@ -56,8 +56,11 @@ FuTemporaryDirectory *
 fu_temporary_directory_new(const gchar *prefix, GError **error)
 {
 	g_autofree gchar *pattern = NULL;
-	g_autoptr(FuTemporaryDirectory) self = g_object_new(FU_TYPE_TEMPORARY_DIRECTORY, NULL);
+	g_autoptr(FuTemporaryDirectory) self = NULL;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	self = g_object_new(FU_TYPE_TEMPORARY_DIRECTORY, NULL);
 	pattern = g_strdup_printf("fwupd-%s-XXXXXX", prefix != NULL ? prefix : "tmp");
 	self->path = g_dir_make_tmp(pattern, error);
 	if (self->path == NULL) {

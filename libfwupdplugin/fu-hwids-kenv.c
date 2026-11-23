@@ -28,6 +28,11 @@ fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    {FU_HWIDS_KEY_PRODUCT_NAME, "smbios.system.product"},
 	    {FU_HWIDS_KEY_PRODUCT_SKU, "smbios.system.sku"},
 	};
+
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *value = fu_kenv_get_string(map[i].key, &error_local);

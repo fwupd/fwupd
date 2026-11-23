@@ -205,6 +205,10 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	g_autofree gchar *fn_attr = NULL;
 	g_autofree gchar *symlink_target = NULL;
 
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(attr != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no sysfs path");
 		return NULL;
@@ -267,6 +271,9 @@ fu_udev_device_parse_number(FuUdevDevice *self, GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GString) path = g_string_new(fu_udev_device_get_sysfs_path(self));
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (path->len == 0)
 		return TRUE;

@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-acpi-sbom-plugin.h"
+#include "fu-acpi-sbom-table.h"
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-smbios-private.h"
@@ -58,7 +59,7 @@ fu_acpi_sbom_plugin_func(void)
 	g_assert_true(ret);
 
 	/* parse it back, the vendor-compressed entry should be skipped */
-	firmware2 = g_object_new(g_type_from_name("FuAcpiSbomTable"), NULL);
+	firmware2 = g_object_new(FU_TYPE_ACPI_SBOM_TABLE, NULL);
 	ret =
 	    fu_firmware_parse_bytes(firmware2, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
