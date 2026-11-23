@@ -4,6 +4,9 @@ on:
       publish:
         required: true
         type: boolean
+      container_lut:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -11,7 +14,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     container:
-      image: fedora:44 # zizmor: ignore[unpinned-images]
+      image: ${{ fromJSON(inputs.container_lut)['fedora-amd64-mingw64'] }} # zizmor: ignore[self-repository]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
