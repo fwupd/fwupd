@@ -136,27 +136,29 @@ class Builder:
             check=True,
         ).stdout.strip()
         dst = os.path.join(targetdir, target, "release", f"lib{libname}.a")
-        if not os.path.exists(dst):
-            print(f"building rust package {package} into {dst}")
-            try:
-                subprocess.run(
-                    [
-                        "cargo",
-                        "build",
-                        "--release",
-                        "--package",
-                        package,
-                        "--target",
-                        target,
-                        "--target-dir",
-                        targetdir,
-                    ],
-                    cwd=srcdir,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
-                sys.exit(1)
+
+        # always run cargo as it is incremental, and the crate sources may have
+        # changed since the archive was last built
+        print(f"building rust package {package} into {dst}")
+        try:
+            subprocess.run(
+                [
+                    "cargo",
+                    "build",
+                    "--release",
+                    "--package",
+                    package,
+                    "--target",
+                    target,
+                    "--target-dir",
+                    targetdir,
+                ],
+                cwd=srcdir,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
         return dst
 
     def build_automake_project(
