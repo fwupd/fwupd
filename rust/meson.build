@@ -121,7 +121,7 @@ fwupd_rust_ffi_incdir = include_directories('fwupd-ffi')
 # links the static archive (cargo normally handles this automatically).
 rust_ffi_extra_deps = []
 if host_machine.system() == 'windows'
-  foreach lib : ['ws2_32', 'userenv', 'bcrypt', 'ntdll']
+  foreach lib : ['ws2_32', 'userenv', 'bcrypt', 'ntdll', 'api-ms-win-core-synch-l1-2-0']
     rust_ffi_extra_deps += cc.find_library(lib)
   endforeach
 else
