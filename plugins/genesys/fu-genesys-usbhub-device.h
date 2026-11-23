@@ -10,6 +10,7 @@
 
 #define FU_TYPE_GENESYS_USBHUB_DEVICE		    (fu_genesys_usbhub_device_get_type())
 #define FU_GENESYS_USBHUB_FLAG_STRICT_PROJECT_CHECK "strict-project-check"
+#define FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED	    "proxy-required"
 
 /* what is known about the firmware stored in a bank */
 typedef enum {
@@ -24,6 +25,34 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     GENESYS_USBHUB_DEVICE,
 		     FuUsbDevice)
 
+typedef gboolean (*FuGenesysUsbhubCtrlHook)(FuUsbDirection direction,
+					    guint8 request,
+					    guint16 value,
+					    guint8 *data,
+					    gsize length,
+					    gpointer user_data,
+					    GError **error);
+
+gboolean
+fu_genesys_usbhub_device_check_parent_hub(guint16 expected_parent_pid,
+					  guint16 hub_vid,
+					  FuDevice *parent,
+					  GError **error);
+gboolean
+fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
+					guint16 hub_vid,
+					FuDevice *device,
+					GError **error);
+gboolean
+fu_genesys_usbhub_device_verify_hid_proxy(FuGenesysUsbhubDevice *self,
+					  FuDevice *proxy,
+					  GError **error);
+guint16
+fu_genesys_usbhub_device_get_parent_hub_pid(FuGenesysUsbhubDevice *self);
+void
+fu_genesys_usbhub_device_set_ctrl_hook(FuGenesysUsbhubDevice *self,
+				       FuGenesysUsbhubCtrlHook hook,
+				       gpointer user_data);
 FuGenesysUsbhubBankState
 fu_genesys_usbhub_device_bank_state_from_error(const GError *error);
 FuGenesysUsbhubBankState

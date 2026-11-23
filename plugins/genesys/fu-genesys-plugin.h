@@ -8,4 +8,5 @@
 
 #include <fwupdplugin.h>
 
+#define FU_TYPE_GENESYS_PLUGIN (fu_genesys_plugin_get_type())
 G_DECLARE_FINAL_TYPE(FuGenesysPlugin, fu_genesys_plugin, FU, GENESYS_PLUGIN, FuPlugin)
