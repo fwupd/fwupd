@@ -2828,6 +2828,153 @@ fu_genesys_usbhub_device_p34_flash_setup_isp_leave_func(void)
 	}
 }
 
+/* late flash setup must verify the full upstream hub chain before opening the HID proxy or
+ * sending ISP_ENTER */
+static void
+fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_genesys_test_context_new();
+
+	/* L3 -> L2 -> L1 (17EF:1121): passes the hub chain gate and reaches ISP_ENTER */
+	{
+		g_autoptr(FuGenesysTestBackend) backend = g_object_new(FU_TYPE_GENESYS_TEST_BACKEND,
+								       "name",
+								       "genesys-test",
+								       "context",
+								       ctx,
+								       NULL);
+		g_autoptr(FuDevice) l1 = fu_genesys_test_parent_new(0x17EF, 0x1121);
+		g_autoptr(FuDevice) l2 = fu_genesys_test_parent_new(0x17EF, 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1, "l1");
+		fu_device_set_id(l2, "l2");
+		fu_device_set_id(l3, "l3");
+		fu_device_add_child(l1, l2);
+		fu_device_add_child(l2, l3);
+		backend->parent = l2;
+		fu_device_set_backend(l3, FU_BACKEND(backend));
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "flash probe"));
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+	}
+
+	/* wrong root hub (1151), missing root hub (L2 only), unlinked parent, wrong ancestor VID,
+	 * and unresolvable backend parent: all refused with zero ISP_ENTER and zero reset */
+	{
+		struct {
+			const gchar *name;
+			gboolean has_backend_parent;
+			gboolean link_l2;
+			gboolean link_l1;
+			guint16 l1_vid;
+			guint16 l1_pid;
+			FwupdError expected_error;
+		} cases[] = {
+		    {"wrong-root-1151",
+		     TRUE,
+		     TRUE,
+		     TRUE,
+		     0x17EF,
+		     0x1151,
+		     FWUPD_ERROR_NOT_SUPPORTED},
+		    {"l2-only", TRUE, TRUE, FALSE, 0, 0, FWUPD_ERROR_NOT_SUPPORTED},
+		    {"unlinked-parent", TRUE, FALSE, FALSE, 0, 0, FWUPD_ERROR_NOT_SUPPORTED},
+		    {"no-parent", FALSE, FALSE, FALSE, 0, 0, FWUPD_ERROR_INVALID_DATA},
+		    {"wrong-ancestor-vid",
+		     TRUE,
+		     TRUE,
+		     TRUE,
+		     0x05E3,
+		     0x1121,
+		     FWUPD_ERROR_NOT_SUPPORTED},
+		};
+
+		for (guint i = 0; i < G_N_ELEMENTS(cases); i++) {
+			g_autoptr(FuGenesysTestBackend) backend =
+			    g_object_new(FU_TYPE_GENESYS_TEST_BACKEND,
+					 "name",
+					 "genesys-test",
+					 "context",
+					 ctx,
+					 NULL);
+			g_autoptr(FuDevice) l1 =
+			    cases[i].link_l1
+				? fu_genesys_test_parent_new(cases[i].l1_vid, cases[i].l1_pid)
+				: NULL;
+			g_autoptr(FuDevice) l2 = fu_genesys_test_parent_new(0x17EF, 0x1122);
+			g_autoptr(FuDevice) l3 =
+			    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+			FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(l3);
+			FuGenesysTestIspHub fake = {0};
+			g_autoptr(GError) error = NULL;
+
+			if (l1 != NULL)
+				fu_device_set_id(l1, "l1");
+			fu_device_set_id(l2, "l2");
+			fu_device_set_id(l3, "l3");
+			if (cases[i].link_l1)
+				fu_device_add_child(l1, l2);
+			if (cases[i].link_l2)
+				fu_device_add_child(l2, l3);
+			backend->parent = cases[i].has_backend_parent ? l2 : NULL;
+			fu_device_set_backend(l3, FU_BACKEND(backend));
+			fu_genesys_usbhub_device_set_ctrl_hook(self,
+							       fu_genesys_test_isp_hub_ctrl_cb,
+							       &fake);
+			fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+			fu_genesys_usbhub_device_begin_flash_setup(self);
+
+			/* outer wrapper refuses before attempting to open the device or HID proxy
+			 */
+			g_assert_false(fu_genesys_usbhub_device_setup_flash_late(self, &error));
+			g_assert_error(error, FWUPD_ERROR, cases[i].expected_error);
+			g_clear_error(&error);
+
+			/* inner opened entry also refuses before ISP_ENTER */
+			g_assert_false(
+			    fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+			g_assert_error(error, FWUPD_ERROR, cases[i].expected_error);
+			g_clear_error(&error);
+
+			g_assert_cmpuint(fake.n_enter, ==, 0);
+			g_assert_cmpuint(fake.n_reset, ==, 0);
+			fu_genesys_test_assert_not_updatable(l3,
+							     FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
+		}
+	}
+
+	/* L1 (17EF:1121, no ParentHubPid/RootHubPid): existing behavior is unchanged */
+	{
+		g_autoptr(FuDevice) l1 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(l1);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_genesys_usbhub_device_set_ctrl_hook(self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(self);
+		fu_genesys_usbhub_device_begin_flash_setup(self);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+		g_assert_cmpuint(fake.n_enter, ==, 1);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+	}
+}
+
 /* only a failed signature check says the bank is bad; any other failure says nothing */
 static void
 fu_genesys_usbhub_device_p34_bank_state_from_error_func(void)
@@ -2930,6 +3077,8 @@ main(int argc, char **argv)
 			fu_genesys_usbhub_device_p34_flash_setup_lifecycle_func);
 	g_test_add_func("/fwupd/genesys/p34/flash-setup-isp-leave",
 			fu_genesys_usbhub_device_p34_flash_setup_isp_leave_func);
+	g_test_add_func("/fwupd/genesys/p34/flash-setup-hub-chain",
+			fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func);
 	g_test_add_func("/fwupd/genesys/p34/bank-state-from-image",
 			fu_genesys_usbhub_device_p34_bank_state_from_image_func);
 	g_test_add_func("/fwupd/genesys/p34/select-update-bank",

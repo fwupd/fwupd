@@ -2317,6 +2317,8 @@ fu_genesys_usbhub_device_setup_flash_late_opened(FuGenesysUsbhubDevice *self, GE
 				    "mode after a failed flash setup: replug the hub");
 		return FALSE;
 	}
+	if (!fu_genesys_usbhub_device_ensure_hub_chain(self, error))
+		return FALSE;
 	if (!fu_genesys_usbhub_device_setup_flash(self, error)) {
 		if (self->isp_enter_sent)
 			g_prefix_error_literal(error, "hub may still be in ISP mode, replug it: ");
@@ -2338,6 +2340,10 @@ fu_genesys_usbhub_device_setup_flash_late(FuGenesysUsbhubDevice *self, GError **
 
 	if (!self->flash_setup_pending)
 		return TRUE;
+
+	/* refuse before opening the USB/HID device when the upstream hub chain is not verified */
+	if (!fu_genesys_usbhub_device_ensure_hub_chain(self, error))
+		return FALSE;
 
 	/* USE_PROXY_FOR_OPEN makes this open the HID proxy as well */
 	locker = fu_device_locker_new(FU_DEVICE(self), error);
