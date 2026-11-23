@@ -111,6 +111,7 @@ struct _FuGenesysUsbhubDevice {
 
 	guint32 fw_bank_code_sizes[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	guint16 fw_bank_vers[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
+	FuGenesysUsbhubBankState fw_bank_states[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	FuGenesysFwBank update_fw_banks[FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 
 	/**
@@ -783,6 +784,32 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 	return TRUE;
 }
 
+gboolean
+fu_genesys_usbhub_device_validate_bank_code_size(guint32 code_size,
+						 guint32 capacity,
+						 GError **error)
+{
+	if (code_size < sizeof(guint16)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid firmware bank code size 0x%x (minimum 0x%zx)",
+			    code_size,
+			    sizeof(guint16));
+		return FALSE;
+	}
+	if (capacity > 0 && code_size > capacity) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid firmware bank code size 0x%x exceeds bank capacity 0x%x",
+			    code_size,
+			    capacity);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* read the code size from the firmware stored in the device */
 static gboolean
 fu_genesys_usbhub_device_get_fw_bank_code_size(FuGenesysUsbhubDevice *self,
@@ -791,6 +818,7 @@ fu_genesys_usbhub_device_get_fw_bank_code_size(FuGenesysUsbhubDevice *self,
 					       GError **error)
 {
 	guint8 kbs = 0;
+	guint32 code_size;
 
 	g_return_val_if_fail(fw_type < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT, FALSE);
 	g_return_val_if_fail(bank_num < FW_BANK_COUNT, FALSE);
@@ -820,6 +848,11 @@ fu_genesys_usbhub_device_get_fw_bank_code_size(FuGenesysUsbhubDevice *self,
 
 	/* bank firmware use fixed code size */
 	if (!self->spec.support_code_size) {
+		if (!fu_genesys_usbhub_device_validate_bank_code_size(
+			self->spec.fw_bank_capacity[fw_type],
+			self->spec.fw_bank_capacity[fw_type],
+			error))
+			return FALSE;
 		self->fw_bank_code_sizes[bank_num][fw_type] = self->spec.fw_bank_capacity[fw_type];
 		return TRUE;
 	}
@@ -835,13 +868,68 @@ fu_genesys_usbhub_device_get_fw_bank_code_size(FuGenesysUsbhubDevice *self,
 		g_prefix_error_literal(error, "error getting fw size from device: ");
 		return FALSE;
 	}
-	self->fw_bank_code_sizes[bank_num][fw_type] = 1024 * kbs;
+	code_size = 1024u * kbs;
+	if (!fu_genesys_usbhub_device_validate_bank_code_size(code_size,
+							      self->spec.fw_bank_capacity[fw_type],
+							      error)) {
+		g_prefix_error(error,
+			       "firmware %s bank%d: ",
+			       fu_genesys_fw_type_to_string(fw_type),
+			       bank_num + 1);
+		return FALSE;
+	}
+	self->fw_bank_code_sizes[bank_num][fw_type] = code_size;
 
 	/* success */
 	return TRUE;
 }
 
 /* read the version from the firmware stored in the device */
+/* only a failed signature check says the bank is bad; any other failure says nothing */
+FuGenesysUsbhubBankState
+fu_genesys_usbhub_device_bank_state_from_error(const GError *error)
+{
+	if (error == NULL)
+		return FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN;
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID))
+		return FU_GENESYS_USBHUB_BANK_STATE_INVALID;
+	return FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN;
+}
+
+/* what a bank image that was read completely says about the firmware: only a checksum that
+ * does not match is a proof that it is bad, an image too small to hold the checksum is not */
+FuGenesysUsbhubBankState
+fu_genesys_usbhub_device_bank_state_from_image(const guint8 *buf, gsize bufsz)
+{
+	guint16 fw_checksum = 0;
+
+	if (buf == NULL || bufsz < sizeof(fw_checksum))
+		return FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN;
+	fw_checksum = fu_memread_uint16(buf + bufsz - sizeof(fw_checksum), G_BIG_ENDIAN);
+	if (fu_sum16(buf, bufsz - sizeof(fw_checksum)) != fw_checksum)
+		return FU_GENESYS_USBHUB_BANK_STATE_INVALID;
+	return FU_GENESYS_USBHUB_BANK_STATE_VALID;
+}
+
+gboolean
+fu_genesys_usbhub_device_select_update_bank2(gboolean is_gl3523,
+					     guint16 bank1_version,
+					     guint16 bank2_version,
+					     gboolean *backup_bank1)
+{
+	if (backup_bank1 != NULL)
+		*backup_bank1 = FALSE;
+	if (bank1_version > bank2_version) {
+		if (is_gl3523) {
+			if (backup_bank1 != NULL)
+				*backup_bank1 = TRUE;
+			return FALSE;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
 static gboolean
 fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 					     FuGenesysFwType fw_type,
@@ -852,11 +940,12 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 	gsize bufsz = 0;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree guint8 *buf = NULL;
 
 	g_return_val_if_fail(fw_type < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT, FALSE);
 	g_return_val_if_fail(bank_num < FW_BANK_COUNT, FALSE);
+
+	self->fw_bank_states[bank_num][fw_type] = FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN;
 
 	/* check firmware type available */
 	if (self->spec.fw_bank_capacity[fw_type] == 0) {
@@ -873,16 +962,32 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 							    fw_type,
 							    bank_num,
 							    &error_local)) {
+		FuGenesysUsbhubBankState state =
+		    fu_genesys_usbhub_device_bank_state_from_error(error_local);
+		if (state != FU_GENESYS_USBHUB_BANK_STATE_INVALID) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),
 			bank_num + 1,
 			error_local->message);
 		self->fw_bank_vers[bank_num][fw_type] = 0;
+		self->fw_bank_states[bank_num][fw_type] = state;
 		return TRUE;
 	}
 
 	/* get bank firmware from device */
 	bufsz = self->fw_bank_code_sizes[bank_num][fw_type];
+	if (!fu_genesys_usbhub_device_validate_bank_code_size(bufsz,
+							      self->spec.fw_bank_capacity[fw_type],
+							      error)) {
+		g_prefix_error(error,
+			       "firmware %s bank%d: ",
+			       fu_genesys_fw_type_to_string(fw_type),
+			       bank_num + 1);
+		return FALSE;
+	}
 	buf = g_malloc0(bufsz);
 	if (!fu_genesys_usbhub_device_read_flash(self,
 						 self->spec.fw_bank_addr[bank_num][fw_type],
@@ -894,14 +999,25 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	stream = FWUPD_INPUT_STREAM(fwupd_memory_input_stream_new_from_bytes(blob));
-	if (!fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local)) {
-		g_debug("ignoring firmware %s bank%d: %s",
+	switch (fu_genesys_usbhub_device_bank_state_from_image(g_bytes_get_data(blob, NULL),
+							       g_bytes_get_size(blob))) {
+	case FU_GENESYS_USBHUB_BANK_STATE_VALID:
+		break;
+	case FU_GENESYS_USBHUB_BANK_STATE_INVALID:
+		g_debug("ignoring firmware %s bank%d: checksum mismatch",
 			fu_genesys_fw_type_to_string(fw_type),
-			bank_num + 1,
-			error_local->message);
+			bank_num + 1);
 		self->fw_bank_vers[bank_num][fw_type] = 0;
+		self->fw_bank_states[bank_num][fw_type] = FU_GENESYS_USBHUB_BANK_STATE_INVALID;
 		return TRUE;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware %s bank%d is too small to verify",
+			    fu_genesys_fw_type_to_string(fw_type),
+			    bank_num + 1);
+		return FALSE;
 	}
 
 	/* get firmware version from bank firmware */
@@ -914,6 +1030,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
+	self->fw_bank_states[bank_num][fw_type] = FU_GENESYS_USBHUB_BANK_STATE_VALID;
 
 	/* keep hub bank 1 fw that may needs backup to bank2 later */
 	if (self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523 && bank_num == FW_BANK_1)
@@ -1921,6 +2038,8 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
 	g_autoptr(GArray) fw_types = g_array_new(FALSE, FALSE, sizeof(FuGenesysFwType));
 
+	memset(self->fw_bank_states, 0, sizeof(self->fw_bank_states));
+
 	for (gint i = 0; i < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT; i++) {
 		if (self->spec.fw_bank_capacity[i] == 0 ||		  /* unsupported fw type */
 		    fw_max_size <= self->spec.fw_bank_addr[FW_BANK_1][i]) /* capacity is smaller */
@@ -1984,18 +2103,13 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 		}
 		fu_progress_step_done(progress);
 
-		if (self->fw_bank_vers[FW_BANK_1][fw_type] >
-		    self->fw_bank_vers[FW_BANK_2][fw_type]) {
-			/* bank1 is more recent than bank2: write fw on bank2 */
-			if (self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523) {
-				/* GL3523 unique dual bank mechanism */
-				self->backup_hub_fw_bank1 = TRUE;
-				self->update_fw_banks[fw_type] = FW_BANK_1;
-			} else {
-				self->update_fw_banks[fw_type] = FW_BANK_2;
-			}
+		if (fu_genesys_usbhub_device_select_update_bank2(
+			self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3523,
+			self->fw_bank_vers[FW_BANK_1][fw_type],
+			self->fw_bank_vers[FW_BANK_2][fw_type],
+			fw_type == FU_GENESYS_FW_TYPE_HUB ? &self->backup_hub_fw_bank1 : NULL)) {
+			self->update_fw_banks[fw_type] = FW_BANK_2;
 		} else {
-			/* bank2 is more recent than bank1: write fw on bank1 */
 			self->update_fw_banks[fw_type] = FW_BANK_1;
 		}
 	}
@@ -2205,6 +2319,71 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_check_bank_runs_target(guint16 target_version,
+						guint16 other_bank_version,
+						GError **error)
+{
+	g_autofree gchar *target_str = NULL;
+	g_autofree gchar *other_str = NULL;
+
+	if (target_version >= other_bank_version)
+		return TRUE;
+	target_str = fu_version_from_uint16_hex(target_version, FWUPD_VERSION_FORMAT_PAIR);
+	other_str = fu_version_from_uint16_hex(other_bank_version, FWUPD_VERSION_FORMAT_PAIR);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "firmware %s is older than %s in the other bank and this hub runs the newest "
+		    "bank: it would not become the running version",
+		    target_str,
+		    other_str);
+	return FALSE;
+}
+
+gboolean
+fu_genesys_usbhub_device_check_update_bank(gboolean banks_compared,
+					   gboolean newest_bank_runs,
+					   gboolean update_bank2,
+					   FuGenesysUsbhubBankState bank1_state,
+					   FuGenesysUsbhubBankState bank2_state,
+					   guint16 bank1_version,
+					   guint16 bank2_version,
+					   gboolean other_bank_runs,
+					   guint16 target_version,
+					   GError **error)
+{
+	FuGenesysUsbhubBankState other_state = update_bank2 ? bank1_state : bank2_state;
+	guint16 other_version = update_bank2 ? bank1_version : bank2_version;
+
+	if (!banks_compared)
+		return TRUE;
+	if (bank1_state == FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN ||
+	    bank2_state == FU_GENESYS_USBHUB_BANK_STATE_UNKNOWN) {
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "bank versions were not read, cannot tell which firmware would run");
+		return FALSE;
+	}
+	if (!newest_bank_runs)
+		return TRUE;
+	if (other_state == FU_GENESYS_USBHUB_BANK_STATE_INVALID && other_bank_runs) {
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "the running bank failed checksum verification, cannot trust its version");
+		return FALSE;
+	}
+	if (other_state == FU_GENESYS_USBHUB_BANK_STATE_INVALID)
+		return TRUE;
+	return fu_genesys_usbhub_device_check_bank_runs_target(target_version,
+							       other_version,
+							       error);
 }
 
 static gboolean
@@ -2981,6 +3160,28 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+	gboolean banks_compared = self->running_bank != FU_GENESYS_FW_STATUS_MASK &&
+				  fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE) &&
+				  self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] != 0 &&
+				  fu_device_get_firmware_size_max(device) >
+				      self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB];
+	gboolean update_bank2 = self->update_fw_banks[FU_GENESYS_FW_TYPE_HUB] == FW_BANK_2;
+	gboolean other_bank_runs = update_bank2
+				       ? (self->running_bank == FU_GENESYS_FW_STATUS_BANK1)
+				       : (self->running_bank == FU_GENESYS_FW_STATUS_BANK2);
+
+	if (!fu_genesys_usbhub_device_check_update_bank(
+		banks_compared,
+		self->spec.chip.model == FU_GENESYS_ISP_MODEL_HUB_GL3525,
+		update_bank2,
+		self->fw_bank_states[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB],
+		self->fw_bank_states[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB],
+		self->fw_bank_vers[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB],
+		self->fw_bank_vers[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB],
+		other_bank_runs,
+		(guint16)fu_firmware_get_version_raw(firmware),
+		error))
+		return FALSE;
 
 	/* enter isp mode */
 	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
