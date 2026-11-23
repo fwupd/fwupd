@@ -1930,6 +1930,12 @@
       <package name="msitools" only-if="mingw64" />
     </distro>
   </dependency>
+  <dependency id="xvfb-run">
+    <distro id="fedora">
+      <!-- for running wine in CI -->
+      <package name="xvfb-run" only-if="mingw64" />
+    </distro>
+  </dependency>
   <dependency id="libinotify">
     <distro id="freebsd">
       <package only-if="amd64" />
