@@ -3192,7 +3192,7 @@ fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
 		fu_genesys_test_plugin_add_device(plugin, l3);
 		g_test_expect_message("FuPluginGenesys",
 				      G_LOG_LEVEL_WARNING,
-				      "*not linked below 17ef:1121*");
+				      "*parent hub is 17ef:1151, expected 17ef:1121*");
 		fu_genesys_test_plugin_add_device(plugin, hid_l3);
 		g_test_assert_expected_messages();
 
@@ -3203,7 +3203,8 @@ fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
 		g_test_assert_expected_messages();
 		g_assert_null(fu_device_get_parent(l2, NULL));
 		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
-		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "17ef:1151"));
 		g_assert_cmpuint(fake.n_enter, ==, 0);
 		g_assert_cmpuint(fake.n_reset, ==, 0);
 		fu_genesys_test_assert_not_updatable(l3, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
@@ -3270,10 +3271,10 @@ fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
 		g_test_assert_expected_messages();
 		g_assert_true(fu_device_get_proxy(l3, NULL) == hid2);
 
-		/* L1 disconnects: stale parent is no longer accepted by check_root_hub */
+		/* L1 disconnects: ancestor chain re-verification rejects stale disconnected L1 */
 		fu_device_add_private_flag(l1_old, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
-		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 		g_assert_cmpuint(fake.n_enter, ==, 0);
 		g_clear_error(&error);
 
@@ -3356,6 +3357,59 @@ fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
 		fu_genesys_test_set_backend_parent(ctx, l3, l2_new);
 		fu_genesys_test_plugin_add_device(plugin, l2_new);
 		g_assert_true(fu_device_get_parent(l3, NULL) == l2_new);
+	}
+
+	/* 6. Ancestor backend topology drift: L3 -> L2 is unchanged and L2 still has a connected
+	 * logical parent L1 (1121), but L2's actual USB backend parent changed to L1 (1151).
+	 * L3 must re-verify L2's backend parent and refuse before ISP_ENTER. */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1_a =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) l1_b = fu_genesys_test_parent_new(0x17EF, 0x1151);
+		g_autoptr(FuDevice) l2 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		FuGenesysUsbhubDevice *l3_self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1_a, "anc-l1-a");
+		fu_device_set_id(l2, "anc-l2");
+		fu_device_set_id(l3, "anc-l3");
+		fu_device_set_physical_id(l1_a, "1-4");
+		fu_device_set_physical_id(l1_b, "1-4");
+		fu_device_set_physical_id(l2, "1-4.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_genesys_test_set_backend_parent(ctx, l2, l1_a);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2);
+		fu_genesys_usbhub_device_set_ctrl_hook(l3_self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(l3_self);
+		fu_genesys_usbhub_device_begin_flash_setup(l3_self);
+
+		fu_genesys_test_plugin_add_device(plugin, l1_a);
+		fu_genesys_test_plugin_add_device(plugin, l2);
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_assert_true(fu_device_get_parent(l2, NULL) == l1_a);
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2);
+
+		/* keep L2 -> L1(1121) logically connected, but switch L2's USB parent to 1151 */
+		fu_genesys_test_set_backend_parent(ctx, l2, l1_b);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "17ef:1151"));
+		g_clear_error(&error);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "17ef:1151"));
+		g_clear_error(&error);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+		fu_genesys_test_assert_not_updatable(l3, FU_GENESYS_USBHUB_INHIBIT_FLASH_SETUP);
 	}
 }
 

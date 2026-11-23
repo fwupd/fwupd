@@ -56,16 +56,27 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest().lower()
 
 
+def is_valid_sha256(digest: str) -> bool:
+    return len(digest) == 64 and all(ch in "0123456789abcdef" for ch in digest)
+
+
 def lint_components(
     components: list[tuple[str, ET.Element]],
     payload_dir: Path | None = None,
     payload_files: set[str] | None = None,
     manifest: dict[str, dict[str, str]] | None = None,
+    release_mode: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     seen_ids: set[str] = set()
     seen_payloads: set[str] = set()
     found_roles: dict[str, tuple[str, int]] = {}
+
+    if release_mode:
+        if manifest is None:
+            errors.append("--release mode requires --manifest with SHA256 entries for L1, L2, L3")
+        if payload_dir is None:
+            errors.append("--release mode requires payload files to verify SHA256 digests")
 
     for source, root in components:
         if root.tag != "component" or root.attrib.get("type") != "firmware":
@@ -197,8 +208,19 @@ def lint_components(
         )
         expected_version = manifest_entry.get("version") if manifest_entry is not None else None
         expected_sha256 = (
-            manifest_entry.get("sha256", "").lower() if manifest_entry is not None else ""
+            manifest_entry.get("sha256", "").strip().lower()
+            if manifest_entry is not None
+            else ""
         )
+        if manifest_entry is not None:
+            if not expected_version:
+                errors.append(f"{source} ({role}): manifest entry missing version")
+            if not expected_payload:
+                errors.append(f"{source} ({role}): manifest entry missing filename")
+            if not is_valid_sha256(expected_sha256):
+                errors.append(
+                    f"{source} ({role}): manifest entry must include a valid 64-hex sha256"
+                )
 
         for idx, rel in enumerate(releases):
             rel_ver = rel.attrib.get("version", "").strip()
@@ -270,6 +292,7 @@ def load_from_dir(
     directory: Path,
     check_payloads: bool,
     manifest: dict[str, dict[str, str]] | None = None,
+    release_mode: bool = False,
 ) -> list[str]:
     xml_files = sorted(directory.glob("*.metainfo.xml"))
     if not xml_files:
@@ -277,19 +300,24 @@ def load_from_dir(
     components: list[tuple[str, ET.Element]] = []
     for path in xml_files:
         components.append((path.name, ET.parse(path).getroot()))
-    payload_files = {p.name for p in directory.iterdir() if p.is_file()} if check_payloads else None
-    payload_dir = directory if check_payloads else None
+    verify_payloads = check_payloads or release_mode
+    payload_files = (
+        {p.name for p in directory.iterdir() if p.is_file()} if verify_payloads else None
+    )
+    payload_dir = directory if verify_payloads else None
     return lint_components(
         components,
         payload_dir=payload_dir,
         payload_files=payload_files,
         manifest=manifest,
+        release_mode=release_mode,
     )
 
 
 def load_from_cab(
     cab_path: Path,
     manifest: dict[str, dict[str, str]] | None = None,
+    release_mode: bool = False,
 ) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="p34-cab-lint-") as tmpdir:
         subprocess.run(
@@ -299,7 +327,12 @@ def load_from_cab(
             stderr=subprocess.PIPE,
             text=True,
         )
-        return load_from_dir(Path(tmpdir), check_payloads=True, manifest=manifest)
+        return load_from_dir(
+            Path(tmpdir),
+            check_payloads=True,
+            manifest=manifest,
+            release_mode=release_mode,
+        )
 
 
 def run_self_test(fixture_dir: Path) -> int:
@@ -324,12 +357,14 @@ def run_self_test(fixture_dir: Path) -> int:
         payload_dir: Path | None = None,
         payload_files: set[str] | None = None,
         manifest: dict[str, dict[str, str]] | None = None,
+        release_mode: bool = False,
     ) -> None:
         res = lint_components(
             [(f"{k}.metainfo.xml", v) for k, v in comps.items()],
             payload_dir=payload_dir,
             payload_files=payload_files,
             manifest=manifest,
+            release_mode=release_mode,
         )
         if not res or not any(expected_substr in e for e in res):
             raise AssertionError(
@@ -439,9 +474,34 @@ def run_self_test(fixture_dir: Path) -> int:
             payload_dir=tdir,
             payload_files={"l1.bin", "l2.bin", "l3.bin"},
             manifest=manifest,
+            release_mode=True,
         )
         if ok_errs:
-            raise AssertionError(f"manifest-positive: unexpected errors {ok_errs!r}")
+            raise AssertionError(f"release-manifest-positive: unexpected errors {ok_errs!r}")
+
+        # --release without --manifest must be rejected
+        assert_rejected(
+            "release-without-manifest",
+            clone_base(),
+            "--release mode requires --manifest",
+            payload_dir=tdir,
+            payload_files={"l1.bin", "l2.bin", "l3.bin"},
+            manifest=None,
+            release_mode=True,
+        )
+
+        # manifest missing sha256 must be rejected
+        bad_manifest = {k: dict(v) for k, v in manifest.items()}
+        bad_manifest["L2"].pop("sha256")
+        assert_rejected(
+            "manifest-missing-sha256",
+            clone_base(),
+            "valid 64-hex sha256",
+            payload_dir=tdir,
+            payload_files={"l1.bin", "l2.bin", "l3.bin"},
+            manifest=bad_manifest,
+            release_mode=True,
+        )
 
         # swap file contents while keeping filenames unchanged
         (tdir / "l1.bin").write_bytes(b"p34-l3-image")
@@ -453,6 +513,7 @@ def run_self_test(fixture_dir: Path) -> int:
             payload_dir=tdir,
             payload_files={"l1.bin", "l2.bin", "l3.bin"},
             manifest=manifest,
+            release_mode=True,
         )
 
         # version mismatch against manifest
@@ -467,6 +528,7 @@ def run_self_test(fixture_dir: Path) -> int:
             payload_dir=tdir,
             payload_files={"l1.bin", "l2.bin", "l3.bin"},
             manifest=manifest,
+            release_mode=True,
         )
 
     # 12. fwupd version below 1.9.8 (e.g. 1.3.4)
@@ -479,7 +541,7 @@ def run_self_test(fixture_dir: Path) -> int:
     c["l3"].attrib["priority"] = "1"
     assert_rejected("wrong-priority-order", c, "invalid install priority order")
 
-    print("PASS: P34WD-40 Hub-only CAB lint self-test (2 positive + 14 negative cases)")
+    print("PASS: P34WD-40 Hub-only CAB lint self-test (2 positive + 16 negative cases)")
     return 0
 
 
@@ -494,7 +556,12 @@ def main() -> int:
     parser.add_argument(
         "--manifest",
         type=Path,
-        help="Optional JSON manifest binding L1/L2/L3 version, filename, and sha256",
+        help="JSON manifest binding L1/L2/L3 version, filename, and 64-hex sha256",
+    )
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="Strict release gate: requires --manifest with valid SHA256 and payload verification",
     )
     parser.add_argument(
         "--self-test", action="store_true", help="Run built-in positive/negative lint tests"
@@ -508,14 +575,21 @@ def main() -> int:
     if args.target is None:
         parser.error("target path is required unless --self-test is specified")
 
+    if args.release and args.manifest is None:
+        print("ERROR: --release mode requires --manifest", file=sys.stderr)
+        return 1
+
     manifest = json.loads(args.manifest.read_text(encoding="utf-8")) if args.manifest else None
 
     if args.target.is_dir():
         errors = load_from_dir(
-            args.target, check_payloads=args.check_payloads, manifest=manifest
+            args.target,
+            check_payloads=args.check_payloads,
+            manifest=manifest,
+            release_mode=args.release,
         )
     elif args.target.is_file() and args.target.suffix == ".cab":
-        errors = load_from_cab(args.target, manifest=manifest)
+        errors = load_from_cab(args.target, manifest=manifest, release_mode=args.release)
     else:
         print(f"unsupported target: {args.target}", file=sys.stderr)
         return 2

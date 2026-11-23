@@ -377,8 +377,23 @@ fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
 static gboolean
 fu_genesys_usbhub_device_ensure_hub_chain(FuGenesysUsbhubDevice *self, GError **error)
 {
+	FuDevice *ancestor = FU_DEVICE(self);
+
 	if (!fu_genesys_usbhub_device_ensure_parent_hub(self, error))
 		return FALSE;
+
+	/* re-verify every linked Genesys hub along the upstream chain against its current USB
+	 * backend parent so a stale logical ancestor cannot mask a changed physical topology */
+	for (guint depth = 0; depth < 4; depth++) {
+		ancestor = fu_device_get_parent(ancestor, NULL);
+		if (ancestor == NULL)
+			break;
+		if (FU_IS_GENESYS_USBHUB_DEVICE(ancestor) &&
+		    !fu_genesys_usbhub_device_ensure_parent_hub(FU_GENESYS_USBHUB_DEVICE(ancestor),
+								error))
+			return FALSE;
+	}
+
 	return fu_genesys_usbhub_device_check_root_hub(self->root_hub_pid,
 						       fu_device_get_vid(FU_DEVICE(self)),
 						       FU_DEVICE(self),

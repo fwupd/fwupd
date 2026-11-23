@@ -1577,13 +1577,11 @@ fu_engine_requirements_p34_hub_chain_func(void)
 	const gchar *valid_xmls[3];
 	g_autoptr(GError) error = NULL;
 
-	/* load the canonical S3 metainfo fixtures directly to prevent metadata drift */
+	/* load the canonical S3 metainfo fixtures directly; missing fixtures must fail, never skip
+	 */
 	xml_l1 = fu_engine_requirements_p34_load_fixture("l1.metainfo.xml", &error);
-	if (xml_l1 == NULL && g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-		g_test_skip("P34 metainfo fixtures not installed");
-		return;
-	}
 	g_assert_no_error(error);
+	g_assert_nonnull(xml_l1);
 	xml_l2 = fu_engine_requirements_p34_load_fixture("l2.metainfo.xml", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(xml_l2);
