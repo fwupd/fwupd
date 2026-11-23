@@ -15,40 +15,14 @@ env:
   PYTHONWARNINGS: "ignore::DeprecationWarning:gi.events"
 
 jobs:
-  find-container:
-    runs-on: ubuntu-latest
-    outputs:
-      container_uri: ${{ steps.find_container.outputs.container_uri }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Find container image
-        id: find_container
-        uses: ./.github/actions/find-container # zizmor: ignore[self-repository]
-        with:
-          distro: ubuntu
-          arch: amd64
-          container_lut: ${{ inputs.container_lut }}
-
   build:
     runs-on: ubuntu-latest
-    needs: find-container
     container:
-      image: ${{ needs.find-container.outputs.container_uri }} # zizmor: ignore[unpinned-images]
+      image: ${{ fromJSON(inputs.container_lut)['ubuntu-amd64'] }} # zizmor: ignore[self-repository]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: install dependencies
-        run: |
-          sudo ./fwupbuild --yes install-dependencies --os ubuntu
       - name: build
         run: |
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
