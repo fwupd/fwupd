@@ -142,6 +142,7 @@ plugins = {
   'synaptics-vmm9': false,
   'system76-launch': false,
   'systemd-pcrlock': false,
+  'tcg-opal': false,
   'test': false,
   'telink-dfu': false,
   'thelio-io': false,
