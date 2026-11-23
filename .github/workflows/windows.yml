@@ -11,7 +11,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     container:
-      image: fedora:44 # zizmor: ignore[unpinned-images]
+      image: fedora:45 # zizmor: ignore[unpinned-images]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
