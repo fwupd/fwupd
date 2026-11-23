@@ -5,6 +5,8 @@
 """Release-time policy lint for Lenovo P34WD-40 Hub-only CAB metainfo."""
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -21,16 +23,19 @@ EXPECTED_HUBS = {
     L1_GUID: {
         "role": "L1",
         "priority": 1,
+        "payload": "l1.bin",
         "required_parents": {},
     },
     L2_GUID: {
         "role": "L2",
         "priority": 2,
+        "payload": "l2.bin",
         "required_parents": {1: L1_GUID},
     },
     L3_GUID: {
         "role": "L3",
         "priority": 3,
+        "payload": "l3.bin",
         "required_parents": {1: L2_GUID, 2: L1_GUID},
     },
 }
@@ -43,9 +48,19 @@ def parse_version(ver: str) -> tuple[int, ...]:
     return tuple(int(p) for p in parts)
 
 
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest().lower()
+
+
 def lint_components(
     components: list[tuple[str, ET.Element]],
+    payload_dir: Path | None = None,
     payload_files: set[str] | None = None,
+    manifest: dict[str, dict[str, str]] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     seen_ids: set[str] = set()
@@ -168,24 +183,72 @@ def lint_components(
                 f"got {custom.get('LVFS::VersionFormat')!r}"
             )
 
-        # payload filename mapping
-        checksums = [
-            el
-            for el in root.findall("./releases/release/checksum")
-            if el.attrib.get("target") == "content"
-        ]
-        if not checksums:
-            errors.append(f"{source} ({role}): missing release <checksum target=\"content\">")
-        for csum in checksums:
-            fname = csum.attrib.get("filename", "").strip()
-            if not fname:
-                errors.append(f"{source} ({role}): empty checksum filename")
+        # per-release checksum and payload binding validation
+        releases = root.findall("./releases/release")
+        if not releases:
+            errors.append(f"{source} ({role}): missing <releases><release>")
+        manifest_entry = manifest.get(role) if manifest is not None else None
+        if manifest is not None and manifest_entry is None:
+            errors.append(f"{source} ({role}): missing role entry in release manifest")
+        expected_payload = (
+            manifest_entry.get("filename")
+            if manifest_entry is not None
+            else spec["payload"]
+        )
+        expected_version = manifest_entry.get("version") if manifest_entry is not None else None
+        expected_sha256 = (
+            manifest_entry.get("sha256", "").lower() if manifest_entry is not None else ""
+        )
+
+        for idx, rel in enumerate(releases):
+            rel_ver = rel.attrib.get("version", "").strip()
+            if not rel_ver:
+                errors.append(f"{source} ({role}): release[{idx}] missing version attribute")
+            elif expected_version and rel_ver != expected_version:
+                errors.append(
+                    f"{source} ({role}): release[{idx}] version {rel_ver!r} does not match "
+                    f"manifest {expected_version!r}"
+                )
+
+            checksums = [
+                el
+                for el in rel.findall("checksum")
+                if el.attrib.get("target") == "content"
+            ]
+            if len(checksums) != 1:
+                errors.append(
+                    f"{source} ({role}): release[{idx}] must have exactly one "
+                    f"<checksum target=\"content\">, got {len(checksums)}"
+                )
                 continue
+
+            fname = checksums[0].attrib.get("filename", "").strip()
+            if not fname:
+                errors.append(f"{source} ({role}): release[{idx}] empty checksum filename")
+                continue
+            if expected_payload and fname != expected_payload:
+                errors.append(
+                    f"{source} ({role}): release[{idx}] payload {fname!r} does not match "
+                    f"expected {expected_payload!r}"
+                )
             if fname in seen_payloads:
                 errors.append(f"{source} ({role}): duplicate payload filename {fname!r}")
             seen_payloads.add(fname)
             if payload_files is not None and fname not in payload_files:
                 errors.append(f"{source} ({role}): payload file {fname!r} not present in archive")
+            elif payload_dir is not None and expected_sha256:
+                fpath = payload_dir / fname
+                if not fpath.is_file():
+                    errors.append(
+                        f"{source} ({role}): payload file {fname!r} not present in archive"
+                    )
+                else:
+                    actual_sha256 = sha256_file(fpath)
+                    if actual_sha256 != expected_sha256:
+                        errors.append(
+                            f"{source} ({role}): payload {fname!r} SHA256 mismatch "
+                            f"(expected {expected_sha256}, got {actual_sha256})"
+                        )
 
     # completeness and priority order L3 > L2 > L1
     for role in ("L1", "L2", "L3"):
@@ -203,7 +266,11 @@ def lint_components(
     return errors
 
 
-def load_from_dir(directory: Path, check_payloads: bool) -> list[str]:
+def load_from_dir(
+    directory: Path,
+    check_payloads: bool,
+    manifest: dict[str, dict[str, str]] | None = None,
+) -> list[str]:
     xml_files = sorted(directory.glob("*.metainfo.xml"))
     if not xml_files:
         return [f"{directory}: no *.metainfo.xml files found"]
@@ -211,10 +278,19 @@ def load_from_dir(directory: Path, check_payloads: bool) -> list[str]:
     for path in xml_files:
         components.append((path.name, ET.parse(path).getroot()))
     payload_files = {p.name for p in directory.iterdir() if p.is_file()} if check_payloads else None
-    return lint_components(components, payload_files=payload_files)
+    payload_dir = directory if check_payloads else None
+    return lint_components(
+        components,
+        payload_dir=payload_dir,
+        payload_files=payload_files,
+        manifest=manifest,
+    )
 
 
-def load_from_cab(cab_path: Path) -> list[str]:
+def load_from_cab(
+    cab_path: Path,
+    manifest: dict[str, dict[str, str]] | None = None,
+) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="p34-cab-lint-") as tmpdir:
         subprocess.run(
             ["gcab", "-x", "-C", tmpdir, str(cab_path)],
@@ -223,7 +299,7 @@ def load_from_cab(cab_path: Path) -> list[str]:
             stderr=subprocess.PIPE,
             text=True,
         )
-        return load_from_dir(Path(tmpdir), check_payloads=True)
+        return load_from_dir(Path(tmpdir), check_payloads=True, manifest=manifest)
 
 
 def run_self_test(fixture_dir: Path) -> int:
@@ -241,8 +317,20 @@ def run_self_test(fixture_dir: Path) -> int:
     def clone_base() -> dict[str, ET.Element]:
         return {k: ET.fromstring(ET.tostring(v)) for k, v in base.items()}
 
-    def assert_rejected(label: str, comps: dict[str, ET.Element], expected_substr: str, payload_files=None) -> None:
-        res = lint_components([(f"{k}.metainfo.xml", v) for k, v in comps.items()], payload_files=payload_files)
+    def assert_rejected(
+        label: str,
+        comps: dict[str, ET.Element],
+        expected_substr: str,
+        payload_dir: Path | None = None,
+        payload_files: set[str] | None = None,
+        manifest: dict[str, dict[str, str]] | None = None,
+    ) -> None:
+        res = lint_components(
+            [(f"{k}.metainfo.xml", v) for k, v in comps.items()],
+            payload_dir=payload_dir,
+            payload_files=payload_files,
+            manifest=manifest,
+        )
         if not res or not any(expected_substr in e for e in res):
             raise AssertionError(
                 f"{label}: expected rejection containing {expected_substr!r}, got {res!r}"
@@ -291,32 +379,126 @@ def run_self_test(fixture_dir: Path) -> int:
     c["l2"].find("id").text = c["l1"].find("id").text
     assert_rejected("duplicate-id", c, "duplicate component <id>")
 
-    # 8. Duplicate payload filename & missing payload in archive
+    # 8. Swapped L1/L3 payload filenames must be rejected even when both files exist
+    c = clone_base()
+    c["l1"].find("./releases/release/checksum").attrib["filename"] = "l3.bin"
+    c["l3"].find("./releases/release/checksum").attrib["filename"] = "l1.bin"
+    assert_rejected(
+        "swapped-l1-l3-payloads",
+        c,
+        "does not match expected",
+        payload_files={"l1.bin", "l2.bin", "l3.bin"},
+    )
+
+    # 9. Duplicate payload filename & missing payload in archive
     c = clone_base()
     c["l2"].find("./releases/release/checksum").attrib["filename"] = "l1.bin"
     assert_rejected("duplicate-payload", c, "duplicate payload filename")
     c = clone_base()
-    assert_rejected("missing-payload", c, "not present in archive", payload_files={"l1.bin", "l2.bin"})
+    assert_rejected(
+        "missing-payload",
+        c,
+        "not present in archive",
+        payload_files={"l1.bin", "l2.bin"},
+    )
 
-    # 9. fwupd version below 1.9.8 (e.g. 1.3.4)
+    # 10. Multi-release component where one release is missing <checksum target="content">
+    c = clone_base()
+    rels = c["l3"].find("releases")
+    rel2 = ET.SubElement(rels, "release", {"version": "88.18", "date": "2026-10-29"})
+    ET.SubElement(rel2, "description")
+    assert_rejected("release-missing-checksum", c, "release[1] must have exactly one")
+
+    # 11. Manifest binding: exact SHA256 + version passes, swapped binary contents or wrong
+    # version fails
+    with tempfile.TemporaryDirectory(prefix="p34-lint-manifest-") as tmpdir:
+        tdir = Path(tmpdir)
+        (tdir / "l1.bin").write_bytes(b"p34-l1-image")
+        (tdir / "l2.bin").write_bytes(b"p34-l2-image")
+        (tdir / "l3.bin").write_bytes(b"p34-l3-image")
+        manifest = {
+            "L1": {
+                "version": "86.25",
+                "filename": "l1.bin",
+                "sha256": sha256_file(tdir / "l1.bin"),
+            },
+            "L2": {
+                "version": "87.16",
+                "filename": "l2.bin",
+                "sha256": sha256_file(tdir / "l2.bin"),
+            },
+            "L3": {
+                "version": "88.17",
+                "filename": "l3.bin",
+                "sha256": sha256_file(tdir / "l3.bin"),
+            },
+        }
+        c = clone_base()
+        ok_errs = lint_components(
+            [(f"{k}.metainfo.xml", v) for k, v in c.items()],
+            payload_dir=tdir,
+            payload_files={"l1.bin", "l2.bin", "l3.bin"},
+            manifest=manifest,
+        )
+        if ok_errs:
+            raise AssertionError(f"manifest-positive: unexpected errors {ok_errs!r}")
+
+        # swap file contents while keeping filenames unchanged
+        (tdir / "l1.bin").write_bytes(b"p34-l3-image")
+        (tdir / "l3.bin").write_bytes(b"p34-l1-image")
+        assert_rejected(
+            "manifest-swapped-content",
+            clone_base(),
+            "SHA256 mismatch",
+            payload_dir=tdir,
+            payload_files={"l1.bin", "l2.bin", "l3.bin"},
+            manifest=manifest,
+        )
+
+        # version mismatch against manifest
+        (tdir / "l1.bin").write_bytes(b"p34-l1-image")
+        (tdir / "l3.bin").write_bytes(b"p34-l3-image")
+        c = clone_base()
+        c["l2"].find("./releases/release").attrib["version"] = "87.99"
+        assert_rejected(
+            "manifest-wrong-version",
+            c,
+            "does not match manifest",
+            payload_dir=tdir,
+            payload_files={"l1.bin", "l2.bin", "l3.bin"},
+            manifest=manifest,
+        )
+
+    # 12. fwupd version below 1.9.8 (e.g. 1.3.4)
     c = clone_base()
     c["l3"].find("./requires/id").attrib["version"] = "1.3.4"
     assert_rejected("fwupd-version-too-low", c, "below minimum 1.9.8")
 
-    # 10. Invalid priority order (L3 priority < L2 priority)
+    # 13. Invalid priority order (L3 priority < L2 priority)
     c = clone_base()
     c["l3"].attrib["priority"] = "1"
     assert_rejected("wrong-priority-order", c, "invalid install priority order")
 
-    print("PASS: P34WD-40 Hub-only CAB lint self-test (1 positive + 10 negative cases)")
+    print("PASS: P34WD-40 Hub-only CAB lint self-test (2 positive + 14 negative cases)")
     return 0
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("target", nargs="?", type=Path, help="Directory with metainfo XMLs or .cab file")
-    parser.add_argument("--check-payloads", action="store_true", help="Verify payload files exist in directory")
-    parser.add_argument("--self-test", action="store_true", help="Run built-in positive/negative lint tests")
+    parser.add_argument(
+        "target", nargs="?", type=Path, help="Directory with metainfo XMLs or .cab file"
+    )
+    parser.add_argument(
+        "--check-payloads", action="store_true", help="Verify payload files exist in directory"
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        help="Optional JSON manifest binding L1/L2/L3 version, filename, and sha256",
+    )
+    parser.add_argument(
+        "--self-test", action="store_true", help="Run built-in positive/negative lint tests"
+    )
     args = parser.parse_args()
 
     if args.self_test:
@@ -326,10 +508,14 @@ def main() -> int:
     if args.target is None:
         parser.error("target path is required unless --self-test is specified")
 
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8")) if args.manifest else None
+
     if args.target.is_dir():
-        errors = load_from_dir(args.target, check_payloads=args.check_payloads)
+        errors = load_from_dir(
+            args.target, check_payloads=args.check_payloads, manifest=manifest
+        )
     elif args.target.is_file() and args.target.suffix == ".cab":
-        errors = load_from_cab(args.target)
+        errors = load_from_cab(args.target, manifest=manifest)
     else:
         print(f"unsupported target: {args.target}", file=sys.stderr)
         return 2
