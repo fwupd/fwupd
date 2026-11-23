@@ -6,6 +6,32 @@ Plugin = genesys
 [USB\VID_05E3&PID_0630]
 Plugin = genesys
 
+# Lenovo P34WD-40 USB2.0 Hubs (L1 1121 > L2 1122 > L3 1123)
+# Each hub requires its own direct child HID proxy (proxy-required + GenesysUsbhubHidProxyId),
+# enforces strict PROJECT/IC matching, and verifies its upstream hub chain before probing the
+# HID proxy or entering ISP mode. L2/L3 set enforce-requires so CABs must carry <firmware depth>
+# parent requirements; L1 is the model fingerprint hub itself.
+[USB\VID_17EF&PID_1121]
+Plugin = genesys
+Flags = strict-project-check,proxy-required,dual-image
+GenesysUsbhubHidProxyId = USB\VID_17EF&PID_F00F
+RemoveDelay = 40000
+
+[USB\VID_17EF&PID_1122]
+Plugin = genesys
+Flags = strict-project-check,proxy-required,dual-image,enforce-requires
+GenesysUsbhubHidProxyId = USB\VID_17EF&PID_4C41
+GenesysParentHubPid = 0x1121
+RemoveDelay = 40000
+
+[USB\VID_17EF&PID_1123]
+Plugin = genesys
+Flags = strict-project-check,proxy-required,dual-image,enforce-requires
+GenesysUsbhubHidProxyId = USB\VID_17EF&PID_4C42
+GenesysParentHubPid = 0x1122
+GenesysRootHubPid = 0x1121
+RemoveDelay = 40000
+
 # Brand Products
 
 # Google Servo Dock
