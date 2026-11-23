@@ -37,8 +37,6 @@ G_DEFINE_TYPE(FuChunk, fu_chunk, G_TYPE_OBJECT)
  * @idx: index, starting at 0
  *
  * Sets the index of the chunk.
- *
- * Since: 1.5.6
  **/
 void
 fu_chunk_set_idx(FuChunk *self, guint idx)
@@ -54,8 +52,6 @@ fu_chunk_set_idx(FuChunk *self, guint idx)
  * Gets the index of the chunk.
  *
  * Returns: index
- *
- * Since: 1.5.6
  **/
 guint
 fu_chunk_get_idx(FuChunk *self)
@@ -70,8 +66,6 @@ fu_chunk_get_idx(FuChunk *self)
  * @page: page number, starting at 0
  *
  * Sets the page of the chunk.
- *
- * Since: 1.5.6
  **/
 void
 fu_chunk_set_page(FuChunk *self, guint page)
@@ -87,8 +81,6 @@ fu_chunk_set_page(FuChunk *self, guint page)
  * Gets the page of the chunk.
  *
  * Returns: page
- *
- * Since: 1.5.6
  **/
 guint
 fu_chunk_get_page(FuChunk *self)
@@ -103,8 +95,6 @@ fu_chunk_get_page(FuChunk *self)
  * @address: memory address
  *
  * Sets the address of the chunk.
- *
- * Since: 1.5.6
  **/
 void
 fu_chunk_set_address(FuChunk *self, gsize address)
@@ -120,8 +110,6 @@ fu_chunk_set_address(FuChunk *self, gsize address)
  * Gets the address of the chunk.
  *
  * Returns: address
- *
- * Since: 1.5.6
  **/
 gsize
 fu_chunk_get_address(FuChunk *self)
@@ -137,8 +125,6 @@ fu_chunk_get_address(FuChunk *self)
  * Gets the data of the chunk.
  *
  * Returns: bytes
- *
- * Since: 1.5.6
  **/
 const guint8 *
 fu_chunk_get_data(FuChunk *self)
@@ -159,8 +145,6 @@ fu_chunk_get_data(FuChunk *self)
  * using this function.
  *
  * Returns: (transfer none): bytes
- *
- * Since: 1.5.6
  **/
 guint8 *
 fu_chunk_get_data_out(FuChunk *self)
@@ -182,8 +166,6 @@ fu_chunk_get_data_out(FuChunk *self)
  * Gets the data size of the chunk.
  *
  * Returns: size in bytes
- *
- * Since: 1.5.6
  **/
 gsize
 fu_chunk_get_data_sz(FuChunk *self)
@@ -206,8 +188,6 @@ fu_chunk_set_data_sz(FuChunk *self, gsize data_sz)
  * @bytes: (nullable): data
  *
  * Sets the data to use for the chunk.
- *
- * Since: 1.5.6
  **/
 void
 fu_chunk_set_bytes(FuChunk *self, GBytes *bytes)
@@ -233,8 +213,6 @@ fu_chunk_set_bytes(FuChunk *self, GBytes *bytes)
  * Gets the data of the chunk.
  *
  * Returns: (transfer full): data
- *
- * Since: 1.5.6
  **/
 GBytes *
 fu_chunk_get_bytes(FuChunk *self)
@@ -256,8 +234,6 @@ fu_chunk_get_bytes(FuChunk *self)
  * Creates a new packet of chunked data.
  *
  * Returns: (transfer full): a #FuChunk
- *
- * Since: 1.1.2
  **/
 FuChunk *
 fu_chunk_new(guint idx, guint page, gsize address, const guint8 *data, gsize data_sz)
@@ -278,8 +254,6 @@ fu_chunk_new(guint idx, guint page, gsize address, const guint8 *data, gsize dat
  * Creates a new packet of data.
  *
  * Returns: (transfer full): a #FuChunk
- *
- * Since: 1.5.6
  **/
 FuChunk *
 fu_chunk_bytes_new(GBytes *bytes)
@@ -325,8 +299,6 @@ fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, FwupdJsonObject *jso
  * Converts the chunked packet to a string representation.
  *
  * Returns: (transfer full): a string
- *
- * Since: 1.1.2
  **/
 gchar *
 fu_chunk_to_string(FuChunk *self)
@@ -345,8 +317,6 @@ fu_chunk_to_string(FuChunk *self)
  * Converts all the chunked packets in an array to a string representation.
  *
  * Returns: (transfer full): a string
- *
- * Since: 1.0.1
  **/
 gchar *
 fu_chunk_array_to_string(GPtrArray *chunks)
@@ -376,8 +346,6 @@ fu_chunk_array_to_string(GPtrArray *chunks)
  * cross a package boundary and is less that a specific transfer size.
  *
  * Returns: (transfer container) (element-type FuChunk): array of packets
- *
- * Since: 2.1.2
  **/
 GPtrArray *
 fu_chunk_array_mutable_new(guint8 *data,
@@ -416,8 +384,6 @@ fu_chunk_array_mutable_new(guint8 *data,
  * cross a package boundary and is less that a specific transfer size.
  *
  * Returns: (transfer container) (element-type FuChunk): array of packets, or %NULL
- *
- * Since: 2.1.2
  **/
 GPtrArray *
 fu_chunk_array_new(const guint8 *data,

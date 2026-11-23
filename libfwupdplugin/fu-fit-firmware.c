@@ -52,8 +52,6 @@ fu_fit_firmware_get_image_root(FuFitFirmware *self)
  * Gets the creation timestamp.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 guint32
 fu_fit_firmware_get_timestamp(FuFitFirmware *self)
@@ -76,8 +74,6 @@ fu_fit_firmware_get_timestamp(FuFitFirmware *self)
  * @timestamp: integer value
  *
  * Sets the creation timestamp.
- *
- * Since: 1.8.2
  **/
 void
 fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp)
@@ -391,8 +387,6 @@ fu_fit_firmware_class_init(FuFitFirmwareClass *klass)
  * fu_fit_firmware_new:
  *
  * Creates a new #FuFirmware of sub type FIT
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_fit_firmware_new(void)

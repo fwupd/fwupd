@@ -402,8 +402,6 @@ fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
  * fu_ifwi_cpd_firmware_new:
  *
  * Creates a new #FuFirmware of Intel Code Partition Directory format
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_ifwi_cpd_firmware_new(void)

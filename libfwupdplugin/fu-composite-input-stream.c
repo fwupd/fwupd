@@ -83,8 +83,6 @@ fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface)
  * Adds a bytes object.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
@@ -117,8 +115,6 @@ fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes,
  * Adds a partial stream object.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
@@ -161,8 +157,6 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
  * Adds a input stream object, which has to be seekable.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
@@ -243,8 +237,6 @@ fu_composite_input_stream_seek(FuInputStream *stream,
  * Creates a composite input stream.
  *
  * Returns: (transfer full): a #FuCompositeInputStream
- *
- * Since: 2.0.0
  **/
 FuInputStream *
 fu_composite_input_stream_new(void)

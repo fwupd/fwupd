@@ -20,8 +20,6 @@
  * @flags: dump flags, e.g. %FU_DUMP_FLAG_SHOW_ASCII
  *
  * Dumps a raw buffer to the screen.
- *
- * Since: 1.8.2
  **/
 void
 fu_dump_full(const gchar *log_domain,
@@ -99,8 +97,6 @@ fu_dump_full(const gchar *log_domain,
  * @len: the size of @data
  *
  * Dumps a raw buffer to the screen.
- *
- * Since: 1.8.2
  **/
 void
 fu_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsize len)
@@ -118,8 +114,6 @@ fu_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsi
  * @bytes: data blob
  *
  * Dumps a byte buffer to the screen.
- *
- * Since: 1.8.2
  **/
 void
 fu_dump_bytes(const gchar *log_domain, const gchar *title, GBytes *bytes)

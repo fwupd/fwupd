@@ -144,8 +144,6 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
  * Sets the I²C device address.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
@@ -193,8 +191,6 @@ fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GEr
  * Write multiple bytes to the I²C device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
@@ -216,8 +212,6 @@ fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **
  * Read multiple bytes from the I²C device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)

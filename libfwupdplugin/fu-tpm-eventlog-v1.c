@@ -138,8 +138,6 @@ fu_tpm_eventlog_v1_init(FuTpmEventlogV1 *self)
  * Creates a new object to parse TPMv1 eventlog data.
  *
  * Returns: a #FuTpmEventlog
- *
- * Since: 2.1.1
  **/
 FuTpmEventlog *
 fu_tpm_eventlog_v1_new(void)

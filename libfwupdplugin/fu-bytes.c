@@ -31,8 +31,6 @@
  * required.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
@@ -68,8 +66,6 @@ fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
  * as required.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.3
  **/
 gboolean
 fu_bytes_set_contents_full(const gchar *filename, GBytes *bytes, gint mode, GError **error)
@@ -121,8 +117,6 @@ fu_bytes_set_contents_full(const gchar *filename, GBytes *bytes, gint mode, GErr
  * Reads a blob of data from a file.
  *
  * Returns: a #GBytes, or %NULL for failure
- *
- * Since: 1.8.2
  **/
 GBytes *
 fu_bytes_get_contents(const gchar *filename, GError **error)
@@ -165,8 +159,6 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
  * the block is already aligned then the original @bytes is returned.
  *
  * Returns: (transfer full): a #GBytes, possibly @bytes
- *
- * Since: 1.8.2
  **/
 GBytes *
 fu_bytes_align(GBytes *bytes, gsize blksz, gchar padval)
@@ -199,8 +191,6 @@ fu_bytes_align(GBytes *bytes, gsize blksz, gchar padval)
  * Checks if a byte array are just empty (0xff) bytes.
  *
  * Returns: %TRUE if @bytes is empty
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_bytes_is_empty(GBytes *bytes)
@@ -223,8 +213,6 @@ fu_bytes_is_empty(GBytes *bytes)
  * Compares the buffers for equality.
  *
  * Returns: %TRUE if @bytes1 and @bytes2 are identical
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
@@ -256,8 +244,6 @@ fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
  * Pads a GBytes to a minimum @sz with `0xff`.
  *
  * Returns: (transfer full): a data blob
- *
- * Since: 2.0.7
  **/
 GBytes *
 fu_bytes_pad(GBytes *bytes, gsize sz, guint8 data)
@@ -292,8 +278,6 @@ fu_bytes_pad(GBytes *bytes, gsize sz, guint8 data)
  * Creates a #GBytes which is a subsection of another #GBytes.
  *
  * Returns: (transfer full): a #GBytes, or #NULL if range is invalid
- *
- * Since: 1.8.2
  **/
 GBytes *
 fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
@@ -335,8 +319,6 @@ fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
  * This may be useful when calling g_mapped_file_new() on a zero-length file.
  *
  * Returns: a pointer to the byte data, or %NULL.
- *
- * Since: 1.6.0
  **/
 const guint8 *
 fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error)
@@ -359,8 +341,6 @@ fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error)
  * Converts @bytes to a lowercase hex string.
  *
  * Returns: (transfer full): a string, which may be zero length
- *
- * Since: 2.0.4
  **/
 gchar *
 fu_bytes_to_string(GBytes *bytes)
@@ -385,8 +365,6 @@ fu_bytes_to_string(GBytes *bytes)
  * Converts a lowercase hex string to a #GBytes.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
- *
- * Since: 2.0.5
  **/
 GBytes *
 fu_bytes_from_string(const gchar *str, GError **error)

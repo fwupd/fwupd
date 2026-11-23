@@ -158,8 +158,6 @@ fu_usb_device_libusb_status_to_gerror(gint status, GError **error)
  * Gets the low-level platform device.
  *
  * Returns: (type gpointer): a libusb_device
- *
- * Since: 2.0.0
  **/
 libusb_device *
 fu_usb_device_get_dev(FuUsbDevice *self)
@@ -301,8 +299,6 @@ fu_usb_device_init(FuUsbDevice *self)
  *
  * Sets the number of tries we should attempt when claiming the device.
  * Applies to all interfaces associated with this device.
- *
- * Since: 1.9.10
  **/
 void
 fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count)
@@ -319,8 +315,6 @@ fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count)
  * Gets the number of tries we should attempt when claiming the device.
  *
  * Returns: integer, or `0` if no attempt should be made.
- *
- * Since: 1.9.10
  **/
 guint
 fu_usb_device_get_claim_retry_count(FuUsbDevice *self)
@@ -336,8 +330,6 @@ fu_usb_device_get_claim_retry_count(FuUsbDevice *self)
  * @configuration: the configuration value to set
  *
  * Set the active bConfigurationValue for the device.
- *
- * Since: 1.7.4
  **/
 void
 fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration)
@@ -353,8 +345,6 @@ fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration)
  * @number: bInterfaceNumber of the interface
  *
  * Adds an interface that will be claimed on `->open()` and released on `->close()`.
- *
- * Since: 1.7.4
  **/
 void
 fu_usb_device_add_interface(FuUsbDevice *device, guint8 number)
@@ -594,8 +584,6 @@ fu_usb_device_open(FuDevice *device, GError **error)
  * Gets the USB bus number for the device.
  *
  * Return value: The 8-bit bus number
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_device_get_bus(FuUsbDevice *self)
@@ -613,8 +601,6 @@ fu_usb_device_get_bus(FuUsbDevice *self)
  * Gets the USB address for the device.
  *
  * Return value: The 8-bit address
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_device_get_address(FuUsbDevice *self)
@@ -632,8 +618,6 @@ fu_usb_device_get_address(FuUsbDevice *self)
  * Gets the index for the iManufacturer string descriptor.
  *
  * Return value: a string descriptor index.
- *
- * Since: 2.0.4
  **/
 guint8
 fu_usb_device_get_manufacturer_index(FuUsbDevice *self)
@@ -650,8 +634,6 @@ fu_usb_device_get_manufacturer_index(FuUsbDevice *self)
  * Gets the index for the iProduct string descriptor.
  *
  * Return value: a string descriptor index.
- *
- * Since: 2.0.4
  **/
 guint8
 fu_usb_device_get_product_index(FuUsbDevice *self)
@@ -1313,8 +1295,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
  * Gets the device release.
  *
  * Returns: integer, or 0x0 if unset or invalid
- *
- * Since: 2.0.0
  **/
 guint16
 fu_usb_device_get_release(FuUsbDevice *self)
@@ -1331,8 +1311,6 @@ fu_usb_device_get_release(FuUsbDevice *self)
  * Gets the string USB revision for the device.
  *
  * Returns: a specification revision in BCD format, or 0x0 if not supported
- *
- * Since: 1.3.4
  **/
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self)
@@ -1349,8 +1327,6 @@ fu_usb_device_get_spec(FuUsbDevice *self)
  * Gets the device class, typically a #FuUsbClass.
  *
  * Return value: a #FuUsbClass, e.g. %FU_USB_CLASS_HUB.
- *
- * Since: 2.0.0
  **/
 FuUsbClass
 fu_usb_device_get_class(FuUsbDevice *self)
@@ -1439,8 +1415,6 @@ fu_usb_device_convert_version(FuDevice *device, guint64 version_raw)
  * Warning: this function is synchronous, and cannot be cancelled.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,
@@ -1575,8 +1549,6 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
  * Warning: this function is synchronous, and cannot be cancelled.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_bulk_transfer(FuUsbDevice *self,
@@ -1678,8 +1650,6 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
  * Warning: this function is synchronous, and cannot be cancelled.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_interrupt_transfer(FuUsbDevice *self,
@@ -1780,8 +1750,6 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
  * This is a blocking function which usually incurs a noticeable delay.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_reset(FuUsbDevice *self, GError **error)
@@ -2016,8 +1984,6 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
  * Gets all the interfaces exported by the device.
  *
  * Return value: (transfer container) (element-type FuUsbInterface): an array of interfaces or %NULL
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
@@ -2054,8 +2020,6 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
  * check each one manually.
  *
  * Return value: (transfer full): a #FuUsbInterface or %NULL for not found
- *
- * Since: 0.2.8
  **/
 FuUsbInterface *
 fu_usb_device_get_interface(FuUsbDevice *self,
@@ -2104,8 +2068,6 @@ fu_usb_device_get_interface(FuUsbDevice *self,
  * with g_free() when no longer needed.
  *
  * Return value: a newly-allocated string holding the descriptor, or NULL on error.
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError **error)
@@ -2183,8 +2145,6 @@ fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError
  * use fu_usb_device_get_string_descriptor_bytes_full instead.
  *
  * Return value: (transfer full): a possibly UTF-16 string, or NULL on error.
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_usb_device_get_string_descriptor_bytes(FuUsbDevice *self,
@@ -2208,8 +2168,6 @@ fu_usb_device_get_string_descriptor_bytes(FuUsbDevice *self,
  * with g_bytes_unref() when no longer needed.
  *
  * Return value: (transfer full): a possibly UTF-16 string, or NULL on error.
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
@@ -2328,8 +2286,6 @@ fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **
  * Claim an interface of the device.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_claim_interface(FuUsbDevice *self,
@@ -2371,8 +2327,6 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
  * Release an interface of the device.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_release_interface(FuUsbDevice *self,
@@ -2440,8 +2394,6 @@ fu_usb_device_get_config_descriptor_for_value(FuUsbDevice *self,
  * ie, iConfiguration.
  *
  * Return value: a string descriptor index, or 0x0 on error
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
@@ -2543,8 +2495,6 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
  * Gets the index for the Serial Number string descriptor.
  *
  * Return value: a string descriptor index.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_device_get_serial_number_index(FuUsbDevice *self)
@@ -2565,8 +2515,6 @@ fu_usb_device_get_serial_number_index(FuUsbDevice *self)
  * Gets the string index from the vendor class interface descriptor.
  *
  * Return value: a non-zero index, or 0x00 for failure
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_device_get_custom_index(FuUsbDevice *self,
@@ -2687,8 +2635,6 @@ fu_usb_device_get_custom_index(FuUsbDevice *self,
  * Sets an alternate setting on an interface.
  *
  * Return value: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GError **error)
@@ -2796,8 +2742,6 @@ fu_usb_device_ensure_hid_descriptors(FuUsbDevice *self, GError **error)
  * are returned. To invalidate the caches use fu_device_invalidate().
  *
  * Return value: (transfer container) (element-type GBytes): an array of HID descriptors
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error)
@@ -3078,8 +3022,6 @@ fu_usb_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlag
  * Creates a new #FuUsbDevice.
  *
  * Returns: (transfer full): a #FuUsbDevice
- *
- * Since: 2.0.0
  **/
 FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, libusb_device *usb_device)
@@ -3199,8 +3141,6 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	 * FuUsbDevice:libusb-device:
 	 *
 	 * The low-level #libusb_device.
-	 *
-	 * Since: 2.0.0
 	 */
 	pspec =
 	    g_param_spec_pointer("libusb-device",

@@ -41,8 +41,6 @@ typedef struct {
  * @version_lowest: version number
  *
  * Sets the lowest possible `platform_ver` for a DS20 descriptor.
- *
- * Since: 1.8.5
  **/
 void
 fu_usb_device_ds20_set_version_lowest(FuUsbDeviceDs20 *self, guint32 version_lowest)
@@ -61,8 +59,6 @@ fu_usb_device_ds20_set_version_lowest(FuUsbDeviceDs20 *self, guint32 version_low
  * Sets the DS20 descriptor onto @device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.5
  **/
 gboolean
 fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, GError **error)

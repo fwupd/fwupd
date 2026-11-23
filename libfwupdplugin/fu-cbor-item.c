@@ -38,8 +38,6 @@ typedef struct {
  * Get the CBOR item kind.
  *
  * Returns: a #FuCborItemKind, e.g. %FU_CBOR_ITEM_KIND_STRING
- *
- * Since: 2.1.2
  **/
 FuCborItemKind
 fu_cbor_item_get_kind(FuCborItem *self)
@@ -57,8 +55,6 @@ fu_cbor_item_get_kind(FuCborItem *self)
  * Gets an integer from a CBOR item.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_cbor_item_get_integer(FuCborItem *self, gint64 *value, GError **error)
@@ -88,8 +84,6 @@ fu_cbor_item_get_integer(FuCborItem *self, gint64 *value, GError **error)
  * Gets an integer from a CBOR item.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_cbor_item_get_boolean(FuCborItem *self, gboolean *value, GError **error)
@@ -118,8 +112,6 @@ fu_cbor_item_get_boolean(FuCborItem *self, gboolean *value, GError **error)
  * Gets a string from a CBOR item.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 2.1.2
  **/
 gchar *
 fu_cbor_item_get_string(FuCborItem *self, GError **error)
@@ -153,8 +145,6 @@ fu_cbor_item_get_string(FuCborItem *self, GError **error)
  * Gets a raw bytestring from a CBOR item.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 2.1.2
  **/
 GBytes *
 fu_cbor_item_get_bytes(FuCborItem *self, GError **error)
@@ -190,8 +180,6 @@ fu_cbor_item_get_bytes(FuCborItem *self, GError **error)
  * Gets the length of the CBOR array.
  *
  * Returns: length
- *
- * Since: 2.1.2
  **/
 guint
 fu_cbor_item_array_length(FuCborItem *self)
@@ -208,8 +196,6 @@ fu_cbor_item_array_length(FuCborItem *self)
  * Gets the length of the CBOR map.
  *
  * Returns: length, or %G_MAXUINT for error
- *
- * Since: 2.1.2
  **/
 guint
 fu_cbor_item_map_length(FuCborItem *self)
@@ -227,8 +213,6 @@ fu_cbor_item_map_length(FuCborItem *self)
  * Gets a specific item in an array.
  *
  * Returns: a #FuCborItem, or %NULL for error
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_array_index(FuCborItem *self, guint idx)
@@ -247,8 +231,6 @@ fu_cbor_item_array_index(FuCborItem *self, guint idx)
  * @item_value: (optional) (out) (transfer none): value
  *
  * Gets a specific pair from a map.
- *
- * Since: 2.1.2
  **/
 void
 fu_cbor_item_map_index(FuCborItem *self, guint idx, FuCborItem **item_key, FuCborItem **item_value)
@@ -372,8 +354,6 @@ fu_cbor_item_append(FuCborItem *self, GByteArray *buf, GError **error)
  * Writes CBOR items into a buffer.
  *
  * Returns: (transfer container): buffer, or %NULL on error
- *
- * Since: 2.1.2
  **/
 GByteArray *
 fu_cbor_item_write(FuCborItem *self, GError **error)
@@ -406,8 +386,6 @@ fu_cbor_item_write(FuCborItem *self, GError **error)
  * Increases the reference count of a CBOR object.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_ref(FuCborItem *self)
@@ -424,8 +402,6 @@ fu_cbor_item_ref(FuCborItem *self)
  * Decreases the reference count of a CBOR object.
  *
  * Returns: (transfer none): a #FuCborItem, or %NULL
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_unref(FuCborItem *self)
@@ -446,8 +422,6 @@ fu_cbor_item_unref(FuCborItem *self)
  * Creates a CBOR object representing a string.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_string(const gchar *value)
@@ -467,8 +441,6 @@ fu_cbor_item_new_string(const gchar *value)
  * Creates a CBOR object representing a byte string.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_bytes(GBytes *value)
@@ -500,8 +472,6 @@ fu_cbor_item_new_string_steal(gchar *value)
  * Creates a CBOR object representing an integer.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_integer(gint64 value)
@@ -522,8 +492,6 @@ fu_cbor_item_new_integer(gint64 value)
  * Creates a CBOR object representing a boolean.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_boolean(gboolean value)
@@ -549,8 +517,6 @@ fu_cbor_item_map_pair_free(FuCborPair *pair)
  * Creates a CBOR object representing a map, usually a dictionary.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_map(void)
@@ -569,8 +535,6 @@ fu_cbor_item_new_map(void)
  * Creates a CBOR object representing an array.
  *
  * Returns: (transfer full): a #FuCborItem
- *
- * Since: 2.1.2
  **/
 FuCborItem *
 fu_cbor_item_new_array(void)
@@ -592,8 +556,6 @@ fu_cbor_item_new_array(void)
  * Adds an item to a CBOR object.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_cbor_item_array_append(FuCborItem *self, FuCborItem *item, GError **error)
@@ -625,8 +587,6 @@ fu_cbor_item_array_append(FuCborItem *self, FuCborItem *item, GError **error)
  * Adds key-value items to a CBOR map.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_cbor_item_map_append(FuCborItem *self,
@@ -718,8 +678,6 @@ fu_cbor_item_append_string(FuCborItem *self, GString *str)
  * Converts a CBOR item to a debug string.
  *
  * Returns: string
- *
- * Since: 2.1.2
  **/
 gchar *
 fu_cbor_item_to_string(FuCborItem *self)

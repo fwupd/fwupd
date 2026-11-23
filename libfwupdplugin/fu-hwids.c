@@ -46,8 +46,6 @@ G_DEFINE_TYPE(FuHwids, fu_hwids, G_TYPE_OBJECT)
  * for display.
  *
  * Returns: the string, e.g. `1.2.3`, or %NULL if not found
- *
- * Since: 0.9.3
  **/
 const gchar *
 fu_hwids_get_value(FuHwids *self, const gchar *key)
@@ -63,8 +61,6 @@ fu_hwids_get_value(FuHwids *self, const gchar *key)
  * Finds out if a hardware GUID exists.
  *
  * Returns: %TRUE if the GUID exists
- *
- * Since: 0.9.3
  **/
 gboolean
 fu_hwids_has_guid(FuHwids *self, const gchar *guid)
@@ -79,8 +75,6 @@ fu_hwids_has_guid(FuHwids *self, const gchar *guid)
  * Returns all the defined HWIDs
  *
  * Returns: (transfer none) (element-type utf8): an array of GUIDs
- *
- * Since: 0.9.3
  **/
 GPtrArray *
 fu_hwids_get_guids(FuHwids *self)
@@ -96,8 +90,6 @@ fu_hwids_get_guids(FuHwids *self)
  *
  * Returns: (transfer container) (element-type utf8): All the known keys,
  * e.g. %FU_HWIDS_KEY_FAMILY
- *
- * Since: 1.5.6
  **/
 GPtrArray *
 fu_hwids_get_keys(FuHwids *self)
@@ -162,8 +154,6 @@ fu_hwids_get_guid_for_str(const gchar *str, GError **error)
  * Gets the defined values for a well known value.
  *
  * Returns: the replacement value, e.g. `Manufacturer&ProductName`, or %NULL for error.
- *
- * Since: 0.9.3
  **/
 const gchar *
 fu_hwids_get_replace_keys(FuHwids *self, const gchar *key)
@@ -186,8 +176,6 @@ fu_hwids_get_replace_keys(FuHwids *self, const gchar *key)
  * @value: a composite hardware key, e.g. `Manufacturer&ProductName`
  *
  * Defines a "Computer Hardware ID" in terms of a set of SMBIOS values.
- *
- * Since: 1.9.16
  **/
 void
 fu_hwids_add_chid(FuHwids *self, const gchar *key, const gchar *value)
@@ -213,8 +201,6 @@ fu_hwids_sort_keys_cb(gconstpointer a, gconstpointer b)
  * Returns all the CHID keys added by fu_hwids_add_chid().
  *
  * Returns: (transfer container) (element-type utf8): IDs
- *
- * Since: 1.9.16
  **/
 GPtrArray *
 fu_hwids_get_chid_keys(FuHwids *self)
@@ -242,8 +228,6 @@ fu_hwids_get_chid_keys(FuHwids *self)
  * Sets override values so you can emulate another system.
  *
  * This function has no effect if called after fu_hwids_setup()
- *
- * Since: 1.8.10
  **/
 void
 fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value)
@@ -278,8 +262,6 @@ fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value)
  * Gets the replacement values for a HardwareID key or plain key.
  *
  * Returns: a string, e.g. `LENOVO&ThinkPad T440s`, or %NULL for error.
- *
- * Since: 0.9.3
  **/
 gchar *
 fu_hwids_get_replace_values(FuHwids *self, const gchar *keys, GError **error)
@@ -322,8 +304,6 @@ fu_hwids_get_replace_values(FuHwids *self, const gchar *keys, GError **error)
  * Gets the GUID for a specific key.
  *
  * Returns: a string, or %NULL for error.
- *
- * Since: 0.9.3
  **/
 gchar *
 fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error)
@@ -346,8 +326,6 @@ fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error)
  * @guid: a GUID
  *
  * Adds a HWID GUID value.
- *
- * Since: 1.8.10
  **/
 void
 fu_hwids_add_guid(FuHwids *self, const gchar *guid)
@@ -366,8 +344,6 @@ fu_hwids_add_guid(FuHwids *self, const gchar *guid)
  * Adds all the `HardwareID` GUIDs from the previously supplied data.
  *
  * Returns: %TRUE for success
- *
- * Since: 0.9.3
  **/
 gboolean
 fu_hwids_setup(FuHwids *self, GError **error)
@@ -469,8 +445,6 @@ fu_hwids_init(FuHwids *self)
  * fu_hwids_new:
  *
  * Creates a new #FuHwids
- *
- * Since: 0.9.3
  **/
 FuHwids *
 fu_hwids_new(void)

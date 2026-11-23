@@ -22,8 +22,6 @@ struct _FuIfwiFptFirmwareClass {
  * FU_IFWI_FPT_FIRMWARE_IDX_INFO:
  *
  * The index for the IFWI info image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_FPT_FIRMWARE_IDX_INFO 0x4f464e49
 
@@ -31,8 +29,6 @@ struct _FuIfwiFptFirmwareClass {
  * FU_IFWI_FPT_FIRMWARE_IDX_FWIM:
  *
  * The index for the IFWI firmware image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_FPT_FIRMWARE_IDX_FWIM 0x4d495746
 
@@ -40,8 +36,6 @@ struct _FuIfwiFptFirmwareClass {
  * FU_IFWI_FPT_FIRMWARE_IDX_IMGI:
  *
  * The index for the IFWI image instance.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_FPT_FIRMWARE_IDX_IMGI 0x49474d49
 
@@ -49,8 +43,6 @@ struct _FuIfwiFptFirmwareClass {
  * FU_IFWI_FPT_FIRMWARE_IDX_SDTA:
  *
  * The index for the IFWI firmware data image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_FPT_FIRMWARE_IDX_SDTA 0x41544447
 
@@ -58,8 +50,6 @@ struct _FuIfwiFptFirmwareClass {
  * FU_IFWI_FPT_FIRMWARE_IDX_CKSM:
  *
  * The index for the IFWI checksum image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_FPT_FIRMWARE_IDX_CKSM 0x4d534b43
 

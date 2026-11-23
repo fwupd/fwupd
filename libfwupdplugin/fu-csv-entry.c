@@ -35,8 +35,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCsvEntry, fu_csv_entry, FU_TYPE_FIRMWARE)
  * @value: (not nullable): string
  *
  * Adds a string value to the entry.
- *
- * Since: 1.9.3
  **/
 void
 fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value)
@@ -55,8 +53,6 @@ fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value)
  * Gets the entry value for a specific index.
  *
  * Returns: a string, or %NULL if unset
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx)
@@ -76,8 +72,6 @@ fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx)
  * Gets the entry value for a specific column ID.
  *
  * Returns: a string, or %NULL if unset or the column ID cannot be found
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id)
@@ -284,8 +278,6 @@ fu_csv_entry_class_init(FuCsvEntryClass *klass)
  * fu_csv_entry_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_csv_entry_new(void)

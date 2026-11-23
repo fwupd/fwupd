@@ -97,8 +97,6 @@ fu_firmware_patch_free(FuFirmwarePatch *ptch)
  * @flag: the firmware flag
  *
  * Adds a specific firmware flag to the firmware.
- *
- * Since: 1.5.0
  **/
 void
 fu_firmware_add_flag(FuFirmware *self, FuFirmwareFlags flag)
@@ -116,8 +114,6 @@ fu_firmware_add_flag(FuFirmware *self, FuFirmwareFlags flag)
  * Finds if the firmware has a specific firmware flag.
  *
  * Returns: %TRUE if the flag is set
- *
- * Since: 1.5.0
  **/
 gboolean
 fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag)
@@ -134,8 +130,6 @@ fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag)
  * Gets an optional version that represents the firmware.
  *
  * Returns: a string, or %NULL
- *
- * Since: 1.3.3
  **/
 const gchar *
 fu_firmware_get_version(FuFirmware *self)
@@ -151,8 +145,6 @@ fu_firmware_get_version(FuFirmware *self)
  * @version: (nullable): optional string version
  *
  * Sets an optional version that represents the firmware.
- *
- * Since: 1.3.3
  **/
 void
 fu_firmware_set_version(FuFirmware *self, const gchar *version)
@@ -171,8 +163,6 @@ fu_firmware_set_version(FuFirmware *self, const gchar *version)
  * `firmware.builder.json` file to avoid string splitting and sanity checks.
  *
  * Returns: an integer, or %G_MAXUINT64 for invalid
- *
- * Since:  1.5.7
  **/
 guint64
 fu_firmware_get_version_raw(FuFirmware *self)
@@ -190,8 +180,6 @@ fu_firmware_get_version_raw(FuFirmware *self)
  * Sets an raw version that represents the firmware.
  *
  * This is optional, and is typically only used for debugging.
- *
- * Since: 1.5.7
  **/
 void
 fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw)
@@ -218,8 +206,6 @@ fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw)
  * Gets the version format.
  *
  * Returns: the version format, or %FWUPD_VERSION_FORMAT_UNKNOWN if unset
- *
- * Since: 2.0.0
  **/
 FwupdVersionFormat
 fu_firmware_get_version_format(FuFirmware *self)
@@ -235,8 +221,6 @@ fu_firmware_get_version_format(FuFirmware *self)
  * @version_format: the version format, e.g. %FWUPD_VERSION_FORMAT_NUMBER
  *
  * Sets the version format.
- *
- * Since: 2.0.0
  **/
 void
 fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_format)
@@ -265,8 +249,6 @@ fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_form
  * Gets an optional filename that represents the image source or destination.
  *
  * Returns: a string, or %NULL
- *
- * Since: 1.6.0
  **/
 const gchar *
 fu_firmware_get_filename(FuFirmware *self)
@@ -282,8 +264,6 @@ fu_firmware_get_filename(FuFirmware *self)
  * @filename: (nullable): a string filename
  *
  * Sets an optional filename that represents the image source or destination.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_filename(FuFirmware *self, const gchar *filename)
@@ -297,8 +277,6 @@ fu_firmware_set_filename(FuFirmware *self, const gchar *filename)
  * fu_firmware_set_id:
  * @self: a #FuPlugin
  * @id: (nullable): image ID, e.g. `config`
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_id(FuFirmware *self, const gchar *id)
@@ -315,8 +293,6 @@ fu_firmware_set_id(FuFirmware *self, const gchar *id)
  * Gets the image ID, typically set at construction.
  *
  * Returns: image ID, e.g. `config`
- *
- * Since: 1.6.0
  **/
 const gchar *
 fu_firmware_get_id(FuFirmware *self)
@@ -332,8 +308,6 @@ fu_firmware_get_id(FuFirmware *self)
  * @addr: integer
  *
  * Sets the base address of the image.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_addr(FuFirmware *self, guint64 addr)
@@ -350,8 +324,6 @@ fu_firmware_set_addr(FuFirmware *self, guint64 addr)
  * Gets the base address of the image.
  *
  * Returns: integer
- *
- * Since: 1.6.0
  **/
 guint64
 fu_firmware_get_addr(FuFirmware *self)
@@ -367,8 +339,6 @@ fu_firmware_get_addr(FuFirmware *self)
  * @offset: integer
  *
  * Sets the base offset of the image.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_offset(FuFirmware *self, guint64 offset)
@@ -385,8 +355,6 @@ fu_firmware_set_offset(FuFirmware *self, guint64 offset)
  * Gets the base offset of the image.
  *
  * Returns: integer
- *
- * Since: 1.6.0
  **/
 guint64
 fu_firmware_get_offset(FuFirmware *self)
@@ -403,8 +371,6 @@ fu_firmware_get_offset(FuFirmware *self)
  * Gets the parent.
  *
  * Returns: (transfer none): the parent firmware, or %NULL if unset
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_firmware_get_parent(FuFirmware *self)
@@ -420,8 +386,6 @@ fu_firmware_get_parent(FuFirmware *self)
  * @parent: (nullable): another #FuFirmware
  *
  * Sets the parent. Only used internally.
- *
- * Since: 1.8.2
  **/
 void
 fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent)
@@ -443,8 +407,6 @@ fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent)
  *
  * Sets the total size of the image, which should be the same size as the
  * data from fu_firmware_write().
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_size(FuFirmware *self, gsize size)
@@ -465,8 +427,6 @@ fu_firmware_set_size(FuFirmware *self, gsize size)
  * used then the size of this is used instead.
  *
  * Returns: integer
- *
- * Since: 1.6.0
  **/
 gsize
 fu_firmware_get_size(FuFirmware *self)
@@ -490,8 +450,6 @@ fu_firmware_get_size(FuFirmware *self)
  * Sets the maximum size of the image allowed during parsing.
  * Implementations should query fu_firmware_get_size_max() during parsing when adding images to
  * ensure the limit is not exceeded.
- *
- * Since: 2.1.6
  **/
 void
 fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max)
@@ -507,8 +465,6 @@ fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max)
  * Gets the maximum size of the image allowed during parsing.
  *
  * Returns: integer, or the default of ~100MiB if not set.
- *
- * Since: 1.9.7
  **/
 gsize
 fu_firmware_get_size_max(FuFirmware *self)
@@ -525,8 +481,6 @@ fu_firmware_get_size_max(FuFirmware *self)
  * @idx: integer
  *
  * Sets the index of the image which is used for ordering.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_idx(FuFirmware *self, guint64 idx)
@@ -543,8 +497,6 @@ fu_firmware_set_idx(FuFirmware *self, guint64 idx)
  * Gets the index of the image which is used for ordering.
  *
  * Returns: integer
- *
- * Since: 1.6.0
  **/
 guint64
 fu_firmware_get_idx(FuFirmware *self)
@@ -560,8 +512,6 @@ fu_firmware_get_idx(FuFirmware *self)
  * @bytes: data blob
  *
  * Sets the contents of the image if not created with fu_firmware_new_from_bytes().
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
@@ -590,8 +540,6 @@ fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
  * should be used instead.
  *
  * Returns: (transfer full): a #GBytes, or %NULL if the payload has never been set
- *
- * Since: 1.6.0
  **/
 GBytes *
 fu_firmware_get_bytes(FuFirmware *self, GError **error)
@@ -623,8 +571,6 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
  * Gets the firmware payload, with any defined patches applied.
  *
  * Returns: (transfer full): a #GBytes, or %NULL if the payload has never been set
- *
- * Since: 1.7.4
  **/
 GBytes *
 fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
@@ -676,8 +622,6 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
  *
  * This allows a firmware to pad to a power of 2 boundary, where @alignment
  * is the bit position to align to.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
@@ -695,8 +639,6 @@ fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
  * Gets the input stream which was used to parse the firmware.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL if the payload has never been set
- *
- * Since: 2.0.0
  **/
 FuInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error)
@@ -721,8 +663,6 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
  * Sets the input stream.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error)
@@ -751,8 +691,6 @@ fu_firmware_set_stream(FuFirmware *self, FuInputStream *stream, GError **error)
  * is the bit position to align to.
  *
  * Returns: a #FuFirmwareAlignment
- *
- * Since: 1.6.0
  **/
 FuFirmwareAlignment
 fu_firmware_get_alignment(FuFirmware *self)
@@ -770,8 +708,6 @@ fu_firmware_get_alignment(FuFirmware *self)
  * Gets the optional image chunks.
  *
  * Returns: (transfer container) (element-type FuChunk) (nullable): chunk data, or %NULL
- *
- * Since: 1.6.0
  **/
 GPtrArray *
 fu_firmware_get_chunks(FuFirmware *self, GError **error)
@@ -811,8 +747,6 @@ fu_firmware_get_chunks(FuFirmware *self, GError **error)
  * @chk: a #FuChunk
  *
  * Adds a chunk to the image.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_add_chunk(FuFirmware *self, FuChunk *chk)
@@ -833,8 +767,6 @@ fu_firmware_add_chunk(FuFirmware *self, FuChunk *chk)
  * @offset: offset to start parsing, typically 0x0
  *
  * Adds a possible magic signature to the image.
- *
- * Since: 2.0.18
  **/
 void
 fu_firmware_add_magic(FuFirmware *self, const guint8 *buf, gsize bufsz, gsize offset)
@@ -863,8 +795,6 @@ fu_firmware_add_magic(FuFirmware *self, const guint8 *buf, gsize bufsz, gsize of
  * Returns a checksum of the payload data.
  *
  * Returns: (transfer full): a checksum string, or %NULL if the checksum is not available
- *
- * Since: 1.6.0
  **/
 gchar *
 fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **error)
@@ -923,8 +853,6 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
  * using fu_srec_firmware_get_records().
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
@@ -954,8 +882,6 @@ fu_firmware_tokenize(FuFirmware *self,
  * Check a new firmware is compatible with the existing firmware.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.4
  **/
 gboolean
 fu_firmware_check_compatible(FuFirmware *self,
@@ -1085,8 +1011,6 @@ fu_firmware_validate_for_offset(FuFirmware *self,
  * Parses a firmware from a stream, typically breaking the firmware into images.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
@@ -1273,8 +1197,6 @@ fu_firmware_parse_stream(FuFirmware *self,
  * Parses a firmware, typically breaking the firmware into images.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.1
  **/
 gboolean
 fu_firmware_parse_bytes(FuFirmware *self,
@@ -1348,8 +1270,6 @@ fu_firmware_parse_bytes(FuFirmware *self,
  * functions.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.5.0
  **/
 gboolean
 fu_firmware_build(FuFirmware *self, FwupdJsonObject *json_object, GError **error)
@@ -1629,8 +1549,6 @@ fu_firmware_builder_load_json(GBytes *blob, GError **error)
  * Firmware subclasses should use fu_firmware_add_image_gtype() for subclassed image objects.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.1
  **/
 FuFirmware *
 fu_firmware_new_from_json(const gchar *json, GError **error)
@@ -1675,8 +1593,6 @@ fu_firmware_new_from_json(const gchar *json, GError **error)
  * Builds a firmware from a JSON manifest.
  *
  * Returns: a #FuFirmware on success, else %NULL
- *
- * Since: 2.1.1
  **/
 FuFirmware *
 fu_firmware_new_from_filename(const gchar *filename, GError **error)
@@ -1701,8 +1617,6 @@ fu_firmware_new_from_filename(const gchar *filename, GError **error)
  * Parses a firmware file, typically breaking the firmware into images.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.3.3
  **/
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags, GError **error)
@@ -1729,8 +1643,6 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
  * Writes a firmware, typically packing the images into a binary blob.
  *
  * Returns: (transfer full): a data blob
- *
- * Since: 2.1.8
  **/
 GByteArray *
 fu_firmware_write_array(FuFirmware *self, GError **error)
@@ -1760,8 +1672,6 @@ fu_firmware_write_array(FuFirmware *self, GError **error)
  * Writes a firmware, typically packing the images into a binary blob.
  *
  * Returns: (transfer full): a data blob
- *
- * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_write(FuFirmware *self, GError **error)
@@ -1793,8 +1703,6 @@ fu_firmware_write(FuFirmware *self, GError **error)
  * it is replaced.
  *
  * If the @address is larger than the size of the image then an error is returned.
- *
- * Since: 1.7.4
  **/
 void
 fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob)
@@ -1843,8 +1751,6 @@ fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob)
  * If the @address is larger than the size of the image then an error is returned.
  *
  * Returns: (transfer full): a #GBytes, or %NULL
- *
- * Since: 1.6.0
  **/
 GBytes *
 fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max, GError **error)
@@ -1903,8 +1809,6 @@ fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max,
  * Writes a firmware, typically packing the images into a binary blob.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.3.3
  **/
 gboolean
 fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error)
@@ -1950,8 +1854,6 @@ fu_firmware_set_depth(FuFirmware *self, guint depth)
  * Gets the depth of this child image relative to the root.
  *
  * Returns: integer, or 0 for the root.
- *
- * Since: 1.9.14
  **/
 guint
 fu_firmware_get_depth(FuFirmware *self)
@@ -1967,8 +1869,6 @@ fu_firmware_get_depth(FuFirmware *self)
  * @type: a #GType, e.g. %FU_TYPE_ELF_FIRMWARE
  *
  * Adds a possible image GType.
- *
- * Since: 2.1.6
  **/
 void
 fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type)
@@ -1991,8 +1891,6 @@ fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type)
  * Returns all the possible image GTypes.
  *
  * Returns: (array length=n_gtypes) (transfer none): array of #GType.
- *
- * Since: 2.1.6
  **/
 const GType *
 fu_firmware_get_image_gtypes(FuFirmware *self, guint *n_gtypes)
@@ -2050,8 +1948,6 @@ fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
  * present it is replaced.
  *
  * Returns: %TRUE if the image was added
- *
- * Since: 1.9.3, but @error was added in 2.0.17
  **/
 gboolean
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
@@ -2126,8 +2022,6 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
  * @images_max: integer, or 0 for unlimited
  *
  * Sets the maximum number of images this container can hold.
- *
- * Since: 2.1.6
  **/
 void
 fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max)
@@ -2143,8 +2037,6 @@ fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max)
  * Gets the maximum number of images this container can hold.
  *
  * Returns: integer, or 0 for unlimited.
- *
- * Since: 1.9.3
  **/
 guint
 fu_firmware_get_images_max(FuFirmware *self)
@@ -2164,8 +2056,6 @@ fu_firmware_get_images_max(FuFirmware *self)
  * Remove an image from the firmware.
  *
  * Returns: %TRUE if the image was removed
- *
- * Since: 1.5.0
  **/
 gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error)
@@ -2197,8 +2087,6 @@ fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error)
  * Removes the first image from the firmware matching the index.
  *
  * Returns: %TRUE if an image was removed
- *
- * Since: 1.5.0
  **/
 gboolean
 fu_firmware_remove_image_by_idx(FuFirmware *self, guint64 idx, GError **error)
@@ -2225,8 +2113,6 @@ fu_firmware_remove_image_by_idx(FuFirmware *self, guint64 idx, GError **error)
  * Removes the first image from the firmware matching the ID.
  *
  * Returns: %TRUE if an image was removed
- *
- * Since: 1.5.0
  **/
 gboolean
 fu_firmware_remove_image_by_id(FuFirmware *self, const gchar *id, GError **error)
@@ -2251,8 +2137,6 @@ fu_firmware_remove_image_by_id(FuFirmware *self, const gchar *id, GError **error
  * Returns all the images in the firmware.
  *
  * Returns: (transfer container) (element-type FuFirmware): images
- *
- * Since: 1.3.1
  **/
 GPtrArray *
 fu_firmware_get_images(FuFirmware *self)
@@ -2279,8 +2163,6 @@ fu_firmware_get_images(FuFirmware *self)
  * Gets the firmware image using the image ID.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
@@ -2345,8 +2227,6 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
  * Gets the firmware image bytes using the image ID.
  *
  * Returns: (transfer full): a #GBytes of a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **error)
@@ -2371,8 +2251,6 @@ fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **er
  * Gets the firmware image stream using the image ID.
  *
  * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 2.0.0
  **/
 FuInputStream *
 fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
@@ -2397,8 +2275,6 @@ fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **e
  * Gets the firmware image using the image index.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error)
@@ -2431,8 +2307,6 @@ fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error)
  * based on the length of the input string.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.5.5
  **/
 FuFirmware *
 fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GError **error)
@@ -2474,8 +2348,6 @@ fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GErro
  * Gets the firmware image bytes using the image index.
  *
  * Returns: (transfer full): a #GBytes of a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error)
@@ -2500,8 +2372,6 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
  * Gets the firmware image stream using the image index.
  *
  * Returns: (transfer full): a #FuInputStream of a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 2.0.0
  **/
 FuInputStream *
 fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
@@ -2526,8 +2396,6 @@ fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **erro
  * Gets the firmware image bytes using the image #GType.
  *
  * Returns: (transfer full): a #GBytes of a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.9.3
  **/
 GBytes *
 fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **error)
@@ -2552,8 +2420,6 @@ fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **err
  * Gets the firmware image using the image #GType.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
@@ -2622,8 +2488,6 @@ fu_firmware_get_images_sorted(FuFirmware *self)
  * The image children will have a predictable order if the firmware has
  * %FU_FIRMWARE_FLAG_DEDUPE_ID or %FU_FIRMWARE_FLAG_DEDUPE_IDX and
  * %FU_FIRMWARE_EXPORT_FLAG_SORTED is also used in @flags.
- *
- * Since: 1.6.0
  **/
 void
 fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
@@ -2789,8 +2653,6 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, FwupdJsonObjec
  * Exports the nested firmware as JSON text.
  *
  * Returns: a string value, or %NULL for invalid.
- *
- * Since: 2.2.1
  **/
 gchar *
 fu_firmware_export_to_json(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
@@ -2813,8 +2675,6 @@ fu_firmware_export_to_json(FuFirmware *self, FuFirmwareExportFlags flags, GError
  * This allows us to easily print the object.
  *
  * Returns: a string value, or %NULL for invalid.
- *
- * Since: 1.3.1
  **/
 gchar *
 fu_firmware_to_string(FuFirmware *self)
@@ -2920,8 +2780,6 @@ fu_firmware_class_init(FuFirmwareClass *klass)
 	 * FuFirmware:parent:
 	 *
 	 * The firmware parent.
-	 *
-	 * Since: 1.8.2
 	 */
 	pspec = g_param_spec_object("parent",
 				    NULL,
@@ -2937,8 +2795,6 @@ fu_firmware_class_init(FuFirmwareClass *klass)
  * Creates an empty firmware object.
  *
  * Returns: a #FuFirmware
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_new(void)
@@ -2954,8 +2810,6 @@ fu_firmware_new(void)
  * Creates a firmware object with the provided image set as default.
  *
  * Returns: a #FuFirmware
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw)
@@ -2976,8 +2830,6 @@ fu_firmware_new_from_bytes(GBytes *fw)
  * Tries to parse the firmware with each #GType in order.
  *
  * Returns: (transfer full) (nullable): a #FuFirmware, or %NULL
- *
- * Since: 1.5.6
  **/
 FuFirmware *
 fu_firmware_new_from_gtypes(FuInputStream *stream,
@@ -3045,8 +2897,6 @@ fu_firmware_new_from_gtypes(FuInputStream *stream,
  * Roundtrip a firmware from builder JSON to binary and back to JSON.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_firmware_roundtrip_from_json(const gchar *builder_json,
@@ -3152,8 +3002,6 @@ fu_firmware_roundtrip_from_json(const gchar *builder_json,
  * Roundtrip a firmware from builder JSON filename to binary and back to JSON.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_firmware_roundtrip_from_filename(const gchar *builder_fn,

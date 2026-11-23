@@ -42,8 +42,6 @@ fu_coswid_collection_class_init(FuCoswidCollectionClass *klass)
  * fu_coswid_collection_new:
  *
  * Creates a new #FuFirmware collection made up of concatenated CoSWID images.
- *
- * Since: 2.2.1
  **/
 FuFirmware *
 fu_coswid_collection_new(void)

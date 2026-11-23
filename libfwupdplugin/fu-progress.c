@@ -100,8 +100,6 @@ G_DEFINE_TYPE_WITH_CODE(FuProgress,
  * Return the id of the progress, which is normally set by the caller.
  *
  * Returns: progress ID
- *
- * Since: 1.7.0
  **/
 const gchar *
 fu_progress_get_id(FuProgress *self)
@@ -116,8 +114,6 @@ fu_progress_get_id(FuProgress *self)
  * @id: progress ID, normally `G_STRLOC`
  *
  * Sets the id of the progress.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_set_id(FuProgress *self, const gchar *id)
@@ -134,8 +130,6 @@ fu_progress_set_id(FuProgress *self, const gchar *id)
  * Return the nice name of the progress, which is normally set by the caller.
  *
  * Returns: progress nice name, e.g. `add-devices`
- *
- * Since: 1.8.2
  **/
 const gchar *
 fu_progress_get_name(FuProgress *self)
@@ -158,8 +152,6 @@ fu_progress_get_name_fallback(FuProgress *self)
  * @name: progress nice name, e.g. `add-devices`, or perhaps just `G_STRFUNC`
  *
  * Sets the nice name of the progress.
- *
- * Since: 1.8.2
  **/
 void
 fu_progress_set_name(FuProgress *self, const gchar *name)
@@ -176,8 +168,6 @@ fu_progress_set_name(FuProgress *self, const gchar *name)
  * Return the status of the progress, which is normally indirectly by fu_progress_add_step().
  *
  * Returns: status
- *
- * Since: 1.7.0
  **/
 FwupdStatus
 fu_progress_get_status(FuProgress *self)
@@ -192,8 +182,6 @@ fu_progress_get_status(FuProgress *self)
  * @flag: an internal progress flag, e.g. %FU_PROGRESS_FLAG_GUESSED
  *
  * Adds a flag.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
@@ -208,8 +196,6 @@ fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
  * @flag: an internal progress flag, e.g. %FU_PROGRESS_FLAG_GUESSED
  *
  * Removes a flag.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
@@ -233,8 +219,6 @@ fu_progress_sleep_idle_stop(FuProgress *self)
  * @flag: an internal progress flag, e.g. %FU_PROGRESS_FLAG_GUESSED
  *
  * Tests for a flag.
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_progress_has_flag(FuProgress *self, FuProgressFlags flag)
@@ -249,8 +233,6 @@ fu_progress_has_flag(FuProgress *self, FuProgressFlags flag)
  * @status: device status
  *
  * Sets the status of the progress.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_set_status(FuProgress *self, FwupdStatus status)
@@ -273,8 +255,6 @@ fu_progress_set_status(FuProgress *self, FwupdStatus status)
  * Get the last set progress percentage.
  *
  * Return value: The percentage value, or %FWUPD_PERCENTAGE_UNKNOWN for error
- *
- * Since: 2.1.2
  **/
 gdouble
 fu_progress_get_percentage(FuProgress *self)
@@ -299,8 +279,6 @@ fu_progress_set_parent(FuProgress *self, FuProgress *parent)
  * Get the duration of the step.
  *
  * Return value: The duration value in seconds
- *
- * Since: 1.8.2
  **/
 gdouble
 fu_progress_get_duration(FuProgress *self)
@@ -335,8 +313,6 @@ fu_progress_build_parent_chain(FuProgress *self, GString *str, guint level)
  * Sets the progress percentage complete.
  *
  * NOTE: this must be above what was previously set, or it will be rejected.
- *
- * Since: 2.1.2
  **/
 void
 fu_progress_set_percentage(FuProgress *self, gdouble percentage)
@@ -385,8 +361,6 @@ fu_progress_set_percentage(FuProgress *self, gdouble percentage)
  * @progress_total: the total number of bytes
  *
  * Sets the progress completion using the raw progress values.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize progress_total)
@@ -406,8 +380,6 @@ fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize pro
  *
  * This enables profiling of FuProgress. This may be useful in development,
  * but be warned; enabling profiling makes #FuProgress very slow.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_set_profile(FuProgress *self, gboolean profile)
@@ -423,8 +395,6 @@ fu_progress_set_profile(FuProgress *self, gboolean profile)
  * Returns if the profile is enabled for this progress.
  *
  * Return value: if profiling has been enabled
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_progress_get_profile(FuProgress *self)
@@ -438,8 +408,6 @@ fu_progress_get_profile(FuProgress *self)
  * @self: A #FuProgress
  *
  * Resets the #FuProgress object to unset
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_reset(FuProgress *self)
@@ -473,8 +441,6 @@ fu_progress_reset(FuProgress *self)
  * function will be called in the loop.
  *
  * The progress ID must be set fu_progress_set_id() before this method is used.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_set_steps(FuProgress *self, guint step_max)
@@ -519,8 +485,6 @@ fu_progress_set_steps(FuProgress *self, guint step_max)
  * Gets the global percentage.
  *
  * Return value: fraction, where 1.0 is 100%.
- *
- * Since: 2.0.4
  **/
 gdouble
 fu_progress_get_global_fraction(FuProgress *self)
@@ -537,8 +501,6 @@ fu_progress_get_global_fraction(FuProgress *self)
  * function will be called in the loop.
  *
  * Return value: number of sub-tasks in this progress
- *
- * Since: 1.7.0
  **/
 guint
 fu_progress_get_steps(FuProgress *self)
@@ -661,8 +623,6 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, gdouble percentage, F
  * will take a bigger chunk of time than another.
  *
  * The progress ID must be set fu_progress_set_id() before this method is used.
- *
- * Since: 1.8.2
  **/
 void
 fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gchar *name)
@@ -719,8 +679,6 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
  * @self: A #FuProgress
  *
  * Called when the step_now sub-task wants to finish early and still complete.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_finished(FuProgress *self)
@@ -752,8 +710,6 @@ fu_progress_finished(FuProgress *self)
  * Monitor a child and proxy back up to the parent with the correct percentage.
  *
  * Return value: (transfer none): A new %FuProgress or %NULL for failure
- *
- * Since: 1.7.0
  **/
 FuProgress *
 fu_progress_get_child(FuProgress *self)
@@ -841,8 +797,6 @@ fu_progress_show_profile(FuProgress *self)
  * @self: A #FuProgress
  *
  * Called when the step_now sub-task has finished.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_step_done(FuProgress *self)
@@ -953,8 +907,6 @@ fu_progress_step_done(FuProgress *self)
  * Sleeps, setting the device progress from 0..100% as time continues.
  *
  * NOTE: You should try to avoid calling this function for emulated devices.
- *
- * Since: 1.7.0
  **/
 void
 fu_progress_sleep(FuProgress *self, guint delay_ms)
@@ -999,8 +951,6 @@ fu_progress_sleep_idle_cb(gpointer user_data)
  *
  * Sleeps, setting the device progress from 0..100% as time continues. If the parent progress
  * percentage is changed or finalized then the idle action will be cancelled.
- *
- * Since: 2.1.8
  **/
 void
 fu_progress_sleep_idle(FuProgress *self, GMainContext *main_ctx, guint delay_ms)
@@ -1056,8 +1006,6 @@ fu_progress_traceback_cb(FuProgress *self,
  * Create a traceback used for profiling startup.
  *
  * Return value: (transfer full): string
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_progress_traceback(FuProgress *self)
@@ -1163,8 +1111,6 @@ fu_progress_class_init(FuProgressClass *klass)
 	 * @percentage: the new value
 	 *
 	 * The ::percentage-changed signal is emitted when the tasks completion has changed.
-	 *
-	 * Since: 2.1.2
 	 **/
 	signals[SIGNAL_PERCENTAGE_CHANGED] = g_signal_new("percentage-changed",
 							  G_TYPE_FROM_CLASS(object_class),
@@ -1182,8 +1128,6 @@ fu_progress_class_init(FuProgressClass *klass)
 	 * @status: the new #FwupdStatus
 	 *
 	 * The ::status-changed signal is emitted when the task status has changed.
-	 *
-	 * Since: 1.7.0
 	 **/
 	signals[SIGNAL_STATUS_CHANGED] = g_signal_new("status-changed",
 						      G_TYPE_FROM_CLASS(object_class),
@@ -1202,8 +1146,6 @@ fu_progress_class_init(FuProgressClass *klass)
  * @id: (nullable): progress ID, normally `G_STRLOC`
  *
  * Return value: A new #FuProgress instance.
- *
- * Since: 1.7.0
  **/
 FuProgress *
 fu_progress_new(const gchar *id)

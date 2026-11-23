@@ -72,8 +72,6 @@ fu_drm_device_to_string(FuDevice *device, guint idt, GString *str)
  * Gets the current status of the DRM device.
  *
  * Returns: a #FuDisplayState, e.g. %FU_DISPLAY_STATE_CONNECTED
- *
- * Since: 1.9.7
  **/
 FuDisplayState
 fu_drm_device_get_state(FuDrmDevice *self)
@@ -90,8 +88,6 @@ fu_drm_device_get_state(FuDrmDevice *self)
  * Gets if the DRM device is currently enabled.
  *
  * Returns: %TRUE if enabled, %FALSE otherwise
- *
- * Since: 1.9.7
  **/
 gboolean
 fu_drm_device_get_enabled(FuDrmDevice *self)
@@ -108,8 +104,6 @@ fu_drm_device_get_enabled(FuDrmDevice *self)
  * Gets the DRM device connector ID.
  *
  * Returns: a string, or %NULL if not found
- *
- * Since: 1.9.7
  **/
 const gchar *
 fu_drm_device_get_connector_id(FuDrmDevice *self)
@@ -126,8 +120,6 @@ fu_drm_device_get_connector_id(FuDrmDevice *self)
  * Gets the X position of the preferred CRTC of the DRM device.
  *
  * Returns: pixels
- *
- * Since: 2.0.0
  **/
 guint32
 fu_drm_device_get_crtc_x(FuDrmDevice *self)
@@ -144,8 +136,6 @@ fu_drm_device_get_crtc_x(FuDrmDevice *self)
  * Gets the Y position of the preferred CRTC of the DRM device.
  *
  * Returns: pixels
- *
- * Since: 2.0.0
  **/
 guint32
 fu_drm_device_get_crtc_y(FuDrmDevice *self)
@@ -162,8 +152,6 @@ fu_drm_device_get_crtc_y(FuDrmDevice *self)
  * Gets the width of the preferred CRTC of the DRM device.
  *
  * Returns: pixels
- *
- * Since: 2.0.0
  **/
 guint32
 fu_drm_device_get_crtc_width(FuDrmDevice *self)
@@ -180,8 +168,6 @@ fu_drm_device_get_crtc_width(FuDrmDevice *self)
  * Gets the height of the preferred CRTC of the DRM device.
  *
  * Returns: pixels
- *
- * Since: 2.0.0
  **/
 guint32
 fu_drm_device_get_crtc_height(FuDrmDevice *self)
@@ -198,8 +184,6 @@ fu_drm_device_get_crtc_height(FuDrmDevice *self)
  * Returns the cached EDID from the DRM device.
  *
  * Returns: (transfer none): a #FuEdid, or %NULL
- *
- * Since: 1.9.7
  **/
 FuEdid *
 fu_drm_device_get_edid(FuDrmDevice *self)
@@ -215,8 +199,6 @@ fu_drm_device_get_edid(FuDrmDevice *self)
  * @edid: a #FuEdid, or %NULL
  *
  * Sets the cached EDID onto the DRM device.
- *
- * Since: 2.0.14
  **/
 void
 fu_drm_device_set_edid(FuDrmDevice *self, FuEdid *edid)

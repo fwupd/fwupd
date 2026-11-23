@@ -125,8 +125,6 @@ fu_compressor_stream_new(FuInputStream *source,
  * Creates a new stream that decompresses data from @source on the fly.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.0.7
  **/
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,
@@ -148,8 +146,6 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
  * Creates a new stream that compresses data from @source on the fly.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.0.7
  **/
 FuInputStream *
 fu_compressor_stream_new_compress(FuInputStream *source,

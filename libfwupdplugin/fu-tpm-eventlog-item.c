@@ -44,8 +44,6 @@ fu_tpm_eventlog_item_alg_to_idx(FuTpmAlg alg)
  * @checksum: a #GBytes of the raw checksum
  *
  * Adds the checksum of a specific type.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_add_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GBytes *checksum)
@@ -69,8 +67,6 @@ fu_tpm_eventlog_item_add_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GBytes 
  * Gets the raw checksum of a specific type.
  *
  * Returns: a #GBytes, or %NULL on error
- *
- * Since: 2.1.1
  **/
 GBytes *
 fu_tpm_eventlog_item_get_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GError **error)
@@ -98,8 +94,6 @@ fu_tpm_eventlog_item_get_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GError 
  * Gets the item kind.
  *
  * Returns: a #FuTpmEventlogItemKind, e.g. %FU_TPM_EVENTLOG_ITEM_KIND_EFI_PLATFORM_FIRMWARE_BLOB
- *
- * Since: 2.1.1
  **/
 FuTpmEventlogItemKind
 fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self)
@@ -114,8 +108,6 @@ fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self)
  * @kind: a #FuTpmEventlogItemKind, e.g. %FU_TPM_EVENTLOG_ITEM_KIND_EFI_PLATFORM_FIRMWARE_BLOB
  *
  * Sets item kind.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_set_kind(FuTpmEventlogItem *self, FuTpmEventlogItemKind kind)
@@ -131,8 +123,6 @@ fu_tpm_eventlog_item_set_kind(FuTpmEventlogItem *self, FuTpmEventlogItemKind kin
  * Gets the PCR register.
  *
  * Returns: value
- *
- * Since: 2.1.1
  **/
 guint8
 fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self)
@@ -147,8 +137,6 @@ fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self)
  * @pcr: a value
  *
  * Sets the PCR register.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_set_pcr(FuTpmEventlogItem *self, guint8 pcr)
@@ -283,8 +271,6 @@ fu_tpm_eventlog_item_init(FuTpmEventlogItem *self)
  * fu_tpm_eventlog_item_new:
  *
  * Returns: (transfer full): a #FuTpmEventlogItem
- *
- * Since: 2.1.1
  **/
 FuTpmEventlogItem *
 fu_tpm_eventlog_item_new(void)

@@ -37,8 +37,6 @@
  * Converts a decimal value from BCD.
  *
  * Returns: integer
- *
- * Since: 2.1.5
  **/
 guint16
 fu_common_from_bcd_u16(guint16 value)
@@ -54,8 +52,6 @@ fu_common_from_bcd_u16(guint16 value)
  * Converts a decimal value to BCD.
  *
  * Returns: integer
- *
- * Since: 2.1.5
  **/
 guint16
 fu_common_to_bcd_u16(guint16 value)
@@ -71,8 +67,6 @@ fu_common_to_bcd_u16(guint16 value)
  * Converts a decimal value from BCD.
  *
  * Returns: integer
- *
- * Since: 2.1.5
  **/
 guint8
 fu_common_from_bcd_u8(guint8 value)
@@ -87,8 +81,6 @@ fu_common_from_bcd_u8(guint8 value)
  * Converts a decimal value to BCD.
  *
  * Returns: integer
- *
- * Since: 2.1.5
  **/
 guint8
 fu_common_to_bcd_u8(guint8 value)
@@ -104,8 +96,6 @@ fu_common_to_bcd_u8(guint8 value)
  * Performs a checked addition of a and b, ensuring the result does not overflow.
  *
  * Returns: @a+@b, or %G_MAXSIZE on overflow
- *
- * Since: 2.0.19
  **/
 gsize
 fu_size_checked_add(gsize a, gsize b)
@@ -127,8 +117,6 @@ fu_size_checked_add(gsize a, gsize b)
  * NOTE: If the operation does overflow then @value is *not* modified.
  *
  * Returns: boolean success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_size_checked_inc(gsize *value, gsize len, GError **error)
@@ -166,8 +154,6 @@ fu_size_checked_inc(gsize *value, gsize len, GError **error)
  * NOTE: If the operation does overflow then @value is *not* modified.
  *
  * Returns: boolean success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_size_checked_inc_product(gsize *value, gsize a, gsize b, GError **error)
@@ -202,8 +188,6 @@ fu_size_checked_inc_product(gsize *value, gsize a, gsize b, GError **error)
  * this prevents silent truncation that could lead to security vulnerabilities.
  *
  * Returns: %TRUE if the conversion was successful, %FALSE if the value exceeds #G_MAXSIZE
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_size_from_uint64(guint64 value, gsize *out, GError **error) /* nocheck:name */
@@ -237,8 +221,6 @@ fu_size_from_uint64(guint64 value, gsize *out, GError **error) /* nocheck:name *
  * a critical warning if @data is NULL.
  *
  * Returns: zero-terminated Base-64 encoded string representing data, or an empty string for no data
- *
- * Since: 2.1.5
  **/
 gchar *
 fu_base64_encode(const guint8 *buf, gsize bufsz)
@@ -263,8 +245,6 @@ fu_base64_encode(const guint8 *buf, gsize bufsz)
  * Any entries with a error_code of `FWUPD_ERROR_LAST` will return success.
  *
  * Returns: boolean success
- *
- * Since: 2.0.13
  **/
 gboolean
 fu_error_map_entry_to_gerror(guint value,
@@ -305,8 +285,6 @@ fu_error_map_entry_to_gerror(guint value,
  * Calls CPUID and returns the registers for the given leaf.
  *
  * Returns: %TRUE if the registers are set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
@@ -343,8 +321,6 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
  * Gets attributes for the first CPU listed in `/proc/cpuinfo`.
  *
  * Returns: (element-type utf8 utf8) (transfer full): CPU attributes
- *
- * Since: 2.0.7
  **/
 GHashTable *
 fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
@@ -388,8 +364,6 @@ fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
  * Returns the size of physical memory.
  *
  * Returns: bytes
- *
- * Since: 1.5.6
  **/
 guint64
 fu_common_get_memory_size(void)
@@ -404,8 +378,6 @@ fu_common_get_memory_size(void)
  * Returns the current kernel command line options.
  *
  * Returns: options as a string, or %NULL on error
- *
- * Since: 1.5.6
  **/
 gchar *
 fu_common_get_kernel_cmdline(GError **error)
@@ -423,8 +395,6 @@ fu_common_get_kernel_cmdline(GError **error)
  * Gets the system Olson timezone ID, as used in the CLDR and ICU specifications.
  *
  * Returns: timezone string, e.g. `Europe/London` or %NULL on error
- *
- * Since: 1.9.7
  **/
 gchar *
 fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error)
@@ -444,8 +414,6 @@ fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error)
  *
  * Returns: aligned value, which will be the same as @value if already aligned,
  * 		or %G_MAXSIZE if the value would overflow
- *
- * Since: 1.6.0
  **/
 gsize
 fu_common_align_up(gsize value, guint8 alignment)
@@ -478,8 +446,6 @@ fu_common_align_up(gsize value, guint8 alignment)
  * Determines if the power state can be considered "on AC power".
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.11
  **/
 gboolean
 fu_power_state_is_ac(FuPowerState power_state)
@@ -494,8 +460,6 @@ fu_power_state_is_ac(FuPowerState power_state)
  * @perror: (nullable): A #GError, perhaps with domain #GIOError
  *
  * Convert the error to a #FwupdError, if required.
- *
- * Since: 2.0.14
  **/
 gboolean
 fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **perror)
@@ -543,8 +507,6 @@ fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **
  * from @parent_gtype then %FWUPD_ERROR_INVALID_DATA is returned.
  *
  * Returns: %TRUE if @name was valid
- *
- * Since: 2.2.1
  **/
 gboolean
 fu_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError **error)
@@ -640,8 +602,6 @@ fu_common_get_random_raw(guint8 *buf, gsize bufsz, gsize *bufsz_valid, GError **
  * Gets random bytes using a cryptographically secure RNG.
  *
  * Returns: (transfer full): a blob of random data, or %NULL for error
- *
- * Since: 2.1.5
  **/
 GByteArray *
 fu_common_get_random(guint bufsz, GError **error)
@@ -672,8 +632,6 @@ fu_common_get_random(guint bufsz, GError **error)
  * Generates a random password using a cryptographically secure RNG.
  *
  * Returns: (transfer full): a string of alphanumeric chars, or %NULL for error
- *
- * Since: 2.1.5
  **/
 gchar *
 fu_common_get_random_string(guint length, GError **error)

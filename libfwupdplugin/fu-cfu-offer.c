@@ -82,8 +82,6 @@ fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJson
  * Gets the part of the firmware that is being transferred.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_segment_number(FuCfuOffer *self)
@@ -101,8 +99,6 @@ fu_cfu_offer_get_segment_number(FuCfuOffer *self)
  * for the next time the device is replugged.
  *
  * Returns: boolean
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self)
@@ -119,8 +115,6 @@ fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self)
  * Gets if the in-situ firmware should ignore version mismatch (e.g. downgrade).
  *
  * Returns: boolean
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self)
@@ -137,8 +131,6 @@ fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self)
  * Gets the component in the device to apply the firmware update.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_component_id(FuCfuOffer *self)
@@ -155,8 +147,6 @@ fu_cfu_offer_get_component_id(FuCfuOffer *self)
  * Gets the token to identify the user specific software making the offer.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_token(FuCfuOffer *self)
@@ -173,8 +163,6 @@ fu_cfu_offer_get_token(FuCfuOffer *self)
  * Gets the hardware variant bitmask corresponding with compatible firmware.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint32
 fu_cfu_offer_get_hw_variant(FuCfuOffer *self)
@@ -191,8 +179,6 @@ fu_cfu_offer_get_hw_variant(FuCfuOffer *self)
  * Gets the CFU protocol version.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_protocol_revision(FuCfuOffer *self)
@@ -209,8 +195,6 @@ fu_cfu_offer_get_protocol_revision(FuCfuOffer *self)
  * Gets the bank register, used if multiple banks are supported.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_bank(FuCfuOffer *self)
@@ -227,8 +211,6 @@ fu_cfu_offer_get_bank(FuCfuOffer *self)
  * Gets the milestone, which can be used as a version for example EV1, EVT etc.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_milestone(FuCfuOffer *self)
@@ -245,8 +227,6 @@ fu_cfu_offer_get_milestone(FuCfuOffer *self)
  * Gets the product ID for this CFU image.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint16
 fu_cfu_offer_get_product_id(FuCfuOffer *self)
@@ -262,8 +242,6 @@ fu_cfu_offer_get_product_id(FuCfuOffer *self)
  * @segment_number: integer
  *
  * Sets the part of the firmware that is being transferred.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_segment_number(FuCfuOffer *self, guint8 segment_number)
@@ -280,8 +258,6 @@ fu_cfu_offer_set_segment_number(FuCfuOffer *self, guint8 segment_number)
  *
  * Sets if the in-situ firmware should reset into the new firmware immediately, rather than waiting
  * for the next time the device is replugged.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_force_immediate_reset(FuCfuOffer *self, gboolean force_immediate_reset)
@@ -297,8 +273,6 @@ fu_cfu_offer_set_force_immediate_reset(FuCfuOffer *self, gboolean force_immediat
  * @force_ignore_version: boolean
  *
  * Sets if the in-situ firmware should ignore version mismatch (e.g. downgrade).
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_force_ignore_version(FuCfuOffer *self, gboolean force_ignore_version)
@@ -314,8 +288,6 @@ fu_cfu_offer_set_force_ignore_version(FuCfuOffer *self, gboolean force_ignore_ve
  * @component_id: integer
  *
  * Sets the component in the device to apply the firmware update.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_component_id(FuCfuOffer *self, guint8 component_id)
@@ -331,8 +303,6 @@ fu_cfu_offer_set_component_id(FuCfuOffer *self, guint8 component_id)
  * @token: integer
  *
  * Sets the token to identify the user specific software making the offer.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_token(FuCfuOffer *self, guint8 token)
@@ -348,8 +318,6 @@ fu_cfu_offer_set_token(FuCfuOffer *self, guint8 token)
  * @hw_variant: integer
  *
  * Sets the hardware variant bitmask corresponding with compatible firmware.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_hw_variant(FuCfuOffer *self, guint32 hw_variant)
@@ -365,8 +333,6 @@ fu_cfu_offer_set_hw_variant(FuCfuOffer *self, guint32 hw_variant)
  * @protocol_revision: integer
  *
  * Sets the CFU protocol version.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_protocol_revision(FuCfuOffer *self, guint8 protocol_revision)
@@ -383,8 +349,6 @@ fu_cfu_offer_set_protocol_revision(FuCfuOffer *self, guint8 protocol_revision)
  * @bank: integer
  *
  * Sets bank register, used if multiple banks are supported.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_bank(FuCfuOffer *self, guint8 bank)
@@ -401,8 +365,6 @@ fu_cfu_offer_set_bank(FuCfuOffer *self, guint8 bank)
  * @milestone: integer
  *
  * Sets the milestone, which can be used as a version for example EV1, EVT etc.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone)
@@ -419,8 +381,6 @@ fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone)
  * @product_id: integer
  *
  * Sets the product ID for this CFU image.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
@@ -619,8 +579,6 @@ fu_cfu_offer_class_init(FuCfuOfferClass *klass)
  * fu_cfu_offer_new:
  *
  * Creates a new #FuFirmware for a CFU offer
- *
- * Since: 1.7.0
  **/
 FuFirmware *
 fu_cfu_offer_new(void)

@@ -98,8 +98,6 @@ fu_linux_fw_upload_device_probe(FuDevice *device, GError **error)
  * Reads the current progress of the upload.
  *
  * Returns: a #FuFwUploadStatus, or %FU_FW_UPLOAD_STATUS_IDLE on error
- *
- * Since: 2.2.1
  **/
 FuFwUploadStatus
 fu_linux_fw_upload_device_get_status(FuLinuxFwUploadDevice *self, GError **error)
@@ -138,8 +136,6 @@ fu_linux_fw_upload_device_get_status(FuLinuxFwUploadDevice *self, GError **error
  * updated by the kernel after each chunk, and not at all while the device is programming.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.2.1
  **/
 gboolean
 fu_linux_fw_upload_device_get_remaining_size(FuLinuxFwUploadDevice *self,
@@ -171,8 +167,6 @@ fu_linux_fw_upload_device_get_remaining_size(FuLinuxFwUploadDevice *self,
  * `FuDevice->write_firmware()` to fail with an error of %FWUPD_ERROR_NOTHING_TO_DO.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.2.1
  **/
 gboolean
 fu_linux_fw_upload_device_cancel(FuLinuxFwUploadDevice *self, GError **error)

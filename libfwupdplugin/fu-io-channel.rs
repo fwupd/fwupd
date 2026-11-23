@@ -11,7 +11,6 @@ enum FuIoChannelOpenFlags {
 }
 
 // Flags used when reading data from the TTY.
-// Since: 1.2.2
 enum FuIoChannelFlags {
     // No flags are set.
     None = 0,

@@ -316,8 +316,6 @@ fu_dfuse_firmware_class_init(FuDfuseFirmwareClass *klass)
  * fu_dfuse_firmware_new:
  *
  * Creates a new #FuFirmware of sub type DfuSe
- *
- * Since: 1.5.6
  **/
 FuFirmware *
 fu_dfuse_firmware_new(void)

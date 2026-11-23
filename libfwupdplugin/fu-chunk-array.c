@@ -39,8 +39,6 @@ G_DEFINE_TYPE(FuChunkArray, fu_chunk_array, G_TYPE_OBJECT)
  * Gets the number of chunks.
  *
  * Returns: integer
- *
- * Since: 1.9.6
  **/
 guint
 fu_chunk_array_length(FuChunkArray *self)
@@ -90,8 +88,6 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
  * Gets the next chunk.
  *
  * Returns: (transfer full): a #FuChunk or %NULL if not valid
- *
- * Since: 1.9.6
  **/
 FuChunk *
 fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
@@ -177,8 +173,6 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
  * transfer size.
  *
  * Returns: (transfer full): a #FuChunkArray, or %NULL on error
- *
- * Since: 1.9.6
  **/
 FuChunkArray *
 fu_chunk_array_new_from_bytes(GBytes *blob,
@@ -224,8 +218,6 @@ fu_chunk_array_new_from_bytes(GBytes *blob,
  * transfer size.
  *
  * Returns: (transfer full): a #FuChunkArray
- *
- * Since: 2.0.2
  **/
 FuChunkArray *
 fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize packet_sz)
@@ -256,8 +248,6 @@ fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize 
  * transfer size.
  *
  * Returns: (transfer full): a #FuChunkArray, or #NULL on error
- *
- * Since: 2.0.2
  **/
 FuChunkArray *
 fu_chunk_array_new_from_stream(FuInputStream *stream,

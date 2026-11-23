@@ -135,8 +135,6 @@ fu_block_device_ioctl_sense_cb(FuIoctl *self,
  * Performs a SCSI IO command with no parameters.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cdbsz, GError **error)
@@ -221,8 +219,6 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
  * Performs a SCSI IO read command.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
@@ -318,8 +314,6 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
  * Performs a SCSI IO write command.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_write(FuBlockDevice *self,

@@ -51,8 +51,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIntelThunderboltNvm, fu_intel_thunderbolt_nvm, FU_T
  * Gets the vendor ID.
  *
  * Returns: an integer, or 0x0 for unset
- *
- * Since: 1.8.5
  **/
 guint16
 fu_intel_thunderbolt_nvm_get_vendor_id(FuIntelThunderboltNvm *self)
@@ -69,8 +67,6 @@ fu_intel_thunderbolt_nvm_get_vendor_id(FuIntelThunderboltNvm *self)
  * Gets the device ID.
  *
  * Returns: an integer, or 0x0 for unset
- *
- * Since: 1.8.5
  **/
 guint16
 fu_intel_thunderbolt_nvm_get_device_id(FuIntelThunderboltNvm *self)
@@ -86,8 +82,6 @@ fu_intel_thunderbolt_nvm_get_device_id(FuIntelThunderboltNvm *self)
  * Gets if the firmware is designed for a host controller rather than a device.
  *
  * Returns: %TRUE for controller, %FALSE for device
- *
- * Since: 1.8.5
  **/
 gboolean
 fu_intel_thunderbolt_nvm_is_host(FuIntelThunderboltNvm *self)
@@ -104,8 +98,6 @@ fu_intel_thunderbolt_nvm_is_host(FuIntelThunderboltNvm *self)
  * Gets if the device is native, i.e. not in recovery mode.
  *
  * Returns: %TRUE if set
- *
- * Since: 1.8.5
  **/
 gboolean
 fu_intel_thunderbolt_nvm_is_native(FuIntelThunderboltNvm *self)
@@ -122,8 +114,6 @@ fu_intel_thunderbolt_nvm_is_native(FuIntelThunderboltNvm *self)
  * Gets if the device has power delivery capability.
  *
  * Returns: %TRUE if set
- *
- * Since: 1.8.5
  **/
 gboolean
 fu_intel_thunderbolt_nvm_has_pd(FuIntelThunderboltNvm *self)
@@ -140,8 +130,6 @@ fu_intel_thunderbolt_nvm_has_pd(FuIntelThunderboltNvm *self)
  * Gets the model ID.
  *
  * Returns: an integer, or 0x0 for unset
- *
- * Since: 1.8.5
  **/
 guint16
 fu_intel_thunderbolt_nvm_get_model_id(FuIntelThunderboltNvm *self)
@@ -161,8 +149,6 @@ fu_intel_thunderbolt_nvm_get_model_id(FuIntelThunderboltNvm *self)
  * comparison between firmware and device.
  *
  * Returns: an integer, or 0x0 for unset
- *
- * Since: 1.8.5
  **/
 guint8
 fu_intel_thunderbolt_nvm_get_flash_size(FuIntelThunderboltNvm *self)
@@ -817,8 +803,6 @@ fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
  * fu_intel_thunderbolt_nvm_new:
  *
  * Creates a new #FuFirmware of Intel NVM format
- *
- * Since: 1.8.5
  **/
 FuFirmware *
 fu_intel_thunderbolt_nvm_new(void)

@@ -51,8 +51,6 @@ fu_linear_firmware_export(FuFirmware *firmware,
  * Gets the image #GType to use when parsing a byte buffer.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 GType
 fu_linear_firmware_get_image_gtype(FuLinearFirmware *self)
@@ -68,8 +66,6 @@ fu_linear_firmware_get_image_gtype(FuLinearFirmware *self)
  * @image_gtype: an image #GType
  *
  * Sets the image #GType to use when parsing a byte buffer.
- *
- * Since: 2.2.1
  **/
 void
 fu_linear_firmware_set_image_gtype(FuLinearFirmware *self, GType image_gtype)
@@ -239,8 +235,6 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
 	 * FuLinearFirmware:image-gtype:
 	 *
 	 * The image #GType
-	 *
-	 * Since: 1.8.2
 	 */
 	pspec =
 	    g_param_spec_gtype("image-gtype",
@@ -256,8 +250,6 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
  * @image_gtype: a #GType, e.g. %FU_TYPE_OPROM_FIRMWARE
  *
  * Creates a new #FuFirmware made up of concatenated images.
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_linear_firmware_new(GType image_gtype)

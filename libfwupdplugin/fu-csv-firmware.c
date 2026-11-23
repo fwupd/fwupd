@@ -42,8 +42,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCsvFirmware, fu_csv_firmware, FU_TYPE_FIRMWARE)
  * * `$idx` sets the firmware index
  * * `$version` sets the firmware version
  * * `$version_raw` sets the raw firmware version
- *
- * Since: 1.9.3
  **/
 void
 fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id)
@@ -62,8 +60,6 @@ fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id)
  * Gets the column ID for a specific index position.
  *
  * Returns: a string, or %NULL if not found
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx)
@@ -84,8 +80,6 @@ fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx)
  * Gets the column index for a given column ID.
  *
  * Returns: position, or %G_MAXUINT if unset
- *
- * Since: 1.9.3
  **/
 guint
 fu_csv_firmware_get_idx_for_column_id(FuCsvFirmware *self, const gchar *column_id)
@@ -107,8 +101,6 @@ fu_csv_firmware_get_idx_for_column_id(FuCsvFirmware *self, const gchar *column_i
  * @write_column_ids: boolean
  *
  * Sets if we should write the column ID headers on export.
- *
- * Since: 2.0.0
  **/
 void
 fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids)
@@ -125,8 +117,6 @@ fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_
  * Gets if we should write the column ID headers on export.
  *
  * Returns: boolean.
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self)
@@ -284,8 +274,6 @@ fu_csv_firmware_class_init(FuCsvFirmwareClass *klass)
  * fu_csv_firmware_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_csv_firmware_new(void)

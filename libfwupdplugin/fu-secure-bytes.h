@@ -15,8 +15,6 @@ G_BEGIN_DECLS
  *
  * A #GByteArray that has its contents cleared to zero before being deallocated,
  * for holding sensitive data such as keys, tokens or passwords.
- *
- * Since: 2.1.8
  **/
 typedef struct FuSecureBytes FuSecureBytes;
 

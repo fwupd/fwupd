@@ -46,8 +46,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
  * Gets the machine type.
  *
  * Returns: a #FuOpromMachineType
- *
- * Since: 1.8.2
  **/
 FuOpromMachineType
 fu_oprom_firmware_get_machine_type(FuOpromFirmware *self)
@@ -64,8 +62,6 @@ fu_oprom_firmware_get_machine_type(FuOpromFirmware *self)
  * Gets the machine type.
  *
  * Returns: a #FuOpromSubsystem
- *
- * Since: 1.8.2
  **/
 FuOpromSubsystem
 fu_oprom_firmware_get_subsystem(FuOpromFirmware *self)
@@ -82,8 +78,6 @@ fu_oprom_firmware_get_subsystem(FuOpromFirmware *self)
  * Gets the machine type.
  *
  * Returns: a #FuOpromCompressionType
- *
- * Since: 1.8.2
  **/
 FuOpromCompressionType
 fu_oprom_firmware_get_compression_type(FuOpromFirmware *self)
@@ -365,8 +359,6 @@ fu_oprom_firmware_class_init(FuOpromFirmwareClass *klass)
  * fu_oprom_firmware_new:
  *
  * Creates a new #FuFirmware of OptionROM format
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_oprom_firmware_new(void)

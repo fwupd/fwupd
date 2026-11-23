@@ -20,8 +20,6 @@
  * Decompresses a LZMA stream.
  *
  * Returns: (transfer full): decompressed data
- *
- * Since: 2.0.7
  **/
 GBytes *
 fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
@@ -81,8 +79,6 @@ fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
  * Compresses into a LZMA stream.
  *
  * Returns: (transfer full): compressed data
- *
- * Since: 1.9.8
  **/
 GBytes *
 fu_lzma_compress_bytes(GBytes *blob, GError **error)

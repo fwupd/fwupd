@@ -250,8 +250,6 @@ fu_usb_interface_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCod
  * fu_usb_interface_new:
  *
  * Return value: a new #FuUsbInterface object.
- *
- * Since: 2.0.0
  **/
 FuUsbInterface *
 fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
@@ -281,8 +279,6 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **e
  * Gets the interface number.
  *
  * Return value: The interface ID
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_number(FuUsbInterface *self)
@@ -298,8 +294,6 @@ fu_usb_interface_get_number(FuUsbInterface *self)
  * Gets the alternate setting for the interface.
  *
  * Return value: alt setting, typically zero.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_alternate(FuUsbInterface *self)
@@ -315,8 +309,6 @@ fu_usb_interface_get_alternate(FuUsbInterface *self)
  * Gets the interface class, typically a #FuUsbInterfaceClassCode.
  *
  * Return value: a interface class number, e.g. 0x09 is a USB hub.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_class(FuUsbInterface *self)
@@ -333,8 +325,6 @@ fu_usb_interface_get_class(FuUsbInterface *self)
  * See fu_usb_interface_get_class().
  *
  * Return value: a interface subclass number.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_subclass(FuUsbInterface *self)
@@ -351,8 +341,6 @@ fu_usb_interface_get_subclass(FuUsbInterface *self)
  * See fu_usb_interface_get_class() and fu_usb_interface_get_subclass().
  *
  * Return value: a interface protocol number.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_protocol(FuUsbInterface *self)
@@ -368,8 +356,6 @@ fu_usb_interface_get_protocol(FuUsbInterface *self)
  * Gets the index for the string descriptor.
  *
  * Return value: a string descriptor index.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_index(FuUsbInterface *self)
@@ -385,8 +371,6 @@ fu_usb_interface_get_index(FuUsbInterface *self)
  * Gets interface endpoints.
  *
  * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints.
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_usb_interface_get_endpoints(FuUsbInterface *self)

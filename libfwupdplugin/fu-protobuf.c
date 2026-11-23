@@ -36,8 +36,6 @@ G_DEFINE_TYPE_EXTENDED(FuProtobuf,
  * Converts the protobuf to a bytes representation.
  *
  * Returns: (transfer full): a #GByteArray
- *
- * Since: 2.1.1
  **/
 GByteArray *
 fu_protobuf_write(FuProtobuf *self)
@@ -53,8 +51,6 @@ fu_protobuf_write(FuProtobuf *self)
  * Converts the protobuf to a string representation.
  *
  * Returns: (transfer full): string
- *
- * Since: 2.1.1
  **/
 gchar *
 fu_protobuf_to_string(FuProtobuf *self)
@@ -92,8 +88,6 @@ fu_protobuf_add_tag_raw(FuProtobuf *self, FuProtobufWireType wire_type, guint8 f
  * Adds a `guint64` tag to the protobuf using a `varint` wire type.
  *
  * NOTE: You cannot add a value of zero; just don't set anything if required.
- *
- * Since: 2.1.1
  **/
 void
 fu_protobuf_add_uint64(FuProtobuf *self, guint8 fnum, guint64 value)
@@ -112,8 +106,6 @@ fu_protobuf_add_uint64(FuProtobuf *self, guint8 fnum, guint64 value)
  * @value: data
  *
  * Adds a `gboolean` tag to the protobuf using a `varint` wire type.
- *
- * Since: 2.1.1
  **/
 void
 fu_protobuf_add_boolean(FuProtobuf *self, guint8 fnum, gboolean value)
@@ -133,8 +125,6 @@ fu_protobuf_add_boolean(FuProtobuf *self, guint8 fnum, gboolean value)
  * Adds an embedded tag to the protobuf using a `len` wire type.
  *
  * NOTE: The @pbuf must be non-zero in size.
- *
- * Since: 2.1.1
  **/
 void
 fu_protobuf_add_embedded(FuProtobuf *self, guint8 fnum, FuProtobuf *pbuf)
@@ -158,8 +148,6 @@ fu_protobuf_add_embedded(FuProtobuf *self, guint8 fnum, FuProtobuf *pbuf)
  * Adds a string tag to the protobuf.
  *
  * NOTE: The string cannot be zero length. Use `fu_protobuf_add_empty()` if required.
- *
- * Since: 2.1.1
  **/
 void
 fu_protobuf_add_string(FuProtobuf *self, guint8 fnum, const gchar *value)
@@ -183,8 +171,6 @@ fu_protobuf_add_string(FuProtobuf *self, guint8 fnum, const gchar *value)
  * @fnum: a field number
  *
  * Adds an empty len tag to the protobuf.
- *
- * Since: 2.1.1
  **/
 void
 fu_protobuf_add_empty(FuProtobuf *self, guint8 fnum)
@@ -423,8 +409,6 @@ fu_protobuf_get_uint64_int32_cb(FuProtobuf *self, gpointer data, gsize *offset, 
  * Gets a guint64 value from a protobuf, either from a varint or int64 type.
  *
  * Returns: (transfer full): %TRUE on success
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_protobuf_get_uint64(FuProtobuf *self, guint8 fnum, guint64 *value, GError **error)
@@ -451,8 +435,6 @@ fu_protobuf_get_uint64(FuProtobuf *self, guint8 fnum, guint64 *value, GError **e
  * Gets a boolean value from a protobuf, either from a varint or int64 type.
  *
  * Returns: (transfer full): %TRUE on success
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_protobuf_get_boolean(FuProtobuf *self, guint8 fnum, gboolean *value, GError **error)
@@ -505,8 +487,6 @@ fu_protobuf_get_string_len_cb(FuProtobuf *self, gpointer data, gsize *offset, GE
  * Gets a string from a protobuf.
  *
  * Returns: (transfer full): the string, or %NULL for error
- *
- * Since: 2.1.1
  **/
 gchar *
 fu_protobuf_get_string(FuProtobuf *self, guint8 fnum, GError **error)
@@ -548,8 +528,6 @@ fu_protobuf_get_embedded_len_cb(FuProtobuf *self, gpointer data, gsize *offset, 
  * Gets an embedded child protobuf from a protobuf.
  *
  * Returns: (transfer full): a #FuProtobuf, or %NULL for error
- *
- * Since: 2.1.1
  **/
 FuProtobuf *
 fu_protobuf_get_embedded(FuProtobuf *self, guint8 fnum, GError **error)
@@ -633,8 +611,6 @@ fu_protobuf_class_init(FuProtobufClass *klass)
  * Creates a new protobuf.
  *
  * Returns: (transfer full): a #FuProtobuf
- *
- * Since: 2.1.1
  **/
 FuProtobuf *
 fu_protobuf_new(void)
@@ -650,8 +626,6 @@ fu_protobuf_new(void)
  * Creates a new protobuf from a data buffer.
  *
  * Returns: (transfer full): a #FuProtobuf
- *
- * Since: 2.1.1
  **/
 FuProtobuf *
 fu_protobuf_new_from_data(const guint8 *buf, gsize bufsz)

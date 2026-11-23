@@ -70,8 +70,6 @@ fu_pci_device_ensure_subsys_instance_id(FuPciDevice *self)
  * @subsystem_vid: integer
  *
  * Sets the device subsystem vendor code.
- *
- * Since: 2.0.0
  **/
 void
 fu_pci_device_set_subsystem_vid(FuPciDevice *self, guint16 subsystem_vid)
@@ -91,8 +89,6 @@ fu_pci_device_set_subsystem_vid(FuPciDevice *self, guint16 subsystem_vid)
  * Gets the device subsystem vendor code.
  *
  * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 2.0.0
  **/
 guint16
 fu_pci_device_get_subsystem_vid(FuPciDevice *self)
@@ -108,8 +104,6 @@ fu_pci_device_get_subsystem_vid(FuPciDevice *self)
  * @subsystem_pid: integer
  *
  * Sets the device subsystem model code.
- *
- * Since: 2.0.0
  **/
 void
 fu_pci_device_set_subsystem_pid(FuPciDevice *self, guint16 subsystem_pid)
@@ -129,8 +123,6 @@ fu_pci_device_set_subsystem_pid(FuPciDevice *self, guint16 subsystem_pid)
  * Gets the device subsystem model code.
  *
  * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.5.0
  **/
 guint16
 fu_pci_device_get_subsystem_pid(FuPciDevice *self)
@@ -146,8 +138,6 @@ fu_pci_device_get_subsystem_pid(FuPciDevice *self)
  * @revision: integer
  *
  * Sets the device revision.
- *
- * Since: 2.0.0
  **/
 void
 fu_pci_device_set_revision(FuPciDevice *self, guint8 revision)
@@ -165,8 +155,6 @@ fu_pci_device_set_revision(FuPciDevice *self, guint8 revision)
  * Gets the device revision.
  *
  * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.1.2
  **/
 guint8
 fu_pci_device_get_revision(FuPciDevice *self)
@@ -183,8 +171,6 @@ fu_pci_device_get_revision(FuPciDevice *self)
  * Gets the device class code.
  *
  * Returns: a #FuPciDeviceClassCode, or %FU_PCI_DEVICE_CLASS_CODE_UNKNOWN if unset or invalid
- *
- * Since: 2.1.6
  **/
 FuPciDeviceClassCode
 fu_pci_device_get_class_code(FuPciDevice *self)

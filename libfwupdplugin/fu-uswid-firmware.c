@@ -410,8 +410,6 @@ fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
  * fu_uswid_firmware_new:
  *
  * Creates a new #FuFirmware of sub type uSWID
- *
- * Since: 1.8.0
  **/
 FuFirmware *
 fu_uswid_firmware_new(void)

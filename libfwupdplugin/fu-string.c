@@ -28,8 +28,6 @@
  * set to 16 automatically.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_strtoull(const gchar *str,
@@ -136,8 +134,6 @@ fu_strtoull(const gchar *str,
  * prefixed with "0x" where they are parsed as base 16.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_strtoll(const gchar *str,
@@ -238,8 +234,6 @@ fu_strtoll(const gchar *str,
  * Converts a string value to a boolean. Only `true` and `false` are accepted values.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error)
@@ -283,8 +277,6 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error)
  * Removes leading and trailing whitespace from a constant string.
  *
  * Returns: newly allocated string
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strstrip(const gchar *str)
@@ -317,8 +309,6 @@ fu_strstrip(const gchar *str)
  * @str: a #GString, e.g. ` test `
  *
  * Removes leading and trailing whitespace from a mutable string.
- *
- * Since: 2.0.17
  **/
 void
 fu_string_strip(GString *str)
@@ -351,8 +341,6 @@ fu_string_strip(GString *str)
  * Copies a string from a buffer of a specified size up to (but not including) `NUL`.
  *
  * Returns: (transfer full): a #GString, possibly of zero size.
- *
- * Since: 1.8.11
  **/
 GString *
 fu_strdup(const gchar *str, gsize bufsz, gsize offset)
@@ -378,8 +366,6 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
  * Returns the width of the string in displayed characters on the console.
  *
  * Returns: width of text
- *
- * Since: 1.8.2
  **/
 gsize
 fu_strwidth(const gchar *text)
@@ -412,8 +398,6 @@ fu_strwidth(const gchar *text)
  * to the last token.
  *
  * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
- *
- * Since: 1.8.2
  **/
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
@@ -438,8 +422,6 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
  * to the last token.
  *
  * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
- *
- * Since: 2.0.7
  **/
 gchar **
 fu_strsplit_bytes(GBytes *blob, const gchar *delimiter, gint max_tokens)
@@ -522,8 +504,6 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
  * and you don't want to allocate a GStrv with billions of one byte items.
  *
  * Returns: %TRUE if no @callback returned FALSE
- *
- * Since: 2.0.0
  */
 gboolean
 fu_strsplit_stream(FuInputStream *stream,
@@ -595,8 +575,6 @@ fu_strsplit_stream(FuInputStream *stream,
  * and you don't want to allocate a GStrv with billions of one byte items.
  *
  * Returns: %TRUE if no @callback returned FALSE
- *
- * Since: 1.8.2
  */
 gboolean
 fu_strsplit_full(const gchar *str,
@@ -654,8 +632,6 @@ fu_strsplit_full(const gchar *str,
  * Converts a string into something that can be safely printed.
  *
  * Returns: (transfer full): safe string, or %NULL if there was nothing valid
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz)
@@ -692,8 +668,6 @@ fu_strsafe(const gchar *str, gsize maxsz)
  * Converts a #GBytes into something that can be safely printed.
  *
  * Returns: (transfer full): safe string, or %NULL if there was nothing valid
- *
- * Since: 2.0.2
  **/
 gchar *
 fu_strsafe_bytes(GBytes *blob, gsize maxsz)
@@ -716,8 +690,6 @@ fu_strsafe_bytes(GBytes *blob, gsize maxsz)
  * string.
  *
  * Returns: a string
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array)
@@ -739,8 +711,6 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
  * Hides password strings encoded in HTTP requests.
  *
  * Returns: a string
- *
- * Since: 1.9.10
  **/
 gchar *
 fu_strpassmask(const gchar *str)
@@ -789,8 +759,6 @@ fu_strpassmask(const gchar *str)
  * Converts a UTF-16 buffer to a UTF-8 string.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)
@@ -825,8 +793,6 @@ fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **err
  * Converts UTF-8 string to a buffer of UTF-16, optionially including the trailing NULw.
  *
  * Returns: (transfer full): a #GByteArray, or %NULL on error
- *
- * Since: 1.9.3
  **/
 GByteArray *
 fu_utf8_to_utf16_byte_array(const gchar *str,
@@ -862,8 +828,6 @@ fu_utf8_to_utf16_byte_array(const gchar *str,
  * Converts a UTF-16 buffer to a UTF-8 string.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
@@ -887,8 +851,6 @@ fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
  * Converts UTF-8 string to a buffer of UTF-16, optionally including the trailing NULw.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
- *
- * Since: 1.9.3
  **/
 GBytes *
 fu_utf8_to_utf16_bytes(const gchar *str,

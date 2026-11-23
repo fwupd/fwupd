@@ -18,8 +18,6 @@ G_DECLARE_FINAL_TYPE(FuChunk, fu_chunk, FU, CHUNK, GObject)
  * FU_CHUNK_PAGESZ_NONE:
  *
  * No page size is used.
- *
- * Since: 2.0.2
  **/
 #define FU_CHUNK_PAGESZ_NONE 0
 
@@ -27,8 +25,6 @@ G_DECLARE_FINAL_TYPE(FuChunk, fu_chunk, FU, CHUNK, GObject)
  * FU_CHUNK_ADDR_OFFSET_NONE:
  *
  * No address offset is used.
- *
- * Since: 2.0.2
  **/
 #define FU_CHUNK_ADDR_OFFSET_NONE 0
 

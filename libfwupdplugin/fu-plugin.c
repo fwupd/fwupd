@@ -107,8 +107,6 @@ typedef gboolean (*FuPluginDeviceArrayFunc)(FuPlugin *self, GPtrArray *devices, 
  * Determines if the plugin is opened
  *
  * Returns: TRUE for opened, FALSE for not
- *
- * Since: 1.3.5
  **/
 gboolean
 fu_plugin_is_open(FuPlugin *self)
@@ -124,8 +122,6 @@ fu_plugin_is_open(FuPlugin *self)
  * Gets the plugin name.
  *
  * Returns: a plugin name, or %NULL for unknown.
- *
- * Since: 0.8.0
  **/
 const gchar *
 fu_plugin_get_name(FuPlugin *self)
@@ -140,8 +136,6 @@ fu_plugin_get_name(FuPlugin *self)
  * @name: a string
  *
  * Sets the plugin name.
- *
- * Since: 0.8.0
  **/
 void
 fu_plugin_set_name(FuPlugin *self, const gchar *name)
@@ -180,8 +174,6 @@ fu_plugin_get_vfuncs(FuPlugin *self)
  * Finds an object in the per-plugin cache.
  *
  * Returns: (transfer none): a #GObject, or %NULL for unfound.
- *
- * Since: 0.8.0
  **/
 gpointer
 fu_plugin_cache_lookup(FuPlugin *self, const gchar *id)
@@ -201,8 +193,6 @@ fu_plugin_cache_lookup(FuPlugin *self, const gchar *id)
  * @dev: a #GObject, typically a #FuDevice
  *
  * Adds an object to the per-plugin cache.
- *
- * Since: 0.8.0
  **/
 void
 fu_plugin_cache_add(FuPlugin *self, const gchar *id, gpointer dev)
@@ -226,8 +216,6 @@ fu_plugin_cache_add(FuPlugin *self, const gchar *id, gpointer dev)
  * @id: the key
  *
  * Removes an object from the per-plugin cache.
- *
- * Since: 0.8.0
  **/
 void
 fu_plugin_cache_remove(FuPlugin *self, const gchar *id)
@@ -249,8 +237,6 @@ fu_plugin_cache_remove(FuPlugin *self, const gchar *id)
  * fu_plugin_alloc_data() has been called by the plugin.
  *
  * Returns: (transfer none): a pointer to a structure, or %NULL for unset.
- *
- * Since: 0.8.0
  **/
 FuPluginData *
 fu_plugin_get_data(FuPlugin *self)
@@ -268,8 +254,6 @@ fu_plugin_get_data(FuPlugin *self)
  * Allocates the per-plugin allocated private data.
  *
  * Returns: (transfer full): a pointer to a structure, or %NULL for unset.
- *
- * Since: 0.8.0
  **/
 FuPluginData *
 fu_plugin_alloc_data(FuPlugin *self, gsize data_sz)
@@ -291,8 +275,6 @@ fu_plugin_alloc_data(FuPlugin *self, gsize data_sz)
  * Tries to guess the name of the plugin from a filename
  *
  * Returns: (transfer full): the guessed name of the plugin
- *
- * Since: 1.0.8
  **/
 gchar *
 fu_plugin_guess_name_from_fn(const gchar *filename)
@@ -316,8 +298,6 @@ fu_plugin_guess_name_from_fn(const gchar *filename)
  * Opens the plugin module, and calls `->load()` on it.
  *
  * Returns: TRUE for success, FALSE for fail
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
@@ -434,8 +414,6 @@ fu_plugin_find_private_flag(FuPluginClass *klass, const gchar *flag)
  * fu_plugin_has_private_flag().
  *
  * Returns: a #GQuark
- *
- * Since: 2.1.6
  **/
 GQuark
 fu_plugin_register_private_flag(FuPluginClass *klass, const gchar *flag)
@@ -479,8 +457,6 @@ fu_plugin_register_private_flag(FuPluginClass *klass, const gchar *flag)
  * @flag: a plugin flag
  *
  * Adds a private flag that can be used by the plugin for any purpose.
- *
- * Since: 2.1.5
  **/
 void
 fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag)
@@ -508,8 +484,6 @@ fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag)
  * @flag: a plugin flag
  *
  * Removes a private flag that can be used by the plugin for any purpose.
- *
- * Since: 2.1.5
  **/
 void
 fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag)
@@ -539,8 +513,6 @@ fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag)
  * Tests for a private flag that can be used by the plugin for any purpose.
  *
  * Returns: %TRUE if @flag is set
- *
- * Since: 2.1.5
  **/
 gboolean
 fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag)
@@ -569,8 +541,6 @@ fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag)
  * @str: a string to append to
  *
  * Add daemon-specific device metadata to an existing string.
- *
- * Since: 1.8.4
  **/
 void
 fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
@@ -616,8 +586,6 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
  * This allows us to easily print the plugin metadata.
  *
  * Returns: a string value, or %NULL for invalid.
- *
- * Since: 1.8.4
  **/
 gchar *
 fu_plugin_to_string(FuPlugin *self)
@@ -686,8 +654,6 @@ fu_plugin_device_child_removed_cb(FuDevice *device, FuDevice *child, FuPlugin *s
  * Asks the daemon to add a device to the exported list. If this device ID
  * has already been added by a different plugin then this request will be
  * ignored.
- *
- * Since: 2.1.1
  **/
 void
 fu_plugin_add_device(FuPlugin *self, FuDevice *device)
@@ -758,8 +724,6 @@ fu_plugin_add_device(FuPlugin *self, FuDevice *device)
  * not yet removed with [method@FuPlugin.remove_device].
  *
  * Returns: (transfer none) (element-type FuDevice): devices
- *
- * Since: 1.5.6
  **/
 GPtrArray *
 fu_plugin_get_devices(FuPlugin *self)
@@ -781,8 +745,6 @@ fu_plugin_get_devices(FuPlugin *self)
  * when using [method@FuPlugin.add_device]. They may wish to use this manually
  * if for instance the coldplug should be ignored based on the metadata
  * set from other plugins.
- *
- * Since: 0.9.7
  **/
 void
 fu_plugin_device_register(FuPlugin *self, FuDevice *device)
@@ -810,8 +772,6 @@ fu_plugin_device_register(FuPlugin *self, FuDevice *device)
  * @device: a device
  *
  * Asks the daemon to remove a device from the exported list.
- *
- * Since: 2.1.1
  **/
 void
 fu_plugin_remove_device(FuPlugin *self, FuDevice *device)
@@ -838,8 +798,6 @@ fu_plugin_remove_device(FuPlugin *self, FuDevice *device)
  * AppStream metadata.
  *
  * Returns: %TRUE if the device is supported.
- *
- * Since: 1.0.0
  **/
 static gboolean
 fu_plugin_check_supported(FuPlugin *self, const gchar *guid)
@@ -856,8 +814,6 @@ fu_plugin_check_supported(FuPlugin *self, const gchar *guid)
  * Gets the context for a plugin.
  *
  * Returns: (transfer none): a #FuContext or %NULL if not set
- *
- * Since: 1.6.0
  **/
 FuContext *
 fu_plugin_get_context(FuPlugin *self)
@@ -872,8 +828,6 @@ fu_plugin_get_context(FuPlugin *self)
  * @ctx: (nullable): optional #FuContext
  *
  * Sets the context for this plugin.
- *
- * Since: 1.8.6
  **/
 void
 fu_plugin_set_context(FuPlugin *self, FuContext *ctx)
@@ -1073,8 +1027,6 @@ fu_plugin_device_read_firmware(FuPlugin *self,
  * Runs the startup routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
@@ -1129,8 +1081,6 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
  * Runs the ready routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.9.6
  **/
 gboolean
 fu_plugin_runner_ready(FuPlugin *self, FuProgress *progress, GError **error)
@@ -1177,8 +1127,6 @@ fu_plugin_runner_ready(FuPlugin *self, FuProgress *progress, GError **error)
  * @self: a #FuPlugin
  *
  * Runs the constructed routine for the plugin, if enabled.
- *
- * Since: 1.8.1
  **/
 void
 fu_plugin_runner_init(FuPlugin *self)
@@ -1368,8 +1316,6 @@ fu_plugin_runner_device_array_generic(FuPlugin *self,
  * Runs the coldplug routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
@@ -1434,8 +1380,6 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
  * Runs the composite_prepare routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.9
  **/
 gboolean
 fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **error)
@@ -1465,8 +1409,6 @@ fu_plugin_runner_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **
  * Runs the composite_cleanup routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.9
  **/
 gboolean
 fu_plugin_runner_composite_cleanup(FuPlugin *self,
@@ -1522,8 +1464,6 @@ fu_plugin_runner_composite_cleanup(FuPlugin *self,
  * Runs the update_prepare routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_prepare(FuPlugin *self,
@@ -1558,8 +1498,6 @@ fu_plugin_runner_prepare(FuPlugin *self,
  * Runs the update_cleanup routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_cleanup(FuPlugin *self,
@@ -1593,8 +1531,6 @@ fu_plugin_runner_cleanup(FuPlugin *self,
  * Runs the update_attach routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
@@ -1624,8 +1560,6 @@ fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, 
  * Runs the update_detach routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
@@ -1654,8 +1588,6 @@ fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, 
  * Runs reload routine for a device
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
@@ -1686,8 +1618,6 @@ fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
  * Performs cleanup actions after the reboot has been performed.
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.9.7
  **/
 gboolean
 fu_plugin_runner_reboot_cleanup(FuPlugin *self, FuDevice *device, GError **error)
@@ -1713,8 +1643,6 @@ fu_plugin_runner_reboot_cleanup(FuPlugin *self, FuDevice *device, GError **error
  * @attrs: a security attribute
  *
  * Runs the `add_security_attrs()` routine for the plugin
- *
- * Since: 1.5.0
  **/
 void
 fu_plugin_runner_add_security_attrs(FuPlugin *self, FuSecurityAttrs *attrs)
@@ -1741,8 +1669,6 @@ fu_plugin_runner_add_security_attrs(FuPlugin *self, FuSecurityAttrs *attrs)
  * Plugins can use this method only in fu_plugin_init()
  *
  * See also: fu_plugin_set_device_gtype_default()
- *
- * Since: 1.6.0
  **/
 void
 fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype)
@@ -1774,8 +1700,6 @@ fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype)
  * Gets all device #GTypes.
  *
  * Returns: (element-type GType) (transfer none) (nullable): registered types, or %NULL
- *
- * Since: 2.0.2
  **/
 GArray *
 fu_plugin_get_device_gtypes(FuPlugin *self)
@@ -1795,8 +1719,6 @@ fu_plugin_get_device_gtypes(FuPlugin *self)
  * returned here.
  *
  * Returns: a #GType, or %G_TYPE_INVALID on error
- *
- * Since: 1.9.14
  **/
 GType
 fu_plugin_get_device_gtype_default(FuPlugin *self)
@@ -1822,8 +1744,6 @@ fu_plugin_get_device_gtype_default(FuPlugin *self)
  * This will also add the device #GType using fu_plugin_add_device_gtype().
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.9.14
  **/
 void
 fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype)
@@ -1869,8 +1789,6 @@ fu_plugin_check_amdgpu_dpaux(FuPlugin *self, GError **error)
  * Use fu_plugin_add_udev_subsystem() if you just want to ensure the subsystem is watched.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.9.3
  **/
 void
 fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem)
@@ -1903,8 +1821,6 @@ fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem)
  * Registers the udev subsystem to be watched by the daemon.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.6.2
  **/
 void
 fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem)
@@ -1926,8 +1842,6 @@ fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem)
  * Adds a firmware #GType which is used when creating devices.
  *
  * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 2.1.1
  **/
 void
 fu_plugin_add_firmware_gtype(FuPlugin *self, GType gtype)
@@ -2063,8 +1977,6 @@ fu_plugin_backend_device_added(FuPlugin *self,
  * Call the backend_device_added routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_plugin_runner_backend_device_added(FuPlugin *self,
@@ -2126,8 +2038,6 @@ fu_plugin_runner_backend_device_added(FuPlugin *self,
  * Call the backend_device_changed routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_plugin_runner_backend_device_changed(FuPlugin *self, FuDevice *device, GError **error)
@@ -2172,8 +2082,6 @@ fu_plugin_runner_backend_device_changed(FuPlugin *self, FuDevice *device, GError
  * @device: a device
  *
  * Call the device_added routine for the plugin
- *
- * Since: 1.5.0
  **/
 void
 fu_plugin_runner_device_added(FuPlugin *self, FuDevice *device)
@@ -2197,8 +2105,6 @@ fu_plugin_runner_device_added(FuPlugin *self, FuDevice *device)
  * @device: a device
  *
  * Call the device_removed routine for the plugin
- *
- * Since: 1.1.2
  **/
 void
 fu_plugin_runner_device_removed(FuPlugin *self, FuDevice *device)
@@ -2220,8 +2126,6 @@ fu_plugin_runner_device_removed(FuPlugin *self, FuDevice *device)
  * @device: a device
  *
  * Call the device_registered routine for the plugin
- *
- * Since: 0.9.7
  **/
 void
 fu_plugin_runner_device_register(FuPlugin *self, FuDevice *device)
@@ -2248,8 +2152,6 @@ fu_plugin_runner_device_register(FuPlugin *self, FuDevice *device)
  * Call the device_created routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.4.0
  **/
 gboolean
 fu_plugin_runner_device_created(FuPlugin *self, FuDevice *device, GError **error)
@@ -2282,8 +2184,6 @@ fu_plugin_runner_device_created(FuPlugin *self, FuDevice *device, GError **error
  * Call into the plugin's verify routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_verify(FuPlugin *self,
@@ -2355,8 +2255,6 @@ fu_plugin_runner_verify(FuPlugin *self,
  * Call into the plugin's activate routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.2.6
  **/
 gboolean
 fu_plugin_runner_activate(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
@@ -2405,8 +2303,6 @@ fu_plugin_runner_activate(FuPlugin *self, FuDevice *device, FuProgress *progress
  * Call into the plugin's unlock routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
@@ -2455,8 +2351,6 @@ fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
  * Call into the plugin's write firmware routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 2.0.7
  **/
 gboolean
 fu_plugin_runner_write_firmware(FuPlugin *self,
@@ -2531,8 +2425,6 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
  * Notify when the firmware has been parsed and the update is ready to be deployed
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 2.0.19
  **/
 gboolean
 fu_plugin_runner_composite_peek_firmware(FuPlugin *self,
@@ -2588,8 +2480,6 @@ fu_plugin_runner_composite_peek_firmware(FuPlugin *self,
  * Call into the plugin's clear results routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_clear_results(FuPlugin *self, FuDevice *device, GError **error)
@@ -2637,8 +2527,6 @@ fu_plugin_runner_clear_results(FuPlugin *self, FuDevice *device, GError **error)
  * Call into the plugin's get results routine
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 0.8.0
  **/
 gboolean
 fu_plugin_runner_get_results(FuPlugin *self, FuDevice *device, GError **error)
@@ -2688,8 +2576,6 @@ fu_plugin_runner_get_results(FuPlugin *self, FuDevice *device, GError **error)
  * Fix the specific security attribute.
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.9.6
  **/
 gboolean
 fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, GError **error)
@@ -2718,8 +2604,6 @@ fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, GE
  * Fix the security issue of given security attribute.
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.9.6
  **/
 gboolean
 fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, GError **error)
@@ -2749,8 +2633,6 @@ fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FuSecurityAttr *attr, G
  * Sets a plugin config option, which may be allow-listed or value-checked.
  *
  * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
@@ -2783,8 +2665,6 @@ fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *va
  * numbers.
  *
  * Returns: the integer value
- *
- * Since: 1.0.0
  **/
 guint
 fu_plugin_get_order(FuPlugin *self)
@@ -2800,8 +2680,6 @@ fu_plugin_get_order(FuPlugin *self)
  *
  * Sets the plugin order, where higher numbers are run after lower
  * numbers.
- *
- * Since: 1.0.0
  **/
 void
 fu_plugin_set_order(FuPlugin *self, guint order)
@@ -2817,8 +2695,6 @@ fu_plugin_set_order(FuPlugin *self, guint order)
  * Gets the plugin priority, where higher numbers are better.
  *
  * Returns: the integer value
- *
- * Since: 1.1.1
  **/
 guint
 fu_plugin_get_priority(FuPlugin *self)
@@ -2833,8 +2709,6 @@ fu_plugin_get_priority(FuPlugin *self)
  * @priority: an integer value
  *
  * Sets the plugin priority, where higher numbers are better.
- *
- * Since: 1.0.0
  **/
 void
 fu_plugin_set_priority(FuPlugin *self, guint priority)
@@ -2855,8 +2729,6 @@ fu_plugin_set_priority(FuPlugin *self, guint priority)
  *
  * NOTE: The depsolver is iterative and may not solve overly-complicated rules;
  * If depsolving fails then fwupd will not start.
- *
- * Since: 1.0.0
  **/
 void
 fu_plugin_add_rule(FuPlugin *self, FuPluginRule rule, const gchar *name)
@@ -2877,8 +2749,6 @@ fu_plugin_add_rule(FuPlugin *self, FuPluginRule rule, const gchar *name)
  *
  * Returns: (element-type utf8) (transfer none) (nullable): the list of plugin names, e.g.
  *`['appstream']`
- *
- * Since: 1.0.0
  **/
 GPtrArray *
 fu_plugin_get_rules(FuPlugin *self, FuPluginRule rule)
@@ -2899,8 +2769,6 @@ fu_plugin_get_rules(FuPlugin *self, FuPluginRule rule)
  *
  * Any data included here will be sent to the metadata server after user
  * confirmation.
- *
- * Since: 1.0.4
  **/
 void
 fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *value)
@@ -2920,8 +2788,6 @@ fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *val
  * Returns the list of additional metadata to be added when filing a report.
  *
  * Returns: (transfer none) (nullable): the map of report metadata
- *
- * Since: 1.0.4
  **/
 GHashTable *
 fu_plugin_get_report_metadata(FuPlugin *self)
@@ -2936,8 +2802,6 @@ fu_plugin_get_report_metadata(FuPlugin *self)
  * @key: a settings key
  *
  * Return the value of a key, falling back to the default value.
- *
- * Since: 1.0.6
  **/
 gchar *
 fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
@@ -2968,8 +2832,6 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
  * @value: the default value of the key if not found
  *
  * Sets the config default value.
- *
- * Since: 2.0.0
  **/
 void
 fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *value)
@@ -3001,8 +2863,6 @@ fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *valu
  * Creates a new #FuSecurityAttr for this specific plugin.
  *
  * Returns: (transfer full): a #FuSecurityAttr
- *
- * Since: 1.8.4
  **/
 FuSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
@@ -3028,8 +2888,6 @@ fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
  * Sets a plugin config value.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
@@ -3073,8 +2931,6 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
  * Reset all the plugin keys back to the default values.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.15
  **/
 gboolean
 fu_plugin_reset_config_values(FuPlugin *self, GError **error)
@@ -3109,8 +2965,6 @@ fu_plugin_reset_config_values(FuPlugin *self, GError **error)
  * Return the boolean value of a key if it's been configured
  *
  * Returns: %TRUE if the value is `true` (case insensitive), %FALSE otherwise
- *
- * Since: 1.4.0
  **/
 gboolean
 fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key)
@@ -3142,8 +2996,6 @@ fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key)
  * Compares two plugins by their names.
  *
  * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
- *
- * Since: 1.0.8
  **/
 gint
 fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2)
@@ -3159,8 +3011,6 @@ fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2)
  * Compares two plugins by their depsolved order, and then by name.
  *
  * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
- *
- * Since: 1.0.8
  **/
 gint
 fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2)
@@ -3265,8 +3115,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-added signal is emitted when a device has been added by the plugin.
-	 *
-	 * Since: 0.8.0
 	 **/
 	signals[SIGNAL_DEVICE_ADDED] = g_signal_new("device-added",
 						    G_TYPE_FROM_CLASS(object_class),
@@ -3284,8 +3132,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-removed signal is emitted when a device has been removed by the plugin.
-	 *
-	 * Since: 0.8.0
 	 **/
 	signals[SIGNAL_DEVICE_REMOVED] =
 	    g_signal_new("device-removed",
@@ -3304,8 +3150,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 	 * @device: the #FuDevice
 	 *
 	 * The ::device-register signal is emitted when another plugin has added the device.
-	 *
-	 * Since: 0.9.7
 	 **/
 	signals[SIGNAL_DEVICE_REGISTER] =
 	    g_signal_new("device-register",
@@ -3327,8 +3171,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 	 * specific device GUID is supported in the existing system metadata.
 	 *
 	 * Returns: %TRUE if the GUID is found
-	 *
-	 * Since: 1.0.0
 	 **/
 	signals[SIGNAL_CHECK_SUPPORTED] =
 	    g_signal_new("check-supported",
@@ -3355,8 +3197,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 	 * FuPlugin:context:
 	 *
 	 * The #FuContext to use.
-	 *
-	 * Since: 1.8.6
 	 */
 	pspec = g_param_spec_object("context",
 				    NULL,
@@ -3417,8 +3257,6 @@ fu_plugin_finalize(GObject *object)
  * @gtype: a #GType, possibly even `G_TYPE_PLUGIN`
  *
  * Creates a new #FuPlugin
- *
- * Since: 1.8.6
  **/
 FuPlugin *
 fu_plugin_new_from_gtype(GType gtype, FuContext *ctx)
@@ -3441,8 +3279,6 @@ fu_plugin_new_from_gtype(GType gtype, FuContext *ctx)
  * @ctx: (nullable): a #FuContext
  *
  * Creates a new #FuPlugin
- *
- * Since: 0.8.0
  **/
 FuPlugin *
 fu_plugin_new(FuContext *ctx)

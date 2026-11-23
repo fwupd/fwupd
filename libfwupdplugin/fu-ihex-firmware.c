@@ -47,8 +47,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
  * of operations, rather than a simple linear image with filled holes.
  *
  * Returns: (transfer none) (element-type FuIhexFirmwareRecord): records
- *
- * Since: 1.3.4
  **/
 GPtrArray *
 fu_ihex_firmware_get_records(FuIhexFirmware *self)
@@ -67,8 +65,6 @@ fu_ihex_firmware_get_records(FuIhexFirmware *self)
  *
  * The default value of zero can be changed to `0xff` if functions like
  * fu_bytes_is_empty() are going to be used on subsections of the data.
- *
- * Since: 1.6.0
  **/
 void
 fu_ihex_firmware_set_padding_value(FuIhexFirmware *self, guint8 padding_value)
@@ -577,8 +573,6 @@ fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
  * fu_ihex_firmware_new:
  *
  * Creates a new #FuFirmware of sub type Ihex
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_ihex_firmware_new(void)

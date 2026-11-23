@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // Flags used to represent backend attributes
-// Since: 2.2.1
 #[derive(ToString, Bitfield)]
 enum FuBackendFlags {
     // No backend flags are set.

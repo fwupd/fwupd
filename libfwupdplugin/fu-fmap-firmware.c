@@ -332,8 +332,6 @@ fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
  * fu_fmap_firmware_new
  *
  * Creates a new #FuFirmware of sub type fmap
- *
- * Since: 1.5.0
  **/
 FuFirmware *
 fu_fmap_firmware_new(void)

@@ -175,8 +175,6 @@ fu_efi_device_path_list_init(FuEfiDevicePathList *self)
  * Creates a new EFI DEVICE_PATH list.
  *
  * Returns: (transfer full): a #FuEfiDevicePathList
- *
- * Since: 1.9.3
  **/
 FuEfiDevicePathList *
 fu_efi_device_path_list_new(void)

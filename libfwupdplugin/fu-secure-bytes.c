@@ -38,8 +38,6 @@ struct FuSecureBytes {
  * After this call, data belongs to the #FuSecureBytes and may no longer be modified by the caller.
  *
  * Returns: (transfer full): a #FuSecureBytes
- *
- * Since: 2.1.8
  **/
 FuSecureBytes *
 fu_secure_bytes_new(guint8 *buf, gsize bufsz, GDestroyNotify destroy_fn)
@@ -60,8 +58,6 @@ fu_secure_bytes_new(guint8 *buf, gsize bufsz, GDestroyNotify destroy_fn)
  * Creates a secure byte array that is cleared when deallocated.
  *
  * Returns: (transfer full): a #FuSecureBytes
- *
- * Since: 2.1.9
  **/
 FuSecureBytes *
 fu_secure_bytes_new_from_bytes(GBytes *bytes)
@@ -104,8 +100,6 @@ fu_secure_bytes_memzero(guint8 *buf, gsize bufsz)
  * Use this, typically via `g_autoptr(FuSecureBytes)`, for buffers holding
  * sensitive data such as keys, tokens or passwords so that the plaintext is not
  * left behind in freed heap memory.
- *
- * Since: 2.1.8
  **/
 void
 fu_secure_bytes_free(FuSecureBytes *self)
@@ -125,8 +119,6 @@ fu_secure_bytes_free(FuSecureBytes *self)
  * Returns the size of the secure buffer.
  *
  * Returns: size in bytes
- *
- * Since: 2.2.1
  **/
 gsize
 fu_secure_bytes_get_size(FuSecureBytes *self)
@@ -142,8 +134,6 @@ fu_secure_bytes_get_size(FuSecureBytes *self)
  * Returns the data of the secure buffer.
  *
  * Returns: pointer
- *
- * Since: 2.2.1
  **/
 guint8 *
 fu_secure_bytes_get_data(FuSecureBytes *self)
@@ -164,8 +154,6 @@ fu_secure_bytes_get_data(FuSecureBytes *self)
  * keys, tokens or passwords, holding the result via `g_autoptr(FuSecureBytes)`.
  *
  * Returns: (transfer full): a #FuSecureBytes, or %NULL for failure
- *
- * Since: 2.1.8
  **/
 FuSecureBytes *
 fu_secure_bytes_get_contents(const gchar *filename, GError **error)
@@ -194,8 +182,6 @@ fu_secure_bytes_get_contents(const gchar *filename, GError **error)
  * parent directories as required.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.2.1
  **/
 gboolean
 fu_secure_bytes_set_contents(FuSecureBytes *self, const gchar *filename, gint mode, GError **error)

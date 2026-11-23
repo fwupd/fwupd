@@ -20,16 +20,12 @@ typedef enum {
 	 * FU_BACKEND_SETUP_FLAG_NONE:
 	 *
 	 * No flags set.
-	 *
-	 * Since: 2.0.0
 	 **/
 	FU_BACKEND_SETUP_FLAG_NONE = 0,
 	/**
 	 * FU_BACKEND_SETUP_FLAG_USE_HOTPLUG:
 	 *
 	 * Set up hotplug events for updates (not used in tests).
-	 *
-	 * Since: 2.0.0
 	 **/
 	FU_BACKEND_SETUP_FLAG_USE_HOTPLUG = 1 << 0,
 } G_GNUC_FLAG_ENUM FuBackendSetupFlags;

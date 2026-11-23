@@ -62,8 +62,6 @@ fu_efi_device_path_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
  * Gets the DEVICE_PATH subtype.
  *
  * Returns: integer
- *
- * Since: 1.9.3
  **/
 guint8
 fu_efi_device_path_get_subtype(FuEfiDevicePath *self)
@@ -79,8 +77,6 @@ fu_efi_device_path_get_subtype(FuEfiDevicePath *self)
  * @subtype: integer
  *
  * Sets the DEVICE_PATH subtype.
- *
- * Since: 1.9.3
  **/
 void
 fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
@@ -212,8 +208,6 @@ fu_efi_device_path_class_init(FuEfiDevicePathClass *klass)
  * fu_efi_device_path_new:
  *
  * Creates a new EFI DEVICE_PATH
- *
- * Since: 1.9.3
  **/
 FuEfiDevicePath *
 fu_efi_device_path_new(void)

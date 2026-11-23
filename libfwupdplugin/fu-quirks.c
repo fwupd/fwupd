@@ -472,8 +472,6 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
  * Looks up an entry in the hardware database using a string value.
  *
  * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.0.1
  **/
 const gchar *
 fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
@@ -565,8 +563,6 @@ fu_quirks_cache_item_free(FuQuirksCacheItem *item)
  * Looks up all entries in the hardware database using a GUID value.
  *
  * Returns: %TRUE if the ID was found, and @iter was called
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
@@ -1074,8 +1070,6 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
  * Loads the various files that define the hardware quirks used in plugins.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.1
  **/
 gboolean
 fu_quirks_load(FuQuirks *self, GError **error)
@@ -1125,8 +1119,6 @@ fu_quirks_load(FuQuirks *self, GError **error)
  *
  * Adds a possible quirk key. If added by a plugin it should be namespaced
  * using the plugin name, where possible.
- *
- * Since: 1.5.8
  **/
 void
 fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key)
@@ -1248,8 +1240,6 @@ fu_quirks_finalize(GObject *obj)
  * Creates a new quirks object.
  *
  * Returns: a new #FuQuirks
- *
- * Since: 1.0.1
  **/
 FuQuirks *
 fu_quirks_new(FuContext *ctx)

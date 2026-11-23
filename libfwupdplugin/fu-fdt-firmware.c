@@ -57,8 +57,6 @@ fu_fdt_firmware_export(FuFirmware *firmware,
  * Gets the CPUID.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 guint32
 fu_fdt_firmware_get_cpuid(FuFdtFirmware *self)
@@ -74,8 +72,6 @@ fu_fdt_firmware_get_cpuid(FuFdtFirmware *self)
  * @cpuid: integer value
  *
  * Sets the CPUID.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_firmware_set_cpuid(FuFdtFirmware *self, guint32 cpuid)
@@ -94,8 +90,6 @@ fu_fdt_firmware_set_cpuid(FuFdtFirmware *self, guint32 cpuid)
  * Gets the FDT image for a specific path.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL
- *
- * Since: 1.8.2
  **/
 FuFdtImage *
 fu_fdt_firmware_get_image_by_path(FuFdtFirmware *self, const gchar *path, GError **error)
@@ -608,8 +602,6 @@ fu_fdt_firmware_class_init(FuFdtFirmwareClass *klass)
  * fu_fdt_firmware_new:
  *
  * Creates a new #FuFirmware of sub type FDT
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_fdt_firmware_new(void)

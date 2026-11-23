@@ -48,8 +48,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSrecFirmware, fu_srec_firmware, FU_TYPE_FIRMWARE)
  * of operations, rather than a simple linear image with filled holes.
  *
  * Returns: (transfer none) (element-type FuSrecFirmwareRecord): records
- *
- * Since: 1.3.2
  **/
 GPtrArray *
 fu_srec_firmware_get_records(FuSrecFirmware *self)
@@ -65,8 +63,6 @@ fu_srec_firmware_get_records(FuSrecFirmware *self)
  * @addr_min: address, or 0x0 to disable
  *
  * Sets the minimum address allowed. This may be useful to ignore a bootloader section.
- *
- * Since: 1.9.3
  **/
 void
 fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min)
@@ -82,8 +78,6 @@ fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min)
  * @addr_max: address, or 0x0 to disable
  *
  * Sets the maximum address allowed. This may be useful to ignore a signature.
- *
- * Since: 1.9.3
  **/
 void
 fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max)
@@ -114,8 +108,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSrecFirmwareRecord, fu_srec_firmware_record_free
  * Returns a single firmware record
  *
  * Returns: (transfer full): record
- *
- * Since: 1.3.2
  **/
 FuSrecFirmwareRecord *
 fu_srec_firmware_record_new(guint ln, FuFirmwareSrecRecordKind kind, guint32 addr)
@@ -145,8 +137,6 @@ fu_srec_firmware_record_dup(const FuSrecFirmwareRecord *rcd)
  * Gets a specific type.
  *
  * Return value: a #GType
- *
- * Since: 1.6.1
  **/
 GType
 fu_srec_firmware_record_get_type(void)
@@ -691,8 +681,6 @@ fu_srec_firmware_class_init(FuSrecFirmwareClass *klass)
  * fu_srec_firmware_new:
  *
  * Creates a new #FuFirmware of type SREC
- *
- * Since: 1.3.2
  **/
 FuFirmware *
 fu_srec_firmware_new(void)

@@ -122,8 +122,6 @@ fu_partial_input_stream_seek(FuInputStream *stream,
  * Creates a partial input stream where content is read from the donor stream.
  *
  * Returns: (transfer full): a #FuPartialInputStream, or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuInputStream *
 fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GError **error)
@@ -189,8 +187,6 @@ fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GEr
  * Gets the offset of the stream.
  *
  * Returns: integer
- *
- * Since: 2.0.0
  **/
 gsize
 fu_partial_input_stream_get_offset(FuPartialInputStream *self)
@@ -206,8 +202,6 @@ fu_partial_input_stream_get_offset(FuPartialInputStream *self)
  * Gets the size of the stream.
  *
  * Returns: integer
- *
- * Since: 2.0.0
  **/
 gsize
 fu_partial_input_stream_get_size(FuPartialInputStream *self)

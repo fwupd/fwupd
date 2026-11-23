@@ -44,8 +44,6 @@ G_DEFINE_TYPE(FuEfiVssAuthVariable, fu_efi_vss_auth_variable, FU_TYPE_FIRMWARE)
  * Gets the VSS variable state.
  *
  * Returns: a #FuEfiVariableState, e.g. %FU_EFI_VARIABLE_STATE_VARIABLE_ADDED
- *
- * Since: 2.0.17
  **/
 FuEfiVariableState
 fu_efi_vss_auth_variable_get_state(FuEfiVssAuthVariable *self)
@@ -338,8 +336,6 @@ fu_efi_vss_auth_variable_class_init(FuEfiVssAuthVariableClass *klass)
  * Creates an empty VSS variable store.
  *
  * Returns: a #FuFirmware
- *
- * Since: 2.0.17
  **/
 FuFirmware *
 fu_efi_vss_auth_variable_new(void)

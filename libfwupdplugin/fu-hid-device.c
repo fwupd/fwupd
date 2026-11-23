@@ -91,8 +91,6 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
  * Parses the HID descriptors.
  *
  * Returns: (transfer container) (element-type FuHidDescriptor): descriptors, or %NULL for error
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
@@ -282,8 +280,6 @@ fu_hid_device_close(FuDevice *device, GError **error)
  * In most cases the HID interface is auto-detected, but this function can be
  * used where there are multiple HID interfaces or where the device USB
  * interface descriptor is invalid.
- *
- * Since: 1.4.0
  **/
 void
 fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number)
@@ -301,8 +297,6 @@ fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number)
  * Gets the HID USB interface number.
  *
  * Returns: integer
- *
- * Since: 1.4.0
  **/
 guint8
 fu_hid_device_get_interface(FuHidDevice *self)
@@ -321,8 +315,6 @@ fu_hid_device_get_interface(FuHidDevice *self)
  *
  * In most cases the HID ep_addr_in is auto-detected, but this function can be
  * used where there are multiple HID EPss or where the device USB EP is invalid.
- *
- * Since: 1.9.4
  **/
 void
 fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in)
@@ -340,8 +332,6 @@ fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in)
  * Gets the HID USB in endpoint.
  *
  * Returns: integer
- *
- * Since: 1.9.4
  **/
 guint8
 fu_hid_device_get_ep_addr_in(FuHidDevice *self)
@@ -360,8 +350,6 @@ fu_hid_device_get_ep_addr_in(FuHidDevice *self)
  *
  * In most cases the HID EPs are auto-detected, but this function can be
  * used where there are multiple HID EPs or where the device USB EP is invalid.
- *
- * Since: 1.9.4
  **/
 void
 fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out)
@@ -379,8 +367,6 @@ fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out)
  * Gets the HID USB out endpoint.
  *
  * Returns: integer
- *
- * Since: 1.9.4
  **/
 guint8
 fu_hid_device_get_ep_addr_out(FuHidDevice *self)
@@ -396,8 +382,6 @@ fu_hid_device_get_ep_addr_out(FuHidDevice *self)
  * @flag: HID device flags, e.g. %FU_HID_DEVICE_FLAG_RETRY_FAILURE
  *
  * Adds a flag to be used for all set and get report messages.
- *
- * Since: 1.5.2
  **/
 void
 fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag)
@@ -504,8 +488,6 @@ fu_hid_device_set_report_internal_cb(FuDevice *device, gpointer user_data, GErro
  * Calls SetReport on the hardware.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.0
  **/
 gboolean
 fu_hid_device_set_report(FuHidDevice *self,
@@ -632,8 +614,6 @@ fu_hid_device_get_report_internal_cb(FuDevice *device, gpointer user_data, GErro
  * Calls GetReport on the hardware.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.0
  **/
 gboolean
 fu_hid_device_get_report(FuHidDevice *self,
@@ -697,8 +677,6 @@ fu_hid_device_class_init(FuHidDeviceClass *klass)
 	 * FuHidDevice:interface:
 	 *
 	 * The HID interface to use.
-	 *
-	 * Since: 1.4.0
 	 */
 	pspec = g_param_spec_uint("interface",
 				  NULL,

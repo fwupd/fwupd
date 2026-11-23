@@ -60,8 +60,6 @@ fu_efi_signature_export(FuFirmware *firmware,
  * Creates a new EFI_SIGNATURE.
  *
  * Returns: (transfer full): signature
- *
- * Since: 2.0.5
  **/
 FuEfiSignature *
 fu_efi_signature_new(FuEfiSignatureKind kind)
@@ -78,8 +76,6 @@ fu_efi_signature_new(FuEfiSignatureKind kind)
  * Returns the signature kind.
  *
  * Returns: #FuEfiSignatureKind, e.g. %FU_EFI_SIGNATURE_KIND_SHA256
- *
- * Since: 1.5.5
  **/
 FuEfiSignatureKind
 fu_efi_signature_get_kind(FuEfiSignature *self)
@@ -119,8 +115,6 @@ fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind)
  * Returns the GUID of the signature owner.
  *
  * Returns: GUID owner, perhaps %FU_EFI_SIGNATURE_GUID_MICROSOFT
- *
- * Since: 1.5.5
  **/
 const gchar *
 fu_efi_signature_get_owner(FuEfiSignature *self)

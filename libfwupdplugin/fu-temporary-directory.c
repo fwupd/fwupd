@@ -31,8 +31,6 @@ G_DEFINE_TYPE(FuTemporaryDirectory, fu_temporary_directory, G_TYPE_OBJECT)
  * Gets the path of the temporary directory.
  *
  * Returns: (transfer full): data
- *
- * Since: 2.1.1
  **/
 const gchar *
 fu_temporary_directory_get_path(FuTemporaryDirectory *self)
@@ -49,8 +47,6 @@ fu_temporary_directory_get_path(FuTemporaryDirectory *self)
  * destroyed.
  *
  * Returns: (transfer full): a #FuTemporaryDirectory
- *
- * Since: 2.1.1
  **/
 FuTemporaryDirectory *
 fu_temporary_directory_new(const gchar *prefix, GError **error)
@@ -78,8 +74,6 @@ fu_temporary_directory_new(const gchar *prefix, GError **error)
  * Builds a path within the temporary_directory.
  *
  * Returns: a path
- *
- * Since: 2.1.1
  **/
 gchar *
 fu_temporary_directory_build(FuTemporaryDirectory *self, ...)

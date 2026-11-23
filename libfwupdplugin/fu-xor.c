@@ -19,8 +19,6 @@
  * Returns the bitwise XOR of all bytes in @buf.
  *
  * Returns: xor value
- *
- * Since: 2.1.1
  **/
 guint8
 fu_xor8(const guint8 *buf, gsize bufsz)
@@ -48,8 +46,6 @@ fu_xor8(const guint8 *buf, gsize bufsz)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_xor8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *value, GError **error)
