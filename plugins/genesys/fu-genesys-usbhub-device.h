@@ -8,7 +8,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_GENESYS_USBHUB_DEVICE (fu_genesys_usbhub_device_get_type())
+#define FU_TYPE_GENESYS_USBHUB_DEVICE		    (fu_genesys_usbhub_device_get_type())
+#define FU_GENESYS_USBHUB_FLAG_STRICT_PROJECT_CHECK "strict-project-check"
 
 /* what is known about the firmware stored in a bank */
 typedef enum {
@@ -32,6 +33,13 @@ fu_genesys_usbhub_device_select_update_bank2(gboolean is_gl3523,
 					     guint16 bank1_version,
 					     guint16 bank2_version,
 					     gboolean *backup_bank1);
+gboolean
+fu_genesys_usbhub_device_check_project_compatibility(gboolean strict,
+						     GBytes *device_project,
+						     const gchar *device_mask_project_ic_type,
+						     GBytes *firmware_project,
+						     const gchar *firmware_mask_project_ic_type,
+						     GError **error);
 gboolean
 fu_genesys_usbhub_device_validate_bank_code_size(guint32 code_size,
 						 guint32 capacity,

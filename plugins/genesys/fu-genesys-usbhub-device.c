@@ -2386,6 +2386,109 @@ fu_genesys_usbhub_device_check_update_bank(gboolean banks_compared,
 							       error);
 }
 
+/* an erased or unprogrammed identity (0x00/0xFF/spaces) must not count as a match */
+static gboolean
+fu_genesys_usbhub_device_identity_is_blank(const guint8 *buf, gsize bufsz)
+{
+	for (gsize i = 0; i < bufsz; i++) {
+		if (g_ascii_isalnum(buf[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_genesys_usbhub_device_check_project_compatibility(gboolean strict,
+						     GBytes *device_project,
+						     const gchar *device_mask_project_ic_type,
+						     GBytes *firmware_project,
+						     const gchar *firmware_mask_project_ic_type,
+						     GError **error)
+{
+	gsize device_project_sz = 0;
+	gsize firmware_project_sz = 0;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!strict)
+		return TRUE;
+
+	if (device_project == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device does not expose PROJECT data");
+		return FALSE;
+	}
+	if (firmware_project == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware does not contain PROJECT data");
+		return FALSE;
+	}
+	if (device_mask_project_ic_type == NULL || strlen(device_mask_project_ic_type) != 6) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device does not expose a valid mask IC type");
+		return FALSE;
+	}
+	if (firmware_mask_project_ic_type == NULL || strlen(firmware_mask_project_ic_type) != 6) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware does not contain a valid mask IC type");
+		return FALSE;
+	}
+	(void)g_bytes_get_data(device_project, &device_project_sz);
+	(void)g_bytes_get_data(firmware_project, &firmware_project_sz);
+	if (device_project_sz != FU_STRUCT_GENESYS_TS_BRAND_PROJECT_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device PROJECT length is %" G_GSIZE_FORMAT ", expected %u",
+			    device_project_sz,
+			    (guint)FU_STRUCT_GENESYS_TS_BRAND_PROJECT_SIZE);
+		return FALSE;
+	}
+	if (firmware_project_sz != FU_STRUCT_GENESYS_TS_BRAND_PROJECT_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware PROJECT length is %" G_GSIZE_FORMAT ", expected %u",
+			    firmware_project_sz,
+			    (guint)FU_STRUCT_GENESYS_TS_BRAND_PROJECT_SIZE);
+		return FALSE;
+	}
+	if (fu_genesys_usbhub_device_identity_is_blank(g_bytes_get_data(device_project, NULL),
+						       device_project_sz) ||
+	    fu_genesys_usbhub_device_identity_is_blank((const guint8 *)device_mask_project_ic_type,
+						       strlen(device_mask_project_ic_type))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device PROJECT or mask IC type is blank");
+		return FALSE;
+	}
+	if (!g_bytes_equal(device_project, firmware_project)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware PROJECT does not match device");
+		return FALSE;
+	}
+	if (g_strcmp0(device_mask_project_ic_type, firmware_mask_project_ic_type) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware mask IC type %s does not match device %s",
+			    firmware_mask_project_ic_type,
+			    device_mask_project_ic_type);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_genesys_usbhub_device_check_firmware(FuDevice *device,
 					FuFirmware *firmware,
@@ -2393,6 +2496,33 @@ fu_genesys_usbhub_device_check_firmware(FuDevice *device,
 					GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_STRICT_PROJECT_CHECK)) {
+		g_autoptr(GBytes) dev_project = NULL;
+		g_autofree gchar *dev_ic = NULL;
+		g_autoptr(GBytes) fw_project = NULL;
+		g_autofree gchar *fw_ic = NULL;
+
+		if (self->st_project_ts != NULL)
+			dev_project = g_bytes_new(self->st_project_ts->buf->data,
+						  self->st_project_ts->buf->len);
+		if (self->st_static_ts != NULL)
+			dev_ic = fu_struct_genesys_ts_static_get_mask_project_ic_type(
+			    self->st_static_ts);
+		if (FU_IS_GENESYS_USBHUB_FIRMWARE(firmware)) {
+			fw_project = fu_genesys_usbhub_firmware_get_project_bytes(
+			    FU_GENESYS_USBHUB_FIRMWARE(firmware));
+			fw_ic = fu_genesys_usbhub_firmware_get_mask_project_ic_type(
+			    FU_GENESYS_USBHUB_FIRMWARE(firmware));
+		}
+		if (!fu_genesys_usbhub_device_check_project_compatibility(TRUE,
+									  dev_project,
+									  dev_ic,
+									  fw_project,
+									  fw_ic,
+									  error))
+			return FALSE;
+	}
 
 	/* has codesign */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN)) {
@@ -3525,4 +3655,5 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_STRICT_PROJECT_CHECK);
 }
