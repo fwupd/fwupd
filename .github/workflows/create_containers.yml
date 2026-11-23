@@ -54,6 +54,7 @@ jobs:
           - { DISTRO: debian, VERSION: testing, ARCH: arm64 }
           - { DISTRO: debian, VERSION: testing, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, VERSION: 44, ARCH: amd64 }
+          - { DISTRO: fedora, VERSION: 45, ARCH: amd64, VARIANT: mingw64 }
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64 }
           - { DISTRO: ubuntu, VERSION: rolling, ARCH: amd64, VARIANT: android }
           - { DISTRO: ubuntu, VERSION: 24.04, ARCH: amd64, VARIANT: snap }
