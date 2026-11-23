@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware" priority="2">
+  <id>com.lenovo.P34WD40.L2.firmware</id>
+  <name>Lenovo P34WD-40 USB Hub Firmware (L2, 17EF:1122)</name>
+  <summary>L2 USB hub firmware for the Lenovo P34WD-40 dock</summary>
+  <description>
+    <p>Updates the Genesys Logic L2 USB hub (17EF:1122) of the Lenovo P34WD-40 dock.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>
+  </provides>
+  <url type="homepage">https://www.lenovo.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer_name>Lenovo</developer_name>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <releases>
+    <release urgency="medium" version="87.16" date="2026-10-28">
+      <checksum filename="l2.bin" target="content"/>
+      <description>
+        <p>P34WD-40 L2 USB hub firmware.</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="2.0.0">org.freedesktop.fwupd</id>
+    <firmware depth="1">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>
+  </requires>
+  <custom>
+    <value key="LVFS::VersionFormat">pair</value>
+    <value key="LVFS::UpdateProtocol">com.genesys.usbhub</value>
+  </custom>
+</component>
