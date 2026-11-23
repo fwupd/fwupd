@@ -2876,6 +2876,7 @@ fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func(void)
 		fu_device_set_id(l1, "l1");
 		fu_device_set_id(l2, "l2");
 		fu_device_set_id(l3, "l3");
+		fu_device_set_physical_id(l2, "1-4.1");
 		fu_device_add_child(l1, l2);
 		fu_device_add_child(l2, l3);
 		backend->parent = l2;
@@ -2946,6 +2947,7 @@ fu_genesys_usbhub_device_p34_flash_setup_hub_chain_func(void)
 				fu_device_set_id(l1, "l1");
 			fu_device_set_id(l2, "l2");
 			fu_device_set_id(l3, "l3");
+			fu_device_set_physical_id(l2, "1-4.1");
 			if (cases[i].link_l1)
 				fu_device_add_child(l1, l2);
 			if (cases[i].link_l2)
@@ -3010,7 +3012,8 @@ fu_genesys_test_set_backend_parent(FuContext *ctx, FuDevice *device, FuDevice *p
 		g_autoptr(FuDevice) usb_parent =
 		    fu_genesys_test_parent_new(fu_device_get_vid(parent),
 					       fu_device_get_pid(parent));
-		fu_device_set_physical_id(usb_parent, fu_device_get_physical_id(parent));
+		if (fu_device_get_physical_id(parent) != NULL)
+			fu_device_set_physical_id(usb_parent, fu_device_get_physical_id(parent));
 		backend->parent = usb_parent;
 		g_object_set_data_full(G_OBJECT(backend),
 				       "genesys-test-usb-parent",
@@ -3284,6 +3287,75 @@ fu_genesys_usbhub_device_p34_plugin_hub_lifecycle_func(void)
 		g_assert_true(fu_device_get_parent(l2, NULL) == l1_new);
 		g_assert_true(fu_genesys_usbhub_device_check_root_hub(0x1121, 0x17EF, l3, &error));
 		g_assert_no_error(error);
+	}
+
+	/* 5. Stale connected parent with same VID/PID but changed backend physical ID:
+	 * must fail closed (zero ISP_ENTER), missing physical ID also fails closed, and
+	 * re-enumeration relinks to the new physical parent */
+	{
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(FuDevice) l1 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1121", 0x1121);
+		g_autoptr(FuDevice) l2_old =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l2_new =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1122", 0x1122);
+		g_autoptr(FuDevice) l2_nophys = fu_genesys_test_parent_new(0x17EF, 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		FuGenesysUsbhubDevice *l3_self = FU_GENESYS_USBHUB_DEVICE(l3);
+		FuGenesysTestIspHub fake = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_id(l1, "stale-l1");
+		fu_device_set_id(l2_old, "stale-l2-old");
+		fu_device_set_id(l2_new, "stale-l2-new");
+		fu_device_set_id(l3, "stale-l3");
+		fu_device_set_physical_id(l1, "1-4");
+		fu_device_set_physical_id(l2_old, "1-4.1");
+		fu_device_set_physical_id(l2_new, "1-5.1");
+		fu_device_set_physical_id(l3, "1-4.1.2");
+		fu_genesys_test_set_backend_parent(ctx, l2_old, l1);
+		fu_genesys_test_set_backend_parent(ctx, l2_new, l1);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2_old);
+		fu_genesys_usbhub_device_set_ctrl_hook(l3_self,
+						       fu_genesys_test_isp_hub_ctrl_cb,
+						       &fake);
+		fu_genesys_usbhub_device_refresh_hid_proxy_inhibit(l3_self);
+		fu_genesys_usbhub_device_begin_flash_setup(l3_self);
+
+		fu_genesys_test_plugin_add_device(plugin, l1);
+		fu_genesys_test_plugin_add_device(plugin, l2_old);
+		fu_genesys_test_plugin_add_device(plugin, l3);
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2_old);
+
+		/* backend parent changes to a different physical path with the same VID/PID while
+		 * l2_old is still marked connected: refused before ISP_ENTER */
+		fu_genesys_test_set_backend_parent(ctx, l3, l2_new);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "does not match"));
+		g_clear_error(&error);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_clear_error(&error);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+
+		/* backend parent without a physical ID also fails closed */
+		fu_genesys_test_set_backend_parent(ctx, l3, l2_nophys);
+		g_assert_false(fu_genesys_usbhub_device_setup_flash_late_opened(l3_self, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "physical ID"));
+		g_clear_error(&error);
+		g_assert_cmpuint(fake.n_enter, ==, 0);
+		g_assert_cmpuint(fake.n_reset, ==, 0);
+
+		/* when the new physical parent arrives, link_hub drops stale l2_old and relinks */
+		fu_genesys_test_set_backend_parent(ctx, l3, l2_new);
+		fu_genesys_test_plugin_add_device(plugin, l2_new);
+		g_assert_true(fu_device_get_parent(l3, NULL) == l2_new);
 	}
 }
 

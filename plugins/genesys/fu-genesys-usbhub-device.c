@@ -279,6 +279,7 @@ fu_genesys_usbhub_device_check_parent_hub(guint16 expected_parent_pid,
 static gboolean
 fu_genesys_usbhub_device_ensure_parent_hub(FuGenesysUsbhubDevice *self, GError **error)
 {
+	FuDevice *linked_parent;
 	g_autoptr(FuDevice) parent = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -293,10 +294,51 @@ fu_genesys_usbhub_device_ensure_parent_hub(FuGenesysUsbhubDevice *self, GError *
 			    error_local->message);
 		return FALSE;
 	}
-	return fu_genesys_usbhub_device_check_parent_hub(self->parent_hub_pid,
-							 fu_device_get_vid(FU_DEVICE(self)),
-							 parent,
-							 error);
+	if (!fu_genesys_usbhub_device_check_parent_hub(self->parent_hub_pid,
+						       fu_device_get_vid(FU_DEVICE(self)),
+						       parent,
+						       error))
+		return FALSE;
+
+	/* if a logical parent is already linked, verify it still matches the current USB parent */
+	linked_parent = fu_device_get_parent(FU_DEVICE(self), NULL);
+	if (linked_parent != NULL) {
+		const gchar *backend_phys = fu_device_get_physical_id(parent);
+		const gchar *linked_phys = fu_device_get_physical_id(linked_parent);
+
+		if (fu_device_has_private_flag(linked_parent, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "linked parent hub is no longer connected");
+			return FALSE;
+		}
+		if (backend_phys == NULL || backend_phys[0] == '\0' || linked_phys == NULL ||
+		    linked_phys[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "parent hub physical ID cannot be verified");
+			return FALSE;
+		}
+		if (fu_device_get_vid(linked_parent) != fu_device_get_vid(parent) ||
+		    fu_device_get_pid(linked_parent) != fu_device_get_pid(parent) ||
+		    g_strcmp0(linked_phys, backend_phys) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "linked parent hub (%04x:%04x %s) does not match current USB "
+				    "parent (%04x:%04x %s)",
+				    fu_device_get_vid(linked_parent),
+				    fu_device_get_pid(linked_parent),
+				    linked_phys,
+				    fu_device_get_vid(parent),
+				    fu_device_get_pid(parent),
+				    backend_phys);
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 /* every hub between this one and the root hub must be linked by the plugin, none is assumed */

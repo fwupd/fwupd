@@ -94,6 +94,7 @@ fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
 {
 	FuDevice *existing_parent;
 	FuDevice *parent;
+	const gchar *usb_parent_phys;
 	guint16 parent_pid;
 	g_autoptr(FuDevice) usb_parent = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -104,25 +105,34 @@ fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
 	if (parent_pid == 0)
 		return FALSE;
 
-	/* drop a stale parent left behind after a replug before linking to the new one */
-	existing_parent = fu_device_get_parent(hub, NULL);
-	if (existing_parent != NULL) {
-		if (!fu_device_has_private_flag(existing_parent,
-						FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
-			return FALSE;
-		fu_device_remove_child(existing_parent, hub);
-		g_object_set(hub, "parent", NULL, NULL);
-	}
-
 	usb_parent = fu_device_get_backend_parent(hub, &error_local);
 	if (usb_parent == NULL) {
 		g_warning("hub cannot find its upstream hub: %s", error_local->message);
 		return FALSE;
 	}
+	usb_parent_phys = fu_device_get_physical_id(usb_parent);
+	if (usb_parent_phys == NULL || usb_parent_phys[0] == '\0') {
+		g_warning("hub upstream physical ID cannot be resolved");
+		return FALSE;
+	}
+
+	/* keep an existing parent only when it is connected and still matches the current USB
+	 * parent; otherwise drop the stale link before relinking */
+	existing_parent = fu_device_get_parent(hub, NULL);
+	if (existing_parent != NULL) {
+		const gchar *existing_phys = fu_device_get_physical_id(existing_parent);
+		if (!fu_device_has_private_flag(existing_parent,
+						FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) &&
+		    fu_device_get_vid(existing_parent) == fu_device_get_vid(usb_parent) &&
+		    fu_device_get_pid(existing_parent) == fu_device_get_pid(usb_parent) &&
+		    g_strcmp0(existing_phys, usb_parent_phys) == 0)
+			return FALSE;
+		fu_device_remove_child(existing_parent, hub);
+		g_object_set(hub, "parent", NULL, NULL);
+	}
 
 	/* the upstream hub may be added later, which links it from there */
-	parent = fu_genesys_plugin_get_device_by_physical_id(self,
-							     fu_device_get_physical_id(usb_parent));
+	parent = fu_genesys_plugin_get_device_by_physical_id(self, usb_parent_phys);
 	if (parent == NULL || parent == hub)
 		return FALSE;
 	if (!fu_genesys_usbhub_device_check_parent_hub(parent_pid,
