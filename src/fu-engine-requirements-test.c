@@ -1531,6 +1531,24 @@ fu_engine_requirements_p34_check(const gchar *xml,
 	return fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, error);
 }
 
+static gchar *
+fu_engine_requirements_p34_load_fixture(const gchar *filename, GError **error)
+{
+	g_autofree gchar *xml = NULL;
+	const gchar *path = g_test_build_filename(G_TEST_DIST,
+						  "..",
+						  "plugins",
+						  "genesys",
+						  "tests",
+						  "p34-hub-cab",
+						  filename,
+						  NULL);
+
+	if (!g_file_get_contents(path, &xml, NULL, error))
+		return NULL;
+	return g_steal_pointer(&xml);
+}
+
 static void
 fu_engine_requirements_p34_hub_chain_func(void)
 {
@@ -1549,95 +1567,35 @@ fu_engine_requirements_p34_hub_chain_func(void)
 	    "USB\\VID_17EF&PID_1122",
 	    "USB\\VID_17EF&PID_1123",
 	};
-	const gchar *xml_l1 =
-	    "<component type=\"firmware\" priority=\"1\">"
-	    "  <provides>"
-	    "    <firmware type=\"flashed\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
-	    "  </provides>"
-	    "  <releases><release version=\"86.25\">"
-	    "    <checksum filename=\"l1.bin\" target=\"content\"/>"
-	    "  </release></releases>"
-	    "  <requires>"
-	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
-	    "  </requires>"
-	    "  <custom>"
-	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
-	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
-	    "  </custom>"
-	    "</component>";
-	const gchar *xml_l2 =
-	    "<component type=\"firmware\" priority=\"2\">"
-	    "  <provides>"
-	    "    <firmware type=\"flashed\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
-	    "  </provides>"
-	    "  <releases><release version=\"87.16\">"
-	    "    <checksum filename=\"l2.bin\" target=\"content\"/>"
-	    "  </release></releases>"
-	    "  <requires>"
-	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
-	    "    <firmware depth=\"1\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
-	    "  </requires>"
-	    "  <custom>"
-	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
-	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
-	    "  </custom>"
-	    "</component>";
-	const gchar *xml_l3 =
-	    "<component type=\"firmware\" priority=\"3\">"
-	    "  <provides>"
-	    "    <firmware type=\"flashed\">9a0bece0-69e7-5489-a218-6645fb94f72d</firmware>"
-	    "  </provides>"
-	    "  <releases><release version=\"88.17\">"
-	    "    <checksum filename=\"l3.bin\" target=\"content\"/>"
-	    "  </release></releases>"
-	    "  <requires>"
-	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
-	    "    <firmware depth=\"1\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
-	    "    <firmware depth=\"2\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>"
-	    "  </requires>"
-	    "  <custom>"
-	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
-	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
-	    "  </custom>"
-	    "</component>";
-	const gchar *xml_l2_no_parent =
-	    "<component type=\"firmware\">"
-	    "  <provides>"
-	    "    <firmware type=\"flashed\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
-	    "  </provides>"
-	    "  <releases><release version=\"87.16\">"
-	    "    <checksum filename=\"l2.bin\" target=\"content\"/>"
-	    "  </release></releases>"
-	    "  <requires>"
-	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
-	    "  </requires>"
-	    "  <custom>"
-	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
-	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
-	    "  </custom>"
-	    "</component>";
-	const gchar *xml_l3_wrong_depth2 =
-	    "<component type=\"firmware\">"
-	    "  <provides>"
-	    "    <firmware type=\"flashed\">9a0bece0-69e7-5489-a218-6645fb94f72d</firmware>"
-	    "  </provides>"
-	    "  <releases><release version=\"88.17\">"
-	    "    <checksum filename=\"l3.bin\" target=\"content\"/>"
-	    "  </release></releases>"
-	    "  <requires>"
-	    "    <id compare=\"ge\" version=\"2.0.0\">org.freedesktop.fwupd</id>"
-	    "    <firmware depth=\"1\">7ea0761a-9e0c-5879-b808-e8d9b8beafae</firmware>"
-	    "    <firmware depth=\"2\">00000000-0000-5000-8000-000000001151</firmware>"
-	    "  </requires>"
-	    "  <custom>"
-	    "    <value key=\"LVFS::VersionFormat\">pair</value>"
-	    "    <value key=\"LVFS::UpdateProtocol\">com.genesys.usbhub</value>"
-	    "  </custom>"
-	    "</component>";
-	const gchar *valid_xmls[3] = {xml_l1, xml_l2, xml_l3};
+	g_autofree gchar *xml_l1 = NULL;
+	g_autofree gchar *xml_l2 = NULL;
+	g_autofree gchar *xml_l3 = NULL;
+	g_autofree gchar *xml_l2_no_parent = NULL;
+	g_autofree gchar *xml_l3_wrong_depth2 = NULL;
+	g_autoptr(GString) mut_l2 = NULL;
+	g_autoptr(GString) mut_l3 = NULL;
+	const gchar *valid_xmls[3];
 	g_autoptr(GError) error = NULL;
 
-	/* model A: all three hubs pass */
+	/* load the canonical S3 metainfo fixtures directly to prevent metadata drift */
+	xml_l1 = fu_engine_requirements_p34_load_fixture("l1.metainfo.xml", &error);
+	if (xml_l1 == NULL && g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+		g_test_skip("P34 metainfo fixtures not installed");
+		return;
+	}
+	g_assert_no_error(error);
+	xml_l2 = fu_engine_requirements_p34_load_fixture("l2.metainfo.xml", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(xml_l2);
+	xml_l3 = fu_engine_requirements_p34_load_fixture("l3.metainfo.xml", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(xml_l3);
+
+	valid_xmls[0] = xml_l1;
+	valid_xmls[1] = xml_l2;
+	valid_xmls[2] = xml_l3;
+
+	/* model A: all three canonical fixtures pass */
 	for (guint i = 0; i < 3; i++) {
 		g_assert_true(fu_engine_requirements_p34_check(valid_xmls[i], i, model_a, &error));
 		g_assert_no_error(error);
@@ -1651,12 +1609,32 @@ fu_engine_requirements_p34_hub_chain_func(void)
 		g_clear_error(&error);
 	}
 
-	/* L2 missing depth=1 parent requirement: rejected by enforce-requires */
+	/* mutate canonical L2 fixture to drop depth=1: rejected by enforce-requires */
+	mut_l2 = g_string_new(xml_l2);
+	g_assert_cmpuint(
+	    g_string_replace(
+		mut_l2,
+		"<firmware depth=\"1\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>",
+		"",
+		0),
+	    ==,
+	    1);
+	xml_l2_no_parent = g_string_free(g_steal_pointer(&mut_l2), FALSE);
 	g_assert_false(fu_engine_requirements_p34_check(xml_l2_no_parent, 1, model_a, &error));
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
-	/* L3 wrong depth=2 GUID: rejected by parent GUID check */
+	/* mutate canonical L3 fixture to require model B at depth=2: rejected by parent check */
+	mut_l3 = g_string_new(xml_l3);
+	g_assert_cmpuint(
+	    g_string_replace(
+		mut_l3,
+		"<firmware depth=\"2\">008d820f-ffc9-502d-8f25-f9313d04e8de</firmware>",
+		"<firmware depth=\"2\">00000000-0000-5000-8000-000000001151</firmware>",
+		0),
+	    ==,
+	    1);
+	xml_l3_wrong_depth2 = g_string_free(g_steal_pointer(&mut_l3), FALSE);
 	g_assert_false(fu_engine_requirements_p34_check(xml_l3_wrong_depth2, 2, model_a, &error));
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
