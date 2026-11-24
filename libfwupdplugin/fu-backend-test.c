@@ -435,6 +435,90 @@ fu_backend_config_func(void)
 	g_assert_cmpstr(value_backend, ==, "right");
 }
 
+static void
+fu_backend_device_parent_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "context", ctx, NULL);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) parent = NULL;
+	g_autoptr(FuDevice) grandparent = NULL;
+	g_autoptr(FuDevice) root = NULL;
+	g_autoptr(FuDeviceEvent) ev_parent = NULL;
+	g_autoptr(FuDeviceEvent) ev_grandparent = NULL;
+	g_autoptr(FuDeviceEvent) ev_root = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* emulated */
+	fu_device_set_backend(device, backend);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_set_fwupd_version(device, PACKAGE_VERSION);
+	fu_device_set_physical_id(device, "1-4.1.2");
+
+	/* hop 1: device -> parent */
+	ev_parent = fu_device_event_new("GetBackendParent");
+	fu_device_event_set_str(ev_parent, "GType", "FuDevice");
+	fu_device_event_set_str(ev_parent, "DeviceId", "1111111111111111111111111111111111111122");
+	fu_device_event_set_str(ev_parent, "BackendId", "/sys/devices/usb1/1-4/1-4.1");
+	fu_device_event_set_str(ev_parent, "PhysicalId", "1-4.1");
+	fu_device_event_set_i64(ev_parent, "Vid", 0x17EF);
+	fu_device_event_set_i64(ev_parent, "Pid", 0x1122);
+	fu_device_add_event(device, ev_parent);
+
+	/* hop 2: parent -> grandparent (redirected to device via priv->target) */
+	ev_grandparent = fu_device_event_new("GetBackendParent");
+	fu_device_event_set_str(ev_grandparent, "GType", "FuDevice");
+	fu_device_event_set_str(ev_grandparent,
+				"DeviceId",
+				"1111111111111111111111111111111111111121");
+	fu_device_event_set_str(ev_grandparent, "BackendId", "/sys/devices/usb1/1-4");
+	fu_device_event_set_str(ev_grandparent, "PhysicalId", "1-4");
+	fu_device_event_set_i64(ev_grandparent, "Vid", 0x17EF);
+	fu_device_event_set_i64(ev_grandparent, "Pid", 0x1121);
+	fu_device_add_event(device, ev_grandparent);
+
+	/* hop 3: grandparent -> root after intermediate parent is unreffed */
+	ev_root = fu_device_event_new("GetBackendParent");
+	fu_device_event_set_str(ev_root, "GType", "FuDevice");
+	fu_device_event_set_str(ev_root, "DeviceId", "1111111111111111111111111111111111111100");
+	fu_device_event_set_str(ev_root, "BackendId", "/sys/devices/usb1");
+	fu_device_event_set_str(ev_root, "PhysicalId", "usb1");
+	fu_device_event_set_i64(ev_root, "Vid", 0x1D6B);
+	fu_device_event_set_i64(ev_root, "Pid", 0x0002);
+	fu_device_add_event(device, ev_root);
+
+	/* hop 1 */
+	parent = fu_device_get_backend_parent(device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(parent);
+	g_assert_true(fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_EMULATED));
+	g_assert_true(fu_device_get_backend(parent) == backend);
+	g_assert_true(fu_device_check_fwupd_version(parent, PACKAGE_VERSION));
+	g_assert_cmpstr(fu_device_get_physical_id(parent), ==, "1-4.1");
+	g_assert_cmpint(fu_device_get_vid(parent), ==, 0x17EF);
+	g_assert_cmpint(fu_device_get_pid(parent), ==, 0x1122);
+
+	/* hop 2 */
+	grandparent = fu_device_get_backend_parent(parent, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(grandparent);
+	g_assert_true(fu_device_has_flag(grandparent, FWUPD_DEVICE_FLAG_EMULATED));
+	g_assert_true(fu_device_get_backend(grandparent) == backend);
+	g_assert_true(fu_device_check_fwupd_version(grandparent, PACKAGE_VERSION));
+	g_assert_cmpstr(fu_device_get_physical_id(grandparent), ==, "1-4");
+	g_assert_cmpint(fu_device_get_vid(grandparent), ==, 0x17EF);
+	g_assert_cmpint(fu_device_get_pid(grandparent), ==, 0x1121);
+
+	/* hop 3 after dropping intermediate parent: root target weak pointer must stay intact */
+	g_clear_object(&parent);
+	root = fu_device_get_backend_parent(grandparent, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(root);
+	g_assert_cmpstr(fu_device_get_physical_id(root), ==, "usb1");
+	g_assert_cmpint(fu_device_get_vid(root), ==, 0x1D6B);
+	g_assert_cmpint(fu_device_get_pid(root), ==, 0x0002);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -443,5 +527,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/backend/config", fu_backend_config_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
 	g_test_add_func("/fwupd/backend/device-child", fu_backend_device_child_func);
+	g_test_add_func("/fwupd/backend/device-parent", fu_backend_device_parent_func);
 	return g_test_run();
 }
