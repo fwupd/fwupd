@@ -507,7 +507,7 @@ fu_parade_lspcon_device_flash_erase_block(FuParadeLspconDevice *self,
 {
 	const guint8 block_erase[] = {0xd8, base_address >> 16, base_address >> 8, base_address};
 
-	g_debug("flash erase block at %#x", base_address);
+	g_debug("flash erase block at 0x%x", base_address);
 	if (!fu_parade_lspcon_device_flash_enable_write(self, error))
 		return FALSE;
 
