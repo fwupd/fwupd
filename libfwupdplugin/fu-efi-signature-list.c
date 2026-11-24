@@ -58,7 +58,9 @@ fu_efi_signature_list_is_external(FuEfiSignatureList *self)
  * fu_efi_signature_list_get_newest:
  * @self: a #FuEfiSignatureList
  *
- * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries.
+ * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries, ignoring any with
+ * %FU_FIRMWARE_FLAG_IS_BLOCKED set so that an older valid entry is not hidden by a newer
+ * blocked one.
  *
  * Returns: (transfer container) (element-type FuEfiSignature): signatures
  **/
@@ -81,6 +83,10 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 		FuEfiSignature *sig_tmp;
 		g_autofree gchar *key = NULL;
 
+		if (fu_firmware_has_flag(FU_FIRMWARE(sig), FU_FIRMWARE_FLAG_IS_BLOCKED)) {
+			g_debug("ignoring blocked %s", fu_firmware_get_id(FU_FIRMWARE(sig)));
+			continue;
+		}
 		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_X509) {
 			key = fu_efi_x509_signature_build_dedupe_key(FU_EFI_X509_SIGNATURE(sig));
 		} else {

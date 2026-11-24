@@ -144,6 +144,14 @@ fu_efi_signature_list_func(void)
 	g_assert_cmpint(sigs_newest->len, ==, 1);
 	sig = g_ptr_array_index(sigs_newest, 0);
 	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2024);
+
+	/* a blocked newest entry falls back to the next newest */
+	fu_firmware_add_flag(FU_FIRMWARE(sig2024), FU_FIRMWARE_FLAG_IS_BLOCKED);
+	g_clear_pointer(&sigs_newest, g_ptr_array_unref);
+	sigs_newest = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
+	g_assert_cmpint(sigs_newest->len, ==, 1);
+	sig = g_ptr_array_index(sigs_newest, 0);
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2023);
 }
 
 static void
