@@ -283,7 +283,8 @@ fu_genesys_usbhub_device_check_root_hub(guint16 expected_root_pid,
 	return FALSE;
 }
 
-/* walk the live USB backend tree up to 4 levels; works in probe()/setup() before plugin linking */
+/* walk the live USB backend tree; when both parent_hub_pid and root_hub_pid are set, require
+ * root_hub_pid to be the direct USB parent of the hub's direct USB parent (exact 2-hop chain) */
 static gboolean
 fu_genesys_usbhub_device_ensure_backend_root_hub(FuGenesysUsbhubDevice *self, GError **error)
 {
@@ -292,6 +293,25 @@ fu_genesys_usbhub_device_ensure_backend_root_hub(FuGenesysUsbhubDevice *self, GE
 
 	if (self->root_hub_pid == 0)
 		return TRUE;
+	if (self->parent_hub_pid != 0) {
+		g_autoptr(FuDevice) parent = fu_device_get_backend_parent(FU_DEVICE(self), NULL);
+		g_autoptr(FuDevice) grandparent = NULL;
+		if (parent != NULL)
+			grandparent = fu_device_get_backend_parent(parent, NULL);
+		if (grandparent != NULL && fu_device_get_vid(grandparent) == hub_vid &&
+		    fu_device_get_pid(grandparent) == self->root_hub_pid)
+			return TRUE;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "hub %04x:%04x is not directly below %04x:%04x via its parent hub, "
+			    "topology cannot be verified",
+			    hub_vid,
+			    fu_device_get_pid(FU_DEVICE(self)),
+			    hub_vid,
+			    self->root_hub_pid);
+		return FALSE;
+	}
 	for (guint depth = 0; depth < 4; depth++) {
 		g_autoptr(FuDevice) parent = fu_device_get_backend_parent(cursor, NULL);
 		if (parent == NULL)
@@ -2819,6 +2839,7 @@ fu_genesys_usbhub_device_check_update_bank(gboolean banks_compared,
 					   guint16 target_version,
 					   GError **error)
 {
+	FuGenesysUsbhubBankState target_state = update_bank2 ? bank2_state : bank1_state;
 	FuGenesysUsbhubBankState other_state = update_bank2 ? bank1_state : bank2_state;
 	guint16 other_version = update_bank2 ? bank1_version : bank2_version;
 
@@ -2841,6 +2862,14 @@ fu_genesys_usbhub_device_check_update_bank(gboolean banks_compared,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "the running bank failed checksum verification, cannot trust its version");
+		return FALSE;
+	}
+	if (target_state == FU_GENESYS_USBHUB_BANK_STATE_VALID &&
+	    other_state == FU_GENESYS_USBHUB_BANK_STATE_INVALID) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "refusing to erase the only checksum-valid firmware bank");
 		return FALSE;
 	}
 	if (other_state == FU_GENESYS_USBHUB_BANK_STATE_INVALID)

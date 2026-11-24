@@ -464,6 +464,34 @@ fu_genesys_usbhub_device_p34_setup_hub_chain_func(void)
 		g_assert_cmpuint(spy.n_other, ==, 0);
 	}
 
+	/* extra intervening hop L3 -> L2 (1122) -> model B (1151) -> L1 (1121): must refuse */
+	{
+		g_autoptr(FuDevice) l1 = fu_genesys_test_parent_new(0x17EF, 0x1121);
+		g_autoptr(FuDevice) mid_wrong = fu_genesys_test_parent_new(0x17EF, 0x1151);
+		g_autoptr(FuDevice) l2 = fu_genesys_test_parent_new(0x17EF, 0x1122);
+		g_autoptr(FuDevice) l3 =
+		    fu_genesys_test_hub_new(ctx, "USB\\VID_17EF&PID_1123", 0x1123);
+		FuGenesysTestIspSpy spy = {0};
+		g_autoptr(GError) error = NULL;
+
+		fu_device_set_physical_id(l1, "1-4");
+		fu_device_set_physical_id(mid_wrong, "1-4.9");
+		fu_device_set_physical_id(l2, "1-4.9.1");
+		fu_device_set_physical_id(l3, "1-4.9.1.2");
+		fu_genesys_test_set_backend_parent(ctx, mid_wrong, l1);
+		fu_genesys_test_set_backend_parent(ctx, l2, mid_wrong);
+		fu_genesys_test_set_backend_parent(ctx, l3, l2);
+		fu_genesys_usbhub_device_set_ctrl_hook(FU_GENESYS_USBHUB_DEVICE(l3),
+						       fu_genesys_test_isp_spy_cb,
+						       &spy);
+
+		g_assert_false(FU_DEVICE_GET_CLASS(l3)->setup(l3, &error));
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		g_assert_cmpuint(spy.n_enter, ==, 0);
+		g_assert_cmpuint(spy.n_reset, ==, 0);
+		g_assert_cmpuint(spy.n_other, ==, 0);
+	}
+
 	/* valid backend chain L3 -> L2 (1122) -> L1 (1121): clears topology gate in setup() */
 	{
 		g_autoptr(FuDevice) l1 = fu_genesys_test_parent_new(0x17EF, 0x1121);
@@ -963,8 +991,23 @@ fu_genesys_usbhub_device_p34_dual_bank_safety_func(void)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
-	/* GL3525 allows when the non-running other bank is INVALID */
-	g_assert_true(
+	/* GL3525 refuses erasing the only checksum-valid bank (even when both versions are 0x0000
+	 * or when the valid bank is not the running other bank) */
+	g_assert_false(
+	    fu_genesys_usbhub_device_check_update_bank(TRUE,
+						       TRUE,
+						       FALSE,
+						       FU_GENESYS_USBHUB_BANK_STATE_VALID,
+						       FU_GENESYS_USBHUB_BANK_STATE_INVALID,
+						       0x0000,
+						       0x0000,
+						       FALSE,
+						       0x8625,
+						       &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	g_assert_false(
 	    fu_genesys_usbhub_device_check_update_bank(TRUE,
 						       TRUE,
 						       TRUE,
@@ -972,6 +1015,35 @@ fu_genesys_usbhub_device_p34_dual_bank_safety_func(void)
 						       FU_GENESYS_USBHUB_BANK_STATE_VALID,
 						       0x0000,
 						       0x8624,
+						       FALSE,
+						       0x8625,
+						       &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* GL3525 allows writing an INVALID target bank when the other bank is VALID and older */
+	g_assert_true(
+	    fu_genesys_usbhub_device_check_update_bank(TRUE,
+						       TRUE,
+						       FALSE,
+						       FU_GENESYS_USBHUB_BANK_STATE_INVALID,
+						       FU_GENESYS_USBHUB_BANK_STATE_VALID,
+						       0x0000,
+						       0x8624,
+						       TRUE,
+						       0x8625,
+						       &error));
+	g_assert_no_error(error);
+
+	/* GL3525 allows when both banks are INVALID and the other bank is not running */
+	g_assert_true(
+	    fu_genesys_usbhub_device_check_update_bank(TRUE,
+						       TRUE,
+						       FALSE,
+						       FU_GENESYS_USBHUB_BANK_STATE_INVALID,
+						       FU_GENESYS_USBHUB_BANK_STATE_INVALID,
+						       0x0000,
+						       0x0000,
 						       FALSE,
 						       0x8625,
 						       &error));
