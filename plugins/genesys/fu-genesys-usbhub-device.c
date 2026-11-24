@@ -476,7 +476,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 		}
 
 		if (fu_device_get_name(FU_DEVICE(cfi_device)) == NULL) {
-			g_debug("read %#x: %s", rdid[i].cmd, flash_id);
+			g_debug("read 0x%x: %s", rdid[i].cmd, flash_id);
 			continue;
 		}
 
@@ -2176,7 +2176,7 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "firmware %s too large, got %#x, expected <= %#x",
+			    "firmware %s too large, got 0x%x, expected <= 0x%x",
 			    fu_firmware_get_id(firmware),
 			    code_size,
 			    bank_size);

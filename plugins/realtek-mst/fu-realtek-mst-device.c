@@ -257,7 +257,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unexpected response code %#x, length %d",
+			    "unexpected response code 0x%x, length %d",
 			    response[0],
 			    response[1]);
 		return FALSE;
@@ -276,7 +276,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unexpected dual bank mode value %#x",
+			    "unexpected dual bank mode value 0x%x",
 			    self->mode);
 		return FALSE;
 	}
@@ -285,7 +285,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unexpected active flash bank value %#x",
+			    "unexpected active flash bank value 0x%x",
 			    self->active_bank);
 		return FALSE;
 	}
@@ -315,7 +315,7 @@ fu_realtek_mst_device_flash_iface_read(FuRealtekMstDevice *self,
 	g_return_val_if_fail(address < FLASH_SIZE, FALSE);
 	g_return_val_if_fail(buf_size <= FLASH_SIZE, FALSE);
 
-	g_debug("read %#zx bytes from %#08x", buf_size, address);
+	g_debug("read 0x%zx bytes from 0x%06x", buf_size, address);
 
 	/* read must start one byte prior to the desired address and ignore the
 	 * first byte of data, since the first read value is unpredictable */
@@ -369,7 +369,7 @@ fu_realtek_mst_device_flash_iface_erase_sector(FuRealtekMstDevice *self,
 {
 	/* address must be 4k-aligned */
 	g_return_val_if_fail((address & 0xFFF) == 0, FALSE);
-	g_debug("sector erase %#08x-%#08x", address, address + FLASH_SECTOR_SIZE);
+	g_debug("sector erase 0x%06x-0x%06x", address, address + FLASH_SECTOR_SIZE);
 
 	/* sector address */
 	if (!fu_realtek_mst_device_write_register(self,
@@ -416,7 +416,7 @@ fu_realtek_mst_device_flash_iface_erase_block(FuRealtekMstDevice *self,
 {
 	/* address must be 64k-aligned */
 	g_return_val_if_fail((address & 0xFFFF) == 0, FALSE);
-	g_debug("block erase %#08x-%#08x", address, address + FLASH_BLOCK_SIZE);
+	g_debug("block erase 0x%06x-0x%06x", address, address + FLASH_BLOCK_SIZE);
 
 	/* block address */
 	if (!fu_realtek_mst_device_write_register(self,
@@ -463,7 +463,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 	if (chunks == NULL)
 		return FALSE;
 
-	g_debug("write %#zx bytes at %#08x", total_size, address);
+	g_debug("write 0x%zx bytes at 0x%06x", total_size, address);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chunk = NULL;
 		guint32 chunk_address;
@@ -534,7 +534,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 							 10,
 							 error)) {
 			g_prefix_error(error,
-				       "timed out waiting for write at %#x to complete: ",
+				       "timed out waiting for write at 0x%x to complete: ",
 				       chunk_address);
 			return FALSE;
 		}
@@ -626,7 +626,7 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* erase old image */
-	g_debug("erase old image from %#x", base_addr);
+	g_debug("erase old image from 0x%x", base_addr);
 	for (guint32 offset = 0; offset < FLASH_USER_SIZE; offset += FLASH_BLOCK_SIZE) {
 		if (!fu_realtek_mst_device_flash_iface_erase_block(self, base_addr + offset, error))
 			return FALSE;
@@ -637,7 +637,7 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write new image */
-	g_debug("write new image to %#x", base_addr);
+	g_debug("write new image to 0x%x", base_addr);
 	if (!fu_realtek_mst_device_flash_iface_write(self,
 						     base_addr,
 						     firmware_bytes,
