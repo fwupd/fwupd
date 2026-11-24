@@ -42,6 +42,7 @@ enum FuFirmwareFlags {
     AllowLinear = 1 << 10, // parse as an array of firmwares
     IsAbstract = 1 << 11, // cannot parse a blob directly
     NoImageTypeCheck = 1 << 12,
+    IsBlocked = 1 << 13, // e.g. a db certificate that is also present in the dbx
 }
 
 enum FuFirmwareAlignment {

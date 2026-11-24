@@ -16,12 +16,66 @@ G_DEFINE_TYPE(FuUefiDbDevice, fu_uefi_db_device, FU_TYPE_UEFI_DEVICE)
 
 #define FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE (16 * FU_KB) /* bytes */
 
+/* the dbx is optional, and the db is still useful without it */
+static GPtrArray *
+fu_uefi_db_device_get_dbx_signatures(FuUefiDbDevice *self)
+{
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	blob = fu_uefi_device_get_efivar_bytes(FU_UEFI_DEVICE(self),
+					       FU_EFIVARS_GUID_SECURITY_DATABASE,
+					       "dbx",
+					       NULL,
+					       &error_local);
+	if (blob == NULL) {
+		g_debug("failed to read dbx, ignoring: %s", error_local->message);
+		return NULL;
+	}
+	if (!fu_firmware_parse_bytes(siglist,
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     &error_local)) {
+		g_debug("failed to parse dbx, ignoring: %s", error_local->message);
+		return NULL;
+	}
+	return fu_firmware_get_images(siglist);
+}
+
+/* an EFI_CERT_X509_GUID entry in the dbx revokes that exact certificate, so compare the
+ * DER data rather than the key ID, which would also match a reissue using the same key */
+static gboolean
+fu_uefi_db_device_signature_is_revoked(GPtrArray *dbx_sigs, FuEfiSignature *sig)
+{
+	g_autoptr(GBytes) blob = NULL;
+
+	if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_X509)
+		return FALSE;
+	blob = fu_firmware_get_bytes(FU_FIRMWARE(sig), NULL);
+	if (blob == NULL)
+		return FALSE;
+	for (guint i = 0; i < dbx_sigs->len; i++) {
+		FuEfiSignature *dbx_sig = g_ptr_array_index(dbx_sigs, i);
+		g_autoptr(GBytes) dbx_blob = NULL;
+		if (fu_efi_signature_get_kind(dbx_sig) != FU_EFI_SIGNATURE_KIND_X509)
+			continue;
+		dbx_blob = fu_firmware_get_bytes(FU_FIRMWARE(dbx_sig), NULL);
+		if (dbx_blob != NULL && g_bytes_equal(blob, dbx_blob))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static gboolean
 fu_uefi_db_device_probe(FuDevice *device, GError **error)
 {
+	FuUefiDbDevice *self = FU_UEFI_DB_DEVICE(device);
 	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) siglist = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) dbx_sigs = NULL;
 	g_autoptr(GPtrArray) default_sigs = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 
@@ -52,6 +106,23 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 	if (siglist == NULL) {
 		g_prefix_error_literal(error, "failed to parse db: ");
 		return FALSE;
+	}
+
+	/* firmware will not trust a revoked certificate, so do not show it */
+	dbx_sigs = fu_uefi_db_device_get_dbx_signatures(self);
+	if (dbx_sigs != NULL) {
+		g_autoptr(GPtrArray) sigs_all = fu_firmware_get_images(siglist);
+		for (guint i = 0; i < sigs_all->len; i++) {
+			FuEfiSignature *sig = g_ptr_array_index(sigs_all, i);
+			if (FU_IS_EFI_X509_SIGNATURE(sig) &&
+			    fu_uefi_db_device_signature_is_revoked(dbx_sigs, sig)) {
+				g_debug(
+				    "blocking %s [%s] as present in dbx",
+				    fu_firmware_get_id(FU_FIRMWARE(sig)),
+				    fu_efi_x509_signature_get_subject(FU_EFI_X509_SIGNATURE(sig)));
+				fu_firmware_add_flag(FU_FIRMWARE(sig), FU_FIRMWARE_FLAG_IS_BLOCKED);
+			}
+		}
 	}
 	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
 	for (guint i = 0; i < sigs->len; i++) {
