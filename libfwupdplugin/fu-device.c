@@ -4395,7 +4395,10 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 			return NULL;
 		parent =
 		    g_object_new(gtype, "context", fu_device_get_context(FU_DEVICE(self)), NULL);
+		fu_device_set_backend(parent, priv->backend);
 		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_EMULATED);
+		if (priv->fwupd_version != NULL)
+			fu_device_set_fwupd_version(parent, priv->fwupd_version);
 		id = fu_device_event_get_str(event, "BackendId", NULL);
 		if (id != NULL)
 			fu_device_set_backend_id(parent, id);
