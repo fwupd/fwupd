@@ -458,14 +458,27 @@ fu_device_get_target(FuDevice *self)
 	return priv->target;
 }
 
+/* follow successive targets to the terminal device, stopping if a cycle is detected */
 static FuDevice *
 fu_device_get_target_with_fallback(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDevice *device = self;
+	g_autoptr(GHashTable) devices_visited = g_hash_table_new(g_direct_hash, g_direct_equal);
+
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	if (priv->target != NULL)
-		return priv->target;
-	return self;
+
+	g_hash_table_add(devices_visited, device);
+	while (TRUE) {
+		FuDevice *target = fu_device_get_target(device);
+		if (target == NULL)
+			break;
+		if (!g_hash_table_add(devices_visited, target)) {
+			g_warning("target cycle detected for %s", fu_device_get_id(self));
+			break;
+		}
+		device = target;
+	}
+	return device;
 }
 
 /**
