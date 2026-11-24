@@ -73,6 +73,16 @@ echo " ● Getting the list of plugins (JSON)…"
 fwupdmgr get-plugins --json
 expect_rc 0
 
+# ---
+echo " ● Getting the list of protocols…"
+fwupdmgr get-protocols
+expect_rc 0
+
+# ---
+echo " ● Getting the list of protocols (JSON)…"
+fwupdmgr get-protocols --json
+expect_rc 0
+
 if [ -f ${CAB} ]; then
     # ---
     echo " ● Examining ${CAB}…"

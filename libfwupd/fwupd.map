@@ -1228,6 +1228,9 @@ LIBFWUPD_2027.0 {
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
     fwupd_client_get_pending_reboot;
+    fwupd_client_get_protocols;
+    fwupd_client_get_protocols_async;
+    fwupd_client_get_protocols_finish;
     fwupd_client_run_connect_funcs;
     fwupd_client_set_battery_level;
     fwupd_client_set_battery_threshold;

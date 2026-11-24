@@ -103,6 +103,10 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	GPtrArray *(*get_protocols)(FwupdClient *self,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
 	GPtrArray *(*get_remotes)(FwupdClient *self,
 				  gpointer user_data,
 				  GCancellable *cancellable,

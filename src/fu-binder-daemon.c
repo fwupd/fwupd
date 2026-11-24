@@ -180,6 +180,7 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 	    "org.freedesktop.fwupd.get-remotes",
 	    "org.freedesktop.fwupd.get-hwids",
 	    "org.freedesktop.fwupd.get-plugins",
+	    "org.freedesktop.fwupd.get-protocols",
 	    "org.freedesktop.fwupd.get-history",
 	    "org.freedesktop.fwupd.get-properties",
 	    "org.freedesktop.fwupd.get-details",

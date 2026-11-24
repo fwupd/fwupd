@@ -554,6 +554,15 @@ fwupd_client_get_approved_firmware_finish(FwupdClient *self,
 					  GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_get_protocols_async(FwupdClient *self,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data) G_GNUC_NON_NULL(1);
+GPtrArray *
+fwupd_client_get_protocols_finish(FwupdClient *self,
+				  GAsyncResult *res,
+				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_set_approved_firmware_async(FwupdClient *self,
 					 GPtrArray *checksums,
 					 GCancellable *cancellable,

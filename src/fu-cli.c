@@ -4708,6 +4708,44 @@ fu_cli_get_approved_firmware(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_cli_get_protocols(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) protocols = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: none expected");
+		return FALSE;
+	}
+
+	/* call into daemon */
+	protocols = fwupd_client_get_protocols(priv->client, priv->cancellable, error);
+	if (protocols == NULL)
+		return FALSE;
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+		for (guint i = 0; i < protocols->len; i++)
+			fwupd_json_array_add_string(json_arr, g_ptr_array_index(protocols, i));
+		fwupd_json_object_add_array(json_obj, "Protocols", json_arr);
+		fu_cli_print_json_object(priv->console, json_obj);
+		return TRUE;
+	}
+	if (protocols->len == 0) {
+		/* TRANSLATORS: the update protocol is how firmware is deployed to the device */
+		fu_console_print_literal(priv->console, _("No device update protocols found."));
+		return TRUE;
+	}
+	for (guint i = 0; i < protocols->len; i++)
+		fu_console_print_literal(priv->console, g_ptr_array_index(protocols, i));
+	return TRUE;
+}
+
+static gboolean
 fu_cli_modify_config(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
@@ -7236,6 +7274,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: firmware approved by the admin */
 			     _("Gets the list of approved firmware"),
 			     fu_cli_get_approved_firmware);
+	fu_cli_cmd_array_add(self,
+			     "get-protocols",
+			     NULL,
+			     /* TRANSLATORS: the update protocol is how firmware is deployed */
+			     _("Gets the list of update protocols used by devices"),
+			     fu_cli_get_protocols);
 	fu_cli_cmd_array_add(self,
 			     "set-approved-firmware",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

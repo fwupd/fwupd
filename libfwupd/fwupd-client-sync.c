@@ -3136,6 +3136,69 @@ fwupd_client_get_approved_firmware(FwupdClient *self, GCancellable *cancellable,
 }
 
 static void
+fwupd_client_get_protocols_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->array =
+	    fwupd_client_get_protocols_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+GPtrArray *
+fwupd_client_sync_impl_get_protocols(FwupdClient *self,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_get_protocols_async(self, cancellable, fwupd_client_get_protocols_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (helper->array == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->array);
+}
+
+/**
+ * fwupd_client_get_protocols:
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the list of update protocols used by all the devices currently added to the daemon.
+ *
+ * Returns: (element-type utf8) (transfer container): protocol IDs, or %NULL for error
+ *
+ * Since: 2027.0
+ **/
+GPtrArray *
+fwupd_client_get_protocols(FwupdClient *self, GCancellable *cancellable, GError **error)
+{
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	if (impl->get_protocols == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->get_protocols");
+		return NULL;
+	}
+	return impl->get_protocols(self, impl_userdata, cancellable, error);
+}
+
+static void
 fwupd_client_set_approved_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

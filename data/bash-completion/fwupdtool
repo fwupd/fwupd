@@ -38,6 +38,7 @@ _fwupdtool_cmd_list=(
 	'get-devices'
 	'get-history'
 	'get-plugins'
+	'get-protocols'
 	'get-remotes'
 	'get-report-metadata'
 	'get-results'

@@ -3898,6 +3898,16 @@ fu_engine_cli_sync_impl_get_plugins(FwupdClient *client,
 }
 
 static GPtrArray *
+fu_engine_cli_sync_impl_get_protocols(FwupdClient *client,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuEngineCli *self = FU_ENGINE_CLI(user_data);
+	return fu_engine_get_protocols(self->engine);
+}
+
+static GPtrArray *
 fu_engine_cli_sync_impl_get_history(FwupdClient *client,
 				    gpointer user_data,
 				    GCancellable *cancellable,
@@ -4284,6 +4294,7 @@ fu_engine_cli_init(FuEngineCli *self)
 	    .get_results = fu_engine_cli_sync_impl_get_results,
 	    .get_upgrades = fu_engine_cli_sync_impl_get_upgrades,
 	    .get_plugins = fu_engine_cli_sync_impl_get_plugins,
+	    .get_protocols = fu_engine_cli_sync_impl_get_protocols,
 	    .get_remotes = fu_engine_cli_sync_impl_get_remotes,
 	    .get_remote_by_id = fu_engine_cli_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fu_engine_cli_sync_impl_get_report_metadata,
