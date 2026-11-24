@@ -91,6 +91,7 @@ enum {
 	PROP_BATTERY_THRESHOLD,
 	PROP_PROBLEMS,
 	PROP_VENDOR,
+	PROP_COMPOSITE_ID,
 	PROP_LAST
 };
 
@@ -571,17 +572,15 @@ fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id)
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->composite_id, composite_id) == 0)
-		return;
-
 	/* sanity check */
 	if (!fwupd_device_id_is_valid(composite_id)) {
 		g_critical("%s is not a valid device ID", composite_id);
 		return;
 	}
 
-	g_set_str(&priv->composite_id, composite_id);
+	/* not changed */
+	if (g_set_str(&priv->composite_id, composite_id))
+		g_object_notify(G_OBJECT(self), "composite-id");
 }
 
 /**
@@ -2092,7 +2091,7 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_id(self, priv_donor->id);
 	if (priv->parent_id == NULL)
 		fwupd_device_set_parent_id(self, priv_donor->parent_id);
-	if (priv->composite_id == NULL)
+	if (priv->composite_id == NULL && priv_donor->composite_id != NULL)
 		fwupd_device_set_composite_id(self, priv_donor->composite_id);
 	if (priv->name == NULL)
 		fwupd_device_set_name(self, priv_donor->name);
@@ -3834,6 +3833,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_VENDOR:
 		g_value_set_string(value, priv->vendor);
 		break;
+	case PROP_COMPOSITE_ID:
+		g_value_set_string(value, priv->composite_id);
+		break;
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint(value, priv->version_format);
 		break;
@@ -3883,6 +3885,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_VENDOR:
 		fwupd_device_set_vendor(self, g_value_get_string(value));
+		break;
+	case PROP_COMPOSITE_ID:
+		fwupd_device_set_composite_id(self, g_value_get_string(value));
 		break;
 	case PROP_ID:
 		fwupd_device_set_id(self, g_value_get_string(value));
@@ -3963,6 +3968,20 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_VENDOR, pspec);
+
+	/**
+	 * FwupdDevice:composite-id:
+	 *
+	 * The device composite ID.
+	 *
+	 * Since: 2027.0
+	 */
+	pspec = g_param_spec_string("composite-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_COMPOSITE_ID, pspec);
 
 	/**
 	 * FwupdDevice:id:
