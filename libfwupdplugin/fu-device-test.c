@@ -1009,6 +1009,17 @@ fu_device_parent_func(void)
 	g_assert_true(parent_root == grandparent);
 	grandparent_root = fu_device_get_root(child);
 	g_assert_true(grandparent_root == grandparent);
+
+	/* reparent the child, which removes it from the old parent */
+	fu_device_add_child(grandparent, child);
+	g_assert_true(fu_device_get_parent_internal(child) == grandparent);
+	g_assert_cmpuint(fu_device_get_children(parent)->len, ==, 0);
+	g_assert_cmpuint(fu_device_get_children(grandparent)->len, ==, 2);
+
+	/* unset the parent */
+	fu_device_set_parent(child, NULL);
+	g_assert_true(fu_device_get_parent_internal(child) == NULL);
+	g_assert_cmpuint(fu_device_get_children(grandparent)->len, ==, 1);
 }
 
 static void
