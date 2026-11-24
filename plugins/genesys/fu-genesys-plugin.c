@@ -154,12 +154,9 @@ fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
 }
 
 static void
-fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
+fu_genesys_plugin_link_hubs(FuPlugin *self)
 {
 	GPtrArray *devices;
-
-	if (!FU_IS_GENESYS_USBHUB_DEVICE(device))
-		return;
 
 	/* link hubs and propagate CompositeId to a fixed point regardless of arrival order */
 	devices = fu_plugin_get_devices(self);
@@ -177,9 +174,27 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 }
 
 static void
+fu_genesys_plugin_device_registered(FuPlugin *self, FuDevice *device)
+{
+	if (!FU_IS_GENESYS_USBHUB_DEVICE(device))
+		return;
+	/* run inside fu_engine_add_device() before fu_device_list_add() and depsolve_order() */
+	fu_genesys_plugin_link_hubs(self);
+}
+
+static void
+fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
+{
+	if (!FU_IS_GENESYS_USBHUB_DEVICE(device))
+		return;
+	fu_genesys_plugin_link_hubs(self);
+}
+
+static void
 fu_genesys_plugin_class_init(FuGenesysPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_genesys_plugin_constructed;
+	plugin_class->device_registered = fu_genesys_plugin_device_registered;
 	plugin_class->device_added = fu_genesys_plugin_device_added;
 }
