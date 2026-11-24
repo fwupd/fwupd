@@ -86,6 +86,8 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 		} else {
 			key = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
 		}
+		if (key == NULL)
+			continue;
 		sig_tmp = g_hash_table_lookup(hash, key);
 		if (sig_tmp == NULL) {
 			g_debug("adding %s", key);
@@ -372,7 +374,8 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	/* look for each type */
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SHA256) {
+		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SHA256 ||
+		    fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SVN) {
 			g_ptr_array_add(sigs_sha256, sig);
 			continue;
 		}

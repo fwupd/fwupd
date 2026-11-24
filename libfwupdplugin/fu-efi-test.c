@@ -172,6 +172,87 @@ fu_efi_signature_list_external_func(void)
 }
 
 static void
+fu_efi_signature_list_svn_func(void)
+{
+	gboolean ret;
+	FuEfiSignature *sig;
+	const gchar *hex =
+	    /* EFI_SIGNATURE_LIST header: EFI_CERT_SHA256_GUID, list_size, header_size, size */
+	    "2616c4c14c509240aca941f936934328"
+	    "7c000000"
+	    "00000000"
+	    "30000000"
+	    /* Windows Bootmgr SVN 12.0 */
+	    "bd9afa775903324dbd6028f4e78f784b"
+	    "01612b139dd5598843ab1c185c3cb2eb9200000c000000000000000000000000"
+	    /* real SHA256 hash */
+	    "bd9afa775903324dbd6028f4e78f784b"
+	    "418ad44c79e3fddd6a0574b24fcf0fb8fee4b3ff2be635d21a5c0852bdea635c";
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GPtrArray) sigs = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = fu_bytes_from_string(hex, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	ret = fu_firmware_parse_bytes(siglist, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	sigs = fu_firmware_get_images(siglist);
+	g_assert_cmpint(sigs->len, ==, 2);
+
+	/* SVN */
+	sig = g_ptr_array_index(sigs, 0);
+	g_assert_cmpint(fu_efi_signature_get_kind(sig), ==, FU_EFI_SIGNATURE_KIND_SVN);
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 0xC0000);
+	g_assert_cmpstr(fu_firmware_get_version(FU_FIRMWARE(sig)), ==, "12.0");
+
+	/* real hash */
+	sig = g_ptr_array_index(sigs, 1);
+	g_assert_cmpint(fu_efi_signature_get_kind(sig), ==, FU_EFI_SIGNATURE_KIND_SHA256);
+
+	/* write back exactly the same data */
+	blob2 = fu_firmware_write(siglist, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob2);
+	g_assert_true(g_bytes_equal(blob, blob2));
+}
+
+static void
+fu_efi_signature_list_svn_build_func(void)
+{
+	g_autofree gchar *checksum = NULL;
+	g_autoptr(FuFirmware) siglist = NULL;
+	g_autoptr(GPtrArray) sigs = NULL;
+	g_autoptr(GPtrArray) sigs_newest = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *json = "{"
+			    "  \"gtype\": \"FuEfiSignatureList\","
+			    "  \"firmware\": [{"
+			    "    \"gtype\": \"FuEfiSignature\","
+			    "    \"kind\": \"svn\","
+			    "    \"owner\": \"77fa9abd-0359-4d32-bd60-28f4e78f784b\","
+			    "    \"svn_guid\": \"9d132b61-59d5-4388-ab1c-185c3cb2eb92\","
+			    "    \"version_raw\": 786432"
+			    "  }]"
+			    "}";
+
+	/* a built SVN has no payload bytes, so the checksum has to be generated */
+	siglist = fu_firmware_new_from_json(json, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(siglist);
+	sigs = fu_firmware_get_images(siglist);
+	g_assert_cmpint(sigs->len, ==, 1);
+	checksum = fu_firmware_get_checksum(g_ptr_array_index(sigs, 0), G_CHECKSUM_SHA256, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum);
+	sigs_newest = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
+	g_assert_cmpint(sigs_newest->len, ==, 1);
+}
+
+static void
 fu_efi_lz77_decompressor_func(void)
 {
 	gboolean ret;
@@ -410,6 +491,9 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efi/x509-signature", fu_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efi/signature-list", fu_efi_signature_list_func);
 	g_test_add_func("/fwupd/efi/signature-list/external", fu_efi_signature_list_external_func);
+	g_test_add_func("/fwupd/efi/signature-list/svn", fu_efi_signature_list_svn_func);
+	g_test_add_func("/fwupd/efi/signature-list/svn/build",
+			fu_efi_signature_list_svn_build_func);
 #ifdef HAVE_GNUTLS
 	g_test_add_func("/fwupd/efi/variable-authentication2",
 			fu_efi_variable_authentication2_func);

@@ -1386,6 +1386,11 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		"efi-signature-list-svn.builder.json",
+		"52b2255c43ff7bc4f86fd9e18643bb21e28586be",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		"efi-variable-authentication2.builder.json",
 		"bd08e81e9c86490dc1ffb32b1e3332606eb0fa97",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,

@@ -38,6 +38,7 @@ install_data(
     'efi-signature.builder.json',
     'efi-signature-list.builder.json',
     'efi-signature-list-external.builder.json',
+    'efi-signature-list-svn.builder.json',
     'efi-variable-authentication2.builder.json',
     'efi-volume.builder.json',
     'efi-volume-sized.builder.json',
