@@ -1033,6 +1033,26 @@ fu_dbus_daemon_method_get_approved_firmware(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_method_get_protocols(FuDbusDaemon *self,
+				    GVariant *parameters,
+				    FuEngineRequest *request,
+				    GDBusMethodInvocation *invocation)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	GVariantBuilder builder;
+	GVariant *val;
+	g_autoptr(GPtrArray) protocols = fu_engine_get_protocols(engine);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+	for (guint i = 0; i < protocols->len; i++) {
+		const gchar *protocol = g_ptr_array_index(protocols, i);
+		g_variant_builder_add_value(&builder, g_variant_new_string(protocol));
+	}
+	val = g_variant_builder_end(&builder);
+	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
+}
+
+static void
 fu_dbus_daemon_method_get_report_metadata(FuDbusDaemon *self,
 					  GVariant *parameters,
 					  FuEngineRequest *request,
@@ -2708,6 +2728,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"GetPlugins", fu_dbus_daemon_method_get_plugins},
 	    {"GetReleases", fu_dbus_daemon_method_get_releases},
 	    {"GetApprovedFirmware", fu_dbus_daemon_method_get_approved_firmware},
+	    {"GetProtocols", fu_dbus_daemon_method_get_protocols},
 	    {"GetReportMetadata", fu_dbus_daemon_method_get_report_metadata},
 	    {"SetApprovedFirmware", fu_dbus_daemon_method_set_approved_firmware},
 	    {"Quit", fu_dbus_daemon_method_quit},

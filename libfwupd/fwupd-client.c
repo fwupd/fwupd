@@ -5687,6 +5687,99 @@ fwupd_client_get_approved_firmware_finish(FwupdClient *self, GAsyncResult *res, 
 }
 
 static void
+fwupd_client_get_protocols_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_auto(GStrv) strv = NULL;
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	g_variant_get(val, "(^as)", &strv);
+	for (guint i = 0; strv[i] != NULL; i++)
+		g_ptr_array_add(array, g_strdup(strv[i]));
+
+	/* success */
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_protocols_async:
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets the list of update protocols used by all the devices currently added to the daemon.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Since: 2027.0
+ **/
+void
+fwupd_client_get_protocols_async(FwupdClient *self,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_protocols_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
+	g_dbus_proxy_call(priv->proxy,
+			  "GetProtocols",
+			  NULL,
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_get_protocols_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_get_protocols_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.get_protocols_async].
+ *
+ * Returns: (element-type utf8) (transfer container): protocol IDs, or %NULL for error
+ *
+ * Since: 2027.0
+ **/
+GPtrArray *
+fwupd_client_get_protocols_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
 fwupd_client_set_approved_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
@@ -8937,6 +9030,7 @@ fwupd_client_init(FwupdClient *self)
 	    .get_results = fwupd_client_sync_impl_get_results,
 	    .get_upgrades = fwupd_client_sync_impl_get_upgrades,
 	    .get_plugins = fwupd_client_sync_impl_get_plugins,
+	    .get_protocols = fwupd_client_sync_impl_get_protocols,
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,

@@ -516,6 +516,28 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	getProtocols(std::vector<std::string> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GPtrArray) protocols = NULL;
+
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-protocols",
+						&error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		protocols = fu_engine_get_protocols(engine);
+		for (size_t i = 0; i < protocols->len; i++) {
+			const gchar *protocol = (const gchar *)g_ptr_array_index(protocols, i);
+			_aidl_return->push_back(protocol);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	setFeatureFlags(int64_t in_flags) override
 	{
 		fu_binder_daemon_set_feature_flags(m_daemon, (FwupdFeatureFlags)in_flags);

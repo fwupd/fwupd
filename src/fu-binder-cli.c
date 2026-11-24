@@ -209,6 +209,16 @@ fu_binder_cli_sync_impl_get_plugins(FwupdClient *client,
 	return fu_binder_cli_bridge_get_plugins(self->fwupd_binder, error);
 }
 
+static GPtrArray *
+fu_binder_cli_sync_impl_get_protocols(FwupdClient *client,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_get_protocols(self->fwupd_binder, error);
+}
+
 static FwupdRemote *
 fu_binder_cli_sync_impl_get_remote_by_id(FwupdClient *client,
 					 const gchar *remote_id,
@@ -544,6 +554,7 @@ fu_binder_cli_init(FuBinderCli *self)
 	    .get_host_security_attrs = fu_binder_cli_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fu_binder_cli_sync_impl_get_host_security_events,
 	    .get_plugins = fu_binder_cli_sync_impl_get_plugins,
+	    .get_protocols = fu_binder_cli_sync_impl_get_protocols,
 	    .get_releases = fu_binder_cli_sync_impl_get_releases,
 	    .get_remote_by_id = fu_binder_cli_sync_impl_get_remote_by_id,
 	    .get_remotes = fu_binder_cli_sync_impl_get_remotes,

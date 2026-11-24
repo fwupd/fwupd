@@ -85,6 +85,11 @@ fwupd_client_sync_impl_get_plugins(FwupdClient *self,
 				   GCancellable *cancellable,
 				   GError **error);
 GPtrArray *
+fwupd_client_sync_impl_get_protocols(FwupdClient *self,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+GPtrArray *
 fwupd_client_sync_impl_get_history(FwupdClient *self,
 				   gpointer user_data,
 				   GCancellable *cancellable,

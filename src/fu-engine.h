@@ -186,6 +186,8 @@ fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress,
     G_GNUC_NON_NULL(1, 2, 3);
 GPtrArray *
 fu_engine_get_approved_firmware(FuEngine *self) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_engine_get_protocols(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 gchar *

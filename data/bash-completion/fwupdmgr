@@ -21,6 +21,7 @@ _fwupdmgr_cmd_list=(
 	'get-devices'
 	'get-history'
 	'get-plugins'
+	'get-protocols'
 	'get-releases'
 	'get-remotes'
 	'get-results'
@@ -255,6 +256,16 @@ _show_plugins()
 	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
 }
 
+_show_protocols()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local protocols
+	protocols="$(command fwupdmgr get-protocols --json 2>/dev/null | jq -r '.Protocols | .[]')"
+	COMPREPLY+=( $(compgen -W "${protocols}" -- "$cur") )
+}
+
 _show_release_versions()
 {
 	if ! command -v jq &> /dev/null; then
@@ -318,6 +329,10 @@ _fwupdmgr()
 	case $prev in
 	--filter)
 		_show_filters
+		return 0
+		;;
+	--filter-protocol)
+		_show_protocols
 		return 0
 		;;
 	esac

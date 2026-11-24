@@ -246,6 +246,46 @@ fu_engine_esp_location_func(void)
 }
 
 static void
+fu_engine_get_protocols_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(GPtrArray) protocols_empty = NULL;
+	g_autoptr(GPtrArray) protocols = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* no devices */
+	protocols_empty = fu_engine_get_protocols(engine);
+	g_assert_nonnull(protocols_empty);
+	g_assert_cmpint(protocols_empty->len, ==, 0);
+
+	/* two devices with an overlapping protocol */
+	fu_device_set_id(device1, "device1");
+	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
+	fu_device_add_protocol(device1, "org.usb.dfu");
+	fu_device_add_protocol(device1, "com.acme");
+	fu_device_add_instance_id(device1, "device1-GUID");
+	fu_engine_add_device(engine, device1);
+	fu_device_set_id(device2, "device2");
+	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
+	fu_device_add_protocol(device2, "com.acme");
+	fu_device_add_instance_id(device2, "device2-GUID");
+	fu_engine_add_device(engine, device2);
+
+	/* sorted and deduplicated */
+	protocols = fu_engine_get_protocols(engine);
+	g_assert_nonnull(protocols);
+	g_assert_cmpint(protocols->len, ==, 2);
+	g_assert_cmpstr(g_ptr_array_index(protocols, 0), ==, "com.acme");
+	g_assert_cmpstr(g_ptr_array_index(protocols, 1), ==, "org.usb.dfu");
+}
+
+static void
 fu_engine_device_parent_guid_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -3894,6 +3934,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	g_test_add_func("/fwupd/engine/codec", fu_engine_codec_func);
+	g_test_add_func("/fwupd/engine/get-protocols", fu_engine_get_protocols_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);

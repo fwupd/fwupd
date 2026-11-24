@@ -6447,6 +6447,39 @@ fu_engine_get_approved_firmware(FuEngine *self)
 	return checksums;
 }
 
+/**
+ * fu_engine_get_protocols:
+ * @self: a #FuEngine
+ *
+ * Gets the update protocols used by all the active devices.
+ *
+ * Returns: (transfer container) (element-type utf8): sorted, unique protocol IDs
+ **/
+GPtrArray *
+fu_engine_get_protocols(FuEngine *self)
+{
+	g_autoptr(GPtrArray) protocols = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GHashTable) protocols_seen = g_hash_table_new(g_str_hash, g_str_equal);
+	g_autoptr(GList) keys = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+
+	devices = fu_device_list_get_active(self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		GPtrArray *device_protocols = fu_device_get_protocols(device);
+		for (guint j = 0; j < device_protocols->len; j++) {
+			const gchar *protocol = g_ptr_array_index(device_protocols, j);
+			g_hash_table_add(protocols_seen, (gpointer)protocol);
+		}
+	}
+	keys = g_list_sort(g_hash_table_get_keys(protocols_seen), (GCompareFunc)g_strcmp0);
+	for (GList *l = keys; l != NULL; l = l->next)
+		g_ptr_array_add(protocols, g_strdup(l->data));
+	return g_steal_pointer(&protocols);
+}
+
 void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum)
 {

@@ -223,6 +223,8 @@ See `man fwupd.conf` for the full list of variables.
 
 **get-plugins**: Show all plugins registered with the daemon.
 
+**get-protocols**: Show the update protocols used by all the devices currently added to the daemon, which can be used with `--filter-protocol`.
+
 **hwids**: Return all the hardware IDs for the machine.
 These GUIDs are sometimes called CHIDs when using Microsoft Windows, and the values returned by fwupd should also match those from `ComputerHardwareIds.exe`.
 

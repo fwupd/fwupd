@@ -186,6 +186,7 @@ def run_tests(args: argparse.Namespace, prefix: str) -> int:
         for cmd in [
             "refresh",
             "get-plugins",
+            "get-protocols",
             "get-remotes",
             "get-devices",
             "get-upgrades",
