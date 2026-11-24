@@ -1607,6 +1607,10 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 
 	/* fix the exported name */
 	fu_device_ensure_exported_name(self);
+
+	/* remove from the old parent's children -- this must be last as it drops a ref */
+	if (parent_old != NULL && parent_old != FWUPD_DEVICE(parent))
+		fwupd_device_remove_child(parent_old, FWUPD_DEVICE(self));
 }
 
 /* if the proxy sets this flag copy it to the logical device */
