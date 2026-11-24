@@ -47,6 +47,18 @@ enum FuEfiSignatureKind {
     Sha256,
     X509,
     External,
+    Svn,
+}
+
+// a Secure Version Number stored as a fake EFI_CERT_SHA256_GUID entry in the dbx
+#[derive(New, ParseStream, Default)]
+#[repr(C, packed)]
+struct FuStructEfiSignatureSvn {
+    version: u8 == 0x01,
+    guid: Guid,
+    minor: u16le,
+    major: u16le,
+    reserved: [u8; 11] == [0x00; 11],
 }
 
 #[repr(u8)]
