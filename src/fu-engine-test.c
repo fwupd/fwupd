@@ -8,6 +8,8 @@
 
 #include "fwupd-remote-private.h"
 
+#include "../plugins/genesys/fu-genesys-plugin.h"
+#include "../plugins/genesys/fu-genesys-usbhub-device.h"
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
@@ -4302,72 +4304,62 @@ fu_engine_p34_composite_cab_func(void)
 }
 #endif /* HAVE_GIO_UNIX */
 
-struct _FuTestP34OrderPlugin {
-	FuPlugin parent_instance;
+struct _FuTestP34UsbBackend {
+	FuBackend parent_instance;
+	GHashTable *parents; /* owned FuDevice* -> owned FuDevice* */
 };
 
-G_DECLARE_FINAL_TYPE(FuTestP34OrderPlugin,
-		     fu_test_p34_order_plugin,
+G_DECLARE_FINAL_TYPE(FuTestP34UsbBackend,
+		     fu_test_p34_usb_backend,
 		     FU,
-		     TEST_P34_ORDER_PLUGIN,
-		     FuPlugin)
+		     TEST_P34_USB_BACKEND,
+		     FuBackend)
 
-G_DEFINE_TYPE(FuTestP34OrderPlugin, fu_test_p34_order_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuTestP34UsbBackend, fu_test_p34_usb_backend, FU_TYPE_BACKEND)
 
-static void
-fu_test_p34_order_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static FuDevice *
+fu_test_p34_usb_backend_get_device_parent(FuBackend *backend,
+					  FuDevice *device,
+					  const gchar *subsystem,
+					  GError **error)
 {
-	GPtrArray *devices = fu_plugin_get_devices(plugin);
-	for (guint pass = 0; pass < devices->len; pass++) {
-		gboolean changed = FALSE;
-		for (guint i = 0; i < devices->len; i++) {
-			FuDevice *hub = g_ptr_array_index(devices, i);
-			const gchar *phys = fu_device_get_physical_id(hub);
-			const gchar *want_parent_phys = NULL;
-			FuDevice *existing_parent = fu_device_get_parent(hub, NULL);
+	FuTestP34UsbBackend *self = FU_TEST_P34_USB_BACKEND(backend);
+	FuDevice *parent = g_hash_table_lookup(self->parents, device);
+	g_autoptr(FuDevice) usb_parent = NULL;
 
-			if (g_strcmp0(phys, "1-4.1") == 0)
-				want_parent_phys = "1-4";
-			else if (g_strcmp0(phys, "1-4.1.2") == 0)
-				want_parent_phys = "1-4.1";
-			else
-				continue;
-
-			if (existing_parent != NULL) {
-				if (g_strcmp0(fu_device_get_composite_id(hub),
-					      fu_device_get_composite_id(existing_parent)) != 0) {
-					fwupd_device_set_composite_id(
-					    FWUPD_DEVICE(hub),
-					    fu_device_get_composite_id(existing_parent));
-					changed = TRUE;
-				}
-				continue;
-			}
-			for (guint j = 0; j < devices->len; j++) {
-				FuDevice *cand = g_ptr_array_index(devices, j);
-				if (g_strcmp0(fu_device_get_physical_id(cand), want_parent_phys) ==
-				    0) {
-					g_object_set(hub, "parent", cand, NULL);
-					changed = TRUE;
-					break;
-				}
-			}
-		}
-		if (!changed)
-			break;
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no parent");
+		return NULL;
 	}
+	usb_parent = fu_device_new(fu_device_get_context(device));
+	fu_device_set_vid(usb_parent, fu_device_get_vid(parent));
+	fu_device_set_pid(usb_parent, fu_device_get_pid(parent));
+	fu_device_set_physical_id(usb_parent, fu_device_get_physical_id(parent));
+	return g_steal_pointer(&usb_parent);
 }
 
 static void
-fu_test_p34_order_plugin_init(FuTestP34OrderPlugin *self)
+fu_test_p34_usb_backend_finalize(GObject *object)
 {
+	FuTestP34UsbBackend *self = FU_TEST_P34_USB_BACKEND(object);
+	g_hash_table_unref(self->parents);
+	G_OBJECT_CLASS(fu_test_p34_usb_backend_parent_class)->finalize(object);
 }
 
 static void
-fu_test_p34_order_plugin_class_init(FuTestP34OrderPluginClass *klass)
+fu_test_p34_usb_backend_init(FuTestP34UsbBackend *self)
 {
-	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	plugin_class->device_registered = fu_test_p34_order_plugin_device_registered;
+	self->parents =
+	    g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, g_object_unref);
+}
+
+static void
+fu_test_p34_usb_backend_class_init(FuTestP34UsbBackendClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
+	object_class->finalize = fu_test_p34_usb_backend_finalize;
+	backend_class->get_device_parent = fu_test_p34_usb_backend_get_device_parent;
 }
 
 static void
@@ -4375,6 +4367,64 @@ fu_test_p34_order_count_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 {
 	guint *count = (guint *)user_data;
 	(*count)++;
+}
+
+static gint
+fu_test_p34_release_compare_cb(gconstpointer a, gconstpointer b)
+{
+	FuRelease *rel_a = *((FuRelease **)a);
+	FuRelease *rel_b = *((FuRelease **)b);
+	return fu_release_compare(rel_a, rel_b);
+}
+
+static FuDevice *
+fu_test_p34_genesys_hub_new(FuContext *ctx,
+			    FuBackend *backend,
+			    const gchar *id,
+			    const gchar *phys_id,
+			    const gchar *logical_id,
+			    guint16 pid,
+			    const gchar *parent_pid_str,
+			    const gchar *root_pid_str,
+			    const gchar *guid,
+			    const gchar *version)
+{
+	g_autoptr(FuDevice) dev = g_object_new(FU_TYPE_GENESYS_USBHUB_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_backend(dev, backend);
+	fu_device_set_id(dev, id);
+	fu_device_set_physical_id(dev, phys_id);
+	fu_device_set_logical_id(dev, logical_id);
+	fu_device_set_name(dev, id);
+	fu_device_set_vid(dev, 0x17EF);
+	fu_device_set_pid(dev, pid);
+	fu_device_build_vendor_id_u16(dev, "USB", 0x17EF);
+	fu_device_add_protocol(dev, "com.genesys.usbhub");
+	fu_device_set_version_format(dev, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version(dev, version);
+	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	if (parent_pid_str != NULL) {
+		fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+		g_assert_true(fu_device_set_quirk_kv(dev,
+						     "GenesysParentHubPid",
+						     parent_pid_str,
+						     FU_CONTEXT_QUIRK_SOURCE_DB,
+						     &error));
+		g_assert_no_error(error);
+	}
+	if (root_pid_str != NULL) {
+		g_assert_true(fu_device_set_quirk_kv(dev,
+						     "GenesysRootHubPid",
+						     root_pid_str,
+						     FU_CONTEXT_QUIRK_SOURCE_DB,
+						     &error));
+		g_assert_no_error(error);
+	}
+	fu_device_add_instance_id(dev, guid);
+	return g_steal_pointer(&dev);
 }
 
 static void
@@ -4385,43 +4435,49 @@ fu_engine_p34_dynamic_parent_order_func(void)
 	    "7ea0761a-9e0c-5879-b808-e8d9b8beafae",
 	    "9a0bece0-69e7-5489-a218-6645fb94f72d",
 	};
-	const guint arrival_orders[2][3] = {
+	/* all 6 arrival permutations of {L1, L2, L3} */
+	const guint arrival_orders[6][3] = {
 	    {0, 1, 2}, /* L1 -> L2 -> L3 */
+	    {0, 2, 1}, /* L1 -> L3 -> L2 */
+	    {1, 0, 2}, /* L2 -> L1 -> L3 */
+	    {1, 2, 0}, /* L2 -> L3 -> L1 */
+	    {2, 0, 1}, /* L3 -> L1 -> L2 */
 	    {2, 1, 0}, /* L3 -> L2 -> L1 */
 	};
+	const gchar *ids[3] = {"p34-l1", "p34-l2", "p34-l3"};
+	const gchar *phys_ids[3] = {"1-4", "1-4.1", "1-4.1.2"};
+	const gchar *logical_ids[3] = {"l1", "l2", "l3"};
+	const guint16 pids[3] = {0x1121, 0x1122, 0x1123};
+	const gchar *parent_pids[3] = {NULL, "0x1121", "0x1122"};
+	const gchar *root_pids[3] = {NULL, NULL, "0x1121"};
+	const gchar *vers[3] = {"86.20", "87.10", "88.10"};
+	/* deliberately unfavorable release priorities so only FuDevice.order gives L3->L2->L1 */
+	const guint64 hostile_priorities[3] = {90, 50, 10};
 	g_autoptr(FuCabinet) cabinet = fu_engine_p34_build_canonical_cab();
 
+	/* 1. All 6 arrival permutations through REAL FuGenesysPlugin + FuEngine */
 	for (guint o = 0; o < G_N_ELEMENTS(arrival_orders); o++) {
 		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+		g_autoptr(FuBackend) backend =
+		    g_object_new(fu_test_p34_usb_backend_get_type(), "context", ctx, NULL);
 		g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 		g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(FuPlugin) plugin =
-		    g_object_new(fu_test_p34_order_plugin_get_type(), "context", ctx, NULL);
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
 		g_autoptr(XbSilo) silo_empty = xb_silo_new();
-		g_autoptr(GPtrArray) write_log = g_ptr_array_new_with_free_func(g_free);
 		g_autoptr(GPtrArray) releases =
 		    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_autoptr(GPtrArray) components = NULL;
-		FuTestP34HubDevice *hubs[3] = {NULL};
-		const gchar *ids[3] = {"p34-l1", "p34-l2", "p34-l3"};
-		const gchar *phys_ids[3] = {"1-4", "1-4.1", "1-4.1.2"};
-		const gchar *logical_ids[3] = {"l1", "l2", "l3"};
-		const gchar *vers[3] = {"86.20", "87.10", "88.10"};
-		const gchar *target_vers[3] = {"86.25", "87.16", "88.17"};
-		const gchar *expected_payloads[3] = {"p34-l1-payload",
-						     "p34-l2-payload",
-						     "p34-l3-payload"};
-		/* deliberately unfavorable release priorities so only FuDevice.order gives L3->L2->L1
-		 */
-		const guint64 hostile_priorities[3] = {90, 50, 10};
+		FuDevice *hubs[3] = {NULL};
 		guint n_added = 0;
 		guint n_removed = 0;
 		g_autoptr(GError) error = NULL;
 		gboolean ret;
 
+		fu_context_add_backend(ctx, backend);
 		fu_engine_set_silo(engine, silo_empty);
-		fu_plugin_set_name(plugin, "p34dyn");
+		fu_plugin_set_name(plugin, "genesys");
 		g_signal_connect(plugin,
 				 "device-added",
 				 G_CALLBACK(fu_test_p34_order_count_cb),
@@ -4436,56 +4492,50 @@ fu_engine_p34_dynamic_parent_order_func(void)
 		g_assert_true(ret);
 
 		for (guint i = 0; i < 3; i++) {
-			FuDevice *dev;
-			hubs[i] = g_object_new(FU_TYPE_TEST_P34_HUB_DEVICE, NULL);
-			hubs[i]->write_log = write_log;
-			hubs[i]->target_version = target_vers[i];
-			hubs[i]->expected_payload = expected_payloads[i];
-			dev = FU_DEVICE(hubs[i]);
-			fu_device_set_context(dev, ctx);
-			fu_device_set_id(dev, ids[i]);
-			fu_device_set_physical_id(dev, phys_ids[i]);
-			fu_device_set_logical_id(dev, logical_ids[i]);
-			fu_device_set_name(dev, ids[i]);
-			fu_device_build_vendor_id_u16(dev, "USB", 0x17EF);
-			fu_device_add_protocol(dev, "com.genesys.usbhub");
-			fu_device_set_version_format(dev, FWUPD_VERSION_FORMAT_PAIR);
-			fu_device_set_version(dev, vers[i]);
-			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-			fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-			if (i > 0)
-				fu_device_add_private_flag(dev,
-							   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
-			fu_device_add_instance_id(dev, model_a[i]);
+			hubs[i] = fu_test_p34_genesys_hub_new(ctx,
+							      backend,
+							      ids[i],
+							      phys_ids[i],
+							      logical_ids[i],
+							      pids[i],
+							      parent_pids[i],
+							      root_pids[i],
+							      model_a[i],
+							      vers[i]);
 		}
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(hubs[1]),
+				    g_object_ref(hubs[0]));
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(hubs[2]),
+				    g_object_ref(hubs[1]));
 
-		/* add hubs without pre-linking parents: device_registered must link before
-		 * fu_device_list_depsolve_order() runs */
+		/* add real FuGenesysUsbhubDevice instances without pre-linking parents */
 		for (guint k = 0; k < 3; k++)
-			fu_plugin_add_device(plugin, FU_DEVICE(hubs[arrival_orders[o][k]]));
+			fu_plugin_add_device(plugin, hubs[arrival_orders[o][k]]);
 
 		g_assert_cmpuint(fu_plugin_get_devices(plugin)->len, ==, 3);
 		g_assert_cmpuint(n_added, ==, 3);
 		g_assert_cmpuint(n_removed, ==, 0);
-		g_assert_true(fu_device_get_parent(FU_DEVICE(hubs[1]), NULL) == FU_DEVICE(hubs[0]));
-		g_assert_true(fu_device_get_parent(FU_DEVICE(hubs[2]), NULL) == FU_DEVICE(hubs[1]));
-		g_assert_cmpstr(fu_device_get_composite_id(FU_DEVICE(hubs[2])),
-				==,
-				fu_device_get_id(FU_DEVICE(hubs[0])));
-		g_assert_cmpint(fu_device_get_order(FU_DEVICE(hubs[2])), ==, -2);
-		g_assert_cmpint(fu_device_get_order(FU_DEVICE(hubs[1])), ==, -1);
-		g_assert_cmpint(fu_device_get_order(FU_DEVICE(hubs[0])), ==, 0);
+		g_assert_true(fu_device_get_parent(hubs[1], NULL) == hubs[0]);
+		g_assert_true(fu_device_get_parent(hubs[2], NULL) == hubs[1]);
+		g_assert_cmpstr(fu_device_get_composite_id(hubs[0]), ==, fu_device_get_id(hubs[0]));
+		g_assert_cmpstr(fu_device_get_composite_id(hubs[1]), ==, fu_device_get_id(hubs[0]));
+		g_assert_cmpstr(fu_device_get_composite_id(hubs[2]), ==, fu_device_get_id(hubs[0]));
+		g_assert_cmpint(fu_device_get_order(hubs[2]), ==, -2);
+		g_assert_cmpint(fu_device_get_order(hubs[1]), ==, -1);
+		g_assert_cmpint(fu_device_get_order(hubs[0]), ==, 0);
 
+		/* build releases explicitly in L1 -> L2 -> L3 order with hostile priorities */
 		components = fu_cabinet_get_components(cabinet, &error);
 		g_assert_no_error(error);
-		for (guint i = 0; i < components->len; i++) {
-			XbNode *component = g_ptr_array_index(components, i);
-			for (guint j = 0; j < 3; j++) {
+		for (guint j = 0; j < 3; j++) {
+			for (guint i = 0; i < components->len; i++) {
+				XbNode *component = g_ptr_array_index(components, i);
 				g_autoptr(FuRelease) release = fu_release_new();
 				g_autoptr(GError) error_local = NULL;
 
-				fu_release_set_device(release, FU_DEVICE(hubs[j]));
+				fu_release_set_device(release, hubs[j]);
 				fu_release_set_request(release, request);
 				if (!fu_release_load(release,
 						     cabinet,
@@ -4504,22 +4554,202 @@ fu_engine_p34_dynamic_parent_order_func(void)
 			}
 		}
 		g_assert_cmpuint(releases->len, ==, 3);
+		/* verify input order is L1 -> L2 -> L3 before sort */
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 0)))),
+				==,
+				"l1");
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 1)))),
+				==,
+				"l2");
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 2)))),
+				==,
+				"l3");
 
-		ret = fu_engine_install_releases(engine,
-						 request,
-						 releases,
-						 progress,
-						 FWUPD_INSTALL_FLAG_NONE,
-						 &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
-		g_assert_cmpuint(write_log->len, ==, 3);
-		g_assert_cmpstr(g_ptr_array_index(write_log, 0), ==, "l3");
-		g_assert_cmpstr(g_ptr_array_index(write_log, 1), ==, "l2");
-		g_assert_cmpstr(g_ptr_array_index(write_log, 2), ==, "l1");
+		/* fu_release_compare() must sort to L3 -> L2 -> L1 solely via FuDevice.order */
+		g_ptr_array_sort(releases, fu_test_p34_release_compare_cb);
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 0)))),
+				==,
+				"l3");
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 1)))),
+				==,
+				"l2");
+		g_assert_cmpstr(fu_device_get_logical_id(fu_release_get_device(
+				    FU_RELEASE(g_ptr_array_index(releases, 2)))),
+				==,
+				"l1");
 
 		for (guint i = 0; i < 3; i++)
 			g_object_unref(hubs[i]);
+	}
+
+	/* 2. Individual replug of L3, L2, and L1 through REAL FuGenesysPlugin + FuEngine:
+	 * verify parent, CompositeId, order (-2, -1, 0), and zero duplicate events */
+	{
+		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+		g_autoptr(FuBackend) backend =
+		    g_object_new(fu_test_p34_usb_backend_get_type(), "context", ctx, NULL);
+		g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		g_autoptr(FuPlugin) plugin =
+		    g_object_new(FU_TYPE_GENESYS_PLUGIN, "context", ctx, NULL);
+		g_autoptr(XbSilo) silo_empty = xb_silo_new();
+		g_autoptr(FuDevice) l1 = NULL;
+		g_autoptr(FuDevice) l2 = NULL;
+		g_autoptr(FuDevice) l3 = NULL;
+		g_autoptr(FuDevice) l3_new = NULL;
+		g_autoptr(FuDevice) l2_new = NULL;
+		g_autoptr(FuDevice) l1_new = NULL;
+		guint n_added = 0;
+		guint n_removed = 0;
+		g_autoptr(GError) error = NULL;
+		gboolean ret;
+
+		fu_context_add_backend(ctx, backend);
+		fu_engine_set_silo(engine, silo_empty);
+		fu_plugin_set_name(plugin, "genesys");
+		g_signal_connect(plugin,
+				 "device-added",
+				 G_CALLBACK(fu_test_p34_order_count_cb),
+				 &n_added);
+		g_signal_connect(plugin,
+				 "device-removed",
+				 G_CALLBACK(fu_test_p34_order_count_cb),
+				 &n_removed);
+		fu_engine_add_plugin(engine, plugin);
+		ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		l1 = fu_test_p34_genesys_hub_new(ctx,
+						 backend,
+						 "replug-l1",
+						 "1-4",
+						 "l1",
+						 0x1121,
+						 NULL,
+						 NULL,
+						 model_a[0],
+						 "86.20");
+		l2 = fu_test_p34_genesys_hub_new(ctx,
+						 backend,
+						 "replug-l2",
+						 "1-4.1",
+						 "l2",
+						 0x1122,
+						 "0x1121",
+						 NULL,
+						 model_a[1],
+						 "87.10");
+		l3 = fu_test_p34_genesys_hub_new(ctx,
+						 backend,
+						 "replug-l3",
+						 "1-4.1.2",
+						 "l3",
+						 0x1123,
+						 "0x1122",
+						 "0x1121",
+						 model_a[2],
+						 "88.10");
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(l2),
+				    g_object_ref(l1));
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(l3),
+				    g_object_ref(l2));
+
+		fu_plugin_add_device(plugin, l1);
+		fu_plugin_add_device(plugin, l2);
+		fu_plugin_add_device(plugin, l3);
+		g_assert_cmpuint(fu_plugin_get_devices(plugin)->len, ==, 3);
+		g_assert_cmpuint(n_added, ==, 3);
+		g_assert_cmpuint(n_removed, ==, 0);
+
+		/* replug L3 */
+		fu_plugin_remove_device(plugin, l3);
+		l3_new = fu_test_p34_genesys_hub_new(ctx,
+						     backend,
+						     "replug-l3-v2",
+						     "1-4.1.2",
+						     "l3",
+						     0x1123,
+						     "0x1122",
+						     "0x1121",
+						     model_a[2],
+						     "88.17");
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(l3_new),
+				    g_object_ref(l2));
+		fu_plugin_add_device(plugin, l3_new);
+		g_assert_cmpuint(fu_plugin_get_devices(plugin)->len, ==, 3);
+		g_assert_cmpuint(n_added, ==, 4);
+		g_assert_cmpuint(n_removed, ==, 1);
+		g_assert_true(fu_device_get_parent(l3_new, NULL) == l2);
+		g_assert_cmpstr(fu_device_get_composite_id(l3_new), ==, fu_device_get_id(l1));
+		g_assert_cmpint(fu_device_get_order(l3_new), ==, -2);
+		g_assert_cmpint(fu_device_get_order(l2), ==, -1);
+		g_assert_cmpint(fu_device_get_order(l1), ==, 0);
+
+		/* replug L2 */
+		fu_plugin_remove_device(plugin, l2);
+		l2_new = fu_test_p34_genesys_hub_new(ctx,
+						     backend,
+						     "replug-l2-v2",
+						     "1-4.1",
+						     "l2",
+						     0x1122,
+						     "0x1121",
+						     NULL,
+						     model_a[1],
+						     "87.16");
+		g_hash_table_insert(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				    g_object_ref(l2_new),
+				    g_object_ref(l1));
+		g_hash_table_replace(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				     g_object_ref(l3_new),
+				     g_object_ref(l2_new));
+		fu_plugin_add_device(plugin, l2_new);
+		g_assert_cmpuint(fu_plugin_get_devices(plugin)->len, ==, 3);
+		g_assert_cmpuint(n_added, ==, 5);
+		g_assert_cmpuint(n_removed, ==, 2);
+		g_assert_true(fu_device_get_parent(l2_new, NULL) == l1);
+		g_assert_true(fu_device_get_parent(l3_new, NULL) == l2_new);
+		g_assert_cmpstr(fu_device_get_composite_id(l3_new), ==, fu_device_get_id(l1));
+		g_assert_cmpint(fu_device_get_order(l3_new), ==, -2);
+		g_assert_cmpint(fu_device_get_order(l2_new), ==, -1);
+		g_assert_cmpint(fu_device_get_order(l1), ==, 0);
+
+		/* replug L1 */
+		fu_plugin_remove_device(plugin, l1);
+		l1_new = fu_test_p34_genesys_hub_new(ctx,
+						     backend,
+						     "replug-l1-v2",
+						     "1-4",
+						     "l1",
+						     0x1121,
+						     NULL,
+						     NULL,
+						     model_a[0],
+						     "86.25");
+		g_hash_table_replace(FU_TEST_P34_USB_BACKEND(backend)->parents,
+				     g_object_ref(l2_new),
+				     g_object_ref(l1_new));
+		fu_plugin_add_device(plugin, l1_new);
+		g_assert_cmpuint(fu_plugin_get_devices(plugin)->len, ==, 3);
+		g_assert_cmpuint(n_added, ==, 6);
+		g_assert_cmpuint(n_removed, ==, 3);
+		g_assert_true(fu_device_get_parent(l2_new, NULL) == l1_new);
+		g_assert_true(fu_device_get_parent(l3_new, NULL) == l2_new);
+		g_assert_cmpstr(fu_device_get_composite_id(l1_new), ==, fu_device_get_id(l1_new));
+		g_assert_cmpstr(fu_device_get_composite_id(l2_new), ==, fu_device_get_id(l1_new));
+		g_assert_cmpstr(fu_device_get_composite_id(l3_new), ==, fu_device_get_id(l1_new));
+		g_assert_cmpint(fu_device_get_order(l3_new), ==, -2);
+		g_assert_cmpint(fu_device_get_order(l2_new), ==, -1);
+		g_assert_cmpint(fu_device_get_order(l1_new), ==, 0);
 	}
 }
 
@@ -4794,7 +5024,9 @@ fu_engine_p34_composite_cab_failures_func(void)
 							  progress,
 							  FWUPD_INSTALL_FLAG_NONE,
 							  &error));
-		g_assert_nonnull(error);
+		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+		g_assert_nonnull(g_strstr_len(error->message, -1, "88.17"));
+		g_assert_nonnull(g_strstr_len(error->message, -1, "88.10"));
 		g_assert_cmpuint(write_log->len, ==, 3);
 		g_assert_cmpstr(fu_device_get_version(FU_DEVICE(hubs[2])), ==, "88.10");
 		for (guint i = 0; i < 3; i++)
