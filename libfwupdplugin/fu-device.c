@@ -450,6 +450,24 @@ fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 	return fu_device_has_private_flag_quark(self, flag_quark);
 }
 
+static FuDevice *
+fu_device_get_target(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->target;
+}
+
+static FuDevice *
+fu_device_get_target_with_fallback(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	if (priv->target != NULL)
+		return priv->target;
+	return self;
+}
+
 /**
  * fu_device_get_request_cnt:
  * @self: a #FuDevice
@@ -4321,6 +4339,7 @@ FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDevice *target;
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(FuDevice) parent = NULL;
@@ -4354,6 +4373,7 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 	}
 
 	/* emulated */
+	target = fu_device_get_target_with_fallback(self);
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		GType gtype;
 		const gchar *gtype_str;
@@ -4375,8 +4395,8 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 								      self,
 								      subsystem,
 								      error);
-				if (parent != self)
-					fu_device_set_target(parent, self);
+				if (parent != NULL && parent != target)
+					fu_device_set_target(parent, target);
 				return g_steal_pointer(&parent);
 			}
 		}
@@ -4414,8 +4434,8 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 			fu_device_set_vid(parent, fu_device_event_get_i64(event, "Vid", NULL));
 		if (fu_device_event_get_i64(event, "Pid", NULL) != G_MAXINT64)
 			fu_device_set_pid(parent, fu_device_event_get_i64(event, "Pid", NULL));
-		if (parent != self)
-			fu_device_set_target(parent, self);
+		if (parent != target)
+			fu_device_set_target(parent, target);
 		return g_steal_pointer(&parent);
 	}
 
@@ -4459,8 +4479,8 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 			fu_device_event_set_i64(event, "Pid", fu_device_get_pid(parent));
 	}
 
-	if (parent != self)
-		fu_device_set_target(parent, self);
+	if (parent != target)
+		fu_device_set_target(parent, target);
 	return g_steal_pointer(&parent);
 }
 
@@ -8330,14 +8350,6 @@ fu_device_clear_events(FuDevice *self)
 		return;
 	g_ptr_array_set_size(priv->events, 0);
 	priv->event_idx = 0;
-}
-
-static FuDevice *
-fu_device_get_target(FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return priv->target;
 }
 
 /**
