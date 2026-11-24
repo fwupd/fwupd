@@ -35,6 +35,9 @@ fu_device_list_get_by_guid(FuDeviceList *self, const gchar *guid, GError **error
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_list_wait_for_replug(FuDeviceList *self, GError **error) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_device_list_get_children(FuDeviceList *self, FuDevice *device)
+    G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_device_list_depsolve_order(FuDeviceList *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 

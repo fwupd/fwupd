@@ -378,6 +378,245 @@ fu_engine_device_parent_id_func(void)
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 }
 
+static FuDevice *
+fu_engine_test_auto_parent_device_new(FuContext *ctx,
+				      const gchar *name,
+				      const gchar *phys_id,
+				      const gchar *logical_id,
+				      const gchar *parent_phys_id,
+				      gboolean auto_parent)
+{
+	FuDevice *dev = fu_device_new(ctx);
+	fu_device_set_plugin(dev, "test");
+	fu_device_set_name(dev, name);
+	fu_device_set_physical_id(dev, phys_id);
+	if (logical_id != NULL)
+		fu_device_set_logical_id(dev, logical_id);
+	fu_device_build_vendor_id_u16(dev, "USB", 0xFFFF);
+	fu_device_add_protocol(dev, "com.acme");
+	fu_device_add_instance_id(dev, name);
+	if (auto_parent)
+		fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
+	if (parent_phys_id != NULL)
+		fu_device_add_parent_physical_id(dev, parent_phys_id);
+	return dev;
+}
+
+static void
+fu_engine_device_auto_parent_multilevel_func(void)
+{
+	const guint perms[6][3] = {
+	    {0, 1, 2},
+	    {0, 2, 1},
+	    {1, 0, 2},
+	    {1, 2, 0},
+	    {2, 0, 1},
+	    {2, 1, 0},
+	};
+
+	/* 1. All 6 arrival permutations of a 3-level tree (Root -> Mid -> Leaf) */
+	for (guint p = 0; p < G_N_ELEMENTS(perms); p++) {
+		gboolean ret;
+		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+		g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+		g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		g_autoptr(XbSilo) silo_empty = xb_silo_new();
+		g_autoptr(FuDevice) root = NULL;
+		g_autoptr(FuDevice) mid = NULL;
+		g_autoptr(FuDevice) leaf = NULL;
+		g_autoptr(GError) error = NULL;
+		FuDevice *devs[3];
+
+		fu_engine_set_silo(engine, silo_empty);
+		fu_plugin_set_name(plugin, "test");
+		fu_engine_add_plugin(engine, plugin);
+		ret = fu_engine_load(engine,
+				     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+				     progress,
+				     &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		root = fu_engine_test_auto_parent_device_new(ctx,
+							     "Root",
+							     "phys-root",
+							     NULL,
+							     NULL,
+							     TRUE);
+		mid = fu_engine_test_auto_parent_device_new(ctx,
+							    "Mid",
+							    "phys-mid",
+							    NULL,
+							    "phys-root",
+							    TRUE);
+		leaf = fu_engine_test_auto_parent_device_new(ctx,
+							     "Leaf",
+							     "phys-leaf",
+							     NULL,
+							     "phys-mid",
+							     FALSE);
+		devs[0] = root;
+		devs[1] = mid;
+		devs[2] = leaf;
+
+		for (guint i = 0; i < 3; i++)
+			fu_plugin_add_device(plugin, devs[perms[p][i]]);
+
+		g_assert_null(fu_device_get_parent_internal(root));
+		g_assert_true(fu_device_get_parent_internal(mid) == root);
+		g_assert_true(fu_device_get_parent_internal(leaf) == mid);
+		g_assert_cmpstr(fu_device_get_composite_id(root), ==, fu_device_get_id(root));
+		g_assert_cmpstr(fu_device_get_composite_id(mid), ==, fu_device_get_id(root));
+		g_assert_cmpstr(fu_device_get_composite_id(leaf), ==, fu_device_get_id(root));
+		g_assert_cmpint(fu_device_get_order(root), ==, 0);
+		g_assert_cmpint(fu_device_get_order(mid), ==, -1);
+		g_assert_cmpint(fu_device_get_order(leaf), ==, -2);
+	}
+
+	/* 2. Individual replug of Leaf, Mid, and Root (including new Root ID propagation) */
+	{
+		gboolean ret;
+		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+		g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+		g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		g_autoptr(XbSilo) silo_empty = xb_silo_new();
+		g_autoptr(FuDevice) root = NULL;
+		g_autoptr(FuDevice) root2 = NULL;
+		g_autoptr(FuDevice) mid = NULL;
+		g_autoptr(FuDevice) mid2 = NULL;
+		g_autoptr(FuDevice) leaf = NULL;
+		g_autoptr(FuDevice) leaf2 = NULL;
+		g_autoptr(GError) error = NULL;
+
+		fu_engine_set_silo(engine, silo_empty);
+		fu_plugin_set_name(plugin, "test");
+		fu_engine_add_plugin(engine, plugin);
+		ret = fu_engine_load(engine,
+				     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+				     progress,
+				     &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		root = fu_engine_test_auto_parent_device_new(ctx,
+							     "Root",
+							     "phys-root",
+							     "v1",
+							     NULL,
+							     TRUE);
+		mid = fu_engine_test_auto_parent_device_new(ctx,
+							    "Mid",
+							    "phys-mid",
+							    "v1",
+							    "phys-root",
+							    TRUE);
+		leaf = fu_engine_test_auto_parent_device_new(ctx,
+							     "Leaf",
+							     "phys-leaf",
+							     "v1",
+							     "phys-mid",
+							     FALSE);
+		fu_plugin_add_device(plugin, root);
+		fu_plugin_add_device(plugin, mid);
+		fu_plugin_add_device(plugin, leaf);
+
+		/* replug Leaf */
+		fu_plugin_remove_device(plugin, leaf);
+		g_clear_object(&leaf);
+		leaf2 = fu_engine_test_auto_parent_device_new(ctx,
+							      "Leaf",
+							      "phys-leaf",
+							      "v2",
+							      "phys-mid",
+							      FALSE);
+		fu_plugin_add_device(plugin, leaf2);
+		g_assert_true(fu_device_get_parent_internal(leaf2) == mid);
+		g_assert_cmpstr(fu_device_get_composite_id(leaf2), ==, fu_device_get_id(root));
+		g_assert_cmpint(fu_device_get_order(leaf2), ==, -2);
+
+		/* replug Mid */
+		fu_plugin_remove_device(plugin, mid);
+		g_clear_object(&mid);
+		mid2 = fu_engine_test_auto_parent_device_new(ctx,
+							     "Mid",
+							     "phys-mid",
+							     "v2",
+							     "phys-root",
+							     TRUE);
+		fu_plugin_add_device(plugin, mid2);
+		g_assert_true(fu_device_get_parent_internal(mid2) == root);
+		g_assert_true(fu_device_get_parent_internal(leaf2) == mid2);
+		g_assert_cmpstr(fu_device_get_composite_id(leaf2), ==, fu_device_get_id(root));
+		g_assert_cmpint(fu_device_get_order(mid2), ==, -1);
+		g_assert_cmpint(fu_device_get_order(leaf2), ==, -2);
+
+		/* replug Root with a new ID */
+		fu_plugin_remove_device(plugin, root);
+		g_clear_object(&root);
+		root2 = fu_engine_test_auto_parent_device_new(ctx,
+							      "Root",
+							      "phys-root",
+							      "v2",
+							      NULL,
+							      TRUE);
+		fu_plugin_add_device(plugin, root2);
+		g_assert_true(fu_device_get_parent_internal(mid2) == root2);
+		g_assert_true(fu_device_get_parent_internal(leaf2) == mid2);
+		g_assert_cmpstr(fu_device_get_composite_id(root2), ==, fu_device_get_id(root2));
+		g_assert_cmpstr(fu_device_get_composite_id(mid2), ==, fu_device_get_id(root2));
+		g_assert_cmpstr(fu_device_get_composite_id(leaf2), ==, fu_device_get_id(root2));
+		g_assert_cmpint(fu_device_get_order(root2), ==, 0);
+		g_assert_cmpint(fu_device_get_order(mid2), ==, -1);
+		g_assert_cmpint(fu_device_get_order(leaf2), ==, -2);
+	}
+
+	/* 3. Deep 4-level tree in reverse arrival order (L3 -> L2 -> L1 -> L0) */
+	{
+		gboolean ret;
+		g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+		g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+		g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		g_autoptr(XbSilo) silo_empty = xb_silo_new();
+		g_autoptr(FuDevice) d0 = NULL;
+		g_autoptr(FuDevice) d1 = NULL;
+		g_autoptr(FuDevice) d2 = NULL;
+		g_autoptr(FuDevice) d3 = NULL;
+		g_autoptr(GError) error = NULL;
+
+		fu_engine_set_silo(engine, silo_empty);
+		fu_plugin_set_name(plugin, "test");
+		fu_engine_add_plugin(engine, plugin);
+		ret = fu_engine_load(engine,
+				     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+				     progress,
+				     &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		d0 = fu_engine_test_auto_parent_device_new(ctx, "L0", "p0", NULL, NULL, TRUE);
+		d1 = fu_engine_test_auto_parent_device_new(ctx, "L1", "p1", NULL, "p0", TRUE);
+		d2 = fu_engine_test_auto_parent_device_new(ctx, "L2", "p2", NULL, "p1", TRUE);
+		d3 = fu_engine_test_auto_parent_device_new(ctx, "L3", "p3", NULL, "p2", FALSE);
+
+		fu_plugin_add_device(plugin, d3);
+		fu_plugin_add_device(plugin, d2);
+		fu_plugin_add_device(plugin, d1);
+		fu_plugin_add_device(plugin, d0);
+
+		g_assert_cmpstr(fu_device_get_composite_id(d0), ==, fu_device_get_id(d0));
+		g_assert_cmpstr(fu_device_get_composite_id(d1), ==, fu_device_get_id(d0));
+		g_assert_cmpstr(fu_device_get_composite_id(d2), ==, fu_device_get_id(d0));
+		g_assert_cmpstr(fu_device_get_composite_id(d3), ==, fu_device_get_id(d0));
+		g_assert_cmpint(fu_device_get_order(d0), ==, 0);
+		g_assert_cmpint(fu_device_get_order(d1), ==, -1);
+		g_assert_cmpint(fu_device_get_order(d2), ==, -2);
+		g_assert_cmpint(fu_device_get_order(d3), ==, -3);
+	}
+}
+
 static void
 fu_engine_partial_hash_func(void)
 {
@@ -3927,6 +4166,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/updatable-hidden", fu_engine_updatable_hidden_func);
 	g_test_add_func("/fwupd/engine/md-verfmt", fu_engine_md_verfmt_func);
 	g_test_add_func("/fwupd/engine/device-auto-parent-id", fu_engine_device_parent_id_func);
+	g_test_add_func("/fwupd/engine/device-auto-parent-multilevel",
+			fu_engine_device_auto_parent_multilevel_func);
 	g_test_add_func("/fwupd/engine/device-auto-parent-guid", fu_engine_device_parent_guid_func);
 	g_test_add_func("/fwupd/engine/install-duration", fu_engine_install_duration_func);
 	g_test_add_func("/fwupd/engine/get-results-appstream-id",

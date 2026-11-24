@@ -140,10 +140,15 @@ fu_device_list_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 /* we cannot use fu_device_get_children() as this will not find "parent-only"
  * logical relationships added using fu_device_add_parent_guid() */
-static GPtrArray *
+GPtrArray *
 fu_device_list_get_children(FuDeviceList *self, FuDevice *device)
 {
-	GPtrArray *devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	GPtrArray *devices;
+
+	g_return_val_if_fail(FU_IS_DEVICE_LIST(self), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
+
+	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);

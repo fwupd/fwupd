@@ -6842,9 +6842,35 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 }
 
 static void
+fu_engine_propagate_composite_id(FuEngine *self,
+				 FuDevice *device,
+				 const gchar *composite_id,
+				 GHashTable *visited)
+{
+	g_autoptr(GPtrArray) children = fu_device_list_get_children(self->device_list, device);
+
+	g_hash_table_add(visited, device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		if (g_hash_table_contains(visited, child))
+			continue;
+		fwupd_device_set_composite_id(FWUPD_DEVICE(child), composite_id);
+		fu_engine_propagate_composite_id(self, child, composite_id, visited);
+	}
+}
+
+static void
 fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
 	fu_device_set_parent(device, parent);
+	if (parent != NULL) {
+		g_autoptr(GHashTable) visited = g_hash_table_new(g_direct_hash, g_direct_equal);
+		g_hash_table_add(visited, parent);
+		fu_engine_propagate_composite_id(self,
+						 device,
+						 fu_device_get_composite_id(parent),
+						 visited);
+	}
 	if (self->phase >= FU_ENGINE_PHASE_DONE) {
 		fu_engine_ensure_device_supported(self, device);
 		fu_engine_ensure_device_supported(self, parent);
