@@ -102,6 +102,7 @@ typedef struct {
 	GArray *private_flags; /* (nullable) (element-type GQuark) */
 	gchar *custom_flags;
 	gulong notify_flags_proxy_id;
+	gulong notify_composite_parent_id;
 	GHashTable *instance_hash; /* (nullable) */
 	FuProgress *progress;	   /* provided for FuDevice notify callbacks */
 } FuDevicePrivate;
@@ -1539,6 +1540,20 @@ fu_device_set_composite_id(FuDevice *self, const gchar *composite_id)
 	}
 }
 
+static void
+fu_device_parent_composite_id_incorporate(FuDevice *self, FuDevice *parent)
+{
+	if (fu_device_get_composite_id(parent) != NULL)
+		fu_device_set_composite_id(self, fu_device_get_composite_id(parent));
+}
+
+static void
+fu_device_parent_composite_id_notify_cb(FuDevice *parent, GParamSpec *pspec, gpointer user_data)
+{
+	FuDevice *self = FU_DEVICE(user_data);
+	fu_device_parent_composite_id_incorporate(self, parent);
+}
+
 /**
  * fu_device_set_parent:
  * @self: a #FuDevice
@@ -1553,6 +1568,9 @@ fu_device_set_composite_id(FuDevice *self, const gchar *composite_id)
 void
 fu_device_set_parent(FuDevice *self, FuDevice *parent)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FwupdDevice *parent_old;
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	/* debug */
@@ -1564,12 +1582,24 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 
 	/* set the composite ID on the children and grandchildren */
 	if (parent != NULL)
-		fu_device_set_composite_id(self, fu_device_get_composite_id(parent));
+		fu_device_parent_composite_id_incorporate(self, parent);
 
 	/* if the parent has a context, make the child inherit it */
 	if (parent != NULL) {
 		if (fu_device_get_context(self) == NULL && fu_device_get_context(parent) != NULL)
 			fu_device_set_context(self, fu_device_get_context(parent));
+	}
+
+	/* disconnect from old parent and watch the new parent */
+	parent_old = fwupd_device_get_parent(FWUPD_DEVICE(self));
+	if (parent_old != NULL)
+		g_clear_signal_handler(&priv->notify_composite_parent_id, parent_old);
+	if (parent != NULL) {
+		priv->notify_composite_parent_id =
+		    g_signal_connect(FWUPD_DEVICE(parent),
+				     "notify::composite-id",
+				     G_CALLBACK(fu_device_parent_composite_id_notify_cb),
+				     self);
 	}
 
 	fwupd_device_set_parent(FWUPD_DEVICE(self), FWUPD_DEVICE(parent));
@@ -8831,6 +8861,7 @@ fu_device_finalize(GObject *object)
 {
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FwupdDevice *parent = fwupd_device_get_parent(FWUPD_DEVICE(self));
 
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
@@ -8844,6 +8875,8 @@ fu_device_finalize(GObject *object)
 						     (gpointer *)&priv->proxy);
 		}
 	}
+	if (parent != NULL)
+		g_clear_signal_handler(&priv->notify_composite_parent_id, parent);
 	if (priv->backend != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
 	if (priv->poll_source != NULL) {

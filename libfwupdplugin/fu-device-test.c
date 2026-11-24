@@ -604,6 +604,42 @@ fu_device_composite_id_func(void)
 }
 
 static void
+fu_device_composite_id_notify_func(void)
+{
+	g_autoptr(FuDevice) grandparent = fu_device_new(NULL);
+	g_autoptr(FuDevice) parent = fu_device_new(NULL);
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
+
+	/* grandparent -> parent -> child */
+	fu_device_set_id(grandparent, "grandparent");
+	fu_device_set_id(parent, "parent");
+	fu_device_set_id(child, "child");
+	fu_device_add_child(parent, child);
+	fu_device_add_child(grandparent, parent);
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			fu_device_get_composite_id(grandparent));
+
+	/* set without using the FuDevice setter, so only the notify can propagate it */
+	fwupd_device_set_composite_id(FWUPD_DEVICE(grandparent),
+				      "1111111111111111111111111111111111111111");
+	g_assert_cmpstr(fu_device_get_composite_id(parent),
+			==,
+			"1111111111111111111111111111111111111111");
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			"1111111111111111111111111111111111111111");
+
+	/* reparent the child to the grandparent, and ensure the old parent is no longer watched */
+	fu_device_set_parent(child, grandparent);
+	fwupd_device_set_composite_id(FWUPD_DEVICE(parent),
+				      "2222222222222222222222222222222222222222");
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			"1111111111111111111111111111111111111111");
+}
+
+static void
 fu_device_inhibit_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -1320,6 +1356,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/instance-id-namespace-empty",
 			fu_device_instance_id_namespace_empty_func);
 	g_test_add_func("/fwupd/device/composite-id", fu_device_composite_id_func);
+	g_test_add_func("/fwupd/device/composite-id-notify", fu_device_composite_id_notify_func);
 	g_test_add_func("/fwupd/device/flags", fu_device_flags_func);
 	g_test_add_func("/fwupd/device/private-flags", fu_device_custom_flags_func);
 	g_test_add_func("/fwupd/device/inhibit", fu_device_inhibit_func);
