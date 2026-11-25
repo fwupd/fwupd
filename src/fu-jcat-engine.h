@@ -19,7 +19,10 @@ G_DECLARE_DERIVABLE_TYPE(FuJcatEngine, fu_jcat_engine, FU, JCAT_ENGINE, GObject)
 struct _FuJcatEngineClass {
 	GObjectClass parent_class;
 	gboolean (*setup)(FuJcatEngine *self, GError **error);
-	gboolean (*add_public_key)(FuJcatEngine *self, const gchar *filename, GError **error);
+	gboolean (*add_public_key)(FuJcatEngine *self,
+				   const gchar *filename,
+				   GBytes *blob,
+				   GError **error);
 	FuJcatResult *(*pubkey_verify)(FuJcatEngine *self,
 				       GBytes *blob,
 				       GBytes *blob_signature,
@@ -41,8 +44,11 @@ struct _FuJcatEngineClass {
 				    FuJcatSignFlags flags,
 				    GError **error);
 	gboolean (*add_public_key_raw)(FuJcatEngine *self, GBytes *blob, GError **error);
+	void (*invalidate)(FuJcatEngine *self);
 };
 
+void
+fu_jcat_engine_invalidate(FuJcatEngine *self) G_GNUC_NON_NULL(1);
 FwupdJcatBlobKind
 fu_jcat_engine_get_kind(FuJcatEngine *self) G_GNUC_NON_NULL(1);
 FwupdJcatBlobMethod

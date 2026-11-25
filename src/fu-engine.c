@@ -118,6 +118,8 @@ struct _FuEngine {
 	FuJcatContext *jcat_context;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
+	GPtrArray *pki_link_monitors; /* (element-type GFileMonitor) */
+	GSource *pki_reload_source;
 	GMainLoop *acquiesce_loop;
 	GSource *acquiesce_source;
 	guint acquiesce_delay;
@@ -262,6 +264,12 @@ FuContext *
 fu_engine_get_context(FuEngine *self)
 {
 	return self->ctx;
+}
+
+FuJcatContext *
+fu_engine_get_jcat_context(FuEngine *self)
+{
+	return self->jcat_context;
 }
 
 static void
@@ -9036,6 +9044,135 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 	return TRUE;
 }
 
+static void
+fu_engine_pki_changed_cb(GFileMonitor *monitor,
+			 GFile *file,
+			 GFile *other_file,
+			 GFileMonitorEvent event_type,
+			 gpointer user_data);
+
+static void
+fu_engine_pki_monitor_free(GFileMonitor *monitor)
+{
+	g_file_monitor_cancel(monitor);
+	g_object_unref(monitor);
+}
+
+/* a key installed as a symlink can change without any event in the pki directory */
+static void
+fu_engine_watch_pki_links(FuEngine *self)
+{
+	GPtrArray *dirs = fu_jcat_context_get_public_key_dirs(self->jcat_context);
+	g_autoptr(GHashTable) watched = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
+	g_ptr_array_set_size(self->pki_link_monitors, 0);
+	for (guint i = 0; i < dirs->len; i++) {
+		const gchar *path = g_ptr_array_index(dirs, i);
+		const gchar *fn_tmp;
+		g_autoptr(GDir) dir = g_dir_open(path, 0, NULL);
+
+		if (dir == NULL)
+			continue;
+		while ((fn_tmp = g_dir_read_name(dir)) != NULL) {
+			g_autofree gchar *fn = g_build_filename(path, fn_tmp, NULL);
+
+			/* follow the chain, watching each target */
+			for (guint j = 0; j < 8; j++) {
+				GFileMonitor *monitor;
+				g_autofree gchar *dirname = NULL;
+				g_autofree gchar *target = g_file_read_link(fn, NULL);
+				g_autoptr(GError) error_local = NULL;
+				g_autoptr(GFile) file = NULL;
+
+				if (target == NULL)
+					break;
+				dirname = g_path_get_dirname(fn);
+				g_free(fn);
+				fn = g_canonicalize_filename(target, dirname);
+				if (g_hash_table_contains(watched, fn))
+					break;
+				g_hash_table_add(watched, g_strdup(fn));
+				file = g_file_new_for_path(fn);
+				monitor = g_file_monitor_file(file,
+							      G_FILE_MONITOR_NONE,
+							      NULL,
+							      &error_local);
+				if (monitor == NULL) {
+					g_warning("failed to watch %s: %s", fn, error_local->message);
+					break;
+				}
+				g_signal_connect(monitor,
+						 "changed",
+						 G_CALLBACK(fu_engine_pki_changed_cb),
+						 self);
+				g_ptr_array_add(self->pki_link_monitors, monitor);
+			}
+		}
+	}
+}
+
+static gboolean
+fu_engine_pki_reload_cb(gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE(user_data);
+
+	self->pki_reload_source = NULL;
+	fu_jcat_context_reload_public_keys(self->jcat_context);
+	fu_engine_watch_pki_links(self);
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_engine_pki_changed_cb(GFileMonitor *monitor,
+			 GFile *file,
+			 GFile *other_file,
+			 GFileMonitorEvent event_type,
+			 gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE(user_data);
+	g_autofree gchar *filename = g_file_get_path(file);
+
+	/* including permission changes, as a key may have become readable */
+	g_info("%s changed, reloading public keys", filename);
+
+	/* not from here, as this may replace the monitor that emitted the signal */
+	if (self->pki_reload_source != NULL)
+		return;
+	self->pki_reload_source = g_idle_source_new();
+	g_source_set_callback(self->pki_reload_source, fu_engine_pki_reload_cb, self, NULL);
+	g_source_attach(self->pki_reload_source, NULL);
+	g_source_unref(self->pki_reload_source);
+}
+
+static void
+fu_engine_add_public_keys(FuEngine *self, const gchar *subdir)
+{
+	GFileMonitor *monitor;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	path = fu_context_build_filename(self->ctx,
+					 NULL,
+					 FU_PATH_KIND_SYSCONFDIR,
+					 "pki",
+					 subdir,
+					 NULL);
+	if (path == NULL)
+		return;
+
+	/* watch before scanning so that a new CA is not missed */
+	file = g_file_new_for_path(path);
+	monitor = g_file_monitor_directory(file, G_FILE_MONITOR_NONE, NULL, &error_local);
+	if (monitor != NULL) {
+		g_signal_connect(monitor, "changed", G_CALLBACK(fu_engine_pki_changed_cb), self);
+		g_ptr_array_add(self->local_monitors, monitor);
+	} else {
+		g_warning("failed to watch %s: %s", path, error_local->message);
+	}
+	fu_jcat_context_add_public_keys(self->jcat_context, path);
+}
+
 #ifdef _WIN32
 static gchar *
 fu_engine_win32_registry_get_string(HKEY hkey,
@@ -9228,8 +9365,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
 	const gchar *keyring_path;
-	g_autofree gchar *pkidir_fw = NULL;
-	g_autofree gchar *pkidir_md = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_bios_policy = NULL;
 
@@ -9302,22 +9437,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	keyring_path = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
 	if (keyring_path != NULL)
 		fu_jcat_context_set_keyring_path(self->jcat_context, keyring_path);
-	pkidir_fw = fu_context_build_filename(self->ctx,
-					      NULL,
-					      FU_PATH_KIND_SYSCONFDIR,
-					      "pki",
-					      "fwupd",
-					      NULL);
-	if (pkidir_fw != NULL)
-		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
-	pkidir_md = fu_context_build_filename(self->ctx,
-					      NULL,
-					      FU_PATH_KIND_SYSCONFDIR,
-					      "pki",
-					      "fwupd-metadata",
-					      NULL);
-	if (pkidir_md != NULL)
-		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_md);
+	fu_engine_add_public_keys(self, "fwupd");
+	fu_engine_add_public_keys(self, "fwupd-metadata");
+	fu_engine_watch_pki_links(self);
 
 	/* cache machine ID so we can use it from a sandboxed app */
 	fu_engine_ensure_host_machine_id(self);
@@ -10013,6 +10135,8 @@ fu_engine_init(FuEngine *self)
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
 	self->host_security_attrs = fu_security_attrs_new();
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->pki_link_monitors =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_engine_pki_monitor_free);
 	self->search_queries = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -10037,6 +10161,8 @@ fu_engine_finalize(GObject *obj)
 		GFileMonitor *monitor = g_ptr_array_index(self->local_monitors, i);
 		g_file_monitor_cancel(monitor);
 	}
+	if (self->pki_reload_source != NULL)
+		g_source_destroy(self->pki_reload_source);
 
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
@@ -10076,6 +10202,7 @@ fu_engine_finalize(GObject *obj)
 	g_object_unref(self->jcat_context);
 	g_ptr_array_unref(self->plugin_filter);
 	g_ptr_array_unref(self->local_monitors);
+	g_ptr_array_unref(self->pki_link_monitors);
 	g_ptr_array_unref(self->search_queries);
 	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);

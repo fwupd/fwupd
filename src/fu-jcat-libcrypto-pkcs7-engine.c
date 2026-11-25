@@ -69,6 +69,7 @@ fu_jcat_libcrypto_pkcs7_engine_add_public_key_raw(FuJcatEngine *engine,
 static gboolean
 fu_jcat_libcrypto_pkcs7_engine_add_public_key(FuJcatEngine *engine,
 					      const gchar *filename,
+					      GBytes *blob,
 					      GError **error)
 {
 	FuJcatLibcryptoPkcs7Engine *self = FU_JCAT_LIBCRYPTO_PKCS7_ENGINE(engine);
@@ -76,18 +77,12 @@ fu_jcat_libcrypto_pkcs7_engine_add_public_key(FuJcatEngine *engine,
 
 	/* search all the public key files */
 	if (g_str_has_suffix(filename, ".pem") || g_str_has_suffix(filename, ".crt")) {
-		g_autoptr(GBytes) blob = fu_bytes_get_contents(filename, error);
-		if (blob == NULL)
-			return FALSE;
 		crt = fu_jcat_libcrypto_pkcs7_load_crt_from_blob_pem(blob, error);
 		if (crt == NULL)
 			return FALSE;
 		if (!fu_jcat_libcrypto_pkcs7_engine_add_pubkey_x509(self, crt, error))
 			return FALSE;
 	} else if (g_str_has_suffix(filename, ".cer") || g_str_has_suffix(filename, ".der")) {
-		g_autoptr(GBytes) blob = fu_bytes_get_contents(filename, error);
-		if (blob == NULL)
-			return FALSE;
 		crt = fu_jcat_libcrypto_pkcs7_load_crt_from_blob_der(blob, error);
 		if (crt == NULL)
 			return FALSE;
@@ -565,6 +560,13 @@ fu_jcat_libcrypto_pkcs7_engine_self_sign(FuJcatEngine *engine,
 }
 
 static void
+fu_jcat_libcrypto_pkcs7_engine_invalidate(FuJcatEngine *engine)
+{
+	FuJcatLibcryptoPkcs7Engine *self = FU_JCAT_LIBCRYPTO_PKCS7_ENGINE(engine);
+	g_clear_pointer(&self->trust_store, X509_STORE_free);
+}
+
+static void
 fu_jcat_libcrypto_pkcs7_engine_finalize(GObject *object)
 {
 	FuJcatLibcryptoPkcs7Engine *self = FU_JCAT_LIBCRYPTO_PKCS7_ENGINE(object);
@@ -586,6 +588,7 @@ fu_jcat_libcrypto_pkcs7_engine_class_init(FuJcatLibcryptoPkcs7EngineClass *klass
 	engine_class->pubkey_sign = fu_jcat_libcrypto_pkcs7_engine_pubkey_sign;
 	engine_class->self_verify = fu_jcat_libcrypto_pkcs7_engine_self_verify;
 	engine_class->self_sign = fu_jcat_libcrypto_pkcs7_engine_self_sign;
+	engine_class->invalidate = fu_jcat_libcrypto_pkcs7_engine_invalidate;
 	object_class->finalize = fu_jcat_libcrypto_pkcs7_engine_finalize;
 }
 

@@ -23,6 +23,8 @@ FuJcatContext *
 fu_jcat_context_new(void);
 void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path) G_GNUC_NON_NULL(1, 2);
+void
+fu_jcat_context_reload_public_keys(FuJcatContext *self) G_GNUC_NON_NULL(1);
 FuJcatEngine *
 fu_jcat_context_get_engine(FuJcatContext *self, FwupdJcatBlobKind kind, GError **error)
     G_GNUC_NON_NULL(1);
@@ -52,5 +54,9 @@ void
 fu_jcat_context_allow_blob_kind(FuJcatContext *self, FwupdJcatBlobKind kind) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_jcat_context_get_public_keys(FuJcatContext *self) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_jcat_context_get_public_key_blobs(FuJcatContext *self) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_jcat_context_get_public_key_dirs(FuJcatContext *self) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

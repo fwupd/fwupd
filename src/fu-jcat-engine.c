@@ -16,6 +16,7 @@ typedef struct {
 	FwupdJcatBlobKind kind;
 	FwupdJcatBlobMethod method;
 	gboolean done_setup;
+	GPtrArray *public_keys_raw; /* (element-type GBytes) */
 } FuJcatEnginePrivate;
 
 static void
@@ -46,6 +47,35 @@ fu_jcat_engine_add_string(FwupdCodec *codec, guint idt, GString *str)
 }
 
 static gboolean
+fu_jcat_engine_setup_keys(FuJcatEngine *self, GError **error)
+{
+	FuJcatEngineClass *klass = FU_JCAT_ENGINE_GET_CLASS(self);
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
+
+	/* optional */
+	if (klass->setup != NULL) {
+		if (!klass->setup(self, error))
+			return FALSE;
+	}
+	if (klass->add_public_key != NULL) {
+		GPtrArray *fns = fu_jcat_context_get_public_keys(priv->context);
+		GPtrArray *blobs = fu_jcat_context_get_public_key_blobs(priv->context);
+		for (guint i = 0; i < fns->len; i++) {
+			const gchar *fn = g_ptr_array_index(fns, i);
+			GBytes *blob = g_ptr_array_index(blobs, i);
+			if (!klass->add_public_key(self, fn, blob, error))
+				return FALSE;
+		}
+	}
+	for (guint i = 0; i < priv->public_keys_raw->len; i++) {
+		GBytes *blob = g_ptr_array_index(priv->public_keys_raw, i);
+		if (!klass->add_public_key_raw(self, blob, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_jcat_engine_setup(FuJcatEngine *self, GError **error)
 {
 	FuJcatEngineClass *klass = FU_JCAT_ENGINE_GET_CLASS(self);
@@ -63,23 +93,35 @@ fu_jcat_engine_setup(FuJcatEngine *self, GError **error)
 		return FALSE;
 	}
 
-	/* optional */
-	if (klass->setup != NULL) {
-		if (!klass->setup(self, error))
-			return FALSE;
-	}
-	if (klass->add_public_key != NULL) {
-		GPtrArray *fns = fu_jcat_context_get_public_keys(priv->context);
-		for (guint i = 0; i < fns->len; i++) {
-			const gchar *fn = g_ptr_array_index(fns, i);
-			if (!klass->add_public_key(self, fn, error))
-				return FALSE;
-		}
+	if (!fu_jcat_engine_setup_keys(self, error)) {
+		/* do not keep a partial set of keys around for the next attempt */
+		if (klass->invalidate != NULL)
+			klass->invalidate(self);
+		return FALSE;
 	}
 
 	/* success */
 	priv->done_setup = TRUE;
 	return TRUE;
+}
+
+/**
+ * fu_jcat_engine_invalidate:
+ * @self: #FuJcatEngine
+ *
+ * Drops any cached public keys.
+ **/
+void
+fu_jcat_engine_invalidate(FuJcatEngine *self)
+{
+	FuJcatEngineClass *klass = FU_JCAT_ENGINE_GET_CLASS(self);
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_JCAT_ENGINE(self));
+
+	if (klass->invalidate != NULL)
+		klass->invalidate(self);
+	priv->done_setup = FALSE;
 }
 
 /**
@@ -233,6 +275,7 @@ gboolean
 fu_jcat_engine_add_public_key_raw(FuJcatEngine *self, GBytes *blob, GError **error)
 {
 	FuJcatEngineClass *klass = FU_JCAT_ENGINE_GET_CLASS(self);
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_JCAT_ENGINE(self), FALSE);
 	g_return_val_if_fail(blob != NULL, FALSE);
 	if (klass->add_public_key_raw == NULL) {
@@ -244,7 +287,12 @@ fu_jcat_engine_add_public_key_raw(FuJcatEngine *self, GBytes *blob, GError **err
 	}
 	if (!fu_jcat_engine_setup(self, error))
 		return FALSE;
-	return klass->add_public_key_raw(self, blob, error);
+	if (!klass->add_public_key_raw(self, blob, error))
+		return FALSE;
+
+	/* so they survive fu_jcat_engine_invalidate() */
+	g_ptr_array_add(priv->public_keys_raw, g_bytes_ref(blob));
+	return TRUE;
 }
 
 /**
@@ -300,6 +348,9 @@ fu_jcat_engine_get_keyring_path(FuJcatEngine *self)
 static void
 fu_jcat_engine_finalize(GObject *object)
 {
+	FuJcatEngine *self = FU_JCAT_ENGINE(object);
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
+	g_ptr_array_unref(priv->public_keys_raw);
 	G_OBJECT_CLASS(fu_jcat_engine_parent_class)->finalize(object);
 }
 
@@ -393,4 +444,6 @@ fu_jcat_engine_class_init(FuJcatEngineClass *klass)
 static void
 fu_jcat_engine_init(FuJcatEngine *self)
 {
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
+	priv->public_keys_raw = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 }

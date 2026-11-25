@@ -69,24 +69,19 @@ fu_jcat_gnutls_pkcs7_engine_add_public_key_raw(FuJcatEngine *engine, GBytes *blo
 static gboolean
 fu_jcat_gnutls_pkcs7_engine_add_public_key(FuJcatEngine *engine,
 					   const gchar *filename,
+					   GBytes *blob,
 					   GError **error)
 {
 	FuJcatGnutlsPkcs7Engine *self = FU_JCAT_GNUTLS_PKCS7_ENGINE(engine);
 
 	/* search all the public key files */
 	if (g_str_has_suffix(filename, ".pem") || g_str_has_suffix(filename, ".crt")) {
-		g_autoptr(GBytes) blob = fu_bytes_get_contents(filename, error);
-		if (blob == NULL)
-			return FALSE;
 		if (!fu_jcat_gnutls_pkcs7_engine_add_pubkey_blob_fmt(self,
 								     blob,
 								     GNUTLS_X509_FMT_PEM,
 								     error))
 			return FALSE;
 	} else if (g_str_has_suffix(filename, ".cer") || g_str_has_suffix(filename, ".der")) {
-		g_autoptr(GBytes) blob = fu_bytes_get_contents(filename, error);
-		if (blob == NULL)
-			return FALSE;
 		if (!fu_jcat_gnutls_pkcs7_engine_add_pubkey_blob_fmt(self,
 								     blob,
 								     GNUTLS_X509_FMT_DER,
@@ -509,6 +504,13 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 }
 
 static void
+fu_jcat_gnutls_pkcs7_engine_invalidate(FuJcatEngine *engine)
+{
+	FuJcatGnutlsPkcs7Engine *self = FU_JCAT_GNUTLS_PKCS7_ENGINE(engine);
+	g_ptr_array_set_size(self->pubkeys_crts, 0);
+}
+
+static void
 fu_jcat_gnutls_pkcs7_engine_finalize(GObject *object)
 {
 	FuJcatGnutlsPkcs7Engine *self = FU_JCAT_GNUTLS_PKCS7_ENGINE(object);
@@ -527,6 +529,7 @@ fu_jcat_gnutls_pkcs7_engine_class_init(FuJcatGnutlsPkcs7EngineClass *klass)
 	engine_class->pubkey_sign = fu_jcat_gnutls_pkcs7_engine_pubkey_sign;
 	engine_class->self_verify = fu_jcat_gnutls_pkcs7_engine_self_verify;
 	engine_class->self_sign = fu_jcat_gnutls_pkcs7_engine_self_sign;
+	engine_class->invalidate = fu_jcat_gnutls_pkcs7_engine_invalidate;
 	object_class->finalize = fu_jcat_gnutls_pkcs7_engine_finalize;
 }
 

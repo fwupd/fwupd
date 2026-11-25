@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <glib/gstdio.h>
+
 #include "fwupd-remote-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
@@ -4144,12 +4146,131 @@ fu_engine_report_metadata_func(void)
 	}
 }
 
+static gboolean
+fu_engine_pki_key_has_contents(FuEngine *engine, const gchar *basename, const gchar *contents)
+{
+	FuJcatContext *jcat_context = fu_engine_get_jcat_context(engine);
+	GPtrArray *public_keys = fu_jcat_context_get_public_keys(jcat_context);
+	GPtrArray *blobs = fu_jcat_context_get_public_key_blobs(jcat_context);
+
+	for (guint i = 0; i < public_keys->len; i++) {
+		const gchar *fn = g_ptr_array_index(public_keys, i);
+		g_autofree gchar *basename_tmp = g_path_get_basename(fn);
+		g_autoptr(GBytes) blob_tmp = NULL;
+
+		if (g_strcmp0(basename_tmp, basename) != 0)
+			continue;
+		if (contents == NULL)
+			return TRUE;
+		blob_tmp = g_bytes_new_static(contents, strlen(contents));
+		return g_bytes_equal(g_ptr_array_index(blobs, i), blob_tmp);
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_engine_pki_wait_for_key(FuEngine *engine, const gchar *basename, const gchar *contents)
+{
+	gint64 deadline = g_get_monotonic_time() + 5 * G_USEC_PER_SEC;
+
+	while (g_get_monotonic_time() < deadline) {
+		while (g_main_context_iteration(NULL, FALSE))
+			;
+		if (fu_engine_pki_key_has_contents(engine, basename, contents))
+			return TRUE;
+		g_usleep(10000);
+	}
+	return FALSE;
+}
+
+static void
+fu_engine_pki_reload_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_link = NULL;
+	g_autofree gchar *fn_other = NULL;
+	g_autofree gchar *fn_target = NULL;
+	g_autofree gchar *fn_target_tmp = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *real_dir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_link = NULL;
+
+	tmpdir = fu_temporary_directory_new("engine-pki", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	pki_dir = fu_temporary_directory_build(tmpdir, "pki", "fwupd", NULL);
+	real_dir = fu_temporary_directory_build(tmpdir, "real", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(pki_dir, 0700), ==, 0);
+	g_assert_cmpint(g_mkdir_with_parents(real_dir, 0700), ==, 0);
+
+	/* a CA installed as a symlink to a file outside the pki directory */
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	fn_target = g_build_filename(real_dir, "ca.pem", NULL);
+	ret = fu_bytes_set_contents(fn_target, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fn_link = g_build_filename(pki_dir, "ca.pem", NULL);
+	file_link = g_file_new_for_path(fn_link);
+	ret = g_file_make_symbolic_link(file_link, fn_target, NULL, &error);
+	if (!ret && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("symlinks not supported");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* and one that cannot be read yet */
+	fn_other = g_build_filename(pki_dir, "other.pem", NULL);
+	ret = fu_bytes_set_contents(fn_other, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_chmod(fn_other, 0000), ==, 0);
+	if (g_file_get_contents(fn_other, &buf, NULL, NULL)) {
+		g_test_skip("file still readable, e.g. running as root");
+		return;
+	}
+
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR, fu_temporary_directory_get_path(tmpdir));
+	engine = fu_engine_new(ctx);
+	g_test_expect_message("FuJcat", G_LOG_LEVEL_WARNING, "failed to read public key *");
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_test_assert_expected_messages();
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_engine_pki_key_has_contents(engine, "ca.pem", NULL));
+	g_assert_false(fu_engine_pki_key_has_contents(engine, "other.pem", NULL));
+
+	/* only a permission change */
+	g_assert_cmpint(g_chmod(fn_other, 0644), ==, 0);
+	g_assert_true(fu_engine_pki_wait_for_key(engine, "other.pem", NULL));
+
+	/* the symlink stays, the target is replaced */
+	fn_target_tmp = g_build_filename(real_dir, "ca.pem.tmp", NULL);
+	ret = g_file_set_contents(fn_target_tmp, "new", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_rename(fn_target_tmp, fn_target), ==, 0);
+	g_assert_true(fu_engine_pki_wait_for_key(engine, "ca.pem", "new"));
+}
+
 int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
+	g_test_add_func("/fwupd/engine/pki-reload", fu_engine_pki_reload_func);
 	g_test_add_func("/fwupd/engine/codec", fu_engine_codec_func);
 	g_test_add_func("/fwupd/engine/get-protocols", fu_engine_get_protocols_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);

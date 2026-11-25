@@ -203,6 +203,8 @@ gboolean
 fu_engine_reset_config(FuEngine *self, const gchar *section, GError **error) G_GNUC_NON_NULL(1, 2);
 FuContext *
 fu_engine_get_context(FuEngine *self) G_GNUC_NON_NULL(1);
+FuJcatContext *
+fu_engine_get_jcat_context(FuEngine *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_engine_get_releases_for_device(FuEngine *self,
 				  FuEngineRequest *request,

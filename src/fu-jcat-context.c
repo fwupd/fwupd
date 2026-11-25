@@ -26,7 +26,9 @@
 struct _FuJcatContext {
 	GObject parent_instance;
 	GPtrArray *engines;
-	GPtrArray *public_keys;
+	GPtrArray *public_keys;	     /* (element-type utf-8) */
+	GPtrArray *public_key_blobs; /* (element-type GBytes) */
+	GPtrArray *public_key_dirs;  /* (element-type utf-8) */
 	gchar *keyring_path;
 	guint32 blob_kinds;
 };
@@ -40,6 +42,8 @@ fu_jcat_context_finalize(GObject *obj)
 	g_free(self->keyring_path);
 	g_ptr_array_unref(self->engines);
 	g_ptr_array_unref(self->public_keys);
+	g_ptr_array_unref(self->public_key_blobs);
+	g_ptr_array_unref(self->public_key_dirs);
 	G_OBJECT_CLASS(fu_jcat_context_parent_class)->finalize(obj);
 }
 
@@ -56,6 +60,8 @@ fu_jcat_context_init(FuJcatContext *self)
 	self->keyring_path = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, NULL);
 	self->engines = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->public_keys = g_ptr_array_new_with_free_func(g_free);
+	self->public_key_blobs = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+	self->public_key_dirs = g_ptr_array_new_with_free_func(g_free);
 
 	g_ptr_array_add(self->engines, fu_jcat_sha256_engine_new(self));
 	g_ptr_array_add(self->engines, fu_jcat_sha512_engine_new(self));
@@ -65,6 +71,49 @@ fu_jcat_context_init(FuJcatContext *self)
 #ifdef USE_JCAT_LIBCRYPTO
 	g_ptr_array_add(self->engines, fu_jcat_libcrypto_pkcs7_engine_new(self));
 #endif
+}
+
+/* returns FALSE if the directory could not be listed; files that could not be read are
+ * added to @failed */
+static gboolean
+fu_jcat_context_scan_public_keys(const gchar *path,
+				 GPtrArray *public_keys,
+				 GPtrArray *blobs,
+				 GPtrArray *failed)
+{
+	const gchar *fn_tmp;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	dir = g_dir_open(path, 0, &error_local);
+	if (dir == NULL) {
+		g_debug("failed to open public keys directory %s: %s", path, error_local->message);
+		return g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	}
+	while ((fn_tmp = g_dir_read_name(dir)) != NULL) {
+		gsize bufsz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autofree gchar *fn = NULL;
+		g_autoptr(GError) error_file = NULL;
+
+		/* only the formats the engines understand */
+		if (!g_str_has_suffix(fn_tmp, ".pem") && !g_str_has_suffix(fn_tmp, ".crt") &&
+		    !g_str_has_suffix(fn_tmp, ".cer") && !g_str_has_suffix(fn_tmp, ".der")) {
+			g_debug("ignoring %s as not a certificate", fn_tmp);
+			continue;
+		}
+
+		/* not mapped, as the file may change after this */
+		fn = g_build_filename(path, fn_tmp, NULL);
+		if (!g_file_get_contents(fn, &buf, &bufsz, &error_file)) {
+			g_warning("failed to read public key %s: %s", fn, error_file->message);
+			g_ptr_array_add(failed, g_steal_pointer(&fn));
+			continue;
+		}
+		g_ptr_array_add(public_keys, g_steal_pointer(&fn));
+		g_ptr_array_add(blobs, g_bytes_new_take(g_steal_pointer(&buf), bufsz));
+	}
+	return TRUE;
 }
 
 /**
@@ -77,21 +126,72 @@ fu_jcat_context_init(FuJcatContext *self)
 void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
 {
-	const gchar *fn_tmp;
-	g_autoptr(GDir) dir = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *path_safe = NULL;
+	g_autoptr(GPtrArray) failed = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(path != NULL);
 
-	/* search all the public key files */
-	dir = g_dir_open(path, 0, &error_local);
-	if (dir == NULL) {
-		g_debug("failed to open public keys directory %s: %s", path, error_local->message);
-		return;
+	/* no trailing separator, so it matches the dirname of each key */
+	path_safe = g_canonicalize_filename(path, NULL);
+	fu_jcat_context_scan_public_keys(path_safe,
+					 self->public_keys,
+					 self->public_key_blobs,
+					 failed);
+	if (!g_ptr_array_find_with_equal_func(self->public_key_dirs, path_safe, g_str_equal, NULL))
+		g_ptr_array_add(self->public_key_dirs, g_steal_pointer(&path_safe));
+}
+
+/**
+ * fu_jcat_context_reload_public_keys:
+ * @self: #FuJcatContext
+ *
+ * Rescans the public key directories.
+ **/
+void
+fu_jcat_context_reload_public_keys(FuJcatContext *self)
+{
+	g_autoptr(GPtrArray) public_keys = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) blobs = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+
+	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
+
+	for (guint i = 0; i < self->public_key_dirs->len; i++) {
+		const gchar *path = g_ptr_array_index(self->public_key_dirs, i);
+		gboolean dir_ok;
+		g_autoptr(GPtrArray) dir_keys = g_ptr_array_new_with_free_func(g_free);
+		g_autoptr(GPtrArray) dir_blobs =
+		    g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+		g_autoptr(GPtrArray) failed = g_ptr_array_new_with_free_func(g_free);
+
+		dir_ok = fu_jcat_context_scan_public_keys(path, dir_keys, dir_blobs, failed);
+		g_ptr_array_extend_and_steal(public_keys, g_steal_pointer(&dir_keys));
+		g_ptr_array_extend_and_steal(blobs, g_steal_pointer(&dir_blobs));
+
+		/* keep what we already read if the directory cannot be listed, or for a file that
+		 * is still there but cannot be read now; a key that has gone is dropped */
+		for (guint j = 0; j < self->public_keys->len; j++) {
+			const gchar *fn = g_ptr_array_index(self->public_keys, j);
+			if (dir_ok) {
+				if (!g_ptr_array_find_with_equal_func(failed, fn, g_str_equal, NULL))
+					continue;
+			} else {
+				g_autofree gchar *dirname = g_path_get_dirname(fn);
+				if (g_strcmp0(dirname, path) != 0)
+					continue;
+			}
+			g_ptr_array_add(public_keys, g_strdup(fn));
+			g_ptr_array_add(blobs, g_bytes_ref(g_ptr_array_index(self->public_key_blobs, j)));
+		}
 	}
-	while ((fn_tmp = g_dir_read_name(dir)) != NULL)
-		g_ptr_array_add(self->public_keys, g_build_filename(path, fn_tmp, NULL));
+	g_ptr_array_set_size(self->public_keys, 0);
+	g_ptr_array_extend_and_steal(self->public_keys, g_steal_pointer(&public_keys));
+	g_ptr_array_set_size(self->public_key_blobs, 0);
+	g_ptr_array_extend_and_steal(self->public_key_blobs, g_steal_pointer(&blobs));
+	for (guint i = 0; i < self->engines->len; i++) {
+		FuJcatEngine *engine = g_ptr_array_index(self->engines, i);
+		fu_jcat_engine_invalidate(engine);
+	}
 }
 
 /* private */
@@ -99,6 +199,20 @@ GPtrArray *
 fu_jcat_context_get_public_keys(FuJcatContext *self)
 {
 	return self->public_keys;
+}
+
+/* private */
+GPtrArray *
+fu_jcat_context_get_public_key_dirs(FuJcatContext *self)
+{
+	return self->public_key_dirs;
+}
+
+/* private, same order as fu_jcat_context_get_public_keys() */
+GPtrArray *
+fu_jcat_context_get_public_key_blobs(FuJcatContext *self)
+{
+	return self->public_key_blobs;
 }
 
 /**

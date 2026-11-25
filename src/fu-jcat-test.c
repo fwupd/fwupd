@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <glib/gstdio.h>
+
 #include "fwupd-jcat-blob.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-jcat-item.h"
@@ -698,6 +700,372 @@ fu_jcat_context_verify_item_csum_func(void)
 	g_clear_error(&error);
 }
 
+static void
+fu_jcat_context_reload_public_keys_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_backup = NULL;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_ca_new = NULL;
+	g_autofree gchar *fn_fw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+	g_autoptr(FuJcatResult) result_removed = NULL;
+
+	pki_dir = g_dir_make_tmp("jcat_pki_XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pki_dir);
+	fn_backup = g_build_filename(pki_dir, "backup", NULL);
+	g_assert_cmpint(g_mkdir(fn_backup, 0700), ==, 0);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+
+	fn_fw = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fw = fu_bytes_get_contents(fn_fw, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+
+	/* not trusted yet */
+	result_fail = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_null(result_fail);
+	g_assert_nonnull(error);
+	g_clear_error(&error);
+
+	/* add the CA */
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	fn_ca_new = g_build_filename(pki_dir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_ca_new, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_jcat_context_reload_public_keys(context);
+
+	result_pass = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+
+	/* remove the CA */
+	g_assert_cmpint(g_unlink(fn_ca_new), ==, 0);
+	fu_jcat_context_reload_public_keys(context);
+	result_removed = fu_jcat_engine_pubkey_verify(engine,
+						      data_fw,
+						      data_sig,
+						      FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						      &error);
+	g_assert_null(result_removed);
+	g_assert_nonnull(error);
+	g_clear_error(&error);
+
+	ret = fu_path_rmtree(pki_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_jcat_context_reload_unreadable_func(gconstpointer user_data)
+{
+	const gchar *suffix = user_data;
+	gboolean ret;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_ca_new = NULL;
+	g_autofree gchar *fn_fw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *pki_dir_reg = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	pki_dir = g_dir_make_tmp("jcat_pki_XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pki_dir);
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	fn_ca_new = g_build_filename(pki_dir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_ca_new, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	pki_dir_reg = g_strconcat(pki_dir, suffix, NULL);
+	fu_jcat_context_add_public_keys(context, pki_dir_reg);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+
+	/* a directory that cannot be read keeps its keys */
+	g_assert_cmpint(g_chmod(pki_dir, 0000), ==, 0);
+	dir = g_dir_open(pki_dir, 0, NULL);
+	if (dir != NULL) {
+		g_assert_cmpint(g_chmod(pki_dir, 0700), ==, 0);
+		ret = fu_path_rmtree(pki_dir, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_test_skip("directory still readable, e.g. running as root");
+		return;
+	}
+	fu_jcat_context_reload_public_keys(context);
+
+	fn_fw = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fw = fu_bytes_get_contents(fn_fw, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+	result = fu_jcat_engine_pubkey_verify(engine,
+					      data_fw,
+					      data_sig,
+					      FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result);
+
+	g_assert_cmpint(g_chmod(pki_dir, 0700), ==, 0);
+	ret = fu_path_rmtree(pki_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_jcat_context_reload_invalid_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_bad = NULL;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_ca_new = NULL;
+	g_autofree gchar *fn_fw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+
+	/* a valid CA next to a broken one */
+	pki_dir = g_dir_make_tmp("jcat_pki_XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pki_dir);
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	fn_ca_new = g_build_filename(pki_dir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_ca_new, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fn_bad = g_build_filename(pki_dir, "broken.pem", NULL);
+	ret = g_file_set_contents(fn_bad, "not a certificate", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+
+	fn_fw = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fw = fu_bytes_get_contents(fn_fw, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+	result_fail = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_null(result_fail);
+	g_assert_nonnull(error);
+	g_clear_error(&error);
+
+	/* remove the broken CA */
+	g_assert_cmpint(g_unlink(fn_bad), ==, 0);
+	fu_jcat_context_reload_public_keys(context);
+	result_pass = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+
+	ret = fu_path_rmtree(pki_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_jcat_context_reload_broken_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_broken = NULL;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_ca_new = NULL;
+	g_autofree gchar *fn_fw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_broken = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+
+	pki_dir = g_dir_make_tmp("jcat_pki_XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pki_dir);
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	fn_ca_new = g_build_filename(pki_dir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_ca_new, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* a key that cannot be read, next to a good one */
+	fn_broken = g_build_filename(pki_dir, "broken.pem", NULL);
+	file_broken = g_file_new_for_path(fn_broken);
+	ret = g_file_make_symbolic_link(file_broken, "does-not-exist.pem", NULL, &error);
+	if (!ret && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("symlinks not supported");
+		g_unlink(fn_ca_new);
+		g_rmdir(pki_dir);
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	g_test_expect_message("FuJcat", G_LOG_LEVEL_WARNING, "failed to read public key *");
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	g_test_assert_expected_messages();
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+
+	fn_fw = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fw = fu_bytes_get_contents(fn_fw, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+	result_pass = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+
+	/* the removed CA is not kept just because another file cannot be read */
+	g_assert_cmpint(g_unlink(fn_ca_new), ==, 0);
+	g_test_expect_message("FuJcat", G_LOG_LEVEL_WARNING, "failed to read public key *");
+	fu_jcat_context_reload_public_keys(context);
+	g_test_assert_expected_messages();
+	result_fail = fu_jcat_engine_pubkey_verify(engine,
+						   data_fw,
+						   data_sig,
+						   FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+						   &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(result_fail);
+
+	g_assert_cmpint(g_unlink(fn_broken), ==, 0);
+	g_assert_cmpint(g_rmdir(pki_dir), ==, 0);
+}
+
+static void
+fu_jcat_context_reload_raw_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_ca = NULL;
+	g_autofree gchar *fn_fw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autoptr(GBytes) data_ca = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result = NULL;
+
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+	fn_ca = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	data_ca = fu_bytes_get_contents(fn_ca, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ca);
+	ret = fu_jcat_engine_add_public_key_raw(engine, data_ca, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* keys added manually survive a reload */
+	fu_jcat_context_reload_public_keys(context);
+
+	fn_fw = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fw = fu_bytes_get_contents(fn_fw, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fw);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+	result = fu_jcat_engine_pubkey_verify(engine,
+					      data_fw,
+					      data_sig,
+					      FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -737,6 +1105,18 @@ main(int argc, char **argv)
 			     fwupd_jcat_pkcs7_engine_self_signed_pq_func);
 #endif
 	g_test_add_func("/jcat/context/verify/blob", fu_jcat_context_verify_blob_func);
+	g_test_add_func("/jcat/context/reload-public-keys", fu_jcat_context_reload_public_keys_func);
+	g_test_add_data_func("/jcat/context/reload-public-keys/unreadable",
+			     "",
+			     fu_jcat_context_reload_unreadable_func);
+	g_test_add_data_func("/jcat/context/reload-public-keys/unreadable-trailing",
+			     G_DIR_SEPARATOR_S,
+			     fu_jcat_context_reload_unreadable_func);
+	g_test_add_func("/jcat/context/reload-public-keys/broken",
+			fu_jcat_context_reload_broken_func);
+	g_test_add_func("/jcat/context/reload-public-keys/raw", fu_jcat_context_reload_raw_func);
+	g_test_add_func("/jcat/context/reload-public-keys/invalid",
+			fu_jcat_context_reload_invalid_func);
 	g_test_add_func("/jcat/context/verify/blob/disallow",
 			fu_jcat_context_verify_blob_disallow_func);
 	g_test_add_func("/jcat/context/verify/item/sign", fu_jcat_context_verify_item_sign_func);
