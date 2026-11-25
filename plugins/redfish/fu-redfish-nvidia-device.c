@@ -288,8 +288,8 @@ fu_redfish_nvidia_device_request_check(FuRedfishRequest *request, GError **error
 		return FALSE;
 	}
 
-	/* success*/
-	return FALSE;
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -313,7 +313,7 @@ fu_redfish_nvidia_device_poll_request(FuRedfishBackend *backend,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					&error_local)) {
 		/* these clear while an update is active */
-		if (fu_redfish_nvidia_device_request_check(request, error)) {
+		if (!fu_redfish_nvidia_device_request_check(request, error)) {
 			g_prefix_error(error, "polling task %s: ", uri);
 			return FALSE;
 		}
@@ -349,7 +349,7 @@ fu_redfish_nvidia_device_poll_request(FuRedfishBackend *backend,
 	}
 
 	/* these statuses can clear while an update remains active */
-	if (fu_redfish_nvidia_device_request_check(request, error)) {
+	if (!fu_redfish_nvidia_device_request_check(request, error)) {
 		g_prefix_error(error, "polling task %s: ", uri);
 		return FALSE;
 	}
