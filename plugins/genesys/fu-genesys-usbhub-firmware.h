@@ -21,3 +21,7 @@ gboolean
 fu_genesys_usbhub_firmware_calculate_size(FuInputStream *stream, gsize *size, GError **error);
 gboolean
 fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error);
+GBytes *
+fu_genesys_usbhub_firmware_get_project_bytes(FuGenesysUsbhubFirmware *self);
+gchar *
+fu_genesys_usbhub_firmware_get_mask_project_ic_type(FuGenesysUsbhubFirmware *self);

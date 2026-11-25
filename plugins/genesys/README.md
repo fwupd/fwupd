@@ -78,9 +78,32 @@ Since 1.7.6
 
 ### `Flags=proxy-required`
 
-A HID proxy must be found to use the USB hub device.
+A HID proxy must be found to use the USB hub device. When set, vendor control transfers fail
+closed instead of falling back to the USB control pipe if no connected proxy is bound.
 
 Since 2.1.1
+
+### `Flags=strict-project-check`
+
+Require exact matching of the 15-byte `PROJECT` tool string and 6-byte mask IC type between the
+device and the firmware image before updating, refusing blank or missing identities.
+
+Since 2.2.1
+
+### GenesysParentHubPid
+
+Expected USB PID (under the same VID) of the direct upstream USB hub. Verified before probing
+the HID proxy, before entering ISP mode, and before every state-changing update entry.
+
+Since 2.2.1
+
+### GenesysRootHubPid
+
+Expected USB PID (under the same VID) of the model-fingerprint ancestor hub (up to 4 hops
+upstream). Verified against the live USB backend topology and any linked logical parent chain
+before probing the HID proxy, before entering ISP mode, and before every update entry.
+
+Since 2.2.1
 
 ### GenesysUsbhubSwitchRequest
 

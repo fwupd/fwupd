@@ -41,6 +41,8 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubSwitchRequest");
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubWriteRequest");
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubHidProxyId");
+	fu_context_add_quirk_key(ctx, "GenesysParentHubPid");
+	fu_context_add_quirk_key(ctx, "GenesysRootHubPid");
 	fu_context_add_quirk_key(ctx, "GenesysSupportDualBank");
 	fu_context_add_quirk_key(ctx, "GenesysSupportCodeSize");
 	fu_context_add_quirk_key(ctx, "GenesysHubBank1Address");
@@ -70,9 +72,129 @@ fu_genesys_plugin_constructed(GObject *obj)
 	G_OBJECT_CLASS(fu_genesys_plugin_parent_class)->constructed(obj);
 }
 
+static FuDevice *
+fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physical_id)
+{
+	GPtrArray *devices = fu_plugin_get_devices(self);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index(devices, i);
+		if (!FU_IS_GENESYS_USBHUB_DEVICE(dev))
+			continue;
+		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+			continue;
+		if (g_strcmp0(fu_device_get_physical_id(dev), physical_id) == 0)
+			return dev;
+	}
+	return NULL;
+}
+
+/* link cascaded hubs by physical ID so fwupd <requires><firmware depth=...> resolves */
+static gboolean
+fu_genesys_plugin_link_hub(FuPlugin *self, FuDevice *hub)
+{
+	FuDevice *existing_parent;
+	FuDevice *parent;
+	const gchar *usb_parent_phys;
+	guint16 parent_pid;
+	g_autoptr(FuDevice) usb_parent = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	if (fu_device_has_private_flag(hub, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+		return FALSE;
+	parent_pid = fu_genesys_usbhub_device_get_parent_hub_pid(FU_GENESYS_USBHUB_DEVICE(hub));
+	if (parent_pid == 0)
+		return FALSE;
+
+	usb_parent = fu_device_get_backend_parent(hub, &error_local);
+	if (usb_parent == NULL) {
+		g_warning("hub cannot find its upstream hub: %s", error_local->message);
+		return FALSE;
+	}
+	usb_parent_phys = fu_device_get_physical_id(usb_parent);
+	if (usb_parent_phys == NULL || usb_parent_phys[0] == '\0') {
+		g_warning("hub upstream physical ID cannot be resolved");
+		return FALSE;
+	}
+
+	/* keep an existing parent only when connected and still matching the current USB parent */
+	existing_parent = fu_device_get_parent(hub, NULL);
+	if (existing_parent != NULL) {
+		const gchar *existing_phys = fu_device_get_physical_id(existing_parent);
+		if (!fu_device_has_private_flag(existing_parent,
+						FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) &&
+		    fu_device_get_vid(existing_parent) == fu_device_get_vid(usb_parent) &&
+		    fu_device_get_pid(existing_parent) == fu_device_get_pid(usb_parent) &&
+		    g_strcmp0(existing_phys, usb_parent_phys) == 0) {
+			if (g_strcmp0(fu_device_get_composite_id(hub),
+				      fu_device_get_composite_id(existing_parent)) != 0) {
+				fwupd_device_set_composite_id(
+				    FWUPD_DEVICE(hub),
+				    fu_device_get_composite_id(existing_parent));
+				return TRUE;
+			}
+			return FALSE;
+		}
+		g_object_set(hub, "parent", NULL, NULL);
+		fwupd_device_set_composite_id(FWUPD_DEVICE(hub), fu_device_get_id(hub));
+	}
+
+	/* the upstream hub may be added later, which links it from there */
+	parent = fu_genesys_plugin_get_device_by_physical_id(self, usb_parent_phys);
+	if (parent == NULL || parent == hub)
+		return existing_parent != NULL;
+	if (!fu_genesys_usbhub_device_check_parent_hub(parent_pid,
+						       fu_device_get_vid(hub),
+						       parent,
+						       &error_local)) {
+		g_warning("hub not linked to its upstream hub: %s", error_local->message);
+		return existing_parent != NULL;
+	}
+	g_object_set(hub, "parent", parent, NULL);
+	return TRUE;
+}
+
+static void
+fu_genesys_plugin_link_hubs(FuPlugin *self)
+{
+	GPtrArray *devices;
+
+	/* link hubs and propagate CompositeId to a fixed point regardless of arrival order */
+	devices = fu_plugin_get_devices(self);
+	for (guint pass = 0; pass < devices->len; pass++) {
+		gboolean changed = FALSE;
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *dev = g_ptr_array_index(devices, i);
+			if (FU_IS_GENESYS_USBHUB_DEVICE(dev) &&
+			    fu_genesys_plugin_link_hub(self, dev))
+				changed = TRUE;
+		}
+		if (!changed)
+			break;
+	}
+}
+
+static void
+fu_genesys_plugin_device_registered(FuPlugin *self, FuDevice *device)
+{
+	if (!FU_IS_GENESYS_USBHUB_DEVICE(device))
+		return;
+	/* run inside fu_engine_add_device() before fu_device_list_add() and depsolve_order() */
+	fu_genesys_plugin_link_hubs(self);
+}
+
+static void
+fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
+{
+	if (!FU_IS_GENESYS_USBHUB_DEVICE(device))
+		return;
+	fu_genesys_plugin_link_hubs(self);
+}
+
 static void
 fu_genesys_plugin_class_init(FuGenesysPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_genesys_plugin_constructed;
+	plugin_class->device_registered = fu_genesys_plugin_device_registered;
+	plugin_class->device_added = fu_genesys_plugin_device_added;
 }
