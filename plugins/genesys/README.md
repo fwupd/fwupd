@@ -84,7 +84,13 @@ Since 1.7.6
 
 A HID proxy must be found to use the USB hub device.
 
-Since 2.1.1
+Since 2027.0
+
+### `Flags=verify-project`
+
+Verify the firmware project matches between device and firmware.
+
+Since 2027.0
 
 ### GenesysUsbhubSwitchRequest
 
