@@ -74,7 +74,7 @@ fu_realtek_rts54hid_pd_device_ensure_status(FuRealtekRts54hidPdDevice *self, GEr
 
 static gboolean
 fu_realtek_rts54hid_pd_device_vendor_cmd_enable(FuRealtekRts54hidPdDevice *self,
-						guint8 value,
+						FuRealtekRts54hidVendorCmdEnable value,
 						GError **error)
 {
 	g_autoptr(FuRealtekRts54hidCmdBuffer) st = fu_realtek_rts54hid_cmd_buffer_new();
@@ -172,9 +172,16 @@ fu_realtek_rts54hid_pd_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
 
 	/* set MCU vendor cmd enable */
-	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(self, 1, error))
+	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(
+		self,
+		FU_REALTEK_RTS54HID_VENDOR_CMD_ENABLE_VENDOR_DEFINED,
+		error))
 		return FALSE;
-	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(self, 3, error))
+	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(
+		self,
+		FU_REALTEK_RTS54HID_VENDOR_CMD_ENABLE_VENDOR_DEFINED |
+		    FU_REALTEK_RTS54HID_VENDOR_CMD_ENABLE_SPI_FLASH_ACCESS,
+		error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

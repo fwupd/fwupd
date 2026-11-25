@@ -40,3 +40,10 @@ struct FuRealtekRts54hidCmdBuffer {
     i2c_speed: FuRealtekRts54hidI2cSpeed,
     reserved: u8,
 }
+
+#[repr(u8)]
+enum FuRealtekRts54hidVendorCmdEnable {
+    None           = 0,
+    VendorDefined  = 1 << 0,
+    SpiFlashAccess = 1 << 1,
+}
