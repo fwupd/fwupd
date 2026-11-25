@@ -63,9 +63,10 @@ fu_realtek_rts54hid_pd_device_ensure_status(FuRealtekRts54hidPdDevice *self, GEr
 		return FALSE;
 
 	/* check the hardware capabilities */
-	if ((st->buf->data[13] & 0x03) > 0)
+	if ((st->buf->data[13] & FU_REALTEK_RTS54HID_STATUS_ISP_VALIDATION_CAPABILITY) > 0) {
 		fu_device_add_private_flag(FU_DEVICE(self),
 					   FU_REALTEK_RTS54HID_DEVICE_FLAG_FW_AUTH);
+	}
 	version = g_strdup_printf("%x.%x", st->buf->data[3], st->buf->data[4]);
 
 	fu_device_set_version(FU_DEVICE(self), version);

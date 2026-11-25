@@ -47,3 +47,10 @@ enum FuRealtekRts54hidVendorCmdEnable {
     VendorDefined  = 1 << 0,
     SpiFlashAccess = 1 << 1,
 }
+
+#[repr(u8)]
+enum FuRealtekRts54hidStatus {
+    None                    = 0,
+    // these bits are proprietary
+    IspValidationCapability = 1 << 3,
+}
