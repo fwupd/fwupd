@@ -1,6 +1,6 @@
 # Realtek USBHub (HID Device)
 [USB\VID_0BDA&PID_5A00]
-Plugin = realtek-rts54hid
+Plugin = realtek_rts54hid
 Flags = enforce-requires
 GType = FuRealtekRts54hidHubDevice
 Rts54HidType = hub
@@ -10,7 +10,7 @@ Children = FuRealtekRts54hidModule|USB\VID_0BDA&PID_5A00&I2C_01
 
 # this is a fictitious example...
 [USB\VID_0BDA&PID_5A00&I2C_01]
-Plugin = realtek-rts54hid
+Plugin = realtek_rts54hid
 Name = HDMI Converter
 Flags = updatable
 FirmwareSize = 0x20000
@@ -18,10 +18,10 @@ Rts54TargetAddr = 0x00
 Rts54I2cSpeed = 0x00
 Rts54RegisterAddrLen = 0x04
 
-# Lenove CCB
+# Lenove CMB
 [USB\VID_0BDA&PID_1299]
-Plugin = realtek-rts54hid
+Plugin = realtek_rts54hid
 GType = FuRealtekRts54hidPdDevice
-Name = Realtek CCB PD
+Name = Realtek CMB PD
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
