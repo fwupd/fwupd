@@ -30,6 +30,7 @@
 #define FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN	"has-codesign"
 #define FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN	"has-hw-codesign"
 #define FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED	"proxy-required"
+#define FU_GENESYS_USBHUB_FLAG_BUILD_PARENT_ID	"build-parent-id"
 
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
@@ -1771,6 +1772,32 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PUBKEY", NULL);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PROJECT", NULL);
 
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_BUILD_PARENT_ID)) {
+		g_autoptr(FuDevice) device_parent = NULL;
+
+		device_parent =
+		    fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error);
+		if (device_parent == NULL) {
+			g_prefix_error_literal(error, "no hub parent: ");
+			return FALSE;
+		}
+		if (!fu_device_probe(device_parent, error)) {
+			g_prefix_error_literal(error, "failed to probe hub parent: ");
+			return FALSE;
+		}
+		fu_device_add_instance_u16(device, "PVID", fu_device_get_vid(device_parent));
+		fu_device_add_instance_u16(device, "PPID", fu_device_get_pid(device_parent));
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "USB",
+						 "VID",
+						 "PID",
+						 "PVID",
+						 "PPID",
+						 NULL))
+			return FALSE;
+	}
+
 	/* have MStar scaler */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER))
 		if (!fu_genesys_usbhub_device_mstar_scaler_setup(self, error))
@@ -3324,4 +3351,5 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN);
 	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED);
+	fu_device_register_private_flag(device_class, FU_GENESYS_USBHUB_FLAG_BUILD_PARENT_ID);
 }
