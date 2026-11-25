@@ -121,16 +121,15 @@ fu_realtek_rts54hid_pd_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_realtek_rts54hid_pd_device_close(FuDevice *device, GError **error)
+fu_realtek_rts54hid_pd_device_cleanup(FuDevice *device,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	FuRealtekRts54hidPdDevice *self = FU_REALTEK_RTS54HID_PD_DEVICE(device);
 
 	/* set MCU to normal clock rate */
-	if (!fu_realtek_rts54hid_pd_device_set_clock_mode(self, FALSE, error))
-		return FALSE;
-
-	/* FuHidDevice->close */
-	return FU_DEVICE_CLASS(fu_realtek_rts54hid_pd_device_parent_class)->close(device, error);
+	return fu_realtek_rts54hid_pd_device_set_clock_mode(self, FALSE, error);
 }
 
 static gboolean
@@ -233,6 +232,6 @@ fu_realtek_rts54hid_pd_device_class_init(FuRealtekRts54hidPdDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->write_firmware = fu_realtek_rts54hid_pd_device_write_firmware;
 	device_class->setup = fu_realtek_rts54hid_pd_device_setup;
-	device_class->close = fu_realtek_rts54hid_pd_device_close;
+	device_class->cleanup = fu_realtek_rts54hid_pd_device_cleanup;
 	device_class->set_progress = fu_realtek_rts54hid_pd_device_set_progress;
 }
