@@ -24,8 +24,9 @@ struct FuStructGenesysPdFirmwareHdr {
 
 // Tool String Descriptor
 #[repr(u8)]
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 enum FuGenesysTsVersion {
+    Unknown,
     Dynamic_9Byte = 0x30,
     Bonding,
     BondingQc,
@@ -209,7 +210,7 @@ struct FuStructGenesysTsVendorSupport {
     reserved3: [char; 15],
 }
 
-#[derive(Parse, ParseStream)]
+#[derive(Parse, ParseStream, New)]
 #[repr(C, packed)]
 struct FuStructGenesysTsBrandProject {
     project: [char; 15],
