@@ -75,7 +75,7 @@ fu_blestech_tp_hid_device_read(FuBlestechTpHidDevice *self,
 			       gsize rbufsz,
 			       GError **error)
 {
-	guint8 read_buf[34] = {FU_BLESTECH_TP_DEVICE_REPORT_ID};
+	guint8 read_buf[30] = {FU_BLESTECH_TP_DEVICE_REPORT_ID};
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  read_buf,
 					  sizeof(read_buf),
@@ -128,14 +128,15 @@ fu_blestech_tp_hid_device_update_start(FuBlestechTpHidDevice *self, GError **err
 }
 
 static gboolean
-fu_blestech_tp_hid_device_switch_boot(FuBlestechTpHidDevice *self, GError **error)
+fu_blestech_tp_hid_device_switch_boot_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuBlestechTpHidDevice *self = FU_BLESTECH_TP_HID_DEVICE(device);
 	guint16 fw_ver = 0;
 	g_autoptr(FuBlestechTpSwitchBootReq) st = fu_blestech_tp_switch_boot_req_new();
 
 	if (!fu_blestech_tp_hid_device_write(self, st->buf, 0, error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), 50);
+	fu_device_sleep(device, 100);
 
 	/* check whether switch boot success */
 	if (!fu_blestech_tp_hid_device_get_version(self, &fw_ver, error))
@@ -151,6 +152,17 @@ fu_blestech_tp_hid_device_switch_boot(FuBlestechTpHidDevice *self, GError **erro
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_blestech_tp_hid_device_switch_boot(FuBlestechTpHidDevice *self, GError **error)
+{
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_blestech_tp_hid_device_switch_boot_cb,
+				    4,
+				    0,
+				    NULL,
+				    error);
 }
 
 static gboolean
