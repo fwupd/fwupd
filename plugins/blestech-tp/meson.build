@@ -18,4 +18,7 @@ plugin_builtins += static_library(
   dependencies: plugin_deps,
 )
 
-device_tests += files('tests/blestech-touchpad.json')
+device_tests += files(
+  'tests/blestech-touchpad.json',
+  'tests/blestech-touchpad-i2c.json',
+)
