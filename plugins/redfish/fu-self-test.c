@@ -859,6 +859,30 @@ fu_redfish_nvidia_update_no_task_func(void)
 }
 
 static void
+fu_redfish_nvidia_update_transient_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* the first poll fails with a busy BMC, and the next one finds the task completed */
+	ret = fu_redfish_nvidia_write_payload(plugin, "transient", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_redfish_common_func(void)
 {
 	const guint8 buf[16] = {0x00,
@@ -1565,6 +1589,8 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/nvidia/update-monitor-failed",
 			fu_redfish_nvidia_update_monitor_failed_func);
 	g_test_add_func("/redfish/nvidia/update-no-task", fu_redfish_nvidia_update_no_task_func);
+	g_test_add_func("/redfish/nvidia/update-transient",
+			fu_redfish_nvidia_update_transient_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);

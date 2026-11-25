@@ -725,6 +725,9 @@ def task_status_548():
 @app.route("/redfish/v1/TaskService/Tasks/<int:task_id>")
 def task_status_nvidia(task_id: int):
     app._nvidia_polls += 1
+    if task_id == 605 and app._nvidia_polls == 1:
+        # the BMC is busy for a moment, and says so with a Redfish error body
+        return _failure("busy", status=503)
     res = {
         "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
         "@odata.type": "#Task.v1_4_3.Task",
@@ -962,6 +965,9 @@ def fwupdate_nvidia():
     elif contents == "monitor-failed":
         res = {"@odata.id": "/redfish/v1/TaskService/Tasks/604"}
         location = "/redfish/v1/TaskService/Tasks/604/Monitor"
+    elif contents == "transient":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/605"}
+        location = "/redfish/v1/TaskService/Tasks/605/Monitor"
     else:
         return _failure("data invalid")
     return Response(
