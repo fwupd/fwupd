@@ -67,6 +67,7 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_error = NULL;
 	g_autoptr(GString) str = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	/* load */
 	if (buf->data == NULL || buf->len == 0) {
@@ -76,12 +77,14 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 				    "there was no JSON payload");
 		return FALSE;
 	}
-	json_node = fwupd_json_parser_load_from_data(self->json_parser,
-						     (const gchar *)buf->data,
-						     (gssize)buf->len,
-						     error);
+	blob = g_bytes_new(buf->data, buf->len);
+	json_node = fwupd_json_parser_load_from_bytes(self->json_parser,
+						      blob,
+						      FWUPD_JSON_LOAD_FLAG_NONE,
+						      error);
 	if (json_node == NULL)
 		return FALSE;
+	g_clear_pointer(&self->json_obj, fwupd_json_object_unref);
 	self->json_obj = fwupd_json_node_get_object(json_node, error);
 	if (self->json_obj == NULL)
 		return FALSE;
@@ -237,7 +240,7 @@ static void
 fu_redfish_request_reset(FuRedfishRequest *self)
 {
 	self->status_code = 0;
-	self->json_obj = NULL;
+	g_clear_pointer(&self->json_obj, fwupd_json_object_unref);
 	g_byte_array_set_size(self->buf, 0);
 }
 
@@ -355,6 +358,8 @@ fu_redfish_request_finalize(GObject *object)
 	FuRedfishRequest *self = FU_REDFISH_REQUEST(object);
 	if (self->cache != NULL)
 		g_hash_table_unref(self->cache);
+	if (self->json_obj != NULL)
+		fwupd_json_object_unref(self->json_obj);
 	g_object_unref(self->json_parser);
 	g_byte_array_unref(self->buf);
 	g_free(self->path_prefix);
