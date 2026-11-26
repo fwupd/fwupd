@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+use crate::path::{PathExt, PathValidationFlag};
+
 use super::archive::{CFString, Utf8CFString};
 use super::CabError;
 use std::ffi::CStr;
@@ -24,24 +26,14 @@ impl CabPath {
     /// to do everything by hand, e.g. `Path` on Unix doesn'tt
     /// check for drive letters.
     fn path_is_valid(path: &str) -> Result<(), CabError> {
-        let unixy_path = path.replace('\\', "/");
-
-        if unixy_path.starts_with('/') {
+        if !path.validate_path(
+            PathValidationFlag::DisallowAbsolutePaths | PathValidationFlag::DisallowDriveLetters,
+        ) {
             return Err(CabError::Format(format!(
                 "absolute path not allowed: {path}"
             )));
         }
-
-        let drive_prefix: Vec<&str> = unixy_path.splitn(2, '/').collect();
-        for drive in drive_prefix.iter().take(1) {
-            if drive.contains(':') {
-                return Err(CabError::Format(format!(
-                    "drive letters in paths are not allowed: {path}"
-                )));
-            }
-        }
-
-        if unixy_path.split('/').any(|p| p == "..") {
+        if !path.validate_path(PathValidationFlag::DisallowTraversal.as_mask()) {
             return Err(CabError::Format(format!(
                 "path traversal not allowed: {path}"
             )));
