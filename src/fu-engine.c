@@ -9113,6 +9113,17 @@ fu_engine_backends_coldplug_backend(FuEngine *self,
 		return FALSE;
 	fu_progress_step_done(progress);
 
+	/* connect hotplug add/change before plugin probing so events arriving while
+	 * plugins probe slow devices are not dropped */
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-added",
+			 G_CALLBACK(fu_engine_backend_device_added_cb),
+			 self);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-changed",
+			 G_CALLBACK(fu_engine_backend_device_changed_cb),
+			 self);
+
 	/* add */
 	fu_engine_backends_coldplug_backend_add_devices(self,
 							backend,
@@ -9123,16 +9134,8 @@ fu_engine_backends_coldplug_backend(FuEngine *self,
 	/* success */
 	fu_backend_add_flag(backend, FU_BACKEND_FLAG_DONE_COLDPLUG);
 	g_signal_connect(FU_BACKEND(backend),
-			 "device-added",
-			 G_CALLBACK(fu_engine_backend_device_added_cb),
-			 self);
-	g_signal_connect(FU_BACKEND(backend),
 			 "device-removed",
 			 G_CALLBACK(fu_engine_backend_device_removed_cb),
-			 self);
-	g_signal_connect(FU_BACKEND(backend),
-			 "device-changed",
-			 G_CALLBACK(fu_engine_backend_device_changed_cb),
 			 self);
 	return TRUE;
 }
