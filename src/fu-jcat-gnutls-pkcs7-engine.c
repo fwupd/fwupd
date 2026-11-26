@@ -509,6 +509,13 @@ fu_jcat_gnutls_pkcs7_engine_self_sign(FuJcatEngine *engine,
 }
 
 static void
+fu_jcat_gnutls_pkcs7_engine_invalidate(FuJcatEngine *engine)
+{
+	FuJcatGnutlsPkcs7Engine *self = FU_JCAT_GNUTLS_PKCS7_ENGINE(engine);
+	g_ptr_array_set_size(self->pubkeys_crts, 0);
+}
+
+static void
 fu_jcat_gnutls_pkcs7_engine_finalize(GObject *object)
 {
 	FuJcatGnutlsPkcs7Engine *self = FU_JCAT_GNUTLS_PKCS7_ENGINE(object);
@@ -527,6 +534,7 @@ fu_jcat_gnutls_pkcs7_engine_class_init(FuJcatGnutlsPkcs7EngineClass *klass)
 	engine_class->pubkey_sign = fu_jcat_gnutls_pkcs7_engine_pubkey_sign;
 	engine_class->self_verify = fu_jcat_gnutls_pkcs7_engine_self_verify;
 	engine_class->self_sign = fu_jcat_gnutls_pkcs7_engine_self_sign;
+	engine_class->invalidate = fu_jcat_gnutls_pkcs7_engine_invalidate;
 	object_class->finalize = fu_jcat_gnutls_pkcs7_engine_finalize;
 }
 

@@ -19,6 +19,7 @@ G_DECLARE_DERIVABLE_TYPE(FuJcatEngine, fu_jcat_engine, FU, JCAT_ENGINE, GObject)
 struct _FuJcatEngineClass {
 	GObjectClass parent_class;
 	gboolean (*setup)(FuJcatEngine *self, GError **error);
+	void (*invalidate)(FuJcatEngine *self);
 	gboolean (*add_public_key)(FuJcatEngine *self, const gchar *filename, GError **error);
 	FuJcatResult *(*pubkey_verify)(FuJcatEngine *self,
 				       GBytes *blob,
@@ -74,5 +75,7 @@ fu_jcat_engine_add_public_key_raw(FuJcatEngine *self, GBytes *blob, GError **err
     G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_jcat_engine_get_keyring_path(FuJcatEngine *self) G_GNUC_NON_NULL(1);
+void
+fu_jcat_engine_invalidate(FuJcatEngine *self) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

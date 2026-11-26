@@ -123,6 +123,13 @@ fu_jcat_libcrypto_pkcs7_engine_setup(FuJcatEngine *engine, GError **error)
 	return TRUE;
 }
 
+static void
+fu_jcat_libcrypto_pkcs7_engine_invalidate(FuJcatEngine *engine)
+{
+	FuJcatLibcryptoPkcs7Engine *self = FU_JCAT_LIBCRYPTO_PKCS7_ENGINE(engine);
+	g_clear_pointer(&self->trust_store, X509_STORE_free);
+}
+
 /* nocheck:name */
 static int
 cms_verify_cb(int ok, X509_STORE_CTX *ctx)
@@ -580,6 +587,7 @@ fu_jcat_libcrypto_pkcs7_engine_class_init(FuJcatLibcryptoPkcs7EngineClass *klass
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuJcatEngineClass *engine_class = FU_JCAT_ENGINE_CLASS(klass);
 	engine_class->setup = fu_jcat_libcrypto_pkcs7_engine_setup;
+	engine_class->invalidate = fu_jcat_libcrypto_pkcs7_engine_invalidate;
 	engine_class->add_public_key = fu_jcat_libcrypto_pkcs7_engine_add_public_key;
 	engine_class->add_public_key_raw = fu_jcat_libcrypto_pkcs7_engine_add_public_key_raw;
 	engine_class->pubkey_verify = fu_jcat_libcrypto_pkcs7_engine_pubkey_verify;

@@ -9206,6 +9206,30 @@ fu_engine_ensure_host_machine_id(FuEngine *self)
 		g_info("failed to build machine-id: %s", error_local->message);
 }
 
+static void
+fu_engine_load_jcat_context_add_public_keys(FuEngine *self)
+{
+	g_autofree gchar *pkidir_fw = NULL;
+	g_autofree gchar *pkidir_md = NULL;
+
+	pkidir_fw = fu_context_build_filename(self->ctx,
+					      NULL,
+					      FU_PATH_KIND_SYSCONFDIR,
+					      "pki",
+					      "fwupd",
+					      NULL);
+	if (pkidir_fw != NULL)
+		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
+	pkidir_md = fu_context_build_filename(self->ctx,
+					      NULL,
+					      FU_PATH_KIND_SYSCONFDIR,
+					      "pki",
+					      "fwupd-metadata",
+					      NULL);
+	if (pkidir_md != NULL)
+		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_md);
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -9228,8 +9252,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
 	const gchar *keyring_path;
-	g_autofree gchar *pkidir_fw = NULL;
-	g_autofree gchar *pkidir_md = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_bios_policy = NULL;
 
@@ -9302,22 +9324,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	keyring_path = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
 	if (keyring_path != NULL)
 		fu_jcat_context_set_keyring_path(self->jcat_context, keyring_path);
-	pkidir_fw = fu_context_build_filename(self->ctx,
-					      NULL,
-					      FU_PATH_KIND_SYSCONFDIR,
-					      "pki",
-					      "fwupd",
-					      NULL);
-	if (pkidir_fw != NULL)
-		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
-	pkidir_md = fu_context_build_filename(self->ctx,
-					      NULL,
-					      FU_PATH_KIND_SYSCONFDIR,
-					      "pki",
-					      "fwupd-metadata",
-					      NULL);
-	if (pkidir_md != NULL)
-		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_md);
+	fu_engine_load_jcat_context_add_public_keys(self);
 
 	/* cache machine ID so we can use it from a sandboxed app */
 	fu_engine_ensure_host_machine_id(self);
@@ -9827,6 +9834,14 @@ fu_engine_codec_iface_init(FwupdCodecInterface *iface)
 }
 
 static void
+fu_engine_jcat_context_changed_cb(FuJcatContext *jcat_context, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE(user_data);
+	fu_jcat_context_invalidate(self->jcat_context);
+	fu_engine_load_jcat_context_add_public_keys(self);
+}
+
+static void
 fu_engine_constructed(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
@@ -9955,6 +9970,10 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = fu_jcat_context_new();
+	g_signal_connect(self->jcat_context,
+			 "changed",
+			 G_CALLBACK(fu_engine_jcat_context_changed_cb),
+			 self);
 	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
 	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
 	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);

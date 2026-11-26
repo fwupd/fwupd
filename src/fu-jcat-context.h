@@ -22,6 +22,8 @@ G_DECLARE_FINAL_TYPE(FuJcatContext, fu_jcat_context, FU, JCAT_CONTEXT, GObject)
 FuJcatContext *
 fu_jcat_context_new(void);
 void
+fu_jcat_context_invalidate(FuJcatContext *self) G_GNUC_NON_NULL(1);
+void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path) G_GNUC_NON_NULL(1, 2);
 FuJcatEngine *
 fu_jcat_context_get_engine(FuJcatContext *self, FwupdJcatBlobKind kind, GError **error)
