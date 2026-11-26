@@ -200,6 +200,7 @@ static void
 fu_dell_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuBiosSetting *bios_attr;
+	const gchar *current_value;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuSecurityAttr) attr = NULL;
 
@@ -208,13 +209,21 @@ fu_dell_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		g_debug("failed to find %s in cache", BIOS_SETTING_BIOS_DOWNGRADE);
 		return;
 	}
+	current_value = fu_bios_setting_get_current_value(bios_attr);
+	if (g_strcmp0(current_value, "Enabled") != 0 && g_strcmp0(current_value, "Disabled") != 0) {
+		g_debug("ignoring unknown value for %s", BIOS_SETTING_BIOS_DOWNGRADE);
+		return;
+	}
 
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
 	fu_security_attr_add_bios_target_value(attr, BIOS_SETTING_BIOS_DOWNGRADE, "Disabled");
 	fu_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attr_add_obsolete(
+	    attr,
+	    "uefi_capsule:" FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
 	fu_security_attrs_append(attrs, attr);
 
-	if (g_strcmp0(fu_bios_setting_get_current_value(bios_attr), "Enabled") == 0) {
+	if (g_strcmp0(current_value, "Enabled") == 0) {
 		fu_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
