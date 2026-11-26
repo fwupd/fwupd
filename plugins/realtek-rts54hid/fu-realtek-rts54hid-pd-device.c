@@ -179,6 +179,8 @@ fu_realtek_rts54hid_pd_device_write_firmware(FuDevice *device,
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* set MCU vendor cmd enable */
 	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(
