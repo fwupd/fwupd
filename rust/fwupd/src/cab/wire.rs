@@ -17,13 +17,10 @@
 //! responsible for correct reading of this optional and/or variable-length
 //! data.
 
-use std::io::Write;
 use zerocopy::byteorder::little_endian::{U16 as U16LE, U32 as U32LE};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 use crate::declare_bitflags;
-use crate::io::ReadSeekExt;
-use crate::streams::ReadSeek;
 
 use super::CabError;
 use super::{MsDosDate, MsDosTime};
@@ -40,61 +37,6 @@ const CFFOLDER_SIZE: usize = 8;
 const CFFILE_SIZE: usize = 16;
 const CFDATA_SIZE: usize = 8;
 const CFHEADER_RESERVE_SIZE: usize = 4;
-
-/// Marker trait for fixed-size, `repr(C, packed)` structs that can be read
-/// directly from a byte source.
-///
-/// # Safety
-/// Only implement for types that are `#[repr(C, packed)]` with no implicit
-/// padding bytes, so their in-memory representation is the correct on-disk
-/// wire format.
-pub trait FixedSizeIO {
-    /// Returns the size of this struct in bytes
-    #[must_use]
-    fn size_in_bytes() -> usize
-    where
-        Self: Sized,
-    {
-        std::mem::size_of::<Self>()
-    }
-
-    /// Read `Self` from the givens source at the given offset, returning
-    /// `Self` and the number of bytes read.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the read fails.
-    fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
-        offset: usize,
-    ) -> Result<(Self, usize), CabError>
-    where
-        Self: Sized + FromBytes + KnownLayout,
-    {
-        let nbytes = Self::size_in_bytes();
-        let data = src.read_exact_at(offset, nbytes)?;
-        let value = Self::read_from_bytes(&data)
-            .map_err(|e| CabError::Format(format!("size mismatch reading wire struct: {e}")))?;
-        Ok((value, nbytes))
-    }
-
-    /// Write `Self` to the given destination buffer.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the destination buffer is insufficiently large.
-    fn write(&self, dst: &mut impl Write) -> std::io::Result<usize>
-    where
-        Self: Sized + IntoBytes + Immutable,
-    {
-        let nbytes = Self::size_in_bytes();
-
-        let bytes: &[u8] = IntoBytes::as_bytes(self);
-        dst.write_all(bytes)?;
-
-        Ok(nbytes)
-    }
-}
 
 /// Compression type used in a cabinet folder.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -212,8 +154,6 @@ pub struct CFHeader {
 
 const _: () = assert!(std::mem::size_of::<CFHeader>() == CFHEADER_SIZE);
 
-impl FixedSizeIO for CFHeader {}
-
 /// Optional reserved-size header immediately following the [`CFHeader`]. Only
 /// present when `CFHeaderFlag::HasReserve` is set.
 ///
@@ -232,8 +172,6 @@ pub struct CFHeaderReserve {
 }
 
 const _: () = assert!(std::mem::size_of::<CFHeaderReserve>() == CFHEADER_RESERVE_SIZE);
-
-impl FixedSizeIO for CFHeaderReserve {}
 
 /// A folder entry within a cab file.
 ///
@@ -259,8 +197,6 @@ pub struct CFFolder {
 }
 
 const _: () = assert!(std::mem::size_of::<CFFolder>() == CFFOLDER_SIZE);
-
-impl FixedSizeIO for CFFolder {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CFFolderIndex {
@@ -331,8 +267,6 @@ pub struct CFFile {
 
 const _: () = assert!(std::mem::size_of::<CFFile>() == CFFILE_SIZE);
 
-impl FixedSizeIO for CFFile {}
-
 /// A data block header.
 ///
 ///```c
@@ -359,10 +293,10 @@ pub struct CFData {
 
 const _: () = assert!(std::mem::size_of::<CFData>() == CFDATA_SIZE);
 
-impl FixedSizeIO for CFData {}
-
 #[cfg(test)]
 mod tests {
+    use crate::io::{ReadExt, ReadSeekExt, WriteExt};
+
     use super::*;
     use std::io::Cursor;
 
@@ -381,7 +315,8 @@ mod tests {
         buf[26..28].copy_from_slice(&1u16.to_le_bytes()); // cFolders
         buf[28..30].copy_from_slice(&2u16.to_le_bytes()); // cFiles
 
-        let (hdr, _) = CFHeader::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let hdr: CFHeader = src.read_type().unwrap();
         assert_eq!(hdr.signature.get(), CF_SIGNATURE);
         assert_eq!(hdr.cbCabinet.get(), 100);
         assert_eq!(hdr.coffFiles.get(), 50);
@@ -409,10 +344,11 @@ mod tests {
             iCabinet: U16LE::new(0),
         };
         let mut buf: Vec<u8> = Vec::new();
-        hdr.write(&mut buf).unwrap();
+        buf.write_type(hdr).unwrap();
         assert_eq!(buf.len(), CFHEADER_SIZE);
 
-        let (parsed, _) = CFHeader::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let parsed: CFHeader = src.read_type().unwrap();
         assert_eq!(parsed.signature.get(), CF_SIGNATURE);
         assert_eq!(parsed.cbCabinet.get(), 12345);
         assert_eq!(parsed.coffFiles.get(), 44);
@@ -424,7 +360,9 @@ mod tests {
     #[test]
     fn cab_header_parse_too_short() {
         let buf = [0u8; 10];
-        assert!(CFHeader::read(&mut Cursor::new(&buf), 0).is_err());
+        let mut src = Cursor::new(&buf);
+        let result: std::io::Result<CFHeader> = src.read_type_at(0);
+        assert!(result.is_err());
     }
 
     #[test]
@@ -434,7 +372,8 @@ mod tests {
         buf[4..6].copy_from_slice(&5u16.to_le_bytes());
         buf[6..8].copy_from_slice(&u16::from(CFCompressionType::MsZip).to_le_bytes());
 
-        let (folder, _) = CFFolder::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let folder = src.read_type_at::<CFFolder>(0).unwrap();
         assert_eq!(folder.coffCabStart.get(), 0x100);
         assert_eq!(folder.cCFData.get(), 5);
         assert_eq!(
@@ -451,10 +390,11 @@ mod tests {
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
         let mut buf: Vec<u8> = Vec::new();
-        folder.write(&mut buf).unwrap();
+        buf.write_type(folder).unwrap();
         assert_eq!(buf.len(), CFFOLDER_SIZE);
 
-        let (parsed, _) = CFFolder::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let parsed = src.read_type_at::<CFFolder>(0).unwrap();
         assert_eq!(parsed.coffCabStart.get(), 0x200);
         assert_eq!(parsed.cCFData.get(), 3);
         assert_eq!(
@@ -470,7 +410,8 @@ mod tests {
         buf[4..6].copy_from_slice(&100u16.to_le_bytes());
         buf[6..8].copy_from_slice(&200u16.to_le_bytes());
 
-        let (dh, _) = CFData::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let dh = src.read_type_at::<CFData>(0).unwrap();
         assert_eq!(dh.csum.get(), 0xDEADBEEF);
         assert_eq!(dh.cbData.get(), 100);
         assert_eq!(dh.cbUncomp.get(), 200);
@@ -484,10 +425,11 @@ mod tests {
             cbUncomp: U16LE::new(128),
         };
         let mut buf: Vec<u8> = Vec::new();
-        dh.write(&mut buf).unwrap();
+        buf.write_type(dh).unwrap();
         assert_eq!(buf.len(), CFDATA_SIZE);
 
-        let (parsed, _) = CFData::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let parsed = src.read_type_at::<CFData>(0).unwrap();
         assert_eq!(parsed.csum.get(), 0x12345678);
         assert_eq!(parsed.cbData.get(), 64);
         assert_eq!(parsed.cbUncomp.get(), 128);
@@ -503,7 +445,8 @@ mod tests {
         buf[12..14].copy_from_slice(&0x5678u16.to_le_bytes()); // time
         buf[14..16].copy_from_slice(&0x20u16.to_le_bytes()); // attribs
 
-        let (fhdr, _) = CFFile::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let fhdr = src.read_type_at::<CFFile>(0).unwrap();
         assert_eq!(fhdr.cbFile.get(), 1000);
         assert_eq!(fhdr.uoffFolderStart.get(), 0);
         assert_eq!(fhdr.iFolder.get(), 0);
@@ -521,9 +464,10 @@ mod tests {
             attribs: U16LE::new(0x20),
         };
         let mut buf: Vec<u8> = Vec::new();
-        fhdr.write(&mut buf).unwrap();
+        buf.write_type(fhdr).unwrap();
 
-        let (parsed, _) = CFFile::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let parsed = src.read_type_at::<CFFile>(0).unwrap();
         assert_eq!(parsed.cbFile.get(), 500);
         assert_eq!(parsed.uoffFolderStart.get(), 100);
         assert_eq!(parsed.iFolder.get(), 0);
@@ -533,7 +477,8 @@ mod tests {
     #[test]
     fn cab_header_reserve_parse() {
         let buf: &[u8] = &[0x10, 0x00, 0x04, 0x02];
-        let (reserve, _) = CFHeaderReserve::read(&mut Cursor::new(&buf), 0).unwrap();
+        let mut src = Cursor::new(&buf);
+        let reserve = src.read_type_at::<CFHeaderReserve>(0).unwrap();
         assert_eq!(reserve.cbCFHeader.get(), 16);
         assert_eq!(reserve.cbCFFolder, 4);
         assert_eq!(reserve.cbCFData, 2);

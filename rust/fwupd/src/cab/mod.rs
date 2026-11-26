@@ -93,6 +93,12 @@ impl From<std::str::Utf8Error> for CabError {
     }
 }
 
+impl From<crate::math::OverflowError<usize>> for CabError {
+    fn from(value: crate::math::OverflowError<usize>) -> Self {
+        CabError::Format(value.to_string())
+    }
+}
+
 impl std::error::Error for CabError {}
 
 impl From<CabError> for crate::Error {

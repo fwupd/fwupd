@@ -14,11 +14,12 @@ use zerocopy::byteorder::little_endian::{U16 as U16LE, U32 as U32LE};
 use super::archive::CFString;
 use super::path::CabPath;
 use super::wire::{
-    CFCompressionType, CFData, CFFile, CFFolder, CFHeader, FixedSizeIO, CF_MAJOR_VERSION,
-    CF_MINOR_VERSION, CF_SIGNATURE,
+    CFCompressionType, CFData, CFFile, CFFolder, CFHeader, CF_MAJOR_VERSION, CF_MINOR_VERSION,
+    CF_SIGNATURE,
 };
 use super::{Checksum, MsDosDate, MsDosFileAttr, MsDosFileAttrs, MsDosTime};
 use crate::compressor::{MszipBlock, MszipCompressor};
+use crate::io::{FixedSizeStruct, WriteExt};
 use crate::streams::{IntoStream, MemoryInputStream, Stream, StreamImpl};
 use crate::units::ByteCount;
 use crate::Bitflags;
@@ -446,7 +447,7 @@ impl ArchiveBuilder<HasFiles> {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        cfheader.write(writer)?;
+        writer.write_type(cfheader)?;
         // No reserve data needed
 
         let mut off_cfdata = offset_cffile + u32::try_from(sz_file_headers)?;
@@ -456,7 +457,7 @@ impl ArchiveBuilder<HasFiles> {
                 cCFData: U16LE::new(u16::try_from(file.block_info.len())?),
                 typeCompress: U16LE::new(file.compression_type.into()),
             };
-            cffolder.write(writer)?;
+            writer.write_type(cffolder)?;
             off_cfdata += u32::try_from(
                 CFData::size_in_bytes() * file.block_info.len() + file.compressed_size as usize,
             )?;
@@ -468,7 +469,7 @@ impl ArchiveBuilder<HasFiles> {
             } else {
                 file.attributes | MsDosFileAttr::NameIsUtf
             };
-            let name = CFString::from(&file.path);
+            let name = file.path.as_ref();
             let cffile = CFFile {
                 cbFile: U32LE::new(file.uncompressed_size),
                 uoffFolderStart: U32LE::new(file.offset_in_folder),
@@ -477,8 +478,8 @@ impl ArchiveBuilder<HasFiles> {
                 time: file.time,
                 attribs: U16LE::new(attrs.bits()),
             };
-            cffile.write(writer)?;
-            writer.write_all(name.as_bytes_with_nul())?;
+            writer.write_type(cffile)?;
+            writer.write_nul_terminated_string(name)?;
         }
 
         for file in &outfiles {
@@ -489,7 +490,7 @@ impl ArchiveBuilder<HasFiles> {
                         cbData: U16LE::new(0),
                         cbUncomp: U16LE::new(0),
                     };
-                    cfdata.write(writer)?;
+                    writer.write_type(cfdata)?;
                     continue;
                 }
 
@@ -513,7 +514,7 @@ impl ArchiveBuilder<HasFiles> {
                 let mut csum = Checksum::new_from_cfdata(&cfdata);
                 csum.update(&data);
                 cfdata.csum = U32LE::new(csum.checksum());
-                cfdata.write(writer)?;
+                writer.write_type(cfdata)?;
                 writer.write_all(&data)?;
             }
         }

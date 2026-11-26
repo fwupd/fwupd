@@ -128,6 +128,12 @@ impl From<&CabPath> for CFString {
     }
 }
 
+impl AsRef<str> for CabPath {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
+
 impl fmt::Display for CabPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
