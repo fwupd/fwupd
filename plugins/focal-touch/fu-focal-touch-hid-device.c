@@ -283,7 +283,7 @@ fu_focal_touch_hid_device_wait_for_upgrade_ready(FuFocalTouchHidDevice *self,
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_focal_touch_hid_device_wait_for_upgrade_ready_cb,
 				    retries,
-				    1,
+				    500,
 				    NULL,
 				    error);
 }
@@ -683,11 +683,6 @@ fu_focal_touch_hid_device_detach(FuDevice *device, FuProgress *progress, GError 
 	/* command to go from APP --> Bootloader */
 	if (!fu_focal_touch_hid_device_send(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "failed to send EnterUpgradeMode: ");
-		return FALSE;
-	}
-	buf = fu_focal_touch_hid_device_recv_raw(self, error);
-	if (buf == NULL) {
-		g_prefix_error_literal(error, "failed to recv EnterUpgradeMode: ");
 		return FALSE;
 	}
 	fu_device_sleep(device, 200);
