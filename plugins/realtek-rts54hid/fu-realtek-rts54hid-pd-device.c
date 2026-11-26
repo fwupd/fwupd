@@ -12,41 +12,16 @@
 
 struct _FuRealtekRts54hidPdDevice {
 	FuRealtekRts54hidDevice parent_instance;
-	gboolean reset_after_update;
 };
 
 G_DEFINE_TYPE(FuRealtekRts54hidPdDevice,
 	      fu_realtek_rts54hid_pd_device,
 	      FU_TYPE_REALTEK_RTS54HID_DEVICE)
 
-static gboolean
-fu_realtek_rts54hid_pd_device_set_quirk_kv(FuDevice *device,
-					     const gchar *key,
-					     const gchar *value,
-					     GError **error)
-{
-
-	FuRealtekRts54hidPdDevice *self = FU_REALTEK_RTS54HID_PD_DEVICE(device);
-
-	if (g_strcmp0(key, "PDResetAfterUpdate") == 0) {
-		if (g_strcmp0(value, "false") == 0)
-			self->reset_after_update = FALSE;
-		else
-			self->reset_after_update = TRUE;
-		return TRUE;
-	}
-	g_set_error(error,
-		    FWUPD_ERROR,
-	   	    FWUPD_ERROR_NOT_SUPPORTED,
-		    "unsupported quirk key: %s",
-		    key);
-	return FALSE;
-
-}
+#define FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE "reset-after-update"
 
 static gboolean
-fu_realtek_rts54hid_pd_device_reset_to_flash(FuRealtekRts54hidPdDevice *self,
-					       GError **error)
+fu_realtek_rts54hid_pd_device_reset_to_flash(FuRealtekRts54hidPdDevice *self, GError **error)
 {
 	g_autoptr(FuRealtekRts54hidCmdBuffer) st = fu_realtek_rts54hid_cmd_buffer_new();
 
@@ -56,8 +31,8 @@ fu_realtek_rts54hid_pd_device_reset_to_flash(FuRealtekRts54hidPdDevice *self,
 
 	if (!fu_realtek_rts54hid_device_set_report(FU_REALTEK_RTS54HID_DEVICE(self),
 						   st->buf,
-						   error)){
-		g_prefix_error_literal(error, "failed to soft reset:");
+						   error)) {
+		g_prefix_error_literal(error, "failed to soft reset: ");
 		return FALSE;
 	}
 
@@ -66,8 +41,7 @@ fu_realtek_rts54hid_pd_device_reset_to_flash(FuRealtekRts54hidPdDevice *self,
 }
 
 static gboolean
-fu_realtek_rts54hid_pd_device_verify_update_fw(FuRealtekRts54hidPdDevice *self,
-					       GError **error)
+fu_realtek_rts54hid_pd_device_verify_update_fw(FuRealtekRts54hidPdDevice *self, GError **error)
 {
 	g_autoptr(FuRealtekRts54hidCmdBuffer) st = fu_realtek_rts54hid_cmd_buffer_new();
 
@@ -79,8 +53,8 @@ fu_realtek_rts54hid_pd_device_verify_update_fw(FuRealtekRts54hidPdDevice *self,
 
 	if (!fu_realtek_rts54hid_device_set_report(FU_REALTEK_RTS54HID_DEVICE(self),
 						   st->buf,
-						   error)){
-		g_prefix_error_literal(error, "failed to verify FW:");
+						   error)) {
+		g_prefix_error_literal(error, "failed to verify: ");
 		return FALSE;
 	}
 
@@ -239,14 +213,16 @@ fu_realtek_rts54hid_pd_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send verify cmd to authenticate the firmware*/
-	if (!fu_realtek_rts54hid_pd_device_verify_update_fw(self,
-							   error))
+	if (!fu_realtek_rts54hid_pd_device_verify_update_fw(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (self->reset_after_update)
+	if (fu_device_has_private_flag(
+		FU_DEVICE(self),
+		FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE)) {
 		if (!fu_realtek_rts54hid_pd_device_reset_to_flash(self, error))
 			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -270,7 +246,8 @@ fu_realtek_rts54hid_pd_device_init(FuRealtekRts54hidPdDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	self->reset_after_update = TRUE;
+	fu_device_add_private_flag(FU_DEVICE(self),
+				   FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE);
 }
 
 static void
@@ -280,5 +257,6 @@ fu_realtek_rts54hid_pd_device_class_init(FuRealtekRts54hidPdDeviceClass *klass)
 	device_class->write_firmware = fu_realtek_rts54hid_pd_device_write_firmware;
 	device_class->setup = fu_realtek_rts54hid_pd_device_setup;
 	device_class->set_progress = fu_realtek_rts54hid_pd_device_set_progress;
-	device_class->set_quirk_kv = fu_realtek_rts54hid_pd_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class,
+					FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE);
 }
