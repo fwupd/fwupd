@@ -28,7 +28,7 @@ class Builder:
             "-lpthread",
             "-lresolv",
             "-ldl",
-            "-lffi",
+            "-l:libffi.a",
             "-lz",
             "-llzma",
             "-lzstd",
