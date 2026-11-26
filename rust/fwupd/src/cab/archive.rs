@@ -18,10 +18,10 @@
 //!
 
 use super::wire;
-use super::wire::{CFCompressionType, CFFolderIndex, CFHeaderFlags, FixedSizeIO};
+use super::wire::{CFCompressionType, CFFolderIndex, CFHeaderFlags};
 use super::{CabError, CabPath};
 use super::{MsDosDate, MsDosFileAttrs, MsDosTime};
-use crate::io::ReadSeekExt;
+use crate::io::{FixedSizeStruct, ReadSeekExt};
 use std::io::Read;
 use std::str::Utf8Error;
 use std::sync::{Arc, Mutex};
@@ -97,8 +97,8 @@ impl CFHeader {
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
 
-        let (raw_header, nbytes) = wire::CFHeader::read(src, offset)?;
-        off += nbytes;
+        let raw_header: wire::CFHeader = src.read_type_at(offset)?;
+        off += wire::CFHeader::size_in_bytes();
 
         if raw_header.signature.get() != wire::CF_SIGNATURE {
             return Err(CabError::Format(format!(
@@ -120,8 +120,8 @@ impl CFHeader {
         // Process optional reserve header
         let header_flags = CFHeaderFlags::from_bits(raw_header.flags.get());
         let reserve = if header_flags.contains(wire::CFHeaderFlag::HasReserve) {
-            let (raw_reserve, nbytes) = wire::CFHeaderReserve::read(src, off)?;
-            off += nbytes;
+            let raw_reserve: wire::CFHeaderReserve = src.read_type_at(off)?;
+            off += wire::CFHeaderReserve::size_in_bytes();
 
             let sz_header = raw_reserve.cbCFHeader.get() as usize;
             if sz_header > max_reserved_size {
@@ -237,8 +237,8 @@ impl CFFolder {
         cffolder_reserved_size: u8,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFFolder::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFFolder = src.read_type_at(offset)?;
+        off += wire::CFFolder::size_in_bytes();
 
         // let _ = src.read_exact_at(off, cffolder_reserved_size)
         off += cffolder_reserved_size as usize;
@@ -272,7 +272,7 @@ impl CFString {
     ///
     /// Returns an error if the read or validation fails
     pub fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
+        src: &mut (impl ReadSeek + ?Sized),
         offset: usize,
         max: usize,
     ) -> Result<(Self, usize), CabError> {
@@ -418,8 +418,8 @@ impl CFFile {
         offset: usize,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFFile::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFFile = src.read_type_at(offset)?;
+        off += wire::CFFile::size_in_bytes();
 
         let (name, nbytes) = CFString::read(src, off, 1024)?;
         off += nbytes;
@@ -467,14 +467,14 @@ impl CFData {
     ///
     /// Returns an error if the read or validation of the checksum failed.
     pub fn read(
-        mut src: &mut (impl ReadSeek + ?Sized),
+        src: &mut (impl ReadSeek + ?Sized),
         offset: usize,
         cfdata_reserved_size: u8,
         verify_checksum: bool,
     ) -> Result<(Self, usize), CabError> {
         let mut off = offset;
-        let (raw, nbytes) = wire::CFData::read(src, offset)?;
-        off += nbytes;
+        let raw: wire::CFData = src.read_type_at(offset)?;
+        off += wire::CFData::size_in_bytes();
 
         // let _ = src.read_exact_at(off, cfdata_reserved_size)
         off += cfdata_reserved_size as usize;
@@ -981,10 +981,9 @@ impl Archive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cab::wire::{
-        CFCompressionType, CFData, CFFile, CFFolder, CFHeader, FixedSizeIO, CF_SIGNATURE,
-    };
+    use crate::cab::wire::{CFCompressionType, CFData, CFFile, CFFolder, CFHeader, CF_SIGNATURE};
     use crate::cab::{Checksum, MsDosFileAttr};
+    use crate::io::WriteExt;
     use crate::streams::IntoStream;
     use crate::Bitflags;
     use std::io::{Cursor, Read};
@@ -1104,14 +1103,14 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         let folder = CFFolder {
             coffCabStart: U32LE::new(off_cfdata),
             cCFData: U16LE::new(1),
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
-        folder.write(&mut out).unwrap();
+        out.write_type(folder).unwrap();
 
         let fhdr = CFFile {
             cbFile: U32LE::new(data.len().try_into().unwrap()),
@@ -1121,16 +1120,15 @@ mod tests {
             time: 0x4800.into(),
             attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
         };
-        fhdr.write(&mut out).unwrap();
-        out.extend_from_slice(filename.as_bytes());
-        out.push(0);
+        out.write_type(fhdr).unwrap();
+        out.write_nul_terminated_string(filename).unwrap();
 
         let dh = CFData {
             csum: U32LE::new(0),
             cbData: U16LE::new(data.len().try_into().unwrap()),
             cbUncomp: U16LE::new(data.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(data);
 
         assert_eq!(out.len(), sz_cabinet as usize);
@@ -1171,14 +1169,14 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         let folder = CFFolder {
             coffCabStart: U32LE::new(off_cfdata),
             cCFData: U16LE::new(1),
             typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
         };
-        folder.write(&mut out).unwrap();
+        out.write_type(folder).unwrap();
 
         for (i, (name, data)) in files.iter().enumerate() {
             let fhdr = CFFile {
@@ -1189,9 +1187,8 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_type(fhdr).unwrap();
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         let dh = CFData {
@@ -1199,7 +1196,7 @@ mod tests {
             cbData: U16LE::new(all_data.len().try_into().unwrap()),
             cbUncomp: U16LE::new(all_data.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(&all_data);
 
         out
@@ -1452,7 +1449,7 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         for _ in 0..files.len() {
             let folder = CFFolder {
@@ -1460,7 +1457,7 @@ mod tests {
                 cCFData: U16LE::new(1),
                 typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
             };
-            folder.write(&mut out).unwrap();
+            out.write_type(folder).unwrap();
         }
 
         for (i, (name, data)) in files.iter().enumerate() {
@@ -1472,9 +1469,8 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_type(fhdr).unwrap();
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         let dh = CFData {
@@ -1482,7 +1478,7 @@ mod tests {
             cbData: U16LE::new(files[0].1.len().try_into().unwrap()),
             cbUncomp: U16LE::new(files[0].1.len().try_into().unwrap()),
         };
-        dh.write(&mut out).unwrap();
+        out.write_type(dh).unwrap();
         out.extend_from_slice(files[0].1);
 
         assert_eq!(out.len(), sz_cabinet as usize);
@@ -1537,7 +1533,7 @@ mod tests {
             setID: U16LE::new(0),
             iCabinet: U16LE::new(0),
         };
-        hdr.write(&mut out).unwrap();
+        out.write_type(hdr).unwrap();
 
         // folder headers: each folder starts at its own data block
         let mut block_off = off_cfdata;
@@ -1547,7 +1543,7 @@ mod tests {
                 cCFData: U16LE::new(1),
                 typeCompress: U16LE::new(u16::from(CFCompressionType::None)),
             };
-            folder.write(&mut out).unwrap();
+            out.write_type(folder).unwrap();
             block_off += u32::try_from(CFDATA_SIZE as usize + data.len()).unwrap();
         }
 
@@ -1560,9 +1556,8 @@ mod tests {
                 time: 0x4800.into(),
                 attribs: U16LE::new(MsDosFileAttr::Arch.bits()),
             };
-            fhdr.write(&mut out).unwrap();
-            out.extend_from_slice(name.as_bytes());
-            out.push(0);
+            out.write_type(fhdr).unwrap();
+            out.write_nul_terminated_string(name).unwrap();
         }
 
         // one data block per file, consecutively
@@ -1572,7 +1567,7 @@ mod tests {
                 cbData: U16LE::new(data.len().try_into().unwrap()),
                 cbUncomp: U16LE::new(data.len().try_into().unwrap()),
             };
-            dh.write(&mut out).unwrap();
+            out.write_type(dh).unwrap();
             out.extend_from_slice(data);
         }
 
