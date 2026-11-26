@@ -22,7 +22,7 @@ fu_uefi_device_read_default_func(void)
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_default = NULL;
 	g_autoptr(GBytes) csum = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) images = NULL;
@@ -37,25 +37,26 @@ fu_uefi_device_read_default_func(void)
 	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	blob = fu_firmware_write(siglist, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob);
 
 	/* set the dbDefault EFI variable */
-	uefi_device = fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "db");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB);
 	fu_device_set_firmware_gtype(FU_DEVICE(uefi_device), FU_TYPE_EFI_SIGNATURE_LIST);
-	ret = fu_uefi_device_set_efivar_bytes(uefi_device,
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "dbDefault",
-					      blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	blob_default = fu_firmware_write(siglist, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_default);
+	ret = fu_efivars_set_data_bytes(fu_context_get_efivars(ctx),
+					FU_EFIVARS_GUID_EFI_GLOBAL,
+					"dbDefault",
+					blob_default,
+					FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+					&error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* read back the default */
-	firmware =
-	    fu_uefi_device_read_default(uefi_device, FU_EFIVARS_GUID_EFI_GLOBAL, "db", &error);
+	firmware = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						      FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB_DEFAULT,
+						      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 	g_assert_true(FU_IS_EFI_SIGNATURE_LIST(firmware));
@@ -69,17 +70,18 @@ fu_uefi_device_read_default_missing_func(void)
 {
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS | FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuUefiDevice) uefi_device = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 
-	/* no dbDefault set, should fail */
-	uefi_device = fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "db");
-	fu_device_set_firmware_gtype(FU_DEVICE(uefi_device), FU_TYPE_EFI_SIGNATURE_LIST);
-	firmware =
-	    fu_uefi_device_read_default(uefi_device, FU_EFIVARS_GUID_EFI_GLOBAL, "db", &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_null(firmware);
+	/* no dbDefault set, should return an empty siglist */
+	firmware = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						      FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB_DEFAULT,
+						      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+	images = fu_firmware_get_images(firmware);
+	g_assert_cmpint(images->len, ==, 0);
 }
 
 static void
@@ -93,7 +95,7 @@ fu_uefi_device_auth_func(void)
 	const guint8 buf[] = {0xFF};
 
 	ret = fu_efivars_set_data(fu_context_get_efivars(ctx),
-				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  FU_EFIVARS_GUID_SECURITY_DATABASE,
 				  "db",
 				  buf,
 				  sizeof(buf),
@@ -105,7 +107,7 @@ fu_uefi_device_auth_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	uefi_device = fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "db");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB);
 	ret = fu_device_probe(FU_DEVICE(uefi_device), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -124,7 +126,7 @@ fu_uefi_device_no_auth_func(void)
 	const guint8 buf[] = {0xFF};
 
 	ret = fu_efivars_set_data(fu_context_get_efivars(ctx),
-				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  FU_EFIVARS_GUID_SECURITY_DATABASE,
 				  "db",
 				  buf,
 				  sizeof(buf),
@@ -135,7 +137,7 @@ fu_uefi_device_no_auth_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	uefi_device = fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "db");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB);
 	ret = fu_device_probe(FU_DEVICE(uefi_device), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

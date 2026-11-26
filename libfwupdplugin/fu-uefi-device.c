@@ -11,6 +11,8 @@
 #include "fu-bytes.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
+#include "fu-efi-signature-list.h"
+#include "fu-efivars-private.h"
 #include "fu-uefi-device-private.h"
 
 /**
@@ -22,8 +24,7 @@
  */
 
 typedef struct {
-	gchar *guid;
-	gchar *name;
+	FuEfiSecureBootSiglistKind kind;
 } FuUefiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE);
@@ -32,226 +33,48 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE);
 
 #define FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE "no-efivars-space"
 
-/* private */
+/**
+ * fu_uefi_device_set_kind:
+ * @self: a #FuUefiDevice
+ * @kind: a #FuEfiSecureBootSiglistKind, e.g. %FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB
+ *
+ * Sets the well-known UEFI Secure Boot variable the device represents.
+ **/
 void
-fu_uefi_device_set_guid(FuUefiDevice *self, const gchar *guid)
+fu_uefi_device_set_kind(FuUefiDevice *self, FuEfiSecureBootSiglistKind kind)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *guid = fu_efivars_secure_boot_siglist_kind_to_guid(kind);
+	const gchar *name = fu_efivars_secure_boot_siglist_kind_to_name(kind);
+
 	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
 
 	/* not changed */
-	if (!g_set_str(&priv->guid, guid))
+	if (priv->kind == kind)
 		return;
+	priv->kind = kind;
+
+	/* used for quirk matching */
 	if (guid != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "GUID", guid);
-}
-
-/* private */
-const gchar *
-fu_uefi_device_get_guid(FuUefiDevice *self)
-{
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
-	return priv->guid;
-}
-
-/* private */
-void
-fu_uefi_device_set_name(FuUefiDevice *self, const gchar *name)
-{
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
-
-	/* not changed */
-	if (!g_set_str(&priv->name, name))
-		return;
 	if (name != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "NAME", name);
 }
 
-/* private */
-const gchar *
-fu_uefi_device_get_name(FuUefiDevice *self)
+/**
+ * fu_uefi_device_get_kind:
+ * @self: a #FuUefiDevice
+ *
+ * Gets the well-known UEFI Secure Boot variable the device represents.
+ *
+ * Returns: a #FuEfiSecureBootSiglistKind, e.g. %FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB
+ **/
+FuEfiSecureBootSiglistKind
+fu_uefi_device_get_kind(FuUefiDevice *self)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
-	return priv->name;
-}
-
-/**
- * fu_uefi_device_set_efivar_bytes:
- * @self: a #FuUefiDevice
- * @guid: globally unique identifier
- * @name: variable name
- * @bytes: data blob
- * @attr: attributes
- * @error: (nullable): optional return location for an error
- *
- * Sets the data to a UEFI variable in NVRAM, emulating if required.
- *
- * Returns: %TRUE on success
- **/
-gboolean
-fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
-				const gchar *guid,
-				const gchar *name,
-				GBytes *bytes,
-				FuEfiVariableAttrs attr,
-				GError **error)
-{
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	FuDeviceEvent *event = NULL;
-	g_autofree gchar *event_id = NULL;
-
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), FALSE);
-	g_return_val_if_fail(guid != NULL, FALSE);
-	g_return_val_if_fail(name != NULL, FALSE);
-	g_return_val_if_fail(bytes != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* need event ID */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("SetEfivar:Guid=%s,Name=%s,Attr=0x%x", guid, name, attr);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		g_autoptr(GBytes) bytes_tmp = NULL;
-
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return FALSE;
-		bytes_tmp = fu_device_event_get_bytes(event, "Data", error);
-		if (bytes_tmp == NULL)
-			return FALSE;
-		return fu_bytes_compare(bytes, bytes_tmp, error);
-	}
-
-	/* save */
-	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-
-	/* set */
-	if (!fu_efivars_set_data_bytes(fu_context_get_efivars(ctx), guid, name, bytes, attr, error))
-		return FALSE;
-
-	/* save response */
-	if (event != NULL)
-		fu_device_event_set_bytes(event, "Data", bytes);
-
-	/* success */
-	return TRUE;
-}
-
-/**
- * fu_uefi_device_get_efivar_bytes:
- * @self: a #FuUefiDevice
- * @guid: Globally unique identifier
- * @name: Variable name
- * @attr: (nullable) (out): #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
- * @error: (nullable): optional return location for an error
- *
- * Gets the data from a UEFI variable in NVRAM, emulating if required.
- *
- * Returns: (transfer full): a #GBytes, or %NULL on error
- **/
-GBytes *
-fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
-				const gchar *guid,
-				const gchar *name,
-				FuEfiVariableAttrs *attr,
-				GError **error)
-{
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	FuDeviceEvent *event = NULL;
-	guint32 attr_tmp = 0;
-	g_autofree gchar *event_id = NULL;
-	g_autoptr(GBytes) blob = NULL;
-
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
-	g_return_val_if_fail(guid != NULL, NULL);
-	g_return_val_if_fail(name != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* need event ID */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("GetEfivar:Guid=%s,Name=%s", guid, name);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return NULL;
-		if (attr != NULL) {
-			guint64 tmp = fu_device_event_get_i64(event, "Attr", error);
-			if (tmp == G_MAXINT64)
-				return NULL;
-			*attr = (FuEfiVariableAttrs)tmp;
-		}
-		return fu_device_event_get_bytes(event, "Data", error);
-	}
-
-	/* save */
-	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-
-	/* read */
-	blob = fu_efivars_get_data_bytes(fu_context_get_efivars(ctx), guid, name, &attr_tmp, error);
-	if (blob == NULL)
-		return NULL;
-	if (attr != NULL)
-		*attr = (FuEfiVariableAttrs)attr_tmp;
-
-	/* save response */
-	if (event != NULL) {
-		fu_device_event_set_bytes(event, "Data", blob);
-		fu_device_event_set_i64(event, "Attr", attr_tmp);
-	}
-
-	/* success */
-	return g_steal_pointer(&blob);
-}
-
-/**
- * fu_uefi_device_read_default:
- * @self: a #FuUefiDevice
- * @guid: Globally unique identifier
- * @name: Variable name, e.g. `db`
- * @error: (nullable): optional return location for an error
- *
- * Gets the data from a UEFI variable in NVRAM, emulating if required.
- *
- * Returns: (transfer full): a #FuFirmware, or %NULL on error
- **/
-FuFirmware *
-fu_uefi_device_read_default(FuUefiDevice *self,
-			    const gchar *guid,
-			    const gchar *name,
-			    GError **error)
-{
-	g_autofree gchar *name_default = NULL;
-	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) blob = NULL;
-
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
-	g_return_val_if_fail(guid != NULL, NULL);
-	g_return_val_if_fail(name != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* sanity check */
-	name_default = g_strdup_printf("%sDefault", name);
-	blob = fu_uefi_device_get_efivar_bytes(self, guid, name_default, NULL, error);
-	if (blob == NULL)
-		return NULL;
-	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
-	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
+	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN);
+	return priv->kind;
 }
 
 static void
@@ -259,8 +82,10 @@ fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	fwupd_codec_string_append(str, idt, "Guid", priv->guid);
-	fwupd_codec_string_append(str, idt, "Name", priv->name);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "Kind",
+				  fu_efi_secure_boot_siglist_kind_to_string(priv->kind));
 }
 
 static void
@@ -268,8 +93,8 @@ fu_uefi_device_incorporate(FuDevice *device, FuDevice *donor)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevice *udonor = FU_UEFI_DEVICE(donor);
-	fu_uefi_device_set_guid(self, fu_uefi_device_get_guid(udonor));
-	fu_uefi_device_set_name(self, fu_uefi_device_get_name(udonor));
+	if (fu_uefi_device_get_kind(udonor) != FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN)
+		fu_uefi_device_set_kind(self, fu_uefi_device_get_kind(udonor));
 }
 
 static gboolean
@@ -283,13 +108,13 @@ fu_uefi_device_check_attrs(FuUefiDevice *self, GError **error)
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.1"))
 		return TRUE;
-	if (priv->guid == NULL || priv->name == NULL)
+	if (priv->kind == FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN)
 		return TRUE;
 
 	/* if variables has been set up incorrectly do not allow update */
 	if (!fu_efivars_get_attrs(fu_context_get_efivars(ctx),
-				  priv->guid,
-				  priv->name,
+				  fu_efivars_secure_boot_siglist_kind_to_guid(priv->kind),
+				  fu_efivars_secure_boot_siglist_kind_to_name(priv->kind),
 				  &attrs,
 				  error))
 		return FALSE;
@@ -316,102 +141,23 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 						"NAME",
 						NULL);
 }
-
 static GBytes *
 fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* sanity check */
-	if (priv->guid == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID");
+	if (priv->kind == FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no kind");
 		return NULL;
 	}
-	if (priv->name == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no name");
-		return NULL;
-	}
-	return fu_uefi_device_get_efivar_bytes(FU_UEFI_DEVICE(device),
-					       priv->guid,
-					       priv->name,
-					       NULL,
-					       error);
-}
-
-static void
-fu_uefi_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(device);
-
-	/* optional properties */
-	fwupd_json_object_add_string(json_obj, "GType", "FuUefiDevice");
-	if (fu_device_get_backend_id(device) != NULL)
-		fwupd_json_object_add_string(json_obj,
-					     "BackendId",
-					     fu_device_get_backend_id(device));
-	if (priv->guid != NULL)
-		fwupd_json_object_add_string(json_obj, "Guid", priv->guid);
-	if (priv->name != NULL)
-		fwupd_json_object_add_string(json_obj, "Name", priv->name);
-
-	/* events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event), json_obj_tmp, flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "Events", json_arr);
-	}
-}
-
-static gboolean
-fu_uefi_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	const gchar *tmp;
-
-	if (!fwupd_json_object_get_string_optional(json_obj, "Guid", &tmp, error))
-		return FALSE;
-	if (tmp != NULL) {
-		if (!fwupd_guid_is_valid(tmp)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid GUID format in JSON: %s",
-				    tmp);
-			return FALSE;
-		}
-		fu_uefi_device_set_guid(self, tmp);
-	}
-	if (!fwupd_json_object_get_string_optional(json_obj, "Name", &tmp, error))
-		return FALSE;
-	if (tmp != NULL)
-		fu_uefi_device_set_name(self, tmp);
-	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
-		return FALSE;
-	if (tmp != NULL)
-		fu_device_set_backend_id(device, tmp);
-
-	/* success */
-	return TRUE;
-}
-
-static void
-fu_uefi_device_finalize(GObject *object)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE(object);
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-
-	g_free(priv->guid);
-	g_free(priv->name);
-
-	G_OBJECT_CLASS(fu_uefi_device_parent_class)->finalize(object);
+	return fu_efivars_get_data_bytes(fu_context_get_efivars(ctx),
+					 fu_efivars_secure_boot_siglist_kind_to_guid(priv->kind),
+					 fu_efivars_secure_boot_siglist_kind_to_name(priv->kind),
+					 NULL,
+					 error);
 }
 
 static void
@@ -453,20 +199,18 @@ static void
 fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_uefi_device_finalize;
 	device_class->to_string = fu_uefi_device_to_string;
 	device_class->probe = fu_uefi_device_probe;
 	device_class->dump_firmware = fu_uefi_device_dump_firmware;
 	device_class->incorporate = fu_uefi_device_incorporate;
-	device_class->build = fu_uefi_device_build;
-	device_class->export = fu_uefi_device_export;
 	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }
 
 FuUefiDevice *
-fu_uefi_device_new(FuContext *ctx, const gchar *guid, const gchar *name)
+fu_uefi_device_new(FuContext *ctx, FuEfiSecureBootSiglistKind kind)
 {
+	const gchar *guid = fu_efivars_secure_boot_siglist_kind_to_guid(kind);
+	const gchar *name = fu_efivars_secure_boot_siglist_kind_to_name(kind);
 	g_autofree gchar *backend_id = NULL;
 	g_autoptr(FuUefiDevice) self = NULL;
 
@@ -476,7 +220,6 @@ fu_uefi_device_new(FuContext *ctx, const gchar *guid, const gchar *name)
 
 	backend_id = g_strdup_printf("%s-%s", guid, name);
 	self = g_object_new(FU_TYPE_UEFI_DEVICE, "context", ctx, "backend-id", backend_id, NULL);
-	fu_uefi_device_set_guid(self, guid);
-	fu_uefi_device_set_name(self, name);
+	fu_uefi_device_set_kind(self, kind);
 	return g_steal_pointer(&self);
 }

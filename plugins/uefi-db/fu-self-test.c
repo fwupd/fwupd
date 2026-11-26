@@ -50,7 +50,7 @@ fu_uefi_db_external_locked_func(void)
 	fu_plugin_runner_device_added(plugin, device_db);
 
 	/* register a KEK device that is external */
-	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK));
 	fu_device_set_plugin(device_kek, "uefi_kek");
 	fu_device_add_private_flag(device_kek, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	fu_plugin_runner_device_register(plugin, device_kek);
@@ -92,7 +92,7 @@ fu_uefi_db_external_not_locked_func(void)
 	fu_plugin_runner_device_added(plugin, device_db);
 
 	/* register a KEK device that is NOT external */
-	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK));
 	fu_device_set_plugin(device_kek, "uefi_kek");
 	fu_plugin_runner_device_register(plugin, device_kek);
 
@@ -122,7 +122,7 @@ fu_uefi_db_external_locked_device_added_func(void)
 	fu_plugin_runner_init(plugin);
 
 	/* register KEK device as external first */
-	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"));
+	device_kek = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK));
 	fu_device_set_plugin(device_kek, "uefi_kek");
 	fu_device_add_private_flag(device_kek, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	fu_plugin_runner_device_register(plugin, device_kek);
@@ -142,7 +142,7 @@ fu_uefi_db_external_locked_device_added_func(void)
 	g_assert_true(fu_device_has_problem(child, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED));
 }
 
-static GBytes *
+static FuFirmware *
 fu_uefi_db_self_test_build_siglist(const gchar *subject, GError **error)
 {
 	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
@@ -151,7 +151,7 @@ fu_uefi_db_self_test_build_siglist(const gchar *subject, GError **error)
 	fu_efi_x509_signature_set_subject(sig, subject);
 	if (!fu_firmware_add_image(siglist, FU_FIRMWARE(sig), error))
 		return NULL;
-	return fu_firmware_write(siglist, error);
+	return g_steal_pointer(&siglist);
 }
 
 static void
@@ -165,7 +165,8 @@ fu_uefi_db_default_ids_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(GBytes) blob_db = NULL;
+	g_autoptr(FuFirmware) siglist_db = NULL;
+	g_autoptr(FuFirmware) siglist_default = NULL;
 	g_autoptr(GBytes) blob_default = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -196,37 +197,34 @@ fu_uefi_db_default_ids_func(void)
 	g_assert_true(fu_context_has_hwid_flag(ctx, "use-db-default-ids"));
 
 	/* build signature lists */
-	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
+	siglist_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_db);
-	blob_default = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2023", &error);
+	g_assert_nonnull(siglist_db);
+	siglist_default = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2023", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_default);
+	g_assert_nonnull(siglist_default);
 
 	/* create the device */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
 
 	/* set the db EFI variable */
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "db",
-	    blob_db,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						 siglist_db,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* set the dbDefault EFI variable */
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "dbDefault",
-					      blob_default,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	blob_default = fu_firmware_write(siglist_default, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_default);
+	ret = fu_efivars_set_data_bytes(fu_context_get_efivars(ctx),
+					FU_EFIVARS_GUID_EFI_GLOBAL,
+					"dbDefault",
+					blob_default,
+					FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+					&error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -262,7 +260,7 @@ fu_uefi_db_no_default_ids_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuX509Certificate) crt_db = fu_x509_certificate_new();
-	g_autoptr(GBytes) blob_db = NULL;
+	g_autoptr(FuFirmware) siglist_db = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_GNUTLS
@@ -279,24 +277,18 @@ fu_uefi_db_no_default_ids_func(void)
 	g_assert_false(fu_context_has_hwid_flag(ctx, "use-db-default-ids"));
 
 	/* generate test certificate for db */
-	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
+	siglist_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test UEFI CA 2011", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_db);
+	g_assert_nonnull(siglist_db);
 
 	/* create the device */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
 
 	/* set the db EFI variable */
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "db",
-	    blob_db,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						 siglist_db,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -327,6 +319,10 @@ fu_uefi_db_revoked_func(void)
 	    fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS | FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuFirmware) siglist_db = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) siglist_revoked = NULL;
+	g_autoptr(FuFirmware) siglist_trusted = NULL;
 	g_autoptr(GByteArray) buf_db = g_byte_array_new();
 	g_autoptr(GBytes) blob_db = NULL;
 	g_autoptr(GBytes) blob_revoked = NULL;
@@ -344,38 +340,54 @@ fu_uefi_db_revoked_func(void)
 	g_assert_true(ret);
 
 	/* the db has two certificates, and the dbx has the exact same bytes for one of them */
-	blob_revoked = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Revoked CA 2011", &error);
+	siglist_revoked =
+	    fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Revoked CA 2011", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(siglist_revoked);
+	siglist_trusted =
+	    fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Trusted CA 2023", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(siglist_trusted);
+
+	/* the db is two EFI_SIGNATURE_LISTs back-to-back, and writing generates a new
+	 * certificate each time so the dbx has to use the same blob */
+	blob_revoked = fu_firmware_write(siglist_revoked, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_revoked);
-	blob_trusted = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Trusted CA 2023", &error);
+	blob_trusted = fu_firmware_write(siglist_trusted, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_trusted);
 	fu_byte_array_append_bytes(buf_db, blob_revoked);
 	fu_byte_array_append_bytes(buf_db, blob_trusted);
 	blob_db = g_bytes_new(buf_db->data, buf_db->len);
-
-	/* create the device */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "db",
-	    blob_db,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	ret = fu_firmware_parse_bytes(siglist_db,
+				      blob_db,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "dbx",
-	    blob_revoked,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+
+	ret = fu_firmware_parse_bytes(siglist_dbx,
+				      blob_revoked,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+				      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create the device */
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						 siglist_db,
+						 &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						 siglist_dbx,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -398,6 +410,7 @@ fu_uefi_db_revoked_same_key_func(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) siglist_db = fu_efi_signature_list_new();
 	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) siglist_tmp = NULL;
 	g_autoptr(FuFirmware) sig_db = NULL;
 	g_autoptr(FuFirmware) sig_dbx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -418,7 +431,10 @@ fu_uefi_db_revoked_same_key_func(void)
 
 	/* the dbx has a different certificate with the same key, made by changing the last
 	 * byte of the DER data, which is inside the signature */
-	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Reissued CA 2011", &error);
+	siglist_tmp = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Reissued CA 2011", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(siglist_tmp);
+	blob_db = fu_firmware_write(siglist_tmp, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_db);
 	buf_dbx = g_byte_array_new();
@@ -427,14 +443,17 @@ fu_uefi_db_revoked_same_key_func(void)
 	blob_dbx = g_bytes_new(buf_dbx->data, buf_dbx->len);
 
 	/* sanity check the key IDs match but the data does not */
-	ret =
-	    fu_firmware_parse_bytes(siglist_db, blob_db, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(siglist_db,
+				      blob_db,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_parse_bytes(siglist_dbx,
 				      blob_dbx,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -448,27 +467,17 @@ fu_uefi_db_revoked_same_key_func(void)
 	g_assert_false(g_bytes_equal(blob_db, blob_dbx));
 
 	/* create the device */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "db",
-	    blob_db,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						 siglist_db,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "dbx",
-	    blob_dbx,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						 siglist_dbx,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -640,7 +649,7 @@ fu_uefi_db_security_attr_production_test_cert_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttr) attr = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(GBytes) blob_db = NULL;
+	g_autoptr(FuFirmware) siglist_db = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_GNUTLS
@@ -656,25 +665,20 @@ fu_uefi_db_security_attr_production_test_cert_func(void)
 	g_assert_true(ret);
 
 	/* build a db with the default MakeCert.exe test key name */
-	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Joe's-Software-Emporium", &error);
+	siglist_db =
+	    fu_uefi_db_self_test_build_siglist("O=Test,CN=Joe's-Software-Emporium", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_db);
+	g_assert_nonnull(siglist_db);
 
 	/* create the device */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
 	fu_device_set_plugin(device, "uefi_db");
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
 
 	/* set the db EFI variable */
-	ret = fu_uefi_device_set_efivar_bytes(
-	    FU_UEFI_DEVICE(device),
-	    FU_EFIVARS_GUID_SECURITY_DATABASE,
-	    "db",
-	    blob_db,
-	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
-		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
-	    &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						 siglist_db,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -717,7 +721,7 @@ fu_uefi_db_security_attr_production_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* create a db device with a child that has no test key */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
 	device_child = fu_device_new(ctx);
 	fu_device_set_id(device, "db");
 	fu_device_set_plugin(device, "uefi_db");
@@ -748,7 +752,7 @@ fu_uefi_db_security_attr_production_test_key_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* create a db device with a child that is a test key */
-	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	device = FU_DEVICE(fu_uefi_db_device_new(ctx));
 	device_child = fu_device_new(ctx);
 	fu_device_set_id(device, "db");
 	fu_device_set_plugin(device, "uefi_db");

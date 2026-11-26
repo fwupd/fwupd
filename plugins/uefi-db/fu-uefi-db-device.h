@@ -10,3 +10,6 @@
 
 #define FU_TYPE_UEFI_DB_DEVICE (fu_uefi_db_device_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiDbDevice, fu_uefi_db_device, FU, UEFI_DB_DEVICE, FuUefiDevice)
+
+FuUefiDbDevice *
+fu_uefi_db_device_new(FuContext *ctx) G_GNUC_NON_NULL(1);
