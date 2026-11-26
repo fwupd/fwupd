@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-device.h"
+#include "fu-efi-struct.h"
 
 G_BEGIN_DECLS
 
@@ -24,23 +25,9 @@ struct _FuUefiDeviceClass {
  */
 #define FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL "is-external"
 
-gboolean
-fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
-				const gchar *guid,
-				const gchar *name,
-				GBytes *bytes,
-				FuEfiVariableAttrs attr,
-				GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
-GBytes *
-fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
-				const gchar *guid,
-				const gchar *name,
-				FuEfiVariableAttrs *attr,
-				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
-FuFirmware *
-fu_uefi_device_read_default(FuUefiDevice *self,
-			    const gchar *guid,
-			    const gchar *name,
-			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_uefi_device_set_kind(FuUefiDevice *self, FuEfiSecureBootSiglistKind kind) G_GNUC_NON_NULL(1);
+FuEfiSecureBootSiglistKind
+fu_uefi_device_get_kind(FuUefiDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 G_END_DECLS

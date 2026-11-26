@@ -21,7 +21,6 @@ plugin_builtin_uefi_dbx = static_library(
   ],
 )
 plugin_builtins += plugin_builtin_uefi_dbx
-device_tests += files('tests/uefi-dbx.json')
 
 if get_option('tests')
   e = executable(

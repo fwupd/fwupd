@@ -29,14 +29,11 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add each subdevice */
-	siglist = fu_device_read_firmware(device,
-					  progress,
-					  FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
-					  error);
-	if (siglist == NULL) {
-		g_prefix_error_literal(error, "failed to parse kek: ");
+	siglist = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						     FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						     error);
+	if (siglist == NULL)
 		return FALSE;
-	}
 	if (fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
@@ -69,30 +66,12 @@ fu_uefi_kek_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* write entire chunk to efivarsfs */
+	FuContext *ctx = fu_device_get_context(device);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_uefi_device_set_efivar_bytes(
-		FU_UEFI_DEVICE(device),
-		FU_EFIVARS_GUID_EFI_GLOBAL,
-		fu_device_get_physical_id(device),
-		fw,
-		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
-		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-		error)) {
-		return FALSE;
-	}
-
-	/* success! */
-	return TRUE;
+	return fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						  FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						  firmware,
+						  error);
 }
 
 static void

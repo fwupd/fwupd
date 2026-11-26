@@ -110,6 +110,7 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 static gboolean
 fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(device);
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(FuFirmware) pk = NULL;
@@ -120,14 +121,11 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_uefi_pk_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	pk = fu_device_read_firmware(device,
-				     progress,
-				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
-				     error);
-	if (pk == NULL) {
-		g_prefix_error_literal(error, "failed to parse PK: ");
+	pk = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK,
+						error);
+	if (pk == NULL)
 		return FALSE;
-	}
 	if (fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(pk)))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 

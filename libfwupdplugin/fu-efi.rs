@@ -471,3 +471,13 @@ enum FuEfiSecureBootState {
     Enabled = 1 << 0,
     InSetup = 1 << 1,
 }
+
+#[derive(ToString)]
+enum FuEfiSecureBootSiglistKind {
+    Unknown,
+    Pk,
+    Kek,
+    DbDefault,
+    Db,
+    Dbx,
+}

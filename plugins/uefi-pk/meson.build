@@ -17,5 +17,3 @@ plugin_builtins += static_library(
   c_args: cargs,
   dependencies: plugin_deps,
 )
-enumeration_data += files('tests/uefi-pk-setup.json')
-device_tests += files('tests/uefi-pk.json')

@@ -10,15 +10,18 @@
 #include "fwupd-error.h"
 
 #include "fu-byte-array.h"
+#include "fu-dummy-efivars.h"
 #include "fu-efi-device-path-list.h"
 #include "fu-efi-file-path-device-path.h"
 #include "fu-efi-hard-drive-device-path.h"
+#include "fu-efi-signature-list.h"
 #include "fu-efivars-private.h"
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
 
 typedef struct {
 	FuPathStore *pstore;
+	GHashTable *auth_variables; /* FuEfiSecureBootSiglistKind:FuEfiSignatureList */
 } FuEfivarsPrivate;
 
 enum { PROP_0, PROP_PATH_STORE, PROP_LAST };
@@ -307,6 +310,215 @@ fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GE
 	return efivars_class->get_monitor(self, guid, name, error);
 }
 
+static const struct {
+	FuEfiSecureBootSiglistKind kind;
+	const gchar *guid;
+	const gchar *name;
+	gboolean rw;
+} fu_efivars_secure_boot_siglist_map[] = {
+    {FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK, FU_EFIVARS_GUID_EFI_GLOBAL, "PK", FALSE},
+    {FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK", TRUE},
+    {FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB_DEFAULT, FU_EFIVARS_GUID_EFI_GLOBAL, "dbDefault", FALSE},
+    {FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB, FU_EFIVARS_GUID_SECURITY_DATABASE, "db", TRUE},
+    {FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX, FU_EFIVARS_GUID_SECURITY_DATABASE, "dbx", TRUE},
+};
+
+static gboolean
+fu_efivars_secure_boot_siglist_kind_is_rw(FuEfiSecureBootSiglistKind kind)
+{
+	for (guint i = 0; i < G_N_ELEMENTS(fu_efivars_secure_boot_siglist_map); i++) {
+		if (fu_efivars_secure_boot_siglist_map[i].kind == kind)
+			return fu_efivars_secure_boot_siglist_map[i].rw;
+	}
+	return FALSE;
+}
+
+/* private */
+const gchar *
+fu_efivars_secure_boot_siglist_kind_to_guid(FuEfiSecureBootSiglistKind kind)
+{
+	for (guint i = 0; i < G_N_ELEMENTS(fu_efivars_secure_boot_siglist_map); i++) {
+		if (fu_efivars_secure_boot_siglist_map[i].kind == kind)
+			return fu_efivars_secure_boot_siglist_map[i].guid;
+	}
+	return NULL;
+}
+
+/* private */
+const gchar *
+fu_efivars_secure_boot_siglist_kind_to_name(FuEfiSecureBootSiglistKind kind)
+{
+	for (guint i = 0; i < G_N_ELEMENTS(fu_efivars_secure_boot_siglist_map); i++) {
+		if (fu_efivars_secure_boot_siglist_map[i].kind == kind)
+			return fu_efivars_secure_boot_siglist_map[i].name;
+	}
+	return NULL;
+}
+
+/* private */
+FuEfiSecureBootSiglistKind
+fu_efivars_secure_boot_siglist_kind_from_guid_name(const gchar *guid, const gchar *name)
+{
+	for (guint i = 0; i < G_N_ELEMENTS(fu_efivars_secure_boot_siglist_map); i++) {
+		if (g_strcmp0(fu_efivars_secure_boot_siglist_map[i].guid, guid) == 0 &&
+		    g_strcmp0(fu_efivars_secure_boot_siglist_map[i].name, name) == 0)
+			return fu_efivars_secure_boot_siglist_map[i].kind;
+	}
+	return FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN;
+}
+
+/**
+ * fu_efivars_get_secure_boot_siglist:
+ * @self: a #FuEfivars
+ * @kind: a #FuEfiSecureBootSiglistKind, e.g. %FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads and parses a well-known UEFI Secure Boot variable, returning the cached contents if
+ * already parsed.
+ *
+ * If the variable is missing then an empty #FuEfiSignatureList is returned.
+ *
+ * Returns: (transfer full): a #FuEfiSignatureList, or %NULL on error
+ **/
+FuFirmware *
+fu_efivars_get_secure_boot_siglist(FuEfivars *self, FuEfiSecureBootSiglistKind kind, GError **error)
+{
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	FuFirmware *siglist_tmp;
+	const gchar *guid = fu_efivars_secure_boot_siglist_kind_to_guid(kind);
+	const gchar *name = fu_efivars_secure_boot_siglist_kind_to_name(kind);
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	g_return_val_if_fail(kind != FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN, NULL);
+	g_return_val_if_fail(guid != NULL, NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* already exists */
+	siglist_tmp = g_hash_table_lookup(priv->auth_variables, GUINT_TO_POINTER(kind));
+	if (siglist_tmp)
+		return g_object_ref(siglist_tmp);
+
+	/* read blob */
+	blob = fu_efivars_get_data_bytes(self, guid, name, NULL, &error_local);
+	if (blob == NULL) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return NULL;
+		}
+		g_debug("failed to read %s: %s",
+			fu_efi_secure_boot_siglist_kind_to_string(kind),
+			error_local->message);
+	} else {
+		if (!fu_firmware_parse_bytes(siglist,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+					     error)) {
+			g_prefix_error(error,
+				       "failed to parse %s: ",
+				       fu_efi_secure_boot_siglist_kind_to_string(kind));
+			return NULL;
+		}
+	}
+
+	/* success */
+	g_hash_table_insert(priv->auth_variables, GUINT_TO_POINTER(kind), g_object_ref(siglist));
+	return g_steal_pointer(&siglist);
+}
+
+/**
+ * fu_efivars_set_secure_boot_siglist:
+ * @self: a #FuEfivars
+ * @kind: a #FuEfiSecureBootSiglistKind, e.g. %FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK
+ * @firmware: (not nullable): a #FuEfiSignatureList
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a well-known UEFI Secure Boot variable, clearing the cached contents if already parsed.
+ *
+ * If @firmware has a payload, e.g. it was parsed with %FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM, then
+ * it is written as-is so that any authentication header is preserved. Otherwise the signature
+ * list is written using fu_firmware_write().
+ *
+ * Read-only variables such as %FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK and
+ * %FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB_DEFAULT cannot be set, unless using dummy efivars.
+ *
+ * Returns: %TRUE on success
+ **/
+gboolean
+fu_efivars_set_secure_boot_siglist(FuEfivars *self,
+				   FuEfiSecureBootSiglistKind kind,
+				   FuFirmware *firmware,
+				   GError **error)
+{
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	const gchar *guid = fu_efivars_secure_boot_siglist_kind_to_guid(kind);
+	const gchar *name = fu_efivars_secure_boot_siglist_kind_to_name(kind);
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(kind != FU_EFI_SECURE_BOOT_SIGLIST_KIND_UNKNOWN, FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* some variables are set by the platform firmware and are read-only, but allow writing
+	 * them when using dummy efivars so that the self tests can set up the PK and dbDefault */
+	if (!fu_efivars_secure_boot_siglist_kind_is_rw(kind) && !FU_IS_DUMMY_EFIVARS(self)) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "%s is read-only", name);
+		return FALSE;
+	}
+
+	/* use the payload if set, otherwise build the siglist */
+	fw = fu_firmware_get_bytes(firmware, &error_local);
+	if (fw == NULL) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		fw = fu_firmware_write(firmware, error);
+		if (fw == NULL)
+			return FALSE;
+	}
+	if (g_bytes_get_size(fw) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "no data for %s-%s",
+			    name,
+			    guid);
+		return FALSE;
+	}
+
+	/* this is no longer valid */
+	g_hash_table_remove(priv->auth_variables, GUINT_TO_POINTER(kind));
+
+	/* write entire chunk to efivarsfs */
+	if (!fu_efivars_set_data_bytes(
+		self,
+		guid,
+		name,
+		fw,
+		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
+		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+		error)) {
+		g_prefix_error(error,
+			       "failed to write %s: ",
+			       fu_efi_secure_boot_siglist_kind_to_string(kind));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_efivars_space_used:
  * @self: a #FuEfivars
@@ -361,7 +573,7 @@ fu_efivars_space_free(FuEfivars *self, GError **error)
  * @self: a #FuEfivars
  * @guid: Globally unique identifier
  * @name: Variable name
- * @data: Data to set
+ * @data: (not nullable): Data to set
  * @sz: size of @data
  * @attr: #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
@@ -387,6 +599,16 @@ fu_efivars_set_data(FuEfivars *self,
 	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* an empty payload would delete the variable, use fu_efivars_delete() for that */
+	if (sz == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "no data to set for %s-%s",
+			    name,
+			    guid);
+		return FALSE;
+	}
 	if (efivars_class->set_data == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
 		return FALSE;
@@ -399,7 +621,7 @@ fu_efivars_set_data(FuEfivars *self,
  * @self: a #FuEfivars
  * @guid: globally unique identifier
  * @name: variable name
- * @bytes: data blob
+ * @bytes: (not nullable): data blob
  * @attr: #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
@@ -1005,6 +1227,11 @@ fu_efivars_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 static void
 fu_efivars_init(FuEfivars *self)
 {
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	priv->auth_variables = g_hash_table_new_full(g_direct_hash,
+						     g_direct_equal,
+						     NULL,
+						     (GDestroyNotify)g_object_unref);
 }
 
 static void
@@ -1015,6 +1242,7 @@ fu_efivars_finalize(GObject *object)
 
 	if (priv->pstore != NULL)
 		g_object_unref(priv->pstore);
+	g_hash_table_unref(priv->auth_variables);
 
 	G_OBJECT_CLASS(fu_efivars_parent_class)->finalize(object);
 }
