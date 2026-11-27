@@ -192,5 +192,6 @@ fwupd.
 If you are working or maintaining a package of fwupd downstream, please consider the following notes.
 
 - The Meson build option `systemd_unit_user` should be used carefully, and the specified user (or resulting group) should be inaccessible to
-  unprivileged system users. Otherwise, this may pose a risk for privilege escalation. The default value for this setting (`DynamicUser=true`) is
-  secure and should be used in the general case.
+  unprivileged system users. Otherwise, this may pose a risk for privilege escalation. The default value for this setting (`fwupd-refresh`, a
+  system user created by the installed sysusers.d file) should be used in the general case; an empty value runs `fwupd-refresh.service` with
+  `DynamicUser=yes` instead.

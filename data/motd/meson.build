@@ -23,12 +23,7 @@ if libsystemd.found()
       'Using systemd DynamicUser for fwupd-refresh.service. See https://github.com/systemd/systemd/issues/22737 for possible implications'
     )
   else
-    dynamic_options = [
-      'ProtectSystem=strict',
-      'ProtectHome=read-only',
-      'User=' + get_option('systemd_unit_user'),
-    ]
-    con2.set('user', '\n'.join(dynamic_options))
+    con2.set('user', 'User=' + get_option('systemd_unit_user'))
   endif
 
   configure_file(
