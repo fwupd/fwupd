@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "0c8f4a671ea4e5851ad67f82a5a3c0d71de398cf06348a30ed09bf4fe85c33d8-Lenovo-mouse_62f5-62f6-vs1.0.8.cab",
-      "emulation-url": "63f2e5be311a050148c6430e4fed22ca1ff06e737210cc793eba12f53f1ed4ed-62f5vs1.0.7to1.0.8.zip",
+      "url": "a45e6e35e3a54a485328fe8a34e42cd9887f65b99873d22a02b462608c08656a-Lenovo-mouse_62f5-62f6-vs1.1.5.cab",
+      "emulation-url": "e39612fc6366773cab53a08873d045bc0bb7bbbbfed021516678943a9617b3b4-Lenovo_AI_mouse.zip",
       "components": [
         {
-          "version": "1.0.8",
+          "version": "1.1.5",
           "guids": [
             "5bde91cf-fa01-5980-9f6d-84b393589743",
             "e973316c-705c-5db1-bd31-ed5135463288"
