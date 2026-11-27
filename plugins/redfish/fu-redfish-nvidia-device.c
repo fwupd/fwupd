@@ -9,6 +9,7 @@
 
 #include <curl/curl.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "fu-redfish-backend.h"
 #include "fu-redfish-nvidia-device.h"
@@ -24,6 +25,10 @@
 
 /* consecutive transient failures tolerated before the update is abandoned */
 #define FU_REDFISH_NVIDIA_TASK_STATE_ERRORS_MAX 5
+
+/* cuts and restores the standby power of the whole board, which activates the staged firmware */
+#define FU_REDFISH_NVIDIA_AUX_POWER_RESET_URI                                                      \
+	"/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset"
 
 struct _FuRedfishNvidiaDevice {
 	FuRedfishDevice parent_instance;
@@ -134,8 +139,106 @@ fu_redfish_nvidia_device_ensure_parent(FuRedfishNvidiaDevice *self, GError **err
 }
 
 static gboolean
+fu_redfish_nvidia_device_member_is_staged(FwupdJsonObject *json_member)
+{
+	const gchar *version;
+	g_autoptr(FwupdJsonObject) json_nvidia = NULL;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
+	g_autoptr(FwupdJsonObject) json_slot = NULL;
+
+	json_oem = fwupd_json_object_get_object(json_member, "Oem", NULL);
+	if (json_oem == NULL)
+		return FALSE;
+	json_nvidia = fwupd_json_object_get_object(json_oem, "Nvidia", NULL);
+	if (json_nvidia == NULL)
+		return FALSE;
+	json_slot = fwupd_json_object_get_object(json_nvidia, "ActiveFirmwareSlot", NULL);
+	if (json_slot == NULL)
+		return FALSE;
+	if (g_strcmp0(fwupd_json_object_get_string(json_slot, "FirmwareState", NULL),
+		      "PendingActivation") != 0)
+		return FALSE;
+
+	/* a slot left empty by a failed update reports the same state */
+	version = fwupd_json_object_get_string(json_slot, "Version", NULL);
+	return version != NULL && version[0] != '\0';
+}
+
+static void
+fu_redfish_nvidia_device_ensure_only_explicit(FuRedfishNvidiaDevice *self,
+					      FuRedfishBackend *backend)
+{
+	gboolean any_staged = FALSE;
+	g_autoptr(GPtrArray) devices = fu_backend_get_devices(FU_BACKEND(backend));
+
+	/* not yet added when probing */
+	if (!g_ptr_array_find(devices, self, NULL))
+		g_ptr_array_add(devices, g_object_ref(self));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		if (FU_IS_REDFISH_NVIDIA_DEVICE(device_tmp) &&
+		    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+			any_staged = TRUE;
+	}
+	if (!any_staged)
+		return;
+
+	/* the BMC applies the whole bundle when activated, so stop it being uploaded again
+	 * for each other component that it changes */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		if (!FU_IS_REDFISH_NVIDIA_DEVICE(device_tmp))
+			continue;
+		if (fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE) ||
+		    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
+			fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES);
+	}
+}
+
+static void
+fu_redfish_nvidia_device_ensure_staged(FuRedfishNvidiaDevice *self, FuRedfishBackend *backend)
+{
+	gboolean any_staged = FALSE;
+	g_autoptr(GPtrArray) devices = fu_backend_get_devices(FU_BACKEND(backend));
+
+	/* the inventory has changed */
+	fu_backend_invalidate(FU_BACKEND(backend));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		g_autoptr(FwupdJsonObject) json_member = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!FU_IS_REDFISH_NVIDIA_DEVICE(device_tmp))
+			continue;
+		json_member =
+		    fu_redfish_nvidia_device_get_json_object(FU_REDFISH_NVIDIA_DEVICE(device_tmp),
+							     fu_device_get_logical_id(device_tmp),
+							     &error_local);
+		if (json_member == NULL) {
+			g_debug("ignoring %s: %s",
+				fu_device_get_logical_id(device_tmp),
+				error_local->message);
+			continue;
+		}
+		if (fu_redfish_nvidia_device_member_is_staged(json_member)) {
+			fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			any_staged = TRUE;
+		}
+	}
+
+	/* something has to carry the flag for the activation */
+	if (!any_staged)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	fu_redfish_nvidia_device_ensure_only_explicit(self, backend);
+}
+
+static gboolean
 fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 {
+	FuRedfishNvidiaDevice *self = FU_REDFISH_NVIDIA_DEVICE(device);
+	FuRedfishBackend *backend;
+	FwupdJsonObject *json_member = NULL;
+
 	/* FuRedfishDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_redfish_nvidia_device_parent_class)->probe(device, error))
 		return FALSE;
@@ -147,8 +250,17 @@ fu_redfish_nvidia_device_probe(FuDevice *device, GError **error)
 	/* override fu_redfish_device_set_version() */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 
+	/* firmware staged by an earlier install */
+	g_object_get(device, "member", &json_member, NULL);
+	if (fu_redfish_nvidia_device_member_is_staged(json_member))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
+	if (backend == NULL)
+		return FALSE;
+	fu_redfish_nvidia_device_ensure_only_explicit(self, backend);
+
 	/* every other component is a child of the BMC */
-	return fu_redfish_nvidia_device_ensure_parent(FU_REDFISH_NVIDIA_DEVICE(device), error);
+	return fu_redfish_nvidia_device_ensure_parent(self, error);
 }
 
 static size_t
@@ -587,6 +699,7 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) json_targets = fwupd_json_array_new();
 	g_autoptr(FwupdJsonObject) json_params = fwupd_json_object_new();
+	g_autoptr(FwupdRequest) request_power = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GString) params = NULL;
 	g_autoptr(curl_mime) mime = NULL;
@@ -688,6 +801,55 @@ fu_redfish_nvidia_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
+	/* the BMC chooses the components from the bundle, so ask it which ones it staged */
+	fu_redfish_nvidia_device_ensure_staged(FU_REDFISH_NVIDIA_DEVICE(device), backend);
+
+	/* pulling the power cable activates the firmware too */
+	request_power = fwupd_request_new();
+	fwupd_request_set_kind(request_power, FWUPD_REQUEST_KIND_POST);
+	fwupd_request_set_id(request_power, FWUPD_REQUEST_ID_REPLUG_POWER);
+	fwupd_request_add_flag(request_power, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	return fu_device_emit_request(device, request_power, progress, error);
+}
+
+static gboolean
+fu_redfish_nvidia_device_activate(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuRedfishBackend *backend;
+	glong status_code;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
+
+	/* the host may not have finished shutting down when the BMC cuts the power */
+	sync();
+
+	fwupd_json_object_add_string(json_obj, "ResetType", "AuxPowerCycleForce");
+	if (!fu_redfish_request_perform_full(request,
+					     FU_REDFISH_NVIDIA_AUX_POWER_RESET_URI,
+					     "POST",
+					     json_obj,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
+					     error)) {
+		g_prefix_error_literal(error, "failed to request an AC power cycle: ");
+		return FALSE;
+	}
+	status_code = fu_redfish_request_get_status_code(request);
+	if (status_code < 200 || status_code >= 300) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to request an AC power cycle: HTTP %li",
+			    status_code);
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -715,6 +877,9 @@ fu_redfish_nvidia_device_init(FuRedfishNvidiaDevice *self)
 	/* the BMC stages the firmware, so no version changes until it is activated */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 
+	/* the install ends by asking for the power cable to be pulled */
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+
 	/* the task poll turns every error it must not retry into one of these */
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_WRITE, NULL);
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED, NULL);
@@ -726,5 +891,6 @@ fu_redfish_nvidia_device_class_init(FuRedfishNvidiaDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_redfish_nvidia_device_probe;
 	device_class->write_firmware = fu_redfish_nvidia_device_write_firmware;
+	device_class->activate = fu_redfish_nvidia_device_activate;
 	device_class->set_progress = fu_redfish_nvidia_device_set_progress;
 }

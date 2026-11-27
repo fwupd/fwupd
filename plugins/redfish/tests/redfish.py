@@ -39,6 +39,7 @@ app._empty_bmc: bool = False
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
 app._nvidia_polls: int = 0
+app._nvidia_staged: bool = False
 
 
 def _failure(msg: str, status=400):
@@ -290,6 +291,16 @@ def firmware_inventory_fw_cpu_0():
         "Updateable": True,
         "Version": "02.00.00",
     }
+    if app._nvidia_staged:
+        # the image failed to authenticate, so the slot is empty
+        res["Oem"] = {
+            "Nvidia": {
+                "ActiveFirmwareSlot": {
+                    "FirmwareState": "PendingActivation",
+                    "Version": "",
+                }
+            }
+        }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -305,6 +316,15 @@ def firmware_inventory_fw_gpu_0():
         "Updateable": True,
         "Version": "03.00.00",
     }
+    if app._nvidia_staged:
+        res["Oem"] = {
+            "Nvidia": {
+                "ActiveFirmwareSlot": {
+                    "FirmwareState": "PendingActivation",
+                    "Version": "03.01.00",
+                }
+            }
+        }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -949,7 +969,8 @@ def fwupdate_nvidia():
         return _failure("filename invalid")
     contents = fileitem.read().decode()
     app._nvidia_polls = 0
-    if contents == "completed":
+    app._nvidia_staged = contents == "staged"
+    if contents in ["completed", "staged"]:
         res = {"@odata.id": "/redfish/v1/TaskService/Tasks/601/Monitor"}
         return Response(json.dumps(res), status=202, mimetype="application/json")
     if contents == "no-task":
@@ -976,6 +997,18 @@ def fwupdate_nvidia():
         mimetype="application/json",
         headers={"Location": location},
     )
+
+
+@app.route(
+    "/redfish/v1/Chassis/BMC_0/Actions/Oem/NvidiaChassis.AuxPowerReset",
+    methods=["POST"],
+)
+def chassis_bmc_0_aux_power_reset():
+    if request.get_json()["ResetType"] != "AuxPowerCycleForce":
+        return _failure("reset type invalid")
+    # the board powers up again running the staged firmware
+    app._nvidia_staged = False
+    return Response(status=204)
 
 
 @app.route(
