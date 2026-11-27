@@ -9,7 +9,7 @@ NordicHidGeneration = default
 # Lenovo Sapphire Folio Keyboard
 [HIDRAW\VEN_17EF&DEV_62CC]
 Plugin = nordic_hid
-Flags = no-generic-guids
+Flags = internal,no-generic-guids
 GType = FuNordicHidCfgChannel
 NordicHidBootloader = B0
 NordicHidGeneration = default
