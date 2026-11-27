@@ -19,11 +19,14 @@ struct _FuIgscOpromFirmware {
 G_DEFINE_TYPE(FuIgscOpromFirmware, fu_igsc_oprom_firmware, FU_TYPE_OPROM_FIRMWARE)
 
 static void
-fu_igsc_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_igsc_oprom_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuIgscOpromFirmware *self = FU_IGSC_OPROM_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
-	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
+	if (self->major_version != 0)
+		fwupd_json_object_add_integer(json_object, "major_version", self->major_version);
+	fu_igsc_fwdata_device_info_export(self->device_infos, json_object);
 }
 
 guint16

@@ -76,12 +76,20 @@ fu_ccgx_dmc_firmware_get_fw_data_size(FuCcgxDmcFirmware *self)
 }
 
 static void
-fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ccgx_dmc_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kx(bn, "fw_data_size", self->fw_data_size);
-		fu_xmlb_builder_insert_kx(bn, "image_records", self->image_records->len);
+		if (self->fw_data_size != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "fw_data_size",
+						      self->fw_data_size);
+		if (self->image_records->len != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "image_records",
+						      self->image_records->len);
 	}
 }
 

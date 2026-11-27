@@ -21,6 +21,7 @@ _fwupdmgr_cmd_list=(
 	'get-devices'
 	'get-history'
 	'get-plugins'
+	'get-protocols'
 	'get-releases'
 	'get-remotes'
 	'get-results'
@@ -31,6 +32,7 @@ _fwupdmgr_cmd_list=(
 	'inhibit'
 	'uninhibit'
 	'install'
+	'write-blob'
 	'local-install'
 	'modify-config'
 	'modify-remote'
@@ -236,7 +238,11 @@ _show_device_ids()
 		return 0
 	fi
 	local description
-	description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
+	if [[ -n "$1" ]]; then
+		description="$(command fwupdmgr get-devices --json 2>/dev/null | jq --arg flag "$1" '.Devices | .[] | select(.Flags // [] | index($flag)) | .DeviceId')"
+	else
+		description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
+	fi
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
 }
 
@@ -248,6 +254,16 @@ _show_plugins()
 	local plugins
 	plugins="$(command fwupdmgr get-plugins --json 2>/dev/null | jq '.Plugins | .[] | .Name')"
 	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
+}
+
+_show_protocols()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local protocols
+	protocols="$(command fwupdmgr get-protocols --json 2>/dev/null | jq -r '.Protocols | .[]')"
+	COMPREPLY+=( $(compgen -W "${protocols}" -- "$cur") )
 }
 
 _show_release_versions()
@@ -315,6 +331,10 @@ _fwupdmgr()
 		_show_filters
 		return 0
 		;;
+	--filter-protocol)
+		_show_protocols
+		return 0
+		;;
 	esac
 
 	case $arg in
@@ -370,6 +390,15 @@ _fwupdmgr()
 		#version
 		elif [[ "$args" = "3" ]]; then
 			_show_release_versions "$prev"
+		fi
+		;;
+	write-blob)
+		#find files
+		if [[ "$args" = "2" ]]; then
+			_filedir
+		#device ID
+		elif [[ "$args" = "3" ]]; then
+			_show_device_ids is-programmer-target
 		fi
 		;;
 	local-install)

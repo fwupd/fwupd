@@ -44,8 +44,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluetoothDevice, fu_bluetooth_device, FU_TYPE_DEVIC
  * @modalias: the modalias, e.g. `bluetooth:v000ApFFFFdFFFF`
  *
  * Sets the device modalias.
- *
- * Since: 2.1.8
  **/
 void
 fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
@@ -85,7 +83,7 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
 	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
 	fu_device_build_instance_id_full(FU_DEVICE(self),
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 subsystem,
 					 "VID",
@@ -136,8 +134,6 @@ fu_bluetooth_device_set_modalias(FuBluetoothDevice *self, const gchar *modalias)
  * @uuid: the UUID
  *
  * Emits a changed signal from the device with the given UUID.
- *
- * Since: 2.1.8
  **/
 void
 fu_bluetooth_device_emit_changed(FuBluetoothDevice *self, const gchar *uuid)
@@ -260,8 +256,6 @@ fu_bluetooth_device_reload(FuDevice *device, GError **error)
  * Reads from a UUID on the device.
  *
  * Returns: (transfer full): data, or %NULL for error
- *
- * Since: 1.5.7
  **/
 GByteArray *
 fu_bluetooth_device_read(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -326,13 +320,17 @@ fu_bluetooth_device_read(FuBluetoothDevice *self, const gchar *uuid, GError **er
  * Reads a string from a UUID on the device.
  *
  * Returns: (transfer full): NUL-terminated string, or %NULL for error
- *
- * Since: 1.5.7
  **/
 gchar *
 fu_bluetooth_device_read_string(FuBluetoothDevice *self, const gchar *uuid, GError **error)
 {
-	g_autoptr(GByteArray) buf = fu_bluetooth_device_read(self, uuid, error);
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(FU_IS_BLUETOOTH_DEVICE(self), NULL);
+	g_return_val_if_fail(uuid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_bluetooth_device_read(self, uuid, error);
 	if (buf == NULL)
 		return NULL;
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
@@ -356,8 +354,6 @@ fu_bluetooth_device_read_string(FuBluetoothDevice *self, const gchar *uuid, GErr
  * Writes to a UUID on the device.
  *
  * Returns: %TRUE if all the data was written
- *
- * Since: 1.5.7
  **/
 gboolean
 fu_bluetooth_device_write(FuBluetoothDevice *self,
@@ -423,8 +419,6 @@ fu_bluetooth_device_write(FuBluetoothDevice *self,
  * method).
  *
  * Returns: %TRUE if the method call completed successfully.
- *
- * Since: 1.5.8
  **/
 gboolean
 fu_bluetooth_device_notify_start(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -450,8 +444,6 @@ fu_bluetooth_device_notify_start(FuBluetoothDevice *self, const gchar *uuid, GEr
  * method).
  *
  * Returns: %TRUE if the method call completed successfully.
- *
- * Since: 1.5.8
  **/
 gboolean
 fu_bluetooth_device_notify_stop(FuBluetoothDevice *self, const gchar *uuid, GError **error)
@@ -478,8 +470,6 @@ fu_bluetooth_device_notify_stop(FuBluetoothDevice *self, const gchar *uuid, GErr
  * method). Closing IO channel releases the notify.
  *
  * Returns: (transfer full): a #FuIOChannel or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_bluetooth_device_notify_acquire(FuBluetoothDevice *self,
@@ -508,8 +498,6 @@ fu_bluetooth_device_notify_acquire(FuBluetoothDevice *self,
  * method). Closing IO channel releases the notify.
  *
  * Returns: (transfer full): a #FuIOChannel or %NULL on error
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_bluetooth_device_write_acquire(FuBluetoothDevice *self,
@@ -534,7 +522,7 @@ fu_bluetooth_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
-fu_bluetooth_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_bluetooth_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuBluetoothDevice *self = FU_BLUETOOTH_DEVICE(device);
 	FuBluetoothDevicePrivate *priv = GET_PRIVATE(self);
@@ -555,28 +543,34 @@ fu_bluetooth_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdC
 }
 
 static gboolean
-fu_bluetooth_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_bluetooth_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBluetoothDevice *self = FU_BLUETOOTH_DEVICE(device);
 	const gchar *tmp;
 	gint64 tmp64 = 0;
 
-	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "PhysicalId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_physical_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "LogicalId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "LogicalId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_logical_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_name(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Modalias", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Modalias", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_bluetooth_device_set_modalias(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Icon", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Icon", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_add_icon(device, tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "Battery", &tmp64, 100, error))
@@ -615,8 +609,8 @@ fu_bluetooth_device_class_init(FuBluetoothDeviceClass *klass)
 	device_class->reload = fu_bluetooth_device_reload;
 	device_class->to_string = fu_bluetooth_device_to_string;
 	device_class->convert_version = fu_bluetooth_device_convert_version;
-	device_class->from_json = fu_bluetooth_device_from_json;
-	device_class->add_json = fu_bluetooth_device_add_json;
+	device_class->build = fu_bluetooth_device_build;
+	device_class->export = fu_bluetooth_device_export;
 
 	/**
 	 * FuBluetoothDevice::changed:
@@ -624,8 +618,6 @@ fu_bluetooth_device_class_init(FuBluetoothDeviceClass *klass)
 	 * @uuid: the UUID that changed
 	 *
 	 * The ::changed signal is emitted when a service with a specific UUID changed.
-	 *
-	 * Since: 1.5.8
 	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),

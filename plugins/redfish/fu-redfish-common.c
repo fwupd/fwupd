@@ -26,14 +26,9 @@ gchar *
 fu_redfish_common_buffer_to_ipv6(const guint8 *buffer)
 {
 	GString *str = g_string_new(NULL);
-	for (guint i = 0; i < 16; i += 4) {
-		g_string_append_printf(str,
-				       "%02x%02x%02x%02x",
-				       buffer[i + 0],
-				       buffer[i + 1],
-				       buffer[i + 2],
-				       buffer[i + 3]);
-		if (i != 12)
+	for (guint i = 0; i < 16; i += 2) {
+		g_string_append_printf(str, "%02x%02x", buffer[i + 0], buffer[i + 1]);
+		if (i != 14)
 			g_string_append(str, ":");
 	}
 	return g_string_free_and_steal(str);

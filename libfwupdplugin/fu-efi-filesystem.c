@@ -161,8 +161,6 @@ fu_efi_filesystem_class_init(FuEfiFilesystemClass *klass)
  * fu_efi_filesystem_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 2.0.0
  **/
 FuFirmware *
 fu_efi_filesystem_new(void)

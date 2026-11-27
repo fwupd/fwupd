@@ -32,9 +32,12 @@ fu_devlink_plugin_get_serial_number_cb(const struct nlmsghdr *nlh, gpointer data
 
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
 
-	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL)
-		*serial_number =
-		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]), G_MAXSIZE);
+	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
+		const struct nlattr *attr = tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER];
+
+		/* the attribute is not guaranteed to be NUL-terminated, so bound the read */
+		*serial_number = fu_strsafe(mnl_attr_get_str(attr), mnl_attr_get_payload_len(attr));
+	}
 
 	return MNL_CB_OK;
 }

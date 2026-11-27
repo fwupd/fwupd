@@ -60,9 +60,19 @@ fu_wacom_usb_plugin_composite_prepare(FuPlugin *self, GPtrArray *devices, GError
 }
 
 static gboolean
-fu_wacom_usb_plugin_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **error)
+fu_wacom_usb_plugin_composite_cleanup(FuPlugin *self,
+				      GPtrArray *devices,
+				      FwupdUpdateState update_state,
+				      GError **error)
 {
 	g_autoptr(FuWacomUsbDevice) main_device = NULL;
+
+	/* do not reset the device if the update did not succeed */
+	if (update_state != FWUPD_UPDATE_STATE_SUCCESS) {
+		g_debug("not resetting device as update state was %s",
+			fwupd_update_state_to_string(update_state));
+		return TRUE;
+	}
 
 	/* find the main device in transaction (which may *be* the main device, or just a proxy) */
 	for (guint i = 0; i < devices->len; i++) {

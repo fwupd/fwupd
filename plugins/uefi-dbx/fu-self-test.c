@@ -66,9 +66,9 @@ fu_uefi_dbx_version_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* create a plausible dbx */
+	/* create a plausible dbx, 20260402 then 20250902 */
 	csum1 =
-	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
+	    fu_bytes_from_string("96275dfd6282a522b011177ee049296952ac794832091f937fbbf92869028629",
 				 &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(csum1);
@@ -77,7 +77,7 @@ fu_uefi_dbx_version_func(void)
 	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx1), NULL);
 
 	csum2 =
-	    fu_bytes_from_string("96275DFD6282A522B011177EE049296952AC794832091F937FBBF92869028629",
+	    fu_bytes_from_string("e14c88dc48339c0555686849a4e3f8986d558e65c4fc863a1a4f1d40478bd47c",
 				 &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(csum2);
@@ -218,7 +218,7 @@ fu_uefi_dbx_not_present_func(void)
 	g_autoptr(FuFirmware) ms_siglist = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *ms_kek_filename = NULL;
-	g_autofree gchar *ms_kek_xml = NULL;
+	g_autofree gchar *ms_kek_json = NULL;
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
@@ -228,14 +228,14 @@ fu_uefi_dbx_not_present_func(void)
 
 	/* create a KEK with Microsoft's signature */
 	ms_kek_filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.json", NULL);
 	g_assert_nonnull(ms_kek_filename);
 
-	ret = g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
+	ret = g_file_get_contents(ms_kek_filename, &ms_kek_json, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ms_siglist = fu_firmware_new_from_xml(ms_kek_xml, &error);
+	ms_siglist = fu_firmware_new_from_json(ms_kek_json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(ms_siglist);
 
@@ -325,7 +325,7 @@ fu_uefi_dbx_validate_filename_func(void)
 	gboolean ret;
 	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *fn_pe = NULL;
-	g_autofree gchar *fn_xml = NULL;
+	g_autofree gchar *fn_json = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) pefile = NULL;
@@ -337,13 +337,13 @@ fu_uefi_dbx_validate_filename_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file_pe = NULL;
 
-	/* so FuPefileFirmware et al. can be resolved from the builder XML */
+	/* so FuPefileFirmware et al. can be resolved from the builder JSON */
 	fu_context_add_firmware_gtypes(ctx);
 
-	/* build a plausible PE file using a builder.xml */
-	fn_xml = g_test_build_filename(G_TEST_DIST, "tests", "pefile.builder.xml", NULL);
-	g_assert_nonnull(fn_xml);
-	pefile = fu_firmware_new_from_filename(fn_xml, &error);
+	/* build a plausible PE file using a builder.json */
+	fn_json = g_test_build_filename(G_TEST_DIST, "tests", "pefile.builder.json", NULL);
+	g_assert_nonnull(fn_json);
+	pefile = fu_firmware_new_from_filename(fn_json, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(pefile);
 	blob_pe = fu_firmware_write(pefile, &error);
@@ -399,7 +399,7 @@ fu_uefi_dbx_validate_filename_func(void)
 	/* a file that is not a PE file is silently ignored */
 	ret = fu_uefi_dbx_signature_list_validate_filename(ctx,
 							   FU_EFI_SIGNATURE_LIST(siglist),
-							   fn_xml,
+							   fn_json,
 							   FU_FIRMWARE_PARSE_FLAG_NONE,
 							   &error);
 	g_assert_no_error(error);

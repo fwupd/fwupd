@@ -13,6 +13,7 @@
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>
 #include <libfwupdplugin/fu-context-private.h>
+#include <libfwupdplugin/fu-coswid-collection.h>
 #include <libfwupdplugin/fu-coswid-firmware.h>
 #include <libfwupdplugin/fu-csv-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
@@ -100,6 +101,7 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_CFU_PAYLOAD);
 	fu_context_add_firmware_gtype(self, FU_TYPE_USWID_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_COSWID_FIRMWARE);
+	fu_context_add_firmware_gtype(self, FU_TYPE_COSWID_COLLECTION);
 	fu_context_add_firmware_gtype(self, FU_TYPE_PEFILE_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_ELF_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_X509_CERTIFICATE);

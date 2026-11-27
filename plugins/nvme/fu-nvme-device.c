@@ -7,9 +7,6 @@
 #include "config.h"
 
 #include <linux/nvme_ioctl.h>
-#ifdef HAVE_LINUX_SED_OPAL_H
-#include <linux/sed-opal.h>
-#endif
 #include <sys/ioctl.h>
 
 #include "fu-nvme-device.h"
@@ -19,7 +16,6 @@ struct _FuNvmeDevice {
 	guint pci_depth;
 	guint64 write_block_size;
 	guint serial_suffix;
-	FuNvmeOpalFlags opal_flags;
 };
 
 #define FU_NVME_COMMIT_ACTION_CA0 0b000 /* replace only */
@@ -36,17 +32,14 @@ struct _FuNvmeDevice {
 
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
-#define FU_NVME_DEVICE_IOCTL_TIMEOUT	  5000 /* ms */
-#define FU_NVME_DEVICE_OPAL_IOCTL_TIMEOUT 500  /* ms */
+#define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 static void
 fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-	g_autofree gchar *opal_flags = fu_nvme_opal_flags_to_string(self->opal_flags);
 	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
 	fwupd_codec_string_append_int(str, idt, "SerialSuffix", self->serial_suffix);
-	fwupd_codec_string_append(str, idt, "OpalFlags", opal_flags);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -323,20 +316,6 @@ fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **erro
 	return TRUE;
 }
 
-FuNvmeOpalFlags
-fu_nvme_device_get_opal_flags(FuNvmeDevice *self)
-{
-	g_return_val_if_fail(FU_IS_NVME_DEVICE(self), 0);
-	return self->opal_flags;
-}
-
-void
-fu_nvme_device_set_opal_flags(FuNvmeDevice *self, FuNvmeOpalFlags opal_flags)
-{
-	g_return_if_fail(FU_IS_NVME_DEVICE(self));
-	self->opal_flags = opal_flags;
-}
-
 static gboolean
 fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
@@ -376,7 +355,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize bufsz, GEr
 	if (fr != NULL) {
 		g_autofree gchar *str = fu_strstrip(fr);
 		if (str[0] != '\0')
-			fu_device_set_version(FU_DEVICE(self), fr);
+			fu_device_set_version(FU_DEVICE(self), str);
 	}
 
 	/* firmware update granularity */
@@ -436,7 +415,7 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "NVME",
 					      "VEN",
@@ -475,36 +454,10 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_nvme_device_ensure_opal_flags(FuNvmeDevice *self, GError **error)
-{
-#ifdef HAVE_LINUX_SED_OPAL_H
-	struct opal_status status = {0};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
-
-	if (!fu_ioctl_execute(ioctl,
-			      IOC_OPAL_GET_STATUS,
-			      (guint8 *)&status,
-			      sizeof(status),
-			      NULL,
-			      FU_NVME_DEVICE_OPAL_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
-			      error)) {
-		g_prefix_error_literal(error, "failed to get TCG Opal status: ");
-		return FALSE;
-	}
-
-	/* success */
-	fu_nvme_device_set_opal_flags(self, status.flags);
-#endif
-	return TRUE;
-}
-
-static gboolean
 fu_nvme_device_setup(FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	guint8 buf[FU_STRUCT_NVME_ID_CTRL_SIZE] = {0x0};
-	g_autoptr(GError) error_opal = NULL;
 
 	/* get and parse CNS */
 	if (!fu_nvme_device_identify_ctrl(self, buf, sizeof(buf), error)) {
@@ -516,10 +469,6 @@ fu_nvme_device_setup(FuDevice *device, GError **error)
 	fu_dump_raw(G_LOG_DOMAIN, "CNS", buf, sizeof(buf));
 	if (!fu_nvme_device_parse_cns(self, buf, sizeof(buf), error))
 		return FALSE;
-
-	/* for the HSI report */
-	if (!fu_nvme_device_ensure_opal_flags(self, &error_opal))
-		g_debug("failed to get OPAL flags: %s", error_opal->message);
 
 	/* add one extra instance ID so that we can match bad firmware */
 	fu_device_add_instance_strsafe(device, "VER", fu_device_get_version(device));

@@ -381,9 +381,9 @@ fu_dell_dock_hid_tbt_write(FuDevice *device,
 	g_return_val_if_fail(input != NULL, FALSE);
 	g_return_val_if_fail(write_size <= HIDI2C_MAX_WRITE, FALSE);
 
-	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
-
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
+		/* the status result is read back into the same buffer */
+		memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 		if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 			g_prefix_error_literal(error, "failed to run TBT update: ");
 			return FALSE;

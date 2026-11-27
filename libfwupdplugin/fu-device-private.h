@@ -95,8 +95,6 @@ fu_device_get_parent_internal(FuDevice *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 
 void
 fu_device_clear_events(FuDevice *self);
-void
-fu_device_set_target(FuDevice *self, FuDevice *target);
 
 FuBackend *
 fu_device_get_backend(FuDevice *self) G_GNUC_PURE;
@@ -104,12 +102,16 @@ void
 fu_device_set_backend(FuDevice *self, FuBackend *backend);
 
 void
-fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_device_export(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+fu_device_build(FuDevice *self, FwupdJsonObject *json_obj, GError **error) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_device_check_firmware(FuDevice *self,
+			 FuFirmware *firmware,
+			 FuFirmwareParseFlags flags,
+			 GError **error) G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

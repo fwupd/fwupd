@@ -19,6 +19,20 @@ if meson.is_cross_build()
   rust_target = meson.get_external_property('rust_target', '')
   if rust_target != ''
     cargo_env.set('MESON_RUST_TARGET', rust_target)
+    cc = meson.get_compiler('c')
+    cargo_env.set(
+      'CARGO_TARGET_' + rust_target.underscorify().to_upper() + '_LINKER',
+      cc.cmd_array()[0],
+    )
+    # For any crates compiling C/C++ code
+    cargo_env.set('CC_' + rust_target.underscorify(), cc.cmd_array()[0])
+    ar = find_program(
+      'llvm-ar',
+      required: false,
+    )
+    if ar.found()
+      cargo_env.set('AR_' + rust_target.underscorify(), ar.full_path())
+    endif
   endif
 endif
 
@@ -27,7 +41,15 @@ fwupd_rust_src = [
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd/Cargo.toml',
   'fwupd/src/bitflags.rs',
+  'fwupd/src/cab/archive.rs',
+  'fwupd/src/cab/builder.rs',
+  'fwupd/src/cab/checksum.rs',
+  'fwupd/src/cab/mod.rs',
+  'fwupd/src/cab/msdos.rs',
+  'fwupd/src/cab/path.rs',
+  'fwupd/src/cab/wire.rs',
   'fwupd/src/compressor/mod.rs',
+  'fwupd/src/compressor/mszip.rs',
   'fwupd/src/compressor/zlib.rs',
   'fwupd/src/json/array.rs',
   'fwupd/src/json/error.rs',
@@ -50,8 +72,10 @@ fwupd_ffi_src = [
   join_paths(meson.project_source_root(), 'Cargo.toml'),
   join_paths(meson.project_source_root(), 'Cargo.lock'),
   'fwupd-ffi/Cargo.toml',
+  'fwupd-ffi/src/cab.rs',
   'fwupd-ffi/src/compressor.rs',
   'fwupd-ffi/src/cstream.rs',
+  'fwupd-ffi/src/glib/gbytes.rs',
   'fwupd-ffi/src/glib/gerror.rs',
   'fwupd-ffi/src/glib/grefstring.rs',
   'fwupd-ffi/src/glib/gstring.rs',
@@ -97,7 +121,7 @@ fwupd_rust_ffi_incdir = include_directories('fwupd-ffi')
 # links the static archive (cargo normally handles this automatically).
 rust_ffi_extra_deps = []
 if host_machine.system() == 'windows'
-  foreach lib : ['ws2_32', 'userenv', 'bcrypt', 'ntdll']
+  foreach lib : ['ws2_32', 'userenv', 'bcrypt', 'ntdll', 'synchronization']
     rust_ffi_extra_deps += cc.find_library(lib)
   endforeach
 else

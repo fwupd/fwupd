@@ -31,8 +31,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY
  * If @fwupd_version is %NULL then expect %TRUE.
  *
  * Returns: %TRUE if the fwupd release contained this attribute
- *
- * Since: 2.0.7
  **/
 gboolean
 fu_security_attr_check_fwupd_version(FuSecurityAttr *self, const gchar *fwupd_version)
@@ -55,8 +53,6 @@ fu_security_attr_check_fwupd_version(FuSecurityAttr *self, const gchar *fwupd_ve
  *
  * Checks all configured possible values of an enumeration attribute and
  * if any match @needle then set as the target value.
- *
- * Since: 1.8.4
  **/
 void
 fu_security_attr_add_bios_target_value(FuSecurityAttr *self, const gchar *id, const gchar *needle)
@@ -116,8 +112,6 @@ fu_security_attr_set_context(FuSecurityAttr *self, FuContext *ctx)
  * Makes a full (deep) copy of a security attribute.
  *
  * Returns: (transfer full): a #FuSecurityAttr
- *
- * Since: 2.1.8
  **/
 FuSecurityAttr *
 fu_security_attr_copy(FuSecurityAttr *donor)
@@ -160,8 +154,6 @@ fu_security_attr_class_init(FuSecurityAttrClass *klass)
  * Creates a new #FuSecurityAttr with context set.
  *
  * Returns: (transfer full): a #FuSecurityAttr
- *
- * Since: 1.8.4
  **/
 FuSecurityAttr *
 fu_security_attr_new(FuContext *ctx, const gchar *appstream_id)

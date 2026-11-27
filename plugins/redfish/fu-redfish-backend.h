@@ -30,10 +30,10 @@ const gchar *
 fu_redfish_backend_get_username(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password);
-void
-fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token);
 gboolean
 fu_redfish_backend_has_bearer_token(FuRedfishBackend *self);
+const gchar *
+fu_redfish_backend_get_session_key_file(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_session_key_file(FuRedfishBackend *self, const gchar *session_key_file);
 void
@@ -48,6 +48,10 @@ void
 fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix);
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
+GType
+fu_redfish_backend_get_device_gtype(FuRedfishBackend *self);
+gboolean
+fu_redfish_backend_ensure_device_gtype(FuRedfishBackend *self, GError **error);
 gchar *
 fu_redfish_backend_get_session_key(FuRedfishBackend *self, GError **error);
 gboolean
@@ -55,4 +59,4 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
 gboolean
 fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *
-fu_redfish_backend_request_new(FuRedfishBackend *self);
+fu_redfish_backend_request_new(FuRedfishBackend *self, GError **error);

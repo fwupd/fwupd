@@ -29,8 +29,6 @@ G_DEFINE_TYPE(FuIntelMeDevice, fu_intel_me_device, FU_TYPE_DEVICE)
  * Gets the ME device family.
  *
  * Returns: a #FuIntelMeFamily, e.g. #FU_INTEL_ME_FAMILY_CSME11
- *
- * Since: 2.1.1
  **/
 FuIntelMeFamily
 fu_intel_me_device_get_family(FuIntelMeDevice *self)
@@ -46,8 +44,6 @@ fu_intel_me_device_get_family(FuIntelMeDevice *self)
  * Gets the ME device issue.
  *
  * Returns: a #FuIntelMeIssue, e.g. #FU_INTEL_ME_ISSUE_NOT_VULNERABLE
- *
- * Since: 2.1.1
  **/
 FuIntelMeIssue
 fu_intel_me_device_get_issue(FuIntelMeDevice *self)
@@ -204,8 +200,6 @@ fu_intel_me_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
  * Gets a HFSTSx register.
  *
  * Returns: (transfer none): a #FuStructIntelMeHfsts, or %NULL if unset
- *
- * Since: 2.1.1
  **/
 FuStructIntelMeHfsts *
 fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx)
@@ -223,8 +217,6 @@ fu_intel_me_device_get_hfsts(FuIntelMeDevice *self, guint idx)
  * @hfsts: a #FuStructIntelMeHfsts
  *
  * Sets a HFSTSx register.
- *
- * Since: 2.1.1
  **/
 void
 fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHfsts *hfsts)
@@ -242,6 +234,8 @@ fu_intel_me_device_set_hfsts(FuIntelMeDevice *self, guint idx, FuStructIntelMeHf
 	}
 
 	/* save buffer for later */
+	if (self->hfsts[idx] == hfsts)
+		return;
 	if (self->hfsts[idx] != NULL)
 		fu_struct_intel_me_hfsts_unref(self->hfsts[idx]);
 	self->hfsts[idx] = fu_struct_intel_me_hfsts_ref(hfsts);
@@ -699,13 +693,14 @@ fu_intel_me_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 }
 
 static gboolean
-fu_intel_me_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_intel_me_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(device);
 	const gchar *version;
 
 	/* optional properties */
-	version = fwupd_json_object_get_string(json_obj, "Version", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Version", &version, error))
+		return FALSE;
 	if (version != NULL)
 		fu_device_set_version(device, version);
 	for (guint i = 1; i < G_N_ELEMENTS(self->hfsts); i++) {
@@ -724,7 +719,7 @@ fu_intel_me_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError
 }
 
 static void
-fu_intel_me_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_intel_me_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(device);
 	fwupd_json_object_add_string(json_obj, "GType", "FuIntelMeDevice");
@@ -747,7 +742,7 @@ fu_intel_me_device_init(FuIntelMeDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "ME");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_physical_id(FU_DEVICE(self), "PCI_SLOT_NAME=0000:00:16.0");
-	fu_device_add_icon(FU_DEVICE(self), "cpu");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_PROCESSOR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	g_signal_connect(FWUPD_DEVICE(self),
@@ -762,7 +757,7 @@ fu_intel_me_device_constructed(GObject *obj)
 	FuIntelMeDevice *self = FU_INTEL_ME_DEVICE(obj);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "PCI\\VEN_8086",
-				       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+				       FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE);
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_intel_me_device_parent_class)->constructed(obj);
@@ -789,8 +784,8 @@ fu_intel_me_device_class_init(FuIntelMeDeviceClass *klass)
 	object_class->constructed = fu_intel_me_device_constructed;
 	object_class->finalize = fu_intel_me_device_finalize;
 	device_class->to_string = fu_intel_me_device_to_string;
-	device_class->from_json = fu_intel_me_device_from_json;
-	device_class->add_json = fu_intel_me_device_add_json;
+	device_class->build = fu_intel_me_device_build;
+	device_class->export = fu_intel_me_device_export;
 	device_class->add_security_attrs = fu_intel_me_device_add_security_attrs;
 }
 
@@ -801,8 +796,6 @@ fu_intel_me_device_class_init(FuIntelMeDeviceClass *klass)
  * Creates a new Intel ME device.
  *
  * Returns: (transfer full): a #FuIntelMeDevice
- *
- * Since: 2.1.1
  **/
 FuIntelMeDevice *
 fu_intel_me_device_new(FuContext *ctx)

@@ -48,7 +48,7 @@ fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 		if (!fu_input_stream_read_u8(stream, i, &value, error))
 			return FALSE;
 		if (value == 0x0) {
-			streamsz = i - 1;
+			streamsz = i;
 			break;
 		}
 	}

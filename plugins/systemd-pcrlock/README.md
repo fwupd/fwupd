@@ -25,6 +25,11 @@ to unlock unattended. Once the machine has rebooted and applied the update, the
 `systemd-pcrlock-*.service` units re-lock the policy against the new
 measurements automatically.
 
+If preparation aborts before any device updates are attempted, the plugin
+re-locks every measurement it unlocked and regenerates the policy. If a device
+update fails after preparation, it only re-locks the measurements associated
+with failed updates, leaving those for successful updates unlocked until reboot.
+
 The plugin is only active when `systemd-pcrlock` is being used to protect the
 system, which is detected by the presence of a generated policy in
 `/var/lib/systemd/pcrlock.json`.

@@ -71,8 +71,6 @@ struct _FuPluginClass {
 	 *
 	 * Initializes the modular plugin.
 	 * Sets up any static data structures for the plugin.
-	 *
-	 * Since: 1.7.2
 	 **/
 	void (*constructed)(GObject *obj);
 	/**
@@ -81,8 +79,6 @@ struct _FuPluginClass {
 	 *
 	 * Destroys the modular plugin.
 	 * Any allocated memory should be freed here.
-	 *
-	 * Since: 1.7.2
 	 **/
 	void (*finalize)(GObject *obj);
 	/**
@@ -97,8 +93,6 @@ struct _FuPluginClass {
 	 * Any plugins not intended for the system or that have failure communicating
 	 * with the device should return FALSE.
 	 * Any allocated memory should be freed here.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*startup)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
@@ -114,8 +108,6 @@ struct _FuPluginClass {
 	 *
 	 * NOTE: Any plugins not intended for the system or that have failure communicating
 	 * with the device should return %FALSE and set @error.
-	 *
-	 * Since: 1.9.6
 	 **/
 	gboolean (*ready)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
@@ -125,8 +117,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Probes for devices.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*coldplug)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
@@ -136,8 +126,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function run when the subclassed device has been created.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*device_created)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -146,8 +134,6 @@ struct _FuPluginClass {
 	 * @dev: a device
 	 *
 	 * Function run when device registered from another plugin.
-	 *
-	 * Since: 1.7.2
 	 **/
 	void (*device_registered)(FuPlugin *self, FuDevice *device);
 	/**
@@ -156,8 +142,6 @@ struct _FuPluginClass {
 	 * @dev: a device
 	 *
 	 * Function run when the subclassed device has been added.
-	 *
-	 * Since: 1.7.2
 	 **/
 	void (*device_added)(FuPlugin *self, FuDevice *device);
 	/**
@@ -169,8 +153,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Verifies the firmware on the device matches the value stored in the database
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*verify)(FuPlugin *self,
 			   FuDevice *device,
@@ -184,8 +166,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Obtains historical update results for the device.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*get_results)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -195,8 +175,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Clears stored update results for the device.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*clear_results)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -207,8 +185,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function to run after a device is added by a backend, e.g. by USB or Udev.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*backend_device_added)(FuPlugin *self,
 					 FuDevice *device,
@@ -221,8 +197,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function run when the device changed.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*backend_device_changed)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -232,8 +206,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function to run when device is physically removed.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*backend_device_removed)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -242,8 +214,6 @@ struct _FuPluginClass {
 	 * @attrs: a security attribute
 	 *
 	 * Function that asks plugins to add Host Security Attributes.
-	 *
-	 * Since: 1.7.2
 	 **/
 	void (*add_security_attrs)(FuPlugin *self, FuSecurityAttrs *attrs);
 	/**
@@ -256,8 +226,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Updates the firmware on the device.
-	 *
-	 * Since: 2.0.7
 	 **/
 	gboolean (*write_firmware)(FuPlugin *self,
 				   FuDevice *device,
@@ -272,8 +240,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Unlocks the device for writes.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*unlock)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -286,8 +252,6 @@ struct _FuPluginClass {
 	 *
 	 * This is intended for devices that it is not safe to immediately activate
 	 * the firmware.  It may be called at a more convenient time instead.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*activate)(FuPlugin *self,
 			     FuDevice *device,
@@ -300,8 +264,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Swaps the device from bootloader mode to runtime mode.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*attach)(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error);
 	/**
@@ -311,8 +273,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Swaps the device from runtime mode to bootloader mode.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*detach)(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error);
 	/**
@@ -324,8 +284,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Prepares the device to receive an update.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*prepare)(FuPlugin *self,
 			    FuDevice *device,
@@ -341,8 +299,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Cleans up the device after receiving an update.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*cleanup)(FuPlugin *self,
 			    FuDevice *device,
@@ -356,29 +312,31 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function run before updating group of composite devices.
-	 *
-	 * Since: 1.7.2
 	 **/
 	gboolean (*composite_prepare)(FuPlugin *self, GPtrArray *devices, GError **error);
 	/**
 	 * composite_cleanup
 	 * @self: a #FuPlugin
 	 * @devices: (element-type FuDevice): array of devices
+	 * @update_state: a #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_FAILED
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function run after updating group of composite devices.
 	 *
-	 * Since: 1.7.2
+	 * The @update_state is %FWUPD_UPDATE_STATE_SUCCESS if all the devices were updated, or
+	 * %FWUPD_UPDATE_STATE_FAILED if any device update failed. If composite prepare failed
+	 * before any device updates were attempted, @update_state is %FWUPD_UPDATE_STATE_UNKNOWN.
 	 **/
-	gboolean (*composite_cleanup)(FuPlugin *self, GPtrArray *devices, GError **error);
+	gboolean (*composite_cleanup)(FuPlugin *self,
+				      GPtrArray *devices,
+				      FwupdUpdateState update_state,
+				      GError **error);
 	/**
 	 * load
 	 * @ctx: a #FuContext
 	 *
 	 * Function to register context attributes, run during early startup even on plugins which
 	 * will be later disabled.
-	 *
-	 * Since: 1.8.1
 	 **/
 	void (*load)(FuContext *ctx);
 	/**
@@ -386,8 +344,6 @@ struct _FuPluginClass {
 	 * @self: A #FuPlugin
 	 *
 	 * Prints plugin private data to the console.
-	 *
-	 * Since: 1.8.4
 	 **/
 	void (*to_string)(FuPlugin *self, guint idt, GString *str);
 	/**
@@ -397,8 +353,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Fix a host security issue.
-	 *
-	 * Since: 1.9.6
 	 **/
 	gboolean (*fix_host_security_attr)(FuPlugin *self, FuSecurityAttr *attr, GError **error);
 	/**
@@ -408,8 +362,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Undo the fix for a host security issue.
-	 *
-	 * Since: 1.9.6
 	 **/
 	gboolean (*undo_host_security_attr)(FuPlugin *self, FuSecurityAttr *attr, GError **error);
 	/**
@@ -419,8 +371,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Performs cleanup actions after the reboot has been performed.
-	 *
-	 * Since: 1.9.7
 	 **/
 	gboolean (*reboot_cleanup)(FuPlugin *self, FuDevice *device, GError **error);
 	/**
@@ -431,8 +381,6 @@ struct _FuPluginClass {
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Sets a plugin config option, which may be allow-listed or value-checked.
-	 *
-	 * Since: 2.0.0
 	 **/
 	gboolean (*modify_config)(FuPlugin *self,
 				  const gchar *key,
@@ -449,8 +397,6 @@ struct _FuPluginClass {
 	 *
 	 * Notify each plugin when the firmware has been parsed and the update is ready to be
 	 * deployed. A plugin should avoid returning with an error here unless an emergency.
-	 *
-	 * Since: 2.0.19
 	 **/
 	gboolean (*composite_peek_firmware)(FuPlugin *self,
 					    FuDevice *device,
@@ -485,7 +431,7 @@ typedef enum {
 	FU_PLUGIN_RULE_RUN_BEFORE,
 	FU_PLUGIN_RULE_BETTER_THAN,
 	FU_PLUGIN_RULE_INHIBITS_IDLE,
-	FU_PLUGIN_RULE_METADATA_SOURCE, /* Since: 1.3.6 */
+	FU_PLUGIN_RULE_METADATA_SOURCE,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;

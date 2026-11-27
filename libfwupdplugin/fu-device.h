@@ -93,15 +93,18 @@ struct _FuDeviceClass {
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
 	void (*invalidate)(FuDevice *self);
 	gchar *(*convert_version)(FuDevice *self, guint64 version_raw);
-	void (*add_json)(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags);
-	gboolean (*from_json)(FuDevice *self,
-			      FwupdJsonObject *json_obj,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+#ifndef __cplusplus
+	void (*export)(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags);
+#endif
+	gboolean (*build)(FuDevice *self,
+			  FwupdJsonObject *json_obj,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*check_firmware)(FuDevice *self,
 				   FuFirmware *firmware,
 				   FuFirmwareParseFlags flags,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*incorporate_from_proxy)(FuDevice *self, FuDevice *donor);
+	void (*set_version_raw)(FuDevice *self, guint64 *version_raw);
 #endif
 };
 
@@ -213,136 +216,102 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS:
  *
  * Do not add instance IDs from the device baseclass.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS "no-auto-instance-ids"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER:
  *
  * Ensure the version is a valid semantic version, e.g. numbers separated with dots.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER "ensure-semver"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED:
  *
  * Only devices supported in the metadata will be opened
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED "only-supported"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME:
  *
  * Set the device name from the metadata `name` if available.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME "md-set-name"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY:
  *
  * Set the device name from the metadata `category` if available.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY "md-set-name-category"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT:
  *
  * Set the device version format from the metadata or history database if available.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT "md-set-verfmt"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON:
  *
  * Set the device icon from the metadata if available.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON "md-set-icon"
 /**
  * FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN:
  *
  * Retry the device open up to 5 times if it fails.
- *
- * Since: 1.5.5
  */
 #define FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN "retry-open"
 /**
  * FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID:
  *
  * Match GUIDs on device replug where the physical and logical IDs will be different.
- *
- * Since: 1.5.8
  */
 #define FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID "replug-match-guid"
 /**
  * FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION:
  *
  * Inherit activation status from the history database on startup.
- *
- * Since: 1.5.9
  */
 #define FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION "inherit-activation"
 /**
  * FU_DEVICE_PRIVATE_FLAG_IS_OPEN:
  *
  * The device opened successfully and ready to use.
- *
- * Since: 1.6.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_IS_OPEN "is-open"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER:
  *
  * Do not attempt to read the device serial number.
- *
- * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER "no-serial-number"
 /**
  * FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN:
  *
  * Automatically assign the parent for children of this device.
- *
- * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN "auto-parent-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET:
  *
  * Device needs resetting twice for attach after the firmware update.
- *
- * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET "attach-extra-reset"
 /**
  * FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN:
  *
  * Children of the device are inhibited by the parent.
- *
- * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN "inhibit-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN:
  *
  * Do not auto-remove children in the device list.
- *
- * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN "no-auto-remove-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK:
  *
  * Use parent for the battery level and threshold.
- *
- * Since: 1.6.4
  */
 #define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK "use-proxy-fallback"
 /**
@@ -357,40 +326,30 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR:
  *
  * Set the device vendor from the metadata `developer_name` if available.
- *
- * Since: 1.7.4
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR "md-set-vendor"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED:
  *
  * Do not allow updating when the laptop lid is closed.
- *
- * Since: 1.7.4
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED "no-lid-closed"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_PROBE:
  *
  * Do not probe this device.
- *
- * Since: 1.7.6
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_PROBE "no-probe"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED:
  *
  * Set the signed/unsigned payload from the metadata if available.
- *
- * Since: 1.7.6
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED "md-set-signed"
 /**
  * FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING:
  *
  * Pause polling when reading or writing to the device
- *
- * Since: 1.8.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING "auto-pause-polling"
 /**
@@ -398,8 +357,6 @@ fu_device_new(FuContext *ctx);
  *
  * Use the device removal delay every time the device is removed, rather than when explicitly
  * waiting for a replug.
- *
- * Since: 2.0.3
  */
 #define FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL "delayed-removal"
 /**
@@ -407,8 +364,6 @@ fu_device_new(FuContext *ctx);
  *
  * Allow updating firmware when the system power is otherwise too low.
  * This is only really useful when updating the system battery firmware.
- *
- * Since: 1.8.11
  */
 #define FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER "ignore-system-power"
 /**
@@ -420,8 +375,6 @@ fu_device_new(FuContext *ctx);
  * archive could be required in different scenarios. For instance, if the user installs a
  * firmware update for a specific network device and then changes the SIM -- it might be
  * they need the archive again and have no internet access.
- *
- * Since: 1.8.13
  */
 #define FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE "save-into-backup-remote"
 /**
@@ -431,74 +384,62 @@ fu_device_new(FuContext *ctx);
  *
  * NOTE: These flags should only affect device update, and should never be used to affect
  * enumeration.
- *
- * Since: 1.9.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS "md-set-flags"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION:
  *
  * Set the device version from the metadata if available.
- *
- * Since: 1.9.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION "md-set-version"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW:
+ *
+ * Set the device integer version from the metadata if available.
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW "md-set-version-raw"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM:
  *
  * Only use the metadata *checksum* to set device attributes.
  *
  * NOTE: This will only work if the release and the device both have the same update protocol.
- *
- * Since: 1.9.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM "md-only-checksum"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV:
  *
  * Add the `_REV` instance ID suffix.
- *
- * Since: 1.9.3
  */
 #define FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV "add-instance-id-rev"
 /**
  * FU_DEVICE_PRIVATE_FLAG_UNCONNECTED:
  *
  * The device is not connected and is probably awaiting replug.
- *
- * Since: 1.9.4
  */
 #define FU_DEVICE_PRIVATE_FLAG_UNCONNECTED "unconnected"
 /**
  * FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED:
  *
  * The device requires a display to be plugged in.
- *
- * Since: 1.9.6
  */
 #define FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED "display-required"
 /**
  * FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING:
  *
  * The device has an update that is waiting to be applied.
- *
- * Since: 1.9.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING "update-pending"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS:
  *
  * Do not add generic GUIDs from outside the plugin.
- *
- * Since: 1.9.8
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS "no-generic-guids"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION:
  *
  * Do not add generic versions from outside the plugin.
- *
- * Since: 2.1.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION "no-generic-version"
 /**
@@ -506,8 +447,6 @@ fu_device_new(FuContext *ctx);
  *
  * The device uses a generic instance ID and firmware requires a parent, child, sibling or
  * CHID requirement.
- *
- * Since: 1.9.8
  */
 #define FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES "enforce-requires"
 /**
@@ -516,8 +455,6 @@ fu_device_new(FuContext *ctx);
  * Updating this device changes a measured firmware component, so a
  * systemd-pcrlock policy protecting the firmware measurements has to be
  * regenerated for the update to be applied.
- *
- * Since: 2.1.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE "requires-unlock-firmware"
 /**
@@ -526,64 +463,48 @@ fu_device_new(FuContext *ctx);
  * Updating this device changes a measured SecureBoot component, so a
  * systemd-pcrlock policy protecting the SecureBoot measurements has to be
  * regenerated for the update to be applied.
- *
- * Since: 2.1.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT "requires-unlock-secureboot"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE:
  *
  * The device represents the main system host firmware.
- *
- * Since: 1.9.10
  */
 #define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE "host-firmware"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD:
  *
  * The device should be a child of the main system host firmware device.
- *
- * Since: 1.9.10
  */
 #define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD "host-firmware-child"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_CPU:
  *
  * The device represents the main CPU device.
- *
- * Since: 1.9.10
  */
 #define FU_DEVICE_PRIVATE_FLAG_HOST_CPU "host-cpu"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD:
  *
  * The device should be a child of the main CPU device.
- *
- * Since: 1.9.10
  */
 #define FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD "host-cpu-child"
 /**
  * FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER:
  *
  * Do not automatically set the device order, e.g. updating the child before the parent.
- *
- * Since: 1.9.13
  */
 #define FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER "explicit-order"
 /**
  * FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY:
  *
  * Reference-count the proxy -- which is useful when using `ProxyGType`.
- *
- * Since: 1.9.15
  */
 #define FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY "refcounted-proxy"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN:
  *
  * Use proxy to open and close the device.
- *
- * Since: 1.9.16
  */
 #define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN "use-proxy-for-open"
 
@@ -593,8 +514,6 @@ fu_device_new(FuContext *ctx);
  * The composite device requires installation of composite firmware on the parent before
  * the child.
  * Normally the child is installed before the parent.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST "install-parent-first"
 
@@ -602,8 +521,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_REGISTERED:
  *
  * The device has been registered with other plugins.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_REGISTERED "registered"
 
@@ -612,8 +529,6 @@ fu_device_new(FuContext *ctx);
  *
  * The device will add counterpart GUIDs from an alternate mode like bootloader.
  * This flag is typically specified in a quirk.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS "add-counterpart-guids"
 
@@ -622,8 +537,6 @@ fu_device_new(FuContext *ctx);
  *
  * The device will always display use the runtime version rather than the bootloader
  * version.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION "use-runtime-version"
 
@@ -631,8 +544,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART:
  *
  * The device relies upon activation or power cycle to load firmware.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART "skips-restart"
 
@@ -640,8 +551,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_IS_FAKE:
  *
  * The device is fake, and constructed from a fake sysfs test directory.
- *
- * Since: 2.0.0
  */
 #define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
@@ -651,8 +560,6 @@ fu_device_new(FuContext *ctx);
  * Add the counterpart instance IDs as visible GUID that can be matched in firmware.
  *
  * This was how the daemon worked in 1.9.x, and some devices in recovery mode still expect this.
- *
- * Since: 2.0.4
  */
 #define FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE "counterpart-visible"
 
@@ -661,8 +568,6 @@ fu_device_new(FuContext *ctx);
  *
  * Detach, then prepare firmware rather than parsing firmware from the runtime device.
  * For some devices the firmware GType isn't known until the bootloader gets added.
- *
- * Since: 2.0.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE "detach-prepare-firmware"
 
@@ -671,8 +576,6 @@ fu_device_new(FuContext *ctx);
  *
  * The device requires `FuDevice->setup()` rather than `FuDevice->probe()` to add instance IDs
  * during emulated device enumeration.
- *
- * Since: 2.0.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP "emulated-require-setup"
 
@@ -681,24 +584,18 @@ fu_device_new(FuContext *ctx);
  *
  * Restart the `detach->write_firmware->attach->reload` loop without completing the sequence.
  * This can be set on any step, unlike `another-write-required` which does all steps.
- *
- * Since: 2.0.7
  */
 #define FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART "install-loop-restart"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE:
  *
  * Set the device required free size from the metadata if available.
- *
- * Since: 2.0.12
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE "md-set-required-free"
 /**
  * FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX:
  *
  * Use the parent device as the name prefix.
- *
- * Since: 2.0.15
  */
 #define FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX "parent-name-prefix"
 /**
@@ -707,22 +604,8 @@ fu_device_new(FuContext *ctx);
  * Allow the device version to be specified as an integer in the release XML.
  *
  * NOTE: This has only ever been a best-effort fallback for ESRT-derived UEFI devices.
- *
- * Since: 2.0.18
  */
 #define FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT "lazy-verfmt"
-/**
- * FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED:
- *
- * Allow the device version to be unset.
- *
- * NOTE: This should only be used when writing to "raw" CFI devices, such as standalone SPI
- * programmers such as CH341A. CFI devices should be used as a proxy devices rather than
- * installable targets in most fwupd plugins.
- *
- * Since: 2.0.18
- */
-#define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:
@@ -732,8 +615,6 @@ fu_device_new(FuContext *ctx);
  *
  * NOTE: This is probably only useful to set in `FuDevice->prepare()` or
  * `FuDevice->write_firmware()` as enumeration may be different when loading emulated devices.
- *
- * Since: 2.1.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER "strict-emulation-order"
 
@@ -741,8 +622,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_PRIVATE_FLAG_HAS_DS20:
  *
  * The device provided a DS-20 quirk descriptor.
- *
- * Since: 2.1.3
  */
 #define FU_DEVICE_PRIVATE_FLAG_HAS_DS20 "has-ds20"
 
@@ -752,8 +631,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_COMPUTER:
  *
  * A generic icon of a computer.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_COMPUTER "computer"
 
@@ -761,8 +638,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_GPU:
  *
  * A generic icon of a gpu.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_GPU "gpu"
 
@@ -770,8 +645,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_AC_ADAPTER:
  *
  * A generic icon of an AC adapter.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_AC_ADAPTER "ac-adapter"
 
@@ -779,8 +652,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_DOCK:
  *
  * A generic icon of a dock.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_DOCK "dock"
 
@@ -788,8 +659,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_DOCK_USB:
  *
  * An icon of a dock attached via USB.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_DOCK_USB "dock-usb"
 
@@ -797,8 +666,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_USB_HUB:
  *
  * An icon of a hub of USB devices.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_USB_HUB "usb-hub"
 
@@ -806,26 +673,20 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_THUNDERBOLT:
  *
  * A generic icon of a thunderbolt device.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_THUNDERBOLT "thunderbolt"
 
 /**
- * FU_DEVICE_ICON_MEMORY:
+ * FU_DEVICE_ICON_MEDIA_FLASH:
  *
- * A generic icon of a memory card.
- *
- * Since: 2.0.10
+ * A generic icon of a flash memory card.
  */
-#define FU_DEVICE_ICON_MEMORY "media-memory"
+#define FU_DEVICE_ICON_MEDIA_FLASH "media-flash"
 
 /**
  * FU_DEVICE_ICON_MODEM:
  *
  * An icon of a modem.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_MODEM "modem"
 
@@ -833,8 +694,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_NETWORK_WIRED:
  *
  * A generic icon of a wired connection.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_NETWORK_WIRED "network-wired"
 
@@ -842,8 +701,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_NETWORK_WIRELESS:
  *
  * A generic icon of a wireless connection.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_NETWORK_WIRELESS "network-wireless"
 
@@ -851,8 +708,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_DRIVE_HARDDISK:
  *
  * A generic icon of a hard disk drive.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_DRIVE_HARDDISK "drive-harddisk"
 
@@ -860,8 +715,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_DRIVE_SSD:
  *
  * A generic icon of a hard disk drive.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_DRIVE_SSD "drive-harddisk-solidstate"
 
@@ -869,8 +722,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_DRIVE_MULTIDISK:
  *
  * A generic icon of a multidisk drive.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_DRIVE_MULTIDISK "drive-multidisk"
 
@@ -878,8 +729,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_AUDIO_CARD:
  *
  * An icon of an audio card.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_AUDIO_CARD "audio-card"
 
@@ -887,8 +736,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_VIDEO_DISPLAY:
  *
  * A generic icon of a display.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_VIDEO_DISPLAY "video-display"
 
@@ -896,8 +743,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_TOUCHPAD:
  *
  * A generic icon of a touchpad.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_TOUCHPAD "input-touchpad"
 
@@ -905,8 +750,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_KEYBOARD:
  *
  * A generic icon of a keyboard.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_KEYBOARD "input-keyboard"
 
@@ -914,8 +757,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_MOUSE:
  *
  * A generic icon of a mouse.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_MOUSE "input-mouse"
 
@@ -923,8 +764,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_DIALPAD:
  *
  * A generic icon of a dialpad.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_DIALPAD "input-dialpad"
 
@@ -932,8 +771,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_GAMING:
  *
  * A generic icon of a gaming controller.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_GAMING "input-gaming"
 
@@ -941,8 +778,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_INPUT_TABLET:
  *
  * A generic icon of a drawing tablet.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_INPUT_TABLET "input-tablet"
 
@@ -950,8 +785,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_AUTH_FINGERPRINT:
  *
  * A generic icon of a fingerprint reader.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_AUTH_FINGERPRINT "auth-fingerprint"
 
@@ -959,8 +792,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_USB_RECEIVER:
  *
  * A generic icon of an USB receiver.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_USB_RECEIVER "usb-receiver"
 
@@ -968,8 +799,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_PDA:
  *
  * A generic icon of a PDA.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_PDA "pda"
 
@@ -977,8 +806,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_WEB_CAMERA:
  *
  * A generic icon of a web camera.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_WEB_CAMERA "camera-web"
 
@@ -986,8 +813,6 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_VIDEO_CAMERA:
  *
  * A generic icon of a video camera.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_VIDEO_CAMERA "camera-video"
 
@@ -995,10 +820,30 @@ fu_device_new(FuContext *ctx);
  * FU_DEVICE_ICON_APPLICATION_CERTIFICATE:
  *
  * A generic icon of a certificate.
- *
- * Since: 2.0.10
  */
 #define FU_DEVICE_ICON_APPLICATION_CERTIFICATE "application-certificate"
+
+/**
+ * FU_DEVICE_ICON_PROCESSOR:
+ *
+ * A generic icon of a CPU processor.
+ */
+#define FU_DEVICE_ICON_PROCESSOR "processor"
+
+/**
+ * FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE:
+ *
+ * A combination of using quirks and the cache, provided as a convenience for plugins.
+ */
+#define FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE                                                   \
+	(FU_DEVICE_INSTANCE_FLAG_QUIRKS | FU_DEVICE_INSTANCE_FLAG_USE_CACHE)
+
+/**
+ * FU_DEVICE_FILTER_NONE:
+ *
+ * Use no filter when getting backend devices.
+ */
+#define FU_DEVICE_FILTER_NONE NULL
 
 /* accessors */
 gchar *
@@ -1031,6 +876,11 @@ fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_child(FuDevice *self,
+			    const gchar *subsystem,
+			    const gchar *filter,
+			    GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1052,6 +902,8 @@ void
 fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_proxy_with_fallback(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_target(FuDevice *self, FuDevice *target) G_GNUC_NON_NULL(1);
 const gchar *
 fu_device_get_metadata(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2) G_GNUC_PURE;
 gboolean
@@ -1245,6 +1097,10 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags flag)
     G_GNUC_NON_NULL(1, 2);
+FuDevice *
+fu_device_incorporate_from_donor(GType gtype,
+				 FuDevice *donor,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 void
 fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
     G_GNUC_NON_NULL(1);

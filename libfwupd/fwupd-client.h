@@ -309,6 +309,18 @@ fwupd_client_install_finish(FwupdClient *self,
 			    GAsyncResult *res,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_write_blob_async(FwupdClient *self,
+			      const gchar *device_id,
+			      const gchar *filename,
+			      const gchar *version,
+			      GCancellable *cancellable,
+			      GAsyncReadyCallback callback,
+			      gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fwupd_client_write_blob_finish(FwupdClient *self,
+			       GAsyncResult *res,
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_install_bytes_async(FwupdClient *self,
 				 const gchar *device_id,
 				 GBytes *bytes,
@@ -542,6 +554,15 @@ fwupd_client_get_approved_firmware_finish(FwupdClient *self,
 					  GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_get_protocols_async(FwupdClient *self,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data) G_GNUC_NON_NULL(1);
+GPtrArray *
+fwupd_client_get_protocols_finish(FwupdClient *self,
+				  GAsyncResult *res,
+				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_set_approved_firmware_async(FwupdClient *self,
 					 GPtrArray *checksums,
 					 GCancellable *cancellable,
@@ -690,6 +711,10 @@ void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status) G_GNUC_NON_NULL(1);
 void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage) G_GNUC_NON_NULL(1);
+void
+fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level) G_GNUC_NON_NULL(1);
+void
+fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold) G_GNUC_NON_NULL(1);
 
 /* only needed when not using D-Bus in in-tree CLIs */
 typedef struct FwupdClientSyncImpl FwupdClientSyncImpl;

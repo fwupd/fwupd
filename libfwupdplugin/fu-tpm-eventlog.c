@@ -22,8 +22,6 @@ G_DEFINE_TYPE(FuTpmEventlog, fu_tpm_eventlog, FU_TYPE_FIRMWARE)
  * Calculate the possible checksums for a given PCR.
  *
  * Returns: (element-type utf8) (transfer container): checksum strings
- *
- * Since: 2.1.1
  **/
 GPtrArray *
 fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self, guint8 pcr, GError **error)
@@ -39,6 +37,9 @@ fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self, guint8 pcr, GError **error)
 	gsize digest_sha384_len = sizeof(digest_sha384);
 	g_autoptr(GPtrArray) csums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GPtrArray) items = fu_firmware_get_images(FU_FIRMWARE(self));
+
+	g_return_val_if_fail(FU_IS_TPM_EVENTLOG(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* sanity check */
 	if (items->len == 0) {

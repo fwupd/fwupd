@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 
-from fwupbuild.dependencies import Dependencies
+from fwupbuild.dependencies import DebianDependency, Dependencies
 from fwupbuild.osprofile import OsName
 
 
@@ -137,4 +137,6 @@ class TestDependencies:
         )
         result = deps.find_packages(OsName.DEBIAN)
         assert len(result) == 1
-        assert result[0].profiles == ["!nocheck"]
+        assert isinstance(result[0], DebianDependency)
+        assert result[0].control is not None
+        assert result[0].control.profiles == ["!nocheck"]

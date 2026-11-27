@@ -220,12 +220,13 @@ fu_device_strsafe_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"dave123", "dave123"},
-		    {"dave123XXX", "dave123"},
-		    {"dave\x03XXX", "dave.XX"},
-		    {"dave\x03\x04XXX", "dave..X"},
-		    {"\x03\x03", NULL},
-		    {NULL, NULL}};
+	} strs[] = {
+	    {"dave123", "dave123"},
+	    {"dave123XXX", "dave123"},
+	    {"dave\x03XXX", "dave.XX"},
+	    {"dave\x03\x04XXX", "dave..X"},
+	    {"\x03\x03", NULL},
+	};
 	GPtrArray *instance_ids;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -242,10 +243,95 @@ fu_device_strsafe_func(void)
 	g_assert_cmpint(instance_ids->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(instance_ids, 0), ==, "SUB\\KEY_LEN-VO");
 
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_strsafe(strs[i].in, 7);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
+}
+
+static void
+fu_device_instance_id_namespace_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* namespaced keys do not pollute the global keys */
+	fu_device_add_instance_u16(dev, "PCI\\VID", 0x1234);
+	fu_device_add_instance_u16(dev, "PCI\\PID", 0x5678);
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PCI\\VID"), ==, "1234");
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PCI\\PID"), ==, "5678");
+	g_assert_null(fu_device_get_instance_str(dev, "VID"));
+	g_assert_null(fu_device_get_instance_str(dev, "PID"));
+
+	/* global keys are separate */
+	fu_device_add_instance_u16(dev, "VID", 0xAAAA);
+	fu_device_add_instance_u16(dev, "PID", 0xBBBB);
+	fu_device_add_instance_u16(dev, "\\REV", 0xCCCC);
+
+	/* the namespace prefix is dropped from the instance ID */
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "PCI\\VID", "PCI\\PID", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "VID", "PID", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "VID", "PID", "REV", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* missing namespaced key */
+	ret = fu_device_build_instance_id(dev, &error, "NVME", "USB\\VID", NULL);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_1234&PID_5678",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_AAAA&PID_BBBB",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"NVME\\VID_AAAA&PID_BBBB&REV_CCCC",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_false(fu_device_has_instance_id(dev,
+						 "NVME\\PCI:VID_1234&PCI:PID_5678",
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+static void
+fu_device_instance_id_namespace_empty_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) dev = fu_device_new(ctx);
+
+	/* the global key is not affected by the empty namespace */
+	fu_device_add_instance_u16(dev, "VID", 0x1234);
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "VID"), ==, "1234");
+
+	/* an empty namespace can be overwritten without a critical, e.g. in a loop */
+	for (guint16 i = 0; i < 3; i++) {
+		gboolean ret;
+		g_autoptr(GError) error = NULL;
+
+		fu_device_add_instance_u16(dev, "\\PID", 0x5670 + i);
+		ret = fu_device_build_instance_id(dev, &error, "USB", "VID", "PID", NULL);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+	g_assert_cmpstr(fu_device_get_instance_str(dev, "PID"), ==, "5672");
+
+	/* the empty namespace prefix is dropped from the instance ID */
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5670",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5671",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(dev,
+						"USB\\VID_1234&PID_5672",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
 static void
@@ -518,6 +604,42 @@ fu_device_composite_id_func(void)
 }
 
 static void
+fu_device_composite_id_notify_func(void)
+{
+	g_autoptr(FuDevice) grandparent = fu_device_new(NULL);
+	g_autoptr(FuDevice) parent = fu_device_new(NULL);
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
+
+	/* grandparent -> parent -> child */
+	fu_device_set_id(grandparent, "grandparent");
+	fu_device_set_id(parent, "parent");
+	fu_device_set_id(child, "child");
+	fu_device_add_child(parent, child);
+	fu_device_add_child(grandparent, parent);
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			fu_device_get_composite_id(grandparent));
+
+	/* set without using the FuDevice setter, so only the notify can propagate it */
+	fwupd_device_set_composite_id(FWUPD_DEVICE(grandparent),
+				      "1111111111111111111111111111111111111111");
+	g_assert_cmpstr(fu_device_get_composite_id(parent),
+			==,
+			"1111111111111111111111111111111111111111");
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			"1111111111111111111111111111111111111111");
+
+	/* reparent the child to the grandparent, and ensure the old parent is no longer watched */
+	fu_device_set_parent(child, grandparent);
+	fwupd_device_set_composite_id(FWUPD_DEVICE(parent),
+				      "2222222222222222222222222222222222222222");
+	g_assert_cmpstr(fu_device_get_composite_id(child),
+			==,
+			"1111111111111111111111111111111111111111");
+}
+
+static void
 fu_device_inhibit_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -692,6 +814,137 @@ fu_device_children_func(void)
 }
 
 static void
+fu_device_children_quirk_func(void)
+{
+	gboolean ret;
+	FuDevice *child;
+	GPtrArray *children;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) parent = g_object_new(FU_TYPE_SELF_TEST_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	/* ensure registered so that fu_gtype_from_name() works */
+	g_type_ensure(FU_TYPE_SELF_TEST_DEVICE);
+	g_type_ensure(FU_TYPE_FIRMWARE);
+	fu_device_set_physical_id(parent, "dummy");
+
+	/* type same as parent */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "b84ed8ed-a7b1-502f-83f6-90132e68adef",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	children = fu_device_get_children(parent);
+	g_assert_cmpint(children->len, ==, 1);
+	child = g_ptr_array_index(children, 0);
+	g_assert_cmpstr(G_OBJECT_TYPE_NAME(child), ==, "FuSelfTestDevice");
+	g_assert_cmpstr(fu_device_get_logical_id(child),
+			==,
+			"b84ed8ed-a7b1-502f-83f6-90132e68adef");
+	g_assert_cmpstr(fu_device_get_physical_id(child), ==, "dummy");
+	g_assert_true(fu_device_has_guid(child, "b84ed8ed-a7b1-502f-83f6-90132e68adef"));
+
+	/* type specified */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuDevice|3b55d37a-0636-53a0-84db-a92ba3f6302c",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(children->len, ==, 2);
+	child = g_ptr_array_index(children, 1);
+	g_assert_cmpstr(G_OBJECT_TYPE_NAME(child), ==, "FuDevice");
+	g_assert_cmpstr(fu_device_get_logical_id(child),
+			==,
+			"3b55d37a-0636-53a0-84db-a92ba3f6302c");
+
+	/* unknown GType */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuNotARealDevice|88e57a95-5647-5d9d-a363-604f22a0bb26",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* GType that is not a FuDevice */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuFirmware|88e57a95-5647-5d9d-a363-604f22a0bb26",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* too many sections */
+	ret = fu_device_set_quirk_kv(parent,
+				     "Children",
+				     "FuDevice|88e57a95-5647-5d9d-a363-604f22a0bb26|extra",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* none of the failures added a child */
+	g_assert_cmpint(children->len, ==, 2);
+}
+
+static void
+fu_device_gtype_quirk_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	g_type_ensure(FU_TYPE_FIRMWARE);
+
+	/* unregistered GType, e.g. from a plugin that is not loaded */
+	ret = fu_device_set_quirk_kv(device,
+				     "GType",
+				     "FuNotARealDevice",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* registered GType of the wrong parent is a quirk bug */
+	ret = fu_device_set_quirk_kv(device,
+				     "GType",
+				     "FuFirmware",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_device_set_quirk_kv(device,
+				     "FirmwareGType",
+				     "FuDevice",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* success */
+	ret = fu_device_set_quirk_kv(device,
+				     "FirmwareGType",
+				     "FuFirmware",
+				     FU_CONTEXT_QUIRK_SOURCE_FILE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_device_get_firmware_gtype(device), ==, FU_TYPE_FIRMWARE);
+}
+
+static void
 fu_device_children_instance_ids_func(void)
 {
 	const gchar *guid_generic = "88e57a95-5647-5d9d-a363-604f22a0bb26";
@@ -756,6 +1009,17 @@ fu_device_parent_func(void)
 	g_assert_true(parent_root == grandparent);
 	grandparent_root = fu_device_get_root(child);
 	g_assert_true(grandparent_root == grandparent);
+
+	/* reparent the child, which removes it from the old parent */
+	fu_device_add_child(grandparent, child);
+	g_assert_true(fu_device_get_parent_internal(child) == grandparent);
+	g_assert_cmpuint(fu_device_get_children(parent)->len, ==, 0);
+	g_assert_cmpuint(fu_device_get_children(grandparent)->len, ==, 2);
+
+	/* unset the parent */
+	fu_device_set_parent(child, NULL);
+	g_assert_true(fu_device_get_parent_internal(child) == NULL);
+	g_assert_cmpuint(fu_device_get_children(grandparent)->len, ==, 1);
 }
 
 static void
@@ -1098,13 +1362,20 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device/possible-plugin", fu_device_possible_plugin_func);
 	g_test_add_func("/fwupd/device/vfuncs", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device/instance-ids", fu_device_instance_ids_func);
+	g_test_add_func("/fwupd/device/instance-id-namespace",
+			fu_device_instance_id_namespace_func);
+	g_test_add_func("/fwupd/device/instance-id-namespace-empty",
+			fu_device_instance_id_namespace_empty_func);
 	g_test_add_func("/fwupd/device/composite-id", fu_device_composite_id_func);
+	g_test_add_func("/fwupd/device/composite-id-notify", fu_device_composite_id_notify_func);
 	g_test_add_func("/fwupd/device/flags", fu_device_flags_func);
 	g_test_add_func("/fwupd/device/private-flags", fu_device_custom_flags_func);
 	g_test_add_func("/fwupd/device/inhibit", fu_device_inhibit_func);
 	g_test_add_func("/fwupd/device/inhibit-updateable", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device/parent", fu_device_parent_func);
 	g_test_add_func("/fwupd/device/children", fu_device_children_func);
+	g_test_add_func("/fwupd/device/children-quirk", fu_device_children_quirk_func);
+	g_test_add_func("/fwupd/device/gtype-quirk", fu_device_gtype_quirk_func);
 	g_test_add_func("/fwupd/device/children-instance-ids",
 			fu_device_children_instance_ids_func);
 	g_test_add_func("/fwupd/device/incorporate", fu_device_incorporate_func);

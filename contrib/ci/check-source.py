@@ -13,6 +13,7 @@ import argparse
 import glob
 import multiprocessing
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 
@@ -673,6 +674,16 @@ class Checker:
                         f"{func} should not use sentence case", linecnt=token.linecnt
                     )
 
+    def _test_printf_alternate_hex(self, node: Node) -> None:
+        for token in node.tokens:
+            if token.hint != TokenHint.STRING:
+                continue
+            if re.search(r"(?<!%)%#[-+ 0-9.*]*(?:hh|h|ll|l|z|j|t)?[xX]", token.data):
+                self.add_failure(
+                    "printf format should use 0x%x rather than %#x",
+                    linecnt=token.linecnt,
+                )
+
     def _test_comment_cpp(self, node: Node) -> None:
         """/* C comments please */"""
         idx = node.tokens.find_fuzzy(["//"])
@@ -821,6 +832,7 @@ class Checker:
             "g_ascii_strtoll": "Use fu_strtoll() instead",
             "g_find_program_in_path": "Use fu_path_store_find_program() instead",
             "g_strerror": "Use fwupd_strerror() instead",
+            "g_type_from_name": "Use fu_gtype_from_name() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
             "g_base64_encode": "Use fu_base64_encode() instead",
             "g_spawn_command_line_sync": "Do not call out to external tools",
@@ -1480,6 +1492,7 @@ class Checker:
                 self._test_debug_newlines(node)
                 self._test_debug_fullstops(node)
                 self._test_debug_sentence_case(node)
+                self._test_printf_alternate_hex(node)
                 self._test_comment_lower_case(node)
                 self._test_comment_cpp(node)
                 self._test_comment_lines(node)

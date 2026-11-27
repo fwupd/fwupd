@@ -91,6 +91,7 @@ enum {
 	PROP_BATTERY_THRESHOLD,
 	PROP_PROBLEMS,
 	PROP_VENDOR,
+	PROP_COMPOSITE_ID,
 	PROP_LAST
 };
 
@@ -571,17 +572,15 @@ fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id)
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->composite_id, composite_id) == 0)
-		return;
-
 	/* sanity check */
 	if (!fwupd_device_id_is_valid(composite_id)) {
 		g_critical("%s is not a valid device ID", composite_id);
 		return;
 	}
 
-	g_set_str(&priv->composite_id, composite_id);
+	/* not changed */
+	if (g_set_str(&priv->composite_id, composite_id))
+		g_object_notify(G_OBJECT(self), "composite-id");
 }
 
 /**
@@ -2092,7 +2091,7 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_id(self, priv_donor->id);
 	if (priv->parent_id == NULL)
 		fwupd_device_set_parent_id(self, priv_donor->parent_id);
-	if (priv->composite_id == NULL)
+	if (priv->composite_id == NULL && priv_donor->composite_id != NULL)
 		fwupd_device_set_composite_id(self, priv_donor->composite_id);
 	if (priv->name == NULL)
 		fwupd_device_set_name(self, priv_donor->name);
@@ -3247,13 +3246,16 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->modified > 0)
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	if (priv->update_state > 0) {
-		fwupd_json_object_add_integer(json_obj,
-					      FWUPD_RESULT_KEY_UPDATE_STATE,
-					      priv->update_state);
+	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_UPDATE_STATE,
+					     fwupd_update_state_to_string(priv->update_state));
 	}
-	if (priv->status > 0)
-		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_STATUS, priv->status);
+	if (priv->status != FWUPD_STATUS_UNKNOWN) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_STATUS,
+					     fwupd_status_to_string(priv->status));
+	}
 	if (priv->percentage > 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      FWUPD_RESULT_KEY_PERCENTAGE,
@@ -3296,55 +3298,98 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	fwupd_device_set_id(self, tmp);
 
 	/* also optional */
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_NAME, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_name(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_parent_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_COMPOSITE_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_COMPOSITE_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_composite_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PROTOCOL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_PROTOCOL,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_add_protocol(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SERIAL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_SERIAL, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_serial(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_SUMMARY, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_summary(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DETAILS_URL, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_DETAILS_URL,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_details_url(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BRANCH, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_BRANCH, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_branch(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_PLUGIN, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_PLUGIN, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_plugin(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VENDOR, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_VENDOR, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_vendor(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VENDOR_ID, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VENDOR_ID,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL) {
 		g_auto(GStrv) split = g_strsplit(tmp, "|", -1);
 		for (guint i = 0; split[i] != NULL; i++)
 			fwupd_device_add_vendor_id(self, split[i]);
 	}
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, FWUPD_RESULT_KEY_VERSION, &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_LOWEST, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_LOWEST,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_lowest(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_HIGHEST, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_HIGHEST,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_highest(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_bootloader(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_FORMAT, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_VERSION_FORMAT,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_version_format(self, fwupd_version_format_from_string(tmp));
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
@@ -3357,14 +3402,14 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_BATTERY_LEVEL,
 							&tmp64,
-							0,
+							FWUPD_BATTERY_LEVEL_INVALID,
 							error))
 		return FALSE;
 	fwupd_device_set_battery_level(self, tmp64);
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
 							&tmp64,
-							0,
+							FWUPD_BATTERY_LEVEL_INVALID,
 							error))
 		return FALSE;
 	fwupd_device_set_battery_threshold(self, tmp64);
@@ -3425,12 +3470,33 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 							error))
 		return FALSE;
 	fwupd_device_set_modified(self, tmp64);
+
+	/* the legacy format used an integer */
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_UPDATE_STATE, NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fwupd_device_set_update_state(self, fwupd_update_state_from_string(tmp));
+	} else {
+		if (!fwupd_json_object_get_integer_with_default(json_obj,
+								FWUPD_RESULT_KEY_UPDATE_STATE,
+								&tmp64,
+								FWUPD_UPDATE_STATE_UNKNOWN,
+								error))
+			return FALSE;
+		fwupd_device_set_update_state(self, tmp64);
+	}
+	/* the legacy format used an integer */
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_STATUS, NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fwupd_device_set_status(self, fwupd_status_from_string(tmp));
+	} else {
+		if (!fwupd_json_object_get_integer_with_default(json_obj,
+								FWUPD_RESULT_KEY_STATUS,
+								&tmp64,
+								FWUPD_STATUS_UNKNOWN,
+								error))
+			return FALSE;
+		fwupd_device_set_status(self, tmp64);
+	}
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_PERCENTAGE,
 							&tmp64,
@@ -3438,7 +3504,11 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 							error))
 		return FALSE;
 	fwupd_device_set_percentage(self, tmp64);
-	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_UPDATE_ERROR, NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj,
+						   FWUPD_RESULT_KEY_UPDATE_ERROR,
+						   &tmp,
+						   error))
+		return FALSE;
 	if (tmp != NULL)
 		fwupd_device_set_update_error(self, tmp);
 
@@ -3763,6 +3833,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_VENDOR:
 		g_value_set_string(value, priv->vendor);
 		break;
+	case PROP_COMPOSITE_ID:
+		g_value_set_string(value, priv->composite_id);
+		break;
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint(value, priv->version_format);
 		break;
@@ -3812,6 +3885,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_VENDOR:
 		fwupd_device_set_vendor(self, g_value_get_string(value));
+		break;
+	case PROP_COMPOSITE_ID:
+		fwupd_device_set_composite_id(self, g_value_get_string(value));
 		break;
 	case PROP_ID:
 		fwupd_device_set_id(self, g_value_get_string(value));
@@ -3892,6 +3968,20 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_VENDOR, pspec);
+
+	/**
+	 * FwupdDevice:composite-id:
+	 *
+	 * The device composite ID.
+	 *
+	 * Since: 2027.0
+	 */
+	pspec = g_param_spec_string("composite-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_COMPOSITE_ID, pspec);
 
 	/**
 	 * FwupdDevice:id:

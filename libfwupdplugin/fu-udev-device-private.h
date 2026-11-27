@@ -30,6 +30,9 @@ gchar *
 fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
 					      const gchar *subsystem,
 					      GError **error) G_GNUC_NON_NULL(1, 2);
+gchar *
+fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,

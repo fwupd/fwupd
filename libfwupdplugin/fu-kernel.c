@@ -26,8 +26,6 @@
  * @pstore: a #FuPathStore
  *
  * Determines if kernel lockdown in effect
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_kernel_locked_down(FuPathStore *pstore)
@@ -68,8 +66,6 @@ fu_kernel_locked_down(FuPathStore *pstore)
  * @error: (nullable): optional return location for an error
  *
  * Determines if the system is running at least a certain required kernel version
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error)
@@ -151,8 +147,6 @@ fu_kernel_parse_config_line_cb(GString *token, guint token_idx, gpointer user_da
  * Parses all the kernel options into a hash table. Commented out options are not included.
  *
  * Returns: (transfer container) (element-type utf8 utf8): config keys
- *
- * Since: 1.9.6
  **/
 GHashTable *
 fu_kernel_parse_config(const gchar *buf, gsize bufsz, GError **error)
@@ -222,8 +216,6 @@ fu_kernel_get_config_path(FuPathStore *pstore, GError **error)
  * Loads all the kernel options into a hash table. Commented out options are not included.
  *
  * Returns: (transfer container) (element-type utf8 utf8): options from the kernel
- *
- * Since: 1.8.5
  **/
 GHashTable *
 fu_kernel_get_config(FuPathStore *pstore, GError **error)
@@ -285,8 +277,6 @@ fu_kernel_get_config(FuPathStore *pstore, GError **error)
  * Parses all the kernel key/values into a hash table, respecting double quotes when required.
  *
  * Returns: (transfer container) (element-type utf8 utf8): keys from the cmdline
- *
- * Since: 1.9.1
  **/
 GHashTable *
 fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz)
@@ -329,8 +319,6 @@ fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz)
  * Loads all the kernel /proc/cmdline key/values into a hash table.
  *
  * Returns: (transfer container) (element-type utf8 utf8): keys from the kernel command line
- *
- * Since: 1.8.5
  **/
 GHashTable *
 fu_kernel_get_cmdline(GError **error)
@@ -453,8 +441,6 @@ fu_kernel_set_commandline(FuPathStore *pstore, const gchar *arg, gboolean enable
  * Add a kernel command line argument.
  *
  * Returns: %TRUE if successful
- *
- * Since: 1.9.5
  **/
 gboolean
 fu_kernel_add_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
@@ -474,8 +460,6 @@ fu_kernel_add_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
  * Remove a kernel command line argument.
  *
  * Returns: %TRUE if successful
- *
- * Since: 1.9.5
  **/
 gboolean
 fu_kernel_remove_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)

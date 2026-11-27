@@ -27,6 +27,18 @@ jobs:
   windows:
     permissions:
       contents: write
+    needs: [containers]
+    if: ${{ always() && needs.containers.result == 'success' }}
     uses: $/.github/workflows/windows.yml
     with:
       publish: true
+      container_lut: ${{ needs.containers.outputs.container_lut }}
+
+  snap:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/snap.yml
+    with:
+      deploy: true
+    secrets:
+      STORE_LOGIN: ${{ secrets.STORE_LOGIN }}

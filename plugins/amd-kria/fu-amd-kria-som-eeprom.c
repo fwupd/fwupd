@@ -129,13 +129,18 @@ fu_amd_kria_som_eeprom_get_serial_number(FuAmdKriaSomEeprom *self)
 }
 
 static void
-fu_amd_kria_som_eeprom_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_kria_som_eeprom_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuAmdKriaSomEeprom *self = FU_AMD_KRIA_SOM_EEPROM(firmware);
 
-	fu_xmlb_builder_insert_kv(bn, "manufacturer", self->manufacturer);
-	fu_xmlb_builder_insert_kv(bn, "product_name", self->product_name);
-	fu_xmlb_builder_insert_kv(bn, "serial_number", self->serial_number);
+	if (self->manufacturer != NULL)
+		fwupd_json_object_add_string(json_object, "manufacturer", self->manufacturer);
+	if (self->product_name != NULL)
+		fwupd_json_object_add_string(json_object, "product_name", self->product_name);
+	if (self->serial_number != NULL)
+		fwupd_json_object_add_string(json_object, "serial_number", self->serial_number);
 }
 
 static void

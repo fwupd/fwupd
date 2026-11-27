@@ -42,12 +42,16 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfwiCpdFirmware, fu_ifwi_cpd_firmware, FU_TYPE_FIRM
 #define FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX 1024
 
 static void
-fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ifwi_cpd_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "header_version", priv->header_version);
-	fu_xmlb_builder_insert_kx(bn, "entry_version", priv->entry_version);
+	if (priv->header_version != 0)
+		fwupd_json_object_add_integer(json_object, "header_version", priv->header_version);
+	if (priv->entry_version != 0)
+		fwupd_json_object_add_integer(json_object, "entry_version", priv->entry_version);
 }
 
 static gboolean
@@ -330,25 +334,36 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_ifwi_cpd_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "header_version", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "header_version")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "header_version", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid header_version");
+			return FALSE;
+		}
 		priv->header_version = val;
 	}
-	tmp = xb_node_query_text(n, "entry_version", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "entry_version")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "entry_version", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid entry_version");
+			return FALSE;
+		}
 		priv->entry_version = val;
 	}
 
@@ -387,8 +402,6 @@ fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
  * fu_ifwi_cpd_firmware_new:
  *
  * Creates a new #FuFirmware of Intel Code Partition Directory format
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_ifwi_cpd_firmware_new(void)

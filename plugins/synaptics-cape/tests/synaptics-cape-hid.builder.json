@@ -1,0 +1,14 @@
+{
+  "gtype": "FuSynapticsCapeHidFirmware",
+  "flags": "has-vid-pid",
+  "id": "payload",
+  "version": "8.41.24.0",
+  "data": "EFSCh...",
+  "firmware": [
+    {
+      "id": "header",
+      "data": "",
+      "data_size": "0x14"
+    }
+  ]
+}

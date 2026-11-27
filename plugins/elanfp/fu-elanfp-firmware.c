@@ -17,21 +17,29 @@ struct _FuElanfpFirmware {
 G_DEFINE_TYPE(FuElanfpFirmware, fu_elanfp_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_elanfp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_elanfp_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "format_version", self->format_version);
+	if (self->format_version != 0)
+		fwupd_json_object_add_integer(json_object, "format_version", self->format_version);
 }
 
 static gboolean
-fu_elanfp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_elanfp_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "format_version", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"format_version",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		self->format_version = tmp;
 
 	/* success */

@@ -67,8 +67,6 @@ fu_security_attrs_init(FuSecurityAttrs *self)
  * @attr: a #FuSecurityAttr
  *
  * Adds a #FuSecurityAttr to the array with no sanity checks.
- *
- * Since: 1.7.1
  **/
 void
 fu_security_attrs_append_internal(FuSecurityAttrs *self, FuSecurityAttr *attr)
@@ -85,8 +83,6 @@ fu_security_attrs_append_internal(FuSecurityAttrs *self, FuSecurityAttr *attr)
  * Adds a #FuSecurityAttr to the array with no sanity checks.
  *
  * Returns: %TRUE if the collection is valid
- *
- * Since: 2.0.7
  **/
 gboolean
 fu_security_attrs_is_valid(FuSecurityAttrs *self)
@@ -101,8 +97,6 @@ fu_security_attrs_is_valid(FuSecurityAttrs *self)
  * @attr: a #FuSecurityAttr
  *
  * Adds a #FuSecurityAttr to the array.
- *
- * Since: 1.5.0
  **/
 void
 fu_security_attrs_append(FuSecurityAttrs *self, FuSecurityAttr *attr)
@@ -141,8 +135,6 @@ fu_security_attrs_append(FuSecurityAttrs *self, FuSecurityAttr *attr)
  * Gets a specific #FuSecurityAttr from the array.
  *
  * Returns: (transfer full): a #FuSecurityAttr or %NULL
- *
- * Since: 1.9.6
  **/
 FuSecurityAttr *
 fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
@@ -150,6 +142,8 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 				      GError **error)
 {
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	g_return_val_if_fail(appstream_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (self->attrs->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -173,8 +167,6 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
  * Serializes the #FuSecurityAttr objects.
  *
  * Returns: a #GVariant or %NULL
- *
- * Since: 1.5.0
  **/
 GVariant *
 fu_security_attrs_to_variant(FuSecurityAttrs *self)
@@ -203,8 +195,6 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
  * Gets all the non-obsoleted attributes in the object.
  *
  * Returns: (transfer container) (element-type FuSecurityAttr): attributes
- *
- * Since: 1.5.0
  **/
 GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self, const gchar *fwupd_version)
@@ -237,8 +227,6 @@ fu_security_attrs_get_all_mutable(FuSecurityAttrs *self)
  * @self: a #FuSecurityAttrs
  *
  * Removes all the attributes in the object.
- *
- * Since: 1.5.0
  **/
 void
 fu_security_attrs_remove_all(FuSecurityAttrs *self)
@@ -256,8 +244,6 @@ fu_security_attrs_remove_all(FuSecurityAttrs *self)
  * Calculates the HSI string from the appended attributes.
  *
  * Returns: (transfer full): a string or %NULL
- *
- * Since: 2.0.7
  **/
 gchar *
 fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
@@ -326,11 +312,7 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 	}
 
 	if (flags & FU_SECURITY_ATTRS_FLAG_ADD_VERSION) {
-		g_string_append_printf(str,
-				       " (v%d.%d.%d)",
-				       FWUPD_MAJOR_VERSION,
-				       FWUPD_MINOR_VERSION,
-				       FWUPD_MICRO_VERSION);
+		g_string_append_printf(str, " (v%d.%d)", FWUPD_MAJOR_VERSION, FWUPD_MINOR_VERSION);
 	}
 
 	return g_string_free_and_steal(g_steal_pointer(&str));
@@ -582,8 +564,6 @@ fu_security_attrs_add_suspend_to_ram_obsoletes(FuSecurityAttrs *self)
  *
  * It is only required to call this function once, and should be done when all
  * attributes have been added. This will also sort the attrs.
- *
- * Since: 1.5.0
  **/
 void
 fu_security_attrs_depsolve(FuSecurityAttrs *self)
@@ -732,8 +712,6 @@ fu_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
  * Only the AppStream ID results are compared, extra metadata is ignored.
  *
  * Returns: (element-type FuSecurityAttr) (transfer container): differences
- *
- * Since: 1.9.2
  */
 GPtrArray *
 fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
@@ -821,8 +799,6 @@ fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
  * is ignored.
  *
  * Returns: %TRUE if the set of attrs can be considered equal
- *
- * Since: 1.9.2
  */
 gboolean
 fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
@@ -835,8 +811,6 @@ fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
  * fu_security_attrs_new:
  *
  * Returns: a security attribute
- *
- * Since: 1.5.0
  **/
 FuSecurityAttrs *
 fu_security_attrs_new(void)

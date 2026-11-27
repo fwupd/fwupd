@@ -319,6 +319,169 @@ fu_uefi_db_no_default_ids_func(void)
 }
 
 static void
+fu_uefi_db_revoked_func(void)
+{
+	gboolean ret;
+	GPtrArray *children;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS | FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GByteArray) buf_db = g_byte_array_new();
+	g_autoptr(GBytes) blob_db = NULL;
+	g_autoptr(GBytes) blob_revoked = NULL;
+	g_autoptr(GBytes) blob_trusted = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_GNUTLS
+	g_test_skip("requires GnuTLS");
+	return;
+#endif
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the db has two certificates, and the dbx has the exact same bytes for one of them */
+	blob_revoked = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Revoked CA 2011", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_revoked);
+	blob_trusted = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Trusted CA 2023", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_trusted);
+	fu_byte_array_append_bytes(buf_db, blob_revoked);
+	fu_byte_array_append_bytes(buf_db, blob_trusted);
+	blob_db = g_bytes_new(buf_db->data, buf_db->len);
+
+	/* create the device */
+	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
+	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
+	ret = fu_uefi_device_set_efivar_bytes(
+	    FU_UEFI_DEVICE(device),
+	    FU_EFIVARS_GUID_SECURITY_DATABASE,
+	    "db",
+	    blob_db,
+	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_uefi_device_set_efivar_bytes(
+	    FU_UEFI_DEVICE(device),
+	    FU_EFIVARS_GUID_SECURITY_DATABASE,
+	    "dbx",
+	    blob_revoked,
+	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* only the trusted certificate is shown */
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	children = fu_device_get_children(device);
+	g_assert_cmpint(children->len, ==, 1);
+	g_assert_cmpstr(fu_device_get_name(g_ptr_array_index(children, 0)), ==, "Trusted CA");
+}
+
+static void
+fu_uefi_db_revoked_same_key_func(void)
+{
+	gboolean ret;
+	GPtrArray *children;
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS | FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) siglist_db = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
+	g_autoptr(FuFirmware) sig_db = NULL;
+	g_autoptr(FuFirmware) sig_dbx = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GByteArray) buf_dbx = NULL;
+	g_autoptr(GBytes) blob_db = NULL;
+	g_autoptr(GBytes) blob_dbx = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_GNUTLS
+	g_test_skip("requires GnuTLS");
+	return;
+#endif
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the dbx has a different certificate with the same key, made by changing the last
+	 * byte of the DER data, which is inside the signature */
+	blob_db = fu_uefi_db_self_test_build_siglist("O=Test,CN=Test Reissued CA 2011", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_db);
+	buf_dbx = g_byte_array_new();
+	fu_byte_array_append_bytes(buf_dbx, blob_db);
+	buf_dbx->data[buf_dbx->len - 1] ^= 0xFF;
+	blob_dbx = g_bytes_new(buf_dbx->data, buf_dbx->len);
+
+	/* sanity check the key IDs match but the data does not */
+	ret =
+	    fu_firmware_parse_bytes(siglist_db, blob_db, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_parse_bytes(siglist_dbx,
+				      blob_dbx,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	sig_db = fu_firmware_get_image_by_idx(siglist_db, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(sig_db);
+	sig_dbx = fu_firmware_get_image_by_idx(siglist_dbx, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(sig_dbx);
+	g_assert_cmpstr(fu_firmware_get_id(sig_db), ==, fu_firmware_get_id(sig_dbx));
+	g_assert_false(g_bytes_equal(blob_db, blob_dbx));
+
+	/* create the device */
+	device = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_SECURITY_DATABASE);
+	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "db");
+	ret = fu_uefi_device_set_efivar_bytes(
+	    FU_UEFI_DEVICE(device),
+	    FU_EFIVARS_GUID_SECURITY_DATABASE,
+	    "db",
+	    blob_db,
+	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_uefi_device_set_efivar_bytes(
+	    FU_UEFI_DEVICE(device),
+	    FU_EFIVARS_GUID_SECURITY_DATABASE,
+	    "dbx",
+	    blob_dbx,
+	    FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+		FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the db certificate is not blocked */
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	children = fu_device_get_children(device);
+	g_assert_cmpint(children->len, ==, 1);
+	g_assert_cmpstr(fu_device_get_name(g_ptr_array_index(children, 0)), ==, "Reissued CA");
+}
+
+static void
 fu_uefi_db_modify_config_func(void)
 {
 	gboolean ret;
@@ -615,6 +778,8 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi-db/default-ids", fu_uefi_db_default_ids_func);
 	g_test_add_func("/uefi-db/no-default-ids", fu_uefi_db_no_default_ids_func);
+	g_test_add_func("/uefi-db/revoked", fu_uefi_db_revoked_func);
+	g_test_add_func("/uefi-db/revoked-same-key", fu_uefi_db_revoked_same_key_func);
 	g_test_add_func("/uefi-db/external-locked", fu_uefi_db_external_locked_func);
 	g_test_add_func("/uefi-db/external-not-locked", fu_uefi_db_external_not_locked_func);
 	g_test_add_func("/uefi-db/external-locked-device-added",

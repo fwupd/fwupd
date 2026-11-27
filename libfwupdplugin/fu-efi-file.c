@@ -35,18 +35,22 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFile, fu_efi_file, FU_TYPE_FIRMWARE)
 #define FU_EFI_FILE_SIZE_MAX (16 * FU_MB)
 
 static void
-fu_efi_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuEfiFile *self = FU_EFI_FILE(firmware);
 	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 
-	fu_xmlb_builder_insert_kx(bn, "attrib", priv->attrib);
-	fu_xmlb_builder_insert_kx(bn, "type", priv->type);
+	if (priv->attrib != 0)
+		fwupd_json_object_add_integer(json_object, "attrib", priv->attrib);
+	if (priv->type != 0)
+		fwupd_json_object_add_integer(json_object, "type", priv->type);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "name",
-					  fu_efi_guid_to_name(fu_firmware_get_id(firmware)));
-		fu_xmlb_builder_insert_kv(bn, "type_name", fu_efi_file_type_to_string(priv->type));
+		const gchar *name_str = fu_efi_guid_to_name(fu_firmware_get_id(firmware));
+		const gchar *type_name_str = fu_efi_file_type_to_string(priv->type);
+		if (name_str != NULL)
+			fwupd_json_object_add_string(json_object, "name", name_str);
+		if (type_name_str != NULL)
+			fwupd_json_object_add_string(json_object, "type_name", type_name_str);
 	}
 }
 
@@ -267,18 +271,28 @@ fu_efi_file_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_file_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_file_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiFile *self = FU_EFI_FILE(firmware);
 	FuEfiFilePrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "type", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"type",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->type = tmp;
-	tmp = xb_node_query_text_as_uint(n, "attrib", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"attrib",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->attrib = tmp;
 
 	/* success */
@@ -310,8 +324,6 @@ fu_efi_file_class_init(FuEfiFileClass *klass)
  * fu_efi_file_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 2.0.0
  **/
 FuFirmware *
 fu_efi_file_new(void)

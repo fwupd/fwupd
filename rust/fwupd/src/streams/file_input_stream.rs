@@ -90,6 +90,18 @@ impl Seek for FileInputStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::io::Searchable;
+    use crate::slice::NonEmptySlice;
+
+    #[test]
+    fn file_searchable_find() {
+        let path = std::env::temp_dir().join("fwupd-test-file-find");
+        std::fs::write(&path, b"hello world").unwrap();
+        let mut stream = FileInputStream::open(&path).unwrap();
+        let needle = NonEmptySlice::new(b"world").unwrap();
+        assert_eq!(stream.find(needle).unwrap(), Some(6));
+        let _ = std::fs::remove_file(&path);
+    }
 
     #[test]
     fn file_read() {

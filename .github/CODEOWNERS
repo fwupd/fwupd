@@ -68,8 +68,9 @@ plugins/systemd-pcrlock/ @bluca
 plugins/raydium-tp/ @Maker-Rad
 plugins/realtek-alc408x/ @vraghav8
 plugins/realtek-mst/ @tari
+plugins/redfish/ @vraghav8 @Arno500
 plugins/rp-pico/ @mntmn
-plugins/rts54hub/ @AnyProblem
+plugins/realtek-rts54hub/ @AnyProblem
 plugins/snapd-uefi/ @BAMF0 @bboozzoo
 plugins/starlabs-coreboot/ @Sean-StarLabs
 plugins/sunwinon-hid/ @xiaosa-zhz

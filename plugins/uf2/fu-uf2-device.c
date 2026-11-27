@@ -65,6 +65,7 @@ fu_uf2_device_probe_current_fw(FuUf2Device *self, GBytes *fw, GError **error)
 		fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware));
 
 	/* add instance ID for quirks */
+	self->family_id = fu_firmware_get_idx(firmware);
 	if (fu_firmware_get_idx(firmware) != 0x0) {
 		fu_device_add_instance_u32(FU_DEVICE(self),
 					   "FAMILY",
@@ -310,6 +311,8 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	if (fn1 == NULL)
 		return FALSE;
 	blob_txt = fu_device_get_contents_bytes(device, fn1, G_MAXUINT32, NULL, error);
+	if (blob_txt == NULL)
+		return FALSE;
 	lines = fu_strsplit_bytes(blob_txt, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "Model: ")) {
@@ -347,7 +350,7 @@ fu_uf2_device_usb_probe(FuUf2Device *self, FuDevice *usb_device, GError **error)
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "USB",
 					      "VID",

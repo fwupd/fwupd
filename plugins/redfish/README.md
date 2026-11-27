@@ -39,9 +39,16 @@ Additionally, on Dell hardware the SystemID is also used:
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID_${RedfishSoftwareId}`
 * `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID` (only-quirks)
 
-Additionally, this Instance ID is added for quirk and parent matching:
+Additionally, this Instance ID is added for matching, quirks and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
+
+On the NVIDIA DGX Station GB300 each device is a child of the BMC, which is the inventory member
+that the manager reports as its `ActiveSoftwareImage`. A component that comes in board variants
+also gets this Instance ID for each PCIe function of its board, read from the PCIe devices of its
+related chassis:
+
+* `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}&VEN_${PciVendor}&DEV_${PciDevice}&SUBSYS_${PciSubsysVendor}${PciSubsys}`
 
 ## Update Behavior
 
@@ -69,6 +76,14 @@ default 0ms.
 
 Since: 1.8.0
 
+### RedfishDeviceGType
+
+The device type to create for each inventory member on a system matched by a CHID, e.g.
+`FuRedfishHpeDevice`. It replaces the type the plugin would otherwise choose from the update
+service and the vendor, which allows a vendor-specific device to be used on an OEM-branded system.
+
+Since: 2027.0
+
 ### `Flags=wildcard-targets`
 
 Do not specify the `odata.id` in the multipart update Targets array and allow the BMC to deploy the
@@ -94,6 +109,14 @@ Use unsigned development builds.
 ### `Flags=manager-reset`
 
 Reset the manager (typically the BMC) after updating this device.
+
+### `Flags=related-chassis-pcie`
+
+Read the PCI IDs from the PCIe devices of a related chassis, and add the vendor and `Id` Instance ID
+with the PCI IDs of each function. This is only correct when the chassis holds a single component
+rather than the whole system.
+
+Since: 2027.0
 
 ## Setting Service IP Manually
 
@@ -144,6 +167,21 @@ or
 ```shell
 curl -k https://192.168.0.133:443/redfish/v1/
 ```
+
+## Bearer Token Rotation
+
+The `[redfish]` `BearerToken` setting is reloaded when `fwupd.conf` changes, so
+a rotated token does not need a daemon restart. Removing the setting restores
+username/password authentication, so `Username` and `Password` must be configured
+first: a daemon started with a token does not create a BMC user. Changes to them
+still need a restart, and a `BearerToken` in the mutable configuration overrides
+the system value, so rotate or remove it there too.
+
+## Session Key Rotation
+
+The file named by the `[redfish]` `SessionKeyFile` setting is read for each request,
+so a session that is replaced out of band does not need a daemon restart. A request
+made while the file cannot be read fails, rather than using other credentials.
 
 ## External Interface Access
 

@@ -74,11 +74,14 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 }
 
 static void
-fu_steelseries_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_steelseries_firmware_export(FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       FwupdJsonObject *json_object)
 {
 	FuSteelseriesFirmware *self = FU_STEELSERIES_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kx(bn, "checksum", self->checksum);
+	if (self->checksum != 0)
+		fwupd_json_object_add_integer(json_object, "checksum", self->checksum);
 }
 
 static void

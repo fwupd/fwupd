@@ -174,32 +174,33 @@ fu_config_migrate_keyfile(FuConfig *self)
 		const gchar *group;
 		const gchar *key;
 		const gchar *value;
-	} key_values[] = {{"fwupd", "ApprovedFirmware", NULL},
-			  {"fwupd", "ArchiveSizeMax", "0"},
-			  {"fwupd", "DisabledDevices", NULL},
-			  {"fwupd", "EnumerateAllDevices", NULL},
-			  {"fwupd", "EspLocation", NULL},
-			  {"fwupd", "HostBkc", NULL},
-			  {"fwupd", "IdleTimeout", "7200"},
-			  {"fwupd", "IdleTimeout", NULL},
-			  {"fwupd", "IgnorePower", NULL},
-			  {"fwupd", "ShowDevicePrivate", NULL},
-			  {"fwupd", "TrustedUids", NULL},
-			  {"fwupd", "UpdateMotd", NULL},
-			  {"fwupd", "UriSchemes", NULL},
-			  {"fwupd", "VerboseDomains", NULL},
-			  {"fwupd", "OnlyTrusted", NULL},
-			  {"fwupd", "IgnorePower", NULL},
-			  {"fwupd", "RequireImmutableEnumeration", NULL},
-			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
-			  {"fwupd", "DisabledPlugins", "test;test_ble"},
-			  {"redfish", "IpmiDisableCreateUser", NULL},
-			  {"redfish", "ManagerResetTimeout", NULL},
-			  {"msr", "MinimumSmeKernelVersion", NULL},
-			  {"thunderbolt", "MinimumKernelVersion", NULL},
-			  {"thunderbolt", "DelayedActivation", NULL},
-			  {NULL, NULL, NULL}};
-	for (guint i = 0; key_values[i].group != NULL; i++) {
+	} key_values[] = {
+	    {"fwupd", "ApprovedFirmware", NULL},
+	    {"fwupd", "ArchiveSizeMax", "0"},
+	    {"fwupd", "DisabledDevices", NULL},
+	    {"fwupd", "EnumerateAllDevices", NULL},
+	    {"fwupd", "EspLocation", NULL},
+	    {"fwupd", "HostBkc", NULL},
+	    {"fwupd", "IdleTimeout", "7200"},
+	    {"fwupd", "IdleTimeout", NULL},
+	    {"fwupd", "IgnorePower", NULL},
+	    {"fwupd", "ShowDevicePrivate", NULL},
+	    {"fwupd", "TrustedUids", NULL},
+	    {"fwupd", "UpdateMotd", NULL},
+	    {"fwupd", "UriSchemes", NULL},
+	    {"fwupd", "VerboseDomains", NULL},
+	    {"fwupd", "OnlyTrusted", NULL},
+	    {"fwupd", "IgnorePower", NULL},
+	    {"fwupd", "RequireImmutableEnumeration", NULL},
+	    {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
+	    {"fwupd", "DisabledPlugins", "test;test_ble"},
+	    {"redfish", "IpmiDisableCreateUser", NULL},
+	    {"redfish", "ManagerResetTimeout", NULL},
+	    {"msr", "MinimumSmeKernelVersion", NULL},
+	    {"thunderbolt", "MinimumKernelVersion", NULL},
+	    {"thunderbolt", "DelayedActivation", NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(key_values); i++) {
 		const gchar *default_value;
 		g_autofree gchar *value = NULL;
 		g_auto(GStrv) keys = NULL;
@@ -376,8 +377,6 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
  * @value: (nullable): a settings value
  *
  * Sets a default config value.
- *
- * Since: 2.0.0
  **/
 void
 fu_config_set_default(FuConfig *self, const gchar *section, const gchar *key, const gchar *value)
@@ -438,8 +437,6 @@ fu_config_save(FuConfig *self, GError **error)
  * @value: (nullable): a settings value
  *
  * Sets a plugin config value, *not* saving to a config file.
- *
- * Since: 2.1.1
  **/
 void
 fu_config_set_value_internal(FuConfig *self,
@@ -469,8 +466,6 @@ fu_config_set_value_internal(FuConfig *self,
  * Sets a plugin config value, saving the new data back to the default config file.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_config_set_value(FuConfig *self,
@@ -506,8 +501,6 @@ fu_config_set_value(FuConfig *self,
  * @section: a settings section
  *
  * Reset all the keys back to the default values.
- *
- * Since: 1.9.15
  **/
 gboolean
 fu_config_reset_defaults(FuConfig *self, const gchar *section, GError **error)
@@ -545,8 +538,6 @@ fu_config_reset_defaults(FuConfig *self, const gchar *section, GError **error)
  * NOTE: this function will return an empty string for `key=`.
  *
  * Returns: (transfer full): key value
- *
- * Since: 1.9.1
  **/
 gchar *
 fu_config_get_value(FuConfig *self, const gchar *section, const gchar *key)
@@ -578,8 +569,6 @@ fu_config_get_value(FuConfig *self, const gchar *section, const gchar *key)
  * NOTE: this function will return an empty string for `key=`.
  *
  * Returns: (transfer full) (nullable): key value
- *
- * Since: 1.9.1
  **/
 gchar **
 fu_config_get_value_strv(FuConfig *self, const gchar *section, const gchar *key)
@@ -603,8 +592,6 @@ fu_config_get_value_strv(FuConfig *self, const gchar *section, const gchar *key)
  * Return the value of a key, falling back to the default value if missing or empty.
  *
  * Returns: boolean
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_config_get_value_bool(FuConfig *self, const gchar *section, const gchar *key)
@@ -632,8 +619,6 @@ fu_config_get_value_bool(FuConfig *self, const gchar *section, const gchar *key)
  * Return the value of a key, falling back to the default value if missing or empty.
  *
  * Returns: uint64
- *
- * Since: 1.9.1
  **/
 guint64
 fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
@@ -667,16 +652,12 @@ fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
  * @basename: (nullable): a file basename, typically, `fwupd.conf`
  *
  * Sets the name of the filename to load.
- *
- * Since: 2.0.18
  **/
 void
 fu_config_set_basename(FuConfig *self, const gchar *basename)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONFIG(self));
-	if (g_strcmp0(priv->basename, basename) == 0)
-		return;
 	g_set_str(&priv->basename, basename);
 }
 
@@ -724,8 +705,6 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable
  * Loads the configuration files from all possible locations.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
@@ -736,6 +715,7 @@ fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	g_return_val_if_fail(priv->items->len == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* load the main daemon config file */
 	configdir = fu_path_store_get_path(priv->pstore, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);
@@ -882,8 +862,6 @@ fu_config_class_init(FuConfigClass *klass)
  * Creates a new #FuConfig.
  *
  * Returns: (transfer full): a new #FuConfig
- *
- * Since: 1.9.1
  **/
 FuConfig *
 fu_config_new(FuPathStore *pstore)

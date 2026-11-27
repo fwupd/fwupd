@@ -40,22 +40,28 @@ G_DEFINE_TYPE_EXTENDED(FuUsbBosDescriptor,
 					     fu_usb_bos_descriptor_codec_iface_init));
 
 static void
-fu_usb_bos_descriptor_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_usb_bos_descriptor_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "dev_capability_type",
-				  fu_usb_descriptor_kind_to_string(self->dev_capability_type));
+	const gchar *dev_capability_type_str =
+	    fu_usb_descriptor_kind_to_string(self->dev_capability_type);
+	if (dev_capability_type_str != NULL)
+		fwupd_json_object_add_string(json_object,
+					     "dev_capability_type",
+					     dev_capability_type_str);
 }
 
 static gboolean
-fu_usb_bos_descriptor_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_usb_bos_descriptor_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
 	const gchar *str;
 
 	/* simple properties */
-	str = xb_node_query_text(n, "dev_capability_type", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "dev_capability_type", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		self->dev_capability_type = fu_usb_descriptor_kind_from_string(str);
 		if (self->dev_capability_type == FU_USB_DESCRIPTOR_KIND_INVALID) {
@@ -89,7 +95,8 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 	self->dev_capability_type = tmpi;
 
 	/* data */
-	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "ExtraData", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
@@ -144,8 +151,6 @@ fu_usb_bos_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
  * Gets the BOS descriptor capability.
  *
  * Return value: capability
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
@@ -251,8 +256,6 @@ fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
  * @st_hdr: a #FuUsbBosHdr
  *
  * Return value: a new #FuUsbBosDescriptor object.
- *
- * Since: 2.1.1
  **/
 FuUsbBosDescriptor *
 fu_usb_bos_descriptor_new(FuUsbBosHdr *st_hdr)

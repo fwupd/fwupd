@@ -19,8 +19,6 @@ G_DECLARE_FINAL_TYPE(FuEfiLoadOption, fu_efi_load_option, FU, EFI_LOAD_OPTION, F
  * FU_EFI_LOAD_OPTION_METADATA_PATH:
  *
  * The key for the 2nd-stage loader path.
- *
- * Since: 2.0.0
  */
 #define FU_EFI_LOAD_OPTION_METADATA_PATH "path"
 
@@ -28,8 +26,6 @@ G_DECLARE_FINAL_TYPE(FuEfiLoadOption, fu_efi_load_option, FU, EFI_LOAD_OPTION, F
  * FU_EFI_LOAD_OPTION_METADATA_CMDLINE:
  *
  * The key for the kernel command line.
- *
- * Since: 2.0.0
  */
 #define FU_EFI_LOAD_OPTION_METADATA_CMDLINE "cmdline"
 

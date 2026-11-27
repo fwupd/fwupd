@@ -67,14 +67,15 @@ fu_release_uri_scheme_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"https://foo.bar/baz", "https"},
-		    {"HTTP://FOO.BAR/BAZ", "http"},
-		    {"ftp://", "ftp"},
-		    {"ftp:", "ftp"},
-		    {"foobarbaz", NULL},
-		    {"", NULL},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	} strs[] = {
+	    {"https://foo.bar/baz", "https"},
+	    {"HTTP://FOO.BAR/BAZ", "http"},
+	    {"ftp://", "ftp"},
+	    {"ftp:", "ftp"},
+	    {"foobarbaz", NULL},
+	    {"", NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_release_uri_get_scheme(strs[i].in);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}

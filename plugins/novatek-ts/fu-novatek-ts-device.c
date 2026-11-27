@@ -865,11 +865,7 @@ fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self, guint32 bin_size, 
 				  5,
 				  &status,
 				  error)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "read status failed, status = 0x%02x",
-			    status);
+		g_prefix_error(error, "read status failed, status = 0x%02x: ", status);
 		return FALSE;
 	}
 	g_debug("read status register ok, status = 0x%02x", status);
@@ -1266,11 +1262,7 @@ fu_novatek_ts_device_check_fw_reset_state(FuNovatekTsDevice *self, guint8 state,
 				  30,
 				  &ctx,
 				  error)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "error, reset state buf[0] = 0x%02x",
-			    ctx.last_state);
+		g_prefix_error(error, "error, reset state buf[0] = 0x%02x: ", ctx.last_state);
 		return FALSE;
 	}
 
@@ -1402,15 +1394,13 @@ fu_novatek_ts_device_ensure_flash_pid(FuNovatekTsDevice *self, GError **error)
 	pid_str[3] = (char)pid_raw[1];
 	pid_str[4] = '\0';
 	if (!fu_strtoull(pid_str, &flash_pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "invalid pid read from flash: '%s' (%02x %02x %02x %02x): ",
-			    pid_str,
-			    pid_raw[0],
-			    pid_raw[1],
-			    pid_raw[2],
-			    pid_raw[3]);
+		g_prefix_error(error,
+			       "invalid pid read from flash: '%s' (%02x %02x %02x %02x): ",
+			       pid_str,
+			       pid_raw[0],
+			       pid_raw[1],
+			       pid_raw[2],
+			       pid_raw[3]);
 		return FALSE;
 	}
 	if (flash_pid == 0x0000 || flash_pid == G_MAXUINT16) {
@@ -1474,10 +1464,7 @@ fu_novatek_ts_device_update_firmware_cb(FuDevice *device, gpointer user_data, GE
 	FuNovatekTsUpdateCtx *ctx = (FuNovatekTsUpdateCtx *)user_data;
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
 	if (!fu_novatek_ts_device_update_firmware_reset(self, ctx->blob, ctx->progress, error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "update normal fw failed");
+		g_prefix_error_literal(error, "update normal fw failed: ");
 		return FALSE;
 	}
 

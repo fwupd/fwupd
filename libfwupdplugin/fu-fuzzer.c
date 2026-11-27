@@ -24,13 +24,15 @@ fu_fuzzer_default_init(FuFuzzerInterface *iface)
  * Calls the implementation with the contents of a fuzzing buffer.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.8
  */
 gboolean
 fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error)
 {
 	FuFuzzerInterface *iface = FU_FUZZER_GET_IFACE(self);
+
+	g_return_val_if_fail(FU_IS_FUZZER(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (iface->test_input == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -50,13 +52,14 @@ fu_fuzzer_test_input(FuFuzzer *self, GByteArray *buf, GError **error)
  * Builds a sample corpus used for fuzzing.
  *
  * Returns: (transfer full): a #GBytes on success
- *
- * Since: 2.1.8
  */
 GByteArray *
 fu_fuzzer_build_example(FuFuzzer *self, GBytes *blob, GError **error)
 {
 	FuFuzzerInterface *iface = FU_FUZZER_GET_IFACE(self);
+
+	g_return_val_if_fail(FU_IS_FUZZER(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (iface->build_example == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

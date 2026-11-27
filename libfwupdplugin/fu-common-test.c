@@ -148,6 +148,74 @@ fu_common_error_map_func(void)
 }
 
 static void
+fu_common_gtype_from_name_func(void)
+{
+	gboolean ret;
+	GType gtype = G_TYPE_INVALID;
+	g_autoptr(GError) error = NULL;
+
+	g_type_ensure(FU_TYPE_DEVICE);
+	g_type_ensure(FU_TYPE_FIRMWARE);
+
+	/* not registered, and out value is not touched */
+	ret = fu_gtype_from_name("FuNotARealType", &gtype, FU_TYPE_DEVICE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_assert_cmpint(gtype, ==, G_TYPE_INVALID);
+	g_clear_error(&error);
+
+	/* not registered, even without a parent */
+	ret = fu_gtype_from_name("FuNotARealType", &gtype, G_TYPE_INVALID, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_assert_cmpint(gtype, ==, G_TYPE_INVALID);
+	g_clear_error(&error);
+
+	/* registered, but the wrong parent, and out value is not touched */
+	ret = fu_gtype_from_name("FuFirmware", &gtype, FU_TYPE_DEVICE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_assert_cmpint(gtype, ==, G_TYPE_INVALID);
+	g_clear_error(&error);
+
+	/* a parent is not a subtype of its child */
+	ret = fu_gtype_from_name("GObject", &gtype, FU_TYPE_DEVICE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_assert_cmpint(gtype, ==, G_TYPE_INVALID);
+	g_clear_error(&error);
+
+	/* exact parent type */
+	ret = fu_gtype_from_name("FuDevice", &gtype, FU_TYPE_DEVICE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(gtype, ==, FU_TYPE_DEVICE);
+
+	/* subtype of the parent */
+	gtype = G_TYPE_INVALID;
+	ret = fu_gtype_from_name("FuFirmware", &gtype, G_TYPE_OBJECT, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(gtype, ==, FU_TYPE_FIRMWARE);
+
+	/* no parent check */
+	gtype = G_TYPE_INVALID;
+	ret = fu_gtype_from_name("FuFirmware", &gtype, G_TYPE_INVALID, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(gtype, ==, FU_TYPE_FIRMWARE);
+
+	/* out value is optional */
+	ret = fu_gtype_from_name("FuDevice", NULL, FU_TYPE_DEVICE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_gtype_from_name("FuFirmware", NULL, FU_TYPE_DEVICE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+}
+
+static void
 fu_common_bitwise_func(void)
 {
 	guint64 val = 0;
@@ -209,21 +277,6 @@ fu_common_guid_func(void)
 		buf[i] = 0xFF;
 	ret = fu_common_guid_is_plausible(buf);
 	g_assert_true(ret);
-}
-
-static void
-fu_common_xmlb_builder_kx_func(void)
-{
-	g_autofree gchar *xml = NULL;
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
-	g_autoptr(GError) error = NULL;
-
-	/* zero is omitted, and all 64 bits are kept even where gulong is 32 bits */
-	fu_xmlb_builder_insert_kx(bn, "idx", 0x0);
-	fu_xmlb_builder_insert_kx(bn, "addr", 0x123456789ABCDEF0ull);
-	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(xml, ==, "<firmware><addr>0x123456789abcdef0</addr></firmware>");
 }
 
 static void
@@ -318,11 +371,11 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/checked-inc", fu_common_checked_inc_func);
 	g_test_add_func("/fwupd/common/checked-inc-product", fu_common_checked_inc_product_func);
 	g_test_add_func("/fwupd/common/error-map", fu_common_error_map_func);
+	g_test_add_func("/fwupd/common/gtype-from-name", fu_common_gtype_from_name_func);
 	g_test_add_func("/fwupd/common/align-up", fu_common_align_up_func);
 	g_test_add_func("/fwupd/common/bitwise", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common/crc", fu_common_crc_func);
 	g_test_add_func("/fwupd/common/guid", fu_common_guid_func);
-	g_test_add_func("/fwupd/common/xmlb-builder-kx", fu_common_xmlb_builder_kx_func);
 	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/common/random", fu_common_random_func);
 	g_test_add_func("/fwupd/common/cpuid", fu_cpuid_func);

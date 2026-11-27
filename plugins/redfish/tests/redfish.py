@@ -16,15 +16,18 @@ HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
 HARDCODED_DELL_USERNAME = "dell_username"
+HARDCODED_NVIDIA_USERNAME = "nvidia_username"
 HARDCODED_USERNAMES = {
     HARDCODED_USERNAME,
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
     HARDCODED_DELL_USERNAME,
+    HARDCODED_NVIDIA_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
 HARDCODED_BEARER_TOKEN = "token2"
+HARDCODED_SESSION_KEY = "1234eabcdeabcdeabcdeabcdeabc1234"
 
 app._percentage545: int = 0
 app._percentage546: int = 0
@@ -35,6 +38,7 @@ app._bmc_reassigned: bool = False
 app._empty_bmc: bool = False
 app._hpeupdatestate: str = "Idle"
 app._hpeupdateresult = None
+app._nvidia_polls: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -44,6 +48,16 @@ def _failure(msg: str, status=400):
     return Response(
         response=json.dumps(res), status=status, mimetype="application/json"
     )
+
+
+def _username():
+    # a session created out of band acts as the default user
+    if (
+        request.authorization is None
+        and request.headers.get("X-Auth-Token") == HARDCODED_SESSION_KEY
+    ):
+        return HARDCODED_USERNAME
+    return request.authorization["username"]
 
 
 @app.route("/redfish/v1/")
@@ -59,9 +73,15 @@ def index():
     app._hpeupdatestate = "Idle"
     app._hpeupdateresult = None
 
+    # a session created out of band is used instead of a username and password
+    if request.authorization is None and "X-Auth-Token" in request.headers:
+        if request.headers["X-Auth-Token"] != HARDCODED_SESSION_KEY:
+            return _failure("unauthorised", status=401)
+        username = HARDCODED_USERNAME
+
     # a bearer token is used instead of a username and password, e.g. when talking
     # to a proxy that injects the real BMC credentials
-    if request.authorization is not None and request.authorization.type == "bearer":
+    elif request.authorization is not None and request.authorization.type == "bearer":
         if request.authorization.token != HARDCODED_BEARER_TOKEN:
             return _failure("unauthorised", status=401)
         username = HARDCODED_USERNAME
@@ -90,6 +110,9 @@ def index():
 
     if username == HARDCODED_DELL_USERNAME:
         res["Vendor"] = "Dell"
+
+    if username == HARDCODED_NVIDIA_USERNAME:
+        res["Vendor"] = "NVIDIA"
 
     if username in (
         HARDCODED_SMC_USERNAME,
@@ -120,7 +143,7 @@ def system():
         "@odata.type": "#ComputerSystem.v1_20_1.ComputerSystem",
     }
 
-    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+    if _username() == HARDCODED_DELL_USERNAME:
         res["Oem"] = {
             "Dell": {
                 "DellSystem": {
@@ -150,29 +173,34 @@ def update_service():
         "ServiceEnabled": True,
     }
 
-    if request.authorization["username"] == HARDCODED_UNL_USERNAME:
+    if _username() == HARDCODED_UNL_USERNAME:
         res["MultipartHttpPushUri"] = "/FWUpdate-unlicensed"
         res["Actions"] = {
             "#UpdateService.StartUpdate": {
                 "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
             }
         }
-    elif request.authorization["username"] == HARDCODED_SMC_USERNAME:
+    elif _username() == HARDCODED_SMC_USERNAME:
         res["MultipartHttpPushUri"] = "/FWUpdate-smc"
         res["Actions"] = {
             "#UpdateService.StartUpdate": {
                 "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
             }
         }
-    elif request.authorization["username"] == HARDCODED_HPE_USERNAME:
+    elif _username() == HARDCODED_HPE_USERNAME:
         res["Oem"] = {"Hpe": {"State": app._hpeupdatestate}}
         if app._hpeupdateresult is not None:
             res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
         res["HttpPushUri"] = "/FWUpdate-hpe"
+    elif _username() == HARDCODED_NVIDIA_USERNAME:
+        res["MultipartHttpPushUri"] = "/FWUpdate-nvidia"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
 
     return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+DELL_NVME_ID = "Installed-0-1.0.1__Disk.Bay.0:Enclosure.Internal.0-4"
 
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory")
@@ -186,6 +214,195 @@ def firmware_inventory():
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BIOS"},
         ],
         "Members@odata.count": 2,
+    }
+    if _username() == HARDCODED_NVIDIA_USERNAME:
+        res["Members"] = [
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"},
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0"},
+            {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0"},
+        ]
+    if _username() == HARDCODED_DELL_USERNAME:
+        res["Members"].append(
+            {"@odata.id": f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}"}
+        )
+        res["Members@odata.count"] = 3
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route(f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}")
+def firmware_inventory_dell_nvme():
+    """a Dell disk: SoftwareId and ComponentID are "0", only the PCI identity tells it apart"""
+    return Response(
+        json.dumps(
+            {
+                "@odata.id": f"/redfish/v1/UpdateService/FirmwareInventory/{DELL_NVME_ID}",
+                "@odata.type": "#SoftwareInventory.v1_10_2.SoftwareInventory",
+                "Id": DELL_NVME_ID,
+                "Name": "PCIe SSD in Slot 0 in Bay 4",
+                "Oem": {
+                    "Dell": {
+                        "DellSoftwareInventory": {
+                            "ComponentID": "0",
+                            "ComponentType": "FRMW",
+                            "DeviceID": "51C3",
+                            "Id": "DCIM:INSTALLED_0x23_304_C_Disk.Bay.0:Enclosure.Internal.0-4",
+                            "IdentityInfoValue": ["DCIM:firmware:1344:51C3:1028:2278"],
+                            "Status": "Installed",
+                            "SubDeviceID": "2278",
+                            "SubVendorID": "1028",
+                            "VendorID": "1344",
+                        }
+                    }
+                },
+                "SoftwareId": "0",
+                "Updateable": True,
+                "Version": "1.0.1",
+            }
+        ),
+        status=200,
+        mimetype="application/json",
+    )
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0")
+def firmware_inventory_fw_bmc_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_BMC_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "Updateable": True,
+        "Version": "GB300-1.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0")
+def firmware_inventory_fw_cpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_CPU_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_CPU_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "SoftwareId": "0x0038",
+        "Updateable": True,
+        "Version": "02.00.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0")
+def firmware_inventory_fw_gpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_GPU_0",
+        "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+        "Id": "FW_GPU_0",
+        "Manufacturer": "NVIDIA",
+        "Name": "Software Inventory",
+        "RelatedItem": [{"@odata.id": "/redfish/v1/Chassis/GPU_0"}],
+        "Updateable": True,
+        "Version": "03.00.00",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0")
+def chassis_gpu_0():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0",
+        "@odata.type": "#Chassis.v1_25_0.Chassis",
+        "Id": "GPU_0",
+        "PCIeDevices": {"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices"},
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices")
+def chassis_gpu_0_pcie_devices():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices",
+        "Members": [{"@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0"}],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0")
+def chassis_gpu_0_pcie_device():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0",
+        "@odata.type": "#PCIeDevice.v1_14_0.PCIeDevice",
+        "Id": "GPU_0",
+        "PCIeFunctions": {
+            "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions"
+        },
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions")
+def chassis_gpu_0_pcie_functions():
+    res = {
+        "Members": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0"
+            },
+            {
+                "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1"
+            },
+        ],
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0")
+def chassis_gpu_0_pcie_function_0():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/0",
+        "DeviceClass": "ProcessingAccelerators",
+        "DeviceId": "0x1234",
+        "SubsystemId": "0x5678",
+        "SubsystemVendorId": "0x10DE",
+        "VendorId": "0x10DE",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1")
+def chassis_gpu_0_pcie_function_1():
+    res = {
+        "@odata.id": "/redfish/v1/Chassis/GPU_0/PCIeDevices/GPU_0/PCIeFunctions/1",
+        "DeviceId": "0x2345",
+        "VendorId": "0x10DE",
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Managers")
+def redfish_managers():
+    res = {
+        "@odata.id": "/redfish/v1/Managers",
+        "@odata.type": "#ManagerCollection.ManagerCollection",
+        "Members": [{"@odata.id": "/redfish/v1/Managers/BMC_0"}],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Managers/BMC_0")
+def redfish_managers_bmc_0():
+    res = {
+        "@odata.id": "/redfish/v1/Managers/BMC_0",
+        "@odata.type": "#Manager.v1_14_0.Manager",
+        "Id": "BMC_0",
+        "ManagerType": "BMC",
+        "Links": {
+            "ActiveSoftwareImage": {
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW_BMC_0"
+            },
+        },
     }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
@@ -219,7 +436,7 @@ def firmware_inventory_bmc():
         "Version": "11A-1.02",
         "ReleaseDate": "2019-03-15T00:00:00",
     }
-    if request.authorization["username"] in {
+    if _username() in {
         HARDCODED_UNL_USERNAME,
         HARDCODED_SMC_USERNAME,
     }:
@@ -227,7 +444,7 @@ def firmware_inventory_bmc():
     else:
         res["Manufacturer"] = "Lenovo"
 
-    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+    if _username() == HARDCODED_DELL_USERNAME:
         res["Oem"] = {"Dell": {"DellSoftwareInventory": {"Status": "Installed"}}}
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
@@ -294,7 +511,7 @@ def firmware_inventory_bios():
         "Version": "P79 v1.45",
         "ReleaseDate": "2019-03-15T00:00:00Z",
     }
-    if request.authorization["username"] in {
+    if _username() in {
         HARDCODED_UNL_USERNAME,
         HARDCODED_SMC_USERNAME,
     }:
@@ -325,13 +542,13 @@ def session_service_sessions():
         json.dumps(res),
         status=200,
         mimetype="application/json",
-        headers={"X-Auth-Token": "1234eabcdeabcdeabcdeabcdeabc1234"},
+        headers={"X-Auth-Token": HARDCODED_SESSION_KEY},
     )
 
 
 @app.route("/redfish/v1/SessionService/Sessions/<session_id>", methods=["DELETE"])
 def session_service_session_delete(session_id):
-    if request.headers.get("X-Auth-Token") != "1234eabcdeabcdeabcdeabcdeabc1234":
+    if request.headers.get("X-Auth-Token") != HARDCODED_SESSION_KEY:
         return _failure("unauthorised", status=401)
     return Response(status=200)
 
@@ -505,6 +722,50 @@ def task_status_548():
     return Response(response=json.dumps(res), status=200, mimetype="application/json")
 
 
+@app.route("/redfish/v1/TaskService/Tasks/<int:task_id>")
+def task_status_nvidia(task_id: int):
+    app._nvidia_polls += 1
+    if task_id == 605 and app._nvidia_polls == 1:
+        # the BMC is busy for a moment, and says so with a Redfish error body
+        return _failure("busy", status=503)
+    res = {
+        "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
+        "@odata.type": "#Task.v1_4_3.Task",
+        "Id": str(task_id),
+        "PercentComplete": 50,
+        "TaskState": "Running",
+        "TaskStatus": "OK",
+    }
+    if task_id == 603:
+        # a component failed to update
+        res["TaskState"] = "Exception"
+        res["TaskStatus"] = "Critical"
+    elif app._nvidia_polls > 1:
+        # the task is removed once it is done
+        if task_id in [602, 604]:
+            return _failure("not found", status=404)
+        res["PercentComplete"] = 100
+        res["TaskState"] = "Completed"
+    return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/<int:task_id>/Monitor")
+def task_monitor_nvidia(task_id: int):
+    # the task is gone, but the monitor still reports that it failed
+    if task_id == 604:
+        res = {
+            "@odata.id": f"/redfish/v1/TaskService/Tasks/{task_id}",
+            "@odata.type": "#Task.v1_4_3.Task",
+            "Id": str(task_id),
+            "TaskState": "Exception",
+            "TaskStatus": "Critical",
+        }
+        return Response(json.dumps(res), status=200, mimetype="application/json")
+
+    # once the task is done the monitor answers with an empty body
+    return Response(status=200)
+
+
 @app.route("/FWUpdate-unlicensed", methods=["GET"])
 def fwupdate_unlicensed():
     res = {
@@ -666,6 +927,49 @@ def fwupdate():
         "TaskMonitor": "/redfish/v1/TaskService/999",
     }
     # Location set to the URI of a task monitor.
+    return Response(
+        json.dumps(res),
+        status=202,
+        mimetype="application/json",
+        headers={"Location": location},
+    )
+
+
+@app.route("/FWUpdate-nvidia", methods=["POST"])
+def fwupdate_nvidia():
+    data = json.loads(request.form["UpdateParameters"])
+    if data["Targets"]:
+        return _failure("targets invalid")
+    if data["ForceUpdate"] is not True:
+        return _failure("force invalid")
+    if data["@Redfish.OperationApplyTime"] != "Immediate":
+        return _failure("apply invalid")
+    fileitem = request.files["UpdateFile"]
+    if fileitem.filename != "firmware.bin":
+        return _failure("filename invalid")
+    contents = fileitem.read().decode()
+    app._nvidia_polls = 0
+    if contents == "completed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/601/Monitor"}
+        return Response(json.dumps(res), status=202, mimetype="application/json")
+    if contents == "no-task":
+        res = {"@odata.id": 601}
+        return Response(json.dumps(res), status=202, mimetype="application/json")
+    if contents == "reaped":
+        # only the Location header gives the task monitor
+        res = {"TaskState": "Running"}
+        location = "/redfish/v1/TaskService/Tasks/602/Monitor"
+    elif contents == "failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/603"}
+        location = "/redfish/v1/TaskService/Tasks/603/Monitor"
+    elif contents == "monitor-failed":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/604"}
+        location = "/redfish/v1/TaskService/Tasks/604/Monitor"
+    elif contents == "transient":
+        res = {"@odata.id": "/redfish/v1/TaskService/Tasks/605"}
+        location = "/redfish/v1/TaskService/Tasks/605/Monitor"
+    else:
+        return _failure("data invalid")
     return Response(
         json.dumps(res),
         status=202,

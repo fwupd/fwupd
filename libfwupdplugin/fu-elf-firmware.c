@@ -455,8 +455,6 @@ fu_elf_firmware_class_init(FuElfFirmwareClass *klass)
  * fu_elf_firmware_new:
  *
  * Creates a new #FuElfFirmware
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_elf_firmware_new(void)

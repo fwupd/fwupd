@@ -24,8 +24,6 @@
  * The returned @value will range from 0 to 0xf.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint4_safe(const gchar *data,
@@ -36,6 +34,9 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 {
 	gchar buffer[2] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -67,8 +68,6 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
  * The returned @value will range from 0 to 0xff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint8_safe(const gchar *data,
@@ -79,6 +78,9 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 {
 	gchar buffer[3] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -110,8 +112,6 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint16_safe(const gchar *data,
@@ -122,6 +122,9 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 {
 	gchar buffer[5] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -153,8 +156,6 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint24_safe(const gchar *data,
@@ -165,6 +166,9 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 {
 	gchar buffer[7] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -180,7 +184,7 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 		return FALSE;
 	}
 	if (value != NULL)
-		*value = (guint16)valuetmp;
+		*value = (guint32)valuetmp;
 	return TRUE;
 }
 
@@ -196,8 +200,6 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
  * The returned @value will range from 0 to 0xffffffff.
  *
  * Returns: %TRUE if parsed, %FALSE otherwise
- *
- * Since: 1.5.6
  **/
 gboolean
 fu_firmware_strparse_uint32_safe(const gchar *data,
@@ -208,6 +210,9 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 {
 	gchar buffer[9] = {'\0'};
 	guint64 valuetmp = 0;
+
+	g_return_val_if_fail(data != NULL || datasz == 0, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */

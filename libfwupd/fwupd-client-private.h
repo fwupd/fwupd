@@ -103,6 +103,10 @@ struct FwupdClientSyncImpl {
 				  gpointer user_data,
 				  GCancellable *cancellable,
 				  GError **error);
+	GPtrArray *(*get_protocols)(FwupdClient *self,
+				    gpointer user_data,
+				    GCancellable *cancellable,
+				    GError **error);
 	GPtrArray *(*get_remotes)(FwupdClient *self,
 				  gpointer user_data,
 				  GCancellable *cancellable,
@@ -129,6 +133,14 @@ struct FwupdClientSyncImpl {
 			    gpointer user_data,
 			    GCancellable *cancellable,
 			    GError **error);
+	gboolean (*write_blob)(FwupdClient *self,
+			       const gchar *device_id,
+			       FwupdInputStream *stream,
+			       const gchar *filename_hint,
+			       const gchar *version,
+			       gpointer user_data,
+			       GCancellable *cancellable,
+			       GError **error);
 	gboolean (*install_release)(FwupdClient *self,
 				    FwupdDevice *device,
 				    FwupdRelease *release,
@@ -235,6 +247,15 @@ fwupd_client_install_stream_async(FwupdClient *self,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+void
+fwupd_client_write_blob_stream_async(FwupdClient *self,
+				     const gchar *device_id,
+				     FwupdUnixInputStream *ustream,
+				     const gchar *filename_hint,
+				     const gchar *version,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
 void
 fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  const gchar *remote_id,

@@ -63,6 +63,16 @@ fwupd_error_convert_mapped_func(void)
 	g_assert_cmpint(error->domain, ==, FWUPD_ERROR);
 }
 
+static void
+fwupd_error_convert_no_space_func(void)
+{
+	g_autoptr(GError) error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NO_SPACE, "full");
+
+	/* e.g. a write past the end of a block device, as for G_FILE_ERROR_NOSPC */
+	fwupd_error_convert(&error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -71,5 +81,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/error/convert/noop", fwupd_error_convert_noop_func);
 	g_test_add_func("/fwupd/error/convert/no-medium", fwupd_error_convert_no_medium_func);
 	g_test_add_func("/fwupd/error/convert/mapped", fwupd_error_convert_mapped_func);
+	g_test_add_func("/fwupd/error/convert/no-space", fwupd_error_convert_no_space_func);
 	return g_test_run();
 }

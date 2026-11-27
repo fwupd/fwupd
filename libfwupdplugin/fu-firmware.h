@@ -37,12 +37,14 @@ struct _FuFirmwareClass {
 			       FuFirmwareParseFlags flags,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
-	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, FwupdJsonObject *json_object);
 	gboolean (*tokenize)(FuFirmware *self,
 			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
-	gboolean (*build)(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*build)(FuFirmware *self,
+			  FwupdJsonObject *json_object,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gchar *(*get_checksum)(FuFirmware *self,
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -60,24 +62,18 @@ struct _FuFirmwareClass {
  * FU_FIRMWARE_ID_PAYLOAD:
  *
  * The usual firmware ID string for the payload.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_PAYLOAD "payload"
 /**
  * FU_FIRMWARE_ID_SIGNATURE:
  *
  * The usual firmware ID string for the signature.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_SIGNATURE "signature"
 /**
  * FU_FIRMWARE_ID_HEADER:
  *
  * The usual firmware ID string for the header.
- *
- * Since: 1.6.0
  **/
 #define FU_FIRMWARE_ID_HEADER "header"
 
@@ -88,7 +84,7 @@ fu_firmware_new(void);
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw);
 FuFirmware *
-fu_firmware_new_from_xml(const gchar *xml, GError **error) G_GNUC_WARN_UNUSED_RESULT
+fu_firmware_new_from_json(const gchar *json, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FuFirmware *
 fu_firmware_new_from_filename(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -102,10 +98,10 @@ fu_firmware_new_from_gtypes(FuInputStream *stream,
 gchar *
 fu_firmware_to_string(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
     G_GNUC_NON_NULL(1, 3);
 gchar *
-fu_firmware_export_to_xml(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
+fu_firmware_export_to_json(FuFirmware *self, FuFirmwareExportFlags flags, GError **error)
     G_GNUC_NON_NULL(1);
 const gchar *
 fu_firmware_get_version(FuFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
@@ -191,13 +187,14 @@ fu_firmware_tokenize(FuFirmware *self,
 		     FuFirmwareParseFlags flags,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_build(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1, 2);
+fu_firmware_build(FuFirmware *self,
+		  FwupdJsonObject *json_object,
+		  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
-			       const gchar *checksum_expected,
-			       FuFirmwareBuilderFlags flags,
-			       GError **error) G_GNUC_NON_NULL(1);
+fu_firmware_roundtrip_from_json(const gchar *builder_json,
+				const gchar *checksum_expected,
+				FuFirmwareBuilderFlags flags,
+				GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
 				    const gchar *checksum_expected,

@@ -126,8 +126,6 @@ fu_usb_endpoint_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCode
  * Gets the maximum packet size this endpoint is capable of sending/receiving.
  *
  * Return value: The maximum packet size
- *
- * Since: 2.0.0
  **/
 guint16
 fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self)
@@ -143,8 +141,6 @@ fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self)
  * Gets the endpoint polling interval.
  *
  * Return value: The endpoint polling interval
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self)
@@ -160,8 +156,6 @@ fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self)
  * Gets the address of the endpoint.
  *
  * Return value: The 4-bit endpoint address
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_endpoint_get_address(FuUsbEndpoint *self)
@@ -177,8 +171,6 @@ fu_usb_endpoint_get_address(FuUsbEndpoint *self)
  * Gets the number part of endpoint address.
  *
  * Return value: The lower 4-bit of endpoint address
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_endpoint_get_number(FuUsbEndpoint *self)
@@ -194,8 +186,6 @@ fu_usb_endpoint_get_number(FuUsbEndpoint *self)
  * Gets the direction of the endpoint.
  *
  * Return value: The endpoint direction
- *
- * Since: 2.0.0
  **/
 FuUsbDirection
 fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
@@ -259,8 +249,6 @@ fu_usb_endpoint_class_init(FuUsbEndpointClass *klass)
  * fu_usb_endpoint_new:
  *
  * Return value: a new #FuUsbEndpoint object.
- *
- * Since: 2.0.0
  **/
 FuUsbEndpoint *
 fu_usb_endpoint_new(const struct libusb_endpoint_descriptor *endpoint_descriptor)

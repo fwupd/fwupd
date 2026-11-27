@@ -28,7 +28,7 @@ typedef struct {
 } FuGInputStreamAdapterClass;
 
 GType
-fu_ginput_stream_adapter_get_type(void);
+fu_ginput_stream_adapter_get_type(void); /* NOLINT(misc-use-internal-linkage) */
 
 static void
 fu_ginput_stream_adapter_seekable_iface_init(GSeekableIface *iface);
@@ -131,8 +131,6 @@ fu_ginput_stream_adapter_init(FuGInputStreamAdapter *self)
  * Use this when a GLib or external API requires a #GInputStream.
  *
  * Returns: (transfer full): a #GInputStream
- *
- * Since: 2.1.7
  **/
 GInputStream *
 fu_input_stream_as_g_input_stream(FuInputStream *stream) /* nocheck:name */

@@ -12,7 +12,7 @@ A Dockerfile for Fedora can be generated in `contrib/ci`.
 To prepare the Docker container run this command:
 
 ```shell
-./fwupbuild docker --distro fedora --version 44 --arch amd64 build
+./fwupbuild dockerfile --os fedora --version 44 --arch amd64 --build
 ```
 
 To build the RPMs run this command (from the root of your git checkout):
@@ -37,17 +37,16 @@ A Dockerfile for Debian or Ubuntu can be generated in `contrib/ci`.
 To prepare the Docker container run one of these commands:
 
 ```shell
-./fwupbuild docker --distro debian --version testing --arch amd64 build
-./fwupbuild docker --distro debian --version testing --arch amd64 --variant i386 build
-./fwupbuild docker --distro ubuntu --version rolling --arch amd64 build
+./fwupbuild dockerfile --os debian --version testing --arch amd64 --build
+./fwupbuild dockerfile --os debian --version testing --arch amd64 --variant i386 --build
+./fwupbuild dockerfile --os ubuntu --version rolling --arch amd64 --build
 ```
 
 To build the DEBs run one of these commands (from the root of your git checkout):
 
 ```shell
-docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-x86_64
-docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-i386
-docker run --privileged -t -v `pwd`:/github/workspace fwupd-ubuntu-x86_64
+docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian
+docker run --privileged -t -v `pwd`:/github/workspace fwupd-ubuntu
 ```
 
 DEBs will be made available in your working directory when complete.
@@ -56,7 +55,7 @@ To build additional DEB package for Qubes OS (fwupd-qubes-vm-whonix)
 add `QUBES=true` environment variable:
 
 ```shell
-docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-x86_64-qubes
+docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian
 ```
 
 ## PKG packages
@@ -66,7 +65,7 @@ A Dockerfile for Arch can be generated in `contrib/ci`.
 To prepare the Docker container run this command:
 
 ```shell
-./fwupbuild dockerfile --os arch --version latest --arch amd64 build
+./fwupbuild dockerfile --os arch --version latest --arch amd64 --build
 ```
 
 To build the PKGs run this command (from the root of your git checkout):

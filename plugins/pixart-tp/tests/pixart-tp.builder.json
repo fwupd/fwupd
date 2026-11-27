@@ -1,0 +1,46 @@
+{
+  "gtype": "FuPixartTpFirmware",
+  "version_raw": "0xff02",
+  "header_ver": "0x103",
+  "ic_part_id": "0x343",
+  "flash_sectors": "0x20",
+  "firmware": [
+    {
+      "gtype": "FuPixartTpSection",
+      "id": "tf-force",
+      "data": "aGVsbG8gd29ybGQ=",
+      "filename": "tf.bin",
+      "update_type": "tf-force",
+      "flags": "valid",
+      "reserved": "01090e0a0000000000000000"
+    },
+    {
+      "gtype": "FuPixartTpSection",
+      "id": "ndt-force",
+      "data": "AAAAAAAAAAAhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANaLAAQAAEMAAAAbmR0IHBheWxvYWQh",
+      "filename": "ndt.bin",
+      "update_type": "ndt-force",
+      "flags": "valid",
+      "reserved": "000000000000000000000000"
+    },
+    {
+      "gtype": "FuPixartTpSection",
+      "id": "parameter",
+      "data": "aGVsbG8gd29ybGQ=",
+      "update_type": "param",
+      "flags": "valid",
+      "target_flash_start": "0x1e000",
+      "section_crc": "0xb887bc55",
+      "reserved": "000000000000000000000000"
+    },
+    {
+      "gtype": "FuPixartTpSection",
+      "id": "payload",
+      "data": "aGVsbG8gd29ybGQ=",
+      "update_type": "fw-section",
+      "flags": "valid",
+      "section_crc": "0xda33306b",
+      "reserved": "000000000000000000000000"
+    }
+  ]
+}

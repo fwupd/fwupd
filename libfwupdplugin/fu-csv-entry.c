@@ -35,8 +35,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCsvEntry, fu_csv_entry, FU_TYPE_FIRMWARE)
  * @value: (not nullable): string
  *
  * Adds a string value to the entry.
- *
- * Since: 1.9.3
  **/
 void
 fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value)
@@ -55,8 +53,6 @@ fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value)
  * Gets the entry value for a specific index.
  *
  * Returns: a string, or %NULL if unset
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx)
@@ -76,8 +72,6 @@ fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx)
  * Gets the entry value for a specific column ID.
  *
  * Returns: a string, or %NULL if unset or the column ID cannot be found
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id)
@@ -105,6 +99,9 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 {
 	const gchar *str_value = fu_csv_entry_get_value_by_column_id(self, column_id);
 
+	g_return_val_if_fail(FU_IS_CSV_ENTRY(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (str_value == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "value not found");
 		return FALSE;
@@ -114,28 +111,29 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 }
 
 static void
-fu_csv_entry_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_csv_entry_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(firmware));
-	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "values", NULL);
+	g_autoptr(FwupdJsonObject) json_values = fwupd_json_object_new();
 
 	for (guint i = 0; i < priv->values->len; i++) {
 		const gchar *value = g_ptr_array_index(priv->values, i);
 		const gchar *key = fu_csv_firmware_get_column_id(parent, i);
-		if (key != NULL)
-			fu_xmlb_builder_insert_kv(bc, key, value);
+		if (key != NULL && value != NULL)
+			fwupd_json_object_add_string(json_values, key, value);
 	}
+	fwupd_json_object_add_object(json_object, "values", json_values);
 }
 
 static gboolean
-fu_csv_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_csv_entry_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(firmware));
 	gboolean add_columns;
-	g_autoptr(GPtrArray) values = NULL;
+	g_autoptr(FwupdJsonObject) json_values = NULL;
 
 	/* sanity check */
 	if (parent == NULL) {
@@ -143,17 +141,29 @@ fu_csv_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
 		return FALSE;
 	}
 
-	values = xb_node_query(n, "values/*", 0, error);
-	if (values == NULL) {
-		fwupd_error_convert(error);
+	json_values = fwupd_json_object_get_object(json_object, "values", error);
+	if (json_values == NULL)
 		return FALSE;
-	}
 	add_columns = fu_csv_firmware_get_column_id(parent, 0) == NULL;
-	for (guint i = 0; i < values->len; i++) {
-		XbNode *c = g_ptr_array_index(values, i);
-		if (add_columns && xb_node_get_element(c) != NULL)
-			fu_csv_firmware_add_column_id(parent, xb_node_get_element(c));
-		fu_csv_entry_add_value(self, xb_node_get_text(c));
+	for (guint i = 0; i < fwupd_json_object_get_size(json_values); i++) {
+		const gchar *key = fwupd_json_object_get_key_for_index(json_values, i, error);
+		const gchar *value = NULL;
+		g_autoptr(FwupdJsonNode) json_node = NULL;
+
+		if (key == NULL)
+			return FALSE;
+		json_node = fwupd_json_object_get_node_for_index(json_values, i, error);
+		if (json_node == NULL)
+			return FALSE;
+
+		/* allow integers to be specified without quotes */
+		if (fwupd_json_node_get_kind(json_node) == FWUPD_JSON_NODE_KIND_RAW)
+			value = fwupd_json_node_get_raw(json_node, NULL);
+		else
+			value = fwupd_json_node_get_string(json_node, NULL);
+		if (add_columns)
+			fu_csv_firmware_add_column_id(parent, key);
+		fu_csv_entry_add_value(self, value);
 	}
 	return TRUE;
 }
@@ -268,8 +278,6 @@ fu_csv_entry_class_init(FuCsvEntryClass *klass)
  * fu_csv_entry_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_csv_entry_new(void)

@@ -21,11 +21,15 @@ G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWA
 #define GSC_FWU_IUP_NUM 2
 
 static void
-fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_igsc_code_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "hw_sku", self->hw_sku);
-	fu_xmlb_builder_insert_kx(bn, "arb_svn", self->arb_svn);
+	if (self->hw_sku != 0)
+		fwupd_json_object_add_integer(json_object, "hw_sku", self->hw_sku);
+	if (self->arb_svn != 0)
+		fwupd_json_object_add_integer(json_object, "arb_svn", self->arb_svn);
 }
 
 guint32

@@ -1,0 +1,14 @@
+{
+  "gtype": "FuFmapFirmware",
+  "signature_offset": "0x10",
+  "firmware": [
+    {
+      "id": "FMAP",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "id": "TEST",
+      "data": "V29ybGQh"
+    }
+  ]
+}

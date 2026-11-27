@@ -22,14 +22,20 @@ struct _FuIgscAuxFirmware {
 G_DEFINE_TYPE(FuIgscAuxFirmware, fu_igsc_aux_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
 
 static void
-fu_igsc_aux_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_igsc_aux_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuIgscAuxFirmware *self = FU_IGSC_AUX_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "oem_version", self->oem_version);
-	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
-	fu_xmlb_builder_insert_kx(bn, "major_vcn", self->major_vcn);
-	fu_xmlb_builder_insert_kx(bn, "data_arb_svn", self->data_arb_svn);
-	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
+	if (self->oem_version != 0)
+		fwupd_json_object_add_integer(json_object, "oem_version", self->oem_version);
+	if (self->major_version != 0)
+		fwupd_json_object_add_integer(json_object, "major_version", self->major_version);
+	if (self->major_vcn != 0)
+		fwupd_json_object_add_integer(json_object, "major_vcn", self->major_vcn);
+	if (self->data_arb_svn != 0)
+		fwupd_json_object_add_integer(json_object, "data_arb_svn", self->data_arb_svn);
+	fu_igsc_fwdata_device_info_export(self->device_infos, json_object);
 }
 
 gboolean
@@ -171,31 +177,48 @@ fu_igsc_aux_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_igsc_aux_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_igsc_aux_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuIgscAuxFirmware *self = FU_IGSC_AUX_FIRMWARE(firmware);
-	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "oem_version", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "oem_version")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "oem_version", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid oem_version");
+			return FALSE;
+		}
 		self->oem_version = val;
 	}
-	tmp = xb_node_query_text(n, "major_version", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "major_version")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "major_version", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid major_version");
+			return FALSE;
+		}
 		self->major_version = val;
 	}
-	tmp = xb_node_query_text(n, "major_vcn", NULL);
-	if (tmp != NULL) {
-		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "major_vcn")) {
+		gint64 val = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "major_vcn", &val, error))
 			return FALSE;
+		if (val < 0 || val > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid major_vcn");
+			return FALSE;
+		}
 		self->major_vcn = val;
 	}
 

@@ -37,7 +37,7 @@ plugin_builtins += plugin_builtin_amd_afc
 
 if get_option('tests')
   install_data(
-    ['tests/amd-afc.builder.xml'],
+    ['tests/amd-afc.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   e = executable(

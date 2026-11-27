@@ -129,26 +129,36 @@ class Builder:
         """build a rust crate as a static library and return the archive path"""
         srcdir = os.path.join(self.srcdir, "fwupd")
         targetdir = os.path.join(self.builddir, "cargo")
-        dst = os.path.join(targetdir, "release", f"lib{libname}.a")
-        if not os.path.exists(dst):
-            print(f"building rust package {package} into {dst}")
-            try:
-                subprocess.run(
-                    [
-                        "cargo",
-                        "build",
-                        "--release",
-                        "--package",
-                        package,
-                        "--target-dir",
-                        targetdir,
-                    ],
-                    cwd=srcdir,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
-                sys.exit(1)
+        target = subprocess.run(
+            ["rustc", "--print", "host-tuple"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dst = os.path.join(targetdir, target, "release", f"lib{libname}.a")
+
+        # always run cargo as it is incremental, and the crate sources may have
+        # changed since the archive was last built
+        print(f"building rust package {package} into {dst}")
+        try:
+            subprocess.run(
+                [
+                    "cargo",
+                    "build",
+                    "--release",
+                    "--package",
+                    package,
+                    "--target",
+                    target,
+                    "--target-dir",
+                    targetdir,
+                ],
+                cwd=srcdir,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
         return dst
 
     def build_automake_project(
@@ -266,14 +276,14 @@ class Builder:
         return os.path.join(self.installdir, dst)
 
     def mkfuzztargets(self, exe: str, globstr: str) -> list[str]:
-        """make binary fuzzing targets from builder.xml files"""
+        """make binary fuzzing targets from builder.json files"""
         builder_xmls = glob.glob(globstr)
         corpus: list[str] = []
         if not builder_xmls:
             builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
             fn_dst = os.path.join(
-                self.builddir, os.path.basename(fn_src).replace(".builder.xml", ".bin")
+                self.builddir, os.path.basename(fn_src).replace(".builder.json", ".bin")
             )
             print(f"building {fn_src} into {fn_dst}")
             try:
@@ -305,7 +315,12 @@ class Builder:
         """create a zip file archive from a glob"""
         if not corpus:
             return
-        argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + corpus
+
+        # zip would otherwise update the existing archive, keeping stale entries
+        fn_zip = os.path.join(self.installdir, dst)
+        if os.path.exists(fn_zip):
+            os.unlink(fn_zip)
+        argv = ["zip", "--junk-paths", fn_zip] + corpus
         print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
@@ -427,7 +442,6 @@ def _build(bld: Builder) -> None:
         {
             "FWUPD_MAJOR_VERSION": 0,
             "FWUPD_MINOR_VERSION": 0,
-            "FWUPD_MICRO_VERSION": 0,
         },
     )
     bld.write_header(
@@ -538,7 +552,7 @@ def _build(bld: Builder) -> None:
                 "fwupd",
                 "libfwupdplugin",
                 "tests",
-                f"{fzr.name}*.builder.xml",
+                f"{fzr.name}*.builder.json",
             ),
         )
         bld.makezip(
@@ -614,7 +628,7 @@ def _build(bld: Builder) -> None:
                 "plugins",
                 fzr.srcdir,
                 "tests",
-                f"{fzr.name}*.builder.xml",
+                f"{fzr.name}*.builder.json",
             ),
         )
         bld.makezip(

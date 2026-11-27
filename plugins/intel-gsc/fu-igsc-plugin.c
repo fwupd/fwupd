@@ -63,7 +63,10 @@ fu_igsc_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **
 }
 
 static gboolean
-fu_igsc_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_igsc_plugin_composite_cleanup(FuPlugin *plugin,
+				 GPtrArray *devices,
+				 FwupdUpdateState update_state,
+				 GError **error)
 {
 	FuIgscDevice *device_igsc = NULL;
 	for (guint i = 0; i < devices->len; i++) {
@@ -75,7 +78,7 @@ fu_igsc_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **
 	}
 	if (device_igsc != NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_igsc_plugin_set_pci_power_policy(device_igsc, "off", &error_local))
+		if (!fu_igsc_plugin_set_pci_power_policy(device_igsc, "auto", &error_local))
 			g_debug("failed to set power policy: %s", error_local->message);
 	}
 	return TRUE;

@@ -65,8 +65,19 @@ fu_redfish_device_set_device_class(FuRedfishDevice *self, const gchar *tmp)
 	g_debug("no icon mapping for %s", tmp);
 }
 
+static gchar *
+fu_redfish_device_build_namespace(const gchar *namespace, const gchar *id)
+{
+	if (namespace == NULL)
+		return g_strdup(id);
+	return g_strdup_printf("%s>%s", namespace, id);
+}
+
 static gboolean
-fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *uri, GError **error)
+fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self,
+					  const gchar *uri,
+					  const gchar *namespace,
+					  GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
@@ -75,7 +86,16 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	guint64 model_id = 0x0;
 	guint64 subsystem_vendor_id = 0x0;
 	guint64 subsystem_model_id = 0x0;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autofree gchar *key_ven = NULL;
+	g_autofree gchar *key_dev = NULL;
+	g_autofree gchar *key_subsys = NULL;
+	g_autofree gchar *namespace_new = NULL;
+	g_autofree gchar *namespace_id = NULL;
+	g_autoptr(FuRedfishRequest) request = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -127,19 +147,48 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
 
 	/* add more instance IDs if possible */
+	namespace_id = g_strdup_printf("VEN_%04X&DEV_%04X&SUBSYS_%04X%04X",
+				       (guint)vendor_id,
+				       (guint)model_id,
+				       (guint)subsystem_vendor_id,
+				       (guint)subsystem_model_id);
+	namespace_new = fu_redfish_device_build_namespace(namespace, namespace_id);
+	key_ven = g_strdup_printf("%s\\VEN", namespace_new);
+	key_dev = g_strdup_printf("%s\\DEV", namespace_new);
+	key_subsys = g_strdup_printf("%s\\SUBSYS", namespace_new);
 	if (vendor_id != 0x0)
-		fu_device_add_instance_u16(FU_DEVICE(self), "VEN", vendor_id);
+		fu_device_add_instance_u16(FU_DEVICE(self), key_ven, vendor_id);
 	if (model_id != 0x0)
-		fu_device_add_instance_u16(FU_DEVICE(self), "DEV", model_id);
+		fu_device_add_instance_u16(FU_DEVICE(self), key_dev, model_id);
 	if (subsystem_vendor_id != 0x0 && subsystem_model_id != 0x0) {
 		g_autofree gchar *subsys = NULL;
 		subsys = g_strdup_printf("%04X%04X",
 					 (guint)subsystem_vendor_id,
 					 (guint)subsystem_model_id);
-		fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
+		fu_device_add_instance_str(FU_DEVICE(self), key_subsys, subsys);
 	}
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", NULL);
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", key_ven, key_dev, NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "PCI",
+				    key_ven,
+				    key_dev,
+				    key_subsys,
+				    NULL);
+
+	/* a component that comes in board variants takes a different image on each */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE)) {
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    "REDFISH",
+					    "VENDOR",
+					    "ID",
+					    key_ven,
+					    key_dev,
+					    key_subsys,
+					    NULL);
+	}
 
 	/* success */
 	return TRUE;
@@ -148,12 +197,17 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 static gboolean
 fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					       const gchar *uri,
+					       const gchar *namespace,
 					       GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) members_array = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -176,7 +230,12 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 				return FALSE;
 			id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
 			if (id != NULL) {
-				if (!fu_redfish_device_probe_related_pcie_item(self, id, error))
+				g_autofree gchar *namespace_new =
+				    fu_redfish_device_build_namespace(namespace, "Func");
+				if (!fu_redfish_device_probe_related_pcie_item(self,
+									       id,
+									       namespace_new,
+									       error))
 					return FALSE;
 			}
 		}
@@ -187,13 +246,74 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 }
 
 static gboolean
-fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GError **error)
+fu_redfish_device_probe_related_item(FuRedfishDevice *self,
+				     const gchar *uri,
+				     const gchar *namespace,
+				     GError **error);
+
+static gboolean
+fu_redfish_device_probe_related_pcie_devices(FuRedfishDevice *self,
+					     const gchar *uri,
+					     const gchar *namespace,
+					     GError **error)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonArray) members_array = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
+
+	/* get URI */
+	if (!fu_redfish_request_perform(request,
+					uri,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+					    FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE,
+					error))
+		return FALSE;
+	json_obj = fu_redfish_request_get_json_object(request, error);
+	if (json_obj == NULL)
+		return FALSE;
+	members_array = fwupd_json_object_get_array(json_obj, "Members", NULL);
+	if (members_array == NULL)
+		return TRUE;
+	for (guint i = 0; i < fwupd_json_array_get_size(members_array); i++) {
+		const gchar *id;
+		g_autoptr(FwupdJsonObject) json_obj_member = NULL;
+		g_autofree gchar *namespace_new = NULL;
+
+		json_obj_member = fwupd_json_array_get_object(members_array, i, error);
+		if (json_obj_member == NULL)
+			return FALSE;
+		id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
+		if (id == NULL)
+			continue;
+		namespace_new = fu_redfish_device_build_namespace(namespace, "Devs");
+		if (!fu_redfish_device_probe_related_item(self, id, namespace_new, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_device_probe_related_item(FuRedfishDevice *self,
+				     const gchar *uri,
+				     const gchar *namespace,
+				     GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_pcie = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -227,8 +347,29 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 	if (json_pcie != NULL) {
 		const gchar *id = fwupd_json_object_get_string(json_pcie, "@odata.id", NULL);
 		if (id != NULL) {
-			if (!fu_redfish_device_probe_related_pcie_functions(self, id, error))
+			if (!fu_redfish_device_probe_related_pcie_functions(self,
+									    id,
+									    namespace,
+									    error))
 				return FALSE;
+		}
+	}
+
+	/* a chassis lists its PCIe devices, but can also be the whole system */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE)) {
+		g_autoptr(FwupdJsonObject) json_devices =
+		    fwupd_json_object_get_object(json_obj, "PCIeDevices", NULL);
+		if (json_devices != NULL) {
+			const gchar *id =
+			    fwupd_json_object_get_string(json_devices, "@odata.id", NULL);
+			if (id != NULL) {
+				if (!fu_redfish_device_probe_related_pcie_devices(self,
+										  id,
+										  namespace,
+										  error))
+					return FALSE;
+			}
 		}
 	}
 	return TRUE;
@@ -371,7 +512,9 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self, GError **error)
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					fu_redfish_backend_get_push_uri_path(backend),
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -381,6 +524,42 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self, GError **error)
 					      FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
 		} else {
 			g_debug("supermicro license check returned %s", error_local->message);
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_device_probe_oem_hpe_targets(FuRedfishDevice *self,
+					FwupdJsonArray *json_arr,
+					const gchar *device_class,
+					GError **error)
+{
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		const gchar *tmp = fwupd_json_array_get_string(json_arr, i, NULL);
+		if (tmp == NULL)
+			continue;
+		fu_device_add_instance_id(FU_DEVICE(self), tmp);
+
+		/* neither is unique on its own: the target is shared with other devices
+		 * of the board and the class with other platforms, so also add the pair */
+		if (device_class != NULL) {
+			g_autofree gchar *target = g_ascii_strdown(tmp, -1);
+			g_autofree gchar *key_vendor = g_strdup_printf("HPE-%u\\VENDOR", i);
+			g_autofree gchar *key_class = g_strdup_printf("HPE-%u\\CLASS", i);
+			g_autofree gchar *key_target = g_strdup_printf("HPE-%u\\TARGET", i);
+
+			fu_device_add_instance_str(FU_DEVICE(self), key_vendor, "HPE");
+			fu_device_add_instance_str(FU_DEVICE(self), key_class, device_class);
+			fu_device_add_instance_str(FU_DEVICE(self), key_target, target);
+			if (!fu_device_build_instance_id(FU_DEVICE(self),
+							 error,
+							 "REDFISH",
+							 key_vendor,
+							 key_class,
+							 key_target,
+							 NULL))
+				return FALSE;
 		}
 	}
 	return TRUE;
@@ -400,38 +579,81 @@ fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj
 	}
 	json_arr = fwupd_json_object_get_array(json_obj, "Targets", NULL);
 	if (json_arr != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
-			tmp = fwupd_json_array_get_string(json_arr, i, NULL);
-			if (tmp == NULL)
-				continue;
-			fu_device_add_instance_id(FU_DEVICE(self), tmp);
-
-			/* neither is unique on its own: the target is shared with other devices
-			 * of the board and the class with other platforms, so also add the pair */
-			if (device_class != NULL) {
-				g_autofree gchar *target = g_ascii_strdown(tmp, -1);
-				fu_device_add_instance_str(FU_DEVICE(self), "VENDOR", "HPE");
-				fu_device_add_instance_str(FU_DEVICE(self), "CLASS", device_class);
-				fu_device_add_instance_str(FU_DEVICE(self), "TARGET", target);
-				if (!fu_device_build_instance_id(FU_DEVICE(self),
-								 error,
-								 "REDFISH",
-								 "VENDOR",
-								 "CLASS",
-								 "TARGET",
-								 NULL))
-					return FALSE;
-			}
-		}
+		if (!fu_redfish_device_probe_oem_hpe_targets(self, json_arr, device_class, error))
+			return FALSE;
 	}
 	return TRUE;
 }
 
+/* Dell reports the PCI identity of a device as hex strings without a prefix, e.g. "1344" */
 static gboolean
-fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
+fu_redfish_device_dell_get_u16(FwupdJsonObject *json_obj,
+			       const gchar *key,
+			       guint16 *value,
+			       GError **error)
+{
+	const gchar *tmp = fwupd_json_object_get_string(json_obj, key, error);
+	guint64 tmp64 = 0;
+
+	if (tmp == NULL)
+		return FALSE;
+	if (!fu_strtoull(tmp, &tmp64, 0x1, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "invalid %s: ", key);
+		return FALSE;
+	}
+	*value = (guint16)tmp64;
+	return TRUE;
+}
+
+/* Some Dell devices, e.g. disks, report a SoftwareId of "0" and a ComponentID of "0", which
+ * does not tell one device from another. The PCI identity they report in DellSoftwareInventory
+ * does, and is the same as the PCIInfo of the device in the Dell catalog. */
+static gboolean
+fu_redfish_device_probe_oem_dell_pci_id(FuRedfishDevice *self,
+					FwupdJsonObject *json_obj,
+					GError **error)
+{
+	guint16 vendor_id = 0;
+	guint16 device_id = 0;
+	guint16 subvendor_id = 0;
+	guint16 subdevice_id = 0;
+	g_autofree gchar *subsys = NULL;
+
+	if (!fu_redfish_device_dell_get_u16(json_obj, "VendorID", &vendor_id, error))
+		return FALSE;
+	if (!fu_redfish_device_dell_get_u16(json_obj, "DeviceID", &device_id, error))
+		return FALSE;
+	if (!fu_redfish_device_dell_get_u16(json_obj, "SubVendorID", &subvendor_id, error))
+		return FALSE;
+	if (!fu_redfish_device_dell_get_u16(json_obj, "SubDeviceID", &subdevice_id, error))
+		return FALSE;
+
+	subsys = g_strdup_printf("%04X%04X", subvendor_id, subdevice_id);
+	fu_device_add_instance_u16(FU_DEVICE(self), "DELL\\VEN", vendor_id);
+	fu_device_add_instance_u16(FU_DEVICE(self), "DELL\\DEV", device_id);
+	fu_device_add_instance_str(FU_DEVICE(self), "DELL\\SUBSYS", subsys);
+
+	/* the same device needs different firmware in different systems */
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "REDFISH",
+					   "VENDOR",
+					   "SYSTEMID",
+					   "DELL\\VEN",
+					   "DELL\\DEV",
+					   "DELL\\SUBSYS",
+					   NULL);
+}
+
+static gboolean
+fu_redfish_device_probe_oem_dell(FuRedfishDevice *self,
+				 FwupdJsonObject *json_obj,
+				 gboolean has_software_id,
+				 GError **error)
 {
 	const gchar *tmp;
 	g_autoptr(FwupdJsonObject) software_info = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* ignore */
 	software_info = fwupd_json_object_get_object(json_obj, "DellSoftwareInventory", NULL);
@@ -468,6 +690,14 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 					      "SYSTEMID",
 					      NULL))
 		return FALSE;
+
+	/* identify the device by what it is, as the SoftwareId may not be usable */
+	if (!fu_redfish_device_probe_oem_dell_pci_id(self, software_info, &error_local))
+		g_debug("not building PCI instance ID: %s", error_local->message);
+
+	/* there is no SOFTWAREID to build from when the device does not report a useful one */
+	if (!has_software_id)
+		return TRUE;
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -491,8 +721,13 @@ fu_redfish_device_set_software_id(FuRedfishDevice *self, const gchar *software_i
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *software_id_lower = g_ascii_strdown(software_id, -1);
 
-	/* save this as-provided */
+	/* save this as-provided, as it is used to verify the target after the task */
 	g_set_str(&priv->software_id, software_id);
+
+	/* Dell reports "0" for devices that have none, like disks: every one of them would
+	 * share an instance ID, so a firmware for one would match them all */
+	if (g_strcmp0(software_id, "0") == 0)
+		return;
 
 	/* already a GUID */
 	if (fwupd_guid_is_valid(software_id_lower)) {
@@ -586,14 +821,20 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		}
 		json_dell = fwupd_json_object_get_object(json_oem, "Dell", NULL);
 		if (json_dell != NULL) {
-			if (!fu_redfish_device_probe_oem_dell(self, json_dell, error))
+			if (!fu_redfish_device_probe_oem_dell(self,
+							      json_dell,
+							      software_id != NULL &&
+								  g_strcmp0(software_id, "0") != 0,
+							      error))
 				return FALSE;
 		}
 	}
 
-	/* used for quirking and parenting */
+	/* used for matching, quirking and parenting */
 	fu_device_build_instance_id_full(dev,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
 					 "REDFISH",
 					 "VENDOR",
@@ -648,7 +889,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 								   NULL);
 				if (tmp == NULL)
 					continue;
-				if (!fu_redfish_device_probe_related_item(self, tmp, error))
+				if (!fu_redfish_device_probe_related_item(self, tmp, NULL, error))
 					return FALSE;
 			}
 		}
@@ -700,7 +941,9 @@ fu_redfish_device_verify_target_identity(FuRedfishDevice *self, GError **error)
 	reset_pending = fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 			fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 
-	request = fu_redfish_backend_request_new(priv->backend);
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 	if (!fu_redfish_request_perform(request,
 					logical_id,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -928,9 +1171,13 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	const gchar *state_tmp;
 	gint64 pc = 0;
 	g_autoptr(GString) message = g_string_new("Unknown failure");
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonArray) json_msgs = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
+
+	request = fu_redfish_backend_request_new(priv->backend, error);
+	if (request == NULL)
+		return FALSE;
 
 	/* create URI and poll */
 	if (!fu_redfish_request_perform(request,
@@ -1193,6 +1440,7 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_RELATED_CHASSIS_PCIE);
 	fu_device_register_private_flag(device_class,
 					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 

@@ -96,19 +96,32 @@ fu_synaptics_rmi_firmware_add_image_v10(FuSynapticsRmiFirmware *self,
 static void
 fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 				 FuFirmwareExportFlags flags,
-				 XbBuilderNode *bn)
+				 FwupdJsonObject *json_object)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "kind", self->kind);
-	fu_xmlb_builder_insert_kv(bn, "product_id", self->product_id);
+	if (self->kind != 0)
+		fwupd_json_object_add_integer(json_object, "kind", self->kind);
+	if (self->product_id != NULL)
+		fwupd_json_object_add_string(json_object, "product_id", self->product_id);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kx(bn, "bootloader_version", self->bootloader_version);
-		fu_xmlb_builder_insert_kx(bn, "io", self->io);
-		fu_xmlb_builder_insert_kx(bn, "checksum", self->checksum);
-		fu_xmlb_builder_insert_kx(bn, "build_id", self->build_id);
-		fu_xmlb_builder_insert_kx(bn, "package_id", self->package_id);
-		fu_xmlb_builder_insert_kx(bn, "product_info", self->product_info);
-		fu_xmlb_builder_insert_kx(bn, "sig_size", self->sig_size);
+		if (self->bootloader_version != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "bootloader_version",
+						      self->bootloader_version);
+		if (self->io != 0)
+			fwupd_json_object_add_integer(json_object, "io", self->io);
+		if (self->checksum != 0)
+			fwupd_json_object_add_integer(json_object, "checksum", self->checksum);
+		if (self->build_id != 0)
+			fwupd_json_object_add_integer(json_object, "build_id", self->build_id);
+		if (self->package_id != 0)
+			fwupd_json_object_add_integer(json_object, "package_id", self->package_id);
+		if (self->product_info != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "product_info",
+						      self->product_info);
+		if (self->sig_size != 0)
+			fwupd_json_object_add_integer(json_object, "sig_size", self->sig_size);
 	}
 }
 
@@ -681,19 +694,25 @@ fu_synaptics_rmi_firmware_write_v10(FuSynapticsRmiFirmware *self, GError **error
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_rmi_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	const gchar *product_id;
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* either 0x or 10 */
-	tmp = xb_node_query_text_as_uint(n, "kind", NULL);
-	if (tmp != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"kind",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
 		self->kind = tmp;
 
 	/* any string */
-	product_id = xb_node_query_text(n, "product_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "product_id", &product_id, error))
+		return FALSE;
 	if (product_id != NULL) {
 		gsize product_id_sz = strlen(product_id);
 		if (product_id_sz > RMI_PRODUCT_ID_LENGTH) {

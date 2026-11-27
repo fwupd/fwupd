@@ -41,6 +41,13 @@ fu_mm_mhi_qcdm_device_detach(FuDevice *device, FuProgress *progress, GError **er
 				    "Firehose prog filename is not set for the device");
 		return FALSE;
 	}
+	if (self->firehose_prog == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Firehose prog not loaded, firmware was not prepared");
+		return FALSE;
+	}
 
 	/* copy the firehose prog into the search path locker */
 	path = fu_kernel_search_path_locker_get_path(self->search_path_locker);
@@ -178,6 +185,9 @@ fu_mm_mhi_qcdm_device_init(FuMmMhiQcdmDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_protocol(FU_UDEV_DEVICE(self), "com.qualcomm.firehose");
+	/* the firehose prog is extracted from the firmware and needed in ->detach() */
+	fu_device_remove_private_flag(FU_DEVICE(self),
+				      FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 }
 
 static void

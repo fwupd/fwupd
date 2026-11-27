@@ -85,6 +85,11 @@ fwupd_client_sync_impl_get_plugins(FwupdClient *self,
 				   GCancellable *cancellable,
 				   GError **error);
 GPtrArray *
+fwupd_client_sync_impl_get_protocols(FwupdClient *self,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error);
+GPtrArray *
 fwupd_client_sync_impl_get_history(FwupdClient *self,
 				   gpointer user_data,
 				   GCancellable *cancellable,
@@ -149,6 +154,15 @@ fwupd_client_sync_impl_install(FwupdClient *self,
 			       gpointer user_data,
 			       GCancellable *cancellable,
 			       GError **error);
+gboolean
+fwupd_client_sync_impl_write_blob(FwupdClient *self,
+				  const gchar *device_id,
+				  FwupdInputStream *stream,
+				  const gchar *filename_hint,
+				  const gchar *version,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error);
 gboolean
 fwupd_client_sync_impl_install_release(FwupdClient *self,
 				       FwupdDevice *device,

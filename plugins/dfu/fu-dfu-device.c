@@ -553,7 +553,9 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual_length = 0;
-	guint8 buf[6] = {0x0};
+	guint8 buf[FU_STRUCT_DFU_STATUS_RES_SIZE] = {0x0};
+	FuDfuState state;
+	g_autoptr(FuStructDfuStatusRes) st = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
@@ -602,27 +604,24 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 			    error_local->message);
 		return FALSE;
 	}
-	if (actual_length != 6) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "cannot get device status, invalid size: %04x",
-			    (guint)actual_length);
+	st = fu_struct_dfu_status_res_parse(buf, actual_length, 0x0, error);
+	if (st == NULL) {
+		g_prefix_error_literal(error, "cannot get device status: ");
 		return FALSE;
 	}
 
-	/* some devices use the wrong state value */
+	/* some devices report a runtime state when in DFU mode */
+	state = fu_struct_dfu_status_res_get_state(st);
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE) &&
-	    fu_dfu_device_get_state(self) != FU_DFU_STATE_DFU_IDLE) {
+	    (state == FU_DFU_STATE_APP_IDLE || state == FU_DFU_STATE_APP_DETACH)) {
 		g_info("quirking device into DFU mode");
-		fu_dfu_device_set_state(self, FU_DFU_STATE_DFU_IDLE);
-	} else {
-		fu_dfu_device_set_state(self, buf[4]);
+		state = FU_DFU_STATE_DFU_IDLE;
 	}
+	fu_dfu_device_set_state(self, state);
 
 	/* status or state changed */
-	fu_dfu_device_set_status(self, buf[0]);
-	fu_dfu_device_set_download_timeout(self, fu_memread_uint24(&buf[1], G_LITTLE_ENDIAN));
+	fu_dfu_device_set_status(self, fu_struct_dfu_status_res_get_status(st));
+	fu_dfu_device_set_download_timeout(self, fu_struct_dfu_status_res_get_poll_timeout(st));
 	g_debug("refreshed status=%s and state=%s (dnload=%u)",
 		fu_dfu_status_to_string(priv->status),
 		fu_dfu_state_to_string(priv->state),

@@ -146,7 +146,7 @@ fwupd_file_input_stream_init(FwupdFileInputStream *self)
  *
  * Returns: (transfer full): a #FwupdFileInputStream, or %NULL on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdFileInputStream *
 fwupd_file_input_stream_new(const gchar *path, GError **error)
@@ -175,7 +175,7 @@ fwupd_file_input_stream_new(const gchar *path, GError **error)
  *
  * Returns: (transfer full): a #FwupdFileInputStream, or %NULL on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdFileInputStream *
 fwupd_file_input_stream_new_from_file(GFile *file, GError **error)

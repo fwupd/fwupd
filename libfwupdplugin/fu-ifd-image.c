@@ -26,20 +26,28 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfdImage, fu_ifd_image, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_image_get_instance_private(o))
 
 static void
-fu_ifd_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ifd_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuIfdImage *self = FU_IFD_IMAGE(firmware);
 	FuIfdImagePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdJsonArray) json_access = fwupd_json_array_new();
 	for (guint i = 0; i < FU_IFD_REGION_MAX; i++) {
+		g_autoptr(FwupdJsonObject) json_item = NULL;
+		const gchar *access_str = NULL;
+		const gchar *region_str = NULL;
 		if (priv->access[i] == FU_IFD_ACCESS_NONE)
 			continue;
-		xb_builder_node_insert_text(bn,
-					    "access",
-					    fu_ifd_access_to_string(priv->access[i]),
-					    "region",
-					    fu_ifd_region_to_string(i),
-					    NULL);
+		json_item = fwupd_json_object_new();
+		access_str = fu_ifd_access_to_string(priv->access[i]);
+		region_str = fu_ifd_region_to_string(i);
+		if (access_str != NULL)
+			fwupd_json_object_add_string(json_item, "access", access_str);
+		if (region_str != NULL)
+			fwupd_json_object_add_string(json_item, "region", region_str);
+		fwupd_json_array_add_object(json_access, json_item);
 	}
+	if (fwupd_json_array_get_size(json_access) > 0)
+		fwupd_json_object_add_array(json_object, "access", json_access);
 }
 
 /**
@@ -49,8 +57,6 @@ fu_ifd_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
  * @access: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
  *
  * Sets the access control for a specific reason.
- *
- * Since: 1.6.2
  **/
 void
 fu_ifd_image_set_access(FuIfdImage *self, FuIfdRegion region, FuIfdAccess access)
@@ -69,8 +75,6 @@ fu_ifd_image_set_access(FuIfdImage *self, FuIfdRegion region, FuIfdAccess access
  * Gets the access control for a specific reason.
  *
  * Returns: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
- *
- * Since: 1.6.2
  **/
 FuIfdAccess
 fu_ifd_image_get_access(FuIfdImage *self, FuIfdRegion region)
@@ -142,8 +146,6 @@ fu_ifd_image_class_init(FuIfdImageClass *klass)
  * fu_ifd_image_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_image_new(void)

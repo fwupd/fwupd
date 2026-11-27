@@ -162,7 +162,7 @@ fu_engine_generate_md_func(void)
 
 	/* verify checksums */
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='container']", NULL);
-	g_assert_cmpstr(tmp, ==, "71aefb2a9b412833d8c519d5816ef4c5668e5e76");
+	g_assert_cmpstr(tmp, ==, "cd289bd1be2aaf3b99ccdfd206936333f34b4350");
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr(tmp, ==, NULL);
 }
@@ -243,6 +243,46 @@ fu_engine_esp_location_func(void)
 	fu_config_set_value_internal(fu_context_get_config(ctx), "fwupd", "EspLocation", NULL);
 	g_signal_emit_by_name(fu_context_get_config(ctx), "changed");
 	g_assert_null(fu_context_get_esp_location(ctx));
+}
+
+static void
+fu_engine_get_protocols_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(GPtrArray) protocols_empty = NULL;
+	g_autoptr(GPtrArray) protocols = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* no devices */
+	protocols_empty = fu_engine_get_protocols(engine);
+	g_assert_nonnull(protocols_empty);
+	g_assert_cmpint(protocols_empty->len, ==, 0);
+
+	/* two devices with an overlapping protocol */
+	fu_device_set_id(device1, "device1");
+	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
+	fu_device_add_protocol(device1, "org.usb.dfu");
+	fu_device_add_protocol(device1, "com.acme");
+	fu_device_add_instance_id(device1, "device1-GUID");
+	fu_engine_add_device(engine, device1);
+	fu_device_set_id(device2, "device2");
+	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
+	fu_device_add_protocol(device2, "com.acme");
+	fu_device_add_instance_id(device2, "device2-GUID");
+	fu_engine_add_device(engine, device2);
+
+	/* sorted and deduplicated */
+	protocols = fu_engine_get_protocols(engine);
+	g_assert_nonnull(protocols);
+	g_assert_cmpint(protocols->len, ==, 2);
+	g_assert_cmpstr(g_ptr_array_index(protocols, 0), ==, "com.acme");
+	g_assert_cmpstr(g_ptr_array_index(protocols, 1), ==, "org.usb.dfu");
 }
 
 static void
@@ -833,7 +873,7 @@ fu_engine_device_md_checksum_set_version_wrong_proto_func(void)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW);
 	fu_device_add_checksum(device,
 			       "cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
@@ -842,6 +882,223 @@ fu_engine_device_md_checksum_set_version_wrong_proto_func(void)
 	/* check the version did not get set, because the protocol was different */
 	g_assert_cmpstr(fu_device_get_version(device), ==, "123");
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_NUMBER);
+}
+
+static XbSilo *
+fu_engine_md_checksum_any_order_silo(GError **error)
+{
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <releases>\n"
+	    /* listed first, but does not match the device checksum */
+	    "      <release version=\"300\">\n"
+	    "        <location>https://test.org/foo-300.cab</location>\n"
+	    "        <checksum type=\"sha1\" filename=\"foo-300.cab\" "
+	    "target=\"container\">0000000000000000000000000000000000000300</checksum>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">1111111111111111111111111111111111111111111111111111111111111111</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    /* listed second, and matches the device checksum */
+	    "      <release version=\"200\">\n"
+	    "        <location>https://test.org/foo-200.cab</location>\n"
+	    "        <checksum type=\"sha1\" filename=\"foo-200.cab\" "
+	    "target=\"container\">0000000000000000000000000000000000000200</checksum>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    "    </releases>\n"
+	    "    <custom>\n"
+	    "      <value key=\"LVFS::UpdateProtocol\">com.acme</value>\n"
+	    "    </custom>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
+		return NULL;
+	xb_builder_import_source(builder, source);
+	return xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+}
+
+static void
+fu_engine_device_md_checksum_set_version_any_order_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	silo = fu_engine_md_checksum_any_order_silo(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* the device version is only known from the matching release */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* the version is resolved before the releases are classified */
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "200");
+	g_assert_cmpint(releases->len, ==, 2);
+	for (guint i = 0; i < releases->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(releases, i);
+		if (g_strcmp0(fwupd_release_get_version(rel), "300") == 0) {
+			g_assert_true(fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_UPGRADE));
+		} else {
+			g_assert_cmpstr(fwupd_release_get_version(rel), ==, "200");
+			g_assert_false(fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_UPGRADE));
+			g_assert_false(
+			    fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_DOWNGRADE));
+		}
+	}
+}
+
+static void
+fu_engine_device_md_checksum_set_version_client_req_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <requires>\n"
+	    "      <client>detach-action</client>\n"
+	    "    </requires>\n"
+	    "    <releases>\n"
+	    "      <release version=\"200\">\n"
+	    "        <location>https://test.org/foo-200.cab</location>\n"
+	    "        <checksum type=\"sha256\" "
+	    "target=\"device\">cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48</"
+	    "checksum>\n"
+	    "      </release>\n"
+	    "    </releases>\n"
+	    "    <custom>\n"
+	    "      <value key=\"LVFS::UpdateProtocol\">com.acme</value>\n"
+	    "    </custom>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* the trusted release has a hard client feature requirement */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "cdb7c90d3ab8833d5324f5d8516d41fa990b9ca721fe643fffaef9057d9f9e48");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* the client lacks the feature, so the release is hidden but the version is set */
+	fu_engine_request_set_feature_flags(request, FWUPD_FEATURE_FLAG_NONE);
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "200");
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_null(releases);
+}
+
+static void
+fu_engine_device_md_checksum_set_version_missing_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	silo = fu_engine_md_checksum_any_order_silo(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* no release matches the device checksum */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_checksum(device,
+			       "2222222222222222222222222222222222222222222222222222222222222222");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_convert_instance_ids(device);
+
+	/* report the missing version rather than classifying against NULL */
+	releases = fu_engine_get_releases_for_device(engine, request, device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(releases);
+	g_assert_null(fu_device_get_version(device));
 }
 
 static void
@@ -2124,7 +2381,89 @@ fu_engine_history_verfmt_func(void)
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpstr(fu_device_get_version(device), ==, "0.1.27");
+	g_assert_cmpstr(fu_device_get_version(device), ==, "1.0.27");
+}
+
+static void
+fu_engine_write_blob_for_device_id_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, plugin);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a device that does not currently allow updates */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.2");
+	fu_device_set_id(device, "test_device");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+	stream_fw = FWUPD_INPUT_STREAM(
+	    fwupd_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL));
+
+	/* unknown device */
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 "not_a_device",
+						 stream_fw,
+						 NULL,
+						 NULL,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* not updatable */
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 fu_device_get_id(device),
+						 stream_fw,
+						 NULL,
+						 NULL,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* now allowed */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_progress_reset(progress);
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 fu_device_get_id(device),
+						 stream_fw,
+						 "firmware.bin",
+						 "1.2.3",
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 FWUPD_FEATURE_FLAG_NONE,
+						 &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -2177,14 +2516,14 @@ fu_engine_install_loop_restart_func(void)
 	stream_fw = FWUPD_INPUT_STREAM(
 	    fwupd_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL));
 	fu_release_set_stream(release, stream_fw);
-	ret = fu_engine_install_blob(engine,
-				     device,
-				     release,
-				     progress,
-				     FWUPD_INSTALL_FLAG_NO_HISTORY |
-					 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				     FWUPD_FEATURE_FLAG_NONE,
-				     &error);
+	ret = fu_engine_write_blob(engine,
+				   device,
+				   release,
+				   progress,
+				   FWUPD_INSTALL_FLAG_NO_HISTORY |
+				       FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				   FWUPD_FEATURE_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2873,6 +3212,10 @@ static void
 fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
+
+	/* only interested in the main test device */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET))
+		return;
 	*dev = g_object_ref(device);
 	fu_test_loop_quit();
 }
@@ -2977,6 +3320,10 @@ static void
 fu_test_plugin_composite_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray *devices = (GPtrArray *)user_data;
+
+	/* not part of the composite update */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET))
+		return;
 	g_ptr_array_add(devices, g_object_ref(device));
 }
 
@@ -3016,22 +3363,18 @@ fu_engine_codec_func(void)
 }
 
 static void
-fu_engine_plugin_composite_func(void)
+fu_engine_plugin_composite_setup(FuEngine *engine,
+				 FuEngineRequest *request,
+				 FuCabinet *cabinet,
+				 FuPlugin *plugin,
+				 GPtrArray *devices,
+				 GPtrArray *releases)
 {
-	FuDevice *dev_tmp;
 	gboolean ret;
-	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
-	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) components = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) releases =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* no metadata in daemon */
@@ -3108,7 +3451,6 @@ fu_engine_plugin_composite_func(void)
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
 			 G_CALLBACK(fu_test_plugin_composite_device_added_cb),
@@ -3167,15 +3509,44 @@ fu_engine_plugin_composite_func(void)
 		}
 	}
 	g_assert_cmpint(releases->len, ==, 3);
+}
+
+static void
+fu_engine_plugin_composite_func(void)
+{
+	FuDevice *dev_tmp;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) releases =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	fu_engine_plugin_composite_setup(engine, request, cabinet, plugin, devices, releases);
 
 	/* sort these by version, forcing fu_engine_install_releases() to sort by device order */
 	g_ptr_array_sort(releases, fu_plugin_composite_release_sort_cb);
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child1");
+	g_assert_cmpstr(fu_device_get_composite_id(dev_tmp),
+			==,
+			"08d460be0f1f9f128413f816022a6439e0078018");
+
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child2");
+	g_assert_cmpstr(fu_device_get_composite_id(dev_tmp),
+			==,
+			"08d460be0f1f9f128413f816022a6439e0078018");
+
 	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
+	g_assert_cmpstr(fu_device_get_id(dev_tmp), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 
 	/* install the cab */
 	ret = fu_engine_install_releases(engine,
@@ -3216,6 +3587,122 @@ fu_engine_plugin_composite_func(void)
 		metadata = fu_device_get_metadata(device, "frombulator");
 		g_assert_cmpstr(metadata, ==, "1");
 	}
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+
+	/* retry this with composite-single-payload set */
+	for (guint i = 0; i < 3; i++) {
+		FuRelease *release = FU_RELEASE(g_ptr_array_index(releases, i));
+		dev_tmp = fu_release_get_device(release);
+		fu_device_add_flag(dev_tmp, FWUPD_DEVICE_FLAG_COMPOSITE_SINGLE_PAYLOAD);
+		fu_device_set_version(dev_tmp, "0.0.1");
+	}
+
+	/* install the cab */
+	ret = fu_engine_install_releases(engine,
+					 request,
+					 releases,
+					 progress,
+					 FWUPD_INSTALL_FLAG_NONE,
+					 &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify we only deployed this once */
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "1.2.3");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
+	g_assert_cmpstr(fu_device_get_version(dev_tmp), ==, "0.0.1");
+}
+
+static void
+fu_engine_plugin_composite_prepare_fail_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuPlugin) plugin_fail = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) releases =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	fu_engine_plugin_composite_setup(engine, request, cabinet, plugin, devices, releases);
+
+	/* add another plugin that fails composite-prepare */
+	fu_plugin_set_name(plugin_fail, "test_fail");
+	fu_plugin_runner_init(plugin_fail);
+	ret = fu_plugin_set_config_value(plugin_fail, "CompositePrepareFail", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_engine_add_plugin(engine, plugin_fail);
+
+	/* install the cab, which should fail */
+	ret = fu_engine_install_releases(engine,
+					 request,
+					 releases,
+					 progress,
+					 FWUPD_INSTALL_FLAG_NONE,
+					 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+
+	/* verify cleanup ran for the plugin that prepared successfully */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_assert_cmpstr(fu_device_get_metadata(device, "frimbulator"), ==, "1");
+		g_assert_cmpstr(fu_device_get_metadata(device, "frombulator"), ==, "1");
+	}
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	g_assert_false(fu_plugin_has_flag(plugin_fail, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+}
+
+static void
+fu_engine_plugin_composite_flag_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = g_ptr_array_new();
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	fu_plugin_runner_init(plugin);
+	g_ptr_array_add(devices, device);
+
+	/* prepare sets the flag, cleanup clears it */
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	ret = fu_plugin_runner_composite_prepare(plugin, devices, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+	ret =
+	    fu_plugin_runner_composite_cleanup(plugin, devices, FWUPD_UPDATE_STATE_SUCCESS, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
+
+	/* failed prepare returns the error and does not set the flag */
+	ret = fu_plugin_set_config_value(plugin, "CompositePrepareFail", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_composite_prepare(plugin, devices, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_COMPOSITE_DONE));
 }
 
 static void
@@ -3664,6 +4151,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	g_test_add_func("/fwupd/engine/codec", fu_engine_codec_func);
+	g_test_add_func("/fwupd/engine/get-protocols", fu_engine_get_protocols_func);
 	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);
@@ -3677,8 +4165,16 @@ main(int argc, char **argv)
 			fu_engine_device_md_checksum_set_version_func);
 	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-wrong-proto",
 			fu_engine_device_md_checksum_set_version_wrong_proto_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-any-order",
+			fu_engine_device_md_checksum_set_version_any_order_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-client-req",
+			fu_engine_device_md_checksum_set_version_client_req_func);
+	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-missing",
+			fu_engine_device_md_checksum_set_version_missing_func);
 	g_test_add_func("/fwupd/engine/multiple-releases", fu_engine_multiple_rels_func);
 	g_test_add_func("/fwupd/engine/install-loop-restart", fu_engine_install_loop_restart_func);
+	g_test_add_func("/fwupd/engine/write-blob-for-device-id",
+			fu_engine_write_blob_for_device_id_func);
 	g_test_add_func("/fwupd/engine/install-request", fu_engine_install_request);
 	g_test_add_func("/fwupd/engine/history-success", fu_engine_history_func);
 	g_test_add_func("/fwupd/engine/history-verfmt", fu_engine_history_verfmt_func);
@@ -3705,6 +4201,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/plugin/mutable", fu_engine_test_plugin_mutable_enumeration);
 	g_test_add_func("/fwupd/engine/esp-location", fu_engine_esp_location_func);
 	g_test_add_func("/fwupd/engine/plugin/composite", fu_engine_plugin_composite_func);
+	g_test_add_func("/fwupd/engine/plugin/composite-flag",
+			fu_engine_plugin_composite_flag_func);
+	g_test_add_func("/fwupd/engine/plugin/composite-prepare-fail",
+			fu_engine_plugin_composite_prepare_fail_func);
 	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
 			fu_engine_plugin_composite_multistep_func);
 	g_test_add_func("/fwupd/engine/write-bios-attrs", fu_engine_modify_bios_settings_func);

@@ -60,6 +60,7 @@ fu_quirks_append_func(void)
 					  "b19d1c67-a29a-51ce-9cae-f7b40fe5505b",
 					  NULL,
 					  fu_quirks_append_cb,
+					  FU_QUIRKS_LOOKUP_FLAG_NONE,
 					  &helper);
 	g_assert_true(ret);
 	g_assert_true(helper.seen_one);

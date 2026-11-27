@@ -39,18 +39,23 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
 #define FU_USWID_FIRMWARE_MINIMUM_HDRVER 1
 
 static void
-fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_uswid_firmware_export(FuFirmware *firmware,
+			 FuFirmwareExportFlags flags,
+			 FwupdJsonObject *json_object)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "hdrver", priv->hdrver);
+	const gchar *format_str = fu_uswid_payload_format_to_string(priv->format);
+	if (priv->hdrver != 0)
+		fwupd_json_object_add_integer(json_object, "hdrver", priv->hdrver);
 	if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
-		fu_xmlb_builder_insert_kv(
-		    bn,
-		    "compression",
-		    fu_uswid_payload_compression_to_string(priv->compression));
+		const gchar *compression_str =
+		    fu_uswid_payload_compression_to_string(priv->compression);
+		if (compression_str != NULL)
+			fwupd_json_object_add_string(json_object, "compression", compression_str);
 	}
-	fu_xmlb_builder_insert_kv(bn, "format", fu_uswid_payload_format_to_string(priv->format));
+	if (format_str != NULL)
+		fwupd_json_object_add_string(json_object, "format", format_str);
 }
 
 static gboolean
@@ -251,6 +256,13 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 			    priv->hdrver);
 		return NULL;
 	}
+	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_VENDOR) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "vendor compression is not supported");
+		return NULL;
+	}
 
 	/* generate early so we know the size */
 	for (guint i = 0; i < images->len; i++) {
@@ -320,20 +332,26 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_uswid_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *str;
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "hdrver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"hdrver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->hdrver = tmp;
 
 	/* simple properties */
-	str = xb_node_query_text(n, "compression", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "compression", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		priv->compression = fu_uswid_payload_compression_from_string(str);
 		if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
@@ -392,8 +410,6 @@ fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
  * fu_uswid_firmware_new:
  *
  * Creates a new #FuFirmware of sub type uSWID
- *
- * Since: 1.8.0
  **/
 FuFirmware *
 fu_uswid_firmware_new(void)

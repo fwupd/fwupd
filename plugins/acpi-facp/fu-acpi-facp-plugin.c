@@ -21,8 +21,8 @@ fu_acpi_facp_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **err
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuAcpiFadtPmProfile pm_profile;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(FuAcpiFacp) facp = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuAcpiFacp) facp = fu_acpi_facp_new();
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 
 	(void)progress;
 	(void)error;
@@ -30,11 +30,14 @@ fu_acpi_facp_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **err
 	fn = fu_context_build_filename(ctx, error, FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
 	if (fn == NULL)
 		return FALSE;
-	blob = fu_bytes_get_contents(fn, NULL);
-	if (blob == NULL)
+	stream = fwupd_file_input_stream_new(fn, NULL);
+	if (stream == NULL)
 		return TRUE;
-	facp = fu_acpi_facp_new(blob, error);
-	if (facp == NULL)
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(facp),
+				      FWUPD_INPUT_STREAM(stream),
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      error))
 		return FALSE;
 	pm_profile = fu_acpi_facp_get_pm_profile(facp);
 
@@ -51,9 +54,9 @@ fu_acpi_facp_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(FuAcpiFacp) facp = NULL;
+	g_autoptr(FuAcpiFacp) facp = fu_acpi_facp_new();
 	g_autoptr(FuSecurityAttr) attr = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FwupdFileInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
@@ -68,14 +71,17 @@ fu_acpi_facp_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	blob = fu_bytes_get_contents(fn, &error_local);
-	if (blob == NULL) {
+	stream = fwupd_file_input_stream_new(fn, &error_local);
+	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	facp = fu_acpi_facp_new(blob, &error_local);
-	if (facp == NULL) {
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(facp),
+				      FWUPD_INPUT_STREAM(stream),
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error_local)) {
 		g_warning("failed to parse %s: %s", fn, error_local->message);
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

@@ -11,7 +11,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build
-        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1.5.9
+        uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
         env:
           CC: gcc
         with:
@@ -22,7 +22,5 @@ jobs:
           prepare: |
             pkg install -y bash python3 git ninja cmake gcc
           run: |
-            ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
-            ./contrib/ci/fwupd_setup_helpers.py test-meson
             ./fwupbuild -vv --yes init builddir
             bash -c "source ./builddir/bin/activate && fwupbuild -vv -C builddir build -Db_lundef=false"

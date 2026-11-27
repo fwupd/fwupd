@@ -25,8 +25,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuZipFile, fu_zip_file, FU_TYPE_FIRMWARE)
  * Gets the archive compression type.
  *
  * Returns: a #FuZipCompression, e.g. #FU_ZIP_COMPRESSION_DEFLATE
- *
- * Since: 2.1.1
  **/
 FuZipCompression
 fu_zip_file_get_compression(FuZipFile *self)
@@ -42,8 +40,6 @@ fu_zip_file_get_compression(FuZipFile *self)
  * @compression: a #FuZipCompression, e.g. #FU_ZIP_COMPRESSION_DEFLATE
  *
  * Sets the archive compression type.
- *
- * Since: 2.1.1
  **/
 void
 fu_zip_file_set_compression(FuZipFile *self, FuZipCompression compression)
@@ -54,14 +50,15 @@ fu_zip_file_set_compression(FuZipFile *self, FuZipCompression compression)
 }
 
 static gboolean
-fu_zip_file_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_zip_file_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuZipFile *self = FU_ZIP_FILE(firmware);
 	FuZipFilePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "compression", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "compression", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		priv->compression = fu_zip_compression_from_string(tmp);
 
@@ -70,13 +67,13 @@ fu_zip_file_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_zip_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_zip_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuZipFile *self = FU_ZIP_FILE(firmware);
 	FuZipFilePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kv(bn,
-				  "compression",
-				  fu_zip_compression_to_string(priv->compression));
+	const gchar *compression_str = fu_zip_compression_to_string(priv->compression);
+	if (compression_str != NULL)
+		fwupd_json_object_add_string(json_object, "compression", compression_str);
 }
 
 static void
@@ -99,8 +96,6 @@ fu_zip_file_init(FuZipFile *self)
  * fu_zip_file_new:
  *
  * Returns: (transfer full): a #FuZipFile
- *
- * Since: 2.1.1
  **/
 FuFirmware *
 fu_zip_file_new(void)

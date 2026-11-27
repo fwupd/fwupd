@@ -138,6 +138,33 @@ fu_uefi_mok_nx_valid_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fu_uefi_mok_nx_empty_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuSecurityAttr) attr_nx = NULL;
+	g_autoptr(FuSecurityAttr) attr_fw = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("", 0);
+
+	/* an empty HSIStatus file means the data is missing */
+	attr_nx = fu_uefi_mok_attr_nx_new(plugin, blob);
+	g_assert_nonnull(attr_nx);
+	g_assert_cmpint(fu_security_attr_get_result(attr_nx),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_true(fu_security_attr_has_flag(attr_nx, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+	g_assert_false(fu_security_attr_has_flag(attr_nx, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+
+	attr_fw = fu_uefi_mok_attr_fw_new(plugin, blob);
+	g_assert_nonnull(attr_fw);
+	g_assert_cmpint(fu_security_attr_get_result(attr_fw),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+	g_assert_true(fu_security_attr_has_flag(attr_fw, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+	g_assert_false(fu_security_attr_has_flag(attr_fw, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -146,5 +173,6 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi/mok/nx-disabled", fu_uefi_mok_nx_disabled_func);
 	g_test_add_func("/uefi/mok/nx-invalid", fu_uefi_mok_nx_invalid_func);
 	g_test_add_func("/uefi/mok/nx-valid", fu_uefi_mok_nx_valid_func);
+	g_test_add_func("/uefi/mok/nx-empty", fu_uefi_mok_nx_empty_func);
 	return g_test_run();
 }

@@ -18,8 +18,6 @@
  * Loads JSON from a Rust-backed FuInputStream stream.
  *
  * Returns: (transfer full): a #FwupdJsonNode, or %NULL for error
- *
- * Since: 2.1.8
  **/
 FwupdJsonNode *
 fu_json_parser_load_from_stream(FwupdJsonParser *self,

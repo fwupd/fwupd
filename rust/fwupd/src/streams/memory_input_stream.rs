@@ -103,6 +103,15 @@ impl<T: AsRef<[u8]>> Seek for MemoryInputStream<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::io::Searchable;
+    use crate::slice::NonEmptySlice;
+
+    #[test]
+    fn memory_searchable_find() {
+        let mut stream = MemoryInputStream::from_data(b"hello world".to_vec());
+        let needle = NonEmptySlice::new(b"world").unwrap();
+        assert_eq!(stream.find(needle).unwrap(), Some(6));
+    }
 
     #[test]
     fn memory_empty() {

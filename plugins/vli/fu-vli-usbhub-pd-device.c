@@ -114,7 +114,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u8(device, "APP", fwver & 0xff);
 	fu_device_add_instance_strup(device, "DEV", name);
 	if (!fu_device_build_instance_id_full(device,
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "USB",
 					      "VID",

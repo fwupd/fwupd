@@ -28,8 +28,6 @@
  * set to 16 automatically.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_strtoull(const gchar *str,
@@ -41,6 +39,8 @@ fu_strtoull(const gchar *str,
 {
 	gchar *endptr = NULL;
 	guint64 value_tmp;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
 	if (str == NULL) {
@@ -71,6 +71,13 @@ fu_strtoull(const gchar *str,
 
 	/* convert */
 	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
+	if (endptr == str) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no digits to parse");
+		return FALSE;
+	}
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -127,8 +134,6 @@ fu_strtoull(const gchar *str,
  * prefixed with "0x" where they are parsed as base 16.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_strtoll(const gchar *str,
@@ -140,6 +145,8 @@ fu_strtoll(const gchar *str,
 {
 	gchar *endptr = NULL;
 	gint64 value_tmp;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
 	if (str == NULL) {
@@ -170,6 +177,13 @@ fu_strtoll(const gchar *str,
 
 	/* convert */
 	value_tmp = g_ascii_strtoll(str, &endptr, base); /* nocheck:blocked */
+	if (endptr == str) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no digits to parse");
+		return FALSE;
+	}
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
@@ -220,12 +234,12 @@ fu_strtoll(const gchar *str,
  * Converts a string value to a boolean. Only `true` and `false` are accepted values.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
@@ -263,8 +277,6 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error)
  * Removes leading and trailing whitespace from a constant string.
  *
  * Returns: newly allocated string
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strstrip(const gchar *str)
@@ -276,7 +288,7 @@ fu_strstrip(const gchar *str)
 
 	/* find first non-space char */
 	for (guint i = 0; str[i] != '\0'; i++) {
-		if (str[i] != ' ') {
+		if (!g_ascii_isspace(str[i])) {
 			head = i;
 			break;
 		}
@@ -297,8 +309,6 @@ fu_strstrip(const gchar *str)
  * @str: a #GString, e.g. ` test `
  *
  * Removes leading and trailing whitespace from a mutable string.
- *
- * Since: 2.0.17
  **/
 void
 fu_string_strip(GString *str)
@@ -331,8 +341,6 @@ fu_string_strip(GString *str)
  * Copies a string from a buffer of a specified size up to (but not including) `NUL`.
  *
  * Returns: (transfer full): a #GString, possibly of zero size.
- *
- * Since: 1.8.11
  **/
 GString *
 fu_strdup(const gchar *str, gsize bufsz, gsize offset)
@@ -358,8 +366,6 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
  * Returns the width of the string in displayed characters on the console.
  *
  * Returns: width of text
- *
- * Since: 1.8.2
  **/
 gsize
 fu_strwidth(const gchar *text)
@@ -392,8 +398,6 @@ fu_strwidth(const gchar *text)
  * to the last token.
  *
  * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
- *
- * Since: 1.8.2
  **/
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
@@ -418,8 +422,6 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
  * to the last token.
  *
  * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
- *
- * Since: 2.0.7
  **/
 gchar **
 fu_strsplit_bytes(GBytes *blob, const gchar *delimiter, gint max_tokens)
@@ -455,7 +457,8 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
 				helper->detected_nul = TRUE;
 				break;
 			}
-			if (strncmp((const gchar *)buf->data + offset,
+			if (offset + helper->delimiter_sz <= buf->len &&
+			    strncmp((const gchar *)buf->data + offset,
 				    helper->delimiter,
 				    helper->delimiter_sz) == 0)
 				break;
@@ -501,8 +504,6 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
  * and you don't want to allocate a GStrv with billions of one byte items.
  *
  * Returns: %TRUE if no @callback returned FALSE
- *
- * Since: 2.0.0
  */
 gboolean
 fu_strsplit_stream(FuInputStream *stream,
@@ -574,8 +575,6 @@ fu_strsplit_stream(FuInputStream *stream,
  * and you don't want to allocate a GStrv with billions of one byte items.
  *
  * Returns: %TRUE if no @callback returned FALSE
- *
- * Since: 1.8.2
  */
 gboolean
 fu_strsplit_full(const gchar *str,
@@ -601,7 +600,7 @@ fu_strsplit_full(const gchar *str,
 
 	/* cannot split */
 	if (delimiter_sz > str_sz) {
-		g_autoptr(GString) token = g_string_new(str);
+		g_autoptr(GString) token = g_string_new_len(str, str_sz);
 		return callback(token, token_idx, user_data, error);
 	}
 
@@ -611,7 +610,8 @@ fu_strsplit_full(const gchar *str,
 		g_autoptr(GString) token = g_string_new(NULL);
 
 		for (offset = offset_old; offset < str_sz; offset++) {
-			if (strncmp(str + offset, delimiter, delimiter_sz) == 0)
+			if (offset + delimiter_sz <= str_sz &&
+			    strncmp(str + offset, delimiter, delimiter_sz) == 0)
 				break;
 		}
 		g_string_append_len(token, str + offset_old, offset - offset_old);
@@ -632,8 +632,6 @@ fu_strsplit_full(const gchar *str,
  * Converts a string into something that can be safely printed.
  *
  * Returns: (transfer full): safe string, or %NULL if there was nothing valid
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz)
@@ -670,8 +668,6 @@ fu_strsafe(const gchar *str, gsize maxsz)
  * Converts a #GBytes into something that can be safely printed.
  *
  * Returns: (transfer full): safe string, or %NULL if there was nothing valid
- *
- * Since: 2.0.2
  **/
 gchar *
 fu_strsafe_bytes(GBytes *blob, gsize maxsz)
@@ -694,8 +690,6 @@ fu_strsafe_bytes(GBytes *blob, gsize maxsz)
  * string.
  *
  * Returns: a string
- *
- * Since: 1.8.2
  **/
 gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array)
@@ -717,8 +711,6 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
  * Hides password strings encoded in HTTP requests.
  *
  * Returns: a string
- *
- * Since: 1.9.10
  **/
 gchar *
 fu_strpassmask(const gchar *str)
@@ -767,8 +759,6 @@ fu_strpassmask(const gchar *str)
  * Converts a UTF-16 buffer to a UTF-8 string.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)
@@ -803,8 +793,6 @@ fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **err
  * Converts UTF-8 string to a buffer of UTF-16, optionially including the trailing NULw.
  *
  * Returns: (transfer full): a #GByteArray, or %NULL on error
- *
- * Since: 1.9.3
  **/
 GByteArray *
 fu_utf8_to_utf16_byte_array(const gchar *str,
@@ -840,8 +828,6 @@ fu_utf8_to_utf16_byte_array(const gchar *str,
  * Converts a UTF-16 buffer to a UTF-8 string.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
@@ -865,8 +851,6 @@ fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
  * Converts UTF-8 string to a buffer of UTF-16, optionally including the trailing NULw.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
- *
- * Since: 1.9.3
  **/
 GBytes *
 fu_utf8_to_utf16_bytes(const gchar *str,

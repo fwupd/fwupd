@@ -23,8 +23,6 @@
  * Windows.
  *
  * Returns: (transfer full): a string, or %NULL if the @key was not found
- *
- * Since: 1.6.1
  **/
 gchar *
 fu_kenv_get_string(const gchar *key, GError **error)

@@ -22,8 +22,6 @@ struct _FuIfwiCpdFirmwareClass {
  * FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST:
  *
  * The index for the IFWI manifest image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST 0x0
 
@@ -31,8 +29,6 @@ struct _FuIfwiCpdFirmwareClass {
  * FU_IFWI_CPD_FIRMWARE_IDX_METADATA:
  *
  * The index for the IFWI metadata image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_CPD_FIRMWARE_IDX_METADATA 0x1
 
@@ -40,8 +36,6 @@ struct _FuIfwiCpdFirmwareClass {
  * FU_IFWI_CPD_FIRMWARE_IDX_MODULEDATA_IDX:
  *
  * The index for the IFWI module data image.
- *
- * Since: 1.8.2
  **/
 #define FU_IFWI_CPD_FIRMWARE_IDX_MODULEDATA_IDX 0x2
 

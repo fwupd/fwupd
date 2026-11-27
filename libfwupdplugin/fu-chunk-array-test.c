@@ -76,16 +76,18 @@ fu_chunk_func(void)
 	chunked3_str = fu_chunk_array_to_string(chunked3);
 	g_assert_cmpstr(chunked3_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <data size=\"0x3\">123</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <data size=\"0x3\">456</data>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"data\": \"123\",\n"
+			"    \"data_size\": 3\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"page\": 1,\n"
+			"    \"data\": \"456\",\n"
+			"    \"data_size\": 3\n"
+			"  }\n"
+			"]");
 
 	chunked4 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x4, 4, 4, &error);
 	g_assert_no_error(error);
@@ -93,27 +95,25 @@ fu_chunk_func(void)
 	chunked4_str = fu_chunk_array_to_string(chunked4);
 	g_assert_cmpstr(chunked4_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <page>0x1</page>\n"
-			"    <data size=\"0x4\">1234</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <page>0x2</page>\n"
-			"    <data size=\"0x2\">56</data>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"page\": 1,\n"
+			"    \"data\": \"1234\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"page\": 2,\n"
+			"    \"data\": \"56\",\n"
+			"    \"data_size\": 2\n"
+			"  }\n"
+			"]");
 	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(chunked5);
 	g_assert_cmpint(chunked5->len, ==, 0);
 	chunked5_str = fu_chunk_array_to_string(chunked5);
-	if (fu_version_compare(xb_version_string(), "0.3.22", FWUPD_VERSION_FORMAT_TRIPLET) >= 0) {
-		g_assert_cmpstr(chunked5_str, ==, "<chunks />\n");
-	} else {
-		g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
-	}
+	g_assert_cmpstr(chunked5_str, ==, "[\n]");
 
 	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4, &error);
 	g_assert_no_error(error);
@@ -121,32 +121,37 @@ fu_chunk_func(void)
 	chunked1_str = fu_chunk_array_to_string(chunked1);
 	g_assert_cmpstr(chunked1_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <data size=\"0x4\">0123</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <addr>0x4</addr>\n"
-			"    <data size=\"0x4\">4567</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x2</idx>\n"
-			"    <addr>0x8</addr>\n"
-			"    <data size=\"0x2\">89</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x3</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <data size=\"0x4\">abcd</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x4</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <addr>0x4</addr>\n"
-			"    <data size=\"0x2\">ef</data>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"data\": \"0123\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"addr\": 4,\n"
+			"    \"data\": \"4567\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 2,\n"
+			"    \"addr\": 8,\n"
+			"    \"data\": \"89\",\n"
+			"    \"data_size\": 2\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 3,\n"
+			"    \"page\": 1,\n"
+			"    \"data\": \"abcd\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 4,\n"
+			"    \"page\": 1,\n"
+			"    \"addr\": 4,\n"
+			"    \"data\": \"ef\",\n"
+			"    \"data_size\": 2\n"
+			"  }\n"
+			"]");
 	chunked2 = fu_chunk_array_new((const guint8 *)"XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(chunked2);
@@ -154,38 +159,44 @@ fu_chunk_func(void)
 	g_debug("%s", chunked2_str);
 	g_assert_cmpstr(chunked2_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <data size=\"0x4\">XXXX</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <addr>0x4</addr>\n"
-			"    <data size=\"0x2\">XX</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x2</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <data size=\"0x4\">YYYY</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x3</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <addr>0x4</addr>\n"
-			"    <data size=\"0x2\">YY</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x4</idx>\n"
-			"    <page>0x2</page>\n"
-			"    <data size=\"0x4\">ZZZZ</data>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x5</idx>\n"
-			"    <page>0x2</page>\n"
-			"    <addr>0x4</addr>\n"
-			"    <data size=\"0x2\">ZZ</data>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"data\": \"XXXX\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"addr\": 4,\n"
+			"    \"data\": \"XX\",\n"
+			"    \"data_size\": 2\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 2,\n"
+			"    \"page\": 1,\n"
+			"    \"data\": \"YYYY\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 3,\n"
+			"    \"page\": 1,\n"
+			"    \"addr\": 4,\n"
+			"    \"data\": \"YY\",\n"
+			"    \"data_size\": 2\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 4,\n"
+			"    \"page\": 2,\n"
+			"    \"data\": \"ZZZZ\",\n"
+			"    \"data_size\": 4\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 5,\n"
+			"    \"page\": 2,\n"
+			"    \"addr\": 4,\n"
+			"    \"data\": \"ZZ\",\n"
+			"    \"data_size\": 2\n"
+			"  }\n"
+			"]");
 }
 
 static void
@@ -204,16 +215,16 @@ fu_chunk_array_null_func(void)
 	chunked1_str = fu_chunk_array_to_string(chunked1);
 	g_assert_cmpstr(chunked1_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <addr>0x80</addr>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"size\": 128\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"addr\": 128,\n"
+			"    \"size\": 128\n"
+			"  }\n"
+			"]");
 
 	chunked2 = fu_chunk_array_new(NULL, 0x200, 0, 0x100, 0x80, &error);
 	g_assert_no_error(error);
@@ -222,27 +233,138 @@ fu_chunk_array_null_func(void)
 	chunked2_str = fu_chunk_array_to_string(chunked2);
 	g_assert_cmpstr(chunked2_str,
 			==,
-			"<chunks>\n"
-			"  <chunk>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x1</idx>\n"
-			"    <addr>0x80</addr>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x2</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"  <chunk>\n"
-			"    <idx>0x3</idx>\n"
-			"    <page>0x1</page>\n"
-			"    <addr>0x80</addr>\n"
-			"    <size>0x80</size>\n"
-			"  </chunk>\n"
-			"</chunks>\n");
+			"[\n"
+			"  {\n"
+			"    \"size\": 128\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 1,\n"
+			"    \"addr\": 128,\n"
+			"    \"size\": 128\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 2,\n"
+			"    \"page\": 1,\n"
+			"    \"size\": 128\n"
+			"  },\n"
+			"  {\n"
+			"    \"idx\": 3,\n"
+			"    \"page\": 1,\n"
+			"    \"addr\": 128,\n"
+			"    \"size\": 128\n"
+			"  }\n"
+			"]");
+}
+
+typedef struct {
+	guint page;
+	gsize address;
+	gsize size;
+} FuChunkTestExpected;
+
+static void
+fu_chunk_test_check(FuChunk *chk, gsize page_sz, const FuChunkTestExpected *expected)
+{
+	g_assert_cmpint(fu_chunk_get_page(chk), ==, expected->page);
+	g_assert_cmpint(fu_chunk_get_address(chk), ==, expected->address);
+	g_assert_cmpint(fu_chunk_get_data_sz(chk), ==, expected->size);
+	g_assert_cmpint(fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk), <=, page_sz);
+}
+
+static void
+fu_chunk_page_boundary_func(void)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) chunked1 = NULL;
+	g_autoptr(GPtrArray) chunked2 = NULL;
+	const FuChunkTestExpected expected1[] = {
+	    {0, 0, 7},
+	    {0, 7, 3},
+	    {1, 0, 7},
+	    {1, 7, 3},
+	};
+	const FuChunkTestExpected expected2[] = {
+	    {0, 2, 2},
+	    {1, 0, 4},
+	    {2, 0, 2},
+	};
+
+	/* packet size is not a factor of the page size */
+	chunked1 = fu_chunk_array_new(NULL, 20, 0x0, 10, 7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked1);
+	g_assert_cmpint(chunked1->len, ==, G_N_ELEMENTS(expected1));
+	for (guint i = 0; i < chunked1->len; i++)
+		fu_chunk_test_check(g_ptr_array_index(chunked1, i), 10, &expected1[i]);
+
+	/* address offset is not aligned to the page, and page size equals packet size */
+	chunked2 = fu_chunk_array_new(NULL, 8, 0x2, 4, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked2);
+	g_assert_cmpint(chunked2->len, ==, G_N_ELEMENTS(expected2));
+	for (guint i = 0; i < chunked2->len; i++)
+		fu_chunk_test_check(g_ptr_array_index(chunked2, i), 4, &expected2[i]);
+}
+
+static void
+fu_chunk_page_boundary_genesys_func(void)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) chunked = NULL;
+	const FuChunkTestExpected expected[] = {
+	    {0, 0xB000, 0x5000},
+	    {1, 0x0000, 0x6000},
+	};
+
+	/* GL3525 bank 2: unaligned start that crosses the 64kB flash block */
+	chunked = fu_chunk_array_new(NULL, 0xB000, 0xB000, 0x10000, 0xFFC0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked);
+	g_assert_cmpint(chunked->len, ==, G_N_ELEMENTS(expected));
+	for (guint i = 0; i < chunked->len; i++)
+		fu_chunk_test_check(g_ptr_array_index(chunked, i), 0x10000, &expected[i]);
+}
+
+static void
+fu_chunk_array_page_boundary_func(void)
+{
+	g_autoptr(FuChunkArray) chunks1 = NULL;
+	g_autoptr(FuChunkArray) chunks2 = NULL;
+	const FuChunkTestExpected expected1[] = {
+	    {0, 0, 7},
+	    {0, 7, 3},
+	    {1, 0, 7},
+	    {1, 7, 3},
+	};
+	const FuChunkTestExpected expected2[] = {
+	    {0, 2, 2},
+	    {1, 0, 4},
+	    {2, 0, 2},
+	};
+
+	/* packet size is not a factor of the page size */
+	chunks1 = fu_chunk_array_new_virtual(20, 0x0, 10, 7);
+	g_assert_nonnull(chunks1);
+	g_assert_cmpint(fu_chunk_array_length(chunks1), ==, G_N_ELEMENTS(expected1));
+	for (guint i = 0; i < fu_chunk_array_length(chunks1); i++) {
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks1, i, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(chk);
+		fu_chunk_test_check(chk, 10, &expected1[i]);
+	}
+
+	/* address offset is not aligned to the page, and page size equals packet size */
+	chunks2 = fu_chunk_array_new_virtual(8, 0x2, 4, 4);
+	g_assert_nonnull(chunks2);
+	g_assert_cmpint(fu_chunk_array_length(chunks2), ==, G_N_ELEMENTS(expected2));
+	for (guint i = 0; i < fu_chunk_array_length(chunks2); i++) {
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks2, i, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(chk);
+		fu_chunk_test_check(chk, 4, &expected2[i]);
+	}
 }
 
 int
@@ -252,5 +374,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func("/fwupd/chunk-array", fu_chunk_array_func);
 	g_test_add_func("/fwupd/chunk-array/null", fu_chunk_array_null_func);
+	g_test_add_func("/fwupd/chunk/page-boundary", fu_chunk_page_boundary_func);
+	g_test_add_func("/fwupd/chunk/page-boundary/genesys", fu_chunk_page_boundary_genesys_func);
+	g_test_add_func("/fwupd/chunk-array/page-boundary", fu_chunk_array_page_boundary_func);
 	return g_test_run();
 }

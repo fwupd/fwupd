@@ -28,8 +28,6 @@ G_DEFINE_TYPE(FuPathStore, fu_path_store, G_TYPE_OBJECT)
  * Sets a possible program path.
  *
  * If the directory does not exist it is ignored
- *
- * Since: 2.1.5
  **/
 void
 fu_path_store_add_program_path(FuPathStore *self, const gchar *path)
@@ -54,8 +52,6 @@ fu_path_store_add_program_path(FuPathStore *self, const gchar *path)
  * will be the same as the `PATH` environment variable.
  *
  * Returns: a new path, or %NULL for error
- *
- * Since: 2.1.5
  **/
 gchar *
 fu_path_store_find_program(FuPathStore *self, const gchar *basename, GError **error)
@@ -87,8 +83,6 @@ fu_path_store_find_program(FuPathStore *self, const gchar *basename, GError **er
  * Gets the defined path for the @kind.
  *
  * Returns: filename, or %NULL
- *
- * Since: 2.1.1
  **/
 const gchar *
 fu_path_store_get_path(FuPathStore *self, FuPathKind kind, GError **error)
@@ -118,8 +112,6 @@ fu_path_store_get_path(FuPathStore *self, FuPathKind kind, GError **error)
  * environment variables, for instance %FWUPD_DATADIR.
  *
  * Returns: a system path, or %NULL if invalid
- *
- * Since: 2.1.1
  **/
 gchar *
 fu_path_store_build_filename(FuPathStore *self, GError **error, FuPathKind kind, ...)
@@ -150,16 +142,13 @@ fu_path_store_build_filename(FuPathStore *self, GError **error, FuPathKind kind,
  * @path: (nullable): directory name
  *
  * Sets the defined path for the @kind.
- *
- * Since: 2.1.1
  **/
 void
 fu_path_store_set_path(FuPathStore *self, FuPathKind kind, const gchar *path)
 {
 	g_return_if_fail(FU_IS_PATH_STORE(self));
 	g_return_if_fail(kind < FU_PATH_KIND_LAST);
-	g_free(self->paths[kind]);
-	self->paths[kind] = g_strdup(path);
+	g_set_str(&self->paths[kind], path);
 }
 
 /**
@@ -169,8 +158,6 @@ fu_path_store_set_path(FuPathStore *self, FuPathKind kind, const gchar *path)
  * @tmpdir: (not nullable): a #FuTemporaryDirectory
  *
  * Sets the @kind to a temporary path.
- *
- * Since: 2.1.1
  **/
 void
 fu_path_store_set_tmpdir(FuPathStore *self, FuPathKind kind, FuTemporaryDirectory *tmpdir)
@@ -187,8 +174,6 @@ fu_path_store_set_tmpdir(FuPathStore *self, FuPathKind kind, FuTemporaryDirector
  * @prefix: (not nullable): directory name
  *
  * Sets the prefix path for the @kind.
- *
- * Since: 2.1.1
  **/
 void
 fu_path_store_add_prefix(FuPathStore *self, FuPathKind kind, const gchar *prefix)
@@ -270,8 +255,6 @@ fu_path_store_get_win32_basedir(void)
  * @self: a #FuPathStore
  *
  * Load the default paths for a typical system.
- *
- * Since: 2.1.1
  **/
 void
 fu_path_store_load_defaults(FuPathStore *self)
@@ -396,8 +379,6 @@ fu_path_store_load_defaults(FuPathStore *self)
  * @self: a #FuPathStore
  *
  * Apply environment-based overrides to the existing paths.
- *
- * Since: 2.1.1
  **/
 void
 fu_path_store_load_from_env(FuPathStore *self)
@@ -571,8 +552,6 @@ fu_path_store_init(FuPathStore *self)
  * fu_path_store_new:
  *
  * Returns: (transfer full): a #FuPathStore
- *
- * Since: 2.1.1
  **/
 FuPathStore *
 fu_path_store_new(void)

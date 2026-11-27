@@ -42,10 +42,13 @@ struct _FuAmdGpuPspFirmware {
 G_DEFINE_TYPE(FuAmdGpuPspFirmware, fu_amd_gpu_psp_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_amd_gpu_psp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_gpu_psp_firmware_export(FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       FwupdJsonObject *json_object)
 {
 	FuAmdGpuPspFirmware *self = FU_AMD_GPU_PSP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "dir_location", self->dir_location);
+	if (self->dir_location != 0)
+		fwupd_json_object_add_integer(json_object, "dir_location", self->dir_location);
 }
 
 static gboolean
@@ -55,10 +58,12 @@ fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
 				 GError **error)
 {
 	g_autoptr(FuStructEfs) st = NULL;
-	st = fu_struct_efs_parse_stream(stream, 0, error);
+	st = fu_struct_efs_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
-	return fu_struct_psp_dir_validate_stream(stream, fu_struct_efs_get_psp_dir_loc(st), error);
+	return fu_struct_psp_dir_validate_stream(stream,
+						 offset + fu_struct_efs_get_psp_dir_loc(st),
+						 error);
 }
 
 static gboolean

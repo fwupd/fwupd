@@ -21,8 +21,6 @@ struct _FuI2cDeviceClass {
  * FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS:
  *
  * Do not add the HWID instance IDs.
- *
- * Since: 2.0.0
  */
 #define FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS "no-hwid-guids"
 

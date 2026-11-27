@@ -42,8 +42,6 @@ G_DEFINE_TYPE_EXTENDED(FuEfiFilePathDevicePath,
  * Any backslash characters are automatically converted to forward slashes.
  *
  * Returns: (transfer full): UTF-8 filename, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **error)
@@ -72,8 +70,6 @@ fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **er
  *
  * Sets the `DEVICE_PATH` name.
  * Any forward slash characters are automatically converted to backslashes.
- *
- * Since: 1.9.3
  **/
 gboolean
 fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
@@ -106,11 +102,12 @@ fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 static void
 fu_efi_file_path_device_path_export(FuFirmware *firmware,
 				    FuFirmwareExportFlags flags,
-				    XbBuilderNode *bn)
+				    FwupdJsonObject *json_object)
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(firmware);
 	g_autofree gchar *name = fu_efi_file_path_device_path_get_name(self, NULL);
-	fu_xmlb_builder_insert_kv(bn, "name", name);
+	if (name != NULL)
+		fwupd_json_object_add_string(json_object, "name", name);
 }
 
 static void
@@ -125,15 +122,18 @@ fu_efi_file_path_device_path_add_json(FwupdCodec *codec,
 }
 
 static gboolean
-fu_efi_file_path_device_path_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_file_path_device_path_build(FuFirmware *firmware,
+				   FwupdJsonObject *json_object,
+				   GError **error)
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(firmware);
-	g_autoptr(XbNode) data = NULL;
 
 	/* optional data */
-	data = xb_node_query_first(n, "name", NULL);
-	if (data != NULL) {
-		if (!fu_efi_file_path_device_path_set_name(self, xb_node_get_text(data), error))
+	if (fwupd_json_object_has_node(json_object, "name")) {
+		const gchar *name = NULL;
+		if (!fwupd_json_object_get_string_optional(json_object, "name", &name, error))
+			return FALSE;
+		if (!fu_efi_file_path_device_path_set_name(self, name, error))
 			return FALSE;
 	}
 
@@ -161,6 +161,7 @@ fu_efi_file_path_device_path_class_init(FuEfiFilePathDevicePathClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->export = fu_efi_file_path_device_path_export;
 	firmware_class->build = fu_efi_file_path_device_path_build;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_KB);
 }
 
 /**
@@ -169,8 +170,6 @@ fu_efi_file_path_device_path_class_init(FuEfiFilePathDevicePathClass *klass)
  * Creates a new EFI `DEVICE_PATH`.
  *
  * Returns: (transfer full): a #FuEfiFilePathDevicePath
- *
- * Since: 1.9.3
  **/
 FuEfiFilePathDevicePath *
 fu_efi_file_path_device_path_new(void)

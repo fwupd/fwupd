@@ -23,8 +23,10 @@ fu_binder_daemon_create_request(FuBinderDaemon *self);
 void
 fu_binder_daemon_set_feature_flags(FuBinderDaemon *self, FwupdFeatureFlags feature_flags);
 
+void
+fu_binder_daemon_reset_idle(FuBinderDaemon *self);
 gboolean
-fu_binder_daemon_authorize(const gchar *action_id, GError **error);
+fu_binder_daemon_authorize(FuBinderDaemon *self, const gchar *action_id, GError **error);
 
 gboolean
 fu_binder_daemon_perform_install_bridge(void *daemon_instance,
@@ -33,6 +35,14 @@ fu_binder_daemon_perform_install_bridge(void *daemon_instance,
 					guint64 flags,
 					const char *filename_hint,
 					GError **error);
+
+gboolean
+fu_binder_daemon_write_blob_bridge(void *daemon_instance,
+				   const gchar *device_id,
+				   int fd,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   GError **error);
 
 gboolean
 fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, GError **error);

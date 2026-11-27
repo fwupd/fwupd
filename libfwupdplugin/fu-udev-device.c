@@ -83,8 +83,6 @@ static guint quarks[QUARK_LAST] = {0};
  * @self: a #FuUdevDevice
  *
  * Emits the ::changed signal for the object.
- *
- * Since: 1.1.2
  **/
 void
 fu_udev_device_emit_changed(FuUdevDevice *self)
@@ -160,8 +158,6 @@ fu_udev_device_set_subsystem(FuUdevDevice *self, const gchar *subsystem)
  * @bind_id: a bind-id string, e.g. `pci:0:0:1`
  *
  * Sets the device ID used for binding the device, e.g. `pci:1:2:3`
- *
- * Since: 1.7.2
  **/
 void
 fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id)
@@ -185,8 +181,6 @@ fu_udev_device_set_driver(FuUdevDevice *self, const gchar *driver)
  * @device_file: (nullable): a device path
  *
  * Sets the device file to use for reading and writing.
- *
- * Since: 1.8.7
  **/
 void
 fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
@@ -196,14 +190,18 @@ fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 		g_object_notify(G_OBJECT(self), "device-file");
 }
 
-static gchar *
+/* private */
+gchar *
 fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError **error)
 {
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *fn_attr = NULL;
 	g_autofree gchar *symlink_target = NULL;
-	g_autofree gchar *value = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(attr != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no sysfs path");
@@ -234,14 +232,13 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	symlink_target = fu_path_get_symlink_target(fn_attr, error);
 	if (symlink_target == NULL)
 		return NULL;
-	value = g_path_get_basename(symlink_target);
 
 	/* save response */
 	if (event != NULL)
-		fu_device_event_set_str(event, "Data", value);
+		fu_device_event_set_str(event, "Data", symlink_target);
 
 	/* success */
-	return g_steal_pointer(&value);
+	return g_steal_pointer(&symlink_target);
 }
 
 /* private */
@@ -268,6 +265,9 @@ fu_udev_device_parse_number(FuUdevDevice *self, GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GString) path = g_string_new(fu_udev_device_get_sysfs_path(self));
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (path->len == 0)
 		return TRUE;
@@ -339,16 +339,24 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 
 	/* find the subsystem, driver and devtype */
 	if (priv->subsystem == NULL) {
+		g_autofree gchar *subsystem_basename = NULL;
 		g_autofree gchar *subsystem_tmp =
 		    fu_udev_device_get_symlink_target(self, "subsystem", error);
 		if (subsystem_tmp == NULL) {
 			g_prefix_error_literal(error, "failed to read subsystem: ");
 			return FALSE;
 		}
-		fu_udev_device_set_subsystem(self, subsystem_tmp);
+		subsystem_basename = g_path_get_basename(subsystem_tmp);
+		fu_udev_device_set_subsystem(self, subsystem_basename);
 	}
-	if (priv->driver == NULL)
-		priv->driver = fu_udev_device_get_symlink_target(self, "driver", NULL);
+	if (priv->driver == NULL) {
+		g_autofree gchar *driver_tmp =
+		    fu_udev_device_get_symlink_target(self, "driver", NULL);
+		if (driver_tmp != NULL) {
+			g_autofree gchar *driver_basename = g_path_get_basename(driver_tmp);
+			fu_udev_device_set_driver(self, driver_basename);
+		}
+	}
 	if (priv->devtype == NULL) {
 		priv->devtype = fu_udev_device_read_property(self, "DEVTYPE", NULL);
 		if (priv->devtype == NULL) {
@@ -407,7 +415,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (subsystem != NULL) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -415,7 +423,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -437,7 +445,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 			fu_device_add_instance_strup(device, "CLASS", cls);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "VEN",
@@ -448,7 +456,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "TYPE", devtype);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "TYPE",
@@ -458,7 +466,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(device, "DRIVER", priv->driver);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 subsystem,
 						 "DRIVER",
@@ -477,8 +485,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
  * Determine how far up a chain a given device is
  *
  * Returns: unsigned integer
- *
- * Since: 2.0.0
  **/
 guint
 fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
@@ -653,8 +659,6 @@ fu_udev_device_incorporate(FuDevice *device, FuDevice *donor)
  * Gets the device subsystem, e.g. `pci`
  *
  * Returns: a subsystem, or NULL if unset or invalid
- *
- * Since: 1.1.2
  **/
 const gchar *
 fu_udev_device_get_subsystem(FuUdevDevice *self)
@@ -671,8 +675,6 @@ fu_udev_device_get_subsystem(FuUdevDevice *self)
  * Gets the device ID used for binding the device, e.g. `pci:1:2:3`
  *
  * Returns: a bind_id, or NULL if unset or invalid
- *
- * Since: 1.7.2
  **/
 const gchar *
 fu_udev_device_get_bind_id(FuUdevDevice *self)
@@ -690,8 +692,6 @@ fu_udev_device_get_bind_id(FuUdevDevice *self)
  * Gets the device driver, e.g. `psmouse`.
  *
  * Returns: a subsystem, or NULL if unset or invalid
- *
- * Since: 1.5.3
  **/
 const gchar *
 fu_udev_device_get_driver(FuUdevDevice *self)
@@ -708,8 +708,6 @@ fu_udev_device_get_driver(FuUdevDevice *self)
  * Gets the device node.
  *
  * Returns: a device file, or NULL if unset
- *
- * Since: 1.3.1
  **/
 const gchar *
 fu_udev_device_get_device_file(FuUdevDevice *self)
@@ -726,8 +724,6 @@ fu_udev_device_get_device_file(FuUdevDevice *self)
  * Gets the device sysfs path, e.g. `/sys/devices/pci0000:00/0000:00:14.0`.
  *
  * Returns: a local path, or NULL if unset or invalid
- *
- * Since: 1.1.2
  **/
 const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self)
@@ -746,8 +742,6 @@ fu_udev_device_get_sysfs_path(FuUdevDevice *self)
  * Gets the device number, if any.
  *
  * Returns: integer, 0 if the data is unavailable.
- *
- * Since: 1.5.0
  **/
 guint64
 fu_udev_device_get_number(FuUdevDevice *self)
@@ -868,8 +862,6 @@ fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
  * Sets the physical ID from the sysfs path, with the `/sys` prefixed removed.
  *
  * Returns: The udev-compatble device path, or %NULL on error.
- *
- * Since: 2.0.1
  **/
 gchar *
 fu_udev_device_get_devpath(FuUdevDevice *self)
@@ -898,8 +890,6 @@ fu_udev_device_get_devpath(FuUdevDevice *self)
  * specific LUNs for a SCSI device.
  *
  * Returns: %TRUE if the physical device was set.
- *
- * Since: 1.1.2
  **/
 gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GError **error)
@@ -996,8 +986,6 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
  * Gets the IO channel.
  *
  * Returns: (transfer none): a #FuIOChannel, or %NULL if the device is not open
- *
- * Since: 1.9.8
  **/
 FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self)
@@ -1014,8 +1002,6 @@ fu_udev_device_get_io_channel(FuUdevDevice *self)
  *
  * Replace the IO channel to use when the device has already been opened.
  * This object will automatically unref @io_channel when fu_device_close() is called.
- *
- * Since: 1.9.8
  **/
 void
 fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
@@ -1032,8 +1018,6 @@ fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
  * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
  *
  * Removes a open flag.
- *
- * Since: 2.0.0
  **/
 void
 fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag)
@@ -1052,8 +1036,6 @@ fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag)
  *
  * For example %FU_IO_CHANNEL_OPEN_FLAG_READ means that fu_device_open()
  * would use `O_RDONLY` rather than `O_RDWR` which is the default.
- *
- * Since: 2.0.0
  **/
 void
 fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag)
@@ -1141,8 +1123,6 @@ fu_udev_device_close(FuDevice *device, GError **error)
  * required by some ioctls.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.9
  **/
 gboolean
 fu_udev_device_reopen(FuUdevDevice *self, GError **error)
@@ -1162,8 +1142,6 @@ fu_udev_device_reopen(FuUdevDevice *self, GError **error)
  * Build a helper to control a device using a low-level request.
  *
  * Returns: (transfer full): a #FuIoctl, or %NULL on error
- *
- * Since: 2.0.2
  **/
 FuIoctl *
 fu_udev_device_ioctl_new(FuUdevDevice *self)
@@ -1290,8 +1268,6 @@ fu_udev_device_ioctl(FuUdevDevice *self,
  * Read a buffer from a file descriptor at a given offset.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
@@ -1376,8 +1352,6 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
  * Seeks a file descriptor to a given offset.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.7.2
  **/
 gboolean
 fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
@@ -1403,7 +1377,12 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 			    id_display);
 		return FALSE;
 	}
-	return fu_io_channel_seek(priv->io_channel, offset, error);
+	if (!fu_io_channel_seek(priv->io_channel, offset, error))
+		return FALSE;
+
+	/* used for the event ID when saving */
+	priv->emulated_offset = offset;
+	return TRUE;
 }
 
 /**
@@ -1417,8 +1396,6 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
  * Write a buffer to a file descriptor at a given offset.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,
@@ -1526,8 +1503,6 @@ fu_udev_device_pwrite(FuUdevDevice *self,
  * Read a buffer from a file descriptor.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.4
  **/
 gboolean
 fu_udev_device_read(FuUdevDevice *self,
@@ -1552,8 +1527,11 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		/* the created value is 2025-10-24T15:32:39.198922Z i.e. just bnr-dp-0.13.zip */
-		if (fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
+		/* the fwupd version is only set when loading emulation data, so always use the
+		 * newest format when saving -- the created value is 2025-10-24T15:32:39.198922Z
+		 * i.e. just bnr-dp-0.13.zip */
+		if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+		    fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
 		    fu_device_get_created(FU_DEVICE(self)) == 0x68FB9C17) {
 			event_id = g_strdup_printf("Read:Length=0x%x,Offset=0x%x",
 						   (guint)bufsz,
@@ -1627,8 +1605,6 @@ fu_udev_device_read(FuUdevDevice *self,
  * Read a buffer from a file descriptor.
  *
  * Returns: (transfer full): A #GBytes, or %NULL
- *
- * Since: 2.0.7
  **/
 GBytes *
 fu_udev_device_read_bytes(FuUdevDevice *self,
@@ -1661,8 +1637,6 @@ fu_udev_device_read_bytes(FuUdevDevice *self,
  * Read a buffer from a file descriptor.
  *
  * Returns: (transfer full): A #GByteArray, or %NULL
- *
- * Since: 2.0.18
  **/
 GByteArray *
 fu_udev_device_read_byte_array(FuUdevDevice *self,
@@ -1697,8 +1671,6 @@ fu_udev_device_read_byte_array(FuUdevDevice *self,
  * Write a buffer to a file descriptor.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.4
  **/
 gboolean
 fu_udev_device_write(FuUdevDevice *self,
@@ -1786,8 +1758,6 @@ fu_udev_device_write(FuUdevDevice *self,
  * Write a buffer to a file descriptor.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.7
  **/
 gboolean
 fu_udev_device_write_bytes(FuUdevDevice *self,
@@ -1818,8 +1788,6 @@ fu_udev_device_write_bytes(FuUdevDevice *self,
  * Write a buffer to a file descriptor.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.18
  **/
 gboolean
 fu_udev_device_write_byte_array(FuUdevDevice *self,
@@ -1842,8 +1810,6 @@ fu_udev_device_write_byte_array(FuUdevDevice *self,
  * Lists all the sysfs attributes.
  *
  * Returns: (transfer container) (element-type utf8): basenames, or %NULL
- *
- * Since: 2.0.9
  **/
 GPtrArray *
 fu_udev_device_list_sysfs(FuUdevDevice *self, GError **error)
@@ -1921,8 +1887,6 @@ fu_udev_device_list_sysfs(FuUdevDevice *self, GError **error)
  * Reads data from a sysfs attribute, removing any newline trailing chars.
  *
  * Returns: (transfer full): string value, or %NULL
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_ms, GError **error)
@@ -1933,6 +1897,7 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 	g_autofree gchar *value = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	g_return_val_if_fail(attr != NULL, NULL);
@@ -1949,6 +1914,8 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
 			return NULL;
 		return g_strdup(fu_device_event_get_str(event, "Data", error));
 	}
@@ -1973,9 +1940,12 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 					    -1,
 					    timeout_ms,
 					    FU_IO_CHANNEL_FLAG_NONE,
-					    error);
+					    &error_local);
 	if (buf == NULL) {
-		g_prefix_error(error, "failed read of %s: ", path);
+		g_prefix_error(&error_local, "failed read of %s: ", path);
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
 	}
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
@@ -2011,8 +1981,6 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
  * Reads raw data from a sysfs attribute.
  *
  * Returns: (transfer full): string value, or %NULL
- *
- * Since: 2.0.1
  **/
 GBytes *
 fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
@@ -2088,8 +2056,6 @@ fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
  * Writes data into a sysfs attribute
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_udev_device_write_sysfs(FuUdevDevice *self,
@@ -2166,8 +2132,6 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
  * Writes raw data into a sysfs attribute.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.1
  **/
 gboolean
 fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
@@ -2244,8 +2208,6 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
  * Writes raw data into a sysfs attribute.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.1
  **/
 gboolean
 fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
@@ -2319,8 +2281,6 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
  * Returns the Udev device type
  *
  * Returns: device type specified in the uevent
- *
- * Since: 1.4.5
  **/
 const gchar *
 fu_udev_device_get_devtype(FuUdevDevice *self)
@@ -2337,8 +2297,6 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
  * Returns the Udev subsystem and device type, as a string.
  *
  * Returns: (transfer full): `subsystem:devtype`, or just `subsystem` if the latter is unset
- *
- * Since: 2.0.2
  **/
 gchar *
 fu_udev_device_get_subsystem_devtype(FuUdevDevice *self)
@@ -2376,8 +2334,6 @@ fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *v
  * Gets a value from the `uevent` file.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **error)
@@ -2451,7 +2407,7 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 }
 
 static void
-fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_udev_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -2480,28 +2436,34 @@ fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 }
 
 static gboolean
-fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_udev_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	const gchar *tmp;
 	gint64 tmp64 = 0;
 
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Subsystem", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Subsystem", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_subsystem(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Devtype", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Devtype", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_devtype(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "Driver", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Driver", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_driver(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BindId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BindId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_bind_id(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "DeviceFile", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "DeviceFile", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_udev_device_set_device_file(self, tmp);
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "Vendor", &tmp64, 0x0, error))
@@ -2637,8 +2599,8 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 	device_class->probe_complete = fu_udev_device_probe_complete;
-	device_class->from_json = fu_udev_device_from_json;
-	device_class->add_json = fu_udev_device_add_json;
+	device_class->build = fu_udev_device_build;
+	device_class->export = fu_udev_device_export;
 	quarks[QUARK_SYSFS_USE_PHYSICAL_ID] =
 	    fu_device_register_private_flag_safe(device_class,
 						 FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID);
@@ -2648,8 +2610,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * @self: the #FuUdevDevice instance that emitted the signal
 	 *
 	 * The ::changed signal is emitted when the low-level GUdevDevice has changed.
-	 *
-	 * Since: 1.1.2
 	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
@@ -2665,8 +2625,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * FuUdevDevice:subsystem:
 	 *
 	 * The device subsystem.
-	 *
-	 * Since: 1.1.2
 	 */
 	pspec = g_param_spec_string("subsystem",
 				    NULL,
@@ -2679,8 +2637,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * FuUdevDevice:bind-id:
 	 *
 	 * The bind ID to use when binding a new driver.
-	 *
-	 * Since: 1.7.2
 	 */
 	pspec = g_param_spec_string("bind-id",
 				    NULL,
@@ -2693,8 +2649,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * FuUdevDevice:driver:
 	 *
 	 * The driver being used for the device.
-	 *
-	 * Since: 1.5.3
 	 */
 	pspec = g_param_spec_string("driver",
 				    NULL,
@@ -2707,8 +2661,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * FuUdevDevice:device-file:
 	 *
 	 * The low level file to use for device access.
-	 *
-	 * Since: 1.3.1
 	 */
 	pspec = g_param_spec_string("device-file",
 				    NULL,
@@ -2721,8 +2673,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	 * FuUdevDevice:devtype:
 	 *
 	 * The device type.
-	 *
-	 * Since: 2.0.0
 	 */
 	pspec = g_param_spec_string("devtype",
 				    NULL,
@@ -2740,8 +2690,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
  * Creates a new #FuUdevDevice.
  *
  * Returns: (transfer full): a #FuUdevDevice
- *
- * Since: 2.0.0
  **/
 FuUdevDevice *
 fu_udev_device_new(FuContext *ctx, const gchar *sysfs_path)

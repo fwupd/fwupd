@@ -45,7 +45,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 The device programs devices in raw mode, and can best be used with `fwupdtool`.
 
-To write an image, use `sudo fwupdtool --plugins wch-ch341a install-blob firmware.bin` and to backup
+To write an image, use `sudo fwupdtool --plugins wch-ch341a write-blob firmware.bin` and to backup
 the contents of a SPI device use `sudo fwupdtool --plugins wch-ch341a firmware-dump backup.bin`
 
 ## Vendor ID Security

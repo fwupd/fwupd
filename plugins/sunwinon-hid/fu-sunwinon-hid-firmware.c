@@ -28,13 +28,18 @@ G_DEFINE_TYPE(FuSunwinonHidFirmware, fu_sunwinon_hid_firmware, FU_TYPE_FIRMWARE)
 static void
 fu_sunwinon_hid_firmware_export(FuFirmware *firmware,
 				FuFirmwareExportFlags flags,
-				XbBuilderNode *bn)
+				FwupdJsonObject *json_object)
 {
 	FuSunwinonHidFirmware *self = FU_SUNWINON_HID_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "bin_size", self->bin_size);
-	fu_xmlb_builder_insert_kx(bn, "load_addr", self->load_addr);
-	fu_xmlb_builder_insert_kx(bn, "full_checksum", self->full_checksum);
-	fu_xmlb_builder_insert_kv(bn, "fw_type", fu_sunwinon_fw_type_to_string(self->fw_type));
+	const gchar *fw_type_str = fu_sunwinon_fw_type_to_string(self->fw_type);
+	if (self->bin_size != 0)
+		fwupd_json_object_add_integer(json_object, "bin_size", self->bin_size);
+	if (self->load_addr != 0)
+		fwupd_json_object_add_integer(json_object, "load_addr", self->load_addr);
+	if (self->full_checksum != 0)
+		fwupd_json_object_add_integer(json_object, "full_checksum", self->full_checksum);
+	if (fw_type_str != NULL)
+		fwupd_json_object_add_string(json_object, "fw_type", fw_type_str);
 }
 
 guint32

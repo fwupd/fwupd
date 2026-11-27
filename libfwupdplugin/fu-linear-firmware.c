@@ -35,11 +35,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuLinearFirmware, fu_linear_firmware, FU_TYPE_FIRMWAR
 enum { PROP_0, PROP_IMAGE_GTYPE, PROP_LAST };
 
 static void
-fu_linear_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_linear_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kv(bn, "image_gtype", g_type_name(priv->image_gtype));
+	fwupd_json_object_add_string(json_object, "image_gtype", g_type_name(priv->image_gtype));
 }
 
 /**
@@ -49,8 +51,6 @@ fu_linear_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
  * Gets the image #GType to use when parsing a byte buffer.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 GType
 fu_linear_firmware_get_image_gtype(FuLinearFirmware *self)
@@ -60,25 +60,35 @@ fu_linear_firmware_get_image_gtype(FuLinearFirmware *self)
 	return priv->image_gtype;
 }
 
+/**
+ * fu_linear_firmware_set_image_gtype:
+ * @self: a #FuLinearFirmware
+ * @image_gtype: an image #GType
+ *
+ * Sets the image #GType to use when parsing a byte buffer.
+ **/
+void
+fu_linear_firmware_set_image_gtype(FuLinearFirmware *self, GType image_gtype)
+{
+	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_LINEAR_FIRMWARE(self));
+	g_return_if_fail(image_gtype != G_TYPE_INVALID);
+	priv->image_gtype = image_gtype;
+}
+
 static gboolean
-fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_linear_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "image_gtype", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "image_gtype", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
-		priv->image_gtype = g_type_from_name(tmp);
-		if (priv->image_gtype == G_TYPE_INVALID) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "GType %s not registered",
-				    tmp);
+		if (!fu_gtype_from_name(tmp, &priv->image_gtype, FU_TYPE_FIRMWARE, error))
 			return FALSE;
-		}
 	}
 
 	/* success */
@@ -225,8 +235,6 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
 	 * FuLinearFirmware:image-gtype:
 	 *
 	 * The image #GType
-	 *
-	 * Since: 1.8.2
 	 */
 	pspec =
 	    g_param_spec_gtype("image-gtype",
@@ -242,8 +250,6 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
  * @image_gtype: a #GType, e.g. %FU_TYPE_OPROM_FIRMWARE
  *
  * Creates a new #FuFirmware made up of concatenated images.
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_linear_firmware_new(GType image_gtype)

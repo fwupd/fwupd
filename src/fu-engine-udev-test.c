@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-context-helper.h"
 #include "fu-context-private.h"
 #include "fu-engine.h"
 
@@ -99,6 +100,9 @@ fu_test_engine_udev_usb(void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuUdevDevice) udev_device2 = NULL;
+	g_autoptr(FuUdevDevice) udev_device3 = NULL;
+	g_autoptr(FuUdevDevice) udev_device4 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* set up test harness */
@@ -135,6 +139,107 @@ fu_test_engine_udev_usb(void)
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "hughski_colorhug");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "1-1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+
+	/* get child, both specified */
+	udev_device2 = FU_UDEV_DEVICE(fu_device_get_backend_child(device,
+								  "usb:usb_interface",
+								  FU_DEVICE_FILTER_NONE,
+								  &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device2);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device2), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device2), ==, "usb_interface");
+	g_assert_true(g_str_has_suffix(fu_udev_device_get_sysfs_path(udev_device2), "/1-1_1.1"));
+
+	/* grandchild is not a direct child */
+	udev_device3 = FU_UDEV_DEVICE(
+	    fu_device_get_backend_child(device, "hid", FU_DEVICE_FILTER_NONE, &error));
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(udev_device3);
+	g_clear_error(&error);
+
+	/* child is not prefixed with the parent name */
+	udev_device4 = FU_UDEV_DEVICE(fu_device_get_backend_child(FU_DEVICE(udev_device2),
+								  "hid",
+								  FU_DEVICE_FILTER_NONE,
+								  &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device4);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device4), ==, "hid");
+	g_assert_true(
+	    g_str_has_suffix(fu_udev_device_get_sysfs_path(udev_device4), "/0003_093A_2862.0076"));
+}
+
+static void
+fu_test_engine_udev_usb_hub_filter(void)
+{
+	FuBackend *backend;
+	gboolean ret;
+	g_autofree gchar *hub_backend_id = NULL;
+	g_autofree gchar *testdatadir_quirks = NULL;
+	g_autofree gchar *testdatadir_sysfs = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) hub = NULL;
+	g_autoptr(FuDevice) child1 = NULL;
+	g_autoptr(FuDevice) child2 = NULL;
+	g_autoptr(FuDevice) child3 = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	testdatadir_sysfs = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir_quirks);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, testdatadir_sysfs);
+
+	/* non-linux */
+	if (!fu_context_has_backend(ctx, "udev")) {
+		g_test_skip("no Udev backend");
+		return;
+	}
+	fu_engine_add_plugin_filter(engine, "hughski_colorhug");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_READONLY |
+				 FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* root hub has two usb_device children */
+	backend = fu_context_get_backend_by_name(ctx, "udev", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(backend);
+	hub_backend_id = g_build_filename(testdatadir_sysfs,
+					  "devices",
+					  "pci0000_00",
+					  "0000_00_14.0",
+					  "usb1",
+					  NULL);
+	hub = fu_backend_create_device(backend, hub_backend_id, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(hub);
+
+	/* use the visible instance ID to choose the right one */
+	child1 =
+	    fu_device_get_backend_child(hub, "usb:usb_device", "USB\\VID_273F&PID_1001", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(child1);
+	g_assert_true(
+	    g_str_has_suffix(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(child1)), "/1-2"));
+	child2 =
+	    fu_device_get_backend_child(hub, "usb:usb_device", "USB\\VID_093A&PID_2862", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(child2);
+	g_assert_true(
+	    g_str_has_suffix(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(child2)), "/1-1"));
+
+	/* filter does not match any child */
+	child3 =
+	    fu_device_get_backend_child(hub, "usb:usb_device", "USB\\VID_FFFF&PID_FFFF", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child3);
 }
 
 static void
@@ -319,6 +424,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	g_test_add_func("/fwupd/engine/udev/hidraw", fu_test_engine_udev_hidraw);
 	g_test_add_func("/fwupd/engine/udev/usb", fu_test_engine_udev_usb);
+	g_test_add_func("/fwupd/engine/udev/usb-hub-filter", fu_test_engine_udev_usb_hub_filter);
 	g_test_add_func("/fwupd/engine/udev/serio", fu_test_engine_udev_serio);
 	g_test_add_func("/fwupd/engine/udev/nvme", fu_test_engine_udev_nvme);
 	g_test_add_func("/fwupd/engine/udev/v4l", fu_test_engine_udev_v4l);

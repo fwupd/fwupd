@@ -37,6 +37,7 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
 	guint64 sectors64 = 0;
 	gsize sectors = 0;
+	gsize size = 0;
 	g_autofree gchar *prop_size = NULL;
 	g_autoptr(GHashTable) cmdline = NULL;
 
@@ -72,8 +73,9 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_size_from_uint64(sectors64, &sectors, error))
 		return FALSE;
-	if (!fu_size_checked_inc_product(&self->max_size, sectors, ANDROID_BOOT_SECTOR_SIZE, error))
+	if (!fu_size_checked_inc_product(&size, sectors, ANDROID_BOOT_SECTOR_SIZE, error))
 		return FALSE;
+	self->max_size = size;
 
 	/* extract serial number and set it */
 	fu_device_set_serial(device, g_hash_table_lookup(cmdline, "androidboot.serialno"));

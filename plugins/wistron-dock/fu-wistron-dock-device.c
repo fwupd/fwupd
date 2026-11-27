@@ -94,7 +94,7 @@ fu_wistron_dock_device_control_cb(FuDevice *device, gpointer user_data, GError *
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "not icp-done, got 0x%02x",
-				    helper->cmd[7]);
+				    helper->buf[7]);
 			return FALSE;
 		}
 	}

@@ -1,0 +1,7 @@
+{
+  "gtype": "FuUf2Firmware",
+  "id": "test",
+  "version": "1.2.3",
+  "addr": "0x0100",
+  "data": "aGVsbG8gd29ybGQ="
+}

@@ -122,10 +122,12 @@ plugins = {
   'qsi-dock': false,
   'raydium-tp': false,
   'realtek-alc408x': false,
+  'realtek-billboard': false,
   'realtek-mst': false,
+  'realtek-rts54hub': false,
+  'realtek-scaler': false,
   'redfish': false,
   'rp-pico': false,
-  'rts54hub': false,
   'starlabs-coreboot': false,
   'steelseries': false,
   'sunplus-camera': false,
@@ -140,6 +142,7 @@ plugins = {
   'synaptics-vmm9': false,
   'system76-launch': false,
   'systemd-pcrlock': false,
+  'tcg-opal': false,
   'test': false,
   'telink-dfu': false,
   'thelio-io': false,
@@ -164,6 +167,7 @@ plugins = {
   'wch-ch341a': false,
   'wch-ch347': false,
   'wistron-dock': false,
+  'xy-kbms': false,
 }
 
 umockdev_tests = []

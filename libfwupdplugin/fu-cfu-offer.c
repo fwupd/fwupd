@@ -45,20 +45,34 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCfuOffer, fu_cfu_offer, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cfu_offer_get_instance_private(o))
 
 static void
-fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "segment_number", priv->segment_number);
-	fu_xmlb_builder_insert_kb(bn, "force_immediate_reset", priv->force_immediate_reset);
-	fu_xmlb_builder_insert_kb(bn, "force_ignore_version", priv->force_ignore_version);
-	fu_xmlb_builder_insert_kx(bn, "component_id", priv->component_id);
-	fu_xmlb_builder_insert_kx(bn, "token", priv->token);
-	fu_xmlb_builder_insert_kx(bn, "hw_variant", priv->hw_variant);
-	fu_xmlb_builder_insert_kx(bn, "protocol_revision", priv->protocol_revision);
-	fu_xmlb_builder_insert_kx(bn, "bank", priv->bank);
-	fu_xmlb_builder_insert_kx(bn, "milestone", priv->milestone);
-	fu_xmlb_builder_insert_kx(bn, "product_id", priv->product_id);
+	if (priv->segment_number != 0)
+		fwupd_json_object_add_integer(json_object, "segment_number", priv->segment_number);
+	fwupd_json_object_add_boolean(json_object,
+				      "force_immediate_reset",
+				      priv->force_immediate_reset);
+	fwupd_json_object_add_boolean(json_object,
+				      "force_ignore_version",
+				      priv->force_ignore_version);
+	if (priv->component_id != 0)
+		fwupd_json_object_add_integer(json_object, "component_id", priv->component_id);
+	if (priv->token != 0)
+		fwupd_json_object_add_integer(json_object, "token", priv->token);
+	if (priv->hw_variant != 0)
+		fwupd_json_object_add_integer(json_object, "hw_variant", priv->hw_variant);
+	if (priv->protocol_revision != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "protocol_revision",
+					      priv->protocol_revision);
+	if (priv->bank != 0)
+		fwupd_json_object_add_integer(json_object, "bank", priv->bank);
+	if (priv->milestone != 0)
+		fwupd_json_object_add_integer(json_object, "milestone", priv->milestone);
+	if (priv->product_id != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", priv->product_id);
 }
 
 /**
@@ -68,8 +82,6 @@ fu_cfu_offer_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
  * Gets the part of the firmware that is being transferred.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_segment_number(FuCfuOffer *self)
@@ -87,8 +99,6 @@ fu_cfu_offer_get_segment_number(FuCfuOffer *self)
  * for the next time the device is replugged.
  *
  * Returns: boolean
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self)
@@ -105,8 +115,6 @@ fu_cfu_offer_get_force_immediate_reset(FuCfuOffer *self)
  * Gets if the in-situ firmware should ignore version mismatch (e.g. downgrade).
  *
  * Returns: boolean
- *
- * Since: 1.7.0
  **/
 gboolean
 fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self)
@@ -123,8 +131,6 @@ fu_cfu_offer_get_force_ignore_version(FuCfuOffer *self)
  * Gets the component in the device to apply the firmware update.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_component_id(FuCfuOffer *self)
@@ -141,8 +147,6 @@ fu_cfu_offer_get_component_id(FuCfuOffer *self)
  * Gets the token to identify the user specific software making the offer.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_token(FuCfuOffer *self)
@@ -159,8 +163,6 @@ fu_cfu_offer_get_token(FuCfuOffer *self)
  * Gets the hardware variant bitmask corresponding with compatible firmware.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint32
 fu_cfu_offer_get_hw_variant(FuCfuOffer *self)
@@ -177,8 +179,6 @@ fu_cfu_offer_get_hw_variant(FuCfuOffer *self)
  * Gets the CFU protocol version.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_protocol_revision(FuCfuOffer *self)
@@ -195,8 +195,6 @@ fu_cfu_offer_get_protocol_revision(FuCfuOffer *self)
  * Gets the bank register, used if multiple banks are supported.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_bank(FuCfuOffer *self)
@@ -213,8 +211,6 @@ fu_cfu_offer_get_bank(FuCfuOffer *self)
  * Gets the milestone, which can be used as a version for example EV1, EVT etc.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint8
 fu_cfu_offer_get_milestone(FuCfuOffer *self)
@@ -231,8 +227,6 @@ fu_cfu_offer_get_milestone(FuCfuOffer *self)
  * Gets the product ID for this CFU image.
  *
  * Returns: integer
- *
- * Since: 1.7.0
  **/
 guint16
 fu_cfu_offer_get_product_id(FuCfuOffer *self)
@@ -248,8 +242,6 @@ fu_cfu_offer_get_product_id(FuCfuOffer *self)
  * @segment_number: integer
  *
  * Sets the part of the firmware that is being transferred.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_segment_number(FuCfuOffer *self, guint8 segment_number)
@@ -266,8 +258,6 @@ fu_cfu_offer_set_segment_number(FuCfuOffer *self, guint8 segment_number)
  *
  * Sets if the in-situ firmware should reset into the new firmware immediately, rather than waiting
  * for the next time the device is replugged.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_force_immediate_reset(FuCfuOffer *self, gboolean force_immediate_reset)
@@ -283,8 +273,6 @@ fu_cfu_offer_set_force_immediate_reset(FuCfuOffer *self, gboolean force_immediat
  * @force_ignore_version: boolean
  *
  * Sets if the in-situ firmware should ignore version mismatch (e.g. downgrade).
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_force_ignore_version(FuCfuOffer *self, gboolean force_ignore_version)
@@ -300,8 +288,6 @@ fu_cfu_offer_set_force_ignore_version(FuCfuOffer *self, gboolean force_ignore_ve
  * @component_id: integer
  *
  * Sets the component in the device to apply the firmware update.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_component_id(FuCfuOffer *self, guint8 component_id)
@@ -317,8 +303,6 @@ fu_cfu_offer_set_component_id(FuCfuOffer *self, guint8 component_id)
  * @token: integer
  *
  * Sets the token to identify the user specific software making the offer.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_token(FuCfuOffer *self, guint8 token)
@@ -334,8 +318,6 @@ fu_cfu_offer_set_token(FuCfuOffer *self, guint8 token)
  * @hw_variant: integer
  *
  * Sets the hardware variant bitmask corresponding with compatible firmware.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_hw_variant(FuCfuOffer *self, guint32 hw_variant)
@@ -351,8 +333,6 @@ fu_cfu_offer_set_hw_variant(FuCfuOffer *self, guint32 hw_variant)
  * @protocol_revision: integer
  *
  * Sets the CFU protocol version.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_protocol_revision(FuCfuOffer *self, guint8 protocol_revision)
@@ -369,8 +349,6 @@ fu_cfu_offer_set_protocol_revision(FuCfuOffer *self, guint8 protocol_revision)
  * @bank: integer
  *
  * Sets bank register, used if multiple banks are supported.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_bank(FuCfuOffer *self, guint8 bank)
@@ -387,8 +365,6 @@ fu_cfu_offer_set_bank(FuCfuOffer *self, guint8 bank)
  * @milestone: integer
  *
  * Sets the milestone, which can be used as a version for example EV1, EVT etc.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone)
@@ -405,8 +381,6 @@ fu_cfu_offer_set_milestone(FuCfuOffer *self, guint8 milestone)
  * @product_id: integer
  *
  * Sets the product ID for this CFU image.
- *
- * Since: 1.7.0
  **/
 void
 fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
@@ -487,47 +461,88 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_cfu_offer_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_cfu_offer_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
-	const gchar *tmpb;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "segment_number", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"segment_number",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->segment_number = tmp;
-	tmpb = xb_node_query_text(n, "force_immediate_reset", NULL);
-	if (tmpb != NULL) {
-		if (!fu_strtobool(tmpb, &priv->force_immediate_reset, error))
-			return FALSE;
-	}
-	tmpb = xb_node_query_text(n, "force_ignore_version", NULL);
-	if (tmpb != NULL) {
-		if (!fu_strtobool(tmpb, &priv->force_ignore_version, error))
-			return FALSE;
-	}
-	tmp = xb_node_query_text_as_uint(n, "component_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"force_immediate_reset",
+							&priv->force_immediate_reset,
+							FALSE,
+							error))
+		return FALSE;
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"force_ignore_version",
+							&priv->force_ignore_version,
+							FALSE,
+							error))
+		return FALSE;
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"component_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->component_id = tmp;
-	tmp = xb_node_query_text_as_uint(n, "token", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"token",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->token = tmp;
-	tmp = xb_node_query_text_as_uint(n, "hw_variant", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"hw_variant",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		priv->hw_variant = tmp;
-	tmp = xb_node_query_text_as_uint(n, "protocol_revision", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"protocol_revision",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->protocol_revision = tmp;
-	tmp = xb_node_query_text_as_uint(n, "bank", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"bank",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->bank = tmp;
-	tmp = xb_node_query_text_as_uint(n, "milestone", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"milestone",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->milestone = tmp;
-	tmp = xb_node_query_text_as_uint(n, "product_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"product_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		priv->product_id = tmp;
 
 	/* success */
@@ -564,8 +579,6 @@ fu_cfu_offer_class_init(FuCfuOfferClass *klass)
  * fu_cfu_offer_new:
  *
  * Creates a new #FuFirmware for a CFU offer
- *
- * Since: 1.7.0
  **/
 FuFirmware *
 fu_cfu_offer_new(void)

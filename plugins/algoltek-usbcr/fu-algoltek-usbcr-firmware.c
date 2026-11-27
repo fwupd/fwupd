@@ -22,11 +22,13 @@ G_DEFINE_TYPE(FuAlgoltekUsbcrFirmware, fu_algoltek_usbcr_firmware, FU_TYPE_FIRMW
 static void
 fu_algoltek_usbcr_firmware_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
-				  XbBuilderNode *bn)
+				  FwupdJsonObject *json_object)
 {
 	FuAlgoltekUsbcrFirmware *self = FU_ALGOLTEK_USBCR_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "boot_ver", self->boot_ver);
-	fu_xmlb_builder_insert_kx(bn, "emmc_ver", self->emmc_ver);
+	if (self->boot_ver != 0)
+		fwupd_json_object_add_integer(json_object, "boot_ver", self->boot_ver);
+	if (self->emmc_ver != 0)
+		fwupd_json_object_add_integer(json_object, "emmc_ver", self->emmc_ver);
 }
 
 static gboolean
@@ -113,17 +115,27 @@ fu_algoltek_usbcr_firmware_get_boot_ver(FuAlgoltekUsbcrFirmware *self)
 }
 
 static gboolean
-fu_algoltek_usbcr_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_algoltek_usbcr_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuAlgoltekUsbcrFirmware *self = FU_ALGOLTEK_USBCR_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* two simple properties */
-	tmp = xb_node_query_text_as_uint(n, "boot_ver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"boot_ver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->boot_ver = tmp;
-	tmp = xb_node_query_text_as_uint(n, "emmc_ver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"emmc_ver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->emmc_ver = tmp;
 
 	/* success */

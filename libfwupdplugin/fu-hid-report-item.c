@@ -43,13 +43,16 @@ fu_hid_report_item_get_value(FuHidReportItem *self)
 }
 
 static void
-fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_hid_report_item_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuHidReportItem *self = FU_HID_REPORT_ITEM(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "kind",
-				  fu_hid_item_kind_to_string(fu_hid_report_item_get_kind(self)));
-	fu_xmlb_builder_insert_kx(bn, "value", self->value);
+	const gchar *kind_str = fu_hid_item_kind_to_string(fu_hid_report_item_get_kind(self));
+	if (kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "kind", kind_str);
+	if (self->value != 0)
+		fwupd_json_object_add_integer(json_object, "value", self->value);
 }
 
 static gboolean
@@ -146,29 +149,42 @@ fu_hid_report_item_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_hid_report_item_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_hid_report_item_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuHidReportItem *self = FU_HID_REPORT_ITEM(firmware);
 	const gchar *tmp;
-	guint64 value = 0;
+	gint64 value = G_MAXINT64;
 
 	/* optional data */
-	tmp = xb_node_query_text(n, "idx", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "idx")) {
+		if (!fwupd_json_object_get_integer(json_object, "idx", &value, error))
 			return FALSE;
+		if (value < 0 || value > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid idx");
+			return FALSE;
+		}
 		fu_firmware_set_idx(firmware, value);
 		fu_firmware_set_id(firmware, fu_hid_item_tag_to_string(value));
 	}
-	tmp = xb_node_query_text(n, "id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "id", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		fu_firmware_set_id(firmware, tmp);
 		fu_firmware_set_idx(firmware, fu_hid_item_tag_from_string(tmp));
 	}
-	tmp = xb_node_query_text(n, "value", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "value")) {
+		if (!fwupd_json_object_get_integer(json_object, "value", &value, error))
 			return FALSE;
+		if (value < 0 || value > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid value");
+			return FALSE;
+		}
 		self->value = value;
 	}
 
@@ -199,8 +215,6 @@ fu_hid_report_item_class_init(FuHidReportItemClass *klass)
  * Creates a new HID report item
  *
  * Returns: (transfer full): a #FuHidReportItem
- *
- * Since: 1.9.4
  **/
 FuHidReportItem *
 fu_hid_report_item_new(void)

@@ -19,11 +19,15 @@ struct _FuRaydiumTpFirmware {
 G_DEFINE_TYPE(FuRaydiumTpFirmware, fu_raydium_tp_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_raydium_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_raydium_tp_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuRaydiumTpFirmware *self = FU_RAYDIUM_TP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "vendor_id", self->vendor_id);
-	fu_xmlb_builder_insert_kx(bn, "product_id", self->product_id);
+	if (self->vendor_id != 0)
+		fwupd_json_object_add_integer(json_object, "vendor_id", self->vendor_id);
+	if (self->product_id != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", self->product_id);
 }
 
 guint16

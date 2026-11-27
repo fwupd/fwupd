@@ -19,8 +19,6 @@
  * Opens the file as an output stream.
  *
  * Returns: (transfer full): a #GOutputStream, or %NULL on error
- *
- * Since: 2.0.12
  **/
 GOutputStream *
 fu_output_stream_from_path(const gchar *path, GError **error)
@@ -50,8 +48,6 @@ fu_output_stream_from_path(const gchar *path, GError **error)
  * Write bytes into the stream, retrying as required. Will block during the operation.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.12
  **/
 gboolean
 fu_output_stream_write_bytes(GOutputStream *stream,

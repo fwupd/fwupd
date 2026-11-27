@@ -111,9 +111,9 @@ fu_engine_requirements_require_vercmp_part(const gchar *compare,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed predicate [%s %s %s]",
-			    version_req,
+			    version,
 			    compare,
-			    version);
+			    version_req);
 		return FALSE;
 	}
 

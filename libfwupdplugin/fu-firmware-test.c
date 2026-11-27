@@ -50,7 +50,7 @@ fu_firmware_fdt_func(void)
 	g_autoptr(FuFdtImage) img2 = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "fdt.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fdt.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -94,7 +94,7 @@ fu_firmware_fit_func(void)
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "fit.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fit.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -130,29 +130,68 @@ fu_firmware_fit_no_compatible_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* a configuration does not need compatible strings */
-	fit = fu_firmware_new_from_xml(
-	    "<firmware gtype=\"FuFitFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>images</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-1</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">any board</metadata>\n"
-	    "        <metadata key=\"data\" format=\"data\">YWJj</metadata>\n" /* abc */
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>configurations</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	fit = fu_firmware_new_from_json("{\n"
+					"  \"gtype\": \"FuFitFirmware\",\n"
+					"  \"firmware\": [\n"
+					"    {\n"
+					"      \"gtype\": \"FuFdtImage\",\n"
+					"      \"metadata\": [\n"
+					"        {\n"
+					"          \"key\": \"timestamp\",\n"
+					"          \"format\": \"uint32\",\n"
+					"          \"value\": \"0x629d4abd\"\n"
+					"        }\n"
+					"      ],\n"
+					"      \"firmware\": [\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"images\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"any board\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data\",\n"
+					"                  \"format\": \"data\",\n"
+					"                  \"value\": \"YWJj\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        },\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"configurations\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"conf-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"firmware\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"firmware-1\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        }\n"
+					"      ]\n"
+					"    }\n"
+					"  ]\n"
+					"}\n",
+					&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fit);
 	blob = fu_firmware_write(fit, &error);
@@ -185,43 +224,122 @@ fu_firmware_fit_external_func(void)
 
 	/* one image with its data at an offset from the end of the FIT, as written by
 	 * 'mkimage -E', and one with its data at an absolute position */
-	fit = fu_firmware_new_from_xml(
-	    "<firmware gtype=\"FuFitFirmware\">\n"
-	    "  <firmware gtype=\"FuFdtImage\">\n"
-	    "    <metadata key=\"timestamp\" format=\"uint32\">0x629d4abd</metadata>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>images</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-1</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">offset</metadata>\n"
-	    "        <metadata key=\"data-offset\" format=\"uint32\">0x4</metadata>\n"
-	    "        <metadata key=\"data-size\" format=\"uint32\">0x3</metadata>\n"
-	    "        <firmware gtype=\"FuFdtImage\">\n"
-	    "          <id>hash-1</id>\n"
-	    "          <metadata key=\"algo\" format=\"str\">crc32</metadata>\n"
-	    "          <metadata key=\"value\" format=\"uint32\">0x352441C2</metadata>\n"
-	    "        </firmware>\n"
-	    "      </firmware>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>firmware-2</id>\n"
-	    "        <metadata key=\"type\" format=\"str\">firmware</metadata>\n"
-	    "        <metadata key=\"description\" format=\"str\">position</metadata>\n"
-	    "        <metadata key=\"data-position\" format=\"uint32\">0x1000</metadata>\n"
-	    "        <metadata key=\"data-size\" format=\"uint32\">0x3</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "    <firmware gtype=\"FuFdtImage\">\n"
-	    "      <id>configurations</id>\n"
-	    "      <firmware gtype=\"FuFdtImage\">\n"
-	    "        <id>conf-1</id>\n"
-	    "        <metadata key=\"compatible\" format=\"strlist\">alice</metadata>\n"
-	    "        <metadata key=\"firmware\" format=\"strlist\">firmware-1</metadata>\n"
-	    "      </firmware>\n"
-	    "    </firmware>\n"
-	    "  </firmware>\n"
-	    "</firmware>\n",
-	    &error);
+	fit = fu_firmware_new_from_json("{\n"
+					"  \"gtype\": \"FuFitFirmware\",\n"
+					"  \"firmware\": [\n"
+					"    {\n"
+					"      \"gtype\": \"FuFdtImage\",\n"
+					"      \"metadata\": [\n"
+					"        {\n"
+					"          \"key\": \"timestamp\",\n"
+					"          \"format\": \"uint32\",\n"
+					"          \"value\": \"0x629d4abd\"\n"
+					"        }\n"
+					"      ],\n"
+					"      \"firmware\": [\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"images\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"offset\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-offset\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x4\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-size\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x3\"\n"
+					"                }\n"
+					"              ],\n"
+					"              \"firmware\": [\n"
+					"                {\n"
+					"                  \"gtype\": \"FuFdtImage\",\n"
+					"                  \"id\": \"hash-1\",\n"
+					"                  \"metadata\": [\n"
+					"                    {\n"
+					"                      \"key\": \"algo\",\n"
+					"                      \"format\": \"str\",\n"
+					"                      \"value\": \"crc32\"\n"
+					"                    },\n"
+					"                    {\n"
+					"                      \"key\": \"value\",\n"
+					"                      \"format\": \"uint32\",\n"
+					"                      \"value\": \"0x352441C2\"\n"
+					"                    }\n"
+					"                  ]\n"
+					"                }\n"
+					"              ]\n"
+					"            },\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"firmware-2\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"type\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"firmware\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"description\",\n"
+					"                  \"format\": \"str\",\n"
+					"                  \"value\": \"position\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-position\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x1000\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"data-size\",\n"
+					"                  \"format\": \"uint32\",\n"
+					"                  \"value\": \"0x3\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        },\n"
+					"        {\n"
+					"          \"gtype\": \"FuFdtImage\",\n"
+					"          \"id\": \"configurations\",\n"
+					"          \"firmware\": [\n"
+					"            {\n"
+					"              \"gtype\": \"FuFdtImage\",\n"
+					"              \"id\": \"conf-1\",\n"
+					"              \"metadata\": [\n"
+					"                {\n"
+					"                  \"key\": \"compatible\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"alice\"\n"
+					"                },\n"
+					"                {\n"
+					"                  \"key\": \"firmware\",\n"
+					"                  \"format\": \"strlist\",\n"
+					"                  \"value\": \"firmware-1\"\n"
+					"                }\n"
+					"              ]\n"
+					"            }\n"
+					"          ]\n"
+					"        }\n"
+					"      ]\n"
+					"    }\n"
+					"  ]\n"
+					"}\n",
+					&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fit);
 	fdt = fu_firmware_write(fit, &error);
@@ -287,46 +405,43 @@ fu_firmware_build_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbSilo) silo = NULL;
-	const gchar *buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-			   "<firmware>\n"
-			   "  <version>1.2.3</version>\n"
-			   "  <firmware>\n"
-			   "    <version>4.5.6</version>\n"
-			   "    <id>header</id>\n"
-			   "    <idx>456</idx>\n"
-			   "    <addr>0x456</addr>\n"
-			   "    <data>aGVsbG8=</data>\n"
-			   "  </firmware>\n"
-			   "  <firmware>\n"
-			   "    <version>7.8.9</version>\n"
-			   "    <id>header</id>\n"
-			   "    <idx>789</idx>\n"
-			   "    <addr>0x789</addr>\n"
-			   "  </firmware>\n"
-			   "</firmware>\n";
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_object = NULL;
+	const gchar *buf = "{\n"
+			   "  \"version\": \"1.2.3\",\n"
+			   "  \"firmware\": [\n"
+			   "    {\n"
+			   "      \"version\": \"4.5.6\",\n"
+			   "      \"id\": \"header\",\n"
+			   "      \"idx\": 456,\n"
+			   "      \"addr\": \"0x456\",\n"
+			   "      \"data\": \"aGVsbG8=\"\n"
+			   "    },\n"
+			   "    {\n"
+			   "      \"version\": \"7.8.9\",\n"
+			   "      \"id\": \"header\",\n"
+			   "      \"idx\": 789,\n"
+			   "      \"addr\": \"0x789\"\n"
+			   "    }\n"
+			   "  ]\n"
+			   "}\n";
 	blob = g_bytes_new_static(buf, strlen(buf));
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 
-	/* parse XML */
-	ret = xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	/* parse JSON */
+	json_node =
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_nonnull(json_node);
+	json_object = fwupd_json_node_get_object(json_node, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	n = xb_silo_query_first(silo, "firmware", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(n);
+	g_assert_nonnull(json_object);
 
 	/* build object */
 	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
-	ret = fu_firmware_build(firmware, n, &error);
+	ret = fu_firmware_build(firmware, json_object, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fu_firmware_get_version(firmware), ==, "1.2.3");
@@ -380,7 +495,7 @@ fu_firmware_dfuse_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a DfuSe firmware */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfuse.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfuse.builder.json", NULL);
 	g_assert_nonnull(filename);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
@@ -410,7 +525,7 @@ fu_firmware_fmap_func(void)
 #endif
 
 	/* load firmware */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap-offset.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap-offset.builder.json", NULL);
 	g_assert_nonnull(filename);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
@@ -445,8 +560,8 @@ static void
 fu_firmware_sorted_func(void)
 {
 	gboolean ret;
-	g_autofree gchar *xml1 = NULL;
-	g_autofree gchar *xml2 = NULL;
+	g_autofree gchar *json1 = NULL;
+	g_autofree gchar *json2 = NULL;
 	g_autoptr(FuFirmware) firmware1 = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware2 = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware3 = fu_firmware_new();
@@ -474,49 +589,53 @@ fu_firmware_sorted_func(void)
 
 	/* by idx */
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
-	xml1 = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
+	json1 = fu_firmware_export_to_json(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
 	g_assert_no_error(error);
-	g_debug("%s", xml1);
-	g_assert_cmpstr(xml1,
+	g_debug("%s", json1);
+	g_assert_cmpstr(json1,
 			==,
-			"<firmware>\n"
-			"  <flags>dedupe-idx</flags>\n"
-			"  <firmware>\n"
-			"    <id>bbb</id>\n"
-			"    <idx>0x100</idx>\n"
-			"  </firmware>\n"
-			"  <firmware>\n"
-			"    <id>aaa</id>\n"
-			"    <idx>0x200</idx>\n"
-			"  </firmware>\n"
-			"  <firmware>\n"
-			"    <id>zzz</id>\n"
-			"    <idx>0x999</idx>\n"
-			"  </firmware>\n"
-			"</firmware>\n");
+			"{\n"
+			"  \"flags\": \"dedupe-idx\",\n"
+			"  \"firmware\": [\n"
+			"    {\n"
+			"      \"id\": \"bbb\",\n"
+			"      \"idx\": 256\n"
+			"    },\n"
+			"    {\n"
+			"      \"id\": \"aaa\",\n"
+			"      \"idx\": 512\n"
+			"    },\n"
+			"    {\n"
+			"      \"id\": \"zzz\",\n"
+			"      \"idx\": 2457\n"
+			"    }\n"
+			"  ]\n"
+			"}");
 
 	/* now by both, here using id as it is last */
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
-	xml2 = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
+	json2 = fu_firmware_export_to_json(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
 	g_assert_no_error(error);
-	g_debug("%s", xml2);
-	g_assert_cmpstr(xml2,
+	g_debug("%s", json2);
+	g_assert_cmpstr(json2,
 			==,
-			"<firmware>\n"
-			"  <flags>dedupe-id,dedupe-idx</flags>\n"
-			"  <firmware>\n"
-			"    <id>aaa</id>\n"
-			"    <idx>0x200</idx>\n"
-			"  </firmware>\n"
-			"  <firmware>\n"
-			"    <id>bbb</id>\n"
-			"    <idx>0x100</idx>\n"
-			"  </firmware>\n"
-			"  <firmware>\n"
-			"    <id>zzz</id>\n"
-			"    <idx>0x999</idx>\n"
-			"  </firmware>\n"
-			"</firmware>\n");
+			"{\n"
+			"  \"flags\": \"dedupe-id,dedupe-idx\",\n"
+			"  \"firmware\": [\n"
+			"    {\n"
+			"      \"id\": \"aaa\",\n"
+			"      \"idx\": 512\n"
+			"    },\n"
+			"    {\n"
+			"      \"id\": \"bbb\",\n"
+			"      \"idx\": 256\n"
+			"    },\n"
+			"    {\n"
+			"      \"id\": \"zzz\",\n"
+			"      \"idx\": 2457\n"
+			"    }\n"
+			"  ]\n"
+			"}");
 }
 
 static void
@@ -531,7 +650,7 @@ fu_firmware_new_from_gtypes_func(void)
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -690,7 +809,7 @@ fu_firmware_dfu_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -713,7 +832,7 @@ fu_firmware_ifwi_cpd_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-cpd.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-cpd.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -832,7 +951,7 @@ fu_firmware_ifwi_fpt_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-fpt.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-fpt.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -865,7 +984,7 @@ fu_firmware_oprom_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "oprom.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "oprom.builder.json", NULL);
 	firmware1 = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware1);
@@ -901,7 +1020,7 @@ fu_firmware_dfu_patch_func(void)
 	g_autoptr(GBytes) data_patch1 = g_bytes_new_static("HELO", 4);
 	g_autoptr(GError) error = NULL;
 
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.json", NULL);
 	firmware = fu_firmware_new_from_filename(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
@@ -982,28 +1101,30 @@ fu_firmware_func(void)
 
 	str = fu_firmware_to_string(firmware);
 	ret = fu_test_compare_lines(str,
-				    "<firmware>\n"
-				    "  <image_gtypes>\n"
-				    "    <gtype>FuFirmware</gtype>\n"
-				    "  </image_gtypes>\n"
-				    "  <firmware>\n"
-				    "    <id>primary</id>\n"
-				    "    <idx>0xd</idx>\n"
-				    "    <addr>0x200</addr>\n"
-				    "    <filename>BIOS.bin</filename>\n"
-				    "    <image_gtypes>\n"
-				    "      <gtype>FuFirmware</gtype>\n"
-				    "    </image_gtypes>\n"
-				    "  </firmware>\n"
-				    "  <firmware>\n"
-				    "    <id>secondary</id>\n"
-				    "    <idx>0x17</idx>\n"
-				    "    <addr>0x400</addr>\n"
-				    "    <image_gtypes>\n"
-				    "      <gtype>FuFirmware</gtype>\n"
-				    "    </image_gtypes>\n"
-				    "  </firmware>\n"
-				    "</firmware>\n",
+				    "{\n"
+				    "  \"image_gtypes\": [\n"
+				    "    \"FuFirmware\"\n"
+				    "  ],\n"
+				    "  \"firmware\": [\n"
+				    "    {\n"
+				    "      \"id\": \"primary\",\n"
+				    "      \"idx\": 13,\n"
+				    "      \"addr\": 512,\n"
+				    "      \"filename\": \"BIOS.bin\",\n"
+				    "      \"image_gtypes\": [\n"
+				    "        \"FuFirmware\"\n"
+				    "      ]\n"
+				    "    },\n"
+				    "    {\n"
+				    "      \"id\": \"secondary\",\n"
+				    "      \"idx\": 23,\n"
+				    "      \"addr\": 1024,\n"
+				    "      \"image_gtypes\": [\n"
+				    "        \"FuFirmware\"\n"
+				    "      ]\n"
+				    "    }\n"
+				    "  ]\n"
+				    "}",
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1120,252 +1241,277 @@ static void
 fu_firmware_builder_round_trip_func(void)
 {
 	struct {
-		const gchar *xml_fn;
+		const gchar *json_fn;
 		const gchar *checksum;
 		FuFirmwareBuilderFlags flags;
 	} map[] = {
 	    {
-		"acpi-table.builder.xml",
+		"acpi-table.builder.json",
 		"e286af7d9e0fcfc0e3fd3f2199156a5f1282c3ca",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"cab.builder.xml",
-		"a708f47b1a46377f1ea420597641ffe9a40abd75",
+		"cab.builder.json",
+		"c819b8a99111dcc5141d14c6d23bdf385b47a411",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"cab-compressed.builder.xml",
+		"cab-compressed.builder.json",
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"elf.builder.xml",
+		"elf.builder.json",
 		"99ea60b8dd46085dcbf1ecd5e72b4cb73a3b6faa",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"dfuse.builder.xml",
+		"dfuse.builder.json",
 		"c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"pefile.builder.xml",
+		"pefile.builder.json",
 		"73b0e0dc9f6175b7bc27b77f20e0d9eca2d2d141",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"linear.builder.xml",
+		"linear.builder.json",
 		"18fa8201652c82dc717df1905d8ab72e46e3d82b",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"hid-report-item.builder.xml",
+		"hid-report-item.builder.json",
 		"5b18c07399fc8968ce22127df38d8d923089ec92",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"hid-descriptor.builder.xml",
+		"hid-descriptor.builder.json",
 		"6bb23f7c9fedc21f05528b3b63ad5837f4a16a92",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"sbatlevel.builder.xml",
+		"sbatlevel.builder.json",
 		"8204ef9477b4305748a0de6e667547cb6ce5e426",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"csv.builder.xml",
+		"csv.builder.json",
 		"986cbf8cde5bc7d8b49ee94cceae3f92efbd2eef",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"fdt.builder.xml",
+		"fdt.builder.json",
 		"40f7fbaff684a6bcf67c81b3079422c2529741e1",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"fit.builder.xml",
+		"fit.builder.json",
 		"3185644581a7d58c04e7faa32364c933d21377e8",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		"srec.builder.xml",
+		"srec.builder.json",
 		"c8b405b7995d5934086c56b091a4c5df47b3b0d7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		"ihex.builder.xml",
+		"srec-addr32.builder.json",
+		"a5ae7449b0a64e8b7466de312b062b72ef63dadf",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
+		"ihex.builder.json",
 		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"fmap.builder.xml",
+		"fmap.builder.json",
 		"0c251eec3890fcf368b89ae8bb6aa2db70a41ade",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-load-option.builder.xml",
+		"efi-load-option.builder.json",
 		"7ef696d22902ae97ef5f73ad9c85a28095ad56f1",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-load-option-hive.builder.xml",
+		"efi-load-option-hive.builder.json",
 		"76a378752b7ccdf3d68365d83784053356fa7e0a",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-load-option-data.builder.xml",
+		"efi-load-option-data.builder.json",
 		"6e6190dc6b1bf45bc6e30ba7a6a98d891d692dd0",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"edid.builder.xml",
+		"edid.builder.json",
 		"64cef10b75ccce684a483d576dd4a4ce6bef8165",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-section.builder.xml",
+		"efi-section.builder.json",
 		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-section.builder.xml",
+		"efi-section.builder.json",
 		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-file.builder.xml",
+		"efi-file.builder.json",
 		"90374d97cf6bc70059d24c816c188c10bd250ed7",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-filesystem.builder.xml",
+		"efi-filesystem.builder.json",
 		"d6fbadc1c303a3b4eede9db7fb0ddb353efffc86",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-signature.builder.xml",
+		"efi-signature.builder.json",
 		"ff7b862504262ce4853db29690b683bb06ce7d1f",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-signature-list.builder.xml",
+		"efi-signature-list.builder.json",
 		"450111ea0f77a0ede5b6a6305cd2e02b44b5f1e9",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-signature-list-external.builder.xml",
+		"efi-signature-list-external.builder.json",
 		"4257548735f5f2430fa72ed75f261e7d80faf22e",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-variable-authentication2.builder.xml",
+		"efi-signature-list-svn.builder.json",
+		"52b2255c43ff7bc4f86fd9e18643bb21e28586be",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"efi-variable-authentication2.builder.json",
 		"bd08e81e9c86490dc1ffb32b1e3332606eb0fa97",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-ftw-store.builder.xml",
+		"efi-ftw-store.builder.json",
 		"9bdb363e31e00d7fb0b42eacdc95771a3795b7ec",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-vss-auth-variable.builder.xml",
+		"efi-vss-auth-variable.builder.json",
 		"de6391f8b09653859b4ff93a7d5004c52c35d5c2",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-vss2-variable-store.builder.xml",
+		"efi-vss2-variable-store.builder.json",
 		"25ef7bf7ea600c8a739ff4dc6876bcd2f9d8d30d",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-volume.builder.xml",
+		"efi-volume.builder.json",
 		"d0f658bce79c8468458e0b64e7de24f45c063076",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"efi-volume-sized.builder.xml",
+		"efi-volume-sized.builder.json",
 		"d7087ea16218d700b9175a9cd0c27bd56b07a6d4",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"ifd.builder.xml",
+		"ifd.builder.json",
 		"494e7be6a72e743e6738c0ecdbdcddbf27d1dbd7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		"cfu-offer.builder.xml",
+		"ifd-no-bios.builder.json",
+		"e5ea653f2df18cb02cf1c13647da5ed4b0bfcb2f",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
+		"ifd-bios.builder.json",
+		"e1d05d4dffea640f4d38c584a06c08f0523cb760",
+		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+	    },
+	    {
+		"cfu-offer.builder.json",
 		"c10223887ff6cdf4475ad07c65b1f0f3a2d0d5ca",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"cfu-payload.builder.xml",
+		"cfu-payload.builder.json",
 		"5da829f5fd15a28970aed98ebb26ebf2f88ed6f2",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"ifwi-cpd.builder.xml",
+		"ifwi-cpd.builder.json",
 		"91e348d17cb91ef7a528e85beb39d15a0532dca5",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"ifwi-fpt.builder.xml",
+		"ifwi-fpt.builder.json",
 		"d1f0fb2c2a7a99441bf4a825d060642315a94d91",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"oprom.builder.xml",
+		"oprom.builder.json",
 		"2e8387c1ef14ed4038e6bc637146b86b4d702fa8",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"intel-thunderbolt.builder.xml",
+		"intel-thunderbolt.builder.json",
 		"b3a73baf05078dfdd833b407a0a6afb239ec2f23",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		"intel-thunderbolt-firmware.builder.xml",
+		"intel-thunderbolt-firmware.builder.json",
 		"cdd9e574df976338685d7f26e431027a7fd857ef",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		"usb-bos-descriptor.builder.xml",
+		"usb-bos-descriptor.builder.json",
 		"a305749853781c6899c4b28039cb4c7d9059b910",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"json.builder.xml",
+		"json.builder.json",
 		"845be24c3f31c4e8f0feeadfe356b3156628ba99",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"tpm-eventlog-v1.builder.xml",
+		"tpm-eventlog-v1.builder.json",
 		"79b257b9f668681e6c50f3c4c59b5430a3c56625",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"tpm-eventlog-v2.builder.xml",
+		"tpm-eventlog-v2.builder.json",
 		"0b965076bd38f737aaadbaff464199ba104f719a",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"uswid.builder.xml",
+		"uswid.builder.json",
 		"a6ad8ca91c0f2d18dc419ecd45fc09336d1089bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"uswid-compressed.builder.xml",
+		"coswid.builder.json",
+		"cbc2d95e841942bfc938dd8f9d8dde26a0c79b9a",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"uswid-compressed.builder.json",
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"zip.builder.xml",
+		"zip.builder.json",
 		"aefdd7b205927e383981b03ded1ad22878d03263",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		"zip-compressed.builder.xml",
+		"zip-compressed.builder.json",
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
@@ -1375,7 +1521,7 @@ fu_firmware_builder_round_trip_func(void)
 		g_autofree gchar *filename = NULL;
 		g_autoptr(GError) error = NULL;
 
-		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].xml_fn, NULL);
+		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].json_fn, NULL);
 		g_debug("parsing: %s", filename);
 		ret = fu_firmware_roundtrip_from_filename(filename,
 							  map[i].checksum,

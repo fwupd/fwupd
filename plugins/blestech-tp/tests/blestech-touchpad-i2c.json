@@ -1,0 +1,18 @@
+{
+  "name": "Blestech BL7953 hid-over-i2c",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "ba5699923e530da9b40616c995f74485c7391cd36012ce501bd7e91b70e785a1-BL7953-X1E80100-2.1-lvfs.cab",
+      "emulation-url": "5da24b56c06f571b575e4faa25c11a434e09dbdcf6030d553961791b70368821-bl7953-i2c-v02-2.1.zip",
+      "components": [
+        {
+          "version": "2.1",
+          "guids": [
+            "b0dd29c2-c0e9-5d31-983a-fb9c64c22af3"
+          ]
+        }
+      ]
+    }
+  ]
+}

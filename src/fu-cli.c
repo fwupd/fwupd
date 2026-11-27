@@ -451,7 +451,7 @@ fu_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GErr
 	}
 
 	/* device is already on a different release */
-	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) != 0)
+	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel_bkc)) != 0)
 		return TRUE;
 
 	/* TRANSLATORS: BKC is the industry name for the best known configuration and is a set
@@ -463,7 +463,7 @@ fu_cli_prompt_warning_bkc(FuCli *self, FwupdDevice *dev, FwupdRelease *rel, GErr
 	    /* TRANSLATORS: %1 is the current device version number, and %2 is the
 	       command name, e.g. `fwupdmgr sync` */
 	    _("This device will be reverted back to %s when the %s command is performed."),
-	    fwupd_release_get_version(rel),
+	    fwupd_release_get_version(rel_bkc),
 	    cmd);
 
 	fu_console_box(
@@ -2202,6 +2202,104 @@ fu_cli_download(FuCli *self, gchar **values, GError **error)
 				   error);
 }
 
+static void
+fu_cli_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck:error */
+{
+	g_autofree gchar *path = g_path_get_dirname(value);
+	if (!g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		/* nocheck:error */
+		g_prefix_error(error,
+			       "Unable to access %s. You may need to copy %s to %s: ",
+			       path,
+			       value,
+			       g_getenv("HOME"));
+	}
+}
+
+static gboolean
+fu_cli_write_blob(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	const gchar *version = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* invalid args */
+	if (g_strv_length(values) == 0 || g_strv_length(values) > 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* get device */
+	fu_cli_add_filter_device_include(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_USES_DAEMON))
+		fu_cli_add_filter_device_include(self, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET);
+	if (g_strv_length(values) >= 2) {
+		dev = fu_cli_get_device_by_id(self, values[1], error);
+		if (dev == NULL)
+			return FALSE;
+	} else {
+		g_autoptr(GPtrArray) devices = NULL;
+		if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "device ID required");
+			return FALSE;
+		}
+		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+		dev = fu_cli_prompt_for_device(self, devices, error);
+		if (dev == NULL)
+			return FALSE;
+	}
+
+	/* optional version */
+	if (g_strv_length(values) >= 3)
+		version = values[2];
+
+	fu_cli_set_current_operation(self, FU_CLI_OPERATION_INSTALL);
+	filename = fu_cli_download_if_required(self, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+
+	/* detect bitlocker */
+	if (!fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_NO_SAFETY_CHECK) &&
+	    !fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_ASSUME_YES)) {
+		if (!fu_cli_prompt_warning_fde(self, dev, error))
+			return FALSE;
+	}
+
+	/* there is no metadata, so the daemon always asks for authentication */
+	if (!fwupd_client_write_blob(priv->client,
+				     fwupd_device_get_id(dev),
+				     filename,
+				     version,
+				     priv->cancellable,
+				     error)) {
+		fu_cli_maybe_prefix_sandbox_error(filename, error);
+		return FALSE;
+	}
+
+	/* TRANSLATORS: success message */
+	fu_console_print_literal(priv->console, _("Successfully installed firmware"));
+
+	fu_cli_display_current_message(self);
+
+	/* we don't want to ask anything */
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_NO_REBOOT_CHECK)) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	/* show reboot if needed */
+	return fu_cli_prompt_complete(self, TRUE, error);
+}
+
 static gboolean
 fu_cli_local_install(FuCli *self, gchar **values, GError **error)
 {
@@ -3478,11 +3576,9 @@ fu_cli_get_updates(FuCli *self, gchar **values, GError **error)
 		for (guint idx = 0; idx < g_strv_length(values); idx++) {
 			FwupdDevice *device = fu_cli_get_device_by_id(self, values[idx], error);
 			if (device == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_ARGS,
-					    "'%s' is not a valid GUID nor DEVICE-ID",
-					    values[idx]);
+				g_prefix_error(error,
+					       "'%s' is not a valid GUID nor DEVICE-ID: ",
+					       values[idx]);
 				return FALSE;
 			}
 			g_ptr_array_add(devices, device);
@@ -4612,6 +4708,44 @@ fu_cli_get_approved_firmware(FuCli *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_cli_get_protocols(FuCli *self, gchar **values, GError **error)
+{
+	FuCliPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) protocols = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: none expected");
+		return FALSE;
+	}
+
+	/* call into daemon */
+	protocols = fwupd_client_get_protocols(priv->client, priv->cancellable, error);
+	if (protocols == NULL)
+		return FALSE;
+	if (fu_cli_has_arg_flag(self, FU_CLI_ARG_FLAG_AS_JSON)) {
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+		for (guint i = 0; i < protocols->len; i++)
+			fwupd_json_array_add_string(json_arr, g_ptr_array_index(protocols, i));
+		fwupd_json_object_add_array(json_obj, "Protocols", json_arr);
+		fu_cli_print_json_object(priv->console, json_obj);
+		return TRUE;
+	}
+	if (protocols->len == 0) {
+		/* TRANSLATORS: the update protocol is how firmware is deployed to the device */
+		fu_console_print_literal(priv->console, _("No device update protocols found."));
+		return TRUE;
+	}
+	for (guint i = 0; i < protocols->len; i++)
+		fu_console_print_literal(priv->console, g_ptr_array_index(protocols, i));
+	return TRUE;
+}
+
+static gboolean
 fu_cli_modify_config(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
@@ -4879,7 +5013,7 @@ static gboolean
 fu_cli_sync(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	const gchar *host_bkc;
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -4890,6 +5024,7 @@ fu_cli_sync(FuCli *self, gchar **values, GError **error)
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
+	host_bkc = fwupd_client_get_host_bkc(priv->client);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(FwupdRelease) rel = NULL;
@@ -5050,17 +5185,9 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) events = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_devices = NULL;
+	g_autoptr(GError) error_events = NULL;
 	g_autofree gchar *str = NULL;
-
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
 
 	/* the "why" */
 	attrs = fwupd_client_get_host_security_attrs(priv->client, priv->cancellable, error);
@@ -5071,21 +5198,21 @@ fu_cli_security(FuCli *self, gchar **values, GError **error)
 	events = fwupd_client_get_host_security_events(priv->client,
 						       10,
 						       priv->cancellable,
-						       &error_local);
+						       &error_events);
 	if (events == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_debug("ignoring failed events: %s", error_local->message);
+		if (g_error_matches(error_events, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring failed events: %s", error_events->message);
 		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+			g_propagate_error(error, g_steal_pointer(&error_events));
 			return FALSE;
 		}
 	}
 
 	/* the "also" */
-	devices = fwupd_client_get_devices(priv->client, priv->cancellable, &error_local);
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, &error_devices);
 	if (devices == NULL) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+		if (!g_error_matches(error_devices, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_propagate_error(error, g_steal_pointer(&error_devices));
 			return FALSE;
 		}
 	}
@@ -5238,7 +5365,7 @@ fu_cli_cmd_get_plugins(FuCli *self, gchar **values, GError **error)
 	FuCliPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) plugins = NULL;
 
-	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, NULL);
+	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, error);
 	if (plugins == NULL)
 		return FALSE;
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_cli_plugin_name_sort_cb);
@@ -6157,7 +6284,8 @@ fu_cli_bios_settings_parse_json(const gchar *json, GError **error)
 	fwupd_json_parser_set_max_depth(json_parser, 50);
 	fwupd_json_parser_set_max_items(json_parser, 1000);
 	fwupd_json_parser_set_max_quoted(json_parser, 1000);
-	json_node = fwupd_json_parser_load_from_data(json_parser, json, -1, error);
+	json_node =
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, error);
 	if (json_node == NULL) {
 		g_prefix_error(error, "failed to load '%s': ", json);
 		return NULL;
@@ -6358,14 +6486,6 @@ static gboolean
 fu_cli_security_fix(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
 
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
@@ -6527,14 +6647,6 @@ static gboolean
 fu_cli_security_undo(FuCli *self, gchar **values, GError **error)
 {
 	FuCliPrivate *priv = GET_PRIVATE(self);
-#ifndef HAVE_HSI
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    /* TRANSLATORS: error message for unsupported feature */
-			    _("Host Security ID (HSI) is not supported"));
-	return FALSE;
-#endif /* HAVE_HSI */
 
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
@@ -7016,6 +7128,13 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     _("Install a firmware file in cabinet format on this hardware"),
 			     fu_cli_local_install);
 	fu_cli_cmd_array_add(self,
+			     "write-blob,install-blob",
+			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			     _("FILENAME DEVICE-ID [VERSION]"),
+			     /* TRANSLATORS: command description */
+			     _("Write a raw firmware blob on a device"),
+			     fu_cli_write_blob);
+	fu_cli_cmd_array_add(self,
 			     "get-details",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			     _("FILE"),
@@ -7155,6 +7274,12 @@ fu_cli_cmd_array_add_common(FuCli *self)
 			     /* TRANSLATORS: firmware approved by the admin */
 			     _("Gets the list of approved firmware"),
 			     fu_cli_get_approved_firmware);
+	fu_cli_cmd_array_add(self,
+			     "get-protocols",
+			     NULL,
+			     /* TRANSLATORS: the update protocol is how firmware is deployed */
+			     _("Gets the list of update protocols used by devices"),
+			     fu_cli_get_protocols);
 	fu_cli_cmd_array_add(self,
 			     "set-approved-firmware",
 			     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

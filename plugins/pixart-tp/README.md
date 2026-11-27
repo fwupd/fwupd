@@ -12,6 +12,9 @@ HID interface.
 
 This plugin sets the fwupd device protocol to `com.pixart.tp` and reports version numbers in hex format.
 
+The haptic child devices use the protocol `com.pixart.tp.haptic` for the TF IC and
+`com.pixart.tp.ndt.haptic` for the NDT IC.
+
 ## Firmware Format
 
 The firmware is parsed by `FuPixartTpFirmware` and validated using:
@@ -82,6 +85,17 @@ Selects the SRAM type used for 256-byte page programming.
 Whether this TP has a TF/haptic child IC.
 
 **Default**: `false`.
+
+### `Flags:has-ndt-haptic`
+
+Whether this TP has an NDT haptic child IC (alternative haptic solution to the TF IC).
+
+**Default**: `false`.
+
+Since: 2027.0
+
+> Note: `has-haptic` and `has-ndt-haptic` are mutually exclusive as a TP only has one
+> haptic solution. If both are set the TP device fails to probe and is not added.
 
 ## Vendor ID Security
 

@@ -9,9 +9,12 @@
 #include "fu-amd-afc-varstore.h"
 
 void
-fu_amd_afc_varstore_export(FuAmdAfcVarstore *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_varstore_export(FuAmdAfcVarstore *self,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kx(bn, "id", self->id);
+	if (self->id != 0)
+		fwupd_json_object_add_integer(json_object, "id", self->id);
 }
 
 void

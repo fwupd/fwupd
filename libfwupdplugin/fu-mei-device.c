@@ -54,10 +54,7 @@ static gboolean
 fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 {
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	if (g_strcmp0(priv->uuid, uuid) == 0)
-		return FALSE;
-	g_set_str(&priv->uuid, uuid);
-	return TRUE;
+	return g_set_str(&priv->uuid, uuid);
 }
 
 static gboolean
@@ -158,7 +155,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 
 	/* for quirk matches */
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "PCI",
 					 "VEN",
@@ -171,7 +168,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 					 "DEV",
 					 NULL);
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "PCI",
 					 "DRIVER",
@@ -191,6 +188,10 @@ fu_mei_device_get_multiline_attr(FuMeiDevice *self, const gchar *attr, guint idx
 	blob = fu_udev_device_read_sysfs_bytes(FU_UDEV_DEVICE(self), attr, -1, 500, error);
 	if (blob == NULL)
 		return NULL;
+	if (g_bytes_get_size(blob) == 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s is empty", attr);
+		return NULL;
+	}
 	lines = fu_strsplit_bytes(blob, "\n", -1);
 	if (g_strv_length(lines) <= idx) {
 		g_set_error(error,
@@ -215,8 +216,6 @@ fu_mei_device_get_multiline_attr(FuMeiDevice *self, const gchar *attr, guint idx
  * Gets the firmware version for a specific index.
  *
  * Returns: string value
- *
- * Since: 1.8.7
  **/
 gchar *
 fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error)
@@ -235,8 +234,6 @@ fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error)
  * Gets the firmware status for a specific index.
  *
  * Returns: string value
- *
- * Since: 1.8.7
  **/
 gchar *
 fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
@@ -253,8 +250,6 @@ fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
  * Gets the maximum message length.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 gsize
 fu_mei_device_get_max_msg_length(FuMeiDevice *self)
@@ -271,8 +266,6 @@ fu_mei_device_get_max_msg_length(FuMeiDevice *self)
  * Gets the protocol version, or 0x for unset.
  *
  * Returns: integer
- *
- * Since: 1.8.2
  **/
 guint8
 fu_mei_device_get_protocol_version(FuMeiDevice *self)
@@ -292,8 +285,6 @@ fu_mei_device_get_protocol_version(FuMeiDevice *self)
  * Connects to the MEI device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_connect(FuMeiDevice *self,
@@ -362,8 +353,6 @@ fu_mei_device_connect(FuMeiDevice *self,
  * @self: a #FuMeiDevice
  *
  * Disconnects from the MEI device.
- *
- * Since: 2.0.17
  **/
 void
 fu_mei_device_disconnect(FuMeiDevice *self)
@@ -384,8 +373,6 @@ fu_mei_device_disconnect(FuMeiDevice *self)
  * Read raw bytes from the device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_read(FuMeiDevice *self,
@@ -418,8 +405,6 @@ fu_mei_device_read(FuMeiDevice *self,
  * Write raw bytes to the device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_mei_device_write(FuMeiDevice *self,

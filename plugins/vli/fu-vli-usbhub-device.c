@@ -1015,8 +1015,10 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	}
 
 	/* update the cached copy */
-	fu_struct_vli_usbhub_hdr_unref(self->st_hd1);
-	self->st_hd1 = fu_struct_vli_usbhub_hdr_ref(st_hdr);
+	if (self->st_hd1 != st_hdr) {
+		fu_struct_vli_usbhub_hdr_unref(self->st_hd1);
+		self->st_hd1 = fu_struct_vli_usbhub_hdr_ref(st_hdr);
+	}
 	return TRUE;
 }
 

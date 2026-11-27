@@ -86,3 +86,18 @@ FuEfiDevicePathList *
 fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *filename, GError **error);
 gboolean
 fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error);
+
+void
+fu_uefi_capsule_device_set_capsule_flags(FuUefiCapsuleDevice *self, guint32 capsule_flags);
+void
+fu_uefi_capsule_device_set_kind(FuUefiCapsuleDevice *self, FuUefiCapsuleDeviceKind kind);
+void
+fu_uefi_capsule_device_set_fw_version(FuUefiCapsuleDevice *self, guint32 fw_version);
+void
+fu_uefi_capsule_device_set_fw_version_lowest(FuUefiCapsuleDevice *self, guint32 fw_version_lowest);
+void
+fu_uefi_capsule_device_set_last_attempt_status(FuUefiCapsuleDevice *self,
+					       FuUefiCapsuleDeviceStatus last_attempt_status);
+void
+fu_uefi_capsule_device_set_last_attempt_version(FuUefiCapsuleDevice *self,
+						guint32 last_attempt_version);

@@ -30,6 +30,9 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 		st_ext = fu_struct_uf2_extension_parse(buf, bufsz, offset, error);
 		if (st_ext == NULL)
 			return FALSE;
+		tag = fu_struct_uf2_extension_get_tag(st_ext);
+		if (tag == 0)
+			break;
 		sz = fu_struct_uf2_extension_get_size(st_ext);
 		if (sz == 0)
 			break;
@@ -43,9 +46,6 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 				    (guint)sz);
 			return FALSE;
 		}
-		tag = fu_struct_uf2_extension_get_tag(st_ext);
-		if (tag == 0)
-			break;
 		if (tag == FU_UF2_FIRMWARE_TAG_VERSION) {
 			g_autofree gchar *str = NULL;
 			str = fu_memstrsafe(buf,
@@ -225,7 +225,6 @@ static GByteArray *
 fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GError **error)
 {
 	gsize offset_ext = FU_STRUCT_UF2_OFFSET_DATA + fu_chunk_get_data_sz(chk);
-	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
 	g_autoptr(FuStructUf2) st = fu_struct_uf2_new();
 	g_autoptr(GPtrArray) extensions =
@@ -255,12 +254,9 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 		}
 	}
 
-	/* offset from base address */
-	addr += fu_chunk_get_idx(chk) * fu_chunk_get_data_sz(chk);
-
 	/* build UF2 packet */
 	fu_struct_uf2_set_flags(st, flags);
-	fu_struct_uf2_set_target_addr(st, addr);
+	fu_struct_uf2_set_target_addr(st, fu_chunk_get_address(chk));
 	fu_struct_uf2_set_payload_size(st, fu_chunk_get_data_sz(chk));
 	fu_struct_uf2_set_block_no(st, fu_chunk_get_idx(chk));
 	fu_struct_uf2_set_num_blocks(st, chk_len);

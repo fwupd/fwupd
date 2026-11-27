@@ -195,6 +195,7 @@ fwupd_jcat_item_get_blob_by_kind(FwupdJcatItem *self, FwupdJcatBlobKind kind, GE
 
 	g_return_val_if_fail(FWUPD_IS_JCAT_ITEM(self), NULL);
 	g_return_val_if_fail(kind != FWUPD_JCAT_BLOB_KIND_UNKNOWN, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	target_blobs = fwupd_jcat_item_get_blobs_by_kind(self, kind);
 	if (target_blobs->len == 0) {

@@ -33,8 +33,6 @@ G_DEFINE_TYPE(FuKernelSearchPathLocker, fu_kernel_search_path_locker, G_TYPE_OBJ
  * Gets the kernel search path set using this locker.
  *
  * Returns: the path set with fu_kernel_search_path_locker_new()
- *
- * Since: 2.0.7
  **/
 const gchar *
 fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self)
@@ -50,6 +48,9 @@ fu_kernel_search_path_get_current(FuPathStore *pstore, GError **error)
 	const gchar *sys_fw_search_path = NULL;
 	gsize sz = 0;
 	g_autofree gchar *contents = NULL;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	sys_fw_search_path = fu_path_store_get_path(pstore, FU_PATH_KIND_FIRMWARE_SEARCH, error);
 	if (sys_fw_search_path == NULL)
@@ -123,8 +124,6 @@ fu_kernel_search_path_locker_close(FuKernelSearchPathLocker *self, GError **erro
  * manually closed using g_clear_object().
  *
  * Returns: (transfer full): a #FuKernelSearchPathLocker, or %NULL on error
- *
- * Since: 2.1.9
  **/
 FuKernelSearchPathLocker *
 fu_kernel_search_path_locker_new(FuPathStore *pstore,

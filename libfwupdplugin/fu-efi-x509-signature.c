@@ -38,13 +38,19 @@ struct _FuEfiX509Signature {
 G_DEFINE_TYPE(FuEfiX509Signature, fu_efi_x509_signature, FU_TYPE_EFI_SIGNATURE)
 
 static void
-fu_efi_x509_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_x509_signature_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "issuer", self->issuer);
-	fu_xmlb_builder_insert_kv(bn, "subject", self->subject);
-	fu_xmlb_builder_insert_kv(bn, "subject_name", self->subject_name);
-	fu_xmlb_builder_insert_kv(bn, "subject_vendor", self->subject_vendor);
+	if (self->issuer != NULL)
+		fwupd_json_object_add_string(json_object, "issuer", self->issuer);
+	if (self->subject != NULL)
+		fwupd_json_object_add_string(json_object, "subject", self->subject);
+	if (self->subject_name != NULL)
+		fwupd_json_object_add_string(json_object, "subject_name", self->subject_name);
+	if (self->subject_vendor != NULL)
+		fwupd_json_object_add_string(json_object, "subject_vendor", self->subject_vendor);
 }
 
 /**
@@ -54,8 +60,6 @@ fu_efi_x509_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
  * Returns the certificate issuer.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.8
  **/
 const gchar *
 fu_efi_x509_signature_get_issuer(FuEfiX509Signature *self)
@@ -69,8 +73,6 @@ void
 fu_efi_x509_signature_set_issuer(FuEfiX509Signature *self, const gchar *issuer)
 {
 	g_return_if_fail(FU_IS_EFI_X509_SIGNATURE(self));
-	if (g_strcmp0(issuer, self->issuer) == 0)
-		return;
 	g_set_str(&self->issuer, issuer);
 }
 
@@ -148,9 +150,8 @@ void
 fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject)
 {
 	g_return_if_fail(FU_IS_EFI_X509_SIGNATURE(self));
-	if (g_strcmp0(subject, self->subject) == 0)
+	if (!g_set_str(&self->subject, subject))
 		return;
-	g_set_str(&self->subject, subject);
 
 	/* parse out two keys things we need */
 	if (subject != NULL) {
@@ -175,8 +176,6 @@ fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject
  * Returns the certificate subject.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.8
  **/
 const gchar *
 fu_efi_x509_signature_get_subject(FuEfiX509Signature *self)
@@ -192,8 +191,6 @@ fu_efi_x509_signature_get_subject(FuEfiX509Signature *self)
  * Returns the certificate subject name, with any suffixed version removed.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.8
  **/
 const gchar *
 fu_efi_x509_signature_get_subject_name(FuEfiX509Signature *self)
@@ -209,8 +206,6 @@ fu_efi_x509_signature_get_subject_name(FuEfiX509Signature *self)
  * Returns the certificate subject name, with any suffixed version removed.
  *
  * Returns: string, or %NULL for unset
- *
- * Since: 2.0.8
  **/
 const gchar *
 fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
@@ -327,8 +322,6 @@ fu_efi_x509_signature_class_init(FuEfiX509SignatureClass *klass)
  * Creates a new #FuEfiX509Signature.
  *
  * Returns: (transfer full): object
- *
- * Since: 2.0.8
  **/
 FuEfiX509Signature *
 fu_efi_x509_signature_new(void)

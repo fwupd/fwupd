@@ -48,15 +48,28 @@ fu_logitech_tap_touch_firmware_get_df_checksum(FuLogitechTapTouchFirmware *self)
 static void
 fu_logitech_tap_touch_firmware_export(FuFirmware *firmware,
 				      FuFirmwareExportFlags flags,
-				      XbBuilderNode *bn)
+				      FwupdJsonObject *json_object)
 {
 	FuLogitechTapTouchFirmware *self = FU_LOGITECH_TAP_TOUCH_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "fw_ic_name", self->fw_ic_name);
-	fu_xmlb_builder_insert_kx(bn, "protocol_version", self->protocol_version);
+	if (self->fw_ic_name != 0)
+		fwupd_json_object_add_integer(json_object, "fw_ic_name", self->fw_ic_name);
+	if (self->protocol_version != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "protocol_version",
+					      self->protocol_version);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kx(bn, "mapping_version", self->mapping_version);
-		fu_xmlb_builder_insert_kx(bn, "ap_checksum", self->ap_checksum);
-		fu_xmlb_builder_insert_kx(bn, "df_checksum", self->df_checksum);
+		if (self->mapping_version != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "mapping_version",
+						      self->mapping_version);
+		if (self->ap_checksum != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "ap_checksum",
+						      self->ap_checksum);
+		if (self->df_checksum != 0)
+			fwupd_json_object_add_integer(json_object,
+						      "df_checksum",
+						      self->df_checksum);
 	}
 }
 
@@ -92,7 +105,7 @@ fu_logitech_tap_touch_firmware_calculate_ap_crc_cb(const guint8 *buf,
 						   gpointer user_data,
 						   GError **error)
 {
-	guint32 *ap_check = (guint32 *)user_data;
+	guint16 *ap_check = (guint16 *)user_data;
 	const guint16 ap_polynomial = 0x8408;
 
 	for (gsize i = 0; i < bufsz; i++) {
@@ -113,7 +126,7 @@ fu_logitech_tap_touch_firmware_calculate_basic_cb(const guint8 *buf,
 						  gpointer user_data,
 						  GError **error)
 {
-	guint32 *df_check = (guint32 *)user_data;
+	guint16 *df_check = (guint16 *)user_data;
 	for (gsize i = 0; i < bufsz; i++)
 		*df_check += buf[i];
 	return TRUE;

@@ -20,8 +20,6 @@
  * Converts the byte array to a lowercase hex string.
  *
  * Returns: (transfer full): a string, which may be zero length
- *
- * Since: 1.8.9
  **/
 gchar *
 fu_byte_array_to_string(GByteArray *array)
@@ -41,8 +39,6 @@ fu_byte_array_to_string(GByteArray *array)
  * Converts a lowercase hex string to a byte array.
  *
  * Returns: (transfer full): a #GByteArray, or %NULL on error
- *
- * Since: 1.9.6
  **/
 GByteArray *
 fu_byte_array_from_string(const gchar *str, GError **error)
@@ -69,8 +65,6 @@ fu_byte_array_from_string(const gchar *str, GError **error)
  * @data: value
  *
  * Adds a 8 bit integer to a byte array.
- *
- * Since: 1.3.1
  **/
 void
 fu_byte_array_append_uint8(GByteArray *array, guint8 data)
@@ -85,8 +79,6 @@ fu_byte_array_append_uint8(GByteArray *array, guint8 data)
  * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
  * Adds a 16 bit integer to a byte array.
- *
- * Since: 1.3.1
  **/
 void
 fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian)
@@ -103,8 +95,6 @@ fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian
  * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
  * Adds a 24 bit integer to a byte array.
- *
- * Since: 1.8.13
  **/
 void
 fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian)
@@ -121,8 +111,6 @@ fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian
  * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
  * Adds a 32 bit integer to a byte array.
- *
- * Since: 1.3.1
  **/
 void
 fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian)
@@ -139,8 +127,6 @@ fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian
  * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
  * Adds a 64 bit integer to a byte array.
- *
- * Since: 1.5.8
  **/
 void
 fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian)
@@ -156,8 +142,6 @@ fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian
  * @bytes: data blob
  *
  * Adds the contents of a GBytes to a byte array.
- *
- * Since: 1.5.8
  **/
 void
 fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes)
@@ -171,8 +155,6 @@ fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes)
  * @array2: another #GByteArray
  *
  * Adds the content of @array2 to @array.
- *
- * Since: 2.0.17
  **/
 void
 fu_byte_array_append_array(GByteArray *array, GByteArray *array2)
@@ -194,8 +176,6 @@ fu_byte_array_append_array(GByteArray *array, GByteArray *array2)
  * Adds the content of @buf at @offset to @array.
  *
  * Returns: %TRUE if the access is safe, %FALSE otherwise
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_byte_array_append_safe(GByteArray *array,
@@ -222,8 +202,6 @@ fu_byte_array_append_safe(GByteArray *array,
  * @data: the byte used to pad the array
  *
  * Sets the size of the GByteArray, expanding with @data as required.
- *
- * Since: 1.8.2
  **/
 void
 fu_byte_array_set_size(GByteArray *array, gsize length, guint8 data)
@@ -244,8 +222,6 @@ fu_byte_array_set_size(GByteArray *array, gsize length, guint8 data)
  *
  * Align a byte array length to a power of 2 boundary, where @alignment is the
  * bit position to align to. If @alignment is zero then @array is unchanged.
- *
- * Since: 1.6.0
  **/
 void
 fu_byte_array_align_up(GByteArray *array, guint8 alignment, guint8 data)
@@ -262,8 +238,6 @@ fu_byte_array_align_up(GByteArray *array, guint8 alignment, guint8 data)
  * Compares two buffers for equality.
  *
  * Returns: %TRUE if @buf1 and @buf2 are identical
- *
- * Since: 1.8.0
  **/
 gboolean
 fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error)

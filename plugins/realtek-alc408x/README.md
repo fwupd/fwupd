@@ -57,7 +57,7 @@ This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `2.2.1`.
+This plugin has been available since fwupd version `2027.0`.
 
 ## Owners
 

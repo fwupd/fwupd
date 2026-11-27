@@ -14,6 +14,8 @@ typedef struct {
 } FuAmdAfcPending;
 
 void
-fu_amd_afc_pending_export(FuAmdAfcPending *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+fu_amd_afc_pending_export(FuAmdAfcPending *self,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object);
 void
 fu_amd_afc_pending_free(FuAmdAfcPending *self);

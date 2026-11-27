@@ -27,40 +27,57 @@ fu_acpi_sbom_entry_get_format(FuAcpiSbomEntry *self)
 	return self->format;
 }
 
+FuUswidPayloadCompression
+fu_acpi_sbom_entry_get_compression(FuAcpiSbomEntry *self)
+{
+	return self->compression;
+}
+
 static void
-fu_acpi_sbom_entry_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_acpi_sbom_entry_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuAcpiSbomEntry *self = FU_ACPI_SBOM_ENTRY(firmware);
-	fu_xmlb_builder_insert_kx(bn, "hdrver", self->hdrver);
+	const gchar *format_str = fu_uswid_payload_format_to_string(self->format);
+	if (self->hdrver != 0)
+		fwupd_json_object_add_integer(json_object, "hdrver", self->hdrver);
 	if (self->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
-		fu_xmlb_builder_insert_kv(
-		    bn,
-		    "compression",
-		    fu_uswid_payload_compression_to_string(self->compression));
+		const gchar *compression_str =
+		    fu_uswid_payload_compression_to_string(self->compression);
+		if (compression_str != NULL)
+			fwupd_json_object_add_string(json_object, "compression", compression_str);
 	}
-	fu_xmlb_builder_insert_kv(bn, "format", fu_uswid_payload_format_to_string(self->format));
+	if (format_str != NULL)
+		fwupd_json_object_add_string(json_object, "format", format_str);
 }
 
 static gboolean
-fu_acpi_sbom_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_acpi_sbom_entry_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuAcpiSbomEntry *self = FU_ACPI_SBOM_ENTRY(firmware);
 	const gchar *str;
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional hdrver */
-	tmp = xb_node_query_text_as_uint(n, "hdrver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"hdrver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		self->hdrver = tmp;
 
 	/* simple properties */
-	str = xb_node_query_text(n, "format", error);
+	str = fwupd_json_object_get_string(json_object, "format", error);
 	if (str == NULL)
 		return FALSE;
 	self->format = fu_uswid_payload_format_from_string(str);
 
 	/* optional */
-	str = xb_node_query_text(n, "compression", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "compression", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		self->compression = fu_uswid_payload_compression_from_string(str);
 		if (self->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
@@ -89,6 +106,7 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 	guint16 hdrsz;
 	guint32 payloadsz;
 	gsize payloadsz_max;
+	gsize streamsz = 0;
 	g_autoptr(FuStructAcpiSbomEntry) st = NULL;
 	g_autoptr(GBytes) blob_uncompressed = NULL;
 
@@ -134,6 +152,18 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 			    fu_firmware_get_size_max(firmware));
 		return FALSE;
 	}
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if ((gsize)hdrsz + (gsize)payloadsz > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "header size 0x%x and payload size 0x%x exceed stream size 0x%zx",
+			    hdrsz,
+			    payloadsz,
+			    streamsz);
+		return FALSE;
+	}
 	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 	self->compression = fu_struct_acpi_sbom_entry_get_compression(st);
 	self->format = fu_struct_acpi_sbom_entry_get_format(st);
@@ -174,25 +204,30 @@ fu_acpi_sbom_entry_parse(FuFirmware *firmware,
 		    fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (blob_uncompressed == NULL)
 			return FALSE;
+	} else if (self->compression == FU_USWID_PAYLOAD_COMPRESSION_VENDOR) {
+		g_debug("ignoring SBOM entry with vendor compression");
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "compression format 0x%x is not supported",
-			    self->compression);
+			    "compression format 0x%x [%s] is not supported",
+			    self->compression,
+			    fu_uswid_payload_compression_to_string(self->compression));
 		return FALSE;
 	}
 
-	/* payload */
-	if (g_bytes_get_size(blob_uncompressed) > payloadsz_max) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "uncompressed payload exceeds max 0x%zx",
-			    payloadsz_max);
-		return FALSE;
+	/* optional payload */
+	if (blob_uncompressed != NULL) {
+		if (g_bytes_get_size(blob_uncompressed) > payloadsz_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "uncompressed payload exceeds max 0x%zx",
+				    payloadsz_max);
+			return FALSE;
+		}
+		fu_firmware_set_bytes(firmware, blob_uncompressed);
 	}
-	fu_firmware_set_bytes(firmware, blob_uncompressed);
 
 	/* success */
 	return TRUE;

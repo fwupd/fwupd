@@ -200,7 +200,7 @@ fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_jcat_file_import_stream2(FwupdJcatFile *self, FwupdInputStream *istream, GError **error)

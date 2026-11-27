@@ -60,12 +60,17 @@ fu_elantp_firmware_get_forcetable_addr(FuElantpFirmware *self)
 }
 
 static void
-fu_elantp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_elantp_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "ic_type", self->ic_type);
-	fu_xmlb_builder_insert_kx(bn, "iap_addr", self->iap_addr);
-	fu_xmlb_builder_insert_kx(bn, "module_id", self->module_id);
+	if (self->ic_type != 0)
+		fwupd_json_object_add_integer(json_object, "ic_type", self->ic_type);
+	if (self->iap_addr != 0)
+		fwupd_json_object_add_integer(json_object, "iap_addr", self->iap_addr);
+	if (self->module_id != 0)
+		fwupd_json_object_add_integer(json_object, "module_id", self->module_id);
 }
 
 static gboolean
@@ -178,20 +183,35 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 }
 
 static gboolean
-fu_elantp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_elantp_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "ic_type", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"ic_type",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->ic_type = tmp;
-	tmp = xb_node_query_text_as_uint(n, "module_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"module_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->module_id = tmp;
-	tmp = xb_node_query_text_as_uint(n, "iap_addr", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"iap_addr",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->iap_addr = tmp;
 
 	/* success */

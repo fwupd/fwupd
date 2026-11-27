@@ -33,7 +33,7 @@ fu_intel_me_smbios_subtype18_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "smbios-subtype-0x18.builder.xml", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "smbios-subtype-0x18.builder.json", NULL);
 	smbios = FU_SMBIOS(fu_firmware_new_from_filename(fn, &error));
 	g_assert_no_error(error);
 	g_assert_nonnull(smbios);
@@ -76,7 +76,7 @@ fu_intel_me_smbios_subtype30_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "smbios-subtype-0x30.builder.xml", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "smbios-subtype-0x30.builder.json", NULL);
 	smbios = FU_SMBIOS(fu_firmware_new_from_filename(fn, &error));
 	g_assert_no_error(error);
 	g_assert_nonnull(smbios);

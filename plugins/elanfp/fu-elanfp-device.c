@@ -109,7 +109,7 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 			    FWUPD_ERROR_INTERNAL,
 			    "send length (%u) is not match with the request (%u)",
 			    (guint)actual,
-			    (guint)bufsz + 1);
+			    (guint)sendsz);
 		return FALSE;
 	}
 

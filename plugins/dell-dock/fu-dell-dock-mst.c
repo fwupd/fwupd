@@ -701,7 +701,7 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 			    length,
 			    error))
 		return FALSE;
-	data_out[0] = data[0] & (1 << 2);
+	data_out[0] = data[0] & ~(1 << 2);
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,

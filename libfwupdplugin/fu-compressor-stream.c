@@ -125,14 +125,15 @@ fu_compressor_stream_new(FuInputStream *source,
  * Creates a new stream that decompresses data from @source on the fly.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.0.7
  **/
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,
 				    FwupdCompressorFormat format,
 				    GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(source), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return fu_compressor_stream_new(source, format, FALSE, error);
 }
 
@@ -145,14 +146,15 @@ fu_compressor_stream_new_decompress(FuInputStream *source,
  * Creates a new stream that compresses data from @source on the fly.
  *
  * Returns: (transfer full): a #FuInputStream, or %NULL on error
- *
- * Since: 2.0.7
  **/
 FuInputStream *
 fu_compressor_stream_new_compress(FuInputStream *source,
 				  FwupdCompressorFormat format,
 				  GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(source), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	return fu_compressor_stream_new(source, format, TRUE, error);
 }
 

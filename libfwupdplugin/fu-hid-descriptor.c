@@ -238,8 +238,6 @@ typedef struct {
  * Finds the first HID report that matches all the report attributes.
  *
  * Returns: (transfer full): A #FuHidReport, or %NULL if not found.
- *
- * Since: 1.9.4
  **/
 FuHidReport *
 fu_hid_descriptor_find_report(FuHidDescriptor *self, GError **error, ...)
@@ -312,8 +310,6 @@ fu_hid_descriptor_class_init(FuHidDescriptorClass *klass)
  * fu_hid_descriptor_new:
  *
  * Creates a new #FuFirmware to parse a HID descriptor
- *
- * Since: 1.9.4
  **/
 FuFirmware *
 fu_hid_descriptor_new(void)

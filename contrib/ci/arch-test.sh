@@ -48,7 +48,9 @@ ninja -C qt5-thread-test test
 endgroup
 
 group "Get the test firmware"
-./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
+if [ "${CI_NETWORK:-false}" = "true" ]; then
+    ./fwupbuild download-test-firmware --tests installed-tests --dest /usr/share/installed-tests/fwupd/
+fi
 endgroup
 
 group "Set up PolicyKit and D-Bus to run the daemon"

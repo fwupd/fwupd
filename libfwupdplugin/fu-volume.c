@@ -173,8 +173,6 @@ fu_volume_class_init(FuVolumeClass *klass)
 	 * @filename: the filename being written
 	 *
 	 * The ::write-file signal is emitted when fu_volume_write_file() is used.
-	 *
-	 * Since: 2.1.8
 	 **/
 	signals[SIGNAL_WRITE_FILE] = g_signal_new("write-file",
 						  G_TYPE_FROM_CLASS(object_class),
@@ -191,8 +189,6 @@ fu_volume_class_init(FuVolumeClass *klass)
 	 * FuVolume:proxy-block:
 	 *
 	 * The proxy for the block interface.
-	 *
-	 * Since: 1.4.6
 	 */
 	pspec =
 	    g_param_spec_object("proxy-block",
@@ -206,8 +202,6 @@ fu_volume_class_init(FuVolumeClass *klass)
 	 * FuVolume:proxy-filesystem:
 	 *
 	 * The proxy for the filesystem interface.
-	 *
-	 * Since: 1.4.6
 	 */
 	pspec =
 	    g_param_spec_object("proxy-filesystem",
@@ -221,8 +215,6 @@ fu_volume_class_init(FuVolumeClass *klass)
 	 * FuVolume:mount-path:
 	 *
 	 * The UNIX mount path.
-	 *
-	 * Since: 1.4.6
 	 */
 	pspec =
 	    g_param_spec_string("mount-path",
@@ -236,8 +228,6 @@ fu_volume_class_init(FuVolumeClass *klass)
 	 * FuVolume:proxy-partition:
 	 *
 	 * The proxy for the filesystem interface.
-	 *
-	 * Since: 1.9.3
 	 */
 	pspec =
 	    g_param_spec_object("proxy-partition",
@@ -260,8 +250,6 @@ fu_volume_init(FuVolume *self)
  * Gets the D-Bus path of the mount point.
  *
  * Returns: string ID, or %NULL
- *
- * Since: 1.4.6
  **/
 const gchar *
 fu_volume_get_id(FuVolume *self)
@@ -283,8 +271,6 @@ fu_volume_get_id(FuVolume *self)
  * Gets the size of the block device pointed to by the volume.
  *
  * Returns: size in bytes, or 0 on error
- *
- * Since: 1.9.3
  **/
 guint64
 fu_volume_get_size(FuVolume *self)
@@ -308,8 +294,6 @@ fu_volume_get_size(FuVolume *self)
  * Gets the size of the partition.
  *
  * Returns: size in bytes, or 0 on error
- *
- * Since: 1.9.3
  **/
 guint64
 fu_volume_get_partition_size(FuVolume *self)
@@ -333,8 +317,6 @@ fu_volume_get_partition_size(FuVolume *self)
  * Gets the offset of the partition.
  *
  * Returns: offset in bytes, or 0 on error
- *
- * Since: 1.9.3
  **/
 guint64
 fu_volume_get_partition_offset(FuVolume *self)
@@ -358,8 +340,6 @@ fu_volume_get_partition_offset(FuVolume *self)
  * Gets the number of the partition.
  *
  * Returns: size in bytes, or 0 on error
- *
- * Since: 1.9.3
  **/
 guint32
 fu_volume_get_partition_number(FuVolume *self)
@@ -383,8 +363,6 @@ fu_volume_get_partition_number(FuVolume *self)
  * Gets the UUID of the partition.
  *
  * Returns: size in bytes, or 0 on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_volume_get_partition_uuid(FuVolume *self)
@@ -413,8 +391,6 @@ fu_volume_get_partition_uuid(FuVolume *self)
  * fu_volume_kind_convert_to_gpt() on the return value of this function.
  *
  * Returns: (transfer full): partition kind, e.g. `0x06`, `vfat` or a GUID like `FU_VOLUME_KIND_ESP`
- *
- * Since: 1.8.13
  **/
 gchar *
 fu_volume_get_partition_kind(FuVolume *self)
@@ -439,8 +415,6 @@ fu_volume_get_partition_kind(FuVolume *self)
  * @partition_kind: a partition kind, e.g. %FU_VOLUME_KIND_ESP
  *
  * Sets the partition name of the volume mount point.
- *
- * Since: 2.0.0
  **/
 void
 fu_volume_set_partition_kind(FuVolume *self, const gchar *partition_kind)
@@ -457,8 +431,6 @@ fu_volume_set_partition_kind(FuVolume *self, const gchar *partition_kind)
  * @partition_uuid: a UUID
  *
  * Sets the partition UUID of the volume mount point.
- *
- * Since: 2.0.0
  **/
 void
 fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid)
@@ -476,8 +448,6 @@ fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid)
  * Gets the partition name of the volume mount point.
  *
  * Returns: (transfer full): partition name, e.g 'Recovery Partition'
- *
- * Since: 1.9.10
  **/
 gchar *
 fu_volume_get_partition_name(FuVolume *self)
@@ -508,8 +478,6 @@ fu_volume_get_partition_name(FuVolume *self)
  * Determines if a volume is part of an MDRAID array.
  *
  * Returns: %TRUE if the volume is part of an MDRAID array
- *
- * Since: 1.9.17
  **/
 gboolean
 fu_volume_is_mdraid(FuVolume *self)
@@ -575,8 +543,6 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
  * Gets the block name of the volume
  *
  * Returns: (transfer full): block device name, e.g 'Recovery Partition'
- *
- * Since: 1.9.24
  **/
 gchar *
 fu_volume_get_block_name(FuVolume *self)
@@ -608,8 +574,6 @@ fu_volume_get_block_name(FuVolume *self)
  * Gets the logical block size of the volume mount point.
  *
  * Returns: block size in bytes or 0 on error
- *
- * Since: 1.9.4
  **/
 gsize
 fu_volume_get_block_size(FuVolume *self, GError **error)
@@ -617,6 +581,7 @@ fu_volume_get_block_size(FuVolume *self, GError **error)
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), 0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0);
 
 	if (self->proxy_blk == NULL) {
 		g_set_error_literal(error,
@@ -644,8 +609,6 @@ fu_volume_get_block_size(FuVolume *self, GError **error)
  * Gets the location of the volume mount point.
  *
  * Returns: UNIX path, or %NULL
- *
- * Since: 1.4.6
  **/
 gchar *
 fu_volume_get_mount_point(FuVolume *self)
@@ -687,8 +650,6 @@ fu_volume_set_filesystem_free(FuVolume *self, guint64 fs_free)
  * Writes a blob of data to a volume, creating the parent directories as required.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.1.8
  **/
 gboolean
 fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GError **error)
@@ -715,8 +676,6 @@ fu_volume_write_file(FuVolume *self, const gchar *filename, GBytes *bytes, GErro
  * Checks the volume for required space.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.6
  **/
 gboolean
 fu_volume_check_free_space(FuVolume *self, guint64 required, GError **error)
@@ -767,8 +726,6 @@ fu_volume_check_free_space(FuVolume *self, guint64 required, GError **error)
  * Checks if the VOLUME is already mounted.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.6
  **/
 gboolean
 fu_volume_is_mounted(FuVolume *self)
@@ -786,8 +743,6 @@ fu_volume_is_mounted(FuVolume *self)
  * Checks if the VOLUME is currently encrypted.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.5.1
  **/
 gboolean
 fu_volume_is_encrypted(FuVolume *self)
@@ -814,8 +769,6 @@ fu_volume_is_encrypted(FuVolume *self)
  * Mounts the VOLUME ready for use.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.6
  **/
 gboolean
 fu_volume_mount(FuVolume *self, GError **error)
@@ -863,8 +816,6 @@ fu_volume_mount(FuVolume *self, GError **error)
  * Guesses if the drive is internal to the system
  *
  * Returns: %TRUE for success
- *
- * Since: 1.5.2
  **/
 gboolean
 fu_volume_is_internal(FuVolume *self)
@@ -886,8 +837,6 @@ fu_volume_is_internal(FuVolume *self)
  * Return the IdType of the volume
  *
  * Returns: string for type or NULL
- *
- * Since: 1.5.2
  **/
 gchar *
 fu_volume_get_id_type(FuVolume *self)
@@ -910,8 +859,6 @@ fu_volume_get_id_type(FuVolume *self)
  * Unmounts the volume after use.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.6
  **/
 gboolean
 fu_volume_unmount(FuVolume *self, GError **error)
@@ -958,8 +905,6 @@ fu_volume_new_from_mount_path(const gchar *mount_path)
  * Converts a MBR type to a GPT type.
  *
  * Returns: the GPT type, usually a GUID. If not known @kind is returned.
- *
- * Since: 1.8.6
  **/
 const gchar *
 fu_volume_kind_convert_to_gpt(const gchar *kind)
@@ -967,23 +912,11 @@ fu_volume_kind_convert_to_gpt(const gchar *kind)
 	struct {
 		const gchar *gpt;
 		const gchar *mbrs[6];
-	} typeguids[] = {{FU_VOLUME_KIND_ESP,
-			  {
-			      "0xef",
-			      "efi",
-			      NULL,
-			  }},
-			 {FU_VOLUME_KIND_BDP,
-			  {
-			      "0x0b",
-			      "0x06",
-			      "vfat",
-			      "fat32",
-			      "fat32lba",
-			      NULL,
-			  }},
-			 {NULL, {NULL}}};
-	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
+	} typeguids[] = {
+	    {FU_VOLUME_KIND_ESP, {"0xef", "efi", NULL}},
+	    {FU_VOLUME_KIND_BDP, {"0x0b", "0x06", "vfat", "fat32", "fat32lba", NULL}},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(typeguids); i++) {
 		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
 			if (g_strcmp0(kind, typeguids[i].mbrs[j]) == 0)
 				return typeguids[i].gpt;
@@ -1055,8 +988,6 @@ fu_volume_codec_iface_init(FwupdCodecInterface *iface)
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not
  *found
- *
- * Since: 1.8.2
  **/
 GPtrArray *
 fu_volume_new_by_kind(const gchar *kind, GError **error)
@@ -1192,8 +1123,6 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
  * Finds the first volume from the specified device.
  *
  * Returns: (transfer full): a volume, or %NULL if the device was not found
- *
- * Since: 1.8.2
  **/
 FuVolume *
 fu_volume_new_by_device(const gchar *device, GError **error)
@@ -1261,8 +1190,6 @@ fu_volume_new_by_device(const gchar *device, GError **error)
  * Finds the first volume from the specified device.
  *
  * Returns: (transfer full): a volume, or %NULL if the device was not found
- *
- * Since: 1.8.2
  **/
 FuVolume *
 fu_volume_new_by_devnum(guint32 devnum, GError **error)

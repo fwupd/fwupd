@@ -22,11 +22,15 @@ struct _FuIlitekItsFirmware {
 G_DEFINE_TYPE(FuIlitekItsFirmware, fu_ilitek_its_firmware, FU_TYPE_IHEX_FIRMWARE)
 
 static void
-fu_ilitek_its_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_ilitek_its_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuIlitekItsFirmware *self = FU_ILITEK_ITS_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "fw_ic_name", self->fw_ic_name);
-	fu_xmlb_builder_insert_kx(bn, "mm_addr", self->mm_addr);
+	if (self->fw_ic_name != NULL)
+		fwupd_json_object_add_string(json_object, "fw_ic_name", self->fw_ic_name);
+	if (self->mm_addr != 0)
+		fwupd_json_object_add_integer(json_object, "mm_addr", self->mm_addr);
 }
 
 static gboolean

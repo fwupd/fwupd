@@ -25,8 +25,6 @@
  * Tries to read @count bytes from the stream into the buffer starting at @buffer.
  *
  * Returns: number of bytes read, 0 for end of stream, or -1 on error
- *
- * Since: 2.1.7
  **/
 gssize
 fu_input_stream_read(FuInputStream *stream,
@@ -35,6 +33,9 @@ fu_input_stream_read(FuInputStream *stream,
 		     GCancellable *cancellable,
 		     GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), -1);
+	g_return_val_if_fail(error == NULL || *error == NULL, -1);
+
 	return fwupd_input_stream_read(stream, buffer, count, cancellable, error);
 }
 
@@ -54,8 +55,6 @@ fu_input_stream_read(FuInputStream *stream,
  * requested, only stopping on an error or end of stream.
  *
  * Returns: %TRUE on success, %FALSE on error
- *
- * Since: 2.1.7
  **/
 gboolean
 fu_input_stream_read_all(FuInputStream *stream,
@@ -65,6 +64,9 @@ fu_input_stream_read_all(FuInputStream *stream,
 			 GCancellable *cancellable,
 			 GError **error)
 {
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fwupd_input_stream_read_all(stream, buffer, count, bytes_read, cancellable, error);
 }
 
@@ -81,8 +83,6 @@ fu_input_stream_read_all(FuInputStream *stream,
  * Tries to read count bytes from the stream into the buffer starting at @buf.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_safe(FuInputStream *stream,
@@ -132,8 +132,6 @@ fu_input_stream_read_safe(FuInputStream *stream,
  * Read a value from a stream using a specified endian in a safe way.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_u8(FuInputStream *stream, gsize offset, guint8 *value, GError **error)
@@ -159,8 +157,6 @@ fu_input_stream_read_u8(FuInputStream *stream, gsize offset, guint8 *value, GErr
  * Read a value from a stream using a specified endian in a safe way.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_u16(FuInputStream *stream,
@@ -190,8 +186,6 @@ fu_input_stream_read_u16(FuInputStream *stream,
  * Read a value from a stream using a specified endian in a safe way.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_u24(FuInputStream *stream,
@@ -221,8 +215,6 @@ fu_input_stream_read_u24(FuInputStream *stream,
  * Read a value from a stream using a specified endian in a safe way.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_u32(FuInputStream *stream,
@@ -252,8 +244,6 @@ fu_input_stream_read_u32(FuInputStream *stream,
  * Read a value from a stream using a specified endian in a safe way.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_u64(FuInputStream *stream,
@@ -285,8 +275,6 @@ fu_input_stream_read_u64(FuInputStream *stream,
  * NOTE: The returned buffer may be smaller than @count!
  *
  * Returns: (transfer full): buffer
- *
- * Since: 2.0.0
  **/
 GByteArray *
 fu_input_stream_read_byte_array(FuInputStream *stream,
@@ -371,8 +359,6 @@ fu_input_stream_read_byte_array(FuInputStream *stream,
  * NOTE: The returned buffer may be smaller than @count!
  *
  * Returns: (transfer full): buffer
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_input_stream_read_bytes(FuInputStream *stream,
@@ -401,8 +387,6 @@ fu_input_stream_read_bytes(FuInputStream *stream,
  * Read a UTF-8 string from a stream in a safe way.
  *
  * Returns: (transfer full): string
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_input_stream_read_string(FuInputStream *stream, gsize offset, gsize count, GError **error)
@@ -436,8 +420,6 @@ fu_input_stream_read_string(FuInputStream *stream, gsize offset, gsize count, GE
  * If @stream is not seekable, %G_MAXSIZE is used as the size.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_size(FuInputStream *stream, gsize *val, GError **error)
@@ -485,8 +467,6 @@ fu_input_stream_compute_checksum_cb(const guint8 *buf,
  * Generates the checksum of the entire stream.
  *
  * Returns: the hexadecimal representation of the checksum, or %NULL on error
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_input_stream_compute_checksum(FuInputStream *stream, GChecksumType checksum_type, GError **error)
@@ -518,8 +498,6 @@ fu_input_stream_compute_sum8_cb(const guint8 *buf, gsize bufsz, gpointer user_da
  * Returns the arithmetic sum of all bytes in the stream.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_compute_sum8(FuInputStream *stream, guint8 *value, GError **error)
@@ -556,8 +534,6 @@ fu_input_stream_compute_sum16_cb(const guint8 *buf, gsize bufsz, gpointer user_d
  * Returns the arithmetic sum of all bytes in the stream.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_compute_sum16(FuInputStream *stream, guint16 *value, GError **error)
@@ -594,8 +570,6 @@ fu_input_stream_compute_sum32_cb(const guint8 *buf, gsize bufsz, gpointer user_d
  * Returns the arithmetic sum of all bytes in the stream.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.1
  **/
 gboolean
 fu_input_stream_compute_sum32(FuInputStream *stream, guint32 *value, GError **error)
@@ -643,8 +617,6 @@ fu_input_stream_compute_crc32_fast_cb(const guint8 *buf,
  * symmetrical, and chainable), so for most uses you want to use the value of 0x0, not 0xFFFFFFFF.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_compute_crc32(FuInputStream *stream, FuCrcKind kind, guint32 *crc, GError **error)
@@ -694,8 +666,6 @@ fu_input_stream_compute_crc16_cb(const guint8 *buf, gsize bufsz, gpointer user_d
  * symmetrical, and chainable), so for most uses you want to use the value of 0x0, not 0xFFFF.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_compute_crc16(FuInputStream *stream, FuCrcKind kind, guint16 *crc, GError **error)
@@ -720,8 +690,6 @@ fu_input_stream_compute_crc16(FuInputStream *stream, FuCrcKind kind, guint16 *cr
  * Split the stream into blocks and calls a function on each chunk.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_chunkify(FuInputStream *stream,
@@ -765,8 +733,6 @@ fu_input_stream_chunkify(FuInputStream *stream,
  * Find a memory buffer within an input stream, without loading the entire stream into a buffer.
  *
  * Returns: %TRUE if @buf was found
- *
- * Since: 2.0.18
  **/
 gboolean
 fu_input_stream_find(FuInputStream *stream,

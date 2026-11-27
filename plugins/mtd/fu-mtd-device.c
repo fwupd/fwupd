@@ -238,6 +238,7 @@ fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuInputStream *stream, GErro
 		g_prefix_error_literal(error, "failed to parse image: ");
 		return FALSE;
 	}
+	g_set_object(&priv->fmap_firmware, firmware);
 	stream_sbom = fu_firmware_get_image_by_id_stream(firmware, "SBOM", error);
 	if (stream_sbom == NULL) {
 		g_prefix_error_literal(error, "no SBOM image: ");

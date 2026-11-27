@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-backend.rs', # fuzzing
   'fu-cbor.rs', # fuzzing
   'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
@@ -19,6 +20,7 @@ fwupdplugin_structs = [
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
+  'fu-fw-upload.rs', # fuzzing
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
@@ -37,6 +39,7 @@ fwupdplugin_structs = [
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
   'fu-protobuf.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
@@ -103,6 +106,7 @@ fwupdplugin_src = [
   'fu-context-helper.c',
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
+  'fu-coswid-collection.c', # fuzzing
   'fu-crc.c', # fuzzing
   'fu-csv-entry.c', # fuzzing
   'fu-csv-firmware.c', # fuzzing
@@ -178,6 +182,7 @@ fwupdplugin_src = [
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
   'fu-linear-firmware.c', # fuzzing
+  'fu-linux-fw-upload-device.c',
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
@@ -344,6 +349,7 @@ fwupdplugin_headers = [
   'fu-kernel.h',
   'fu-kernel-search-path.h',
   'fu-linear-firmware.h',
+  'fu-linux-fw-upload-device.h',
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-msgpack-item.h',
@@ -515,6 +521,7 @@ if get_option('tests')
     'bytes',
     'cab-firmware',
     'cbor',
+    'cfu-offer',
     'chunk-array',
     'common',
     'compressor-stream',
@@ -524,6 +531,7 @@ if get_option('tests')
     'device',
     'device-event',
     'device-locker',
+    'dpaux-device',
     'dump',
     'efi',
     'efivars',
@@ -532,12 +540,14 @@ if get_option('tests')
     'hid-descriptor',
     'hidraw-device',
     'hwids',
+    'i2c-device',
     'ihex-firmware',
     'input-stream',
     'intel-me',
     'io-channel',
     'kernel',
     'kernel-search-path',
+    'linux-fw-upload-device',
     'lzma',
     'mei-device',
     'mem',
@@ -552,7 +562,9 @@ if get_option('tests')
     'progress',
     'protobuf',
     'quirks',
+    'sbatlevel-section',
     'secure-bytes',
+    'serio-device',
     'security-attrs',
     'smbios',
     'srec-firmware',

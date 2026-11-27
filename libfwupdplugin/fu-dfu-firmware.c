@@ -37,14 +37,20 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuFirmware, fu_dfu_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_dfu_firmware_get_instance_private(o))
 
 static void
-fu_dfu_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_dfu_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "vendor", priv->vid);
-	fu_xmlb_builder_insert_kx(bn, "product", priv->pid);
-	fu_xmlb_builder_insert_kx(bn, "release", priv->release);
-	fu_xmlb_builder_insert_kx(bn, "dfu_version", priv->dfu_version);
+	if (priv->vid != 0)
+		fwupd_json_object_add_integer(json_object, "vendor", priv->vid);
+	if (priv->pid != 0)
+		fwupd_json_object_add_integer(json_object, "product", priv->pid);
+	if (priv->release != 0)
+		fwupd_json_object_add_integer(json_object, "release", priv->release);
+	if (priv->dfu_version != 0)
+		fwupd_json_object_add_integer(json_object, "dfu_version", priv->dfu_version);
 }
 
 /* private */
@@ -63,8 +69,6 @@ fu_dfu_firmware_get_footer_len(FuDfuFirmware *self)
  * Gets the vendor ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_vid(FuDfuFirmware *self)
@@ -81,8 +85,6 @@ fu_dfu_firmware_get_vid(FuDfuFirmware *self)
  * Gets the product ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_pid(FuDfuFirmware *self)
@@ -99,8 +101,6 @@ fu_dfu_firmware_get_pid(FuDfuFirmware *self)
  * Gets the device ID, or 0xffff for no restriction.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_release(FuDfuFirmware *self)
@@ -117,8 +117,6 @@ fu_dfu_firmware_get_release(FuDfuFirmware *self)
  * Gets the file format version with is 0x0100 by default.
  *
  * Returns: integer
- *
- * Since: 1.3.3
  **/
 guint16
 fu_dfu_firmware_get_version(FuDfuFirmware *self)
@@ -134,8 +132,6 @@ fu_dfu_firmware_get_version(FuDfuFirmware *self)
  * @vid: vendor ID, or 0xffff if the firmware should match any vendor
  *
  * Sets the vendor ID.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_vid(FuDfuFirmware *self, guint16 vid)
@@ -151,8 +147,6 @@ fu_dfu_firmware_set_vid(FuDfuFirmware *self, guint16 vid)
  * @pid: product ID, or 0xffff if the firmware should match any product
  *
  * Sets the product ID.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_pid(FuDfuFirmware *self, guint16 pid)
@@ -168,8 +162,6 @@ fu_dfu_firmware_set_pid(FuDfuFirmware *self, guint16 pid)
  * @release: release, or 0xffff if the firmware should match any release
  *
  * Sets the release for the dfu firmware.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_release(FuDfuFirmware *self, guint16 release)
@@ -185,8 +177,6 @@ fu_dfu_firmware_set_release(FuDfuFirmware *self, guint16 release)
  * @version: integer
  *
  * Sets the file format version.
- *
- * Since: 1.3.3
  **/
 void
 fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
@@ -223,6 +213,10 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	const guint8 *buf;
 	g_autoptr(FuStructDfuFtr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(FU_IS_DFU_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
@@ -328,6 +322,10 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(FuStructDfuFtr) st = fu_struct_dfu_ftr_new();
 
+	g_return_val_if_fail(FU_IS_DFU_FIRMWARE(self), NULL);
+	g_return_val_if_fail(contents != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* add the raw firmware data, the footer-less-CRC, and only then the CRC */
 	fu_byte_array_append_bytes(buf, contents);
 	fu_struct_dfu_ftr_set_release(st, priv->release);
@@ -365,24 +363,44 @@ fu_dfu_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_dfu_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_dfu_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "vendor", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"vendor",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->vid = tmp;
-	tmp = xb_node_query_text_as_uint(n, "product", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"product",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->pid = tmp;
-	tmp = xb_node_query_text_as_uint(n, "release", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"release",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->release = tmp;
-	tmp = xb_node_query_text_as_uint(n, "dfu_version", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"dfu_version",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp >= 0 && tmp <= G_MAXUINT16)
 		priv->dfu_version = tmp;
 
 	/* success */
@@ -417,8 +435,6 @@ fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
  * fu_dfu_firmware_new:
  *
  * Creates a new #FuFirmware of sub type Dfu
- *
- * Since: 1.3.3
  **/
 FuFirmware *
 fu_dfu_firmware_new(void)

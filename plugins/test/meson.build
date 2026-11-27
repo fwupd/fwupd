@@ -12,6 +12,7 @@ plugin_builtins += static_library(
   sources: [
     'fu-test-device.c',
     'fu-test-plugin.c',
+    'fu-test-target-device.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

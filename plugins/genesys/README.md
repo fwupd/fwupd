@@ -42,6 +42,10 @@ Additionally, some customized instance IDs are added. e.g.
 * `USB\VID_05E3&PID_0630&PROJECT_1885D34D-0418-5EF8-8E69-4CEF77B6B6E8`
 * `USB\VID_03F0&PID_0610&PUBKEY_AB859399-95B8-5817-B521-9AD8CC7F5BD6`
 
+Additionally, if `build-parent-id` is set the parent VID and PID values are added too:
+
+* `USB\VID_17EF&PID_1122&PVID_17EF&PPID_1121`
+
 These devices also use custom GUID values for the Scaler, e.g.
 
 * `GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_B335BDCE-7073-5D0E-9BD3-9B69C1A6899F&PANELREV_RIM101`
@@ -76,6 +80,18 @@ Use I2C ch0.
 
 Since 1.7.6
 
+### `Flags=proxy-required`
+
+A HID proxy must be found to use the USB hub device.
+
+Since 2027.0
+
+### `Flags=verify-project`
+
+Verify the firmware project matches between device and firmware.
+
+Since 2027.0
+
 ### GenesysUsbhubSwitchRequest
 
 USB Hub Switch Request value.
@@ -99,6 +115,12 @@ USB Hub Write Request value.
 * HP Mxfd FHD Monitors: `0xA3`
 
 Since 1.7.6.
+
+### GenesysUsbhubHidProxyId
+
+The optional filter to use when finding the HID proxy, e.g. `USB\VID_273F&PID_1001`
+
+Since 2027.0
 
 ### GenesysScalerDeviceTransferSize
 

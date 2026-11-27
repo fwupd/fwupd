@@ -178,8 +178,6 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
  * Reads all the SMBIOS values from a DMI blob.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_file(FuSmbios *self, const gchar *filename, GError **error)
@@ -228,7 +226,14 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 			    intermediate_anchor_str);
 		return FALSE;
 	}
-	csum = fu_sum8(buf + 10, bufsz - 10);
+	if (!fu_sum8_safe(buf,
+			  bufsz,
+			  FU_STRUCT_SMBIOS_EP32_OFFSET_INTERMEDIATE_ANCHOR_STR,
+			  FU_STRUCT_SMBIOS_EP32_SIZE -
+			      FU_STRUCT_SMBIOS_EP32_OFFSET_INTERMEDIATE_ANCHOR_STR,
+			  &csum,
+			  error))
+		return FALSE;
 	if (csum != 0x00) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -284,8 +289,6 @@ fu_smbios_parse_ep64(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
  * Reads all the SMBIOS values from a specific path.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
@@ -388,8 +391,6 @@ fu_smbios_parse(FuFirmware *firmware,
  * Reads all the SMBIOS values from the hardware.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup(FuSmbios *self, GError **error)
@@ -468,38 +469,53 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 }
 
 static void
-fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
 
+	g_autoptr(FwupdJsonArray) json_items = fwupd_json_array_new();
+
 	for (guint i = 0; i < self->items->len; i++) {
 		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "item", NULL);
+		g_autoptr(FwupdJsonObject) json_item = fwupd_json_object_new();
+		g_autoptr(FwupdJsonObject) json_strings = fwupd_json_object_new();
 		g_autofree gchar *buf = fu_byte_array_to_string(item->buf);
-		fu_xmlb_builder_insert_kx(bc, "type", item->type);
-		fu_xmlb_builder_insert_kx(bc, "length", item->buf->len);
-		fu_xmlb_builder_insert_kx(bc, "handle", item->handle);
-		fu_xmlb_builder_insert_kv(bc, "buf", buf);
+		if (item->type != 0)
+			fwupd_json_object_add_integer(json_item, "type", item->type);
+		if (item->buf->len != 0)
+			fwupd_json_object_add_integer(json_item, "length", item->buf->len);
+		if (item->handle != 0)
+			fwupd_json_object_add_integer(json_item, "handle", item->handle);
+		fwupd_json_object_add_string(json_item, "buf", buf);
 		for (guint j = 0; j < item->strings->len; j++) {
 			const gchar *tmp = g_ptr_array_index(item->strings, j);
 			g_autofree gchar *title = g_strdup_printf("%02u", j);
 			g_autofree gchar *value = fu_strsafe(tmp, 40);
-			xb_builder_node_insert_text(bc, "string", value, "idx", title, NULL);
+			if (value != NULL)
+				fwupd_json_object_add_string(json_strings, title, value);
 		}
+		if (fwupd_json_object_get_size(json_strings) > 0)
+			fwupd_json_object_add_object(json_item, "strings", json_strings);
+		fwupd_json_array_add_object(json_items, json_item);
 	}
+	fwupd_json_object_add_array(json_object, "items", json_items);
 }
 
 static gboolean
-fu_smbios_build_item(FuSmbios *self, XbNode *n, GError **error)
+fu_smbios_build_item(FuSmbios *self, FwupdJsonObject *json_object, GError **error)
 {
 	const gchar *str;
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 	g_autoptr(FuSmbiosItem) item = fu_smbios_item_new();
-	g_autoptr(GPtrArray) xb_strings = NULL;
 
 	/* optional type */
-	tmp = xb_node_query_text_as_uint(n, "type", NULL);
-	if (tmp != G_MAXUINT64) {
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"type",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64) {
 		if (tmp > G_MAXUINT8) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -511,8 +527,13 @@ fu_smbios_build_item(FuSmbios *self, XbNode *n, GError **error)
 	}
 
 	/* optional handle */
-	tmp = xb_node_query_text_as_uint(n, "handle", NULL);
-	if (tmp != G_MAXUINT64) {
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"handle",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64) {
 		if (tmp > G_MAXUINT16) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -524,19 +545,29 @@ fu_smbios_build_item(FuSmbios *self, XbNode *n, GError **error)
 	}
 
 	/* optional data buffer */
-	str = xb_node_query_text(n, "buf", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "buf", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		item->buf = fu_byte_array_from_string(str, error);
 		if (item->buf == NULL)
 			return FALSE;
 	}
 
-	/* optional string table */
-	xb_strings = xb_node_query(n, "string", 0, NULL);
-	if (xb_strings != NULL) {
-		for (guint i = 0; i < xb_strings->len; i++) {
-			XbNode *c = g_ptr_array_index(xb_strings, i);
-			g_ptr_array_add(item->strings, g_strdup(xb_node_get_text(c)));
+	/* optional string table, keyed by index */
+	if (fwupd_json_object_has_node(json_object, "strings")) {
+		g_autoptr(FwupdJsonObject) json_strings =
+		    fwupd_json_object_get_object(json_object, "strings", error);
+		if (json_strings == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_object_get_size(json_strings); i++) {
+			const gchar *key =
+			    fwupd_json_object_get_key_for_index(json_strings, i, error);
+			if (key == NULL)
+				return FALSE;
+			str = fwupd_json_object_get_string(json_strings, key, error);
+			if (str == NULL)
+				return FALSE;
+			g_ptr_array_add(item->strings, g_strdup(str));
 		}
 	}
 
@@ -546,17 +577,22 @@ fu_smbios_build_item(FuSmbios *self, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_smbios_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
-	g_autoptr(GPtrArray) xb_items = NULL;
 
 	/* optional items */
-	xb_items = xb_node_query(n, "item", 0, NULL);
-	if (xb_items != NULL) {
-		for (guint i = 0; i < xb_items->len; i++) {
-			XbNode *c = g_ptr_array_index(xb_items, i);
-			if (!fu_smbios_build_item(self, c, error))
+	if (fwupd_json_object_has_node(json_object, "items")) {
+		g_autoptr(FwupdJsonArray) json_items =
+		    fwupd_json_object_get_array(json_object, "items", error);
+		if (json_items == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_items); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_items, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_smbios_build_item(self, json_item, error))
 				return FALSE;
 		}
 	}
@@ -575,8 +611,6 @@ fu_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
  * Reads all the SMBIOS data blobs of a specified type.
  *
  * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if invalid or not found
- *
- * Since: 2.0.7
  **/
 GPtrArray *
 fu_smbios_get_data(FuSmbios *self, guint8 type, guint8 length, GError **error)
@@ -621,8 +655,6 @@ fu_smbios_get_data(FuSmbios *self, guint8 type, guint8 length, GError **error)
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: an integer, or %G_MAXUINT if invalid or not found
- *
- * Since: 2.0.7
  **/
 guint
 fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
@@ -671,8 +703,6 @@ fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 length, guint8 offset,
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: a string, or %NULL if invalid or not found
- *
- * Since: 2.0.7
  **/
 const gchar *
 fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
@@ -753,8 +783,6 @@ fu_smbios_init(FuSmbios *self)
  * Creates a new object to parse SMBIOS data.
  *
  * Returns: a #FuSmbios
- *
- * Since: 1.0.0
  **/
 FuSmbios *
 fu_smbios_new(FuPathStore *pstore)

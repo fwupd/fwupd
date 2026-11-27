@@ -35,7 +35,10 @@ pub use memory_input_stream::*;
 #[doc(inline)]
 pub use partial_input_stream::*;
 
-use std::io::{self, Read, Seek};
+use std::{
+    io::{self, Read, Seek},
+    sync::{Arc, Mutex},
+};
 
 #[derive(Debug)]
 pub enum StreamError {
@@ -89,3 +92,32 @@ impl<T: Read + Seek> ReadSeek for T {
         self
     }
 }
+
+/// Convenience typedef, combined with the [`IntoStream`] this
+/// makes the creation of a stream easier:
+///
+/// ```
+/// use fwupd::streams::{MemoryInputStream, Stream, StreamImpl, IntoStream};
+/// let memstream = MemoryInputStream::from_data(vec![1, 2, 3]);
+///
+/// // equivalent to Arc::new(Mutex::new(memstream))
+/// let stream: Stream<StreamImpl> = memstream.into_stream();
+/// ```
+pub type Stream<T> = Arc<Mutex<T>>;
+
+/// Convenience typedef
+///
+/// The `ReadSeek` is implemented by each stream, Send is just
+/// there to shut clippy up in the FFI, we don't really need it
+/// since fwupd is single-threaded.
+pub type StreamImpl = dyn ReadSeek + Send;
+
+/// Trait for a blanket implementation of `into_stream()`
+/// for any sized type.
+pub trait IntoStream: Sized {
+    fn into_stream(self) -> Stream<Self> {
+        Arc::new(Mutex::new(self))
+    }
+}
+
+impl<T> IntoStream for T {}

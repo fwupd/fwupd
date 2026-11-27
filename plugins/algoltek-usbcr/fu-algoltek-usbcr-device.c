@@ -661,7 +661,7 @@ fu_algoltek_usbcr_device_set_progress(FuDevice *device, FuProgress *progress)
 static gchar *
 fu_algoltek_usbcr_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	return g_strdup_printf("%x", (guint)fu_device_get_version_raw(device));
+	return g_strdup_printf("%x", (guint)version_raw);
 }
 
 static void

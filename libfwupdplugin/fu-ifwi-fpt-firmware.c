@@ -203,8 +203,6 @@ fu_ifwi_fpt_firmware_class_init(FuIfwiFptFirmwareClass *klass)
  * fu_ifwi_fpt_firmware_new:
  *
  * Creates a new #FuFirmware of Intel Flash Program Tool format
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_ifwi_fpt_firmware_new(void)

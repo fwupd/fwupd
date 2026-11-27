@@ -30,6 +30,10 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    {FU_HWIDS_KEY_PRODUCT_NAME, "model"},
 	};
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* adds compatible GUIDs */
 	fdt = fu_context_get_fdt(ctx, error);
 	if (fdt == NULL)
@@ -60,13 +64,14 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 		struct {
 			FuSmbiosChassisKind chassis_kind;
 			const gchar *dt;
-		} chassis_map[] = {{FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE, "convertible"},
-				   {FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC, "embedded"},
-				   {FU_SMBIOS_CHASSIS_KIND_HAND_HELD, "handset"},
-				   {FU_SMBIOS_CHASSIS_KIND_LAPTOP, "laptop"},
-				   {FU_SMBIOS_CHASSIS_KIND_TABLET, "tablet"},
-				   {FU_SMBIOS_CHASSIS_KIND_UNKNOWN, NULL}};
-		for (guint i = 0; chassis_map[i].dt != NULL; i++) {
+		} chassis_map[] = {
+		    {FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE, "convertible"},
+		    {FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC, "embedded"},
+		    {FU_SMBIOS_CHASSIS_KIND_HAND_HELD, "handset"},
+		    {FU_SMBIOS_CHASSIS_KIND_LAPTOP, "laptop"},
+		    {FU_SMBIOS_CHASSIS_KIND_TABLET, "tablet"},
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(chassis_map); i++) {
 			if (g_strcmp0(chassis_type, chassis_map[i].dt) == 0) {
 				fu_context_set_chassis_kind(ctx, chassis_map[i].chassis_kind);
 				break;
@@ -91,8 +96,9 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/ibm,firmware-versions", NULL);
 	if (fdt_img_fwver != NULL) {
 		g_autofree gchar *version = NULL;
-		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
-		fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
+		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img_fwver), "version", &version, NULL);
+		if (version != NULL)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
 	}
 
 	/* fall back to the firmware unix time */

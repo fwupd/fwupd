@@ -146,8 +146,10 @@ gboolean
 fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+fu_engine_composite_cleanup(FuEngine *self,
+			    GPtrArray *devices,
+			    FwupdUpdateState update_state,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,
@@ -155,13 +157,23 @@ fu_engine_install_release(FuEngine *self,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
-fu_engine_install_blob(FuEngine *self,
-		       FuDevice *device,
-		       FuRelease *release,
-		       FuProgress *progress,
-		       FwupdInstallFlags flags,
-		       FwupdFeatureFlags feature_flags,
-		       GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
+fu_engine_write_blob(FuEngine *self,
+		     FuDevice *device,
+		     FuRelease *release,
+		     FuProgress *progress,
+		     FwupdInstallFlags flags,
+		     FwupdFeatureFlags feature_flags,
+		     GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
+gboolean
+fu_engine_write_blob_for_device_id(FuEngine *self,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   FwupdFeatureFlags feature_flags,
+				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
@@ -174,6 +186,8 @@ fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress,
     G_GNUC_NON_NULL(1, 2, 3);
 GPtrArray *
 fu_engine_get_approved_firmware(FuEngine *self) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_engine_get_protocols(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 gchar *

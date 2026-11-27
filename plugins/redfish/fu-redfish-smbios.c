@@ -90,44 +90,71 @@ fu_redfish_smbios_set_port(FuRedfishSmbios *self, guint16 port)
 }
 
 static void
-fu_redfish_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_redfish_smbios_export(FuFirmware *firmware,
+			 FuFirmwareExportFlags flags,
+			 FwupdJsonObject *json_object)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
-	fu_xmlb_builder_insert_kv(bn,
-				  "interface_type",
-				  fu_redfish_smbios_interface_type_to_string(self->interface_type));
-	fu_xmlb_builder_insert_kx(bn, "port", self->port);
-	fu_xmlb_builder_insert_kv(bn, "hostname", self->hostname);
-	fu_xmlb_builder_insert_kv(bn, "mac_addr", self->mac_addr);
-	fu_xmlb_builder_insert_kv(bn, "ip_addr", self->ip_addr);
-	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
-	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
+	const gchar *interface_type_str =
+	    fu_redfish_smbios_interface_type_to_string(self->interface_type);
+	if (interface_type_str != NULL)
+		fwupd_json_object_add_string(json_object, "interface_type", interface_type_str);
+	if (self->port != 0)
+		fwupd_json_object_add_integer(json_object, "port", self->port);
+	if (self->hostname != NULL)
+		fwupd_json_object_add_string(json_object, "hostname", self->hostname);
+	if (self->mac_addr != NULL)
+		fwupd_json_object_add_string(json_object, "mac_addr", self->mac_addr);
+	if (self->ip_addr != NULL)
+		fwupd_json_object_add_string(json_object, "ip_addr", self->ip_addr);
+	if (self->vid != 0)
+		fwupd_json_object_add_integer(json_object, "vid", self->vid);
+	if (self->pid != 0)
+		fwupd_json_object_add_integer(json_object, "pid", self->pid);
 }
 
 static gboolean
-fu_redfish_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_redfish_smbios_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
 	const gchar *tmp;
-	guint64 tmpu;
+	gint64 tmpu = G_MAXINT64;
 
 	/* optional properties */
-	tmpu = xb_node_query_text_as_uint(n, "port", NULL);
-	if (tmpu != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"port",
+							&tmpu,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpu != G_MAXINT64)
 		fu_redfish_smbios_set_port(self, (guint16)tmpu);
-	tmpu = xb_node_query_text_as_uint(n, "vid", NULL);
-	if (tmpu != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"vid",
+							&tmpu,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpu != G_MAXINT64)
 		self->vid = (guint16)tmpu;
-	tmpu = xb_node_query_text_as_uint(n, "pid", NULL);
-	if (tmpu != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"pid",
+							&tmpu,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmpu != G_MAXINT64)
 		self->pid = (guint16)tmpu;
-	tmp = xb_node_query_text(n, "hostname", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "hostname", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_redfish_smbios_set_hostname(self, tmp);
-	tmp = xb_node_query_text(n, "mac_addr", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "mac_addr", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_redfish_smbios_set_mac_addr(self, tmp);
-	tmp = xb_node_query_text(n, "ip_addr", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "ip_addr", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_redfish_smbios_set_ip_addr(self, tmp);
 

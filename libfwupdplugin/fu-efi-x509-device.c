@@ -218,8 +218,6 @@ fu_efi_x509_device_class_init(FuEfiX509DeviceClass *klass)
  * Creates a new X.509 EFI device.
  *
  * Returns: (transfer full): a #FuEfiX509Device
- *
- * Since: 2.0.8
  **/
 FuEfiX509Device *
 fu_efi_x509_device_new(FuContext *ctx, FuEfiX509Signature *sig)

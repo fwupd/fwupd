@@ -1,0 +1,13 @@
+{
+  "gtype": "FuIntelThunderboltFirmware",
+  "offset": "0x8",
+  "vendor_id": "0x8086",
+  "device_id": "0x15d3",
+  "model_id": "0x1234",
+  "family": "alpine-ridge-c",
+  "is_host": true,
+  "is_native": false,
+  "generation": "0x3",
+  "ports": "0x2",
+  "has_pd": true
+}

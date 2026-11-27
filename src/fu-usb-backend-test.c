@@ -53,16 +53,18 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 }
 
 /*
- * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.xml:
+ * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.json,
+ * where idx is bVendorCode and size is wLength:
  *
- *    <firmware gtype="FuUsbDeviceFwDs20">
- *      <idx>42</idx>   <!-- bVendorCode -->
- *      <size>32</size> <!-- wLength -->
- *    </firmware>
+ *    {
+ *      "gtype": "FuUsbDeviceFwDs20",
+ *      "idx": 42,
+ *      "size": 32
+ *    }
  *
  * Then run:
  *
- *    fwupdtool firmware-build fw-ds20.builder.xml fw-ds20.bin
+ *    fwupdtool firmware-build fw-ds20.builder.json fw-ds20.bin
  *    base64 fw-ds20.bin
  *
  * To generate the fake control transfer response, save fw-ds20.quirk:
@@ -106,7 +108,7 @@ fu_usb_backend_func(void)
 
 	/* load the JSON into the backend */
 	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
-	g_assert_true(fu_backend_get_enabled(backend));
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_ENABLED));
 	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
 	g_assert_cmpint(cnt_added, ==, 0);
 	g_assert_cmpint(cnt_removed, ==, 0);

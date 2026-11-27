@@ -135,7 +135,7 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 	     cmd != FU_JABRA_FILE_PACKET_CMD_ACK && cmd != FU_JABRA_FILE_PACKET_CMD_NACK)) {
 		/* unrelated report, ignore and rx again */
 		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
-						      0x82,
+						      self->epin,
 						      cmd_rsp->buf->data,
 						      cmd_rsp->buf->len,
 						      NULL,
@@ -630,6 +630,8 @@ fu_jabra_file_device_write_firmware(FuDevice *device,
 
 	/* check if firmware file already exists on device */
 	firmware_checksum = fu_firmware_get_checksum(firmware, G_CHECKSUM_MD5, error);
+	if (firmware_checksum == NULL)
+		return FALSE;
 	if (!fu_jabra_file_device_file_checksum(self, firmware_checksum, &match, error))
 		return FALSE;
 	if (!match) {

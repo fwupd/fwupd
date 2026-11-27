@@ -292,13 +292,11 @@ if build_docs
     install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
   )
-  if hsi
-    install_data(
-      ['hsi.html'],
-      install_tag: 'doc',
-      install_dir: join_paths(datadir, 'doc', 'fwupd'),
-    )
-  endif
+  install_data(
+    ['hsi.html'],
+    install_tag: 'doc',
+    install_dir: join_paths(datadir, 'doc', 'fwupd'),
+  )
   install_data(
     ['urlmap_fwupd.js'],
     install_tag: 'doc',

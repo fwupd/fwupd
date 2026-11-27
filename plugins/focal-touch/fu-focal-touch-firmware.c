@@ -23,10 +23,13 @@ fu_focal_touch_firmware_get_checksum(FuFocalTouchFirmware *self)
 }
 
 static void
-fu_focal_touch_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_focal_touch_firmware_export(FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       FwupdJsonObject *json_object)
 {
 	FuFocalTouchFirmware *self = FU_FOCAL_TOUCH_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "checksum", self->checksum);
+	if (self->checksum != 0)
+		fwupd_json_object_add_integer(json_object, "checksum", self->checksum);
 }
 
 static gboolean

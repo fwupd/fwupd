@@ -39,10 +39,9 @@ fu_uefi_device_set_guid(FuUefiDevice *self, const gchar *guid)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
 
-	/* same */
-	if (g_strcmp0(priv->guid, guid) == 0)
+	/* not changed */
+	if (!g_set_str(&priv->guid, guid))
 		return;
-	g_set_str(&priv->guid, guid);
 	if (guid != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "GUID", guid);
 }
@@ -63,10 +62,9 @@ fu_uefi_device_set_name(FuUefiDevice *self, const gchar *name)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
 
-	/* same */
-	if (g_strcmp0(priv->name, name) == 0)
+	/* not changed */
+	if (!g_set_str(&priv->name, name))
 		return;
-	g_set_str(&priv->name, name);
 	if (name != NULL)
 		fu_device_add_instance_str(FU_DEVICE(self), "NAME", name);
 }
@@ -92,8 +90,6 @@ fu_uefi_device_get_name(FuUefiDevice *self)
  * Sets the data to a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.5
  **/
 gboolean
 fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
@@ -160,8 +156,6 @@ fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
  * Gets the data from a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
- *
- * Since: 2.0.5
  **/
 GBytes *
 fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
@@ -233,8 +227,6 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
  * Gets the data from a UEFI variable in NVRAM, emulating if required.
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL on error
- *
- * Since: 2.1.5
  **/
 FuFirmware *
 fu_uefi_device_read_default(FuUefiDevice *self,
@@ -348,7 +340,7 @@ fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_uefi_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
@@ -379,12 +371,13 @@ fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 }
 
 static gboolean
-fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_uefi_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		if (!fwupd_guid_is_valid(tmp)) {
 			g_set_error(error,
@@ -396,10 +389,12 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 		}
 		fu_uefi_device_set_guid(self, tmp);
 	}
-	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Name", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_uefi_device_set_name(self, tmp);
-	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BackendId", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
 
@@ -464,8 +459,8 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	device_class->probe = fu_uefi_device_probe;
 	device_class->dump_firmware = fu_uefi_device_dump_firmware;
 	device_class->incorporate = fu_uefi_device_incorporate;
-	device_class->from_json = fu_uefi_device_from_json;
-	device_class->add_json = fu_uefi_device_add_json;
+	device_class->build = fu_uefi_device_build;
+	device_class->export = fu_uefi_device_export;
 	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }
 

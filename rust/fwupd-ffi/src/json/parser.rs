@@ -20,7 +20,7 @@ use fwupd::Bitflags;
 use super::node::FwupdRsJsonNode;
 use crate::cstream::{CStream, CStreamCallbacks, CStreamHandle};
 use crate::glib::GError;
-use crate::streams::StreamImpl;
+use fwupd::streams::{Stream, StreamImpl};
 
 /// Opaque FFI handle for the JSON parser.
 ///
@@ -233,7 +233,7 @@ pub unsafe extern "C" fn fwupd_rs_json_parser_load_from_stream(
 #[no_mangle]
 pub unsafe extern "C" fn fwupd_rs_json_parser_load_from_stream_impl(
     ptr: *const FwupdRsJsonParser,
-    stream_impl: *mut StreamImpl,
+    stream_impl: *mut Stream<StreamImpl>,
     flags: c_uint,
     error: *mut *mut GError,
 ) -> *mut FwupdRsJsonNode {

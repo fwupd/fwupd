@@ -19,10 +19,13 @@ struct _FuFpcFf2Firmware {
 G_DEFINE_TYPE(FuFpcFf2Firmware, fu_fpc_ff2_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_fpc_ff2_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_fpc_ff2_firmware_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuFpcFf2Firmware *self = FU_FPC_FF2_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "blocks_num", self->blocks_num);
+	if (self->blocks_num != 0)
+		fwupd_json_object_add_integer(json_object, "blocks_num", self->blocks_num);
 }
 
 static gboolean

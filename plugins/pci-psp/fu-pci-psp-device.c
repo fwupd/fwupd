@@ -90,7 +90,7 @@ fu_pci_psp_device_probe(FuDevice *device, GError **error)
 						     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						     &error_tee);
 	if (attr_tee_version == NULL)
-		g_info("failed to read bootloader version: %s", error_tee->message);
+		g_info("failed to read TEE version: %s", error_tee->message);
 	else
 		fu_device_set_version(device, attr_tee_version);
 
@@ -469,7 +469,7 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuPciPspDevice *self,
 	}
 
 	if (!val) {
-		g_debug("no RPMC compatible SPI rom present");
+		g_debug("RPMC production mode not enabled");
 		fu_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}

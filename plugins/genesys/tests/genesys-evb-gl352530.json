@@ -13,6 +13,19 @@
           ]
         }
       ]
+    },
+    {
+      "url": "dac4422d05f83d644ae9639dbf23645df71889e1471def2a9f13a70d2d5233b4-GenesysLogic_TestEVB_GL352530_HID_89.8.cab",
+      "emulation-url": "2e847c489297f5975bc3c6e9838272ef48c2c7c4a8883bc13c3d8e0353fdbaa6-emulation.zip",
+      "components": [
+        {
+          "name": "HID",
+          "version": "89.8",
+          "guids": [
+            "fd6e5d61-b0f4-56a6-b50e-8904c2bd300a"
+          ]
+        }
+      ]
     }
   ]
 }

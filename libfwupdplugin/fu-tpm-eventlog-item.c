@@ -44,8 +44,6 @@ fu_tpm_eventlog_item_alg_to_idx(FuTpmAlg alg)
  * @checksum: a #GBytes of the raw checksum
  *
  * Adds the checksum of a specific type.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_add_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GBytes *checksum)
@@ -69,8 +67,6 @@ fu_tpm_eventlog_item_add_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GBytes 
  * Gets the raw checksum of a specific type.
  *
  * Returns: a #GBytes, or %NULL on error
- *
- * Since: 2.1.1
  **/
 GBytes *
 fu_tpm_eventlog_item_get_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GError **error)
@@ -98,8 +94,6 @@ fu_tpm_eventlog_item_get_checksum(FuTpmEventlogItem *self, FuTpmAlg alg, GError 
  * Gets the item kind.
  *
  * Returns: a #FuTpmEventlogItemKind, e.g. %FU_TPM_EVENTLOG_ITEM_KIND_EFI_PLATFORM_FIRMWARE_BLOB
- *
- * Since: 2.1.1
  **/
 FuTpmEventlogItemKind
 fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self)
@@ -114,8 +108,6 @@ fu_tpm_eventlog_item_get_kind(FuTpmEventlogItem *self)
  * @kind: a #FuTpmEventlogItemKind, e.g. %FU_TPM_EVENTLOG_ITEM_KIND_EFI_PLATFORM_FIRMWARE_BLOB
  *
  * Sets item kind.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_set_kind(FuTpmEventlogItem *self, FuTpmEventlogItemKind kind)
@@ -131,8 +123,6 @@ fu_tpm_eventlog_item_set_kind(FuTpmEventlogItem *self, FuTpmEventlogItemKind kin
  * Gets the PCR register.
  *
  * Returns: value
- *
- * Since: 2.1.1
  **/
 guint8
 fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self)
@@ -147,8 +137,6 @@ fu_tpm_eventlog_item_get_pcr(FuTpmEventlogItem *self)
  * @pcr: a value
  *
  * Sets the PCR register.
- *
- * Since: 2.1.1
  **/
 void
 fu_tpm_eventlog_item_set_pcr(FuTpmEventlogItem *self, guint8 pcr)
@@ -190,23 +178,33 @@ fu_tpm_eventlog_item_get_checksum_string(FuFirmware *firmware,
 }
 
 static gboolean
-fu_tpm_eventlog_item_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_tpm_eventlog_item_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuTpmEventlogItem *self = FU_TPM_EVENTLOG_ITEM(firmware);
 	const gchar *tmp;
-	guint64 tmp64;
+	gint64 tmp64 = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "kind", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "kind", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_tpm_eventlog_item_set_kind(self, fu_tpm_eventlog_item_kind_from_string(tmp));
-	tmp64 = xb_node_query_text_as_uint(n, "pcr", NULL);
-	if (tmp64 != G_MAXUINT64)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"pcr",
+							&tmp64,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp64 != G_MAXINT64)
 		fu_tpm_eventlog_item_set_pcr(self, tmp64);
 
 	/* checksums */
 	for (guint i = 0; i < G_N_ELEMENTS(algs); i++) {
-		tmp = xb_node_query_text(n, fu_tpm_alg_to_string(algs[i]), NULL);
+		if (!fwupd_json_object_get_string_optional(json_object,
+							   fu_tpm_alg_to_string(algs[i]),
+							   &tmp,
+							   error))
+			return FALSE;
 		if (tmp != NULL) {
 			g_autoptr(GBytes) blob = fu_bytes_from_string(tmp, error);
 			if (blob == NULL)
@@ -220,15 +218,22 @@ fu_tpm_eventlog_item_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_tpm_eventlog_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_tpm_eventlog_item_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuTpmEventlogItem *self = FU_TPM_EVENTLOG_ITEM(firmware);
-	fu_xmlb_builder_insert_kv(bn, "kind", fu_tpm_eventlog_item_kind_to_string(self->kind));
-	fu_xmlb_builder_insert_kx(bn, "pcr", self->pcr);
+	const gchar *kind_str = fu_tpm_eventlog_item_kind_to_string(self->kind);
+	if (kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "kind", kind_str);
+	if (self->pcr != 0)
+		fwupd_json_object_add_integer(json_object, "pcr", self->pcr);
 	for (guint i = 0; i < G_N_ELEMENTS(algs); i++) {
 		if (self->checksums[i] != NULL) {
 			g_autofree gchar *value = fu_bytes_to_string(self->checksums[i]);
-			fu_xmlb_builder_insert_kv(bn, fu_tpm_alg_to_string(algs[i]), value);
+			fwupd_json_object_add_string(json_object,
+						     fu_tpm_alg_to_string(algs[i]),
+						     value);
 		}
 	}
 }
@@ -266,8 +271,6 @@ fu_tpm_eventlog_item_init(FuTpmEventlogItem *self)
  * fu_tpm_eventlog_item_new:
  *
  * Returns: (transfer full): a #FuTpmEventlogItem
- *
- * Since: 2.1.1
  **/
 FuTpmEventlogItem *
 fu_tpm_eventlog_item_new(void)

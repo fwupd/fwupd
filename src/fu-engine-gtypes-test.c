@@ -125,6 +125,13 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	if (firmware == NULL)
 		firmware = fu_firmware_new_from_bytes(data);
 
+	/* ->check_firmware() */
+	if (fu_device_check_firmware(device,
+				     firmware,
+				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				     NULL))
+		g_debug("did ->check_firmware()!");
+
 	/* ->write_firmware() */
 	if (fu_device_write_firmware(device, firmware, progress3, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->write_firmware()!");
@@ -142,9 +149,9 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 
 	/* roundtrip to JSON */
 	device3 = g_object_new(gtype, "context", ctx, NULL);
-	fu_device_add_json(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
-	if (fu_device_from_json(device3, json_obj, NULL))
-		g_debug("did ->from_json()");
+	fu_device_export(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (fu_device_build(device3, json_obj, NULL))
+		g_debug("did ->build()");
 }
 
 static void
@@ -207,12 +214,12 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 
 	/* export -> build */
 	if (!g_strv_contains(noxml, g_type_name(gtype))) {
-		g_autofree gchar *xml = fu_firmware_export_to_xml(
+		g_autofree gchar *json = fu_firmware_export_to_json(
 		    firmware,
 		    FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG | FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
 		    NULL);
-		if (xml != NULL) {
-			g_autoptr(FuFirmware) firmware2 = fu_firmware_new_from_xml(xml, &error);
+		if (json != NULL) {
+			g_autoptr(FuFirmware) firmware2 = fu_firmware_new_from_json(json, &error);
 			g_assert_no_error(error);
 			g_assert_nonnull(firmware2);
 		}
@@ -327,7 +334,10 @@ fu_engine_gtypes_func(void)
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) devices = g_ptr_array_new();
 		g_ptr_array_add(devices, device_nop);
-		if (!fu_plugin_runner_composite_cleanup(plugin, devices, &error_local))
+		if (!fu_plugin_runner_composite_cleanup(plugin,
+							devices,
+							FWUPD_UPDATE_STATE_SUCCESS,
+							&error_local))
 			g_debug("ignoring: %s", error_local->message);
 	}
 

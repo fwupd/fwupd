@@ -49,8 +49,6 @@ fu_v4l_device_to_string(FuDevice *device, guint idt, GString *str)
  * Gets the video4linux device index.
  *
  * Returns: integer, or %G_MAXUINT8 on error
- *
- * Since: 2.0.0
  **/
 guint8
 fu_v4l_device_get_index(FuV4lDevice *self)
@@ -70,8 +68,6 @@ fu_v4l_device_get_index(FuV4lDevice *self)
  * during probe.
  *
  * Returns: integer, or 0 on error
- *
- * Since: 2.0.0
  **/
 FuV4lCap
 fu_v4l_device_get_caps(FuV4lDevice *self)
@@ -91,7 +87,7 @@ fu_v4l_device_usb_probe(FuV4lDevice *self, FuDevice *usb_device, GError **error)
 				   "VID",
 				   fu_device_get_instance_str(usb_device, "VID"));
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					      error,
 					      "USB",
 					      "VID",

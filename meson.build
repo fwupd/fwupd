@@ -2,7 +2,7 @@ project(
   'fwupd',
   'c',
   'rust',
-  version: '2.2.1',
+  version: '2027.0',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
@@ -21,12 +21,10 @@ fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
 fwupd_minor_version = varr[1]
-fwupd_micro_version = varr[2]
 
 conf = configuration_data()
 conf.set('MAJOR_VERSION', fwupd_major_version)
 conf.set('MINOR_VERSION', fwupd_minor_version)
-conf.set('MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # get source version, falling back to package version
@@ -113,6 +111,7 @@ warning_flags = [
   '-Wno-cast-function-type',
   '-Wno-unknown-pragmas',
   '-Wno-missing-field-initializers',
+  '-Wno-missing-noreturn',
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
   '-Wold-style-definition',
@@ -318,17 +317,15 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').require(host_machine.system() in ['linux', 'android']).require(
-    host_cpu in ['x86', 'x86_64']
-  ).allowed()
-  if hsi
-    conf.set('HAVE_HSI', '1')
-  endif
+  conf.set_quoted('HOST_CPU_FAMILY', host_cpu)
   libxmlb = dependency(
     'xmlb',
     version: '>= 0.3.19',
     fallback: ['libxmlb', 'libxmlb_dep'],
   )
+  if libxmlb.version().version_compare('< 0.3.30')
+    warning('libxmlb >= 0.3.30 is strongly recommended for speed and security')
+  endif
   if libxmlb.get_variable('zstd') == 'true'
     lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
@@ -1055,7 +1052,6 @@ if build_daemon != 'none'
     {
       'bluez': bluez.allowed(),
       'libusb': libusb,
-      'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
       'crypto': jcat_crypto,

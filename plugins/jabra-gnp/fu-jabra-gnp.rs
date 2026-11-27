@@ -31,3 +31,11 @@ struct FuStructJabraGnpPacket {
     cmd: FuJabraGnpPacketCmd,
     //payload: [u8; 57],
 }
+
+#[derive(Parse, Getters)]
+#[repr(C, packed)]
+struct FuStructJabraGnpStringResponse {
+    header: FuStructJabraGnpPacket,
+    length: u8,
+    data: [u8; 55],
+}

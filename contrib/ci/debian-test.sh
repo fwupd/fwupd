@@ -19,7 +19,7 @@ EOF
 
 group "Update system and install dependencies"
 apt update -qq
-apt install -qq -y gcovr ./dist/*.deb
+apt install -qq -y ./dist/*.deb
 endgroup
 
 group "Enable test devices"
@@ -29,7 +29,9 @@ endgroup
 fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 
 group "Get the test firmware"
-./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
+if [[ "${CI_NETWORK:-false}" = "true" ]]; then
+    ./fwupbuild download-test-firmware --tests installed-tests --dest /usr/share/installed-tests/fwupd/
+fi
 endgroup
 
 service dbus restart
@@ -38,8 +40,10 @@ group "Run the tests via gnome-desktop-testing-runner"
 gnome-desktop-testing-runner --timeout=2400 fwupd
 endgroup
 
-# generate coverage report
-./contrib/ci/coverage.py
+# generate coverage report from the source copy so gcovr filters match
+WORKSPACE="$PWD"
+(cd build &&
+    GCOVR_OUTPUT="$WORKSPACE/coverage.xml" "$WORKSPACE/contrib/ci/coverage.py")
 
 group "Clean up"
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev

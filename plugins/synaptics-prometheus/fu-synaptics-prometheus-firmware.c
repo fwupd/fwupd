@@ -44,10 +44,11 @@ fu_synaptics_prometheus_firmware_set_signature_size(FuSynapticsPrometheusFirmwar
 static void
 fu_synaptics_prometheus_firmware_export(FuFirmware *firmware,
 					FuFirmwareExportFlags flags,
-					XbBuilderNode *bn)
+					FwupdJsonObject *json_object)
 {
 	FuSynapticsPrometheusFirmware *self = FU_SYNAPTICS_PROMETHEUS_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "product_id", self->product_id);
+	if (self->product_id != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", self->product_id);
 }
 
 static gboolean
@@ -193,14 +194,21 @@ fu_synaptics_prometheus_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_synaptics_prometheus_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_prometheus_firmware_build(FuFirmware *firmware,
+				       FwupdJsonObject *json_object,
+				       GError **error)
 {
 	FuSynapticsPrometheusFirmware *self = FU_SYNAPTICS_PROMETHEUS_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "product_id", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"product_id",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT32)
 		self->product_id = tmp;
 
 	/* success */

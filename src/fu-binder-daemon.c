@@ -118,6 +118,18 @@ fu_binder_daemon_dup_sender(void)
 	return g_strdup_printf("%u:%u", (guint)uid, (guint)pid);
 }
 
+void
+fu_binder_daemon_reset_idle(FuBinderDaemon *self)
+{
+	FuEngine *engine;
+
+	g_return_if_fail(FU_IS_BINDER_DAEMON(self));
+
+	engine = fu_daemon_get_engine(FU_DAEMON(self));
+	if (engine != NULL)
+		fu_engine_idle_reset(engine);
+}
+
 FuEngineRequest *
 fu_binder_daemon_create_request(FuBinderDaemon *self)
 {
@@ -125,6 +137,7 @@ fu_binder_daemon_create_request(FuBinderDaemon *self)
 	g_autoptr(FuClient) client = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(sender);
 
+	fu_binder_daemon_reset_idle(self);
 	fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
 
 	/* did the client set the list of supported features or any hints */
@@ -144,6 +157,7 @@ fu_binder_daemon_set_feature_flags(FuBinderDaemon *self, FwupdFeatureFlags featu
 {
 	g_autofree gchar *sender = fu_binder_daemon_dup_sender();
 	FuClient *client = fu_client_list_register(self->client_list, sender);
+	fu_binder_daemon_reset_idle(self);
 	fu_client_set_feature_flags(client, feature_flags);
 }
 
@@ -166,6 +180,7 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 	    "org.freedesktop.fwupd.get-remotes",
 	    "org.freedesktop.fwupd.get-hwids",
 	    "org.freedesktop.fwupd.get-plugins",
+	    "org.freedesktop.fwupd.get-protocols",
 	    "org.freedesktop.fwupd.get-history",
 	    "org.freedesktop.fwupd.get-properties",
 	    "org.freedesktop.fwupd.get-details",
@@ -186,24 +201,26 @@ fu_binder_daemon_action_id_requires_root(const gchar *action_id)
 
 /* no polkit, so require the calling process to be root before performing a privileged action */
 gboolean
-fu_binder_daemon_authorize(const gchar *action_id, GError **error)
+fu_binder_daemon_authorize(FuBinderDaemon *self, const gchar *action_id, GError **error)
 {
-	uid_t calling_uid;
+	g_return_val_if_fail(FU_IS_BINDER_DAEMON(self), FALSE);
 
-	/* read-only actions, or ones that are trusted by Jcat signatures */
-	if (!fu_binder_daemon_action_id_requires_root(action_id))
-		return TRUE;
-
-	calling_uid = AIBinder_getCallingUid();
-	if (calling_uid != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_AUTH_FAILED,
-			    "%s requires root, but caller uid is %u",
-			    action_id,
-			    (guint)calling_uid);
-		return FALSE;
+	/* harmful actions, or ones that are not trusted by Jcat signatures */
+	if (fu_binder_daemon_action_id_requires_root(action_id)) {
+		uid_t calling_uid = AIBinder_getCallingUid();
+		if (calling_uid != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AUTH_FAILED,
+				    "%s requires root, but caller uid is %u",
+				    action_id,
+				    (guint)calling_uid);
+			return FALSE;
+		}
 	}
+
+	/* success */
+	fu_binder_daemon_reset_idle(self);
 	return TRUE;
 }
 
@@ -220,7 +237,7 @@ fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper, GErro
 		    fu_engine_installer_pop_action_id(helper->engine_installer);
 		if (action_id == NULL)
 			break;
-		if (!fu_binder_daemon_authorize(action_id, error))
+		if (!fu_binder_daemon_authorize(self, action_id, error))
 			return FALSE;
 	}
 
@@ -242,6 +259,7 @@ fu_binder_daemon_authorize_install_queue(FuBinderDaemonAuthHelper *helper, GErro
 					 helper->flags,
 					 error);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
+	fu_binder_daemon_reset_idle(self);
 	if (!ret)
 		return FALSE;
 	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
@@ -350,7 +368,7 @@ fu_binder_daemon_activate_bridge(void *daemon_instance, const gchar *device_id, 
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.device-activate", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.device-activate", error))
 		return FALSE;
 	return fu_engine_activate(engine, device_id, progress, error);
 }
@@ -359,9 +377,89 @@ gboolean
 fu_binder_daemon_quit_bridge(void *daemon_instance, GError **error)
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.quit", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.quit", error))
 		return FALSE;
 	return fu_daemon_schedule_process_quit(FU_DAEMON(self), error);
+}
+
+gboolean
+fu_binder_daemon_write_blob_bridge(void *daemon_instance,
+				   const gchar *device_id,
+				   int fd,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   GError **error)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngineRequest) request = fu_binder_daemon_create_request(self);
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
+
+	g_debug("starting blob install via aidl bridge for device: %s", device_id);
+
+	/* there is no metadata to match against, so the device has to be specified */
+	if (g_strcmp0(device_id, FWUPD_DEVICE_ID_ANY) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "a device ID is required");
+		return FALSE;
+	}
+
+	/* only raw devices written using a programmer can be used without metadata */
+	device = fu_engine_get_device(engine, device_id, error);
+	if (device == NULL)
+		return FALSE;
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device is not a programmer target");
+		return FALSE;
+	}
+
+	/* there are no signature, requirement or version checks, so always require root */
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.write-blob", error))
+		return FALSE;
+
+	/* the caller owns the fd */
+	if (fd < 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid file descriptor received");
+		return FALSE;
+	}
+	stream = FWUPD_INPUT_STREAM(fwupd_unix_input_stream_new(fd, FALSE, error));
+	if (stream == NULL) {
+		g_prefix_error_literal(error, "invalid stream: ");
+		return FALSE;
+	}
+
+	fu_daemon_set_update_in_progress(FU_DAEMON(self), TRUE);
+	ret = fu_engine_write_blob_for_device_id(engine,
+						 device_id,
+						 stream,
+						 filename_hint,
+						 version,
+						 progress,
+						 FWUPD_INSTALL_FLAG_NONE,
+						 fu_engine_request_get_feature_flags(request),
+						 error);
+	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
+	fu_binder_daemon_reset_idle(self);
+	if (!ret)
+		return FALSE;
+	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "daemon was stopped");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -370,7 +468,7 @@ fu_binder_daemon_verify_bridge(void *daemon_instance, const gchar *device_id, GE
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.verify", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.verify", error))
 		return FALSE;
 	return fu_engine_verify(engine, device_id, progress, error);
 }
@@ -381,7 +479,7 @@ fu_binder_daemon_verify_update_bridge(void *daemon_instance, const gchar *device
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	g_autoptr(FuProgress) progress = fu_binder_daemon_progress_new(self);
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.verify-update", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.verify-update", error))
 		return FALSE;
 	return fu_engine_verify_update(engine, device_id, progress, error);
 }
@@ -391,7 +489,7 @@ fu_binder_daemon_unlock_bridge(void *daemon_instance, const gchar *device_id, GE
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.device-unlock", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.device-unlock", error))
 		return FALSE;
 	return fu_engine_unlock(engine, device_id, error);
 }
@@ -401,7 +499,7 @@ fu_binder_daemon_clear_results_bridge(void *daemon_instance, const gchar *device
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.clear-results", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.clear-results", error))
 		return FALSE;
 	return fu_engine_clear_results(engine, device_id, error);
 }
@@ -415,7 +513,7 @@ fu_binder_daemon_modify_device_bridge(void *daemon_instance,
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.modify-device", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.modify-device", error))
 		return FALSE;
 	return fu_engine_modify_device(engine, device_id, key, value, error);
 }
@@ -429,7 +527,7 @@ fu_binder_daemon_modify_remote_bridge(void *daemon_instance,
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.modify-remote", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.modify-remote", error))
 		return FALSE;
 	return fu_engine_modify_remote(engine, remote_id, key, value, error);
 }
@@ -439,7 +537,7 @@ fu_binder_daemon_clean_remote_bridge(void *daemon_instance, const gchar *remote_
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.clean-remote", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.clean-remote", error))
 		return FALSE;
 	return fu_engine_clean_remote(engine, remote_id, error);
 }
@@ -453,7 +551,7 @@ fu_binder_daemon_modify_config_bridge(void *daemon_instance,
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.modify-config", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.modify-config", error))
 		return FALSE;
 	return fu_engine_modify_config(engine, section, key, value, error);
 }
@@ -463,7 +561,7 @@ fu_binder_daemon_reset_config_bridge(void *daemon_instance, const gchar *section
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.reset-config", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.reset-config", error))
 		return FALSE;
 	return fu_engine_reset_config(engine, section, error);
 }
@@ -478,7 +576,8 @@ fu_binder_daemon_update_metadata_bridge(void *daemon_instance,
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.refresh-remote", error))
+
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.refresh-remote", error))
 		return FALSE;
 	return fu_engine_update_metadata(engine, remote_id, stream, stream_sig, error);
 }
@@ -490,7 +589,7 @@ fu_binder_daemon_set_bios_settings_bridge(void *daemon_instance,
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(daemon_instance);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.set-bios-settings", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.set-bios-settings", error))
 		return FALSE;
 	return fu_engine_modify_bios_settings(engine, settings, FALSE, error);
 }
@@ -505,7 +604,7 @@ fu_binder_daemon_self_sign_bridge(void *daemon_instance,
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FuJcatSignFlags jcat_flags = FU_JCAT_SIGN_FLAG_NONE;
 
-	if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.self-sign", error))
+	if (!fu_binder_daemon_authorize(self, "org.freedesktop.fwupd.self-sign", error))
 		return NULL;
 	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP)
 		jcat_flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;

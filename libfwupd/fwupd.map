@@ -1215,7 +1215,7 @@ LIBFWUPD_2.1.7 {
   local: *;
 } LIBFWUPD_2.1.6;
 
-LIBFWUPD_2.2.1 {
+LIBFWUPD_2027.0 {
   global:
     fwupd_bios_setting_get_parent;
     fwupd_bios_setting_set_parent;
@@ -1228,7 +1228,12 @@ LIBFWUPD_2.2.1 {
     fwupd_client_emit_device_removed;
     fwupd_client_emit_device_request;
     fwupd_client_get_pending_reboot;
+    fwupd_client_get_protocols;
+    fwupd_client_get_protocols_async;
+    fwupd_client_get_protocols_finish;
     fwupd_client_run_connect_funcs;
+    fwupd_client_set_battery_level;
+    fwupd_client_set_battery_threshold;
     fwupd_client_set_host_bkc;
     fwupd_client_set_host_machine_id;
     fwupd_client_set_host_product;
@@ -1236,6 +1241,9 @@ LIBFWUPD_2.2.1 {
     fwupd_client_set_pending_reboot;
     fwupd_client_set_percentage;
     fwupd_client_set_status;
+    fwupd_client_write_blob;
+    fwupd_client_write_blob_async;
+    fwupd_client_write_blob_finish;
     fwupd_file_input_stream_get_type;
     fwupd_file_input_stream_new;
     fwupd_file_input_stream_new_from_file;
@@ -1244,6 +1252,7 @@ LIBFWUPD_2.2.1 {
     fwupd_input_stream_read;
     fwupd_input_stream_read_all;
     fwupd_jcat_file_import_stream2;
+    fwupd_json_object_get_string_optional;
     fwupd_json_parser_load_from_stream2;
     fwupd_memory_input_stream_get_type;
     fwupd_memory_input_stream_new_from_bytes;

@@ -67,7 +67,7 @@ device with the latest matching firmware and then attaching it back into runtime
 Using a *generic* VID/PID for the bootloader means fwupd does not know how to recover
 the device back into runtime mode as the client does not know what firmware to choose
 and the user is forced to either RMA the device, or to download the correct file manually
-from the vendor vebsite and use low-level commands like `sudo fwupdtool install-blob`.
+from the vendor vebsite and use low-level commands like `sudo fwupdtool write-blob`.
 
 ## Vendor ID Security
 

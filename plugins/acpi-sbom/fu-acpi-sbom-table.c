@@ -64,6 +64,11 @@ fu_acpi_sbom_table_parse(FuFirmware *firmware,
 		}
 		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(entry), error))
 			return FALSE;
+
+		/* no payload bytes to extract */
+		if (fu_acpi_sbom_entry_get_compression(FU_ACPI_SBOM_ENTRY(entry)) ==
+		    FU_USWID_PAYLOAD_COMPRESSION_VENDOR)
+			continue;
 		if (!fu_firmware_add_image(firmware, entry, error))
 			return FALSE;
 	}

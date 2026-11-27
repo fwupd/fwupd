@@ -53,6 +53,8 @@ fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
+		const struct nlattr *name_attr;
+		const struct nlattr *value_attr;
 		g_autofree gchar *name = NULL;
 		g_autofree gchar *value = NULL;
 
@@ -66,10 +68,14 @@ fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 		    ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE] == NULL)
 			continue;
 
-		name =
-		    fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]), G_MAXSIZE);
-		value = fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]),
-				   G_MAXSIZE);
+		/* the attribute is not guaranteed to be NUL-terminated, so bound the read */
+		name_attr = ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME];
+		value_attr = ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE];
+		name = fu_strsafe(mnl_attr_get_str(name_attr), mnl_attr_get_payload_len(name_attr));
+		value =
+		    fu_strsafe(mnl_attr_get_str(value_attr), mnl_attr_get_payload_len(value_attr));
+		if (name == NULL || value == NULL)
+			continue;
 		version_info = g_hash_table_lookup(version_table, name);
 		if (version_info == NULL) {
 			version_info = g_new0(FuDevlinkVersionInfo, 1);
@@ -843,7 +849,7 @@ fu_devlink_device_cleanup(FuDevice *device,
 }
 
 static void
-fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_devlink_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 
@@ -870,7 +876,7 @@ fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCod
 }
 
 static gboolean
-fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_devlink_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	const gchar *bus_name;
@@ -880,16 +886,22 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	g_autofree gchar *device_id = NULL;
 
 	/* devlink-specific properties */
-	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
-	dev_name = fwupd_json_object_get_string(json_obj, "DevName", NULL);
-	ven = fwupd_json_object_get_string(json_obj, "Vid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "BusName", &bus_name, error))
+		return FALSE;
+	if (!fwupd_json_object_get_string_optional(json_obj, "DevName", &dev_name, error))
+		return FALSE;
+	if (!fwupd_json_object_get_string_optional(json_obj, "Vid", &ven, error))
+		return FALSE;
 	if (ven == NULL)
-		ven = fwupd_json_object_get_string(json_obj, "Ven", NULL);
+		if (!fwupd_json_object_get_string_optional(json_obj, "Ven", &ven, error))
+			return FALSE;
 	if (ven != NULL)
 		fu_device_add_instance_str(device, "VEN", ven);
-	dev = fwupd_json_object_get_string(json_obj, "Pid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Pid", &dev, error))
+		return FALSE;
 	if (dev == NULL)
-		dev = fwupd_json_object_get_string(json_obj, "Dev", NULL);
+		if (!fwupd_json_object_get_string_optional(json_obj, "Dev", &dev, error))
+			return FALSE;
 	if (dev != NULL)
 		fu_device_add_instance_str(device, "DEV", dev);
 
@@ -994,8 +1006,8 @@ fu_devlink_device_class_init(FuDevlinkDeviceClass *klass)
 	device_class->to_string = fu_devlink_device_to_string;
 	device_class->setup = fu_devlink_device_setup;
 	device_class->reload = fu_devlink_device_setup;
-	device_class->add_json = fu_devlink_device_add_json;
-	device_class->from_json = fu_devlink_device_from_json;
+	device_class->export = fu_devlink_device_export;
+	device_class->build = fu_devlink_device_build;
 	device_class->incorporate = fu_devlink_device_incorporate;
 	device_class->set_quirk_kv = fu_devlink_device_set_quirk_kv;
 }

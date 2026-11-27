@@ -307,6 +307,7 @@ if __name__ == "__main__":
             "X-InputController",
             "X-Headphones",
             "X-Headset",
+            "X-ExpansionCard",
         ],
         default=[],
     )

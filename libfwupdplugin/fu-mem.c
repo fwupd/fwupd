@@ -21,8 +21,6 @@
  * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
- *
- * Since: 1.8.2
  **/
 void
 fu_memwrite_uint16(guint8 *buf, guint16 val_native, FuEndianType endian)
@@ -49,8 +47,6 @@ fu_memwrite_uint16(guint8 *buf, guint16 val_native, FuEndianType endian)
  * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
- *
- * Since: 1.8.2
  **/
 void
 fu_memwrite_uint24(guint8 *buf, guint32 val_native, FuEndianType endian)
@@ -77,8 +73,6 @@ fu_memwrite_uint24(guint8 *buf, guint32 val_native, FuEndianType endian)
  * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
- *
- * Since: 1.8.2
  **/
 void
 fu_memwrite_uint32(guint8 *buf, guint32 val_native, FuEndianType endian)
@@ -105,8 +99,6 @@ fu_memwrite_uint32(guint8 *buf, guint32 val_native, FuEndianType endian)
  * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
- *
- * Since: 1.8.2
  **/
 void
 fu_memwrite_uint64(guint8 *buf, guint64 val_native, FuEndianType endian)
@@ -134,8 +126,6 @@ fu_memwrite_uint64(guint8 *buf, guint64 val_native, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
- *
- * Since: 1.8.2
  **/
 guint16
 fu_memread_uint16(const guint8 *buf, FuEndianType endian)
@@ -165,8 +155,6 @@ fu_memread_uint16(const guint8 *buf, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
- *
- * Since: 1.8.2
  **/
 guint32
 fu_memread_uint24(const guint8 *buf, FuEndianType endian)
@@ -197,8 +185,6 @@ fu_memread_uint24(const guint8 *buf, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
- *
- * Since: 1.8.2
  **/
 guint32
 fu_memread_uint32(const guint8 *buf, FuEndianType endian)
@@ -228,8 +214,6 @@ fu_memread_uint32(const guint8 *buf, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
- *
- * Since: 1.8.2
  **/
 guint64
 fu_memread_uint64(const guint8 *buf, FuEndianType endian)
@@ -265,8 +249,6 @@ fu_memread_uint64(const guint8 *buf, FuEndianType endian)
  * Compares the buffers for equality.
  *
  * Returns: %TRUE if @buf1 and @buf2 are identical
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memcmp_safe(const guint8 *buf1,
@@ -320,8 +302,6 @@ fu_memcmp_safe(const guint8 *buf1,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if the access is safe, %FALSE otherwise
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
@@ -375,8 +355,6 @@ fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if the access is safe, %FALSE otherwise
- *
- * Since: 1.9.1
  **/
 gboolean
 fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error)
@@ -438,8 +416,6 @@ fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if the bytes were copied, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memcpy_safe(guint8 *dst,
@@ -475,8 +451,6 @@ fu_memcpy_safe(guint8 *dst,
  * Finds a block of memory in another block of memory in a safe way.
  *
  * Returns: %TRUE if the needle was found in the haystack, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memmem_safe(const guint8 *haystack,
@@ -520,7 +494,7 @@ fu_memmem_safe(const guint8 *haystack,
 		return TRUE;
 	}
 #else
-	for (gsize i = 0; i < haystack_sz - needle_sz; i++) {
+	for (gsize i = 0; i <= haystack_sz - needle_sz; i++) {
 		if (memcmp(haystack + i, needle, needle_sz) == 0) {
 			if (offset != NULL)
 				*offset = i;
@@ -554,12 +528,12 @@ fu_memmem_safe(const guint8 *haystack,
  * NOTE: This function intentionally limits allocation size to 1GB.
  *
  * Returns: (transfer full): block of allocated memory, or %NULL for an error.
- *
- * Since: 1.8.2
  **/
 guint8 *
 fu_memdup_safe(const guint8 *src, gsize n, GError **error)
 {
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* sanity check */
 	if (n > 0x40000000) {
 		g_set_error(error,
@@ -589,8 +563,6 @@ fu_memdup_safe(const guint8 *src, gsize n, GError **error)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memread_uint8_safe(const guint8 *buf, gsize bufsz, gsize offset, guint8 *value, GError **error)
@@ -630,8 +602,6 @@ fu_memread_uint8_safe(const guint8 *buf, gsize bufsz, gsize offset, guint8 *valu
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memread_uint16_safe(const guint8 *buf,
@@ -676,8 +646,6 @@ fu_memread_uint16_safe(const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 1.8.3
  **/
 gboolean
 fu_memread_uint24_safe(const guint8 *buf,
@@ -722,8 +690,6 @@ fu_memread_uint24_safe(const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memread_uint32_safe(const guint8 *buf,
@@ -768,8 +734,6 @@ fu_memread_uint32_safe(const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was set, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memread_uint64_safe(const guint8 *buf,
@@ -813,8 +777,6 @@ fu_memread_uint64_safe(const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was written, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memwrite_uint8_safe(guint8 *buf, gsize bufsz, gsize offset, guint8 value, GError **error)
@@ -848,8 +810,6 @@ fu_memwrite_uint8_safe(guint8 *buf, gsize bufsz, gsize offset, guint8 value, GEr
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was written, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memwrite_uint16_safe(guint8 *buf,
@@ -891,8 +851,6 @@ fu_memwrite_uint16_safe(guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was written, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memwrite_uint32_safe(guint8 *buf,
@@ -934,8 +892,6 @@ fu_memwrite_uint32_safe(guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE if @value was written, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_memwrite_uint64_safe(guint8 *buf,
@@ -972,8 +928,6 @@ fu_memwrite_uint64_safe(guint8 *buf,
  * Converts a byte buffer to a ASCII string.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 1.9.3
  **/
 gchar *
 fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError **error)
@@ -1007,13 +961,14 @@ fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError 
  * Reads a NUL-terminated string from a buffer.
  *
  * Returns: (transfer full): a string, or %NULL on error
- *
- * Since: 2.1.4
  **/
 GString *
 fu_memread_string_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(buf != NULL || bufsz == 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* validate offset is within buffer bounds */
 	if (offset >= bufsz) {

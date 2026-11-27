@@ -17,7 +17,9 @@ typedef struct {
 } FuAmdAfcForm;
 
 void
-fu_amd_afc_form_export(FuAmdAfcForm *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+fu_amd_afc_form_export(FuAmdAfcForm *self,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object);
 void
 fu_amd_afc_form_free(FuAmdAfcForm *self);
 

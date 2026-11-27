@@ -37,21 +37,24 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiSection, fu_efi_section, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_section_get_instance_private(o))
 
 static void
-fu_efi_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_section_export(FuFirmware *firmware,
+		      FuFirmwareExportFlags flags,
+		      FwupdJsonObject *json_object)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 
-	fu_xmlb_builder_insert_kx(bn, "type", priv->type);
+	if (priv->type != 0)
+		fwupd_json_object_add_integer(json_object, "type", priv->type);
 	if (priv->user_interface != NULL)
-		fu_xmlb_builder_insert_kv(bn, "user_interface", priv->user_interface);
+		fwupd_json_object_add_string(json_object, "user_interface", priv->user_interface);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kv(bn,
-					  "name",
-					  fu_efi_guid_to_name(fu_firmware_get_id(firmware)));
-		fu_xmlb_builder_insert_kv(bn,
-					  "type_name",
-					  fu_efi_section_type_to_string(priv->type));
+		const gchar *name_str = fu_efi_guid_to_name(fu_firmware_get_id(firmware));
+		const gchar *type_name_str = fu_efi_section_type_to_string(priv->type);
+		if (name_str != NULL)
+			fwupd_json_object_add_string(json_object, "name", name_str);
+		if (type_name_str != NULL)
+			fwupd_json_object_add_string(json_object, "type_name", type_name_str);
 	}
 }
 
@@ -215,9 +218,8 @@ fu_efi_section_freeform_subtype_guid_to_string(const gchar *guid)
 	    {"d46346ca-82a1-4cde-9546-77c86f893888", "?Oprom"},
 	    {"e095affe-d4cd-4289-9b48-28f64e3d781d", "IntelRstOprom"},
 	    {"fe612b72-203c-47b1-8560-a66d946eb371", "setupdata"},
-	    {NULL, NULL},
 	};
-	for (guint i = 0; freeform_guids[i].guid != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(freeform_guids); i++) {
 		if (g_strcmp0(guid, freeform_guids[i].guid) == 0)
 			return freeform_guids[i].str;
 	}
@@ -463,18 +465,24 @@ fu_efi_section_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_section_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_section_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	const gchar *str;
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "type", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"type",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->type = tmp;
-	str = xb_node_query_text(n, "user_interface", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "user_interface", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		if (priv->user_interface != NULL) {
 			g_set_error(error,
@@ -534,8 +542,6 @@ fu_efi_section_class_init(FuEfiSectionClass *klass)
  * fu_efi_section_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 2.0.0
  **/
 FuFirmware *
 fu_efi_section_new(void)

@@ -15,3 +15,5 @@ FuAcpiDmar *
 fu_acpi_dmar_new(void);
 gboolean
 fu_acpi_dmar_get_opt_in(FuAcpiDmar *self);
+void
+fu_acpi_dmar_set_opt_in(FuAcpiDmar *self, gboolean opt_in);

@@ -27,7 +27,7 @@ device_tests += files('tests/bnr-dp.json')
 
 if get_option('tests')
   install_data(
-    'tests' / 'bnr-dp.builder.xml',
+    'tests' / 'bnr-dp.builder.json',
     install_dir: installed_test_datadir / 'tests',
   )
   test(

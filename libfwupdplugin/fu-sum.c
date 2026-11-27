@@ -19,8 +19,6 @@
  * Returns the arithmetic sum of all bytes in @buf.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint8
 fu_sum8(const guint8 *buf, gsize bufsz)
@@ -48,8 +46,6 @@ fu_sum8(const guint8 *buf, gsize bufsz)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE on success, %FALSE otherwise
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_sum8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *value, GError **error)
@@ -71,8 +67,6 @@ fu_sum8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *valu
  * Returns the arithmetic sum of all bytes in @blob.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint8
 fu_sum8_bytes(GBytes *blob)
@@ -91,8 +85,6 @@ fu_sum8_bytes(GBytes *blob)
  * Returns the arithmetic sum of all bytes in @buf, adding them one byte at a time.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint16
 fu_sum16(const guint8 *buf, gsize bufsz)
@@ -120,8 +112,6 @@ fu_sum16(const guint8 *buf, gsize bufsz)
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Returns: %TRUE on success, %FALSE otherwise
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_sum16_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint16 *value, GError **error)
@@ -143,8 +133,6 @@ fu_sum16_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint16 *va
  * Returns the arithmetic sum of all bytes in @blob, adding them one byte at a time.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint16
 fu_sum16_bytes(GBytes *blob)
@@ -163,8 +151,6 @@ fu_sum16_bytes(GBytes *blob)
  * The caller must ensure that @bufsz is a multiple of 2.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint16
 fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian)
@@ -186,8 +172,6 @@ fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian)
  * The caller must ensure that the size of @blob is a multiple of 2.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint16
 fu_sum16w_bytes(GBytes *blob, FuEndianType endian)
@@ -204,8 +188,6 @@ fu_sum16w_bytes(GBytes *blob, FuEndianType endian)
  * Returns the arithmetic sum of all bytes in @buf, adding them one byte at a time.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint32
 fu_sum32(const guint8 *buf, gsize bufsz)
@@ -224,8 +206,6 @@ fu_sum32(const guint8 *buf, gsize bufsz)
  * Returns the arithmetic sum of all bytes in @blob, adding them one byte at a time.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint32
 fu_sum32_bytes(GBytes *blob)
@@ -244,8 +224,6 @@ fu_sum32_bytes(GBytes *blob)
  * The caller must ensure that @bufsz is a multiple of 4.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint32
 fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian)
@@ -267,8 +245,6 @@ fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian)
  * The caller must ensure that the size of @blob is a multiple of 4.
  *
  * Returns: sum value
- *
- * Since: 1.8.2
  **/
 guint32
 fu_sum32w_bytes(GBytes *blob, FuEndianType endian)

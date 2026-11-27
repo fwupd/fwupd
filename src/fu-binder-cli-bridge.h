@@ -29,6 +29,8 @@ fu_binder_cli_bridge_get_remotes(AIBinder *binder, GError **error);
 GPtrArray *
 fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error);
 GPtrArray *
+fu_binder_cli_bridge_get_protocols(AIBinder *binder, GError **error);
+GPtrArray *
 fu_binder_cli_bridge_get_history(AIBinder *binder, GError **error);
 gboolean
 fu_binder_cli_bridge_set_feature_flags(AIBinder *binder,
@@ -41,6 +43,13 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			     FwupdInstallFlags install_flags,
 			     const char *filename_hint,
 			     GError **error);
+gboolean
+fu_binder_cli_bridge_write_blob(AIBinder *binder_handle,
+				const char *id,
+				int fd,
+				const char *filename_hint,
+				const char *version,
+				GError **error);
 gboolean
 fu_binder_cli_bridge_update_metadata(AIBinder *binder,
 				     const char *remote_id,

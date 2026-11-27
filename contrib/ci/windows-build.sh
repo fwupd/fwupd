@@ -7,13 +7,6 @@ if [ "$CI" != "true" ]; then
     exit 1
 fi
 
-# install deps
-if [ "$(id -u)" -eq 0 ]; then
-    dnf install -y python3
-    dnf install -y xvfb-run
-    ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
-fi
-
 #prep
 export LC_ALL=C.UTF-8
 root=$(pwd)

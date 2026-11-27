@@ -92,6 +92,8 @@ fu_common_get_block_devices(GError **error)
 	g_autoptr(GVariantIter) obj_iter = NULL;
 	g_autoptr(GDBusConnection) connection = NULL;
 
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
 		g_prefix_error_literal(error, "failed to get system bus: ");
@@ -249,6 +251,8 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 	    "zswap.enabled",
 	};
 
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* get a PII-safe kernel command line */
 	hash = fu_kernel_get_cmdline(error);
 	if (hash == NULL)
@@ -277,6 +281,9 @@ fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
 	const gchar *fn_localtime;
 	g_autoptr(GFile) file_localtime = NULL;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	fn_localtime = fu_path_store_get_path(pstore, FU_PATH_KIND_LOCALTIME, error);
 	if (fn_localtime == NULL)

@@ -1450,7 +1450,10 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 	data[5] = cmd;
 	data[6] = fu_xor8(data, sizeof(data) - 1);
 
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
@@ -1468,9 +1471,6 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 
 	fu_device_sleep(FU_DEVICE(self), 100); /* 1ms */
 
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,

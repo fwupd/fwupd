@@ -1,0 +1,375 @@
+{
+  "gtype": "FuHidDescriptor",
+  "firmware": [
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0x101"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "collection",
+          "value": "0x1"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf4"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "data": "<",
+          "data_size": "0x1",
+          "value": "0x3c"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xc7"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "output",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf5"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x10"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xcc"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "input",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf2"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x10"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xdc"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "output",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf3"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x10"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xd8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "input",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf1"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "data": "<",
+          "data_size": "0x1",
+          "value": "0x3c"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xc8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "feature",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf9"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x18"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xdd"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "output",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x14"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage",
+          "value": "0xde"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "input",
+          "value": "0x2"
+        }
+      ]
+    },
+    {
+      "gtype": "FuHidReport",
+      "firmware": [
+        {
+          "gtype": "FuHidReportItem",
+          "id": "usage-page",
+          "value": "0xff0b"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-minimum"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "logical-maximum",
+          "value": "0xff"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-id",
+          "value": "0xf8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-size",
+          "value": "0x8"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "report-count",
+          "value": "0x14"
+        },
+        {
+          "gtype": "FuHidReportItem",
+          "id": "end-collection"
+        }
+      ]
+    }
+  ]
+}

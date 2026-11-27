@@ -28,7 +28,9 @@ typedef struct {
 } FuAmdAfcSetting;
 
 void
-fu_amd_afc_setting_export(FuAmdAfcSetting *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+fu_amd_afc_setting_export(FuAmdAfcSetting *self,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object);
 gchar *
 fu_amd_afc_setting_build_name(FuAmdAfcSetting *self);
 const gchar *

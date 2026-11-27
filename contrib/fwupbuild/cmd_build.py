@@ -91,9 +91,10 @@ def symlink_efi_binaries(dist: Path):
 
     # Find .efi files
     binaries = []
-    for entry in system_efi.glob("*.efi"):
-        if entry.is_file():
-            binaries.append(entry)
+    for pattern in ("*.efi", "*.efi.signed"):
+        for entry in system_efi.glob(pattern):
+            if entry.is_file():
+                binaries.append(entry)
 
     if not binaries:
         return

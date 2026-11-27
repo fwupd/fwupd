@@ -32,8 +32,6 @@ G_DEFINE_TYPE(FuEdid, fu_edid, FU_TYPE_FIRMWARE)
  * Gets the PNP ID, e.g. `IBM`.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_pnp_id(FuEdid *self)
@@ -48,15 +46,11 @@ fu_edid_get_pnp_id(FuEdid *self)
  * @pnp_id: (nullable): three digit string value, or %NULL
  *
  * Sets the PNP ID, which has a length equal to or less than 3 ASCII characters.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->pnp_id, pnp_id) == 0)
-		return;
 	g_set_str(&self->pnp_id, pnp_id);
 }
 
@@ -67,8 +61,6 @@ fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id)
  * Gets the EISA ID, e.g. `LTN154P2-L05`.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_eisa_id(FuEdid *self)
@@ -83,15 +75,11 @@ fu_edid_get_eisa_id(FuEdid *self)
  * @eisa_id: (nullable): string value, or %NULL
  *
  * Sets the EISA ID, which has to be equal to or less than 13 ASCII characters long.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->eisa_id, eisa_id) == 0)
-		return;
 	g_set_str(&self->eisa_id, eisa_id);
 }
 
@@ -102,8 +90,6 @@ fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id)
  * Gets the serial number.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_serial_number(FuEdid *self)
@@ -119,15 +105,11 @@ fu_edid_get_serial_number(FuEdid *self)
  *
  * Sets the serial number, which can either be a unsigned 32 bit integer, or a string equal to or
  * less than 13 ASCII characters long.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->serial_number, serial_number) == 0)
-		return;
 	g_set_str(&self->serial_number, serial_number);
 }
 
@@ -138,8 +120,6 @@ fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
  * Gets the product name.
  *
  * Returns: string value, or %NULL for unset
- *
- * Since: 1.9.6
  **/
 const gchar *
 fu_edid_get_product_name(FuEdid *self)
@@ -154,15 +134,11 @@ fu_edid_get_product_name(FuEdid *self)
  * @product_name: (nullable): string value, or %NULL
  *
  * Sets the product name, e.g. `LG HDR WQHD`.
- *
- * Since: 2.0.14
  **/
 void
 fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
 {
 	g_return_if_fail(FU_IS_EDID(self));
-	if (g_strcmp0(self->product_name, product_name) == 0)
-		return;
 	g_set_str(&self->product_name, product_name);
 }
 
@@ -173,8 +149,6 @@ fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
  * Gets the product code.
  *
  * Returns: integer, or 0x0 for unset
- *
- * Since: 1.9.6
  **/
 guint16
 fu_edid_get_product_code(FuEdid *self)
@@ -189,8 +163,6 @@ fu_edid_get_product_code(FuEdid *self)
  * @product_code: integer, or 0x0 for unset
  *
  * Sets the product code.
- *
- * Since: 1.9.6
  **/
 void
 fu_edid_set_product_code(FuEdid *self, guint16 product_code)
@@ -376,13 +348,14 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_edid_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
 	const gchar *value;
 
 	/* simple properties */
-	value = xb_node_query_text(n, "pnp_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "pnp_id", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz != 3) {
@@ -396,7 +369,8 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_pnp_id(self, value);
 	}
-	value = xb_node_query_text(n, "serial_number", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "serial_number", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz > FU_STRUCT_EDID_DESCRIPTOR_SIZE_DATA) {
@@ -410,7 +384,8 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_serial_number(self, value);
 	}
-	value = xb_node_query_text(n, "eisa_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "eisa_id", &value, error))
+		return FALSE;
 	if (value != NULL) {
 		gsize valuesz = strlen(value);
 		if (valuesz > FU_STRUCT_EDID_DESCRIPTOR_SIZE_DATA) {
@@ -424,11 +399,17 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 		fu_edid_set_eisa_id(self, value);
 	}
-	value = xb_node_query_text(n, "product_code", NULL);
-	if (value != NULL) {
-		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "product_code")) {
+		gint64 tmp = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "product_code", &tmp, error))
 			return FALSE;
+		if (tmp < 0 || tmp > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid product_code");
+			return FALSE;
+		}
 		fu_edid_set_product_code(self, tmp);
 	}
 
@@ -437,14 +418,19 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_edid_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_edid_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuEdid *self = FU_EDID(firmware);
-	fu_xmlb_builder_insert_kv(bn, "pnp_id", self->pnp_id);
-	fu_xmlb_builder_insert_kv(bn, "serial_number", self->serial_number);
-	fu_xmlb_builder_insert_kv(bn, "product_name", self->product_name);
-	fu_xmlb_builder_insert_kv(bn, "eisa_id", self->eisa_id);
-	fu_xmlb_builder_insert_kx(bn, "product_code", self->product_code);
+	if (self->pnp_id != NULL)
+		fwupd_json_object_add_string(json_object, "pnp_id", self->pnp_id);
+	if (self->serial_number != NULL)
+		fwupd_json_object_add_string(json_object, "serial_number", self->serial_number);
+	if (self->product_name != NULL)
+		fwupd_json_object_add_string(json_object, "product_name", self->product_name);
+	if (self->eisa_id != NULL)
+		fwupd_json_object_add_string(json_object, "eisa_id", self->eisa_id);
+	if (self->product_code != 0)
+		fwupd_json_object_add_integer(json_object, "product_code", self->product_code);
 }
 
 static void
@@ -480,8 +466,6 @@ fu_edid_init(FuEdid *self)
  * fu_edid_new:
  *
  * Returns: (transfer full): a #FuEdid
- *
- * Since: 1.9.6
  **/
 FuEdid *
 fu_edid_new(void)

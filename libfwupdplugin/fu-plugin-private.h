@@ -78,6 +78,7 @@ fu_plugin_runner_composite_prepare(FuPlugin *self,
 gboolean
 fu_plugin_runner_composite_cleanup(FuPlugin *self,
 				   GPtrArray *devices,
+				   FwupdUpdateState update_state,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_plugin_runner_composite_peek_firmware(FuPlugin *self,

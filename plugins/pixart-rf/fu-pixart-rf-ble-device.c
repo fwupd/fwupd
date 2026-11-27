@@ -259,7 +259,7 @@ fu_pixart_rf_ble_device_check_support_report_id(FuPixartRfBleDevice *self, GErro
 		g_debug("failed to parse descriptor: %s", error_local2->message);
 	}
 	g_debug("usage-page: 0x%x feature_report_id: %d",
-		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		PIXART_RF_HID_DEV_OTA_REPORT_USAGE_PAGE,
 		self->feature_report_id);
 
 	/* check ota notify input report usage page exist or not */
@@ -271,7 +271,7 @@ fu_pixart_rf_ble_device_check_support_report_id(FuPixartRfBleDevice *self, GErro
 		g_debug("failed to parse descriptor: %s", error_local3->message);
 	}
 	g_debug("usage-page: 0x%x input_report_id: %d",
-		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		PIXART_RF_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
 		self->input_report_id);
 
 	/* success */
@@ -728,7 +728,7 @@ fu_pixart_rf_ble_device_write_firmware(FuDevice *device,
 		if (!fu_pixart_rf_ble_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)self->fwstate.offset + 1,
+						(gsize)i + 1,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);

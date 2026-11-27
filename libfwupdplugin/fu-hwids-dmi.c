@@ -21,17 +21,22 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 	struct {
 		const gchar *hwid;
 		const gchar *key;
-	} map[] = {{FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, "board_vendor"},
-		   {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "board_name"},
-		   {FU_HWIDS_KEY_BIOS_VENDOR, "bios_vendor"},
-		   {FU_HWIDS_KEY_BIOS_VERSION, "bios_version"},
-		   {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "bios_date"},
-		   {FU_HWIDS_KEY_FAMILY, "product_family"},
-		   {FU_HWIDS_KEY_MANUFACTURER, "sys_vendor"},
-		   {FU_HWIDS_KEY_PRODUCT_NAME, "product_name"},
-		   {FU_HWIDS_KEY_PRODUCT_SKU, "product_sku"},
-		   {FU_HWIDS_KEY_ENCLOSURE_KIND, "chassis_type"},
-		   {NULL, NULL}};
+	} map[] = {
+	    {FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, "board_vendor"},
+	    {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "board_name"},
+	    {FU_HWIDS_KEY_BIOS_VENDOR, "bios_vendor"},
+	    {FU_HWIDS_KEY_BIOS_VERSION, "bios_version"},
+	    {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "bios_date"},
+	    {FU_HWIDS_KEY_FAMILY, "product_family"},
+	    {FU_HWIDS_KEY_MANUFACTURER, "sys_vendor"},
+	    {FU_HWIDS_KEY_PRODUCT_NAME, "product_name"},
+	    {FU_HWIDS_KEY_PRODUCT_SKU, "product_sku"},
+	    {FU_HWIDS_KEY_ENCLOSURE_KIND, "chassis_type"},
+	};
+
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
+	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* the values the kernel parsed; these are world-readable */
 	path = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, error);
@@ -41,7 +46,7 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no %s", path);
 		return FALSE;
 	}
-	for (guint i = 0; map[i].key != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		gsize bufsz = 0;
 		g_autofree gchar *buf = NULL;
 		g_autofree gchar *fn = g_build_filename(path, map[i].key, NULL);

@@ -43,7 +43,9 @@ fu_redfish_legacy_device_detach(FuDevice *device, FuProgress *progress, GError *
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
@@ -69,7 +71,9 @@ fu_redfish_legacy_device_attach(FuDevice *device, FuProgress *progress, GError *
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
@@ -103,7 +107,9 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
 	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, g_bytes_get_data(fw, NULL));

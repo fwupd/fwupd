@@ -25,7 +25,7 @@ if get_option('tests')
     [
       'grub2/grub.cfg',
       'test.quirk',
-      'uefi-update-info.builder.xml',
+      'uefi-update-info.builder.json',
     ],
     install_dir: installed_test_datadir,
   )

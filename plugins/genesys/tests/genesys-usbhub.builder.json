@@ -1,0 +1,8 @@
+{
+  "gtype": "FuGenesysUsbhubFirmware",
+  "data": "aGVsbG8gd29ybGQ=",
+  "tool_string_version": "brand-project",
+  "mask_project_code": "ABCD",
+  "mask_project_ic_type": "352310",
+  "brand_project": "MYPROJECT"
+}

@@ -64,16 +64,10 @@ echo " ● Importing hwids"
 run import-hwids ${TMPDIR}/hwids.ini
 expect_rc 0
 
-UNAME=$(uname -m)
-if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "i686" ]; then
-    EXPECTED=0
-else
-    EXPECTED=1
-fi
 # ---
 echo " ● Showing security"
 run security
-expect_rc $EXPECTED
+expect_rc 0
 
 # ---
 echo " ● Showing plugins"
@@ -216,8 +210,8 @@ fi
 
 # ---
 echo " ● Firmware builder…"
-echo "<firmware gtype=\"FuSrecFirmware\"><id>HDR</id><data>aGVsbG8gd29ybGQ=</data></firmware>" >${TMPDIR}/blob.builder.xml
-run firmware-build ${TMPDIR}/blob.builder.xml ${TMPDIR}/blob.srec
+echo '{"gtype": "FuSrecFirmware", "id": "HDR", "data": "aGVsbG8gd29ybGQ="}' >${TMPDIR}/blob.builder.json
+run firmware-build ${TMPDIR}/blob.builder.json ${TMPDIR}/blob.srec
 expect_rc 0
 
 # ---
@@ -317,7 +311,7 @@ expect_rc 0
 # ---
 echo " ● Installing blob…"
 echo " ● 0.0.0" >${TMPDIR}/blob.bin
-run install-blob ${TMPDIR}/blob.bin ${DEVICE}
+run write-blob ${TMPDIR}/blob.bin ${DEVICE}
 expect_rc 0
 
 # ---

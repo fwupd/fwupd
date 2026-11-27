@@ -10,37 +10,54 @@
 #include "fu-amd-afc-setting.h"
 
 void
-fu_amd_afc_setting_export(FuAmdAfcSetting *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_setting_export(FuAmdAfcSetting *self,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
-	fu_xmlb_builder_insert_kv(bn, "kind", fu_amd_afc_setting_kind_to_string(self->kind));
+	const gchar *kind_str = fu_amd_afc_setting_kind_to_string(self->kind);
+	if (kind_str != NULL)
+		fwupd_json_object_add_string(json_object, "kind", kind_str);
 	if (self->display_name != NULL)
-		fu_xmlb_builder_insert_kv(bn, "display_name", self->display_name);
+		fwupd_json_object_add_string(json_object, "display_name", self->display_name);
 	if (self->language != NULL)
-		fu_xmlb_builder_insert_kv(bn, "language", self->language);
+		fwupd_json_object_add_string(json_object, "language", self->language);
 	if (self->paths->len > 0) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "paths", NULL);
+		g_autoptr(FwupdJsonArray) json_paths = fwupd_json_array_new();
 		for (guint i = 0; i < self->paths->len; i++) {
 			const gchar *path = g_ptr_array_index(self->paths, i);
-			fu_xmlb_builder_insert_kv(bc, "path", path);
+			if (path != NULL)
+				fwupd_json_array_add_string(json_paths, path);
 		}
+		fwupd_json_object_add_array(json_object, "paths", json_paths);
 	}
 	if (self->options->len > 0) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "options", NULL);
+		g_autoptr(FwupdJsonArray) json_options = fwupd_json_array_new();
 		for (guint i = 0; i < self->options->len; i++) {
 			FuAmdAfcOption *option = g_ptr_array_index(self->options, i);
-			g_autoptr(XbBuilderNode) bcc = xb_builder_node_insert(bc, "option", NULL);
-			fu_amd_afc_option_export(option, flags, bcc);
+			g_autoptr(FwupdJsonObject) json_option = fwupd_json_object_new();
+			fu_amd_afc_option_export(option, flags, json_option);
+			fwupd_json_array_add_object(json_options, json_option);
 		}
+		fwupd_json_object_add_array(json_object, "options", json_options);
 	}
-	fu_xmlb_builder_insert_kx(bn, "question_id", self->question_id);
-	fu_xmlb_builder_insert_kx(bn, "question_flags", self->question_flags);
-	fu_xmlb_builder_insert_kb(bn, "has_current", self->has_current);
-	fu_xmlb_builder_insert_kx(bn, "current", self->current);
-	fu_xmlb_builder_insert_kx(bn, "minimum", self->minimum);
-	fu_xmlb_builder_insert_kx(bn, "maximum", self->maximum);
-	fu_xmlb_builder_insert_kx(bn, "step", self->step);
-	fu_xmlb_builder_insert_kb(bn, "has_default", self->has_default);
-	fu_xmlb_builder_insert_kx(bn, "default_value", self->default_value);
+	if (self->question_id != 0)
+		fwupd_json_object_add_integer(json_object, "question_id", self->question_id);
+	if (self->question_flags != 0)
+		fwupd_json_object_add_integer(json_object, "question_flags", self->question_flags);
+	fwupd_json_object_add_boolean(json_object, "has_current", self->has_current);
+	if (self->current != 0)
+		fwupd_json_object_add_integer(json_object, "current", (gint64)self->current);
+	if (self->minimum != 0)
+		fwupd_json_object_add_integer(json_object, "minimum", (gint64)self->minimum);
+	if (self->maximum != 0)
+		fwupd_json_object_add_integer(json_object, "maximum", (gint64)self->maximum);
+	if (self->step != 0)
+		fwupd_json_object_add_integer(json_object, "step", (gint64)self->step);
+	fwupd_json_object_add_boolean(json_object, "has_default", self->has_default);
+	if (self->default_value != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "default_value",
+					      (gint64)self->default_value);
 }
 
 void

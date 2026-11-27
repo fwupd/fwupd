@@ -61,9 +61,7 @@ FwupdProperties_to_AIDL(FuBinderDaemon *self)
 		p.hostProduct = host_product;
 	if (host_machine_id != NULL)
 		p.hostMachineId = host_machine_id;
-#ifdef HAVE_HSI
 	host_security_id = fu_engine_get_host_security_id(engine, NULL);
-#endif
 	if (host_security_id != NULL)
 		p.hostSecurityId = host_security_id;
 	p.tainted = FALSE;
@@ -233,6 +231,7 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	binder_status_t
 	dump(int fd, const char ** /*args*/, uint32_t /*numArgs*/) override
 	{
+		fu_binder_daemon_reset_idle(m_daemon);
 		g_autofree gchar *json = fwupd_codec_to_json_string(FWUPD_CODEC(m_daemon),
 								    FWUPD_CODEC_FLAG_TRUSTED,
 								    NULL);
@@ -307,7 +306,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) devices = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-devices", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-devices",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -355,9 +356,35 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	}
 
 	::ndk::ScopedAStatus
+	installBlob(const std::string &in_id,
+		    const ::ndk::ScopedFileDescriptor &in_fd,
+		    const std::optional<std::string> &in_filenameHint,
+		    const std::optional<std::string> &in_version) override
+	{
+		g_autoptr(GError) error = NULL;
+
+		g_info("received install blob request for device %s", in_id.c_str());
+		if (!fu_binder_daemon_write_blob_bridge(
+			m_daemon,
+			in_id.c_str(),
+			in_fd.get(),
+			in_filenameHint.has_value() ? in_filenameHint.value().c_str() : NULL,
+			in_version.has_value() ? in_version.value().c_str() : NULL,
+			&error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
 	addEventListener(
 	    const std::shared_ptr<aidl_fwupd::IFwupdEventListener> &in_listener) override
 	{
+		/* reset rather than inhibit idle: Android caches client processes after UI close,
+		 * so linkToDeath would keep the daemon alive indefinitely */
+		fu_binder_daemon_reset_idle(m_daemon);
 		if (in_listener) {
 			std::lock_guard<std::mutex> lock(m_listeners_mutex);
 			m_listeners.push_back(in_listener);
@@ -375,7 +402,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-upgrades", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-upgrades",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -402,7 +431,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-releases", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-releases",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -427,7 +458,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) remotes = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-remotes", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-remotes",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -449,7 +482,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getHwids(std::vector<aidl_fwupd::FwupdHwid> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-hwids", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-hwids",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -465,7 +500,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		GPtrArray *plugins;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-plugins", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-plugins",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -474,6 +511,28 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		for (size_t i = 0; i < plugins->len; i++) {
 			FwupdPlugin *plugin = FWUPD_PLUGIN(g_ptr_array_index(plugins, i));
 			_aidl_return->push_back(fu_binder_plugin_to_aidl(plugin));
+		}
+		return ::ndk::ScopedAStatus::ok();
+	}
+
+	::ndk::ScopedAStatus
+	getProtocols(std::vector<std::string> *_aidl_return) override
+	{
+		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GPtrArray) protocols = NULL;
+
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-protocols",
+						&error)) {
+			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
+			    error->code,
+			    error->message);
+		}
+		protocols = fu_engine_get_protocols(engine);
+		for (size_t i = 0; i < protocols->len; i++) {
+			const gchar *protocol = (const gchar *)g_ptr_array_index(protocols, i);
+			_aidl_return->push_back(protocol);
 		}
 		return ::ndk::ScopedAStatus::ok();
 	}
@@ -492,7 +551,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) devices = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-history", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-history",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -514,7 +575,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getProperties(aidl_fwupd::FwupdProperties *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-properties", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-properties",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -716,7 +779,9 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) details = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-details", &error)) {
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-details",
+						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
@@ -759,7 +824,8 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		GHashTableIter iter;
 		gpointer key, value;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-report-metadata",
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-report-metadata",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -789,7 +855,8 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GPtrArray) items = NULL;
 
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-bios-settings",
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-bios-settings",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
@@ -830,13 +897,13 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 	getHostSecurityAttrs(std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-host-security-attrs",
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-host-security-attrs",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
 		}
-#ifdef HAVE_HSI
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		g_autoptr(FuSecurityAttrs) attrs = fu_engine_get_host_security_attrs(engine);
 		g_autoptr(GPtrArray) items = fu_security_attrs_get_all(attrs, NULL);
@@ -846,12 +913,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
 		}
 		return ::ndk::ScopedAStatus::ok();
-#else
-		(void)_aidl_return;
-		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "HSI support not enabled");
-#endif
 	}
 
 	::ndk::ScopedAStatus
@@ -859,13 +920,13 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			      std::vector<aidl_fwupd::FwupdSecurityAttr> *_aidl_return) override
 	{
 		g_autoptr(GError) error = NULL;
-		if (!fu_binder_daemon_authorize("org.freedesktop.fwupd.get-host-security-events",
+		if (!fu_binder_daemon_authorize(m_daemon,
+						"org.freedesktop.fwupd.get-host-security-events",
 						&error)) {
 			return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
 			    error->code,
 			    error->message);
 		}
-#ifdef HAVE_HSI
 		FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(m_daemon));
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_autoptr(GPtrArray) items = NULL;
@@ -882,13 +943,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd
 			_aidl_return->push_back(fu_binder_security_attr_to_aidl(attr));
 		}
 		return ::ndk::ScopedAStatus::ok();
-#else
-		(void)in_limit;
-		(void)_aidl_return;
-		return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "HSI support not enabled");
-#endif
 	}
 
 	::ndk::ScopedAStatus

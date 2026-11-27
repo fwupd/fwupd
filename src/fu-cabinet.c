@@ -249,8 +249,18 @@ fu_cabinet_parse_release(FuCabinet *self,
 
 	/* we set this with XbBuilderSource before the silo was created */
 	metadata_trust = xb_node_query_first(release, "../../info/metadata_trust", NULL);
-	if (metadata_trust != NULL)
+	if (metadata_trust != NULL) {
+#if LIBXMLB_CHECK_VERSION(0, 3, 30)
+		if (!xb_node_is_info(metadata_trust)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "XML info was not created with XbBuilderSource");
+			return FALSE;
+		}
+#endif
 		release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+	}
 
 	/* look for source artifact first */
 	artifact = xb_node_query_first(release, "artifacts/artifact[@type='source']", NULL);
@@ -305,9 +315,9 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents size invalid, expected "
-				    "%zu, got %" G_GUINT64_FORMAT,
-				    streamsz,
-				    size);
+				    "%" G_GUINT64_FORMAT ", got %zu",
+				    size,
+				    streamsz);
 			return FALSE;
 		}
 	} else {
@@ -329,8 +339,8 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents checksum invalid, expected %s, got %s",
-				    checksum,
-				    xb_node_get_text(csum_tmp));
+				    checksum_old,
+				    checksum);
 			return FALSE;
 		}
 	}
@@ -841,6 +851,16 @@ fu_cabinet_sign_enumerate_metainfo(FuCabinet *self, GPtrArray *files, GError **e
 		for (guint i = 0; i < nodes->len; i++) {
 			XbNode *n = g_ptr_array_index(nodes, i);
 			const gchar *text = xb_node_get_text(n);
+#if LIBXMLB_CHECK_VERSION(0, 3, 30)
+			if (!xb_node_is_info(n)) {
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "XML info was not created with XbBuilderSource");
+				return FALSE;
+			}
+#endif
 			if (text == NULL)
 				continue;
 			g_debug("adding: %s", text);

@@ -47,7 +47,7 @@ fu_bluez_device_json_func(void)
 	json_obj = fwupd_json_node_get_object(node, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_obj);
-	ret = fu_device_from_json(dev, json_obj, &error);
+	ret = fu_device_build(dev, json_obj, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -57,7 +57,7 @@ fu_bluez_device_json_func(void)
 	g_assert_nonnull(g_strstr_len(str, -1, "char0003"));
 
 	/* serialize back out */
-	fu_device_add_json(dev, json_obj_out, FWUPD_CODEC_FLAG_NONE);
+	fu_device_export(dev, json_obj_out, FWUPD_CODEC_FLAG_NONE);
 	json_out = fwupd_json_object_to_string(json_obj_out, FWUPD_JSON_EXPORT_FLAG_NONE);
 	g_assert_nonnull(json_out);
 	g_assert_nonnull(g_strstr_len(json_out->str, -1, "00002a28-0000-1000-8000-00805f9b34fb"));
@@ -88,7 +88,7 @@ fu_bluez_device_json_invalid_func(void)
 	json_obj = fwupd_json_node_get_object(node, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_obj);
-	ret = fu_device_from_json(dev, json_obj, &error);
+	ret = fu_device_build(dev, json_obj, &error);
 	g_assert_false(ret);
 	g_assert_nonnull(error);
 }

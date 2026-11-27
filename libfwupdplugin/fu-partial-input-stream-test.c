@@ -109,7 +109,7 @@ fu_partial_input_stream_func(void)
 	g_autoptr(FuInputStream) stream = NULL;
 
 	/* check the behavior of FwupdFileInputStream */
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.json", NULL);
 	g_assert_nonnull(fn);
 	stream_file = fwupd_file_input_stream_new(fn, &error);
 	g_assert_no_error(error);
@@ -121,24 +121,24 @@ fu_partial_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), 0x0, G_SEEK_END, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 155);
 	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 	pos = g_seekable_tell(G_SEEKABLE(stream_file));
-	g_assert_cmpint(pos, ==, 216);
+	g_assert_cmpint(pos, ==, 155);
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
-	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 216);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 155);
 	/* we CAN seek past the end... */
 	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos + 10000, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 10216);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 10155);
 	/* reads all return zero */
 	rc = fu_input_stream_read(FWUPD_INPUT_STREAM(stream_file), buf, 2, NULL, &error);
 	g_assert_no_error(error);

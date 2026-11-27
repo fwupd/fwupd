@@ -37,11 +37,14 @@ G_DEFINE_TYPE_EXTENDED(FuEfiDevicePath,
 #define GET_PRIVATE(o) (fu_efi_device_path_get_instance_private(o))
 
 static void
-fu_efi_device_path_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_device_path_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "subtype", priv->subtype);
+	if (priv->subtype != 0)
+		fwupd_json_object_add_integer(json_object, "subtype", priv->subtype);
 }
 
 static void
@@ -59,8 +62,6 @@ fu_efi_device_path_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
  * Gets the DEVICE_PATH subtype.
  *
  * Returns: integer
- *
- * Since: 1.9.3
  **/
 guint8
 fu_efi_device_path_get_subtype(FuEfiDevicePath *self)
@@ -76,8 +77,6 @@ fu_efi_device_path_get_subtype(FuEfiDevicePath *self)
  * @subtype: integer
  *
  * Sets the DEVICE_PATH subtype.
- *
- * Since: 1.9.3
  **/
 void
 fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
@@ -163,15 +162,20 @@ fu_efi_device_path_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_device_path_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_device_path_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "subtype", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"subtype",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		priv->subtype = tmp;
 
 	/* success */
@@ -204,8 +208,6 @@ fu_efi_device_path_class_init(FuEfiDevicePathClass *klass)
  * fu_efi_device_path_new:
  *
  * Creates a new EFI DEVICE_PATH
- *
- * Since: 1.9.3
  **/
 FuEfiDevicePath *
 fu_efi_device_path_new(void)

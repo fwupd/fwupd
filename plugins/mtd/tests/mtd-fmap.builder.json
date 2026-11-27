@@ -1,0 +1,19 @@
+{
+  "gtype": "FuFmapFirmware",
+  "firmware": [
+    {
+      "id": "FMAP",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuUswidFirmware",
+      "id": "SBOM",
+      "firmware": [
+        {
+          "gtype": "FuCoswidFirmware",
+          "version": "456"
+        }
+      ]
+    }
+  ]
+}

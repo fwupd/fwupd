@@ -67,15 +67,16 @@ fu_strpassmask_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"foo https://test.com/auth bar", "foo https://test.com/auth bar"},
-		    {"foo https://user%40host:SECRET@test.com/auth bar",
-		     "foo https://user%40host:XXXXXX@test.com/auth bar"},
-		    {"foo https://user1%40host:SECRET@test.com/auth "
-		     "https://user2%40host:SECRET2@test.com/auth bar",
-		     "foo https://user1%40host:XXXXXX@test.com/auth "
-		     "https://user2%40host:XXXXXXX@test.com/auth bar"},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	} strs[] = {
+	    {"foo https://test.com/auth bar", "foo https://test.com/auth bar"},
+	    {"foo https://user%40host:SECRET@test.com/auth bar",
+	     "foo https://user%40host:XXXXXX@test.com/auth bar"},
+	    {"foo https://user1%40host:SECRET@test.com/auth "
+	     "https://user2%40host:SECRET2@test.com/auth bar",
+	     "foo https://user1%40host:XXXXXX@test.com/auth "
+	     "https://user2%40host:XXXXXXX@test.com/auth bar"},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_strpassmask(strs[i].in);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
@@ -127,6 +128,21 @@ fu_strsplit_func(void)
 	g_assert_true(ret);
 	/* we have an empty last section */
 	g_assert_cmpint(cnt, ==, bigsz + 1);
+
+	/* the size has to be respected, as the buffer may not be NUL terminated */
+	g_ptr_array_set_size(array, 0);
+	ret = fu_strsplit_full("abc", 1, "\r\n", fu_string_strnsplit_add_cb, array, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "a");
+
+	g_ptr_array_set_size(array, 0);
+	ret = fu_strsplit_full("a\r\n", 2, "\r\n", fu_string_strnsplit_add_cb, array, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "a\r");
 }
 
 static void
@@ -135,17 +151,21 @@ fu_strstrip_func(void)
 	struct {
 		const gchar *old;
 		const gchar *new;
-	} map[] = {{"same", "same"},
-		   {" leading", "leading"},
-		   {"tailing ", "tailing"},
-		   {"  b  ", "b"},
-		   {"  ", ""},
-		   {NULL, NULL}};
-	for (guint i = 0; map[i].old != NULL; i++) {
+	} map[] = {
+	    {"same", "same"},
+	    {" leading", "leading"},
+	    {"tailing ", "tailing"},
+	    {"  b  ", "b"},
+	    {"  ", ""},
+	    {"\tboth\n", "both"},
+	    {"\n", ""},
+	    {"  \n", ""},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autofree gchar *tmp = fu_strstrip(map[i].old);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
-	for (guint i = 0; map[i].old != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autoptr(GString) str = g_string_new(map[i].old);
 		fu_string_strip(str);
 		g_assert_cmpstr(str->str, ==, map[i].new);
@@ -178,6 +198,26 @@ fu_strtoull_func(void)
 	g_assert_false(ret);
 	ret = fu_strtoull("", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
+	ret = fu_strtoull("", &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoull("\n", &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoull("0x", &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoull("0x", &val, 0, G_MAXUINT32, FU_INTEGER_BASE_16, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoull("0x123", &val, 0, G_MAXUINT32, FU_INTEGER_BASE_10, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
 	ret = fu_strtoull("124", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
 	ret = fu_strtoull("119", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
@@ -210,6 +250,26 @@ fu_strtoll_func(void)
 	g_assert_false(ret);
 	ret = fu_strtoll("", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
+	ret = fu_strtoll("", &val, 0, G_MAXINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoll("\n", &val, 0, G_MAXINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoll("0x", &val, 0, G_MAXINT32, FU_INTEGER_BASE_AUTO, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoll("0x", &val, 0, G_MAXINT32, FU_INTEGER_BASE_16, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_strtoll("0x123", &val, 0, G_MAXINT32, FU_INTEGER_BASE_10, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_clear_error(&error);
 	ret = fu_strtoll("124", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
 	ret = fu_strtoll("-124", &val, -123, 123, FU_INTEGER_BASE_AUTO, NULL);

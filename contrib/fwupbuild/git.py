@@ -46,6 +46,34 @@ class GitRepo:
         """
         return cls(directories.repository_root())
 
+    @classmethod
+    def clone(cls, url: str, /, depth: int = 0, cwd: Path | None = None) -> Self:
+        """
+        Clone the git repo from the given url into the given directory (or the
+        current working directory if missing).
+
+        The resulting git repo's root path will be cwd/<repo name>.
+        """
+        args = ["--quiet"]
+        if depth > 0:
+            args += ["--depth", str(depth)]
+
+        kwargs = {"check": True}
+        if cwd:
+            kwargs["cwd"] = str(cwd)
+
+        RunCmd(["git", "clone", *args, url], **kwargs)
+
+        repo_name = Path(url).name
+        if repo_name.endswith(".git"):
+            repo_name = repo_name.removesuffix(".git")
+
+        repo = Path(cwd) / repo_name if cwd else Path.cwd() / repo_name
+        if not repo.exists():
+            raise FileNotFoundError(f"{repo} not found after successful git clone")
+
+        return cls(root=repo)
+
     @property
     def current_ref(self) -> str | None:
         """
@@ -95,6 +123,21 @@ class GitRepo:
         to the repository root.
         """
         cmd = RunCmd(["git", "ls-files", "-z"], cwd=self.root, check=True)
+        return [Path(p) for p in cmd.stdout.split("\0") if p]
+
+    @cached_property
+    def untracked_files(self) -> list[Path]:
+        """
+        Returns the list of files present locally but not added to git,
+        as paths relative to the repository root.
+
+        Files listed in .gitignore are not included in this list.
+        """
+        cmd = RunCmd(
+            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+            cwd=self.root,
+            check=True,
+        )
         return [Path(p) for p in cmd.stdout.split("\0") if p]
 
     def find_files(
@@ -148,7 +191,12 @@ class GitRepo:
             return file_filter is None or file_filter(f)
 
         def use_file(f: Path) -> bool:
-            return has_suffix(f) and not ignore_path(f) and filter_allows_file(f)
+            return (
+                not f.is_dir()
+                and has_suffix(f)
+                and not ignore_path(f)
+                and filter_allows_file(f)
+            )
 
         files = [f for f in self.files if use_file(f)]
         if not as_absolute_paths:

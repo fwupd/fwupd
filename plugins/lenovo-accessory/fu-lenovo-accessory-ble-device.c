@@ -390,7 +390,7 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	if (!fu_lenovo_accessory_impl_dfu_crc(FU_LENOVO_ACCESSORY_IMPL(device),
 					      &device_crc,
 					      error)) {
-		g_prefix_error(error, "BLE CRC Error (device 0x%08x): ", device_crc);
+		g_prefix_error_literal(error, "failed to read BLE CRC: ");
 		return FALSE;
 	}
 	if (device_crc != file_crc) {

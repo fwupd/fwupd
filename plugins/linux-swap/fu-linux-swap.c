@@ -300,6 +300,8 @@ fu_linux_swap_new(FuPathStore *pstore, const gchar *buf, gsize bufsz, GError **e
 								    FU_PATH_KIND_HOSTFS_ROOT,
 								    fn,
 								    NULL);
+				if (path == NULL)
+					return NULL;
 
 				self->enabled_cnt++;
 				if (!fu_linux_swap_verify_file(self, pstore, path, error))

@@ -154,6 +154,13 @@ fu_amd_kria_device_probe(FuDevice *device, GError **error)
 	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "OF_FULLNAME", error);
 	if (prop_of_fullname == NULL)
 		return FALSE;
+	if (prop_of_fullname[0] == '\0') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "OF_FULLNAME is empty");
+		return FALSE;
+	}
 	of_name = fu_strsplit(prop_of_fullname, strlen(prop_of_fullname), "@", -1);
 	if (of_name == NULL) {
 		g_set_error(error,

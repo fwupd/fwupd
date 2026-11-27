@@ -37,8 +37,6 @@ G_DEFINE_TYPE(FuMsgpackItem, fu_msgpack_item, G_TYPE_OBJECT)
  * Gets the item kind.
  *
  * Returns: a #FuMsgpackItemKind, e.g. %FU_MSGPACK_ITEM_KIND_BOOLEAN
- *
- * Since: 2.0.0
  **/
 FuMsgpackItemKind
 fu_msgpack_item_get_kind(FuMsgpackItem *self)
@@ -54,8 +52,6 @@ fu_msgpack_item_get_kind(FuMsgpackItem *self)
  * Reads a value from the item.
  *
  * Returns: an integer, or %G_MAXINT64 if invalid or not found
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_msgpack_item_get_boolean(FuMsgpackItem *self)
@@ -72,8 +68,6 @@ fu_msgpack_item_get_boolean(FuMsgpackItem *self)
  * Reads a value from the item.
  *
  * Returns: an integer, or %G_MAXINT64 if invalid or not found
- *
- * Since: 2.0.0
  **/
 gint64
 fu_msgpack_item_get_integer(FuMsgpackItem *self)
@@ -90,8 +84,6 @@ fu_msgpack_item_get_integer(FuMsgpackItem *self)
  * Reads a value from the item.
  *
  * Returns: an integer, or %G_MINDOUBLE if invalid or not found
- *
- * Since: 2.0.0
  **/
 gdouble
 fu_msgpack_item_get_float(FuMsgpackItem *self)
@@ -108,8 +100,6 @@ fu_msgpack_item_get_float(FuMsgpackItem *self)
  * Reads a value from the item.
  *
  * Returns: (transfer none): a #GByteArray
- *
- * Since: 2.0.0
  **/
 GByteArray *
 fu_msgpack_item_get_binary(FuMsgpackItem *self)
@@ -127,8 +117,6 @@ fu_msgpack_item_get_binary(FuMsgpackItem *self)
  * Reads the number of items in the map.
  *
  * Returns: an integer, or %G_MAXUINT64 if invalid or not found
- *
- * Since: 2.0.0
  **/
 guint64
 fu_msgpack_item_get_map(FuMsgpackItem *self)
@@ -145,8 +133,6 @@ fu_msgpack_item_get_map(FuMsgpackItem *self)
  * Reads the number of items in the array.
  *
  * Returns: an integer, or %G_MAXUINT64 if invalid or not found
- *
- * Since: 2.0.0
  **/
 guint64
 fu_msgpack_item_get_array(FuMsgpackItem *self)
@@ -163,8 +149,6 @@ fu_msgpack_item_get_array(FuMsgpackItem *self)
  * Reads a value from the item.
  *
  * Returns: (transfer none): a #GString
- *
- * Since: 2.0.0
  **/
 GString *
 fu_msgpack_item_get_string(FuMsgpackItem *self)
@@ -180,8 +164,6 @@ fu_msgpack_item_get_string(FuMsgpackItem *self)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_nil(void)
@@ -198,8 +180,6 @@ fu_msgpack_item_new_nil(void)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_boolean(gboolean value)
@@ -217,8 +197,6 @@ fu_msgpack_item_new_boolean(gboolean value)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_integer(gint64 value)
@@ -237,8 +215,6 @@ fu_msgpack_item_new_integer(gint64 value)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_float(gdouble value)
@@ -257,8 +233,6 @@ fu_msgpack_item_new_float(gdouble value)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_binary(GByteArray *buf)
@@ -277,8 +251,6 @@ fu_msgpack_item_new_binary(GByteArray *buf)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_binary_stream(FuInputStream *stream)
@@ -297,8 +269,6 @@ fu_msgpack_item_new_binary_stream(FuInputStream *stream)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_string(const gchar *str)
@@ -317,8 +287,6 @@ fu_msgpack_item_new_string(const gchar *str)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_map(guint64 items)
@@ -336,8 +304,6 @@ fu_msgpack_item_new_map(guint64 items)
  * Creates a new msgpack item.
  *
  * Returns: (transfer full): a #FuMsgpackItem
- *
- * Since: 2.0.0
  **/
 FuMsgpackItem *
 fu_msgpack_item_new_array(guint64 items)
@@ -544,6 +510,8 @@ gboolean
 fu_msgpack_item_append(FuMsgpackItem *self, GByteArray *buf, GError **error)
 {
 	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (self->kind == FU_MSGPACK_ITEM_KIND_NIL) {
 		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_NIL);
@@ -617,6 +585,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 
 	g_return_val_if_fail(buf != NULL, NULL);
 	g_return_val_if_fail(offset != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* first byte, normally a command */
 	if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &cmd, error))

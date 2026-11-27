@@ -98,10 +98,12 @@ fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 static void
 fu_genesys_usbhub_codesign_firmware_export(FuFirmware *firmware,
 					   FuFirmwareExportFlags flags,
-					   XbBuilderNode *bn)
+					   FwupdJsonObject *json_object)
 {
 	FuGenesysUsbhubCodesignFirmware *self = FU_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kv(bn, "codesign", fu_genesys_fw_codesign_to_string(self->codesign));
+	const gchar *codesign_str = fu_genesys_fw_codesign_to_string(self->codesign);
+	if (codesign_str != NULL)
+		fwupd_json_object_add_string(json_object, "codesign", codesign_str);
 }
 
 static void

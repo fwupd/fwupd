@@ -42,8 +42,6 @@ fu_processor_device_has_feature(FuProcessorDevice *self, FuProcessorFeatureFlags
  * Returns the CPU kind.
  *
  * Returns: kind, or %FU_PROCESSOR_KIND_UNKNOWN if invalid
- *
- * Since: 2.1.1
  **/
 FuProcessorKind
 fu_processor_device_get_kind(FuProcessorDevice *self)
@@ -60,8 +58,6 @@ fu_processor_device_get_kind(FuProcessorDevice *self)
  * Returns if the CPU needs a specific mitigation.
  *
  * Returns: %TRUE if required
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_processor_device_needs_mitigation(FuProcessorDevice *self,
@@ -78,8 +74,6 @@ fu_processor_device_needs_mitigation(FuProcessorDevice *self,
  * Returns the microcode version required to mitigate Sinkclose.
  *
  * Returns: version, or 0% if invalid
- *
- * Since: 2.1.1
  **/
 guint32
 fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self)
@@ -95,8 +89,6 @@ fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self)
  * Returns the AMD PSP version required to mitigate EntrySign.
  *
  * Returns: version, or %NULL if invalid
- *
- * Since: 2.1.2
  **/
 const gchar *
 fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self)
@@ -224,7 +216,7 @@ fu_processor_device_probe_manufacturer_id(FuProcessorDevice *self, GError **erro
 	/* convert to something sane and get the quirked vendor name */
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "VEN", str);
 	return fu_device_build_instance_id_full(FU_DEVICE(self),
-						FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						error,
 						"CPUID",
 						"VEN",
@@ -558,8 +550,6 @@ fu_processor_device_class_init(FuProcessorDeviceClass *klass)
  * Creates a new #FuProcessorDevice.
  *
  * Returns: (transfer full): a #FuProcessorDevice
- *
- * Since: 2.1.1
  **/
 FuProcessorDevice *
 fu_processor_device_new(FuContext *ctx)

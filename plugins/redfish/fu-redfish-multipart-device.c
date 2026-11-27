@@ -33,8 +33,6 @@ fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const
 {
 	g_return_if_fail(FU_IS_REDFISH_MULTIPART_DEVICE(self));
 	g_return_if_fail(apply_time != NULL);
-	if (g_strcmp0(self->apply_time, apply_time) == 0)
-		return;
 	g_set_str(&self->apply_time, apply_time);
 }
 
@@ -101,7 +99,9 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
-	request = fu_redfish_backend_request_new(backend);
+	request = fu_redfish_backend_request_new(backend, error);
+	if (request == NULL)
+		return FALSE;
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);
 

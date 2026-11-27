@@ -16,7 +16,9 @@
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"
+#include "fu-redfish-hpe-device.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-nvidia-device.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
 #include "fu-redfish-struct.h"
@@ -308,6 +310,7 @@ fu_redfish_backend_session_key_missing_func(void)
 	g_assert_nonnull(tmpdir);
 	fn = fu_temporary_directory_build(tmpdir, "does-not-exist", NULL);
 	fu_redfish_backend_set_session_key_file(backend, fn);
+	g_assert_cmpstr(fu_redfish_backend_get_session_key_file(backend), ==, fn);
 	session_key = fu_redfish_backend_get_session_key(backend, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(session_key);
@@ -364,6 +367,115 @@ fu_redfish_backend_session_key_empty_func(void)
 }
 
 static void
+fu_redfish_backend_device_gtype_unmatched_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a _different_ system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-invalid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[2d2a4a8b-6a35-5b3a-9a4e-3c2f2c6e2b1a]\n"
+				  "RedfishDeviceGType = FuRedfishHpeDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_redfish_backend_get_device_gtype(backend), ==, FU_TYPE_REDFISH_DEVICE);
+}
+
+static void
+fu_redfish_backend_device_gtype_hpe_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a HPE system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-hpe", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuRedfishHpeDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_redfish_backend_get_device_gtype(backend),
+			==,
+			FU_TYPE_REDFISH_HPE_DEVICE);
+}
+
+static void
+fu_redfish_backend_device_gtype_invalid_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRedfishBackend) backend = fu_redfish_backend_new(ctx);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* write a quirk for a HPE system */
+	tmpdir = fu_temporary_directory_new("redfish-gtype-invalid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuDevice\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_redfish_backend_ensure_device_gtype(backend, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
+static void
 fu_redfish_bearer_token_func(void)
 {
 	gboolean ret;
@@ -400,6 +512,374 @@ fu_redfish_bearer_token_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* a rotated token is used by new requests */
+	fu_config_set_value_internal(fu_context_get_config(ctx),
+				     "redfish",
+				     "BearerToken",
+				     "invalid-token");
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* removing the token restores basic authentication */
+	fu_config_set_value_internal(fu_context_get_config(ctx), "redfish", "BearerToken", NULL);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_redfish_session_key_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *conf = NULL;
+	g_autofree gchar *conf_fn = NULL;
+	g_autofree gchar *key_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness, using an empty sysfs directory so that the session key is the
+	 * only credential the plugin can find */
+	tmpdir = fu_temporary_directory_new("redfish", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	key_fn = fu_temporary_directory_build(tmpdir, "session-key", NULL);
+	ret = g_file_set_contents(key_fn, "1234eabcdeabcdeabcdeabcdeabc1234\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	conf_fn = fu_temporary_directory_build(tmpdir, "redfish-session-key-fwupd.conf", NULL);
+	conf = g_strdup_printf("[redfish]\nUri=http://localhost:4661\nSessionKeyFile=%s\n", key_fn);
+	ret = g_file_set_contents(conf_fn, conf, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, fu_temporary_directory_get_path(tmpdir));
+	fu_context_set_path(ctx,
+			    FU_PATH_KIND_SYSCONFDIR_PKG,
+			    fu_temporary_directory_get_path(tmpdir));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-session-key-fwupd.conf");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the session replaces the BMC user account, so this should not fail trying to
+	 * verify or create one using IPMI */
+	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* every request uses the key */
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_plugin_get_devices(plugin)->len, ==, 2);
+
+	/* a rotated key is used by new requests */
+	ret = g_file_set_contents(key_fn, "invalid-key\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = g_file_set_contents(key_fn, "1234eabcdeabcdeabcdeabcdeabc1234\n", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* a key that cannot be read fails the request rather than using other credentials */
+	fu_redfish_plugin_set_credentials(plugin, "username2", "password2");
+	ret = g_file_set_contents(key_fn, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_redfish_plugin_reload(plugin, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
+static FuPlugin *
+fu_redfish_nvidia_plugin_new(FuTemporaryDirectory *tmpdir, GError **error)
+{
+	gboolean ret;
+	g_autofree gchar *quirk_fn = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error_local = NULL;
+
+	/* write a quirk for a NVIDIA system */
+	quirk_fn = fu_temporary_directory_build(tmpdir, "redfish.quirk", NULL);
+	ret = g_file_set_contents(quirk_fn,
+				  "[93f84748-c854-5d6b-b78a-13c2361e0758]\n"
+				  "RedfishDeviceGType = FuRedfishNvidiaDevice\n",
+				  -1,
+				  &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_QUIRKS, tmpdir);
+	fu_context_add_quirk_key(ctx, "RedfishDeviceGType");
+	fu_hwids_add_guid(fu_context_get_hwids(ctx), "93f84748-c854-5d6b-b78a-13c2361e0758");
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
+
+	/* only a failed startup means that redfish.py is not running */
+	plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	if (!fu_plugin_runner_startup(plugin, progress, error))
+		return NULL;
+	fu_redfish_plugin_set_credentials(plugin, "nvidia_username", "password2");
+	ret = fu_redfish_plugin_reload(plugin, progress, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error_local);
+	g_assert_no_error(error_local);
+	g_assert_true(ret);
+	return g_steal_pointer(&plugin);
+}
+
+static gboolean
+fu_redfish_nvidia_write_payload(FuPlugin *plugin, const gchar *payload, GError **error)
+{
+	FuDevice *dev;
+	GPtrArray *devices = fu_plugin_get_devices(plugin);
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob = g_bytes_new_static(payload, strlen(payload));
+
+	if (devices->len < 2) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "not enough devices: %u",
+			    devices->len);
+		return FALSE;
+	}
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	firmware = fu_firmware_new_from_bytes(blob);
+	dev = g_ptr_array_index(devices, 1);
+	return fu_plugin_runner_write_firmware(plugin,
+					       dev,
+					       firmware,
+					       progress,
+					       FWUPD_INSTALL_FLAG_NONE,
+					       error);
+}
+
+static void
+fu_redfish_nvidia_devices_func(void)
+{
+	FuDevice *dev;
+	GPtrArray *devices;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 3);
+
+	/* the BMC */
+	dev = g_ptr_array_index(devices, 0);
+	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW BMC 0");
+	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_BMC_0"));
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_COMPOSITE_SINGLE_PAYLOAD));
+	g_assert_true(fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN));
+
+	/* a component behind the BMC */
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(FU_IS_REDFISH_NVIDIA_DEVICE(dev));
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW CPU 0");
+	g_assert_true(fu_device_has_guid(dev, "REDFISH\\VENDOR_NVIDIA&ID_FW_CPU_0"));
+	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
+
+	/* a numeric version is still a plain string */
+	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_PLAIN);
+
+	/* a component that comes in board variants */
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_cmpstr(fu_device_get_name(dev), ==, "FW GPU 0");
+	g_assert_true(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_NVIDIA&ID_FW_GPU_0&VEN_10DE&DEV_1234&SUBSYS_10DE5678"));
+	g_assert_false(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_NVIDIA&ID_FW_GPU_0&VEN_10DE&DEV_2345&SUBSYS_10DE5678"));
+	g_assert_true(fu_device_has_parent_backend_id(dev, "FW_BMC_0"));
+}
+
+static void
+fu_redfish_nvidia_update_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* no Location header, so the task is taken from the response */
+	ret = fu_redfish_nvidia_write_payload(plugin, "completed", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_redfish_nvidia_update_reaped_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* the task is removed once done, and the monitor then answers with an empty body */
+	ret = fu_redfish_nvidia_write_payload(plugin, "reaped", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_redfish_nvidia_update_failed_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	ret = fu_redfish_nvidia_write_payload(plugin, "failed", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+	g_assert_false(ret);
+}
+
+static void
+fu_redfish_nvidia_update_monitor_failed_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* the task is removed, but its monitor still reports a failure */
+	ret = fu_redfish_nvidia_write_payload(plugin, "monitor-failed", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+	g_assert_false(ret);
+}
+
+static void
+fu_redfish_nvidia_update_no_task_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* the response names no task to poll */
+	ret = fu_redfish_nvidia_write_payload(plugin, "no-task", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
+
+static void
+fu_redfish_nvidia_update_transient_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* the first poll fails with a busy BMC, and the next one finds the task completed */
+	ret = fu_redfish_nvidia_write_payload(plugin, "transient", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -428,7 +908,7 @@ fu_redfish_common_func(void)
 	ipv4 = fu_redfish_common_buffer_to_ipv4(buf);
 	g_assert_cmpstr(ipv4, ==, "0.1.2.3");
 	ipv6 = fu_redfish_common_buffer_to_ipv6(buf);
-	g_assert_cmpstr(ipv6, ==, "00010203:04050607:08090a0b:0c0d0e0f");
+	g_assert_cmpstr(ipv6, ==, "0001:0203:0405:0607:0809:0a0b:0c0d:0e0f");
 	maca = fu_redfish_common_buffer_to_mac(buf);
 	g_assert_cmpstr(maca, ==, "00:01:02:03:04:05");
 }
@@ -439,11 +919,12 @@ fu_redfish_common_version_func(void)
 	struct {
 		const gchar *in;
 		const gchar *op;
-	} strs[] = {{"1.2.3", "1.2.3"},
-		    {"P50 v1.2.3 PROD", "1.2.3"},
-		    {"P50 1.2.3 DEV", "1.2.3"},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
+	} strs[] = {
+	    {"1.2.3", "1.2.3"},
+	    {"P50 v1.2.3 PROD", "1.2.3"},
+	    {"P50 1.2.3 DEV", "1.2.3"},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(strs); i++) {
 		g_autofree gchar *tmp = fu_redfish_common_fix_version(strs[i].in);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
@@ -457,14 +938,15 @@ fu_redfish_common_lenovo_func(void)
 		gboolean ret;
 		const gchar *build;
 		const gchar *version;
-	} values[] = {{"11A-1.02", TRUE, "11A", "1.02"},
-		      {"11A-0.00", TRUE, "11A", "0.00"},
-		      {"99Z-9.99", TRUE, "99Z", "9.99"},
-		      {"9-9-9.99", FALSE, NULL, NULL},
-		      {"999-9.99", FALSE, NULL, NULL},
-		      {"ACB-9.99", FALSE, NULL, NULL},
-		      {NULL, FALSE, NULL, NULL}};
-	for (guint i = 0; values[i].in != NULL; i++) {
+	} values[] = {
+	    {"11A-1.02", TRUE, "11A", "1.02"},
+	    {"11A-0.00", TRUE, "11A", "0.00"},
+	    {"99Z-9.99", TRUE, "99Z", "9.99"},
+	    {"9-9-9.99", FALSE, NULL, NULL},
+	    {"999-9.99", FALSE, NULL, NULL},
+	    {"ACB-9.99", FALSE, NULL, NULL},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(values); i++) {
 		gboolean ret;
 		g_autofree gchar *build = NULL;
 		g_autofree gchar *version = NULL;
@@ -655,12 +1137,21 @@ fu_redfish_dell_devices_func(gconstpointer user_data)
 		g_test_skip("no redfish support");
 		return;
 	}
-	g_assert_cmpint(devices->len, ==, 2);
+	g_assert_cmpint(devices->len, ==, 3);
 
 	dev = g_ptr_array_index(devices, 1);
 	g_assert_true(FU_IS_REDFISH_DEVICE(dev));
 	g_assert_true(
 	    fu_device_has_guid(dev, "REDFISH\\VENDOR_Lenovo&SYSTEMID_0C60&SOFTWAREID_UEFI-AFE1-6"));
+
+	/* a disk that reports a SoftwareId of "0" is identified by its PCI IDs, as the Dell
+	 * catalog gives them in PCIInfo, and not by a SOFTWAREID shared by every disk */
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_true(FU_IS_REDFISH_DEVICE(dev));
+	g_assert_true(fu_device_has_guid(
+	    dev,
+	    "REDFISH\\VENDOR_Dell&SYSTEMID_0C60&VEN_1344&DEV_51C3&SUBSYS_10282278"));
+	g_assert_false(fu_device_has_guid(dev, "REDFISH\\VENDOR_Dell&SYSTEMID_0C60&SOFTWAREID_0"));
 }
 
 static void
@@ -1065,9 +1556,10 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+	g_type_ensure(FU_TYPE_REDFISH_HPE_DEVICE);
 
 	smbios_data_fn =
-	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.json", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
 
 	fu_self_init(self);
@@ -1082,7 +1574,23 @@ main(int argc, char **argv)
 			fu_redfish_backend_session_key_valid_func);
 	g_test_add_func("/redfish/backend/session-key/empty",
 			fu_redfish_backend_session_key_empty_func);
+	g_test_add_func("/redfish/backend/device-gtype/unmatched",
+			fu_redfish_backend_device_gtype_unmatched_func);
+	g_test_add_func("/redfish/backend/device-gtype/hpe",
+			fu_redfish_backend_device_gtype_hpe_func);
+	g_test_add_func("/redfish/backend/device-gtype/invalid",
+			fu_redfish_backend_device_gtype_invalid_func);
 	g_test_add_func("/redfish/bearer-token", fu_redfish_bearer_token_func);
+	g_test_add_func("/redfish/session-key", fu_redfish_session_key_func);
+	g_test_add_func("/redfish/nvidia/devices", fu_redfish_nvidia_devices_func);
+	g_test_add_func("/redfish/nvidia/update", fu_redfish_nvidia_update_func);
+	g_test_add_func("/redfish/nvidia/update-reaped", fu_redfish_nvidia_update_reaped_func);
+	g_test_add_func("/redfish/nvidia/update-failed", fu_redfish_nvidia_update_failed_func);
+	g_test_add_func("/redfish/nvidia/update-monitor-failed",
+			fu_redfish_nvidia_update_monitor_failed_func);
+	g_test_add_func("/redfish/nvidia/update-no-task", fu_redfish_nvidia_update_no_task_func);
+	g_test_add_func("/redfish/nvidia/update-transient",
+			fu_redfish_nvidia_update_transient_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);

@@ -33,6 +33,48 @@ fu_mem_memmem_func(void)
 }
 
 static void
+fu_mem_memmem_end_func(void)
+{
+	const guint8 haystack[] = {'H', 'A', 'Y', 'S'};
+	const guint8 needle_end[] = {'Y', 'S'};
+	const guint8 needle_byte[] = {'S'};
+	gboolean ret;
+	gsize offset = G_MAXSIZE;
+	g_autoptr(GError) error = NULL;
+
+	/* at the very end of the haystack */
+	ret = fu_memmem_safe(haystack,
+			     sizeof(haystack),
+			     needle_end,
+			     sizeof(needle_end),
+			     &offset,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0x2);
+
+	/* single byte at the very end of the haystack */
+	offset = G_MAXSIZE;
+	ret = fu_memmem_safe(haystack,
+			     sizeof(haystack),
+			     needle_byte,
+			     sizeof(needle_byte),
+			     &offset,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0x3);
+
+	/* same size as the haystack */
+	offset = G_MAXSIZE;
+	ret =
+	    fu_memmem_safe(haystack, sizeof(haystack), haystack, sizeof(haystack), &offset, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0x0);
+}
+
+static void
 fu_mem_endian_func(void)
 {
 	guint8 buf[3] = {0};
@@ -121,6 +163,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/mem/memmem", fu_mem_memmem_func);
+	g_test_add_func("/fwupd/mem/memmem-end", fu_mem_memmem_end_func);
 	g_test_add_func("/fwupd/mem/endian", fu_mem_endian_func);
 	g_test_add_func("/fwupd/mem/memcpy", fu_mem_memcpy_func);
 	return g_test_run();

@@ -49,8 +49,6 @@ fu_ioctl_fixup_build_key(FuIoctlFixup *fixup, const gchar *suffix)
  * Adds a name for the ioctl, preserving compatibility with existing emulation data.
  *
  * NOTE: For new devices this is not required.
- *
- * Since: 2.0.2
  **/
 void
 fu_ioctl_set_name(FuIoctl *self, const gchar *name)
@@ -120,8 +118,6 @@ fu_ioctl_append_key_from_buf(GString *event_id, const gchar *key, const guint8 *
  * @value: a integer value
  *
  * Adds a key for the emulation, formatting it as `0x%02x`.
- *
- * Since: 2.0.2
  **/
 void
 fu_ioctl_add_key_as_u8(FuIoctl *self, const gchar *key, gsize value)
@@ -138,8 +134,6 @@ fu_ioctl_add_key_as_u8(FuIoctl *self, const gchar *key, gsize value)
  * @value: a integer value
  *
  * Adds a key for the emulation, formatting it as `0x%04x`.
- *
- * Since: 2.0.2
  **/
 void
 fu_ioctl_add_key_as_u16(FuIoctl *self, const gchar *key, gsize value)
@@ -179,8 +173,6 @@ fu_ioctl_add_buffer(FuIoctl *self,
  *
  * Adds a mutable buffer that can be used to fix up the ioctl-defined structure with the buffer and
  * size, and adds a key for the emulation.
- *
- * Since: 2.0.2
  **/
 void
 fu_ioctl_add_mutable_buffer(FuIoctl *self,
@@ -202,8 +194,6 @@ fu_ioctl_add_mutable_buffer(FuIoctl *self,
  *
  * Adds a constant buffer that can be used to fix up the ioctl-defined structure with the buffer
  * and size, and adds a key for the emulation.
- *
- * Since: 2.0.2
  **/
 void
 fu_ioctl_add_const_buffer(FuIoctl *self,
@@ -233,8 +223,6 @@ fu_ioctl_add_const_buffer(FuIoctl *self,
  * ioctl wrapper structures that use indirect pointer values.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.2
  **/
 gboolean
 fu_ioctl_execute(FuIoctl *self,
@@ -247,13 +235,13 @@ fu_ioctl_execute(FuIoctl *self,
 		 GError **error)
 {
 	FuDeviceEvent *event = NULL;
+	gboolean emulated;
+	gboolean save_events;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) event_id = NULL;
-	gboolean emulated =
-	    fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
-	gboolean save_events =
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS);
+
+	g_return_val_if_fail(FU_IS_IOCTL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* for fuzzing */
 	if (fu_device_has_private_flag(FU_DEVICE(self->udev_device),
@@ -264,6 +252,9 @@ fu_ioctl_execute(FuIoctl *self,
 	}
 
 	/* need event ID */
+	emulated = fu_device_has_flag(FU_DEVICE(self->udev_device), FWUPD_DEVICE_FLAG_EMULATED);
+	save_events = fu_context_has_flag(fu_device_get_context(FU_DEVICE(self->udev_device)),
+					  FU_CONTEXT_FLAG_SAVE_EVENTS);
 	if (emulated || save_events) {
 		event_id = g_string_new(self->event_id->str);
 		if (g_strcmp0(event_id->str, "Ioctl:") == 0) {

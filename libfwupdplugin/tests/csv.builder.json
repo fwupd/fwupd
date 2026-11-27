@@ -1,0 +1,19 @@
+{
+  "gtype": "FuCsvFirmware",
+  "firmware": [
+    {
+      "gtype": "FuCsvEntry",
+      "values": {
+        "component_name": "sbat",
+        "component_generation": "1"
+      }
+    },
+    {
+      "gtype": "FuCsvEntry",
+      "values": {
+        "component_name": "grub",
+        "component_generation": "1"
+      }
+    }
+  ]
+}

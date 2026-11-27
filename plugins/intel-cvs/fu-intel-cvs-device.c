@@ -134,7 +134,7 @@ fu_intel_cvs_device_check_status_cb(FuDevice *device, gpointer user_data, GError
 	/* read and parse the status */
 	blob = fu_udev_device_read_sysfs_bytes(FU_UDEV_DEVICE(device),
 					       "cvs_ctrl_data_fwupd",
-					       FU_STRUCT_INTEL_CVS_PROBE_SIZE,
+					       FU_STRUCT_INTEL_CVS_STATUS_SIZE,
 					       FU_INTEL_CVS_DEVICE_SYSFS_TIMEOUT,
 					       error);
 	if (blob == NULL)

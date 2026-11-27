@@ -47,8 +47,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
  * of operations, rather than a simple linear image with filled holes.
  *
  * Returns: (transfer none) (element-type FuIhexFirmwareRecord): records
- *
- * Since: 1.3.4
  **/
 GPtrArray *
 fu_ihex_firmware_get_records(FuIhexFirmware *self)
@@ -67,8 +65,6 @@ fu_ihex_firmware_get_records(FuIhexFirmware *self)
  *
  * The default value of zero can be changed to `0xff` if functions like
  * fu_bytes_is_empty() are going to be used on subsections of the data.
- *
- * Since: 1.6.0
  **/
 void
 fu_ihex_firmware_set_padding_value(FuIhexFirmware *self, guint8 padding_value)
@@ -229,6 +225,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
 	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	gboolean got_data = FALSE;
 	gboolean got_eof = FALSE;
 	guint32 abs_addr = 0x0;
 	guint32 addr_last = 0x0;
@@ -317,7 +314,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 
 			/* any holes in the hex record */
 			len_hole = addr - addr_last;
-			if (addr_last > 0 && len_hole > 1 * FU_MB) {
+			if (got_data && len_hole > 1 * FU_MB) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -326,7 +323,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 				return FALSE;
 			}
-			if (addr_last > 0x0 && len_hole > 1) {
+			if (got_data && len_hole > 1) {
 				g_debug("filling address 0x%08x to 0x%08x on line %u",
 					addr_last + 1,
 					addr_last + len_hole - 1,
@@ -335,6 +332,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 					fu_byte_array_append_uint8(buf, priv->padding_value);
 			}
 			addr_last = addr + rcd->data->len - 1;
+			got_data = TRUE;
 			if (addr_last < addr) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -575,8 +573,6 @@ fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
  * fu_ihex_firmware_new:
  *
  * Creates a new #FuFirmware of sub type Ihex
- *
- * Since: 1.3.1
  **/
 FuFirmware *
 fu_ihex_firmware_new(void)

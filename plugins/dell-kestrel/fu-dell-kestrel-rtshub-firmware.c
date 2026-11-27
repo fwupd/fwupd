@@ -24,16 +24,17 @@ G_DEFINE_TYPE(FuDellKestrelRtshubFirmware, fu_dell_kestrel_rtshub_firmware, FU_T
 static gchar *
 fu_dell_kestrel_rtshub_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
-	return fu_version_from_uint32_hex(version_raw, fu_firmware_get_version_format(firmware));
+	return fu_version_from_uint16_hex(version_raw, fu_firmware_get_version_format(firmware));
 }
 
 static void
 fu_dell_kestrel_rtshub_firmware_export(FuFirmware *firmware,
 				       FuFirmwareExportFlags flags,
-				       XbBuilderNode *bn)
+				       FwupdJsonObject *json_object)
 {
 	FuDellKestrelRtshubFirmware *self = FU_DELL_KESTREL_RTSHUB_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "product_id", self->pid);
+	if (self->pid != 0)
+		fwupd_json_object_add_integer(json_object, "product_id", self->pid);
 }
 
 static gboolean

@@ -121,9 +121,9 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 	    {"bcdVersion",
 	     FU_QSI_DOCK_FIRMWARE_IDX_NONE,
 	     FU_QSI_DOCK_ISP_VERSION_IN_MCU_OFFSET_BCD_VERSION},
-	    {NULL, 0, 0}};
+	};
 
-	for (guint i = 0; components[i].name != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(components); i++) {
 		const guint8 *val = outbuf + components[i].offset;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDevice) child = NULL;

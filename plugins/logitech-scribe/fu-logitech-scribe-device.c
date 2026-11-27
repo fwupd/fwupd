@@ -173,7 +173,7 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "not FU_LOGITECH_SCRIBE_USB_CMD_ACK, got %x",
-			    cmd);
+			    cmd_tmp);
 		return FALSE;
 	}
 	if (!fu_memread_uint32_safe(buf_ack->data,

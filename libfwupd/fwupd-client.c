@@ -454,7 +454,7 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
  *
  * Sets the string that represents the host vendor.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
@@ -471,7 +471,7 @@ fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
  *
  * Sets the string that represents the host product.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
@@ -488,7 +488,7 @@ fwupd_client_set_host_product(FwupdClient *self, const gchar *host_product)
  *
  * Sets the string that represents the host machine ID.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_machine_id(FwupdClient *self, const gchar *host_machine_id)
@@ -558,7 +558,7 @@ fwupd_client_download_set_retries(FwupdClient *self, guint retries)
  *
  * Sets the string that represents the host BKC.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
@@ -580,7 +580,7 @@ fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
  *
  * Sets the client status. This is thread-safe and can be called from any thread.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
@@ -600,7 +600,7 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
  *
  * Sets the client percentage. This is thread-safe and can be called from any thread.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
@@ -614,20 +614,40 @@ fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 	}
 }
 
-static void
+/**
+ * fwupd_client_set_battery_level:
+ * @self: a #FwupdClient
+ * @battery_level: value in percent
+ *
+ * Sets the system battery level in percent.
+ *
+ * Since: 2027.0
+ **/
+void
 fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(battery_level <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_level == battery_level)
 		return;
 	priv->battery_level = battery_level;
 	g_object_notify(G_OBJECT(self), "battery-level");
 }
 
-static void
+/**
+ * fwupd_client_set_battery_threshold:
+ * @self: a #FwupdClient
+ * @battery_threshold: value in percent
+ *
+ * Sets the system battery threshold in percent.
+ *
+ * Since: 2027.0
+ **/
+void
 fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(battery_threshold <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_threshold == battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;
@@ -779,7 +799,7 @@ fwupd_client_name_owner_changed_cb(GDBusProxy *proxy, GParamSpec *pspec, FwupdCl
  *
  * Emits a `::device-request` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
@@ -810,7 +830,7 @@ fwupd_client_emit_device_request(FwupdClient *self, FwupdRequest *req)
  *
  * Emits a `::device-added` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
@@ -829,7 +849,7 @@ fwupd_client_emit_device_added(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-removed` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
@@ -848,7 +868,7 @@ fwupd_client_emit_device_removed(FwupdClient *self, FwupdDevice *dev)
  *
  * Emits a `::device-changed` signal into the assigned mainloop.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_emit_device_changed(FwupdClient *self, FwupdDevice *dev)
@@ -1170,12 +1190,15 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_run_connect_funcs(FwupdClient *self, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	for (guint i = 0; i < priv->connect_items->len; i++) {
 		FwupdClientConnectItem *item = g_ptr_array_index(priv->connect_items, i);
@@ -3849,6 +3872,68 @@ fwupd_client_install_stream_async(FwupdClient *self,
 						  fwupd_client_install_stream_cb,
 						  g_steal_pointer(&task));
 }
+
+void
+fwupd_client_write_blob_stream_async(FwupdClient *self,
+				     const gchar *device_id,
+				     FwupdUnixInputStream *ustream,
+				     const gchar *filename_hint,
+				     const gchar *version,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	GVariantBuilder builder;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_write_blob_stream_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
+
+	/* set options -- the daemon only needs the basename */
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+	if (filename_hint != NULL) {
+		g_autofree gchar *basename = g_path_get_basename(filename_hint);
+		g_variant_builder_add(&builder, "{sv}", "filename", g_variant_new_string(basename));
+	}
+	if (version != NULL)
+		g_variant_builder_add(&builder, "{sv}", "version", g_variant_new_string(version));
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new();
+	g_unix_fd_list_append(fd_list, fwupd_unix_input_stream_get_fd(ustream), NULL);
+	request = g_dbus_message_new_method_call(FWUPD_DBUS_SERVICE,
+						 FWUPD_DBUS_PATH,
+						 FWUPD_DBUS_INTERFACE,
+						 "InstallBlob");
+	g_dbus_message_set_unix_fd_list(request, fd_list);
+
+	/* call into daemon */
+	g_dbus_message_set_body(request,
+				g_variant_new("(sha{sv})",
+					      device_id,
+					      fwupd_unix_input_stream_get_fd(ustream),
+					      &builder));
+	g_dbus_connection_send_message_with_reply(g_dbus_proxy_get_connection(priv->proxy),
+						  request,
+						  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						  G_MAXINT,
+						  NULL,
+						  cancellable,
+						  fwupd_client_install_stream_cb,
+						  g_steal_pointer(&task));
+}
 #endif
 
 /**
@@ -4012,6 +4097,95 @@ fwupd_client_install_async(FwupdClient *self,
  **/
 gboolean
 fwupd_client_install_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean(G_TASK(res), error);
+}
+
+/**
+ * fwupd_client_write_blob_async:
+ * @self: a #FwupdClient
+ * @device_id: (not nullable): the device ID
+ * @filename: (not nullable): the firmware blob to install
+ * @version: (nullable): the version to use if the firmware does not specify one
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Write a firmware blob that is not in a cabinet archive onto a specific specific programmer
+ * target.
+ *
+ * As there is no metadata, no signature, requirement or version checks are done, and the daemon
+ * always requires admin authentication.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 2027.0
+ **/
+void
+fwupd_client_write_blob_async(FwupdClient *self,
+			      const gchar *device_id,
+			      const gchar *filename,
+			      const gchar *version,
+			      GCancellable *cancellable,
+			      GAsyncReadyCallback callback,
+			      gpointer callback_data)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(device_id != NULL);
+	g_return_if_fail(filename != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	/* move to a thread if this ever takes more than a few ms */
+	ustream = fwupd_unix_input_stream_new_from_filename(filename, &error);
+	if (ustream == NULL) {
+		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_write_blob_async);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* call into daemon */
+	fwupd_client_write_blob_stream_async(self,
+					     device_id,
+					     ustream,
+					     filename,
+					     version,
+					     cancellable,
+					     callback,
+					     callback_data);
+#else
+	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_write_blob_async);
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Install blob async only supported on Linux");
+#endif
+}
+
+/**
+ * fwupd_client_write_blob_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.write_blob_async].
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2027.0
+ **/
+gboolean
+fwupd_client_write_blob_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
@@ -4849,7 +5023,7 @@ fwupd_client_get_only_trusted(FwupdClient *self)
  *
  * Returns: %TRUE if the daemon is checking signatures
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_client_get_pending_reboot(FwupdClient *self)
@@ -4866,7 +5040,7 @@ fwupd_client_get_pending_reboot(FwupdClient *self)
  *
  * Sets if system changes are pending a reboot.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_set_pending_reboot(FwupdClient *self, gboolean pending_reboot)
@@ -5505,6 +5679,99 @@ fwupd_client_get_approved_firmware_async(FwupdClient *self,
  **/
 GPtrArray *
 fwupd_client_get_approved_firmware_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_protocols_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_auto(GStrv) strv = NULL;
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	g_variant_get(val, "(^as)", &strv);
+	for (guint i = 0; strv[i] != NULL; i++)
+		g_ptr_array_add(array, g_strdup(strv[i]));
+
+	/* success */
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_protocols_async:
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets the list of update protocols used by all the devices currently added to the daemon.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Since: 2027.0
+ **/
+void
+fwupd_client_get_protocols_async(FwupdClient *self,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_protocols_async);
+
+	/* sanity check before using proxy */
+	if (priv->proxy == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"no proxy");
+		return;
+	}
+	g_dbus_proxy_call(priv->proxy,
+			  "GetProtocols",
+			  NULL,
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_get_protocols_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_get_protocols_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.get_protocols_async].
+ *
+ * Returns: (element-type utf8) (transfer container): protocol IDs, or %NULL for error
+ *
+ * Since: 2027.0
+ **/
+GPtrArray *
+fwupd_client_get_protocols_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
@@ -6410,6 +6677,36 @@ fwupd_client_download_ipfs(FwupdClient *self,
 	return g_steal_pointer(&bstdout);
 }
 
+static gchar *
+fwupd_client_strsafe_ascii(GByteArray *buf, guint len_max)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(buf != NULL, NULL);
+
+	/* nothing to parse */
+	if (buf->data == NULL || buf->len == 0)
+		return NULL;
+
+	/* add each printable ASCII char up to @len_man */
+	for (guint i = 0; i < MIN(buf->len, len_max); i++) {
+		const gchar val = buf->data[i];
+		if (val == '\0')
+			break;
+		if (g_ascii_isspace(val)) {
+			g_string_append_c(str, ' ');
+			continue;
+		}
+		if (g_ascii_isprint(val))
+			g_string_append_c(str, val);
+	}
+	if (str->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 static GBytes *
 fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
 {
@@ -6468,11 +6765,11 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 	g_info("status-code was %ld", status_code);
 	if (status_code == 429) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
+				    FWUPD_ERROR_INVALID_FILE,
 				    "Failed to download due to server limit: %s",
 				    str);
 			return NULL;
@@ -6484,8 +6781,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 	if (status_code == 502 || status_code == 503 || status_code == 504) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_TIMED_OUT,
@@ -6502,8 +6799,8 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 	if (status_code >= 400) {
-		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
-		if (g_str_is_ascii(str)) {
+		g_autofree gchar *str = fwupd_client_strsafe_ascii(buf, 4000);
+		if (str != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -6749,7 +7046,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_download_bytes2_async(FwupdClient *self,
@@ -6802,7 +7099,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 GBytes *
 fwupd_client_download_bytes2_finish(FwupdClient *self, GAsyncResult *res, GError **error)
@@ -7066,7 +7363,8 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 
 	/* parse JSON reply */
 	str = g_strndup(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-	json_root = fwupd_json_parser_load_from_data(json_parser, str, -1, &error);
+	json_root =
+	    fwupd_json_parser_load_from_data(json_parser, str, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	if (json_root == NULL) {
 		g_task_return_new_error(task,
 					FWUPD_ERROR,
@@ -8188,7 +8486,7 @@ fwupd_client_build_report_security(FwupdClient *self,
  * Adds a function to run after the connection has been completed. For example, checking that
  * the client version matches the daemon version.
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 void
 fwupd_client_add_connect_func(FwupdClient *self,
@@ -8666,7 +8964,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	 *
 	 * If the daemon is waiting for a reboot to apply changes.
 	 *
-	 * Since: 2.2.1
+	 * Since: 2027.0
 	 */
 	pspec = g_param_spec_boolean("pending-reboot",
 				     NULL,
@@ -8732,11 +9030,13 @@ fwupd_client_init(FwupdClient *self)
 	    .get_results = fwupd_client_sync_impl_get_results,
 	    .get_upgrades = fwupd_client_sync_impl_get_upgrades,
 	    .get_plugins = fwupd_client_sync_impl_get_plugins,
+	    .get_protocols = fwupd_client_sync_impl_get_protocols,
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
 	    .inhibit = fwupd_client_sync_impl_inhibit,
 	    .install = fwupd_client_sync_impl_install,
+	    .write_blob = fwupd_client_sync_impl_write_blob,
 	    .install_release = fwupd_client_sync_impl_install_release,
 	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,

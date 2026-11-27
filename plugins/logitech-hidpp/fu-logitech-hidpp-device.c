@@ -71,8 +71,6 @@ static void
 fu_logitech_hidpp_device_set_model_id(FuLogitechHidppDevice *self, const gchar *model_id)
 {
 	g_return_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self));
-	if (g_strcmp0(self->model_id, model_id) == 0)
-		return;
 	g_set_str(&self->model_id, model_id);
 }
 
@@ -169,7 +167,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 
 	/* if the device index is unset, grab it from the reply */
 	if (self->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
-	    fu_struct_logitech_hidpp_msg_get_device_id(st_req) !=
+	    fu_struct_logitech_hidpp_msg_get_device_id(st_rsp) !=
 		FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
 		self->device_idx = fu_struct_logitech_hidpp_msg_get_device_id(st_rsp);
 		g_debug("device index is %02x", self->device_idx);
@@ -2193,7 +2191,7 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_hidpp_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_logitech_hidpp_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	const gchar *tmp;
@@ -2220,9 +2218,7 @@ fu_logitech_hidpp_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, 
 }
 
 static void
-fu_logitech_hidpp_device_add_json(FuDevice *device,
-				  FwupdJsonObject *json_obj,
-				  FwupdCodecFlags flags)
+fu_logitech_hidpp_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 
@@ -2253,8 +2249,8 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 	device_class->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
 	device_class->cleanup = fu_logitech_hidpp_device_cleanup;
 	device_class->set_progress = fu_logitech_hidpp_device_set_progress;
-	device_class->from_json = fu_logitech_hidpp_device_from_json;
-	device_class->add_json = fu_logitech_hidpp_device_add_json;
+	device_class->build = fu_logitech_hidpp_device_build;
+	device_class->export = fu_logitech_hidpp_device_export;
 	fu_device_register_private_flag(device_class,
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
 	fu_device_register_private_flag(device_class, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE);

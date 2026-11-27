@@ -57,7 +57,7 @@ fu_uefi_dbx_device_set_checksum(FuUefiDbxDevice *self, const gchar *csum, GError
 	fu_device_add_checksum(FU_DEVICE(self), csum);
 
 	/* for operating offline, with no /usr/share/fwupd/remotes.d archives */
-	fu_device_add_instance_strup(FU_DEVICE(self), "CSUM", csum);
+	fu_device_add_instance_strup(FU_DEVICE(self), "\\CSUM", csum);
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -116,9 +116,9 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		return TRUE;
 	}
 
-	/* add the last checksum to the device */
-	for (guint i = sigs->len; i > 0; i--) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
+	/* find each checksum in the quirk database */
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
 		const gchar *owner = fu_efi_signature_get_owner(sig);
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
@@ -134,12 +134,8 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 			g_debug("skipping dbx entry %s as non-microsoft (%s)", csum, owner);
 			continue;
 		}
-
-		if (csum != NULL) {
-			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
-				return FALSE;
-			break;
-		}
+		if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -186,7 +182,7 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* validate this is safe to apply */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(ctx,
 							 FU_EFI_SIGNATURE_LIST(firmware),
@@ -229,7 +225,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		checksum = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, error);
 		if (checksum == NULL)
 			return FALSE;
-		fu_device_add_instance_strup(device, "CRT", checksum);
+		fu_device_add_instance_strup(device, "\\CRT", checksum);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						 NULL,
@@ -250,6 +246,12 @@ fu_uefi_dbx_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
+fu_uefi_dbx_device_set_version_raw(FuDevice *device, guint64 *version_raw)
+{
+	*version_raw = MAX(*version_raw, fu_device_get_version_raw(device));
 }
 
 static gchar *
@@ -280,7 +282,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self),
 				   FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION_RAW);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	g_signal_connect(FWUPD_DEVICE(self),
@@ -303,4 +305,5 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->convert_version = fu_uefi_dbx_device_convert_version;
+	device_class->set_version_raw = fu_uefi_dbx_device_set_version_raw;
 }

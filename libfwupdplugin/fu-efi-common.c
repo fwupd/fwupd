@@ -19,8 +19,6 @@
  * Converts a GUID to the known nice name.
  *
  * Returns: identifier string, or %NULL if unknown
- *
- * Since: 1.6.2
  **/
 const gchar *
 fu_efi_guid_to_name(const gchar *guid)
@@ -76,8 +74,6 @@ fu_efi_guid_to_name(const gchar *guid)
  * Parses a UEFI section.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
@@ -87,6 +83,10 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		      GError **error)
 {
 	gsize streamsz = 0;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(FWUPD_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
@@ -140,59 +140,108 @@ fu_efi_parse_sections(FuFirmware *firmware,
 /**
  * fu_efi_timestamp_export:
  * @st: a #FuStructEfiTime
- * @bn: a #XbBuilderNode
+ * @json_object: a #FwupdJsonObject
  *
- * Exports an `EFI_TIME` to XML.
- *
- * Since: 2.0.17
+ * Exports an `EFI_TIME` to JSON.
  **/
 void
-fu_efi_timestamp_export(FuStructEfiTime *st, XbBuilderNode *bn)
+fu_efi_timestamp_export(FuStructEfiTime *st, FwupdJsonObject *json_object)
 {
 	if (fu_struct_efi_time_get_year(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "year", fu_struct_efi_time_get_year(st));
+		fwupd_json_object_add_integer(json_object, "year", fu_struct_efi_time_get_year(st));
 	if (fu_struct_efi_time_get_month(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "month", fu_struct_efi_time_get_month(st));
+		fwupd_json_object_add_integer(json_object,
+					      "month",
+					      fu_struct_efi_time_get_month(st));
 	if (fu_struct_efi_time_get_day(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "day", fu_struct_efi_time_get_day(st));
+		fwupd_json_object_add_integer(json_object, "day", fu_struct_efi_time_get_day(st));
 	if (fu_struct_efi_time_get_hour(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "hour", fu_struct_efi_time_get_hour(st));
+		fwupd_json_object_add_integer(json_object, "hour", fu_struct_efi_time_get_hour(st));
 	if (fu_struct_efi_time_get_minute(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "minute", fu_struct_efi_time_get_minute(st));
+		fwupd_json_object_add_integer(json_object,
+					      "minute",
+					      fu_struct_efi_time_get_minute(st));
 	if (fu_struct_efi_time_get_second(st) != 0)
-		fu_xmlb_builder_insert_kx(bn, "second", fu_struct_efi_time_get_second(st));
+		fwupd_json_object_add_integer(json_object,
+					      "second",
+					      fu_struct_efi_time_get_second(st));
+}
+
+/* sets @value to G_MAXINT64 if @key is not found */
+static gboolean
+fu_efi_timestamp_build_value(FwupdJsonObject *json_object,
+			     const gchar *key,
+			     gint64 value_max,
+			     gint64 *value,
+			     GError **error)
+{
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							key,
+							value,
+							G_MAXINT64,
+							error)) {
+		g_prefix_error(error, "failed to parse %s: ", key);
+		return FALSE;
+	}
+	if (*value == G_MAXINT64)
+		return TRUE;
+	if (*value < 0 || *value > value_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "%s value %" G_GINT64_FORMAT " invalid, maximum is %" G_GINT64_FORMAT,
+			    key,
+			    *value,
+			    value_max);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /**
  * fu_efi_timestamp_build:
  * @st: a #FuStructEfiTime
- * @n: a #XbNode
+ * @json_object: a #FwupdJsonObject
+ * @error: (nullable): optional return location for an error
  *
- * Imports an `EFI_TIME` from XML.
+ * Imports an `EFI_TIME` from JSON. Missing members are ignored.
  *
- * Since: 2.0.17
+ * Returns: %TRUE for success
  **/
-void
-fu_efi_timestamp_build(FuStructEfiTime *st, XbNode *n)
+gboolean
+fu_efi_timestamp_build(FuStructEfiTime *st, FwupdJsonObject *json_object, GError **error)
 {
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
-	tmp = xb_node_query_text_as_uint(n, "year", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_year(st, tmp);
-	tmp = xb_node_query_text_as_uint(n, "month", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_month(st, tmp);
-	tmp = xb_node_query_text_as_uint(n, "day", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_day(st, tmp);
-	tmp = xb_node_query_text_as_uint(n, "hour", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_hour(st, tmp);
-	tmp = xb_node_query_text_as_uint(n, "minute", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_minute(st, tmp);
-	tmp = xb_node_query_text_as_uint(n, "second", NULL);
-	if (tmp != G_MAXUINT64)
-		fu_struct_efi_time_set_second(st, tmp);
+	g_return_val_if_fail(st != NULL, FALSE);
+	g_return_val_if_fail(json_object != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_efi_timestamp_build_value(json_object, "year", G_MAXUINT16, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_year(st, (guint16)tmp);
+	if (!fu_efi_timestamp_build_value(json_object, "month", G_MAXUINT8, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_month(st, (guint8)tmp);
+	if (!fu_efi_timestamp_build_value(json_object, "day", G_MAXUINT8, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_day(st, (guint8)tmp);
+	if (!fu_efi_timestamp_build_value(json_object, "hour", G_MAXUINT8, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_hour(st, (guint8)tmp);
+	if (!fu_efi_timestamp_build_value(json_object, "minute", G_MAXUINT8, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_minute(st, (guint8)tmp);
+	if (!fu_efi_timestamp_build_value(json_object, "second", G_MAXUINT8, &tmp, error))
+		return FALSE;
+	if (tmp != G_MAXINT64)
+		fu_struct_efi_time_set_second(st, (guint8)tmp);
+
+	/* success */
+	return TRUE;
 }

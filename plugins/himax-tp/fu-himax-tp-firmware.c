@@ -238,37 +238,60 @@ fu_himax_tp_firmware_parse(FuFirmware *firmware,
 }
 
 static void
-fu_himax_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_himax_tp_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuHimaxTpFirmware *self = FU_HIMAX_TP_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kv(bn, "ic_id", self->ic_id);
-	fu_xmlb_builder_insert_kx(bn, "cid", self->cid);
-	fu_xmlb_builder_insert_kx(bn, "tp_cfg_ver", self->tp_cfg_ver);
-	fu_xmlb_builder_insert_kx(bn, "dd_cfg_ver", self->dd_cfg_ver);
+	if (self->ic_id != NULL)
+		fwupd_json_object_add_string(json_object, "ic_id", self->ic_id);
+	if (self->cid != 0)
+		fwupd_json_object_add_integer(json_object, "cid", self->cid);
+	if (self->tp_cfg_ver != 0)
+		fwupd_json_object_add_integer(json_object, "tp_cfg_ver", self->tp_cfg_ver);
+	if (self->dd_cfg_ver != 0)
+		fwupd_json_object_add_integer(json_object, "dd_cfg_ver", self->dd_cfg_ver);
 }
 
 static gboolean
-fu_himax_tp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_himax_tp_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuHimaxTpFirmware *self = FU_HIMAX_TP_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 	const gchar *str;
 
-	tmp = xb_node_query_text_as_uint(n, "cid", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"cid",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->cid = tmp;
-	str = xb_node_query_text(n, "ic_id", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "ic_id", &str, error))
+		return FALSE;
 	if (str != NULL)
 		g_set_str(&self->ic_id, str);
-	str = xb_node_query_text(n, "ic_id_mod", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "ic_id_mod", &str, error))
+		return FALSE;
 	if (str != NULL)
 		g_set_str(&self->ic_id_mod, str);
-	tmp = xb_node_query_text_as_uint(n, "tp_cfg_ver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"tp_cfg_ver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		self->tp_cfg_ver = tmp;
-	tmp = xb_node_query_text_as_uint(n, "dd_cfg_ver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"dd_cfg_ver",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT8)
 		self->dd_cfg_ver = tmp;
 
 	/* success */

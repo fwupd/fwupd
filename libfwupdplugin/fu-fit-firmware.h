@@ -29,8 +29,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  *
  * The compatible metadata for the FIT image, typically a string list, e.g.
  *`pine64,rockpro64-v2.1:pine64,rockpro64`.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_COMPATIBLE "compatible"
 
@@ -38,8 +36,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_DATA:
  *
  * The raw data for the FIT image, typically a blob.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_DATA "data"
 
@@ -47,8 +43,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_ALGO:
  *
  * The checksum algorithm for the FIT image, typically a string, e.g. `crc32`.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_ALGO "algo"
 
@@ -56,8 +50,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_DATA_OFFSET:
  *
  * The external data offset after the FIT image, typically a uint32.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_DATA_OFFSET "data-offset"
 
@@ -65,8 +57,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_DATA_POSITION:
  *
  * The external data position from the start of the file, typically a uint32.
- *
- * Since: 2.2.1
  **/
 #define FU_FIT_FIRMWARE_ATTR_DATA_POSITION "data-position"
 
@@ -74,8 +64,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_DATA_SIZE:
  *
  * The data size of the external image, typically a uint32.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_DATA_SIZE "data-size"
 
@@ -83,8 +71,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_STORE_OFFSET:
  *
  * The store offset for the FIT image, typically a uint32.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_STORE_OFFSET "store-offset"
 
@@ -92,8 +78,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_VALUE:
  *
  * The value of the checksum, which is typically a blob.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_VALUE "value"
 
@@ -101,8 +85,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_SKIP_OFFSET:
  *
  * The offset to skip when writing the FIT image, typically a uint32.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_SKIP_OFFSET "skip-offset"
 
@@ -110,8 +92,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_VERSION:
  *
  * The version of the FIT image, typically a string, e.g. `1.2.3`.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_VERSION "version"
 
@@ -119,8 +99,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ATTR_TIMESTAMP:
  *
  * The creation timestamp of FIT image, typically a uint32.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ATTR_TIMESTAMP "timestamp"
 
@@ -128,8 +106,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ID_IMAGES:
  *
  * The usual firmware ID string for the images.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ID_IMAGES "images"
 
@@ -137,8 +113,6 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp) G_GNUC_NON
  * FU_FIT_FIRMWARE_ID_CONFIGURATIONS:
  *
  * The usual firmware ID string for the configurations.
- *
- * Since: 1.8.2
  **/
 #define FU_FIT_FIRMWARE_ID_CONFIGURATIONS "configurations"
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "fu-context.h"
+#include "fu-quirks-struct.h"
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
 			    const gchar *key,
 			    FuQuirksIter iter_cb,
+			    FuQuirksLookupFlags flags,
 			    gpointer user_data) G_GNUC_NON_NULL(1, 2);
 void
 fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON_NULL(1, 2);
@@ -49,56 +51,42 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * FU_QUIRKS_PLUGIN:
  *
  * The quirk key for the plugin name, e.g. `csr`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_PLUGIN "Plugin"
 /**
  * FU_QUIRKS_FLAGS:
  *
  * The quirk key for either for public, internal or private flags, e.g. `is-bootloader`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_FLAGS "Flags"
 /**
  * FU_QUIRKS_HOST_BKC:
  *
  * The quirk key for the Host Best Known Configuration aka "BKC".
- *
- * Since: 2.1.8
  **/
 #define FU_QUIRKS_HOST_BKC "HostBkc"
 /**
  * FU_QUIRKS_SUMMARY:
  *
  * The quirk key for the summary, e.g. `An open source display colorimeter`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_SUMMARY "Summary"
 /**
  * FU_QUIRKS_ICON:
  *
  * The quirk key for the icon, e.g. `media-removable`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_ICON "Icon"
 /**
  * FU_QUIRKS_NAME:
  *
  * The quirk key for the name, e.g. `ColorHug`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_NAME "Name"
 /**
  * FU_QUIRKS_BRANCH:
  *
  * The quirk key for the firmware branch.
- *
- * Since: 1.5.0
  **/
 #define FU_QUIRKS_BRANCH "Branch"
 /**
@@ -107,8 +95,6 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * The quirk key for the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`.
  *
  * If the value provided is not already a suitable GUID, it will be converted to one.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_GUID "Guid"
 /**
@@ -117,8 +103,6 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * The quirk key for the GUID, only used for quirk matching, e.g. `SYNAPTICS_CAPE\CX31993`.
  *
  * If the value provided is not already a suitable GUID, it will be converted to one.
- *
- * Since: 1.9.6
  **/
 #define FU_QUIRKS_GUID_QUIRK "Guid[quirk]"
 /**
@@ -131,8 +115,6 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * Adding this type of GUID does not cause a "cascade" by matching using the quirk database.
  *
  * If the value provided is not already a suitable GUID, it will be converted to one.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_COUNTERPART_GUID "CounterpartGuid"
 /**
@@ -141,16 +123,12 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * The quirk key for the parent GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`.
  *
  * If the value provided is not already a suitable GUID, it will be converted to one.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_PARENT_GUID "ParentGuid"
 /**
  * FU_QUIRKS_PROXY_GUID:
  *
  * The quirk key for the proxy GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`.
- *
- * Since: 1.4.1
  **/
 #define FU_QUIRKS_PROXY_GUID "ProxyGuid"
 /**
@@ -161,200 +139,150 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  *
  * This allows the quirk entry to adds one or more virtual devices to a physical device.
  * If the type of device is not specified the parent device type is used.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_CHILDREN "Children"
 /**
  * FU_QUIRKS_VERSION:
  *
  * The quirk key for the version, e.g. `1.2.3`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_VERSION "Version"
 /**
  * FU_QUIRKS_VERSION_RAW:
  *
  * The quirk key for the version, e.g. `0x123`.
- *
- * Since: 2.1.9
  **/
 #define FU_QUIRKS_VERSION_RAW "VersionRaw"
 /**
  * FU_QUIRKS_VERSION_LOWEST:
  *
  * The quirk key for the lowest allowed version, e.g. `1.2.3`.
- *
- * Since: 2.1.2
  **/
 #define FU_QUIRKS_VERSION_LOWEST "VersionLowest"
 /**
  * FU_QUIRKS_VERSION_HIGHEST:
  *
  * The quirk key for the highest allowed version, e.g. `1.2.3`.
- *
- * Since: 2.1.2
  **/
 #define FU_QUIRKS_VERSION_HIGHEST "VersionHighest"
 /**
  * FU_QUIRKS_VENDOR:
  *
  * The quirk key for the vendor name, e.g. `Hughski Limited`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_VENDOR "Vendor"
 /**
  * FU_QUIRKS_VENDOR_ID:
  *
  * The quirk key for the vendor ID, e.g. `USB:0x123A`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_VENDOR_ID "VendorId"
 /**
  * FU_QUIRKS_FIRMWARE_SIZE_MIN:
  *
  * The quirk key for the minimum firmware size in bytes, e.g. `512`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_FIRMWARE_SIZE_MIN "FirmwareSizeMin"
 /**
  * FU_QUIRKS_FIRMWARE_SIZE_MAX:
  *
  * The quirk key for the maximum firmware size in bytes, e.g. `1024`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_FIRMWARE_SIZE_MAX "FirmwareSizeMax"
 /**
  * FU_QUIRKS_FIRMWARE_SIZE:
  *
  * The quirk key for the exact required firmware size in bytes, e.g. `1024`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_FIRMWARE_SIZE "FirmwareSize"
 /**
  * FU_QUIRKS_INSTALL_DURATION:
  *
  * The quirk key for the install duration in seconds, e.g. `60`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_INSTALL_DURATION "InstallDuration"
 /**
  * FU_QUIRKS_VERSION_FORMAT:
  *
  * The quirk key for the version format, e.g. `quad`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_VERSION_FORMAT "VersionFormat"
 /**
  * FU_QUIRKS_GTYPE:
  *
  * The quirk key for the custom GType, e.g. `FuCcgxHidDevice`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_GTYPE "GType"
 /**
  * FU_QUIRKS_PROXY_GTYPE:
  *
  * The quirk key for the custom proxy GType, e.g. `FuCcgxHidDevice`.
- *
- * Since: 1.9.15
  **/
 #define FU_QUIRKS_PROXY_GTYPE "ProxyGType"
 /**
  * FU_QUIRKS_FIRMWARE_GTYPE:
  *
  * The quirk key for the custom firmware GType, e.g. `FuUswidFirmware`.
- *
- * Since: 1.7.2
  **/
 #define FU_QUIRKS_FIRMWARE_GTYPE "FirmwareGType"
 /**
  * FU_QUIRKS_PROTOCOL:
  *
  * The quirk key for the protocol, e.g. `org.usb.dfu`.
- *
- * Since: 1.3.7
  **/
 #define FU_QUIRKS_PROTOCOL "Protocol"
 /**
  * FU_QUIRKS_PROBLEM:
  *
  * The quirk key for the problem, e.g. `insecure-platform`.
- *
- * Since: 2.1.8
  **/
 #define FU_QUIRKS_PROBLEM "Problem"
 /**
  * FU_QUIRKS_UPDATE_MESSAGE:
  *
  * The quirk key for the update message shown after the transaction has completed.
- *
- * Since: 1.4.0
  **/
 #define FU_QUIRKS_UPDATE_MESSAGE "UpdateMessage"
 /**
  * FU_QUIRKS_UPDATE_IMAGE:
  *
  * The quirk key for the update image shown before the update is performed.
- *
- * Since: 1.5.0
  **/
 #define FU_QUIRKS_UPDATE_IMAGE "UpdateImage"
 /**
  * FU_QUIRKS_PRIORITY:
  *
  * The quirk key for the device priority, e.g. `2`.
- *
- * Since: 1.4.1
  **/
 #define FU_QUIRKS_PRIORITY "Priority"
 /**
  * FU_QUIRKS_BATTERY_THRESHOLD:
  *
  * The quirk key for the battery threshold in percent, e.g. `80`.
- *
- * Since: 1.6.0
  **/
 #define FU_QUIRKS_BATTERY_THRESHOLD "BatteryThreshold"
 /**
  * FU_QUIRKS_APPSTREAM_ID:
  *
  * The quirk key for the fwupd AppStream identifier, e.g. `org.fwupd.bios.secure-boot`.
- *
- * Since: 2.1.7
  **/
 #define FU_QUIRKS_APPSTREAM_ID "AppstreamId"
 /**
  * FU_QUIRKS_REMOVE_DELAY:
  *
  * The quirk key for the device removal delay in milliseconds, e.g. `2500`.
- *
- * Since: 1.5.0
  **/
 #define FU_QUIRKS_REMOVE_DELAY "RemoveDelay"
 /**
  * FU_QUIRKS_ACQUIESCE_DELAY:
  *
  * The quirk key for the device removal delay in milliseconds, e.g. `2500`.
- *
- * Since: 1.8.3
  **/
 #define FU_QUIRKS_ACQUIESCE_DELAY "AcquiesceDelay"
 /**
  * FU_QUIRKS_INHIBIT:
  *
  * The quirk key to inhibit the UPDATABLE flag and to set an update error, e.g. `In safe mode`.
- *
- * Since: 1.6.2
  **/
 #define FU_QUIRKS_INHIBIT "Inhibit"
 /**
@@ -362,8 +290,6 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  *
  * The quirk key to add security issues affecting a specific device, e.g.
  * `https://www.pugetsystems.com/support/guides/critical-samsung-ssd-firmware-update/`.
- *
- * Since: 1.7.6
  **/
 #define FU_QUIRKS_ISSUE "Issue"
 /**
@@ -371,112 +297,84 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  *
  * The quirk key for the device-specific product page, e.g.
  * `https://www.lenovo.com/us/en/p/laptops/thinkpad/thinkpadp/thinkpad-p50/22tp2wpwp50`.
- *
- * Since: 2.1.2
  **/
 #define FU_QUIRKS_DETAILS_URL "DetailsUrl"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_READ_ID
  *
  * The quirk key to set the CFI read ID command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_READ_ID "CfiDeviceCmdReadId"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ
  *
  * The quirk key to set the CFI read ID size, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ "CfiDeviceCmdReadIdSz"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE
  *
  * The quirk key to set the CFI chip erase command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE "CfiDeviceCmdChipErase"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE
  *
  * The quirk key to set the CFI block erase command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE "CfiDeviceCmdBlockErase"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE
  *
  * The quirk key to set the CFI sector erase command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE "CfiDeviceCmdSectorErase"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS
  *
  * The quirk key to set the CFI write status command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS "CfiDeviceCmdWriteStatus"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG
  *
  * The quirk key to set the CFI page program command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG "CfiDeviceCmdPageProg"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA
  *
  * The quirk key to set the CFI read data command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA "CfiDeviceCmdReadData"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS
  *
  * The quirk key to set the CFI read status command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS "CfiDeviceCmdReadStatus"
 /**
  * FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN
  *
  * The quirk key to set the CFI write en command, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN "CfiDeviceCmdWriteEn"
 /**
  * FU_QUIRKS_CFI_DEVICE_PAGE_SIZE
  *
  * The quirk key to set the CFI page size, e.g. `0xF8`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_PAGE_SIZE "CfiDevicePageSize"
 /**
  * FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE
  *
  * The quirk key to set the CFI sector size, e.g. `0x100`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE "CfiDeviceSectorSize"
 /**
  * FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE
  *
  * The quirk key to set the CFI block size, e.g. `0x100`.
- *
- * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE "CfiDeviceBlockSize"
 

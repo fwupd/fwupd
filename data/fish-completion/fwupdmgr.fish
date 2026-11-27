@@ -10,6 +10,10 @@ function __fish_fwupdmgr_remotes --description 'Get remote IDs used by fwupdmgr'
     fwupdmgr get-remotes 2>/dev/null | string replace -f -r '.*Remote ID:\s*(.*)' '$1'
 end
 
+function __fish_fwupdmgr_protocols --description 'Get device update protocols used by fwupdmgr'
+    fwupdmgr get-protocols 2>/dev/null | string match -r '^[a-z0-9]+(?:\.[A-Za-z0-9_-]+)+$'
+end
+
 function __fish_fwupdmgr_bios_settings --description 'Get BIOS setting names via fwupdmgr'
     fwupdmgr get-bios-settings --no-authenticate 2>/dev/null | string replace -f -r '^(\S+):$' '$1'
 end
@@ -37,6 +41,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         get-devices 'Get all devices that support firmware updates' \
         get-history 'Show history of firmware updates' \
         get-plugins 'Get all enabled plugins registered with the system' \
+        get-protocols 'Gets the list of update protocols used by devices' \
         get-releases 'Gets the releases for a device' \
         get-remotes 'Gets the configured remotes' \
         get-results 'Gets the results from the last update' \
@@ -44,6 +49,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         hwids 'Return all the hardware IDs for the machine' \
         inhibit 'Inhibit the system to prevent upgrades' \
         install 'Install a specific firmware file on all devices that match' \
+        write-blob 'Write a raw firmware blob on a device' \
         local-install 'Install a firmware file in cabinet format on this hardware' \
         modify-config 'Modifies a daemon configuration value' \
         modify-remote 'Modifies a given remote' \
@@ -96,6 +102,7 @@ complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when dow
 complete -c fwupdmgr -l p2p -d 'Only use peer-to-peer networking when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
 complete -c fwupdmgr -l filter-release -d 'Filter with a set of release flags'
+complete -c fwupdmgr -l filter-protocol -x -a "(__fish_fwupdmgr_protocols)" -d 'Filter to specific protocols'
 complete -c fwupdmgr -l json -d 'Output in JSON format'
 complete -c fwupdmgr -l no-security-fix -d 'Do not prompt to fix security issues'
 complete -c fwupdmgr -l no-authenticate -d 'Don\'t prompt for authentication'
@@ -108,7 +115,7 @@ set -l deviceid_consumers activate check-reboot-needed clear-results device-wait
 # complete device IDs
 complete -c fwupdmgr -n "__fish_seen_subcommand_from $deviceid_consumers" -x -a "(__fish_fwupdmgr_devices)"
 # complete files and device IDs
-complete -c fwupdmgr -n "__fish_seen_subcommand_from local-install" -r -a "(__fish_fwupdmgr_devices)"
+complete -c fwupdmgr -n "__fish_seen_subcommand_from write-blob local-install" -r -a "(__fish_fwupdmgr_devices)"
 
 # commands exclusively consuming remote IDs
 set -l remoteid_consumers disable-remote enable-remote modify-remote

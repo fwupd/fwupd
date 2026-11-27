@@ -98,15 +98,9 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 		g_autofree gchar *guid = fwupd_guid_hash_string(device_ids[i]);
 		const gchar *gtypestr = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_GTYPE);
 		if (gtypestr != NULL) {
-			GType gtype = g_type_from_name(gtypestr);
-			if (gtype == G_TYPE_INVALID) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "unknown GType name %s",
-					    gtypestr);
+			GType gtype = G_TYPE_INVALID;
+			if (!fu_gtype_from_name(gtypestr, &gtype, FU_TYPE_MM_DEVICE, error))
 				return NULL;
-			}
 			return g_object_new(gtype, "context", ctx, NULL);
 		}
 	}
@@ -115,7 +109,7 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 	device_ids_str = g_strjoinv(", ", (gchar **)device_ids);
 	g_set_error(error,
 		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "no explicit GType for %s",
 		    device_ids_str);
 	return NULL;
@@ -130,7 +124,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 	MMModemFirmwareUpdateMethod update_methods;
 	MMModemPortInfo *used_ports = NULL;
 	guint n_used_ports = 0;
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	MMModemPortInfo *ignored_ports = NULL;
 	guint n_ignored_ports = 0;
 #endif
@@ -221,7 +215,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		mm_modem_port_info_array_free(used_ports, n_used_ports);
 	}
 
-#if MM_CHECK_VERSION(1, 26, 0)
+#if MM_CHECK_VERSION(1, 25, 1)
 	if (mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
 		for (guint i = 0; i < n_ignored_ports; i++) {
 			g_debug("found port %s: %s",
@@ -282,7 +276,7 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 	/* create device and probe */
 	device = fu_mm_backend_probe_gtype(self, omodem, &error_local);
 	if (device == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring, and trying legacy fallback: %s", error_local->message);
 			device = fu_mm_backend_probe_gtype_fallback(self, omodem, error);
 			if (device == NULL)
@@ -398,16 +392,23 @@ fu_mm_backend_setup(FuBackend *backend,
 		    GError **error)
 {
 	FuMmBackend *self = FU_MM_BACKEND(backend);
+	GMainContext *main_ctx = fu_context_get_main_context(fu_backend_get_context(backend));
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GFile) file = g_file_new_for_path(FU_MM_BACKEND_MODEM_POWER_SYSFS_PATH);
 
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
 		return FALSE;
+
+	/* the object manager signals are dispatched on the thread-default main context at
+	 * construction time, so bind them to the context we iterate -- otherwise the modem
+	 * removal is never seen while waiting for the replug */
+	g_main_context_push_thread_default(main_ctx);
 	self->manager = mm_manager_new_sync(connection,
 					    G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START,
 					    NULL,
 					    error);
+	g_main_context_pop_thread_default(main_ctx);
 	if (self->manager == NULL)
 		return FALSE;
 

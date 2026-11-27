@@ -63,7 +63,8 @@ fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		if (!fu_input_stream_compute_sum8(stream_tmp, &chksum_actual, error))
 			return FALSE;
-		if (FU_GENESYS_GL32XX_CHECKSUM_MAGIC - chksum_actual != chksum_expected) {
+		chksum_actual = FU_GENESYS_GL32XX_CHECKSUM_MAGIC - chksum_actual;
+		if (chksum_actual != chksum_expected) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,

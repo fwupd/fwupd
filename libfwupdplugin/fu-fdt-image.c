@@ -42,26 +42,27 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 	struct {
 		const gchar *key;
 		const gchar *format;
-	} key_format_map[] = {{"#address-cells", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"algo", FU_FDT_IMAGE_FORMAT_STR},
-			      {"arch", FU_FDT_IMAGE_FORMAT_STR},
-			      {"compatible", FU_FDT_IMAGE_FORMAT_STRLIST},
-			      {"compression", FU_FDT_IMAGE_FORMAT_STR},
-			      {"creator", FU_FDT_IMAGE_FORMAT_STR},
-			      {"data-offset", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"data-position", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"data-size", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"default", FU_FDT_IMAGE_FORMAT_STR},
-			      {"description", FU_FDT_IMAGE_FORMAT_STR},
-			      {"entry", FU_FDT_IMAGE_FORMAT_STR},
-			      {"firmware", FU_FDT_IMAGE_FORMAT_STR},
-			      {"load", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"os", FU_FDT_IMAGE_FORMAT_STR},
-			      {"timestamp", FU_FDT_IMAGE_FORMAT_UINT32},
-			      {"type", FU_FDT_IMAGE_FORMAT_STR},
-			      {"version", FU_FDT_IMAGE_FORMAT_STR},
-			      {NULL, NULL}};
-	for (guint i = 0; key_format_map[i].key != NULL; i++) {
+	} key_format_map[] = {
+	    {"#address-cells", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"algo", FU_FDT_IMAGE_FORMAT_STR},
+	    {"arch", FU_FDT_IMAGE_FORMAT_STR},
+	    {"compatible", FU_FDT_IMAGE_FORMAT_STRLIST},
+	    {"compression", FU_FDT_IMAGE_FORMAT_STR},
+	    {"creator", FU_FDT_IMAGE_FORMAT_STR},
+	    {"data-offset", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"data-position", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"data-size", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"default", FU_FDT_IMAGE_FORMAT_STR},
+	    {"description", FU_FDT_IMAGE_FORMAT_STR},
+	    {"entry", FU_FDT_IMAGE_FORMAT_STR},
+	    {"firmware", FU_FDT_IMAGE_FORMAT_STR},
+	    {"load", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"os", FU_FDT_IMAGE_FORMAT_STR},
+	    {"timestamp", FU_FDT_IMAGE_FORMAT_UINT32},
+	    {"type", FU_FDT_IMAGE_FORMAT_STR},
+	    {"version", FU_FDT_IMAGE_FORMAT_STR},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(key_format_map); i++) {
 		if (g_strcmp0(key, key_format_map[i].key) == 0)
 			return key_format_map[i].format;
 	}
@@ -93,13 +94,14 @@ fu_fdt_image_strlist_from_blob(GBytes *blob, GError **error)
 }
 
 static void
-fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, FwupdJsonObject *json_object)
 {
 	FuFdtImage *self = FU_FDT_IMAGE(firmware);
 	FuFdtImagePrivate *priv = GET_PRIVATE(self);
 	GHashTableIter iter;
 	gpointer key;
 	gpointer value;
+	g_autoptr(FwupdJsonArray) json_metadata = fwupd_json_array_new();
 
 	g_hash_table_iter_init(&iter, priv->hash_attrs);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -107,7 +109,7 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 		const guint8 *buf = g_bytes_get_data(value, &bufsz);
 		const gchar *format = g_hash_table_lookup(priv->hash_attrs_format, key);
 		g_autofree gchar *str = NULL;
-		g_autoptr(XbBuilderNode) bc = NULL;
+		g_autoptr(FwupdJsonObject) json_item = fwupd_json_object_new();
 
 		/* guess format based on key name to improve debugging experience */
 		if (format == NULL)
@@ -117,7 +119,7 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 			str = g_strdup_printf("0x%x", (guint)tmp);
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_UINT64) == 0 && bufsz == 8) {
 			guint64 tmp = fu_memread_uint64(buf, G_BIG_ENDIAN);
-			str = g_strdup_printf("0x%x", (guint)tmp);
+			str = g_strdup_printf("0x%" G_GINT64_MODIFIER "x", tmp);
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STR) == 0 && bufsz > 0) {
 			str = g_strndup((const gchar *)buf, bufsz);
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STRLIST) == 0 && bufsz > 0) {
@@ -127,12 +129,15 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 		} else {
 			str = fu_base64_encode(buf, bufsz);
 		}
-		bc = xb_builder_node_insert(bn, "metadata", "key", key, NULL);
+		fwupd_json_object_add_string(json_item, "key", key);
 		if (str != NULL)
-			xb_builder_node_set_text(bc, str, -1);
+			fwupd_json_object_add_string(json_item, "value", str);
 		if (format != NULL)
-			xb_builder_node_set_attr(bc, "format", format);
+			fwupd_json_object_add_string(json_item, "format", format);
+		fwupd_json_array_add_object(json_metadata, json_item);
 	}
+	if (fwupd_json_array_get_size(json_metadata) > 0)
+		fwupd_json_object_add_array(json_object, "metadata", json_metadata);
 }
 
 /**
@@ -142,8 +147,6 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
  * Gets all the attributes stored on the image.
  *
  * Returns: (transfer container) (element-type utf8): keys
- *
- * Since: 1.8.2
  **/
 GPtrArray *
 fu_fdt_image_get_attrs(FuFdtImage *self)
@@ -171,8 +174,6 @@ fu_fdt_image_get_attrs(FuFdtImage *self)
  * Gets a attribute from the image.
  *
  * Returns: (transfer full): blob
- *
- * Since: 1.8.2
  **/
 GBytes *
 fu_fdt_image_get_attr(FuFdtImage *self, const gchar *key, GError **error)
@@ -204,8 +205,6 @@ fu_fdt_image_get_attr(FuFdtImage *self, const gchar *key, GError **error)
  * Gets a uint32 attribute from the image.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_u32(FuFdtImage *self, const gchar *key, guint32 *val, GError **error)
@@ -244,8 +243,6 @@ fu_fdt_image_get_attr_u32(FuFdtImage *self, const gchar *key, guint32 *val, GErr
  * Gets a uint64 attribute from the image.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_u64(FuFdtImage *self, const gchar *key, guint64 *val, GError **error)
@@ -284,8 +281,6 @@ fu_fdt_image_get_attr_u64(FuFdtImage *self, const gchar *key, guint64 *val, GErr
  * Gets a stringlist attribute from the image. @val is always `NUL` terminated.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, GError **error)
@@ -348,8 +343,6 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
  * Gets a string attribute from the image. @val is always `NUL` terminated.
  *
  * Returns: %TRUE if @val was set.
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GError **error)
@@ -403,8 +396,6 @@ fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GErro
  * @blob: a #GBytes
  *
  * Sets a attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr(FuFdtImage *self, const gchar *key, GBytes *blob)
@@ -431,8 +422,6 @@ fu_fdt_image_set_attr_format(FuFdtImage *self, const gchar *key, const gchar *fo
  * @value: value to store
  *
  * Sets a uint32 attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_uint32(FuFdtImage *self, const gchar *key, guint32 value)
@@ -456,8 +445,6 @@ fu_fdt_image_set_attr_uint32(FuFdtImage *self, const gchar *key, guint32 value)
  * @value: value to store
  *
  * Sets a uint64 attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_uint64(FuFdtImage *self, const gchar *key, guint64 value)
@@ -481,8 +468,6 @@ fu_fdt_image_set_attr_uint64(FuFdtImage *self, const gchar *key, guint64 value)
  * @value: value to store
  *
  * Sets a string attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_str(FuFdtImage *self, const gchar *key, const gchar *value)
@@ -505,8 +490,6 @@ fu_fdt_image_set_attr_str(FuFdtImage *self, const gchar *key, const gchar *value
  * @value: values to store
  *
  * Sets a stringlist attribute for the image.
- *
- * Since: 1.8.2
  **/
 void
 fu_fdt_image_set_attr_strlist(FuFdtImage *self, const gchar *key, gchar **value)
@@ -528,19 +511,38 @@ fu_fdt_image_set_attr_strlist(FuFdtImage *self, const gchar *key, gchar **value)
 	fu_fdt_image_set_attr_format(self, key, FU_FDT_IMAGE_FORMAT_STRLIST);
 }
 
+/* the value can also be specified as a JSON integer rather than a string */
 static gboolean
-fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
+fu_fdt_image_build_metadata_integer(FwupdJsonObject *json_object, guint64 *value, GError **error)
+{
+	gint64 tmp = 0;
+	if (fwupd_json_object_get_string(json_object, "value", NULL) != NULL)
+		return TRUE;
+	if (!fwupd_json_object_get_integer_with_default(json_object, "value", &tmp, 0, error))
+		return FALSE;
+	*value = (guint64)tmp;
+	return TRUE;
+}
+
+static gboolean
+fu_fdt_image_build_metadata_node(FuFdtImage *self, FwupdJsonObject *json_object, GError **error)
 {
 	const gchar *key;
 	const gchar *format;
-	const gchar *value = xb_node_get_text(n);
+	const gchar *value = fwupd_json_object_get_string(json_object, "value", NULL);
 
-	key = xb_node_get_attr(n, "key");
+	/* an empty value is exported for an empty property */
+	if (value != NULL && value[0] == '\0')
+		value = NULL;
+
+	if (!fwupd_json_object_get_string_optional(json_object, "key", &key, error))
+		return FALSE;
 	if (key == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "key invalid");
 		return FALSE;
 	}
-	format = xb_node_get_attr(n, "format");
+	if (!fwupd_json_object_get_string_optional(json_object, "format", &format, error))
+		return FALSE;
 	if (format == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -554,6 +556,8 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 	/* actually parse values */
 	if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_UINT32) == 0) {
 		guint64 tmp = 0;
+		if (!fu_fdt_image_build_metadata_integer(json_object, &tmp, error))
+			return FALSE;
 		if (value != NULL) {
 			if (!fu_strtoull(value,
 					 &tmp,
@@ -568,6 +572,8 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 	}
 	if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_UINT64) == 0) {
 		guint64 tmp = 0;
+		if (!fu_fdt_image_build_metadata_integer(json_object, &tmp, error))
+			return FALSE;
 		if (value != NULL) {
 			if (!fu_strtoull(value,
 					 &tmp,
@@ -622,16 +628,21 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_fdt_image_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_fdt_image_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuFdtImage *self = FU_FDT_IMAGE(firmware);
-	g_autoptr(GPtrArray) metadata = NULL;
 
-	metadata = xb_node_query(n, "metadata", 0, NULL);
-	if (metadata != NULL) {
-		for (guint i = 0; i < metadata->len; i++) {
-			XbNode *c = g_ptr_array_index(metadata, i);
-			if (!fu_fdt_image_build_metadata_node(self, c, error))
+	if (fwupd_json_object_has_node(json_object, "metadata")) {
+		g_autoptr(FwupdJsonArray) json_metadata =
+		    fwupd_json_object_get_array(json_object, "metadata", error);
+		if (json_metadata == NULL)
+			return FALSE;
+		for (guint i = 0; i < fwupd_json_array_get_size(json_metadata); i++) {
+			g_autoptr(FwupdJsonObject) json_item =
+			    fwupd_json_array_get_object(json_metadata, i, error);
+			if (json_item == NULL)
+				return FALSE;
+			if (!fu_fdt_image_build_metadata_node(self, json_item, error))
 				return FALSE;
 		}
 	}
@@ -676,8 +687,6 @@ fu_fdt_image_class_init(FuFdtImageClass *klass)
  * fu_fdt_image_new:
  *
  * Creates a new #FuFirmware of sub type FDT image
- *
- * Since: 1.8.2
  **/
 FuFirmware *
 fu_fdt_image_new(void)

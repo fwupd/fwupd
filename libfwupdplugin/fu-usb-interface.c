@@ -40,15 +40,29 @@ G_DEFINE_TYPE_EXTENDED(FuUsbInterface,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_interface_codec_iface_init));
 
 static void
-fu_usb_interface_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_usb_interface_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "number", self->iface.bInterfaceNumber);
-	fu_xmlb_builder_insert_kx(bn, "alternate", self->iface.bAlternateSetting);
-	fu_xmlb_builder_insert_kx(bn, "class", self->iface.bInterfaceClass);
-	fu_xmlb_builder_insert_kx(bn, "subclass", self->iface.bInterfaceSubClass);
-	fu_xmlb_builder_insert_kx(bn, "protocol", self->iface.bInterfaceProtocol);
-	fu_xmlb_builder_insert_kx(bn, "interface", self->iface.iInterface);
+	if (self->iface.bInterfaceNumber != 0)
+		fwupd_json_object_add_integer(json_object, "number", self->iface.bInterfaceNumber);
+	if (self->iface.bAlternateSetting != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "alternate",
+					      self->iface.bAlternateSetting);
+	if (self->iface.bInterfaceClass != 0)
+		fwupd_json_object_add_integer(json_object, "class", self->iface.bInterfaceClass);
+	if (self->iface.bInterfaceSubClass != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "subclass",
+					      self->iface.bInterfaceSubClass);
+	if (self->iface.bInterfaceProtocol != 0)
+		fwupd_json_object_add_integer(json_object,
+					      "protocol",
+					      self->iface.bInterfaceProtocol);
+	if (self->iface.iInterface != 0)
+		fwupd_json_object_add_integer(json_object, "interface", self->iface.iInterface);
 }
 
 static gboolean
@@ -150,7 +164,8 @@ fu_usb_interface_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError 
 	}
 
 	/* extra data */
-	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "ExtraData", &str, error))
+		return FALSE;
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
@@ -235,15 +250,17 @@ fu_usb_interface_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCod
  * fu_usb_interface_new:
  *
  * Return value: a new #FuUsbInterface object.
- *
- * Since: 2.0.0
  **/
 FuUsbInterface *
 fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
 {
-	FuUsbInterface *self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
+	g_autoptr(FuUsbInterface) self = NULL;
+
+	g_return_val_if_fail(iface != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* copy the data */
+	self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 	memcpy(&self->iface, /* nocheck:blocked */
 	       iface,
 	       sizeof(struct libusb_interface_descriptor));
@@ -252,7 +269,7 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **e
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
 		g_ptr_array_add(self->endpoints, fu_usb_endpoint_new(&iface->endpoint[i]));
 
-	return FU_USB_INTERFACE(self);
+	return g_steal_pointer(&self);
 }
 
 /**
@@ -262,8 +279,6 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **e
  * Gets the interface number.
  *
  * Return value: The interface ID
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_number(FuUsbInterface *self)
@@ -279,8 +294,6 @@ fu_usb_interface_get_number(FuUsbInterface *self)
  * Gets the alternate setting for the interface.
  *
  * Return value: alt setting, typically zero.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_alternate(FuUsbInterface *self)
@@ -296,8 +309,6 @@ fu_usb_interface_get_alternate(FuUsbInterface *self)
  * Gets the interface class, typically a #FuUsbInterfaceClassCode.
  *
  * Return value: a interface class number, e.g. 0x09 is a USB hub.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_class(FuUsbInterface *self)
@@ -314,8 +325,6 @@ fu_usb_interface_get_class(FuUsbInterface *self)
  * See fu_usb_interface_get_class().
  *
  * Return value: a interface subclass number.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_subclass(FuUsbInterface *self)
@@ -332,8 +341,6 @@ fu_usb_interface_get_subclass(FuUsbInterface *self)
  * See fu_usb_interface_get_class() and fu_usb_interface_get_subclass().
  *
  * Return value: a interface protocol number.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_protocol(FuUsbInterface *self)
@@ -349,8 +356,6 @@ fu_usb_interface_get_protocol(FuUsbInterface *self)
  * Gets the index for the string descriptor.
  *
  * Return value: a string descriptor index.
- *
- * Since: 2.0.0
  **/
 guint8
 fu_usb_interface_get_index(FuUsbInterface *self)
@@ -366,8 +371,6 @@ fu_usb_interface_get_index(FuUsbInterface *self)
  * Gets interface endpoints.
  *
  * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints.
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_usb_interface_get_endpoints(FuUsbInterface *self)

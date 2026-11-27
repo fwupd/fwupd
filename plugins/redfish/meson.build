@@ -15,7 +15,8 @@ endif
 plugin_builtin_redfish = static_library(
   'fu_plugin_redfish',
   rustgen.process(
-    'fu-redfish.rs' # fuzzing
+    'fu-redfish.rs', # fuzzing
+    'fu-redfish-nvidia.rs',
   ),
   sources: [
     'fu-redfish-plugin.c',
@@ -28,6 +29,7 @@ plugin_builtin_redfish = static_library(
     'fu-redfish-hpe-device.c',
     'fu-redfish-multipart-device.c',
     'fu-redfish-network.c',
+    'fu-redfish-nvidia-device.c',
     'fu-redfish-network-device.c',
     'fu-redfish-request.c',
     'fu-redfish-smbios.c', # fuzzing
@@ -45,7 +47,7 @@ plugin_builtins += plugin_builtin_redfish
 
 if get_option('tests')
   install_data(
-    ['tests/redfish-smbios.builder.xml'],
+    ['tests/redfish-smbios.builder.json'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
   )
   install_data(
@@ -98,6 +100,7 @@ if get_option('tests')
       'G_TEST_BUILDDIR': meson.current_build_dir(),
       'G_TEST_SRCDIR': meson.current_source_dir(),
     },
+    timeout: 180,
   )
   e = executable(
     'redfish-network-device-self-test',

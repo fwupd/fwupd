@@ -83,11 +83,6 @@ option(
   description: 'OpenSSL support',
 )
 option(
-  'hsi',
-  type: 'feature',
-  description: 'Host Security Information',
-)
-option(
   'introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',

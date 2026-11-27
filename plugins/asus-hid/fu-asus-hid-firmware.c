@@ -21,13 +21,18 @@ struct _FuAsusHidFirmware {
 G_DEFINE_TYPE(FuAsusHidFirmware, fu_asus_hid_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_asus_hid_firmware_export(FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    FwupdJsonObject *json_object)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kv(bn, "fga", self->fga);
-	fu_xmlb_builder_insert_kv(bn, "product", self->product);
-	fu_xmlb_builder_insert_kv(bn, "version", self->version);
+	if (self->fga != NULL)
+		fwupd_json_object_add_string(json_object, "fga", self->fga);
+	if (self->product != NULL)
+		fwupd_json_object_add_string(json_object, "product", self->product);
+	if (self->version != NULL)
+		fwupd_json_object_add_string(json_object, "version", self->version);
 }
 
 static gboolean

@@ -39,8 +39,6 @@ fu_path_delete(const gchar *path, GError **error)
  * Recursively removes a directory.
  *
  * Returns: %TRUE for success, %FALSE otherwise
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_path_rmtree(const gchar *directory, GError **error)
@@ -110,8 +108,6 @@ fu_path_get_file_list_internal(GPtrArray *files, const gchar *directory, GError 
  * will be returned.
  *
  * Returns: (transfer container) (element-type utf8): array of files, or %NULL for error
- *
- * Since: 1.8.2
  **/
 GPtrArray *
 fu_path_get_files(const gchar *path, GError **error)
@@ -134,8 +130,6 @@ fu_path_get_files(const gchar *path, GError **error)
  * Creates any required directories, including any parent directories.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_path_mkdir(const gchar *dirname, GError **error)
@@ -145,7 +139,7 @@ fu_path_mkdir(const gchar *dirname, GError **error)
 
 	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
 		g_debug("creating path %s", dirname);
-	if (g_mkdir_with_parents(dirname, 0755) == -1) {
+	if (g_mkdir_with_parents(dirname, 0700) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -165,8 +159,6 @@ fu_path_mkdir(const gchar *dirname, GError **error)
  * Creates any required directories, including any parent directories.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.8.2
  **/
 gboolean
 fu_path_mkdir_parent(const gchar *filename, GError **error)
@@ -196,8 +188,6 @@ fu_path_glob_sort_cb(gconstpointer a, gconstpointer b)
  * Any results are sorted. No matching files will set @error.
  *
  * Returns:  (element-type utf8) (transfer container): matching files, or %NULL
- *
- * Since: 1.8.2
  **/
 GPtrArray *
 fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
@@ -237,8 +227,6 @@ fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
  * Returns the resolved absolute file name.
  *
  * Returns: (transfer full): path, or %NULL on error
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_path_make_absolute(const gchar *filename, GError **error)
@@ -286,8 +274,6 @@ fu_path_make_absolute(const gchar *filename, GError **error)
  * Returns the symlink target.
  *
  * Returns: (transfer full): path, or %NULL on error
- *
- * Since: 2.0.0
  **/
 gchar *
 fu_path_get_symlink_target(const gchar *filename, GError **error)
@@ -295,6 +281,8 @@ fu_path_get_symlink_target(const gchar *filename, GError **error)
 	const gchar *target;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	file = g_file_new_for_path(filename);
 	info = g_file_query_info(file,
@@ -332,8 +320,6 @@ fu_path_get_symlink_target(const gchar *filename, GError **error)
  * - non-ASCII filenames
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.2
  **/
 gboolean
 fu_path_verify_safe(const gchar *filename, GError **error)
@@ -406,8 +392,6 @@ fu_path_verify_safe(const gchar *filename, GError **error)
  * and other dangerous characters with underscores.
  *
  * Returns: (transfer full): a newly allocated sanitized string
- *
- * Since: 2.1.4
  **/
 gchar *
 fu_path_sanitize_basename(const gchar *str)

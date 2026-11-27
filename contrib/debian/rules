@@ -17,6 +17,9 @@ CONFARGS =
 
 ifneq ($(CI),)
 	CONFARGS += --werror -Db_coverage=true
+	# fixfilepath remaps the build path to '.' which makes gcov record
+	# relative source paths that gcovr >= 8.7 cannot resolve
+	DEB_BUILD_MAINT_OPTIONS += reproducible=-fixfilepath
 else
 	CONFARGS += -Dsupported_build=enabled
 endif

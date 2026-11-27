@@ -9,7 +9,7 @@
   <!ATTLIST distro id (arch | centos | darwin | debian | fedora | freebsd | ubuntu) #REQUIRED>
 
   <!ELEMENT package EMPTY>
-  <!ATTLIST package only-if (android | arm64 | i386 | mingw64 | s390x | amd64 ) #IMPLIED>
+  <!ATTLIST package only-if (android | arm64 | i386 | mingw64 | s390x | amd64 | snap ) #IMPLIED>
   <!ATTLIST package name CDATA #IMPLIED>
 
   <!ELEMENT control (version?, inclusive*, exclusive*, profile*)>
@@ -74,6 +74,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
     <distro id="debian">
       <control />
@@ -89,6 +90,10 @@
     <distro id="freebsd">
       <package only-if="amd64" />
     </distro>
+  </dependency>
+  <dependency id="ieee-data">
+    <distro id="debian" />
+    <distro id="ubuntu" />
   </dependency>
   <dependency id="7zip">
     <distro id="debian">
@@ -132,6 +137,7 @@
     <distro id="ubuntu">
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="base-devel">
@@ -151,6 +157,9 @@
       <package only-if="arm64" />
       <package only-if="i386" />
       <package only-if="amd64" />
+    </distro>
+    <distro id="ubuntu">
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="noto-fonts-cjk">
@@ -188,6 +197,11 @@
     <distro id="ubuntu">
       <package only-if="amd64" />
       <package only-if="android" />
+    </distro>
+  </dependency>
+  <dependency id="clang-tidy">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="clang-tools">
@@ -248,6 +262,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libcairo-gobject2">
@@ -480,6 +495,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="fontconfig">
@@ -541,6 +557,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
     <distro id="freebsd">
       <package name="gettext" />
@@ -584,6 +601,7 @@
       <package name="gnu-efi" only-if="amd64" />
       <package name="gnu-efi" only-if="i386" />
       <package name="gnu-efi" only-if="arm64" />
+      <package name="gnu-efi" only-if="snap" />
     </distro>
   </dependency>
   <dependency id="git">
@@ -603,6 +621,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libglib2.0-dev">
@@ -631,6 +650,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
     <distro id="freebsd">
       <package name="glib" />
@@ -676,6 +696,7 @@
       </control>
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
     <distro id="freebsd">
       <package only-if="amd64" />
@@ -835,6 +856,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libzstd-dev">
@@ -878,6 +900,7 @@
       </control>
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libicu-dev">
@@ -968,6 +991,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="meson">
@@ -994,6 +1018,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
     <distro id="freebsd">
       <package only-if="amd64" />
@@ -1018,6 +1043,12 @@
     <distro id="ubuntu">
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="rustfmt">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="rustc">
@@ -1042,11 +1073,32 @@
     <distro id="ubuntu">
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="rust-clippy">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="rustup">
     <distro id="ubuntu">
       <package only-if="android" />
+    </distro>
+  </dependency>
+  <dependency id="cargo-rpm-macros">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency id="rust-zerocopy+derive-devel">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency id="rust-libc-devel">
+    <distro id="fedora">
+      <package />
     </distro>
   </dependency>
   <dependency id="libstd-rust-dev">
@@ -1148,6 +1200,7 @@
       <package name="pkgconf" only-if="amd64" />
       <package name="pkgconf" only-if="arm64" />
       <package name="pkgconf" only-if="android" />
+      <package name="pkg-config" only-if="snap" />
     </distro>
     <distro id="centos">
       <package name="pkgconf-pkg-config" only-if="amd64" />
@@ -1200,6 +1253,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libmnl-dev">
@@ -1239,6 +1293,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libmbim-glib-dev">
@@ -1257,6 +1312,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libqrtr-glib-dev">
@@ -1288,6 +1344,7 @@
       </control>
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="python3-pip">
@@ -1347,6 +1404,7 @@
     <distro id="ubuntu">
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
     <distro id="fedora">
       <package only-if="amd64" />
@@ -1390,6 +1448,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
     <distro id="freebsd">
       <package name="py312-pygobject" />
@@ -1491,6 +1550,7 @@
       <package only-if="amd64" />
       <package only-if="arm64" />
       <package only-if="android" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="gi-docgen">
@@ -1511,6 +1571,9 @@
       <package only-if="android" />
     </distro>
     <distro id="debian">
+      <control>
+        <profile>!nodoc</profile>
+      </control>
       <build-target mode="build-indep" />
     </distro>
     <distro id="freebsd">
@@ -1611,6 +1674,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
     <distro id="darwin">
       <package name="sqlite" />
@@ -1652,6 +1716,7 @@
       </control>
       <package name="systemd-dev" only-if="amd64" />
       <package name="systemd-dev" only-if="arm64" />
+      <package name="systemd" only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libsystemd-dev">
@@ -1670,6 +1735,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="shared-mime-info">
@@ -1726,6 +1792,7 @@
       <control />
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="valgrind">
@@ -1797,6 +1864,7 @@
       </control>
       <package only-if="amd64" />
       <package only-if="arm64" />
+      <package only-if="snap" />
     </distro>
   </dependency>
   <dependency id="libgcrypt-devel">
@@ -1815,6 +1883,11 @@
     </distro>
     <distro id="fedora">
       <package name="ShellCheck" only-if="amd64" />
+    </distro>
+  </dependency>
+  <dependency id="pre-commit">
+    <distro id="ubuntu">
+      <package only-if="amd64" />
     </distro>
   </dependency>
   <dependency id="shfmt">
@@ -1857,6 +1930,12 @@
       <package name="msitools" only-if="mingw64" />
     </distro>
   </dependency>
+  <dependency id="xvfb-run">
+    <distro id="fedora">
+      <!-- for running wine in CI -->
+      <package name="xvfb-run" only-if="mingw64" />
+    </distro>
+  </dependency>
   <dependency id="libinotify">
     <distro id="freebsd">
       <package only-if="amd64" />
@@ -1865,5 +1944,55 @@
   <dependency id="build-essential">
     <distro id="debian" />
     <distro id="ubuntu" />
+  </dependency>
+  <dependency id="curl">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="fwupd-signed">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="fwupd-unsigned">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="libcurl4-openssl-dev">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="libgnutls28-dev">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="libpango1.0-dev">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="modemmanager">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="python3-cairo">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="shim-signed">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
+  </dependency>
+  <dependency id="uuid-dev">
+    <distro id="ubuntu">
+      <package only-if="snap" />
+    </distro>
   </dependency>
 </dependencies>

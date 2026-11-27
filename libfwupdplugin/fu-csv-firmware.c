@@ -42,8 +42,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCsvFirmware, fu_csv_firmware, FU_TYPE_FIRMWARE)
  * * `$idx` sets the firmware index
  * * `$version` sets the firmware version
  * * `$version_raw` sets the raw firmware version
- *
- * Since: 1.9.3
  **/
 void
 fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id)
@@ -62,8 +60,6 @@ fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id)
  * Gets the column ID for a specific index position.
  *
  * Returns: a string, or %NULL if not found
- *
- * Since: 1.9.3
  **/
 const gchar *
 fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx)
@@ -84,8 +80,6 @@ fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx)
  * Gets the column index for a given column ID.
  *
  * Returns: position, or %G_MAXUINT if unset
- *
- * Since: 1.9.3
  **/
 guint
 fu_csv_firmware_get_idx_for_column_id(FuCsvFirmware *self, const gchar *column_id)
@@ -107,8 +101,6 @@ fu_csv_firmware_get_idx_for_column_id(FuCsvFirmware *self, const gchar *column_i
  * @write_column_ids: boolean
  *
  * Sets if we should write the column ID headers on export.
- *
- * Since: 2.0.0
  **/
 void
 fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids)
@@ -125,8 +117,6 @@ fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_
  * Gets if we should write the column ID headers on export.
  *
  * Returns: boolean.
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self)
@@ -220,26 +210,28 @@ fu_csv_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_csv_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_csv_firmware_export(FuFirmware *firmware,
+		       FuFirmwareExportFlags flags,
+		       FwupdJsonObject *json_object)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kb(bn, "write_column_ids", priv->write_column_ids);
+	fwupd_json_object_add_boolean(json_object, "write_column_ids", priv->write_column_ids);
 }
 
 static gboolean
-fu_csv_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_csv_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 
 	/* optional properties */
-	tmp = xb_node_query_text(n, "write_column_ids", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->write_column_ids, error))
-			return FALSE;
-	}
+	if (!fwupd_json_object_get_boolean_with_default(json_object,
+							"write_column_ids",
+							&priv->write_column_ids,
+							TRUE,
+							error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -282,8 +274,6 @@ fu_csv_firmware_class_init(FuCsvFirmwareClass *klass)
  * fu_csv_firmware_new:
  *
  * Creates a new #FuFirmware
- *
- * Since: 1.9.3
  **/
 FuFirmware *
 fu_csv_firmware_new(void)

@@ -20,8 +20,6 @@ G_BEGIN_DECLS
  * @pos: bit position, where 0 is the least significant byte
  *
  * Sets a bit in a value using a bitwise operation.
- *
- * Since: 2.0.0
  **/
 #define FU_BIT_SET(val, pos) ((val) |= (1ull << (pos))) /* nocheck:blocked */
 
@@ -31,8 +29,6 @@ G_BEGIN_DECLS
  * @pos: bit position, where 0 is the least significant byte
  *
  * Clears a bit in a value using a bitwise operation.
- *
- * Since: 2.0.0
  **/
 #define FU_BIT_CLEAR(val, pos) ((val) &= ~(1ull << (pos))) /* nocheck:blocked */
 
@@ -44,8 +40,6 @@ G_BEGIN_DECLS
  * Checks a bit in a value using a bitwise operation.
  *
  * Returns: %TRUE if the bit is set.
- *
- * Since: 2.0.0
  **/
 #define FU_BIT_IS_SET(val, pos) ((val) & (1ull << (pos)))
 
@@ -57,8 +51,6 @@ G_BEGIN_DECLS
  * Checks a bit in a value using a bitwise operation.
  *
  * Returns: %TRUE if the bit is clear.
- *
- * Since: 2.0.0
  **/
 #define FU_BIT_IS_CLEAR(val, pos) (!FU_BIT_IS_SET(val, (pos)))
 
@@ -66,8 +58,6 @@ G_BEGIN_DECLS
  * FU_KB:
  *
  * The number of bytes in 1 KiB.
- *
- * Since: 2.1.2
  **/
 #define FU_KB (1ull << 10)
 
@@ -75,8 +65,6 @@ G_BEGIN_DECLS
  * FU_MB:
  *
  * The number of bytes in 1 MiB.
- *
- * Since: 2.1.2
  **/
 #define FU_MB (1ull << 20)
 
@@ -84,8 +72,6 @@ G_BEGIN_DECLS
  * FU_GB:
  *
  * The number of bytes in 1 GiB.
- *
- * Since: 2.1.2
  **/
 #define FU_GB (1ull << 30)
 
@@ -152,17 +138,13 @@ gboolean
 fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **perror)
     G_GNUC_NON_NULL(1);
 
+gboolean
+fu_gtype_from_name(const gchar *name, GType *gtype, GType parent_gtype, GError **error)
+    G_GNUC_NON_NULL(1);
+
 GByteArray *
 fu_common_get_random(guint bufsz, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gchar *
 fu_common_get_random_string(guint length, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-
-void
-fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)
-    G_GNUC_NON_NULL(1);
-void
-fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
-void
-fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

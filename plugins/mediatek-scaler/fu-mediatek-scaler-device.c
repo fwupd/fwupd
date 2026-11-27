@@ -110,7 +110,7 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 	/* read into tmp buffer */
 	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
 	if (proxy == NULL)
-		return FALSE;
+		return NULL;
 	if (!fu_i2c_device_read(proxy, buf, sizeof(buf), error))
 		return NULL;
 
@@ -742,12 +742,15 @@ fu_mediatek_scaler_device_write_chunk_cb(FuDevice *device, gpointer user_data, G
 
 	/* verify the sent data chunk */
 	if (!fu_mediatek_scaler_device_check_sent_info(self, helper->chk, helper->sent_sz, error)) {
-		/* restore the data size counter */
+		g_autoptr(GError) error_local = NULL;
+
+		/* restore the data size counter so the chunk can be retried */
 		if (!fu_mediatek_scaler_device_set_data_fast_forward(
 			self,
 			helper->sent_sz - fu_chunk_get_data_sz(helper->chk),
-			error))
-			return FALSE;
+			&error_local))
+			g_debug("failed to restore data size counter: %s", error_local->message);
+		return FALSE;
 	}
 
 	/* ff to reset the checksum */

@@ -211,7 +211,7 @@ fu_legion_hid2_iap_device_wait_for_complete_cb(FuDevice *device, gpointer user_d
 
 	st_res = fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), st_req, error);
 	if (st_res == NULL) {
-		g_prefix_error_literal(error, "failed to verify code: ");
+		g_prefix_error_literal(error, "failed to wait for completion: ");
 		return FALSE;
 	}
 	value = fu_struct_legion_iap_tlv_get_value(st_res, NULL);

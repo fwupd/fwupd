@@ -99,6 +99,10 @@ fu_pixart_tp_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(section), stream, offset, flags, error))
 			return FALSE;
 		update_type = fu_pixart_tp_section_get_update_type(section);
+
+		/* a child device finds its own section using the update type */
+		fu_firmware_set_idx(FU_FIRMWARE(section), update_type);
+
 		if (update_type == FU_PIXART_TP_UPDATE_TYPE_FW_SECTION) {
 			if (!fu_pixart_tp_section_has_flag(section,
 							   FU_PIXART_TP_FIRMWARE_FLAG_VALID)) {
@@ -122,9 +126,6 @@ fu_pixart_tp_firmware_parse(FuFirmware *firmware,
 			}
 			saw_param = TRUE;
 			fu_firmware_set_id(FU_FIRMWARE(section), "parameter");
-
-		} else if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE) {
-			fu_firmware_set_id(FU_FIRMWARE(section), "tf-force");
 		}
 
 		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(section), error))
@@ -160,12 +161,17 @@ fu_pixart_tp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 }
 
 static void
-fu_pixart_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pixart_tp_firmware_export(FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     FwupdJsonObject *json_object)
 {
 	FuPixartTpFirmware *self = FU_PIXART_TP_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "header_ver", self->header_ver);
-	fu_xmlb_builder_insert_kx(bn, "ic_part_id", self->ic_part_id);
-	fu_xmlb_builder_insert_kx(bn, "flash_sectors", self->flash_sectors);
+	if (self->header_ver != 0)
+		fwupd_json_object_add_integer(json_object, "header_ver", self->header_ver);
+	if (self->ic_part_id != 0)
+		fwupd_json_object_add_integer(json_object, "ic_part_id", self->ic_part_id);
+	if (self->flash_sectors != 0)
+		fwupd_json_object_add_integer(json_object, "flash_sectors", self->flash_sectors);
 }
 
 static GByteArray *
@@ -230,29 +236,46 @@ fu_pixart_tp_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_pixart_tp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_pixart_tp_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuPixartTpFirmware *self = FU_PIXART_TP_FIRMWARE(firmware);
-	const gchar *tmp;
-	guint64 tmp64 = 0;
+	gint64 tmp64 = G_MAXINT64;
 
 	/* simple properties */
-	tmp = xb_node_query_text(n, "header_ver", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "header_ver")) {
+		if (!fwupd_json_object_get_integer(json_object, "header_ver", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid header_ver");
+			return FALSE;
+		}
 		self->header_ver = (guint16)tmp64;
 	}
-	tmp = xb_node_query_text(n, "ic_part_id", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "ic_part_id")) {
+		if (!fwupd_json_object_get_integer(json_object, "ic_part_id", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid ic_part_id");
+			return FALSE;
+		}
 		self->ic_part_id = (guint16)tmp64;
 	}
-	tmp = xb_node_query_text(n, "flash_sectors", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "flash_sectors")) {
+		if (!fwupd_json_object_get_integer(json_object, "flash_sectors", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid flash_sectors");
+			return FALSE;
+		}
 		self->flash_sectors = (guint16)tmp64;
 	}
 

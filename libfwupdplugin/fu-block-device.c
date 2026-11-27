@@ -40,7 +40,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", 0x1234);
 		fu_device_add_instance_u16(device, "DEV", 0x5678);
 		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						 NULL,
 						 "BLOCK",
 						 "VEN",
@@ -59,16 +59,21 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		/* copy the VID and PID, and reconstruct compatible IDs */
 		if (!fu_device_probe(usb_device, error))
 			return FALSE;
-		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(usb_device));
-		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(usb_device));
+		fu_device_add_instance_u16(device, "USB\\VEN", fu_device_get_vid(usb_device));
+		fu_device_add_instance_u16(device, "USB\\DEV", fu_device_get_pid(usb_device));
 		if (!fu_device_build_instance_id_full(device,
-						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 						      error,
 						      "BLOCK",
-						      "VEN",
+						      "USB\\VEN",
 						      NULL))
 			return FALSE;
-		if (!fu_device_build_instance_id(device, error, "BLOCK", "VEN", "DEV", NULL))
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "BLOCK",
+						 "USB\\VEN",
+						 "USB\\DEV",
+						 NULL))
 			return FALSE;
 		fu_device_incorporate(device,
 				      usb_device,
@@ -130,8 +135,6 @@ fu_block_device_ioctl_sense_cb(FuIoctl *self,
  * Performs a SCSI IO command with no parameters.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cdbsz, GError **error)
@@ -145,8 +148,13 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -187,6 +195,10 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -207,8 +219,6 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
  * Performs a SCSI IO read command.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
@@ -227,8 +237,14 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -273,6 +289,11 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -293,8 +314,6 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
  * Performs a SCSI IO write command.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
@@ -313,8 +332,14 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
 	/* include these when generating the emulation event */
@@ -359,6 +384,11 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	/* success */
 	return TRUE;
 #else
+	g_return_val_if_fail(FU_IS_BLOCK_DEVICE(self), FALSE);
+	g_return_val_if_fail(cdb != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

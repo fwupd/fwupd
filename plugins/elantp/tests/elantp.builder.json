@@ -1,0 +1,7 @@
+{
+  "gtype": "FuElantpFirmware",
+  "ic_type": "0x16",
+  "iap_addr": "0xe00",
+  "module_id": "0x2",
+  "data": "aGVsbG8gd29ybGQ="
+}

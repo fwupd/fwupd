@@ -1,4 +1,3 @@
-hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 plugins += {
@@ -8,6 +7,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiDmar"']
 
 plugin_builtin_acpi_dmar = static_library(
   'fu_plugin_acpi_dmar',
+  rustgen.process('fu-acpi-dmar.rs'),
   sources: [
     'fu-acpi-dmar-plugin.c',
     'fu-acpi-dmar.c',

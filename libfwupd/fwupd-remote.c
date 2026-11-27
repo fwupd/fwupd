@@ -552,12 +552,9 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
-	/* not changed */
-	if (g_strcmp0(priv->metadata_uri, metadata_uri) == 0)
-		return;
-
 	/* save this so we can export the object as a GVariant */
-	g_set_str(&priv->metadata_uri, metadata_uri);
+	if (!g_set_str(&priv->metadata_uri, metadata_uri))
+		return;
 
 	/* generate the signature URI too */
 	g_clear_pointer(&priv->metadata_uri_sig, g_free);

@@ -48,8 +48,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSrecFirmware, fu_srec_firmware, FU_TYPE_FIRMWARE)
  * of operations, rather than a simple linear image with filled holes.
  *
  * Returns: (transfer none) (element-type FuSrecFirmwareRecord): records
- *
- * Since: 1.3.2
  **/
 GPtrArray *
 fu_srec_firmware_get_records(FuSrecFirmware *self)
@@ -65,8 +63,6 @@ fu_srec_firmware_get_records(FuSrecFirmware *self)
  * @addr_min: address, or 0x0 to disable
  *
  * Sets the minimum address allowed. This may be useful to ignore a bootloader section.
- *
- * Since: 1.9.3
  **/
 void
 fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min)
@@ -82,8 +78,6 @@ fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min)
  * @addr_max: address, or 0x0 to disable
  *
  * Sets the maximum address allowed. This may be useful to ignore a signature.
- *
- * Since: 1.9.3
  **/
 void
 fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max)
@@ -114,8 +108,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSrecFirmwareRecord, fu_srec_firmware_record_free
  * Returns a single firmware record
  *
  * Returns: (transfer full): record
- *
- * Since: 1.3.2
  **/
 FuSrecFirmwareRecord *
 fu_srec_firmware_record_new(guint ln, FuFirmwareSrecRecordKind kind, guint32 addr)
@@ -134,6 +126,7 @@ fu_srec_firmware_record_dup(const FuSrecFirmwareRecord *rcd)
 	FuSrecFirmwareRecord *dest;
 	g_return_val_if_fail(rcd != NULL, NULL);
 	dest = fu_srec_firmware_record_new(rcd->ln, rcd->kind, rcd->addr);
+	g_byte_array_unref(dest->buf);
 	dest->buf = g_byte_array_ref(rcd->buf);
 	return dest;
 }
@@ -144,8 +137,6 @@ fu_srec_firmware_record_dup(const FuSrecFirmwareRecord *rcd)
  * Gets a specific type.
  *
  * Return value: a #GType
- *
- * Since: 1.6.1
  **/
 GType
 fu_srec_firmware_record_get_type(void)
@@ -406,6 +397,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	gboolean got_hdr = FALSE;
 	guint16 data_cnt = 0;
+	gboolean got_data = FALSE;
 	guint32 addr32_last = 0;
 	guint32 img_address = 0;
 	g_autoptr(GBytes) img_bytes = NULL;
@@ -499,7 +491,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 				guint32 len_hole = rcd->addr - addr32_last;
 
 				/* fill any holes, but only up to 1Mb to avoid a DoS */
-				if (addr32_last > 0 && len_hole > 1 * FU_MB) {
+				if (got_data && len_hole > 1 * FU_MB) {
 					g_set_error(
 					    error,
 					    FWUPD_ERROR,
@@ -509,9 +501,9 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 					return FALSE;
 				}
-				if (addr32_last > 0x0 && len_hole > 1) {
+				if (got_data && len_hole > 0) {
 					g_debug("filling address 0x%08x to 0x%08x at line %u",
-						addr32_last + 1,
+						addr32_last,
 						addr32_last + len_hole - 1,
 						rcd->ln);
 					for (guint i = 0; i < len_hole; i++)
@@ -520,9 +512,10 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 
 				/* add data */
 				g_byte_array_append(outbuf, rcd->buf->data, rcd->buf->len);
-				if (img_address == 0x0)
+				if (!got_data)
 					img_address = rcd->addr;
 				addr32_last = rcd->addr + rcd->buf->len;
+				got_data = TRUE;
 				if (addr32_last < rcd->addr) {
 					g_set_error(error,
 						    FWUPD_ERROR,
@@ -688,8 +681,6 @@ fu_srec_firmware_class_init(FuSrecFirmwareClass *klass)
  * fu_srec_firmware_new:
  *
  * Creates a new #FuFirmware of type SREC
- *
- * Since: 1.3.2
  **/
 FuFirmware *
 fu_srec_firmware_new(void)

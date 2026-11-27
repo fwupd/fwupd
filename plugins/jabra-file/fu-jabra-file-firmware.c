@@ -18,10 +18,13 @@ struct _FuJabraFileFirmware {
 G_DEFINE_TYPE(FuJabraFileFirmware, fu_jabra_file_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_jabra_file_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_jabra_file_firmware_export(FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      FwupdJsonObject *json_object)
 {
 	FuJabraFileFirmware *self = FU_JABRA_FILE_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "dfu_pid", self->dfu_pid);
+	if (self->dfu_pid != 0)
+		fwupd_json_object_add_integer(json_object, "dfu_pid", self->dfu_pid);
 }
 
 static gboolean

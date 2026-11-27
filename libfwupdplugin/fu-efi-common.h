@@ -49,8 +49,10 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_NON_NULL(1, 2);
 void
-fu_efi_timestamp_export(FuStructEfiTime *st, XbBuilderNode *bn) G_GNUC_NON_NULL(1, 2);
-void
-fu_efi_timestamp_build(FuStructEfiTime *st, XbNode *n) G_GNUC_NON_NULL(1, 2);
+fu_efi_timestamp_export(FuStructEfiTime *st, FwupdJsonObject *json_object) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_efi_timestamp_build(FuStructEfiTime *st,
+		       FwupdJsonObject *json_object,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

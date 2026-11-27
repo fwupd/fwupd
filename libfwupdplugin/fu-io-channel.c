@@ -46,8 +46,6 @@ G_DEFINE_TYPE(FuIOChannel, fu_io_channel, G_TYPE_OBJECT)
  * Gets the file descriptor for the device.
  *
  * Returns: fd, or -1 for not open.
- *
- * Since: 1.2.2
  **/
 gint
 fu_io_channel_unix_get_fd(FuIOChannel *self)
@@ -64,8 +62,6 @@ fu_io_channel_unix_get_fd(FuIOChannel *self)
  * Closes the file descriptor for the device if open.
  *
  * Returns: %TRUE if all the FD was closed.
- *
- * Since: 1.2.2
  **/
 gboolean
 fu_io_channel_shutdown(FuIOChannel *self, GError **error)
@@ -90,8 +86,6 @@ fu_io_channel_shutdown(FuIOChannel *self, GError **error)
  * Seeks the file descriptor to a specific offset.
  *
  * Returns: %TRUE if all the seek worked.
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_io_channel_seek(FuIOChannel *self, gsize offset, GError **error)
@@ -152,8 +146,6 @@ fu_io_channel_flush_input(FuIOChannel *self, GError **error)
  * Writes bytes to the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: %TRUE if all the bytes was written
- *
- * Since: 1.2.2
  **/
 gboolean
 fu_io_channel_write_bytes(FuIOChannel *self,
@@ -164,6 +156,10 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 {
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(bytes, &bufsz);
+
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(bytes != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_io_channel_write_raw(self, buf, bufsz, timeout_ms, flags, error);
 }
 
@@ -196,8 +192,6 @@ fu_io_channel_write_stream_cb(const guint8 *buf, gsize bufsz, gpointer user_data
  * Writes the stream to the fd, chucking when required.
  *
  * Returns: %TRUE if all the bytes was written
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_io_channel_write_stream(FuIOChannel *self,
@@ -226,8 +220,6 @@ fu_io_channel_write_stream(FuIOChannel *self,
  * Writes bytes to the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: %TRUE if all the bytes was written
- *
- * Since: 1.3.2
  **/
 gboolean
 fu_io_channel_write_byte_array(FuIOChannel *self,
@@ -236,6 +228,10 @@ fu_io_channel_write_byte_array(FuIOChannel *self,
 			       FuIoChannelFlags flags,
 			       GError **error)
 {
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	return fu_io_channel_write_raw(self, buf->data, buf->len, timeout_ms, flags, error);
 }
 
@@ -251,8 +247,6 @@ fu_io_channel_write_byte_array(FuIOChannel *self,
  * Writes bytes to the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: %TRUE if all the bytes was written
- *
- * Since: 1.2.2
  **/
 gboolean
 fu_io_channel_write_raw(FuIOChannel *self,
@@ -364,8 +358,6 @@ fu_io_channel_write_raw(FuIOChannel *self,
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: a #GBytes (which may be bigger than @count), or %NULL for error
- *
- * Since: 1.2.2
  **/
 GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
@@ -374,8 +366,12 @@ fu_io_channel_read_bytes(FuIOChannel *self,
 			 FuIoChannelFlags flags,
 			 GError **error)
 {
-	g_autoptr(GByteArray) buf =
-	    fu_io_channel_read_byte_array(self, count, timeout_ms, flags, error);
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_io_channel_read_byte_array(self, count, timeout_ms, flags, error);
 	if (buf == NULL)
 		return NULL;
 	return g_bytes_new(buf->data, buf->len);
@@ -392,8 +388,6 @@ fu_io_channel_read_bytes(FuIOChannel *self,
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: (transfer full): a #GByteArray (which may be bigger than @count), or %NULL for error
- *
- * Since: 1.3.2
  **/
 GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
@@ -410,6 +404,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	g_autoptr(GByteArray) buf_tmp = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* a temp buf of 1k or smaller size */
 	g_byte_array_set_size(buf_tmp, count >= 0 ? MIN(count, 1024) : 1024);
@@ -543,8 +538,6 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
  * Returns: a #GBytes, or %NULL for error
- *
- * Since: 1.2.2
  **/
 gboolean
 fu_io_channel_read_raw(FuIOChannel *self,
@@ -558,6 +551,7 @@ fu_io_channel_read_raw(FuIOChannel *self,
 	g_autoptr(GByteArray) tmp = NULL;
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	tmp = fu_io_channel_read_byte_array(self, bufsz, timeout_ms, flags, error);
 	if (tmp == NULL)
@@ -598,8 +592,6 @@ fu_io_channel_init(FuIOChannel *self)
  * Creates a new object to write and read from.
  *
  * Returns: a #FuIOChannel
- *
- * Since: 1.2.2
  **/
 FuIOChannel *
 fu_io_channel_unix_new(gint fd)
@@ -619,8 +611,6 @@ fu_io_channel_unix_new(gint fd)
  * Creates a new object to write and/or read from.
  *
  * Returns: a #FuIOChannel
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, GError **error)
@@ -673,8 +663,6 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, G
  * Creates a new virtual object to write and/or read from.
  *
  * Returns: a #FuIOChannel
- *
- * Since: 2.0.0
  **/
 FuIOChannel *
 fu_io_channel_virtual_new(const gchar *name, GError **error)

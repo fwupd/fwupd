@@ -17,7 +17,3 @@ FuNvmeDevice *
 fu_nvme_device_new_from_blob(FuContext *ctx, const guint8 *buf, gsize sz, GError **error);
 gboolean
 fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **error);
-FuNvmeOpalFlags
-fu_nvme_device_get_opal_flags(FuNvmeDevice *self);
-void
-fu_nvme_device_set_opal_flags(FuNvmeDevice *self, FuNvmeOpalFlags opal_flags);

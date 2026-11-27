@@ -52,13 +52,13 @@ fu_amd_kria_persistent_firmware_init(FuAmdKriaPersistentFirmware *self)
 static void
 fu_amd_kria_persistent_firmware_export(FuFirmware *firmware,
 				       FuFirmwareExportFlags flags,
-				       XbBuilderNode *bn)
+				       FwupdJsonObject *json_object)
 {
 	FuAmdKriaPersistentFirmware *self = FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kv(bn,
-				  "last_booted",
-				  self->last_booted == FU_AMD_KRIA_BOOT_IMAGE_ID_A ? "A" : "B");
+	fwupd_json_object_add_string(json_object,
+				     "last_booted",
+				     self->last_booted == FU_AMD_KRIA_BOOT_IMAGE_ID_A ? "A" : "B");
 }
 
 static void

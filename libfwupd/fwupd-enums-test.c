@@ -56,7 +56,7 @@ fwupd_enums_func(void)
 	}
 
 	/* bitfield */
-	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_IS_PROGRAMMER_TARGET; i *= 2) {
 		const gchar *tmp = fwupd_device_flag_to_string(i);
 		if (tmp == NULL)
 			continue;

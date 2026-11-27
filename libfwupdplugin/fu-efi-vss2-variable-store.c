@@ -179,8 +179,6 @@ fu_efi_vss2_variable_store_class_init(FuEfiVss2VariableStoreClass *klass)
  * Creates an empty VSS variable store.
  *
  * Returns: a #FuFirmware
- *
- * Since: 2.0.17
  **/
 FuFirmware *
 fu_efi_vss2_variable_store_new(void)

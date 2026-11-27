@@ -335,7 +335,7 @@ fu_amd_afc_write_func(void)
 static void
 fu_amd_afc_form_func(void)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 	g_autoptr(FuAmdAfcForm) form = g_new0(FuAmdAfcForm, 1);
 
 	form->id = 0x1234;
@@ -343,50 +343,50 @@ fu_amd_afc_form_func(void)
 	form->visited = TRUE;
 	form->settings = g_array_new(FALSE, FALSE, sizeof(guint));
 	form->refs = g_array_new(FALSE, FALSE, sizeof(guint16));
-	fu_amd_afc_form_export(form, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+	fu_amd_afc_form_export(form, FU_FIRMWARE_EXPORT_FLAG_NONE, json_object);
 
-	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), >, 0);
 }
 
 static void
 fu_amd_afc_option_func(void)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 	g_autoptr(FuAmdAfcOption) option = g_new0(FuAmdAfcOption, 1);
 
 	option->name = g_strdup("Enabled");
 	option->value = 0x1;
-	fu_amd_afc_option_export(option, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+	fu_amd_afc_option_export(option, FU_FIRMWARE_EXPORT_FLAG_NONE, json_object);
 
-	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), >, 0);
 }
 
 static void
 fu_amd_afc_varstore_func(void)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 	g_autoptr(FuAmdAfcVarstore) varstore = g_new0(FuAmdAfcVarstore, 1);
 
 	varstore->id = 0x4321;
 	varstore->data = g_bytes_new_static("test", 4);
-	fu_amd_afc_varstore_export(varstore, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+	fu_amd_afc_varstore_export(varstore, FU_FIRMWARE_EXPORT_FLAG_NONE, json_object);
 
-	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), >, 0);
 }
 
 static void
 fu_amd_afc_pending_func(void)
 {
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("firmware");
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
 	FuAmdAfcPending *pending = g_new0(FuAmdAfcPending, 1);
 
 	/* no autoptr cleanup defined */
 	pending->setting = 0x20;
 	pending->value = g_strdup("Enabled");
-	fu_amd_afc_pending_export(pending, FU_FIRMWARE_EXPORT_FLAG_NONE, bn);
+	fu_amd_afc_pending_export(pending, FU_FIRMWARE_EXPORT_FLAG_NONE, json_object);
 	fu_amd_afc_pending_free(pending);
 
-	g_assert_cmpint(xb_builder_node_get_children(bn)->len, >, 0);
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), >, 0);
 }
 
 int

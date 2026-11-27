@@ -1,0 +1,40 @@
+{
+  "gtype": "FuElanfpFirmware",
+  "format_version": "0x123",
+  "firmware": [
+    {
+      "gtype": "FuCfuOffer",
+      "idx": "0x72",
+      "version_raw": "0x1234",
+      "product_id": "0x5678",
+      "bank": "0x1"
+    },
+    {
+      "gtype": "FuCfuOffer",
+      "idx": "0x73",
+      "version_raw": "0x1234",
+      "product_id": "0x5678",
+      "bank": "0x2"
+    },
+    {
+      "gtype": "FuCfuPayload",
+      "idx": "0x74",
+      "chunks": [
+        {
+          "data": "aGVsbG8gd29ybGQ=",
+          "addr": "0x8001234"
+        }
+      ]
+    },
+    {
+      "gtype": "FuCfuPayload",
+      "idx": "0x75",
+      "chunks": [
+        {
+          "data": "aGVsbG8gd29ybGQ=",
+          "addr": "0x8001234"
+        }
+      ]
+    }
+  ]
+}

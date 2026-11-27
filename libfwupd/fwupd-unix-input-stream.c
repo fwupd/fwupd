@@ -117,7 +117,7 @@ fwupd_unix_input_stream_seek(FwupdInputStream *stream,
  *
  * Returns: (transfer full): a #FwupdUnixInputStream
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdUnixInputStream *
 fwupd_unix_input_stream_new(gint fd, gboolean close_fd, GError **error)
@@ -191,7 +191,7 @@ fwupd_unix_input_stream_new(gint fd, gboolean close_fd, GError **error)
  *
  * Returns: (transfer full): a #FwupdInputStream, or %NULL on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 FwupdUnixInputStream *
 fwupd_unix_input_stream_new_from_filename(const gchar *filename, GError **error)
@@ -223,7 +223,7 @@ fwupd_unix_input_stream_new_from_filename(const gchar *filename, GError **error)
  *
  * Returns: a file descriptor, or -1 on error
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gint
 fwupd_unix_input_stream_get_fd(FwupdUnixInputStream *stream)
@@ -241,7 +241,7 @@ fwupd_unix_input_stream_get_fd(FwupdUnixInputStream *stream)
  *
  * Returns: %TRUE if sealed
  *
- * Since: 2.2.1
+ * Since: 2027.0
  **/
 gboolean
 fwupd_unix_input_stream_require_seal(FwupdUnixInputStream *stream, GError **error)

@@ -14,7 +14,6 @@ export FORCE_COLUMNS=100
 
 group "Update system and install dependencies"
 dnf install -y dist/*.rpm
-dnf install -y gcovr
 endgroup
 
 group "Enable test devices"

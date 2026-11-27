@@ -12,7 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
-#include "fu-coswid-firmware.h"
+#include "fu-coswid-collection.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-json-firmware.h"
@@ -46,12 +46,19 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWAR
 #define FU_PEFILE_FIRMWARE_SYMBOLS_MAX 1000000
 
 static void
-fu_pefile_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pefile_firmware_export(FuFirmware *firmware,
+			  FuFirmwareExportFlags flags,
+			  FwupdJsonObject *json_object)
 {
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);
 	FuPefileFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kv(bn, "authenticode_hash", priv->authenticode_hash);
-	fu_xmlb_builder_insert_kv(bn, "subsystem", fu_coff_subsystem_to_string(priv->subsystem_id));
+	const gchar *subsystem_str = fu_coff_subsystem_to_string(priv->subsystem_id);
+	if (priv->authenticode_hash != NULL)
+		fwupd_json_object_add_string(json_object,
+					     "authenticode_hash",
+					     priv->authenticode_hash);
+	if (subsystem_str != NULL)
+		fwupd_json_object_add_string(json_object, "subsystem", subsystem_str);
 }
 
 static gboolean
@@ -164,7 +171,7 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 
 	/* create new firmware */
 	if (g_strcmp0(sect_id, ".sbom") == 0) {
-		img = fu_linear_firmware_new(FU_TYPE_COSWID_FIRMWARE);
+		img = fu_coswid_collection_new();
 	} else if (g_strcmp0(sect_id, ".sbat") == 0 || g_strcmp0(sect_id, ".sbata") == 0 ||
 		   g_strcmp0(sect_id, ".sbatl") == 0) {
 		img = fu_csv_firmware_new();
@@ -218,8 +225,14 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 					      fu_struct_pe_coff_section_get_size_of_raw_data(st));
 	}
 
+	/* add image */
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error)) {
+		g_prefix_error(error, "failed to add %s: ", sect_id);
+		return FALSE;
+	}
+
 	/* success */
-	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
+	return TRUE;
 }
 
 static gboolean
@@ -652,6 +665,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_SBATLEVEL_SECTION);
 	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_JSON_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_COSWID_COLLECTION);
 	fu_firmware_set_images_max(firmware_class, 100);
 	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }
@@ -660,8 +674,6 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
  * fu_pefile_firmware_new:
  *
  * Creates a new #FuPefileFirmware
- *
- * Since: 1.8.10
  **/
 FuFirmware *
 fu_pefile_firmware_new(void)

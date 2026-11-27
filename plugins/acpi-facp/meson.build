@@ -1,4 +1,3 @@
-hsi or subdir_done()
 host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
@@ -8,6 +7,7 @@ plugins += {
 
 plugin_builtin_acpi_facp = static_library(
   'fu_plugin_acpi_facp',
+  rustgen.process('fu-acpi-facp.rs'),
   sources: [
     'fu-acpi-facp-plugin.c',
     'fu-acpi-facp.c',

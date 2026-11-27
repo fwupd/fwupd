@@ -21,5 +21,7 @@ FuFirmware *
 fu_linear_firmware_new(GType image_gtype);
 GType
 fu_linear_firmware_get_image_gtype(FuLinearFirmware *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+void
+fu_linear_firmware_set_image_gtype(FuLinearFirmware *self, GType image_gtype) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

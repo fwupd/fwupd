@@ -24,14 +24,22 @@ struct _FuUefiUpdateInfo {
 G_DEFINE_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, FU_TYPE_FIRMWARE)
 
 static void
-fu_uefi_update_info_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_uefi_update_info_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuUefiUpdateInfo *self = FU_UEFI_UPDATE_INFO(firmware);
-	fu_xmlb_builder_insert_kv(bn, "guid", self->guid);
-	fu_xmlb_builder_insert_kv(bn, "capsule_fn", self->capsule_fn);
-	fu_xmlb_builder_insert_kx(bn, "capsule_flags", self->capsule_flags);
-	fu_xmlb_builder_insert_kx(bn, "hw_inst", self->hw_inst);
-	fu_xmlb_builder_insert_kv(bn, "status", fu_uefi_update_info_status_to_string(self->status));
+	const gchar *status_str = fu_uefi_update_info_status_to_string(self->status);
+	if (self->guid != NULL)
+		fwupd_json_object_add_string(json_object, "guid", self->guid);
+	if (self->capsule_fn != NULL)
+		fwupd_json_object_add_string(json_object, "capsule_fn", self->capsule_fn);
+	if (self->capsule_flags != 0)
+		fwupd_json_object_add_integer(json_object, "capsule_flags", self->capsule_flags);
+	if (self->hw_inst != 0)
+		fwupd_json_object_add_integer(json_object, "hw_inst", (gint64)self->hw_inst);
+	if (status_str != NULL)
+		fwupd_json_object_add_string(json_object, "status", status_str);
 }
 
 void
@@ -65,32 +73,40 @@ fu_uefi_update_info_set_status(FuUefiUpdateInfo *self, FuUefiUpdateInfoStatus st
 }
 
 static gboolean
-fu_uefi_update_info_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_uefi_update_info_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuUefiUpdateInfo *self = FU_UEFI_UPDATE_INFO(firmware);
 	const gchar *tmp;
 
-	tmp = xb_node_query_text(n, "guid", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "guid", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_uefi_update_info_set_guid(self, tmp);
-	tmp = xb_node_query_text(n, "capsule_fn", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "capsule_fn", &tmp, error))
+		return FALSE;
 	if (tmp != NULL)
 		fu_uefi_update_info_set_capsule_fn(self, tmp);
-	tmp = xb_node_query_text(n, "capsule_flags", NULL);
-	if (tmp != NULL) {
-		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "capsule_flags")) {
+		gint64 tmp64 = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "capsule_flags", &tmp64, error))
 			return FALSE;
+		if (tmp64 < 0 || tmp64 > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid capsule_flags");
+			return FALSE;
+		}
 		fu_uefi_update_info_set_capsule_flags(self, tmp64);
 	}
-	tmp = xb_node_query_text(n, "hw_inst", NULL);
-	if (tmp != NULL) {
-		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+	if (fwupd_json_object_has_node(json_object, "hw_inst")) {
+		gint64 tmp64 = G_MAXINT64;
+		if (!fwupd_json_object_get_integer(json_object, "hw_inst", &tmp64, error))
 			return FALSE;
 		fu_uefi_update_info_set_hw_inst(self, tmp64);
 	}
-	tmp = xb_node_query_text(n, "status", NULL);
+	if (!fwupd_json_object_get_string_optional(json_object, "status", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		self->status = fu_uefi_update_info_status_from_string(tmp);
 		if (self->status == FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN) {

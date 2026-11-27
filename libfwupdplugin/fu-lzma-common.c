@@ -20,8 +20,6 @@
  * Decompresses a LZMA stream.
  *
  * Returns: (transfer full): decompressed data
- *
- * Since: 2.0.7
  **/
 GBytes *
 fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
@@ -31,6 +29,8 @@ fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
 	lzma_stream strm = LZMA_STREAM_INIT;
 	g_autofree guint8 *tmpbuf = g_malloc0(tmpbufsz);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	strm.next_in = g_bytes_get_data(blob, NULL);
 	strm.avail_in = g_bytes_get_size(blob);
@@ -79,8 +79,6 @@ fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
  * Compresses into a LZMA stream.
  *
  * Returns: (transfer full): compressed data
- *
- * Since: 1.9.8
  **/
 GBytes *
 fu_lzma_compress_bytes(GBytes *blob, GError **error)
@@ -90,6 +88,8 @@ fu_lzma_compress_bytes(GBytes *blob, GError **error)
 	lzma_stream strm = LZMA_STREAM_INIT;
 	g_autofree guint8 *tmpbuf = g_malloc0(tmpbufsz);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	strm.next_in = g_bytes_get_data(blob, NULL);
 	strm.avail_in = g_bytes_get_size(blob);

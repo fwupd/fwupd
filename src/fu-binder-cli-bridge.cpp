@@ -12,7 +12,12 @@
 #include <android/binder_auto_utils.h>
 #include <android/binder_process.h>
 
+#include <chrono>
+#include <condition_variable>
 #include <dlfcn.h>
+#include <memory>
+#include <mutex>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -20,6 +25,9 @@
 #include "fu-binder-common.h"
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
+
+#define FU_BINDER_SERVICE_NAME		   "org.freedesktop.fwupd.IFwupd/default"
+#define FU_BINDER_SERVICE_WAIT_TIMEOUT_SEC 60
 
 /* define the listener object: converts incoming Binder events back into
  * FwupdClient signals so they flow through the same event path as the D-Bus
@@ -107,7 +115,7 @@ class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener
 AIBinder *
 fu_binder_cli_bridge_get_service_handle(GError **error)
 {
-	void *handle = dlopen("libbinder_ndk.so", RTLD_NOW | RTLD_LOCAL);
+	static void *handle = dlopen("libbinder_ndk.so", RTLD_NOW | RTLD_LOCAL);
 	if (handle == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -116,9 +124,62 @@ fu_binder_cli_bridge_get_service_handle(GError **error)
 		return NULL;
 	}
 
+	ABinderProcess_startThreadPool();
+	auto check_svc = (AIBinder * (*)(const char *))
+	    dlsym(handle, "AServiceManager_checkService");
+	auto is_declared = (bool (*)(const char *))dlsym(handle, "AServiceManager_isDeclared");
+	auto wait_svc = (AIBinder * (*)(const char *))
+	    dlsym(handle, "AServiceManager_waitForService");
 	auto get_svc = (AIBinder * (*)(const char *)) dlsym(handle, "AServiceManager_getService");
-	AIBinder *binder = get_svc ? get_svc("org.freedesktop.fwupd.IFwupd/default") : NULL;
-	dlclose(handle);
+	AIBinder *binder = NULL;
+	bool wait_timed_out = false;
+
+	/* fast path if the daemon is already running */
+	if (check_svc != NULL)
+		binder = check_svc(FU_BINDER_SERVICE_NAME);
+
+	/* trigger on-demand lazy startup when VINTF-declared, bounded so a broken daemon
+	 * cannot hang indefinitely while allowing slow USB/wireless peripheral coldplugs */
+	if (binder == NULL && wait_svc != NULL &&
+	    (is_declared == NULL || is_declared(FU_BINDER_SERVICE_NAME))) {
+		struct WaitState {
+			std::mutex mtx;
+			std::condition_variable cv;
+			AIBinder *result = NULL;
+			bool done = false;
+			bool timed_out = false;
+		};
+		auto state = std::make_shared<WaitState>();
+		std::thread([state, wait_svc]() {
+			AIBinder *res = wait_svc(FU_BINDER_SERVICE_NAME);
+			bool release = false;
+			{
+				std::lock_guard<std::mutex> lock(state->mtx);
+				if (state->timed_out) {
+					release = true;
+				} else {
+					state->result = res;
+					state->done = true;
+				}
+			}
+			if (release && res != NULL)
+				AIBinder_decStrong(res);
+			state->cv.notify_one();
+		}).detach();
+
+		std::unique_lock<std::mutex> lock(state->mtx);
+		if (state->cv.wait_for(lock,
+				       std::chrono::seconds(FU_BINDER_SERVICE_WAIT_TIMEOUT_SEC),
+				       [&state]() { return state->done; })) {
+			binder = state->result;
+		} else {
+			state->timed_out = true;
+			wait_timed_out = true;
+		}
+	}
+
+	if (binder == NULL && !wait_timed_out && get_svc != NULL)
+		binder = get_svc(FU_BINDER_SERVICE_NAME);
 
 	if (binder == NULL) {
 		g_set_error(error,
@@ -356,6 +417,47 @@ fu_binder_cli_bridge_get_plugins(AIBinder *binder, GError **error)
 		g_ptr_array_add(plugins, plugin);
 	}
 	return g_steal_pointer(&plugins);
+}
+
+GPtrArray *
+fu_binder_cli_bridge_get_protocols(AIBinder *binder, GError **error)
+{
+	AIBinder_incStrong(binder);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder);
+	auto service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd interface");
+		return NULL;
+	}
+
+	std::vector<std::string> aidl_protocols;
+	auto status = service->getProtocols(&aidl_protocols);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Binder transaction failed: %s",
+			    status.getDescription().c_str());
+		return NULL;
+	}
+
+	g_autoptr(GPtrArray) protocols = g_ptr_array_new_with_free_func(g_free);
+	for (const auto &p : aidl_protocols)
+		g_ptr_array_add(protocols, g_strdup(p.c_str()));
+	return g_steal_pointer(&protocols);
 }
 
 GPtrArray *
@@ -607,6 +709,68 @@ fu_binder_cli_bridge_install(AIBinder *binder_handle,
 			    FWUPD_ERROR,
 			    status.getStatus(),
 			    "Install failed: %s",
+			    status.getDescription().c_str());
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_binder_cli_bridge_write_blob(AIBinder *binder_handle,
+				const char *id,
+				int fd,
+				const char *filename_hint,
+				const char *version,
+				GError **error)
+{
+	AIBinder_incStrong(binder_handle);
+	::ndk::SpAIBinder spBinder;
+	spBinder.set(binder_handle);
+	std::shared_ptr<aidl_fwupd::IFwupd> service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+	std::optional<std::string> filename_hint_opt;
+	std::optional<std::string> version_opt;
+
+	if (service == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to cast Binder to IFwupd");
+		return FALSE;
+	}
+
+	::ndk::ScopedFileDescriptor sfd(dup(fd));
+	if (sfd.get() < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to duplicate file descriptor for Binder");
+		return FALSE;
+	}
+
+	/* the daemon only needs the basename */
+	if (filename_hint != NULL) {
+		g_autofree gchar *basename = g_path_get_basename(filename_hint);
+		filename_hint_opt = std::string(basename);
+	}
+	if (version != NULL)
+		version_opt = std::string(version);
+
+	auto status = service->installBlob(std::string(id), sfd, filename_hint_opt, version_opt);
+	if (!status.isOk()) {
+		if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+			const char *msg = status.getMessage();
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    status.getServiceSpecificError(),
+					    msg != NULL ? msg : "unknown daemon error");
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    status.getStatus(),
+			    "Install blob failed: %s",
 			    status.getDescription().c_str());
 		return FALSE;
 	}

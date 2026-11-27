@@ -11,6 +11,7 @@
 #include "fu-pixart-tp-haptic-device.h"
 #include "fu-pixart-tp-section.h"
 #include "fu-pixart-tp-struct.h"
+#include "fu-pixart-tp-tf-struct.h"
 
 struct _FuPixartTpHapticDevice {
 	FuDevice parent_instance;
@@ -25,6 +26,8 @@ G_DEFINE_TYPE(FuPixartTpHapticDevice, fu_pixart_tp_haptic_device, FU_TYPE_DEVICE
 #define FU_PIXART_TP_TF_RETRY_INTERVAL_MS 10
 
 #define FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN 64
+
+#define FU_PIXART_TP_TF_WRITE_CHUNK_SZ 32
 
 static void
 fu_pixart_tp_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -577,10 +580,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_TOUCH_CONTROL,
 							 FU_PIXART_TP_TF_TOUCH_CONTROL_DISABLE,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to disable touch");
+		g_prefix_error_literal(error, "failed to disable touch: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -590,10 +590,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_SET_UPGRADE_MODE,
 							 FU_PIXART_TP_TF_UPGRADE_MODE_ENTER_BOOT,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to enter bootloader mode");
+		g_prefix_error_literal(error, "failed to enter bootloader mode: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100);
@@ -604,10 +601,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 							 FU_PIXART_TP_TF_CMD_SET_UPGRADE_MODE,
 							 FU_PIXART_TP_TF_UPGRADE_MODE_ERASE_FLASH,
 							 error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to send erase flash command");
+		g_prefix_error_literal(error, "failed to send erase flash command: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 2000);
@@ -617,7 +611,7 @@ fu_pixart_tp_haptic_device_tf_write_firmware(FuPixartTpHapticDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       32,
+					       FU_PIXART_TP_TF_WRITE_CHUNK_SZ,
 					       error);
 	if (chunks == NULL)
 		return FALSE;
@@ -694,25 +688,6 @@ fu_pixart_tp_haptic_device_tf_write_firmware_process(FuPixartTpHapticDevice *sel
 
 	if (!fu_pixart_tp_haptic_device_tf_exit_upgrade_mode(self, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
-
-	if (g_bytes_get_size(blob) < 128) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid firmware file: size too small for header check");
-		return FALSE;
-	}
-	for (guint i = 6; i < 128; i++) {
-		const guint8 *data = g_bytes_get_data(blob, NULL);
-		if (data[i] != 0) {
-			g_set_error_literal(
-			    error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid firmware file, non-zero data in header region");
-			return FALSE;
-		}
-	}
 
 	return fu_pixart_tp_haptic_device_tf_write_firmware(self,
 							    send_interval,
@@ -862,13 +837,46 @@ fu_pixart_tp_haptic_device_prepare_firmware(FuDevice *device,
 					    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_pixart_tp_firmware_new();
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(FuInputStream) img_stream = NULL;
 
 	/* parse the TP FWHD firmware */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	/* find the TF_FORCE section image by ID */
-	return fu_firmware_get_image_by_id(firmware, "tf-force", error);
+	/* find the TF_FORCE section image by update type */
+	img = fu_firmware_get_image_by_idx(firmware, FU_PIXART_TP_UPDATE_TYPE_TF_FORCE, error);
+	if (img == NULL)
+		return NULL;
+	if (fu_firmware_get_size(img) > (gsize)G_MAXUINT16 * FU_PIXART_TP_TF_WRITE_CHUNK_SZ) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware blob too large for the TF protocol: 0x%zx bytes",
+			    fu_firmware_get_size(img));
+		return NULL;
+	}
+
+	/* sanity check the header */
+	img_stream = fu_firmware_get_stream(img, error);
+	if (img_stream == NULL)
+		return NULL;
+	for (guint i = 6; i < 128; i++) {
+		guint8 data = 0;
+		if (!fu_input_stream_read_u8(img_stream, i, &data, error))
+			return NULL;
+		if (data != 0x0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid firmware file, non-zero data in header @0x%x",
+				    i);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&img);
 }
 
 static gboolean
@@ -1036,11 +1044,11 @@ fu_pixart_tp_haptic_device_init(FuPixartTpHapticDevice *self)
 	fu_device_add_instance_str(FU_DEVICE(self), "COMPONENT", "tf");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_logical_id(FU_DEVICE(self), "tf");
-	fu_device_set_name(FU_DEVICE(self), "Touchpad Haptic");
+	fu_device_set_name(FU_DEVICE(self), "Haptic");
 	fu_device_set_summary(FU_DEVICE(self), "Force/haptic controller for touchpad");
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_DEVICE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_SECTION);
-	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 }
 
 FuPixartTpHapticDevice *

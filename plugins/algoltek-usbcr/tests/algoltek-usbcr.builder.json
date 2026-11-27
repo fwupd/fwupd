@@ -1,0 +1,6 @@
+{
+  "gtype": "FuAlgoltekUsbcrFirmware",
+  "version_raw": "0x258",
+  "boot_ver": "0x208",
+  "emmc_ver": "0x401"
+}

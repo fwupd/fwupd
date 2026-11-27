@@ -38,42 +38,66 @@ enum { PROP_0, PROP_CONTEXT, PROP_LAST };
 G_DEFINE_TYPE(FuAmdAfcState, fu_amd_afc_state, FU_TYPE_FIRMWARE)
 
 static void
-fu_amd_afc_state_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_amd_afc_state_export(FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			FwupdJsonObject *json_object)
 {
 	FuAmdAfcState *self = FU_AMD_AFC_STATE(firmware);
 	if (self->strings->len > 0) {
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "strings", NULL);
+		g_autoptr(FwupdJsonArray) json_strings = fwupd_json_array_new();
 		for (guint i = 0; i < self->strings->len; i++) {
 			const gchar *tmp = g_ptr_array_index(self->strings, i);
-			fu_xmlb_builder_insert_kv(bc, "string", tmp);
+			if (tmp != NULL)
+				fwupd_json_array_add_string(json_strings, tmp);
 		}
+		fwupd_json_object_add_array(json_object, "strings", json_strings);
 	}
-	for (guint i = 0; i < self->forms->len; i++) {
-		FuAmdAfcForm *form = g_ptr_array_index(self->forms, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "form", NULL);
-		fu_amd_afc_form_export(form, flags, bc);
+	if (self->forms->len > 0) {
+		g_autoptr(FwupdJsonArray) json_forms = fwupd_json_array_new();
+		for (guint i = 0; i < self->forms->len; i++) {
+			FuAmdAfcForm *form = g_ptr_array_index(self->forms, i);
+			g_autoptr(FwupdJsonObject) json_form = fwupd_json_object_new();
+			fu_amd_afc_form_export(form, flags, json_form);
+			fwupd_json_array_add_object(json_forms, json_form);
+		}
+		fwupd_json_object_add_array(json_object, "forms", json_forms);
 	}
-	for (guint i = 0; i < self->varstores->len; i++) {
-		FuAmdAfcVarstore *varstore = g_ptr_array_index(self->varstores, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "varstore", NULL);
-		fu_amd_afc_varstore_export(varstore, flags, bc);
+	if (self->varstores->len > 0) {
+		g_autoptr(FwupdJsonArray) json_varstores = fwupd_json_array_new();
+		for (guint i = 0; i < self->varstores->len; i++) {
+			FuAmdAfcVarstore *varstore = g_ptr_array_index(self->varstores, i);
+			g_autoptr(FwupdJsonObject) json_varstore = fwupd_json_object_new();
+			fu_amd_afc_varstore_export(varstore, flags, json_varstore);
+			fwupd_json_array_add_object(json_varstores, json_varstore);
+		}
+		fwupd_json_object_add_array(json_object, "varstores", json_varstores);
 	}
-	for (guint i = 0; i < self->settings->len; i++) {
-		FuAmdAfcSetting *setting = g_ptr_array_index(self->settings, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "setting", NULL);
-		fu_amd_afc_setting_export(setting, flags, bc);
+	if (self->settings->len > 0) {
+		g_autoptr(FwupdJsonArray) json_settings = fwupd_json_array_new();
+		for (guint i = 0; i < self->settings->len; i++) {
+			FuAmdAfcSetting *setting = g_ptr_array_index(self->settings, i);
+			g_autoptr(FwupdJsonObject) json_setting = fwupd_json_object_new();
+			fu_amd_afc_setting_export(setting, flags, json_setting);
+			fwupd_json_array_add_object(json_settings, json_setting);
+		}
+		fwupd_json_object_add_array(json_object, "settings", json_settings);
 	}
-	for (guint i = 0; i < self->pendings->len; i++) {
-		FuAmdAfcPending *pending = g_ptr_array_index(self->pendings, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "pending", NULL);
-		fu_amd_afc_pending_export(pending, flags, bc);
+	if (self->pendings->len > 0) {
+		g_autoptr(FwupdJsonArray) json_pendings = fwupd_json_array_new();
+		for (guint i = 0; i < self->pendings->len; i++) {
+			FuAmdAfcPending *pending = g_ptr_array_index(self->pendings, i);
+			g_autoptr(FwupdJsonObject) json_pending = fwupd_json_object_new();
+			fu_amd_afc_pending_export(pending, flags, json_pending);
+			fwupd_json_array_add_object(json_pendings, json_pending);
+		}
+		fwupd_json_object_add_array(json_object, "pendings", json_pendings);
 	}
 	if (self->formset_name != NULL)
-		fu_xmlb_builder_insert_kv(bn, "formset_name", self->formset_name);
+		fwupd_json_object_add_string(json_object, "formset_name", self->formset_name);
 	if (self->language != NULL)
-		fu_xmlb_builder_insert_kv(bn, "language", self->language);
+		fwupd_json_object_add_string(json_object, "language", self->language);
 	if (self->revision != 0)
-		fu_xmlb_builder_insert_kx(bn, "revision", self->revision);
+		fwupd_json_object_add_integer(json_object, "revision", self->revision);
 }
 
 FuContext *

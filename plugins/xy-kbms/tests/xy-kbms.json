@@ -1,0 +1,17 @@
+{
+  "name": "XY KBMS",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "0c9d6b62e6344614bb4431ca3c02c6f472e8cdcbae3fb001047b2acf549a1f49-xykbms-pinmap-uk-4.cab",
+      "emulation-url": "cbe60af03b0a42db2370f95e131452de21e3d2004b4c98f299721700943f07d1-xykbms-pinmap-uk-4.zip",
+      "components": [
+        {
+          "guids": [
+            "e5be179d-8408-5e7e-8df3-1a7b6dae3659"
+          ]
+        }
+      ]
+    }
+  ]
+}

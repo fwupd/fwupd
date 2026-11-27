@@ -34,14 +34,19 @@ G_DEFINE_TYPE(FuBcm57xxFirmware, fu_bcm57xx_firmware, FU_TYPE_FIRMWARE)
 #define BCM_CODE_DIRECTORY_ADDR_APE 0x07
 
 static void
-fu_bcm57xx_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_bcm57xx_firmware_export(FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   FwupdJsonObject *json_object)
 {
 	FuBcm57xxFirmware *self = FU_BCM57XX_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "vendor", self->vendor);
-	fu_xmlb_builder_insert_kx(bn, "model", self->model);
+	if (self->vendor != 0)
+		fwupd_json_object_add_integer(json_object, "vendor", self->vendor);
+	if (self->model != 0)
+		fwupd_json_object_add_integer(json_object, "model", self->model);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
-		fu_xmlb_builder_insert_kb(bn, "is_backup", self->is_backup);
-		fu_xmlb_builder_insert_kx(bn, "phys_addr", self->phys_addr);
+		fwupd_json_object_add_boolean(json_object, "is_backup", self->is_backup);
+		if (self->phys_addr != 0)
+			fwupd_json_object_add_integer(json_object, "phys_addr", self->phys_addr);
 	}
 }
 
@@ -128,7 +133,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "stage1 offset invalid, got: 0x%x, expected 0x%x",
-			    (guint)stage1_sz,
+			    (guint)stage1_off,
 			    (guint)BCM_NVRAM_STAGE1_BASE);
 		return NULL;
 	}
@@ -467,17 +472,27 @@ _g_bytes_new_sized(gsize sz)
 }
 
 static gboolean
-fu_bcm57xx_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_bcm57xx_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuBcm57xxFirmware *self = FU_BCM57XX_FIRMWARE(firmware);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* two simple properties */
-	tmp = xb_node_query_text_as_uint(n, "vendor", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"vendor",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->vendor = tmp;
-	tmp = xb_node_query_text_as_uint(n, "model", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"model",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		self->model = tmp;
 
 	/* success */

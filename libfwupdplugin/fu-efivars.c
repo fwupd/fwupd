@@ -34,8 +34,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfivars, fu_efivars, G_TYPE_OBJECT);
  * Gets the well-known path store.
  *
  * Returns: (transfer none): a #FuPathStore, or %NULL if not set
- *
- * Since: 2.1.1
  **/
 FuPathStore *
 fu_efivars_get_path_store(FuEfivars *self)
@@ -53,8 +51,6 @@ fu_efivars_get_path_store(FuEfivars *self)
  * Determines if the kernel supports EFI variables
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_supported(FuEfivars *self, GError **error)
@@ -81,8 +77,6 @@ fu_efivars_supported(FuEfivars *self, GError **error)
  * Removes a variable from NVRAM, returning an error if it does not exist.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_delete(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
@@ -111,8 +105,6 @@ fu_efivars_delete(FuEfivars *self, const gchar *guid, const gchar *name, GError 
  * Removes a group of variables from NVRAM
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_delete_with_glob(FuEfivars *self,
@@ -143,8 +135,6 @@ fu_efivars_delete_with_glob(FuEfivars *self,
  * Test if a variable exists
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name)
@@ -173,8 +163,6 @@ fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name)
  * Gets the data from a UEFI variable in NVRAM
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_get_data(FuEfivars *self,
@@ -210,8 +198,6 @@ fu_efivars_get_data(FuEfivars *self,
  * Gets the attributes from a UEFI variable in NVRAM
  *
  * Returns: %TRUE on success
- *
- * Since: 2.1.1
  **/
 gboolean
 fu_efivars_get_attrs(FuEfivars *self,
@@ -245,8 +231,6 @@ fu_efivars_get_attrs(FuEfivars *self,
  * Gets the data from a UEFI variable in NVRAM
  *
  * Returns: (transfer full): a #GBytes, or %NULL
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_efivars_get_data_bytes(FuEfivars *self,
@@ -278,8 +262,6 @@ fu_efivars_get_data_bytes(FuEfivars *self,
  * no names matching the GUID.
  *
  * Returns: (transfer container) (element-type utf8): array of names
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_efivars_get_names(FuEfivars *self, const gchar *guid, GError **error)
@@ -307,8 +289,6 @@ fu_efivars_get_names(FuEfivars *self, const gchar *guid, GError **error)
  * Returns a file monitor for a specific key.
  *
  * Returns: (transfer full): a #GFileMonitor, or %NULL for an error
- *
- * Since: 2.0.0
  **/
 GFileMonitor *
 fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
@@ -318,6 +298,7 @@ fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GE
 	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (efivars_class->get_monitor == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
@@ -335,8 +316,6 @@ fu_efivars_get_monitor(FuEfivars *self, const gchar *guid, const gchar *name, GE
  * kernel as some (hopefully small) variables are hidden from userspace.
  *
  * Returns: total allocated size of all visible variables, or %G_MAXUINT64 on error
- *
- * Since: 2.0.0
  **/
 guint64
 fu_efivars_space_used(FuEfivars *self, GError **error)
@@ -361,8 +340,6 @@ fu_efivars_space_used(FuEfivars *self, GError **error)
  * Gets the free size available for new EFI variables, as reported from QueryVariableInfo.
  *
  * Returns: free space in bytes, or %G_MAXUINT64 on error
- *
- * Since: 2.0.12
  **/
 guint64
 fu_efivars_space_free(FuEfivars *self, GError **error)
@@ -392,8 +369,6 @@ fu_efivars_space_free(FuEfivars *self, GError **error)
  * Sets the data to a UEFI variable in NVRAM
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_data(FuEfivars *self,
@@ -431,8 +406,6 @@ fu_efivars_set_data(FuEfivars *self,
  * Sets the data to a UEFI variable in NVRAM
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_data_bytes(FuEfivars *self,
@@ -464,8 +437,6 @@ fu_efivars_set_data_bytes(FuEfivars *self,
  * Determines if secure boot was enabled
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_get_secure_boot(FuEfivars *self, FuEfiSecureBootState *state, GError **error)
@@ -564,8 +535,6 @@ fu_efivars_set_secure_boot(FuEfivars *self, gboolean enabled, GError **error)
  * Gets the index of the `BootNext` variable.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error)
@@ -604,8 +573,6 @@ fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error)
  * Sets the index of the `BootNext` variable.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_boot_next(FuEfivars *self, guint16 idx, GError **error)
@@ -634,8 +601,6 @@ fu_efivars_set_boot_next(FuEfivars *self, guint16 idx, GError **error)
  * Gets the index of the `BootCurrent` variable.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_get_boot_current(FuEfivars *self, guint16 *idx, GError **error)
@@ -695,8 +660,6 @@ fu_efivars_set_boot_current(FuEfivars *self, guint16 idx, GError **error)
  * Gets the indexes of the `BootOrder` variable.
  *
  * Returns: (transfer full) (element-type guint16): boot order, or %NULL on error
- *
- * Since: 2.0.0
  **/
 GArray *
 fu_efivars_get_boot_order(FuEfivars *self, GError **error)
@@ -738,8 +701,6 @@ fu_efivars_get_boot_order(FuEfivars *self, GError **error)
  * Sets the index of the `BootNext` variable.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error)
@@ -804,8 +765,6 @@ fu_efivars_build_boot_order(FuEfivars *self, GError **error, ...)
  * If @target does not exist on the volume then a dummy file is created.
  *
  * Returns: %TRUE on success
- *
- * Since: 2.0.6
  **/
 gboolean
 fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
@@ -876,8 +835,6 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
  * Gets the raw data of the `BootXXXX` variable.
  *
  * Returns: (transfer full): boot data
- *
- * Since: 2.0.0
  **/
 GBytes *
 fu_efivars_get_boot_data(FuEfivars *self, guint16 idx, GError **error)
@@ -898,8 +855,6 @@ fu_efivars_get_boot_data(FuEfivars *self, guint16 idx, GError **error)
  * Sets the raw data of the `BootXXXX` variable. If @blob is %NULL then the boot entry is deleted.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **error)
@@ -929,8 +884,6 @@ fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **er
  * Gets the loadopt data of the `BootXXXX` variable.
  *
  * Returns: (transfer full): a #FuEfiLoadOption, or %NULL
- *
- * Since: 2.0.0
  **/
 FuEfiLoadOption *
 fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
@@ -966,8 +919,6 @@ fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
  * Sets the loadopt data of the `BootXXXX` variable.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_efivars_set_boot_entry(FuEfivars *self, guint16 idx, FuEfiLoadOption *entry, GError **error)
@@ -992,8 +943,6 @@ fu_efivars_set_boot_entry(FuEfivars *self, guint16 idx, FuEfiLoadOption *entry, 
  * Gets the loadopt data for all the entries listed in `BootOrder`.
  *
  * Returns: (transfer full) (element-type FuEfiLoadOption): boot data
- *
- * Since: 2.0.0
  **/
 GPtrArray *
 fu_efivars_get_boot_entries(FuEfivars *self, GError **error)

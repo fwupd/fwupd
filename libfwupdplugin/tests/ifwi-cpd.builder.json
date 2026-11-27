@@ -1,0 +1,18 @@
+{
+  "gtype": "FuIfwiCpdFirmware",
+  "idx": "0x1234",
+  "header_version": "0x1",
+  "entry_version": "0x2",
+  "firmware": [
+    {
+      "gtype": "FuIfwiCpdImage",
+      "id": "one",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuIfwiCpdImage",
+      "id": "two",
+      "data": "aGVsbG8gd29ybGQ="
+    }
+  ]
+}

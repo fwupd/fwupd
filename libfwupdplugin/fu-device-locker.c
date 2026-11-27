@@ -71,8 +71,6 @@ fu_device_locker_init(FuDeviceLocker *self)
  * and allows the caller to properly handle the error.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.4.0
  **/
 gboolean
 fu_device_locker_close(FuDeviceLocker *self, GError **error)
@@ -111,8 +109,6 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
  * Think of this object as the device ownership.
  *
  * Returns: a device locker, or %NULL if the @open_func failed.
- *
- * Since: 1.0.0
  **/
 FuDeviceLocker *
 fu_device_locker_new(FuDevice *device, GError **error)
@@ -141,8 +137,6 @@ fu_device_locker_new(FuDevice *device, GError **error)
  * Think of this object as the device ownership.
  *
  * Returns: a device locker, or %NULL if the @open_func failed.
- *
- * Since: 1.0.0
  **/
 FuDeviceLocker *
 fu_device_locker_new_full(FuDevice *device,

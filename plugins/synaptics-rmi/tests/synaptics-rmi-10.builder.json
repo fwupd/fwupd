@@ -1,0 +1,12 @@
+{
+  "gtype": "FuSynapticsRmiFirmware",
+  "kind": "0x10",
+  "product_id": "Example",
+  "firmware": [
+    {
+      "gtype": "FuFirmware",
+      "id": "ui",
+      "data": "ZGF2ZQ=="
+    }
+  ]
+}

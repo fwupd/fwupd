@@ -77,7 +77,7 @@ repos:
             plugins/uefi-capsule/tests/test\.bmp|
             src/tests/auth/firmware\.xml\.gz|
             src/tests/history_v[12]\.db|
-            src/tests/sys/devices/pci0000_00/0000_00_14\.0/usb1/1-1/descriptors
+            src/tests/sys/devices/pci0000_00/0000_00_14\.0/usb1/(1-[12]/)?descriptors
           )$
       - id: check-potfiles
         name: check for missing translated files from potfiles
@@ -146,18 +146,18 @@ repos:
         entry: ./contrib/ci/check-dep-versions.py
         files: ^(meson\.build|contrib/ci/dependencies\.xml)$
         pass_filenames: false
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.49.1
-    hooks:
-      - id: markdownlint
-        args: ["--fix", "--ignore", ".github"]
-        types: [markdown]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
       - id: gitleaks
   - repo: local
     hooks:
+      - id: check-rust
+        name: check rust files for common issues
+        language: system
+        entry: ./fwupbuild check-rust
+        pass_filenames: false
+        types: [rust]
       - id: rustfmt
         name: rustfmt
         entry: rustfmt --check

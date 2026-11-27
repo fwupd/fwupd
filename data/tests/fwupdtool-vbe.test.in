@@ -1,0 +1,3 @@
+[Test]
+Type=session-exclusive
+Exec=python3 @installedtestsdir@/fwupdtool-vbe.py

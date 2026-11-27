@@ -1,0 +1,3 @@
+# Realtek Scaler (AIO or external display, updated over the DP AUX channel)
+[DRM\VEN_DEL&DEV_C927]
+Plugin = realtek_scaler

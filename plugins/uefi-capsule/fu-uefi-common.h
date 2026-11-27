@@ -24,8 +24,16 @@ fu_uefi_get_built_app_path(FuPathStore *pstore,
 			   GError **error);
 gboolean
 fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *height, GError **error);
-guint64
-fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name);
+gboolean
+fu_uefi_read_file_as_uint64(const gchar *path,
+			    const gchar *attr_name,
+			    guint64 *value,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_uefi_read_file_as_uint32(const gchar *path,
+			    const gchar *attr_name,
+			    guint32 *value,
+			    GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_uefi_esp_target_verify(const gchar *fn_src, const gchar *fn_dst);
 gboolean

@@ -149,8 +149,6 @@ fu_pkcs7_class_init(FuPkcs7Class *klass)
  * Creates a new #FuPkcs7.
  *
  * Returns: (transfer full): object
- *
- * Since: 2.0.9
  **/
 FuPkcs7 *
 fu_pkcs7_new(void)

@@ -1,0 +1,17 @@
+{
+  "gtype": "FuZipFirmware",
+  "firmware": [
+    {
+      "gtype": "FuZipFile",
+      "compression": "deflate",
+      "id": "hello.txt",
+      "data": "aGVsbG8gd29ybGQ="
+    },
+    {
+      "gtype": "FuZipFile",
+      "compression": "deflate",
+      "id": "goodbye.txt",
+      "data": "Z29vZGJ5ZQ=="
+    }
+  ]
+}

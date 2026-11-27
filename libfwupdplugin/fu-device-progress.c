@@ -75,8 +75,6 @@ fu_device_progress_init(FuDeviceProgress *self)
  * back to 0%.
  *
  * Returns: a #FuDeviceProgress
- *
- * Since: 1.8.11
  **/
 FuDeviceProgress *
 fu_device_progress_new(FuDevice *device, FuProgress *progress)

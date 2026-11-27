@@ -507,7 +507,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 		failure_cnt++;
 		g_debug("programming failed: retrying (%u)", failure_cnt);
-		fu_progress_step_done(progress);
+		fu_progress_reset(fu_progress_get_child(progress));
 	}
 
 	fu_progress_step_done(progress);
@@ -626,7 +626,7 @@ static void
 fu_emmc_device_init(FuEmmcDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
-	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MEMORY);
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MEDIA_FLASH);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);

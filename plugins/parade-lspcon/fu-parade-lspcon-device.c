@@ -176,24 +176,37 @@ fu_parade_lspcon_device_poll_register(FuParadeLspconDevice *self,
 static gboolean
 fu_parade_lspcon_device_flash_read(FuParadeLspconDevice *self,
 				   guint32 base_address,
-				   guint8 *data,
-				   const gsize len,
+				   guint8 *buf,
+				   gsize bufsz,
 				   FuProgress *progress,
 				   GError **error)
 {
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE(self);
-	gsize offset = 0;
+	g_autoptr(GPtrArray) chunks = NULL;
 
-	while (offset < len) {
-		/* page 7 reads always start from the base of the mapped window- we'll
-		 * read the whole page then pull out the parts we care about, using the
-		 * full page everywhere except possibly in the first and last reads */
+	/* page 7 reads always start from the base of the mapped window */
+	if (base_address % 256 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "flash read address 0x%x is not page aligned",
+			    base_address);
+		return FALSE;
+	}
+
+	chunks =
+	    fu_chunk_array_mutable_new(buf, bufsz, base_address, FU_CHUNK_PAGESZ_NONE, 256, error);
+	if (chunks == NULL)
+		return FALSE;
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 page_data[256] = {0x0};
-		guint8 page_data_start = base_address & 0xFF;
-		gsize page_data_take = MIN((gssize)len, 256 - page_data_start);
 		g_autoptr(FuParadeLspconI2cAddressGuard) guard = NULL;
 
-		if (!fu_parade_lspcon_device_map_page(self, base_address, error))
+		/* read the whole page then copy out the part we care about */
+		if (!fu_parade_lspcon_device_map_page(self, fu_chunk_get_address(chk), error))
 			return FALSE;
 		guard =
 		    fu_parade_lspcon_device_i2c_address_guard_new(self,
@@ -201,25 +214,21 @@ fu_parade_lspcon_device_flash_read(FuParadeLspconDevice *self,
 								  error);
 		if (guard == NULL)
 			return FALSE;
-		if (!fu_i2c_device_read(i2c_device, page_data, 256, error))
+		if (!fu_i2c_device_read(i2c_device, page_data, sizeof(page_data), error))
 			return FALSE;
-
-		if (!fu_memcpy_safe(data,
-				    len,
-				    offset,
+		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0,
 				    page_data,
 				    sizeof(page_data),
-				    page_data_start,
-				    page_data_take,
+				    0x0,
+				    fu_chunk_get_data_sz(chk),
 				    error))
 			return FALSE;
-		base_address += page_data_take;
-		if (!fu_size_checked_inc(&offset, page_data_take, error))
-			return FALSE;
-
-		fu_progress_set_percentage_full(progress, offset, len);
+		fu_progress_step_done(progress);
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -498,7 +507,7 @@ fu_parade_lspcon_device_flash_erase_block(FuParadeLspconDevice *self,
 {
 	const guint8 block_erase[] = {0xd8, base_address >> 16, base_address >> 8, base_address};
 
-	g_debug("flash erase block at %#x", base_address);
+	g_debug("flash erase block at 0x%x", base_address);
 	if (!fu_parade_lspcon_device_flash_enable_write(self, error))
 		return FALSE;
 
@@ -590,6 +599,15 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuInputStream) flag_data_stream = NULL;
 
+	/* sanity check */
+	if (blocksz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware size not set");
+		return FALSE;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -631,7 +649,7 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 						fu_progress_get_child(progress),
 						error))
 		return FALSE;
-	buf = fu_input_stream_read_byte_array(stream, target_address, blocksz, NULL, error);
+	buf = fu_input_stream_read_byte_array(stream, 0x0, blocksz, NULL, error);
 	if (buf == NULL)
 		return FALSE;
 	if (!fu_memcmp_safe(buf->data, buf->len, 0x0, readback_buf, blocksz, 0x0, blocksz, error)) {
@@ -711,12 +729,12 @@ fu_parade_lspcon_device_set_ieee_oui(FuParadeLspconDevice *self, guint32 ieee_ou
 {
 	g_autofree gchar *vid = g_strdup_printf("%06X", ieee_oui);
 	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", vid);
-	fu_device_add_instance_str(FU_DEVICE(self), "VID", vid);
+	fu_device_add_instance_str(FU_DEVICE(self), "OUI\\VID", vid);
 	return fu_device_build_instance_id_full(FU_DEVICE(self),
 						FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						error,
 						"OUI",
-						"VID",
+						"OUI\\VID",
 						NULL);
 }
 
@@ -878,6 +896,14 @@ fu_parade_lspcon_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 	gsize blocksz = fu_device_get_firmware_size_max(device);
 	g_autofree guint8 *buf = g_malloc0(blocksz);
 
+	/* sanity check */
+	if (blocksz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware size not set");
+		return NULL;
+	}
 	if (!fu_parade_lspcon_device_flash_read(self,
 						self->active_partition * blocksz,
 						buf,

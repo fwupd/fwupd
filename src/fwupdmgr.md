@@ -99,6 +99,9 @@ the exact same hardware, both available on the LVFS.
 
 **local-install**: Install a local firmware archive. The regular **install** will also fall back to this if the first argument is a local file that exists.
 
+**write-blob**: Write a raw firmware file that is not in a cabinet archive onto a specific device.
+There is no metadata, and so no signature, requirement or version checks are done, and the administrator password is always required.
+
 **activate**: Set the installed firmware version as running, which may mean the device becomes offline or unresponsive for a few moments.
 
 **sync**: Install all releases with a matching BKC tag if a "Best Known Configuration" has been set for the local machine.
@@ -219,6 +222,8 @@ See `man fwupd.conf` for the full list of variables.
 **unlock**: Unlocks the device for firmware access, which may be required for some platform devices.
 
 **get-plugins**: Show all plugins registered with the daemon.
+
+**get-protocols**: Show the update protocols used by all the devices currently added to the daemon, which can be used with `--filter-protocol`.
 
 **hwids**: Return all the hardware IDs for the machine.
 These GUIDs are sometimes called CHIDs when using Microsoft Windows, and the values returned by fwupd should also match those from `ComputerHardwareIds.exe`.

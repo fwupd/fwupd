@@ -182,8 +182,6 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
  * Gets the DPCD offset.
  *
  * Returns: integer
- *
- * Since: 2.1.1
  **/
 goffset
 fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self)
@@ -200,8 +198,6 @@ fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self)
  *
  * Sets the DPCD offset. Must be either %FU_DPAUX_DEVICE_DPCD_OFFSET_SOURCE_DEVICE,
  * %FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE, or %FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE.
- *
- * Since: 2.1.1
  **/
 void
 fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset)
@@ -223,8 +219,6 @@ fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset)
  * Gets the DPCD IEEE OUI.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 guint32
 fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self)
@@ -240,8 +234,6 @@ fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self)
  * @dpcd_ieee_oui: integer
  *
  * Sets the DPCD IEEE OUI.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui)
@@ -261,8 +253,6 @@ fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui)
  * Gets the DPCD hardware revision number.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 guint8
 fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self)
@@ -278,8 +268,6 @@ fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self)
  * @dpcd_hw_rev: integer
  *
  * Sets the DPCD hardware revision number.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev)
@@ -296,8 +284,6 @@ fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev)
  * Gets the DPCD device ID.
  *
  * Returns: integer
- *
- * Since: 1.9.8
  **/
 const gchar *
 fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self)
@@ -313,16 +299,12 @@ fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self)
  * @dpcd_dev_id: integer
  *
  * Sets the DPCD device ID.
- *
- * Since: 1.9.8
  **/
 void
 fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id)
 {
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(self));
-	if (g_strcmp0(priv->dpcd_dev_id, dpcd_dev_id) == 0)
-		return;
 	g_set_str(&priv->dpcd_dev_id, dpcd_dev_id);
 }
 
@@ -336,8 +318,6 @@ fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id)
  * Write multiple bytes to the DP AUX device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.8
  **/
 gboolean
 fu_dpaux_device_write(FuDpauxDevice *self,
@@ -375,8 +355,6 @@ fu_dpaux_device_write(FuDpauxDevice *self,
  * Read multiple bytes from the DP AUX device.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.8
  **/
 gboolean
 fu_dpaux_device_read(FuDpauxDevice *self,
@@ -428,13 +406,13 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_dpaux_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+fu_dpaux_device_export(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* FuUdevDevice->add_json */
-	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->add_json(device, json_obj, flags);
+	/* FuUdevDevice->export */
+	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->export(device, json_obj, flags);
 
 	/* optional properties */
 	if (priv->dpcd_offset != 0)
@@ -442,13 +420,13 @@ fu_dpaux_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodec
 }
 
 static gboolean
-fu_dpaux_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+fu_dpaux_device_build(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	gint64 tmp64 = 0;
 
-	/* FuUdevDevice->from_json */
-	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->from_json(device, json_obj, error))
+	/* FuUdevDevice->build */
+	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->build(device, json_obj, error))
 		return FALSE;
 
 	/* optional properties */
@@ -536,15 +514,13 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	device_class->to_string = fu_dpaux_device_to_string;
 	device_class->incorporate = fu_dpaux_device_incorporate;
 	device_class->convert_version = fu_dpaux_device_convert_version;
-	device_class->from_json = fu_dpaux_device_from_json;
-	device_class->add_json = fu_dpaux_device_add_json;
+	device_class->build = fu_dpaux_device_build;
+	device_class->export = fu_dpaux_device_export;
 
 	/**
 	 * FuDpauxDevice:dpcd-ieee-oui:
 	 *
 	 * The DPCD IEEE OUI.
-	 *
-	 * Since: 1.9.11
 	 */
 	pspec = g_param_spec_uint("dpcd-ieee-oui",
 				  NULL,

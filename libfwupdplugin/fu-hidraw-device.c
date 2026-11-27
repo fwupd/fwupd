@@ -50,8 +50,6 @@ fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
  * Gets the bus type.
  *
  * Returns: a #FuHidBusType, e.g. %FU_HID_BUS_TYPE_USB
- *
- * Since: 2.0.14
  **/
 FuHidBusType
 fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
@@ -69,8 +67,6 @@ fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
  * Retrieves and parses the HID descriptor.
  *
  * Returns: (transfer full): a #FuHidDescriptor, or %NULL on error
- *
- * Since: 2.0.12
  **/
 FuHidDescriptor *
 fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
@@ -79,10 +75,14 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 	gint desc_size = 0;
 	struct hidraw_report_descriptor rpt_desc = {0x0};
 	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* get report descriptor size */
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	if (!fu_ioctl_execute(ioctl,
 			      HIDIOCGRDESCSIZE,
 			      (guint8 *)&desc_size,
@@ -114,6 +114,9 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 		return NULL;
 	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
 #else
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -317,7 +320,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	/* USB\\VID_1234 */
 	fu_device_add_instance_u16(FU_DEVICE(self), "VID", fu_device_get_vid(device));
 	fu_device_build_instance_id_full(device,
-					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "USB",
 					 "VID",
@@ -326,7 +329,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", fu_device_get_pid(device));
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS_USE_CACHE,
 					 NULL,
 					 "HIDRAW",
 					 "VEN",
@@ -357,8 +360,6 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
  * Do a HID SetFeature request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,
@@ -410,8 +411,6 @@ fu_hidraw_device_set_feature(FuHidrawDevice *self,
  * Do a HID GetFeature request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.0
  **/
 gboolean
 fu_hidraw_device_get_feature(FuHidrawDevice *self,
@@ -464,8 +463,6 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
  * Do a HID GetInput request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.19
  **/
 gboolean
 fu_hidraw_device_get_input(FuHidrawDevice *self,
@@ -518,8 +515,6 @@ fu_hidraw_device_get_input(FuHidrawDevice *self,
  * Do a HID SetOutputReport request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.14
  **/
 gboolean
 fu_hidraw_device_set_report(FuHidrawDevice *self,
@@ -552,8 +547,6 @@ fu_hidraw_device_set_report(FuHidrawDevice *self,
  * Do a HID GetInputReport request.
  *
  * Returns: %TRUE for success
- *
- * Since: 2.0.14
  **/
 gboolean
 fu_hidraw_device_get_report(FuHidrawDevice *self,

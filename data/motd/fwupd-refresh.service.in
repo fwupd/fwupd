@@ -1,5 +1,5 @@
 [Unit]
-Description=Refresh fwupd metadata and update motd
+Description=Refresh fwupd metadata, sync the host BKC and update motd
 Documentation=man:fwupdmgr(1)
 Wants=network-online.target
 After=network-online.target
@@ -22,3 +22,4 @@ ProtectKernelTunables=true
 ProtectKernelLogs=true
 SuccessExitStatus=2 101
 ExecStart=@bindir@/fwupdmgr refresh
+ExecStart=@bindir@/fwupdmgr sync

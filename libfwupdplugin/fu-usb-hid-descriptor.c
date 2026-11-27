@@ -40,7 +40,8 @@ fu_usb_hid_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 	FuUsbHidDescriptor *self = FU_USB_HID_DESCRIPTOR(codec);
 	const gchar *tmp;
 
-	tmp = fwupd_json_object_get_string(json_obj, "Data", NULL);
+	if (!fwupd_json_object_get_string_optional(json_obj, "Data", &tmp, error))
+		return FALSE;
 	if (tmp != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(tmp, &bufsz);
@@ -71,8 +72,6 @@ fu_usb_hid_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
  * Gets the hid descriptor interface number.
  *
  * Return value: integer
- *
- * Since: 2.0.2
  **/
 guint8
 fu_usb_hid_descriptor_get_iface_number(FuUsbHidDescriptor *self)
@@ -86,8 +85,6 @@ fu_usb_hid_descriptor_get_iface_number(FuUsbHidDescriptor *self)
  * @self: a #FuUsbHidDescriptor
  *
  * Sets the hid descriptor interface number.
- *
- * Since: 2.0.2
  **/
 void
 fu_usb_hid_descriptor_set_iface_number(FuUsbHidDescriptor *self, guint8 iface_number)
@@ -103,8 +100,6 @@ fu_usb_hid_descriptor_set_iface_number(FuUsbHidDescriptor *self, guint8 iface_nu
  * Gets the HID descriptor length.
  *
  * Return value: integer
- *
- * Since: 2.0.2
  **/
 gsize
 fu_usb_hid_descriptor_get_descriptor_length(FuUsbHidDescriptor *self)
@@ -120,8 +115,6 @@ fu_usb_hid_descriptor_get_descriptor_length(FuUsbHidDescriptor *self)
  * Gets the HID descriptor binary blob.
  *
  * Return value: (transfer none): The descriptor data
- *
- * Since: 2.0.2
  **/
 GBytes *
 fu_usb_hid_descriptor_get_blob(FuUsbHidDescriptor *self)
@@ -135,13 +128,13 @@ fu_usb_hid_descriptor_get_blob(FuUsbHidDescriptor *self)
  * @self: a #FuUsbHidDescriptor
  *
  * Sets the HID descriptor binary blob.
- *
- * Since: 2.0.2
  **/
 void
 fu_usb_hid_descriptor_set_blob(FuUsbHidDescriptor *self, GBytes *blob)
 {
 	g_return_if_fail(FU_IS_USB_HID_DESCRIPTOR(self));
+	if (self->blob == blob)
+		return;
 	if (self->blob != NULL)
 		g_bytes_unref(self->blob);
 	self->blob = g_bytes_ref(blob);

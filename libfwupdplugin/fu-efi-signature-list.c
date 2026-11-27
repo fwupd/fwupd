@@ -38,8 +38,6 @@ G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
  * likely fail.
  *
  * Returns: %TRUE if there is exactly one signature with `FuEfiSignatureKind.External`.
- *
- * Since: 2.1.7
  **/
 gboolean
 fu_efi_signature_list_is_external(FuEfiSignatureList *self)
@@ -60,11 +58,11 @@ fu_efi_signature_list_is_external(FuEfiSignatureList *self)
  * fu_efi_signature_list_get_newest:
  * @self: a #FuEfiSignatureList
  *
- * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries.
+ * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries, ignoring any with
+ * %FU_FIRMWARE_FLAG_IS_BLOCKED set so that an older valid entry is not hidden by a newer
+ * blocked one.
  *
  * Returns: (transfer container) (element-type FuEfiSignature): signatures
- *
- * Since: 2.0.8
  **/
 GPtrArray *
 fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
@@ -85,11 +83,17 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 		FuEfiSignature *sig_tmp;
 		g_autofree gchar *key = NULL;
 
+		if (fu_firmware_has_flag(FU_FIRMWARE(sig), FU_FIRMWARE_FLAG_IS_BLOCKED)) {
+			g_debug("ignoring blocked %s", fu_firmware_get_id(FU_FIRMWARE(sig)));
+			continue;
+		}
 		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_X509) {
 			key = fu_efi_x509_signature_build_dedupe_key(FU_EFI_X509_SIGNATURE(sig));
 		} else {
 			key = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
 		}
+		if (key == NULL)
+			continue;
 		sig_tmp = g_hash_table_lookup(hash, key);
 		if (sig_tmp == NULL) {
 			g_debug("adding %s", key);
@@ -376,7 +380,8 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	/* look for each type */
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SHA256) {
+		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SHA256 ||
+		    fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_SVN) {
 			g_ptr_array_add(sigs_sha256, sig);
 			continue;
 		}
@@ -448,8 +453,6 @@ fu_efi_signature_list_add_magic(FuFirmware *firmware)
  * fu_efi_signature_list_new:
  *
  * Creates a new #FuFirmware that can parse an EFI_SIGNATURE_LIST
- *
- * Since: 1.5.5
  **/
 FuFirmware *
 fu_efi_signature_list_new(void)

@@ -209,6 +209,16 @@ fu_binder_cli_sync_impl_get_plugins(FwupdClient *client,
 	return fu_binder_cli_bridge_get_plugins(self->fwupd_binder, error);
 }
 
+static GPtrArray *
+fu_binder_cli_sync_impl_get_protocols(FwupdClient *client,
+				      gpointer user_data,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	return fu_binder_cli_bridge_get_protocols(self->fwupd_binder, error);
+}
+
 static FwupdRemote *
 fu_binder_cli_sync_impl_get_remote_by_id(FwupdClient *client,
 					 const gchar *remote_id,
@@ -238,6 +248,31 @@ fu_binder_cli_sync_impl_connect(FwupdClient *client,
 {
 	FuBinderCli *self = FU_BINDER_CLI(user_data);
 	return fu_binder_cli_bridge_connect_client(self->fwupd_binder, client, error);
+}
+
+static gboolean
+fu_binder_cli_sync_impl_write_blob(FwupdClient *client,
+				   const gchar *device_id,
+				   FuInputStream *stream,
+				   const gchar *filename_hint,
+				   const gchar *version,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error)
+{
+	FuBinderCli *self = FU_BINDER_CLI(user_data);
+	g_autoptr(FwupdUnixInputStream) ustream = NULL;
+
+	/* convert the FuInputStream into a FuUnixInputStream */
+	ustream = fwupd_unix_input_stream_from_stream(stream, error);
+	if (ustream == NULL)
+		return FALSE;
+	return fu_binder_cli_bridge_write_blob(self->fwupd_binder,
+					       device_id,
+					       fwupd_unix_input_stream_get_fd(ustream),
+					       filename_hint,
+					       version,
+					       error);
 }
 
 static gboolean
@@ -519,6 +554,7 @@ fu_binder_cli_init(FuBinderCli *self)
 	    .get_host_security_attrs = fu_binder_cli_sync_impl_get_host_security_attrs,
 	    .get_host_security_events = fu_binder_cli_sync_impl_get_host_security_events,
 	    .get_plugins = fu_binder_cli_sync_impl_get_plugins,
+	    .get_protocols = fu_binder_cli_sync_impl_get_protocols,
 	    .get_releases = fu_binder_cli_sync_impl_get_releases,
 	    .get_remote_by_id = fu_binder_cli_sync_impl_get_remote_by_id,
 	    .get_remotes = fu_binder_cli_sync_impl_get_remotes,
@@ -526,6 +562,7 @@ fu_binder_cli_init(FuBinderCli *self)
 	    .get_results = fu_binder_cli_sync_impl_get_results,
 	    .get_upgrades = fu_binder_cli_sync_impl_get_upgrades,
 	    .install = fu_binder_cli_sync_impl_install,
+	    .write_blob = fu_binder_cli_sync_impl_write_blob,
 	    .modify_bios_setting = fu_binder_cli_sync_impl_modify_bios_setting,
 	    .modify_config = fu_binder_cli_sync_impl_modify_config,
 	    .modify_device = fu_binder_cli_sync_impl_modify_device,

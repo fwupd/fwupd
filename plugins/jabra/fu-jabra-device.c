@@ -36,6 +36,11 @@ _fu_usb_device_get_interface_for_class(FuUsbDevice *usb_device, guint8 intf_clas
 		if (fu_usb_interface_get_class(intf) == intf_class)
 			return fu_usb_interface_get_number(intf);
 	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no interface with class 0x%02x",
+		    intf_class);
 	return 0xff;
 }
 

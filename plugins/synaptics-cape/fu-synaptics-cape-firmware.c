@@ -52,27 +52,39 @@ fu_synaptics_cape_firmware_set_pid(FuSynapticsCapeFirmware *self, guint16 pid)
 static void
 fu_synaptics_cape_firmware_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
-				  XbBuilderNode *bn)
+				  FwupdJsonObject *json_object)
 {
 	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
 	FuSynapticsCapeFirmwarePrivate *priv = GET_PRIVATE(self);
-	fu_xmlb_builder_insert_kx(bn, "vid", priv->vid);
-	fu_xmlb_builder_insert_kx(bn, "pid", priv->pid);
+	if (priv->vid != 0)
+		fwupd_json_object_add_integer(json_object, "vid", priv->vid);
+	if (priv->pid != 0)
+		fwupd_json_object_add_integer(json_object, "pid", priv->pid);
 }
 
 static gboolean
-fu_synaptics_cape_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_cape_firmware_build(FuFirmware *firmware, FwupdJsonObject *json_object, GError **error)
 {
 	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
 	FuSynapticsCapeFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint64 tmp;
+	gint64 tmp = G_MAXINT64;
 
 	/* optional properties */
-	tmp = xb_node_query_text_as_uint(n, "vid", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"vid",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		priv->vid = tmp;
-	tmp = xb_node_query_text_as_uint(n, "pid", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+	if (!fwupd_json_object_get_integer_with_default(json_object,
+							"pid",
+							&tmp,
+							G_MAXINT64,
+							error))
+		return FALSE;
+	if (tmp != G_MAXINT64 && tmp <= G_MAXUINT16)
 		priv->pid = tmp;
 
 	/* success */

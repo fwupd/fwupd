@@ -8,6 +8,7 @@
 
 #include "fu-test-device.h"
 #include "fu-test-plugin.h"
+#include "fu-test-target-device.h"
 
 struct _FuTestPlugin {
 	FuPlugin parent_instance;
@@ -20,6 +21,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDevice) device = fu_test_device_new(ctx);
+	g_autoptr(FuDevice) device_target = fu_test_target_device_new(ctx);
 
 	if (!fu_device_setup(device, error))
 		return FALSE;
@@ -34,6 +36,11 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		}
 	}
 	fu_plugin_add_device(plugin, device);
+
+	/* a raw device written using an external programmer, with no version */
+	if (!fu_device_setup(device_target, error))
+		return FALSE;
+	fu_plugin_add_device(plugin, device_target);
 
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		g_autoptr(FuDevice) child1 = NULL;
@@ -81,6 +88,7 @@ fu_test_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *va
 	const gchar *keys[] = {"AnotherWriteRequired",
 			       "CompositeChild",
 			       "DecompressDelay",
+			       "InstallLoopRestart",
 			       "NeedsActivation",
 			       "NeedsReboot",
 			       "RegistrationSupported",
@@ -184,6 +192,10 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				    "device was not in supported mode");
 		return FALSE;
 	}
+
+	/* there is no version to update */
+	if (FU_IS_TEST_TARGET_DEVICE(device))
+		return TRUE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
 	decompress_delay_str = fu_plugin_get_config_value(plugin, "DecompressDelay");
@@ -353,6 +365,13 @@ fu_test_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 static gboolean
 fu_test_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
+	if (fu_plugin_get_config_value_boolean(plugin, "CompositePrepareFail")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed as requested");
+		return FALSE;
+	}
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device = g_ptr_array_index(devices, i);
@@ -363,7 +382,10 @@ fu_test_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **
 }
 
 static gboolean
-fu_test_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+fu_test_plugin_composite_cleanup(FuPlugin *plugin,
+				 GPtrArray *devices,
+				 FwupdUpdateState update_state,
+				 GError **error)
 {
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		for (guint i = 0; i < devices->len; i++) {
@@ -396,6 +418,7 @@ fu_test_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "AnotherWriteRequired", "false");
 	fu_plugin_set_config_default(plugin, "InstallLoopRestart", "false");
 	fu_plugin_set_config_default(plugin, "CompositeChild", "false");
+	fu_plugin_set_config_default(plugin, "CompositePrepareFail", "false");
 	fu_plugin_set_config_default(plugin, "DecompressDelay", "0");
 	fu_plugin_set_config_default(plugin, "NeedsActivation", "false");
 	fu_plugin_set_config_default(plugin, "NeedsReboot", "false");

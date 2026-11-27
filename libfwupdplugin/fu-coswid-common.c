@@ -19,8 +19,6 @@
  * Reads a string value. If a bytestring is provided it is converted to a GUID.
  *
  * Returns: (transfer full): text, or %NULL on error
- *
- * Since: 1.9.17
  **/
 gchar *
 fu_coswid_read_string(FuCborItem *item, GError **error)
@@ -56,8 +54,6 @@ fu_coswid_read_string(FuCborItem *item, GError **error)
  * Reads a tag value.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.17
  **/
 gboolean
 fu_coswid_read_tag(FuCborItem *item, FuCoswidTag *value, GError **error)
@@ -85,8 +81,6 @@ fu_coswid_read_tag(FuCborItem *item, FuCoswidTag *value, GError **error)
  * Reads a version-scheme value.
  *
  * Returns: %TRUE for success
- *
- * Since: 1.9.17
  **/
 gboolean
 fu_coswid_read_version_scheme(FuCborItem *item, FuCoswidVersionScheme *value, GError **error)
@@ -112,8 +106,6 @@ fu_coswid_read_version_scheme(FuCborItem *item, FuCoswidVersionScheme *value, GE
  * @value: string
  *
  * Writes a string tag value.
- *
- * Since: 1.9.17
  **/
 void
 fu_coswid_write_tag_string(FuCborItem *item, FuCoswidTag tag, const gchar *value)
@@ -132,8 +124,6 @@ fu_coswid_write_tag_string(FuCborItem *item, FuCoswidTag tag, const gchar *value
  * @bufsz: sizeof @buf
  *
  * Writes a bytestring tag value.
- *
- * Since: 1.9.17
  **/
 void
 fu_coswid_write_tag_bytestring(FuCborItem *item, FuCoswidTag tag, const guint8 *buf, gsize bufsz)
@@ -152,8 +142,6 @@ fu_coswid_write_tag_bytestring(FuCborItem *item, FuCoswidTag tag, const guint8 *
  * @value: boolean
  *
  * Writes a #gboolean tag value.
- *
- * Since: 1.9.17
  **/
 void
 fu_coswid_write_tag_bool(FuCborItem *item, FuCoswidTag tag, gboolean value)
@@ -171,8 +159,6 @@ fu_coswid_write_tag_bool(FuCborItem *item, FuCoswidTag tag, gboolean value)
  * @value: integer
  *
  * Writes an integer tag value.
- *
- * Since: 1.9.17
  **/
 void
 fu_coswid_write_tag_integer(FuCborItem *item, FuCoswidTag tag, gint64 value)
@@ -190,8 +176,6 @@ fu_coswid_write_tag_integer(FuCborItem *item, FuCoswidTag tag, gint64 value)
  * @value: a #FuCborItem
  *
  * Writes a raw tag value.
- *
- * Since: 1.9.17
  **/
 void
 fu_coswid_write_tag_item(FuCborItem *item, FuCoswidTag tag, FuCborItem *value)
@@ -209,8 +193,6 @@ fu_coswid_write_tag_item(FuCborItem *item, FuCoswidTag tag, FuCborItem *value)
  * @error: (nullable): optional return location for an error
  *
  * Parses an item that *may* be an array, calling @func on each map value.
- *
- * Since: 1.9.17
  **/
 gboolean
 fu_coswid_parse_one_or_many(FuCborItem *item,
