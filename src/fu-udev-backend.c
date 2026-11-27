@@ -470,6 +470,23 @@ fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **e
 	/* success */
 	return TRUE;
 }
+
+static gchar *
+fu_udev_backend_netlink_get_subsystem(GBytes *blob)
+{
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
+
+	for (gsize i = 0; i < bufsz; i++) {
+		g_autofree gchar *kvstr = fu_memstrsafe(buf, bufsz, i, bufsz - i, NULL);
+		if (kvstr == NULL)
+			break;
+		if (g_str_has_prefix(kvstr, "SUBSYSTEM="))
+			return g_strdup(kvstr + strlen("SUBSYSTEM="));
+		i += strlen(kvstr);
+	}
+	return NULL;
+}
 #endif
 
 /* if enabled, systemd takes the kernel event, runs the udev rules (which might
@@ -629,9 +646,21 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 
 	action = fu_udev_action_from_string(split[0]);
 	if (action == FU_UDEV_ACTION_ADD) {
-		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
-		g_autoptr(FuUdevDevice) device =
-		    fu_udev_backend_create_device(self, sysfspath, NULL, error);
+		g_autofree gchar *subsystem = fu_udev_backend_netlink_get_subsystem(blob);
+		g_autoptr(GPtrArray) udev_subsystems = fu_context_get_udev_subsystems(ctx);
+		g_autofree gchar *sysfspath = NULL;
+		g_autoptr(FuUdevDevice) device = NULL;
+
+		if (subsystem != NULL && udev_subsystems != NULL &&
+		    !g_ptr_array_find_with_equal_func(udev_subsystems,
+						      subsystem,
+						      g_str_equal,
+						      NULL)) {
+			g_debug("ignoring netlink add for unwatched subsystem %s", subsystem);
+			return TRUE;
+		}
+		sysfspath = g_build_filename(sysfsdir, split[1], NULL);
+		device = fu_udev_backend_create_device(self, sysfspath, NULL, error);
 		if (device == NULL)
 			return FALSE;
 		if (!fu_device_retry_full(FU_DEVICE(device),
