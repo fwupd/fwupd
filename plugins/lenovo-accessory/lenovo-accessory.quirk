@@ -3,7 +3,7 @@
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidBootloader
 
-# === GTECH ODM (0x61FA-0x6202) ===
+# === ODM A (0x61FA-0x6202) ===
 
 # Lenovo Professional Wireless Keyboard 2
 [BLUETOOTH\VID_17EF&PID_61FA]
@@ -67,7 +67,7 @@ Name = Lenovo Pro USB-C Unified Pairing Receiver
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidDualDevice
 
-# === Liteon ODM (0x6296-0x629E) ===
+# === ODM B (0x6296-0x629E) ===
 
 # Lenovo Professional Wireless Keyboard 2
 [BLUETOOTH\VID_17EF&PID_6296]
