@@ -182,7 +182,7 @@ Plugin = lenovo_accessory
 Flags = signed-payload
 GType = FuLenovoAccessoryHidDualDevice
 FirmwareGType = FuLenovoAccessoryFirmware
-LenovoAccessoryInterface = 0x02
+LenovoAccessoryInterface = 0x02,0x03
 
 # Lenovo 510 Comfort Mouse (BT Mode)
 [BLUETOOTH\VID_17EF&PID_6365]
@@ -199,4 +199,3 @@ Plugin = lenovo_accessory
 Flags = signed-payload
 GType = FuLenovoAccessoryHidDualDevice
 FirmwareGType = FuLenovoAccessoryFirmware
-LenovoAccessoryInterface = 0x02
