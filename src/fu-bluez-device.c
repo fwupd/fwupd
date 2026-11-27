@@ -280,7 +280,8 @@ fu_bluez_device_add_instance_by_service_uuid(FuBluezDevice *self,
 	parent = fu_device_get_parent(FU_DEVICE(self), error);
 	if (parent == NULL)
 		return FALSE;
-	fu_device_add_instance_str(parent, "GATT", obj_uuid);
+	/* prefix with backslash to skip duplicate-key validation for multiple GATT services */
+	fu_device_add_instance_str(parent, "\\GATT", obj_uuid);
 	if (!fu_device_build_instance_id_full(parent,
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,

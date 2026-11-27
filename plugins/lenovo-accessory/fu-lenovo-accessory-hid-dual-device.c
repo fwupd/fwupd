@@ -12,6 +12,7 @@
 
 struct _FuLenovoAccessoryHidDualDevice {
 	FuHidDevice parent_instance;
+	GByteArray *iface_candidates; /* from the LenovoAccessoryInterface quirk */
 };
 
 static void
@@ -488,12 +489,29 @@ fu_lenovo_accessory_hid_dual_device_set_quirk_kv(FuDevice *device,
 						 GError **error)
 {
 	FuLenovoAccessoryHidDualDevice *self = FU_LENOVO_ACCESSORY_HID_DUAL_DEVICE(device);
-	guint64 tmp = 0;
 
+	/* a single interface, or a list of candidates resolved in ->probe() */
 	if (g_strcmp0(key, "LenovoAccessoryInterface") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
-			return FALSE;
-		fu_hid_device_set_interface(FU_HID_DEVICE(self), (guint8)tmp);
+		g_auto(GStrv) split = g_strsplit(value, ",", -1);
+		g_byte_array_set_size(self->iface_candidates, 0);
+		for (guint i = 0; split[i] != NULL; i++) {
+			guint64 tmp = 0;
+			guint8 iface;
+			if (!fu_strtoull(g_strstrip(split[i]),
+					 &tmp,
+					 0,
+					 G_MAXUINT8,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
+			iface = (guint8)tmp;
+			g_byte_array_append(self->iface_candidates, &iface, 1);
+		}
+		if (self->iface_candidates->len == 1) {
+			fu_hid_device_set_interface(FU_HID_DEVICE(self),
+						    self->iface_candidates->data[0]);
+			g_byte_array_set_size(self->iface_candidates, 0);
+		}
 		return TRUE;
 	}
 
@@ -503,6 +521,56 @@ fu_lenovo_accessory_hid_dual_device_set_quirk_kv(FuDevice *device,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "quirk key not supported");
 	return FALSE;
+}
+
+static gboolean
+fu_lenovo_accessory_hid_dual_device_probe(FuDevice *device, GError **error)
+{
+	FuLenovoAccessoryHidDualDevice *self = FU_LENOVO_ACCESSORY_HID_DUAL_DEVICE(device);
+	g_autoptr(GPtrArray) ifaces = NULL;
+
+	/* FuUsbDevice->probe, which also sets the quirks */
+	if (!FU_DEVICE_CLASS(fu_lenovo_accessory_hid_dual_device_parent_class)
+		 ->probe(device, error))
+		return FALSE;
+
+	/* a fixed interface was set */
+	if (self->iface_candidates->len == 0)
+		return TRUE;
+
+	/* the command interface moved between firmware versions, so use the
+	 * candidate that is a vendor HID interface without a boot protocol */
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
+	if (ifaces == NULL)
+		return FALSE;
+	for (guint i = 0; i < self->iface_candidates->len; i++) {
+		guint8 candidate = self->iface_candidates->data[i];
+		for (guint j = 0; j < ifaces->len; j++) {
+			FuUsbInterface *iface = g_ptr_array_index(ifaces, j);
+			if (fu_usb_interface_get_number(iface) != candidate)
+				continue;
+			if (fu_usb_interface_get_class(iface) != FU_USB_CLASS_HID ||
+			    fu_usb_interface_get_subclass(iface) != 0x0 ||
+			    fu_usb_interface_get_protocol(iface) != 0x0)
+				continue;
+			g_debug("using interface 0x%02x for commands", candidate);
+			fu_hid_device_set_interface(FU_HID_DEVICE(self), candidate);
+			return TRUE;
+		}
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no vendor HID command interface found");
+	return FALSE;
+}
+
+static void
+fu_lenovo_accessory_hid_dual_device_finalize(GObject *object)
+{
+	FuLenovoAccessoryHidDualDevice *self = FU_LENOVO_ACCESSORY_HID_DUAL_DEVICE(object);
+	g_byte_array_unref(self->iface_candidates);
+	G_OBJECT_CLASS(fu_lenovo_accessory_hid_dual_device_parent_class)->finalize(object);
 }
 
 static void
@@ -517,6 +585,9 @@ static void
 fu_lenovo_accessory_hid_dual_device_class_init(FuLenovoAccessoryHidDualDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_lenovo_accessory_hid_dual_device_finalize;
+	device_class->probe = fu_lenovo_accessory_hid_dual_device_probe;
 	device_class->write_firmware = fu_lenovo_accessory_hid_dual_device_write_firmware;
 	device_class->set_progress = fu_lenovo_accessory_hid_dual_device_set_progress;
 	device_class->setup = fu_lenovo_accessory_hid_dual_device_setup;
@@ -527,6 +598,7 @@ fu_lenovo_accessory_hid_dual_device_class_init(FuLenovoAccessoryHidDualDeviceCla
 static void
 fu_lenovo_accessory_hid_dual_device_init(FuLenovoAccessoryHidDualDevice *self)
 {
+	self->iface_candidates = g_byte_array_new();
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* ms */
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.accessory");
 	fu_device_set_install_duration(FU_DEVICE(self), 60);
