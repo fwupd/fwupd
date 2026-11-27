@@ -180,7 +180,6 @@ fu_realtek_rts54hid_pd_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* set MCU vendor cmd enable */
 	if (!fu_realtek_rts54hid_pd_device_vendor_cmd_enable(
@@ -219,17 +218,25 @@ fu_realtek_rts54hid_pd_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (fu_device_has_private_flag(
-		FU_DEVICE(self),
-		FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE)) {
-		if (!fu_realtek_rts54hid_pd_device_reset_to_flash(self, error))
-			return FALSE;
-	}
-	fu_progress_step_done(progress);
-
 	/* success */
 	return TRUE;
 }
+
+static gboolean
+fu_realtek_rts54hid_pd_device_attach(FuDevice *device,
+					     FuProgress *progress,
+					     GError **error)
+{
+	if (!fu_device_has_private_flag(
+		device,
+		FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE))
+			return TRUE;
+
+	return fu_realtek_rts54hid_pd_device_reset_to_flash(
+			FU_REALTEK_RTS54HID_PD_DEVICE(device), error);
+
+}
+
 
 static void
 fu_realtek_rts54hid_pd_device_set_progress(FuDevice *device, FuProgress *progress)
@@ -259,6 +266,7 @@ fu_realtek_rts54hid_pd_device_class_init(FuRealtekRts54hidPdDeviceClass *klass)
 	device_class->write_firmware = fu_realtek_rts54hid_pd_device_write_firmware;
 	device_class->setup = fu_realtek_rts54hid_pd_device_setup;
 	device_class->set_progress = fu_realtek_rts54hid_pd_device_set_progress;
+	device_class->attach = fu_realtek_rts54hid_pd_device_attach;
 	fu_device_register_private_flag(device_class,
 					FU_TYPE_REALTEK_RTS54HID_PD_DEVICE_FLAG_RESET_AFTER_UPDATE);
 }
