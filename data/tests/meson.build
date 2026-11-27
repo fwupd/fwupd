@@ -61,7 +61,7 @@ if plugins['vbe']
   )
 endif
 
-if plugins['uefi-dbx'] and host_machine.system() == 'linux'
+if plugins['uefi-sb'] and host_machine.system() == 'linux'
   configure_file(
     input: 'dbxtool.test.in',
     output: 'dbxtool.test',

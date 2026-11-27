@@ -82,8 +82,7 @@ plugins/synaptics-vmm9/ @ApolloLing
 plugins/system76-launch/ @jackpot51
 plugins/telink-dfu/ @liangjiazhi-telink
 plugins/thelio-io/ @jackpot51
-plugins/uefi-db/ @hughsie
-plugins/uefi-kek/ @hughsie
+plugins/uefi-sb/ @hughsie
 plugins/uefi-mok/ @hughsie
 plugins/uefi-sbat/ @vathpela
 plugins/usi-dock/ @victor-cheng

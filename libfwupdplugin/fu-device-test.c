@@ -1341,9 +1341,9 @@ fu_device_id_display_func(void)
 	id2 = fu_device_get_id_display(device);
 	g_assert_cmpstr(id2, ==, "362301da643102b9f38477387e2193e57abaa590");
 
-	fu_device_set_plugin(device, "uefi_dbx");
+	fu_device_set_plugin(device, "uefi_sb");
 	id3 = fu_device_get_id_display(device);
-	g_assert_cmpstr(id3, ==, "362301da643102b9f38477387e2193e57abaa590 {uefi_dbx}");
+	g_assert_cmpstr(id3, ==, "362301da643102b9f38477387e2193e57abaa590 {uefi_sb}");
 
 	fu_device_set_name(device, "UEFI dbx");
 	id4 = fu_device_get_id_display(device);

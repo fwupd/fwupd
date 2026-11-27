@@ -85,7 +85,7 @@ fu_systemd_pcrlock_plugin_abort_on_error_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(FU_TYPE_SYSTEMD_PCRLOCK_PLUGIN, ctx);
-	g_autoptr(FuDevice) device = fu_systemd_pcrlock_test_device_new(ctx, "uefi_dbx", TRUE);
+	g_autoptr(FuDevice) device = fu_systemd_pcrlock_test_device_new(ctx, "uefi_sb_dbx", TRUE);
 	g_autoptr(GPtrArray) devices =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GError) error = NULL;

@@ -58,7 +58,7 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'test', 'fu-test-plugin.c'),
         '--defines',
-        join_paths(meson.project_source_root(), 'plugins', 'uefi-db', 'fu-uefi-db-plugin.c'),
+        join_paths(meson.project_source_root(), 'plugins', 'uefi-sb', 'fu-uefi-sb-plugin.c'),
         '--defines',
         join_paths(
           meson.project_source_root(),
@@ -140,7 +140,7 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'test', 'fu-test-plugin.c'),
         '--defines',
-        join_paths(meson.project_source_root(), 'plugins', 'uefi-db', 'fu-uefi-db-plugin.c'),
+        join_paths(meson.project_source_root(), 'plugins', 'uefi-sb', 'fu-uefi-sb-plugin.c'),
         '--defines',
         join_paths(
           meson.project_source_root(),
@@ -268,7 +268,7 @@ if build_docs
       '--content-dir=@0@'.format(meson.current_build_dir()),
       '--content-dir=@0@'.format(meson.current_source_dir()),
       '--content-dir=@0@'.format(meson.current_build_dir() / '../src'),
-      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-dbx'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-sb'),
       '--content-dir=@0@'.format(meson.current_build_dir() / '../data/motd'),
       '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-capsule'),
       '@INPUT1@',

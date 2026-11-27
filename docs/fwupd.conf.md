@@ -285,11 +285,11 @@ The `[uefi_capsule]` section can contain the following parameters:
 
   Override the screen height in pixels of the EFI framebuffer as used by the UX capsule.
 
-## UEFI_DB PARAMETERS
+## UEFI_SB PARAMETERS
 
-The `[uefi_db]` section can contain the following parameters:
+The `[uefi_sb]` section can contain the following parameters:
 
-**UpdateWindowsCA={{uefi_db_UpdateWindowsCA}}**
+**UpdateWindowsCA={{uefi_sb_UpdateWindowsCA}}**
 
   The flash space used by UEFI updates is limited -- if we update the Windows CA (when we're not
   dual-booted with Windows) then we are using the flash space we need for UEFI db and dbx updates.

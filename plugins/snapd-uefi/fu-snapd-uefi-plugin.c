@@ -36,9 +36,9 @@ fu_snapd_uefi_plugin_device_to_key_database(FuSnapPlugin *self, FuDevice *device
 {
 	const gchar *plugin = fu_device_get_plugin(device);
 
-	if (g_strcmp0(plugin, "uefi_dbx") == 0)
+	if (g_strcmp0(plugin, "uefi_sb_dbx") == 0)
 		return "DBX";
-	if (g_strcmp0(plugin, "uefi_db") == 0)
+	if (g_strcmp0(plugin, "uefi_sb_db") == 0)
 		return "DB";
 	if (g_strcmp0(plugin, "uefi_kek") == 0)
 		return "KEK";

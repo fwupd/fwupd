@@ -349,7 +349,7 @@ fu_engine_gtypes_func(void)
 		g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 		g_autoptr(GError) error_local = NULL;
 
-		fu_device_set_plugin(device_nop, "uefi_dbx");
+		fu_device_set_plugin(device_nop, "uefi_sb_dbx");
 		if (!fu_plugin_runner_composite_peek_firmware(plugin,
 							      device_nop,
 							      firmware,
