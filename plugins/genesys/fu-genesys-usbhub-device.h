@@ -16,4 +16,5 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     GENESYS_USBHUB_DEVICE,
 		     FuUsbDevice)
 
-#define FU_GENESYS_USBHUB_FLAG_VERIFY_PROJECT "verify-project"
+#define FU_GENESYS_USBHUB_FLAG_BUILD_PARENT_ID "build-parent-id"
+#define FU_GENESYS_USBHUB_FLAG_VERIFY_PROJECT  "verify-project"

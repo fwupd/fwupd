@@ -30,7 +30,6 @@
 #define FU_GENESYS_USBHUB_FLAG_HAS_CODESIGN	"has-codesign"
 #define FU_GENESYS_USBHUB_FLAG_HAS_HW_CODESIGN	"has-hw-codesign"
 #define FU_GENESYS_USBHUB_FLAG_PROXY_REQUIRED	"proxy-required"
-#define FU_GENESYS_USBHUB_FLAG_BUILD_PARENT_ID	"build-parent-id"
 
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
@@ -1779,10 +1778,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		    fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error);
 		if (device_parent == NULL) {
 			g_prefix_error_literal(error, "no hub parent: ");
-			return FALSE;
-		}
-		if (!fu_device_probe(device_parent, error)) {
-			g_prefix_error_literal(error, "failed to probe hub parent: ");
 			return FALSE;
 		}
 		fu_device_add_instance_u16(device, "PVID", fu_device_get_vid(device_parent));
