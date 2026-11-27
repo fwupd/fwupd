@@ -83,6 +83,25 @@ fu_jcat_engine_setup(FuJcatEngine *self, GError **error)
 }
 
 /**
+ * fu_jcat_engine_invalidate:
+ * @self: #FuJcatEngine
+ *
+ * Invalidates any trust list or stored public keys, essentially "undoing" `klass->setup`.
+ **/
+void
+fu_jcat_engine_invalidate(FuJcatEngine *self)
+{
+	FuJcatEngineClass *klass = FU_JCAT_ENGINE_GET_CLASS(self);
+	FuJcatEnginePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_JCAT_ENGINE(self));
+
+	if (klass->invalidate != NULL)
+		klass->invalidate(self);
+	priv->done_setup = FALSE;
+}
+
+/**
  * fu_jcat_engine_pubkey_verify:
  * @self: #FuJcatEngine
  * @blob: #GBytes

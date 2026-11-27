@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <glib/gstdio.h>
+
 #include "fwupd-jcat-blob.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-jcat-item.h"
@@ -327,6 +329,264 @@ fwupd_jcat_pkcs7_engine_self_signed_func(gconstpointer test_data)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(result_fail);
 	g_clear_error(&error);
+}
+
+static FuJcatResult *
+fu_jcat_test_verify_lvfs_p7b(FuJcatEngine *engine, GError **error)
+{
+	g_autofree gchar *fn_bin = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autoptr(GBytes) data_fwbin = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+
+	fn_bin = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fwbin = fu_bytes_get_contents(fn_bin, error);
+	if (data_fwbin == NULL)
+		return NULL;
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, error);
+	if (data_sig == NULL)
+		return NULL;
+	return fu_jcat_engine_pubkey_verify(engine,
+					    data_fwbin,
+					    data_sig,
+					    FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					    error);
+}
+
+static void
+fwupd_jcat_pkcs7_engine_invalidate_func(gconstpointer test_data)
+{
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass1 = NULL;
+	g_autoptr(FuJcatResult) result_pass2 = NULL;
+
+	/* set up context */
+	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	g_assert_cmpint(fu_jcat_context_get_public_keys(context)->len, >, 0);
+
+	/* get engine */
+	engine = ((FuJcatEngineNewFunc)test_data)(context);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+
+	/* trusted */
+	result_pass1 = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass1);
+
+	/* remove all public keys, and drop the trust list */
+	fu_jcat_context_invalidate(context);
+	g_assert_cmpint(fu_jcat_context_get_public_keys(context)->len, ==, 0);
+
+	/* engines created directly are not owned by the context */
+	fu_jcat_engine_invalidate(engine);
+
+	/* no longer trusted */
+	result_fail = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_nonnull(error);
+	g_assert_null(result_fail);
+	g_clear_error(&error);
+
+	/* invalidating twice is safe */
+	fu_jcat_engine_invalidate(engine);
+
+	/* add the keys back, and trusted once more */
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	result_pass2 = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass2);
+	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass2),
+			==,
+			"O=Linux Vendor Firmware Project,CN=LVFS CA");
+}
+
+typedef struct {
+	GMainLoop *loop;
+	guint cnt;
+	guint keys_expected;
+	const gchar *pki_dir;
+} FuJcatContextChangedHelper;
+
+static void
+fu_jcat_context_changed_cb(FuJcatContext *context, gpointer user_data)
+{
+	FuJcatContextChangedHelper *helper = (FuJcatContextChangedHelper *)user_data;
+
+	/* do the same thing as the FuEngine */
+	fu_jcat_context_invalidate(context);
+	fu_jcat_context_add_public_keys(context, helper->pki_dir);
+	helper->cnt++;
+	g_main_loop_quit(helper->loop);
+}
+
+static gboolean
+fu_jcat_context_changed_timeout_cb(gpointer user_data)
+{
+	FuJcatContextChangedHelper *helper = (FuJcatContextChangedHelper *)user_data;
+	g_main_loop_quit(helper->loop);
+	return G_SOURCE_REMOVE;
+}
+
+/* independently of FuJcatContext, check the platform can monitor this directory */
+static gboolean
+fu_jcat_test_directory_monitor_supported(const gchar *path)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file = g_file_new_for_path(path);
+	g_autoptr(GFileMonitor) monitor = NULL;
+
+	monitor = g_file_monitor_directory(file, G_FILE_MONITOR_WATCH_MOVES, NULL, &error_local);
+	if (monitor == NULL) {
+		g_debug("cannot monitor %s: %s", path, error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/* fails the test if ::changed was not emitted before the timeout */
+static void
+fu_jcat_context_changed_wait(FuJcatContext *context, FuJcatContextChangedHelper *helper)
+{
+	guint timeout_id;
+
+	helper->cnt = 0;
+	timeout_id = g_timeout_add_seconds(10, fu_jcat_context_changed_timeout_cb, helper);
+	g_main_loop_run(helper->loop);
+	g_assert_cmpint(helper->cnt, >, 0);
+	g_source_remove(timeout_id);
+
+	/* the events were coalesced, so the directory was only re-read once it was complete */
+	g_assert_cmpint(fu_jcat_context_get_public_keys(context)->len, ==, helper->keys_expected);
+}
+
+static void
+fu_jcat_context_changed_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_src = NULL;
+	g_autofree gchar *fn_dst = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GBytes) blob_pem = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GMainLoop) loop = g_main_loop_new(NULL, FALSE);
+	FuJcatContextChangedHelper helper = {.loop = loop};
+
+	/* start with an empty public key directory */
+	tmpdir = fu_temporary_directory_new("jcat-context-changed", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	helper.pki_dir = fu_temporary_directory_get_path(tmpdir);
+	if (!fu_jcat_test_directory_monitor_supported(helper.pki_dir)) {
+		g_test_skip("no directory monitor support");
+		return;
+	}
+	g_signal_connect(context, "changed", G_CALLBACK(fu_jcat_context_changed_cb), &helper);
+	fu_jcat_context_add_public_keys(context, helper.pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	g_assert_cmpint(fu_jcat_context_get_public_keys(context)->len, ==, 0);
+
+	/* not trusted */
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+	result_fail = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_nonnull(error);
+	g_assert_null(result_fail);
+	g_clear_error(&error);
+
+	/* install the LVFS CA into the watched directory */
+	fn_src = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	blob_pem = fu_bytes_get_contents(fn_src, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_pem);
+	fn_dst = fu_temporary_directory_build(tmpdir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_dst, blob_pem, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* wait for ::changed */
+	helper.keys_expected = 1;
+	fu_jcat_context_changed_wait(context, &helper);
+	g_signal_handlers_disconnect_by_data(context, &helper);
+
+	/* the same engine is now trusted */
+	result_pass = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass),
+			==,
+			"O=Linux Vendor Firmware Project,CN=LVFS CA");
+}
+
+static void
+fu_jcat_context_changed_delete_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn_src = NULL;
+	g_autofree gchar *fn_dst = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GBytes) blob_pem = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GMainLoop) loop = g_main_loop_new(NULL, FALSE);
+	FuJcatContextChangedHelper helper = {.loop = loop};
+
+	/* start with the LVFS CA in the public key directory */
+	tmpdir = fu_temporary_directory_new("jcat-context-changed-delete", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	helper.pki_dir = fu_temporary_directory_get_path(tmpdir);
+	if (!fu_jcat_test_directory_monitor_supported(helper.pki_dir)) {
+		g_test_skip("no directory monitor support");
+		return;
+	}
+	fn_src = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
+	blob_pem = fu_bytes_get_contents(fn_src, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_pem);
+	fn_dst = fu_temporary_directory_build(tmpdir, "LVFS-CA.pem", NULL);
+	ret = fu_bytes_set_contents(fn_dst, blob_pem, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_signal_connect(context, "changed", G_CALLBACK(fu_jcat_context_changed_cb), &helper);
+	fu_jcat_context_add_public_keys(context, helper.pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	g_assert_cmpint(fu_jcat_context_get_public_keys(context)->len, ==, 1);
+
+	/* trusted */
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+	result_pass = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+
+	/* revoke the LVFS CA by deleting it */
+	g_assert_cmpint(g_unlink(fn_dst), ==, 0);
+
+	/* wait for ::changed */
+	helper.keys_expected = 0;
+	fu_jcat_context_changed_wait(context, &helper);
+	g_signal_handlers_disconnect_by_data(context, &helper);
+
+	/* the same engine is no longer trusted */
+	result_fail = fu_jcat_test_verify_lvfs_p7b(engine, &error);
+	g_assert_nonnull(error);
+	g_assert_null(result_fail);
 }
 
 #ifdef HAVE_GNUTLS_PQC
@@ -722,6 +982,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/jcat/engine/pkcs7/self-signed/openssl",
 			     &fu_jcat_libcrypto_pkcs7_engine_new,
 			     fwupd_jcat_pkcs7_engine_self_signed_func);
+	g_test_add_data_func("/jcat/engine/pkcs7/invalidate/openssl",
+			     &fu_jcat_libcrypto_pkcs7_engine_new,
+			     fwupd_jcat_pkcs7_engine_invalidate_func);
 #endif
 #ifdef HAVE_GNUTLS
 	g_test_add_data_func("/jcat/engine/pkcs7/gnutls",
@@ -730,12 +993,17 @@ main(int argc, char **argv)
 	g_test_add_data_func("/jcat/engine/pkcs7/self-signed/gnutls",
 			     &fu_jcat_gnutls_pkcs7_engine_new,
 			     fwupd_jcat_pkcs7_engine_self_signed_func);
+	g_test_add_data_func("/jcat/engine/pkcs7/invalidate/gnutls",
+			     &fu_jcat_gnutls_pkcs7_engine_new,
+			     fwupd_jcat_pkcs7_engine_invalidate_func);
 #endif
 #ifdef HAVE_GNUTLS_PQC
 	g_test_add_data_func("/jcat/engine/pkcs7-self-signed/pq-gnutls",
 			     &fu_jcat_gnutls_pkcs7_engine_new,
 			     fwupd_jcat_pkcs7_engine_self_signed_pq_func);
 #endif
+	g_test_add_func("/jcat/context/changed", fu_jcat_context_changed_func);
+	g_test_add_func("/jcat/context/changed/delete", fu_jcat_context_changed_delete_func);
 	g_test_add_func("/jcat/context/verify/blob", fu_jcat_context_verify_blob_func);
 	g_test_add_func("/jcat/context/verify/blob/disallow",
 			fu_jcat_context_verify_blob_disallow_func);

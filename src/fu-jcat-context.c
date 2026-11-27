@@ -27,19 +27,31 @@ struct _FuJcatContext {
 	GObject parent_instance;
 	GPtrArray *engines;
 	GPtrArray *public_keys;
+	GPtrArray *monitors; /* element-type GFileMonitor */
+	guint changed_id;
 	gchar *keyring_path;
 	guint32 blob_kinds;
 };
 
 G_DEFINE_TYPE(FuJcatContext, fu_jcat_context, G_TYPE_OBJECT)
 
+/* coalesce multiple events, e.g. a write to a temporary file followed by a rename */
+#define FU_JCAT_CONTEXT_CHANGED_DELAY 50 /* ms */
+
+enum { SIGNAL_CHANGED, SIGNAL_LAST };
+
+static guint signals[SIGNAL_LAST] = {0};
+
 static void
 fu_jcat_context_finalize(GObject *obj)
 {
 	FuJcatContext *self = FU_JCAT_CONTEXT(obj);
+	if (self->changed_id != 0)
+		g_source_remove(self->changed_id);
 	g_free(self->keyring_path);
 	g_ptr_array_unref(self->engines);
 	g_ptr_array_unref(self->public_keys);
+	g_ptr_array_unref(self->monitors);
 	G_OBJECT_CLASS(fu_jcat_context_parent_class)->finalize(obj);
 }
 
@@ -48,6 +60,16 @@ fu_jcat_context_class_init(FuJcatContextClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_jcat_context_finalize;
+
+	signals[SIGNAL_CHANGED] = g_signal_new("changed",
+					       G_TYPE_FROM_CLASS(object_class),
+					       G_SIGNAL_RUN_LAST,
+					       0,
+					       NULL,
+					       NULL,
+					       g_cclosure_marshal_VOID__VOID,
+					       G_TYPE_NONE,
+					       0);
 }
 
 static void
@@ -56,6 +78,7 @@ fu_jcat_context_init(FuJcatContext *self)
 	self->keyring_path = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, NULL);
 	self->engines = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->public_keys = g_ptr_array_new_with_free_func(g_free);
+	self->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_ptr_array_add(self->engines, fu_jcat_sha256_engine_new(self));
 	g_ptr_array_add(self->engines, fu_jcat_sha512_engine_new(self));
@@ -67,12 +90,61 @@ fu_jcat_context_init(FuJcatContext *self)
 #endif
 }
 
+static gboolean
+fu_jcat_context_changed_timeout_cb(gpointer user_data)
+{
+	FuJcatContext *self = FU_JCAT_CONTEXT(user_data);
+	self->changed_id = 0;
+	g_debug("emitting ::changed");
+	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_jcat_context_monitor_changed_cb(GFileMonitor *monitor,
+				   GFile *file,
+				   GFile *other_file,
+				   GFileMonitorEvent event_type,
+				   gpointer user_data)
+{
+	FuJcatContext *self = FU_JCAT_CONTEXT(user_data);
+	g_autofree gchar *path = NULL;
+
+	/* restart the timer so ::changed is only emitted once things are idle */
+	path = g_file_get_path(file);
+	g_debug("%s modified, scheduling ::changed", path);
+	if (self->changed_id != 0)
+		g_source_remove(self->changed_id);
+	self->changed_id =
+	    g_timeout_add(FU_JCAT_CONTEXT_CHANGED_DELAY, fu_jcat_context_changed_timeout_cb, self);
+}
+
+/**
+ * fu_jcat_context_invalidate:
+ * @self: #FuJcatContext
+ *
+ * Removes all public keys and invalidates every engine added to the context.
+ **/
+void
+fu_jcat_context_invalidate(FuJcatContext *self)
+{
+	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
+
+	g_ptr_array_set_size(self->public_keys, 0);
+	g_ptr_array_set_size(self->monitors, 0);
+	for (guint i = 0; i < self->engines->len; i++) {
+		FuJcatEngine *engine = g_ptr_array_index(self->engines, i);
+		fu_jcat_engine_invalidate(engine);
+	}
+}
+
 /**
  * fu_jcat_context_add_public_keys:
  * @self: #FuJcatContext
  * @path: A directory of files
  *
- * Adds a public key directory.
+ * Adds a public key directory and watch it for possible changes. If the directory is changed
+ * in any way the ::changed signal will be emitted.
  **/
 void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
@@ -80,9 +152,24 @@ fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
 	const gchar *fn_tmp;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileMonitor) monitor = NULL;
 
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(path != NULL);
+
+	/* watch this even if it does not exist */
+	file = g_file_new_for_path(path);
+	monitor = g_file_monitor_directory(file, G_FILE_MONITOR_WATCH_MOVES, NULL, &error_local);
+	if (monitor == NULL) {
+		g_debug("failed to monitor: %s", error_local->message);
+	} else {
+		g_signal_connect(G_FILE_MONITOR(monitor),
+				 "changed",
+				 G_CALLBACK(fu_jcat_context_monitor_changed_cb),
+				 self);
+		g_ptr_array_add(self->monitors, g_steal_pointer(&monitor));
+	}
 
 	/* search all the public key files */
 	dir = g_dir_open(path, 0, &error_local);
