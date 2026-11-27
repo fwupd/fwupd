@@ -2314,9 +2314,13 @@ fu_engine_history_func(void)
 	g_assert_cmpstr(fu_device_get_update_error(device3), ==, NULL);
 
 	/* ClearResults() */
+	fu_device_set_metadata_integer(device, "nr-clear", 0);
 	ret = fu_engine_clear_results(engine, FWUPD_DEVICE_ID_ANY, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* check the plugin was given the live device and not the history device */
+	g_assert_cmpint(fu_device_get_metadata_integer(device, "nr-clear"), ==, 1);
 
 	/* GetResults() */
 	device4 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
