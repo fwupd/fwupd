@@ -13,3 +13,8 @@ G_DECLARE_FINAL_TYPE(FuMmMhiFirehoseDevice,
 		     FU,
 		     MM_MHI_FIREHOSE_DEVICE,
 		     FuMmDevice)
+
+gboolean
+fu_mm_mhi_firehose_prepare_dev_image(FuFirmware *firmware,
+				     const gchar * const *product_ids,
+				     GError **error);
