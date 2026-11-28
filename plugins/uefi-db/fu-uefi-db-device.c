@@ -16,38 +16,10 @@ G_DEFINE_TYPE(FuUefiDbDevice, fu_uefi_db_device, FU_TYPE_UEFI_DEVICE)
 
 #define FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE (16 * FU_KB) /* bytes */
 
-/* the dbx is optional, and the db is still useful without it */
-static GPtrArray *
-fu_uefi_db_device_get_dbx_signatures(FuUefiDbDevice *self)
-{
-	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	blob = fu_uefi_device_get_efivar_bytes(FU_UEFI_DEVICE(self),
-					       FU_EFIVARS_GUID_SECURITY_DATABASE,
-					       "dbx",
-					       NULL,
-					       &error_local);
-	if (blob == NULL) {
-		g_debug("failed to read dbx, ignoring: %s", error_local->message);
-		return NULL;
-	}
-	if (!fu_firmware_parse_bytes(siglist,
-				     blob,
-				     0x0,
-				     FU_FIRMWARE_PARSE_FLAG_NONE,
-				     &error_local)) {
-		g_debug("failed to parse dbx, ignoring: %s", error_local->message);
-		return NULL;
-	}
-	return fu_firmware_get_images(siglist);
-}
-
 /* an EFI_CERT_X509_GUID entry in the dbx revokes that exact certificate, so compare the
  * DER data rather than the key ID, which would also match a reissue using the same key */
 static gboolean
-fu_uefi_db_device_signature_is_revoked(GPtrArray *dbx_sigs, FuEfiSignature *sig)
+fu_uefi_db_device_signature_is_revoked(GPtrArray *sigs_dbx, FuEfiSignature *sig)
 {
 	g_autoptr(GBytes) blob = NULL;
 
@@ -56,8 +28,8 @@ fu_uefi_db_device_signature_is_revoked(GPtrArray *dbx_sigs, FuEfiSignature *sig)
 	blob = fu_firmware_get_bytes(FU_FIRMWARE(sig), NULL);
 	if (blob == NULL)
 		return FALSE;
-	for (guint i = 0; i < dbx_sigs->len; i++) {
-		FuEfiSignature *dbx_sig = g_ptr_array_index(dbx_sigs, i);
+	for (guint i = 0; i < sigs_dbx->len; i++) {
+		FuEfiSignature *dbx_sig = g_ptr_array_index(sigs_dbx, i);
 		g_autoptr(GBytes) dbx_blob = NULL;
 		if (fu_efi_signature_get_kind(dbx_sig) != FU_EFI_SIGNATURE_KIND_X509)
 			continue;
@@ -71,51 +43,54 @@ fu_uefi_db_device_signature_is_revoked(GPtrArray *dbx_sigs, FuEfiSignature *sig)
 static gboolean
 fu_uefi_db_device_probe(FuDevice *device, GError **error)
 {
-	FuUefiDbDevice *self = FU_UEFI_DB_DEVICE(device);
 	FuContext *ctx = fu_device_get_context(device);
-	g_autoptr(FuFirmware) siglist = NULL;
+	g_autoptr(FuFirmware) siglist_db = NULL;
+	g_autoptr(FuFirmware) siglist_dbx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GPtrArray) dbx_sigs = NULL;
-	g_autoptr(GPtrArray) default_sigs = NULL;
-	g_autoptr(GPtrArray) sigs = NULL;
+	g_autoptr(GPtrArray) sigs_dbx = NULL;
+	g_autoptr(GPtrArray) sigs_dbdefault = NULL;
+	g_autoptr(GPtrArray) sigs_db = NULL;
 
 	/* FuUefiDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_uefi_db_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	/* for specific vendors we care about the default value */
+	/* for specific vendors we care about the default value, but this is optional */
 	if (fu_context_has_hwid_flag(ctx, "use-db-default-ids")) {
-		g_autoptr(FuFirmware) firmware_default = NULL;
+		g_autoptr(FuFirmware) siglist_dbdefault = NULL;
 		g_autoptr(GError) error_local = NULL;
-		firmware_default = fu_uefi_device_read_default(FU_UEFI_DEVICE(device),
-							       FU_EFIVARS_GUID_EFI_GLOBAL,
-							       "db",
-							       &error_local);
-		if (firmware_default == NULL) {
-			g_debug("failed to get dbDefault, ignoring: %s", error_local->message);
+
+		siglist_dbdefault =
+		    fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						       FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB_DEFAULT,
+						       &error_local);
+		if (siglist_dbdefault == NULL) {
+			g_debug("ignoring dbDefault: %s", error_local->message);
 		} else {
-			default_sigs = fu_firmware_get_images(firmware_default);
+			sigs_dbdefault = fu_firmware_get_images(siglist_dbdefault);
 		}
 	}
 
 	/* add each subdevice */
-	siglist = fu_device_read_firmware(device,
-					  progress,
-					  FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
-					  error);
-	if (siglist == NULL) {
-		g_prefix_error_literal(error, "failed to parse db: ");
+	siglist_db = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+							FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+							error);
+	if (siglist_db == NULL)
 		return FALSE;
-	}
 
 	/* firmware will not trust a revoked certificate, so do not show it */
-	dbx_sigs = fu_uefi_db_device_get_dbx_signatures(self);
-	if (dbx_sigs != NULL) {
-		g_autoptr(GPtrArray) sigs_all = fu_firmware_get_images(siglist);
+	siglist_dbx = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+							 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+							 error);
+	if (siglist_dbx == NULL)
+		return FALSE;
+	sigs_dbx = fu_firmware_get_images(siglist_dbx);
+	if (sigs_dbx != NULL) {
+		g_autoptr(GPtrArray) sigs_all = fu_firmware_get_images(siglist_db);
 		for (guint i = 0; i < sigs_all->len; i++) {
 			FuEfiSignature *sig = g_ptr_array_index(sigs_all, i);
 			if (FU_IS_EFI_X509_SIGNATURE(sig) &&
-			    fu_uefi_db_device_signature_is_revoked(dbx_sigs, sig)) {
+			    fu_uefi_db_device_signature_is_revoked(sigs_dbx, sig)) {
 				g_debug(
 				    "blocking %s [%s] as present in dbx",
 				    fu_firmware_get_id(FU_FIRMWARE(sig)),
@@ -124,9 +99,9 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 			}
 		}
 	}
-	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
-	for (guint i = 0; i < sigs->len; i++) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
+	sigs_db = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist_db));
+	for (guint i = 0; i < sigs_db->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs_db, i);
 		g_autoptr(FuEfiX509Device) x509_device = NULL;
 		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_X509)
 			continue;
@@ -138,8 +113,8 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 		fu_device_set_proxy(FU_DEVICE(x509_device), device);
 		if (!fu_device_probe(FU_DEVICE(x509_device), error))
 			return FALSE;
-		for (guint j = 0; default_sigs != NULL && j < default_sigs->len; j++) {
-			FuFirmware *default_sig = g_ptr_array_index(default_sigs, j);
+		for (guint j = 0; sigs_dbdefault != NULL && j < sigs_dbdefault->len; j++) {
+			FuFirmware *default_sig = g_ptr_array_index(sigs_dbdefault, j);
 			if (fu_firmware_get_id(default_sig) == NULL)
 				continue;
 			if (g_strcmp0(fu_firmware_get_id(default_sig),
@@ -170,30 +145,12 @@ fu_uefi_db_device_write_firmware(FuDevice *device,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* write entire chunk to efivarsfs */
+	FuContext *ctx = fu_device_get_context(device);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_uefi_device_set_efivar_bytes(
-		FU_UEFI_DEVICE(device),
-		FU_EFIVARS_GUID_SECURITY_DATABASE,
-		fu_device_get_physical_id(device),
-		fw,
-		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
-		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-		error)) {
-		return FALSE;
-	}
-
-	/* success! */
-	return TRUE;
+	return fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						  FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+						  firmware,
+						  error);
 }
 
 static void
@@ -307,4 +264,16 @@ fu_uefi_db_device_class_init(FuUefiDbDeviceClass *klass)
 	device_class->add_security_attrs = fu_uefi_db_device_add_security_attrs;
 	device_class->set_progress = fu_uefi_db_device_set_progress;
 	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
+}
+
+FuUefiDbDevice *
+fu_uefi_db_device_new(FuContext *ctx)
+{
+	g_autoptr(FuUefiDbDevice) self = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
+
+	self = g_object_new(FU_TYPE_UEFI_DB_DEVICE, "context", ctx, NULL);
+	fu_uefi_device_set_kind(FU_UEFI_DEVICE(self), FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB);
+	return g_steal_pointer(&self);
 }

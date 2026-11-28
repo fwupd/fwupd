@@ -45,7 +45,7 @@ fu_uefi_kek_external_locked_func(void)
 	fu_plugin_runner_device_added(plugin, device_kek);
 
 	/* register a PK device that is external */
-	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "PK"));
+	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK));
 	fu_device_set_plugin(device_pk, "uefi_pk");
 	fu_device_add_private_flag(device_pk, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	fu_plugin_runner_device_register(plugin, device_pk);
@@ -87,7 +87,7 @@ fu_uefi_kek_external_not_locked_func(void)
 	fu_plugin_runner_device_added(plugin, device_kek);
 
 	/* register a PK device that is NOT external */
-	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "PK"));
+	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK));
 	fu_device_set_plugin(device_pk, "uefi_pk");
 	fu_plugin_runner_device_register(plugin, device_pk);
 
@@ -117,7 +117,7 @@ fu_uefi_kek_external_locked_device_added_func(void)
 	fu_plugin_runner_init(plugin);
 
 	/* register PK device as external first */
-	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFIVARS_GUID_EFI_GLOBAL, "PK"));
+	device_pk = FU_DEVICE(fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK));
 	fu_device_set_plugin(device_pk, "uefi_pk");
 	fu_device_add_private_flag(device_pk, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	fu_plugin_runner_device_register(plugin, device_pk);

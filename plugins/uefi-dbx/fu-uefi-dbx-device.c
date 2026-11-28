@@ -24,30 +24,12 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags install_flags,
 				  GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* write entire chunk to efivarsfs */
+	FuContext *ctx = fu_device_get_context(device);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_uefi_device_set_efivar_bytes(
-		FU_UEFI_DEVICE(device),
-		FU_EFIVARS_GUID_SECURITY_DATABASE,
-		"dbx",
-		fw,
-		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
-		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-		error)) {
-		return FALSE;
-	}
-
-	/* success! */
-	return TRUE;
+	return fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						  FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						  firmware,
+						  error);
 }
 
 static gboolean
@@ -81,36 +63,22 @@ fu_uefi_dbx_device_set_checksum(FuUefiDbxDevice *self, const gchar *csum, GError
 static gboolean
 fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 {
-	g_autoptr(GBytes) dbx_blob = NULL;
-	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new();
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	g_autoptr(FuFirmware) dbx = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* use the number of checksums in the dbx as a version number, ignoring
 	 * some owners that do not make sense */
-	dbx_blob = fu_uefi_device_get_efivar_bytes(FU_UEFI_DEVICE(self),
-						   FU_EFIVARS_GUID_SECURITY_DATABASE,
-						   "dbx",
-						   NULL,
-						   &error_local);
-	if (dbx_blob == NULL) {
-		/* create an empty dbx signature list */
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-	} else {
-		if (!fu_firmware_parse_bytes(dbx,
-					     dbx_blob,
-					     0x0,
-					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
-					     error))
-			return FALSE;
-		sigs = fu_firmware_get_images(dbx);
-	}
+	dbx = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						 error);
+	if (dbx == NULL)
+		return FALSE;
 
 	/* special entry for "empty" */
-	if (sigs == NULL) {
+	sigs = fu_firmware_get_images(dbx);
+	if (sigs->len == 0) {
 		g_debug("dbx variable not found, creating a fake dbx");
 		fu_device_set_version_raw(FU_DEVICE(self), 0);
 		return TRUE;
@@ -201,20 +169,18 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
 	g_autoptr(FuFirmware) kek = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
-	kek = fu_device_read_firmware(device,
-				      progress,
-				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
-				      error);
-	if (kek == NULL) {
-		g_prefix_error_literal(error, "failed to parse KEK: ");
+	kek = fu_efivars_get_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						 error);
+	if (kek == NULL)
 		return FALSE;
-	}
 	fu_device_add_instance_strup(device, "ARCH", fu_uefi_dbx_get_efi_arch());
 
 	sigs = fu_firmware_get_images(kek);
@@ -306,4 +272,16 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->convert_version = fu_uefi_dbx_device_convert_version;
 	device_class->set_version_raw = fu_uefi_dbx_device_set_version_raw;
+}
+
+FuUefiDbxDevice *
+fu_uefi_dbx_device_new(FuContext *ctx)
+{
+	g_autoptr(FuUefiDbxDevice) self = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
+
+	self = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	fu_uefi_device_set_kind(FU_UEFI_DEVICE(self), FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX);
+	return g_steal_pointer(&self);
 }

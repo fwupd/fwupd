@@ -8,8 +8,8 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-device-private.h"
+#include "fu-efivars-private.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-device-private.h"
 
@@ -24,64 +24,31 @@ fu_uefi_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 {
 	FuContext *ctx = fu_backend_get_context(backend);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	struct {
-		const gchar *guid;
-		const gchar *name;
-	} guid_names[] = {
-	    {FU_EFIVARS_GUID_EFI_GLOBAL, "PK"},
-	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"},
-	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "db"},
-	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbx"},
+	FuEfiSecureBootSiglistKind kinds[] = {
+	    FU_EFI_SECURE_BOOT_SIGLIST_KIND_PK,
+	    FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+	    FU_EFI_SECURE_BOOT_SIGLIST_KIND_DB,
+	    FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
 	};
 
 	/* each important EFI key */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, G_N_ELEMENTS(guid_names));
-	for (guint i = 0; i < G_N_ELEMENTS(guid_names); i++) {
+	fu_progress_set_steps(progress, G_N_ELEMENTS(kinds));
+	for (guint i = 0; i < G_N_ELEMENTS(kinds); i++) {
 		g_autoptr(FuUefiDevice) uefi_device = NULL;
-		if (!fu_efivars_exists(efivars, guid_names[i].guid, guid_names[i].name)) {
+		if (!fu_efivars_exists(efivars,
+				       fu_efivars_secure_boot_siglist_kind_to_guid(kinds[i]),
+				       fu_efivars_secure_boot_siglist_kind_to_name(kinds[i]))) {
 			fu_progress_step_done(progress);
 			continue;
 		}
-		uefi_device = fu_uefi_device_new(ctx, guid_names[i].guid, guid_names[i].name);
+		uefi_device = fu_uefi_device_new(ctx, kinds[i]);
 		fu_backend_device_added(backend, FU_DEVICE(uefi_device));
 		fu_progress_step_done(progress);
 	}
 
 	/* success */
 	return TRUE;
-}
-
-static FuDevice *
-fu_uefi_backend_create_device(FuBackend *backend, const gchar *backend_id, GError **error)
-{
-	g_autofree gchar *guid = NULL;
-	g_autoptr(FuUefiDevice) uefi_device = NULL;
-
-	/* the backend-id is `GUID-name`, e.g. 8be4df61-93ca-11d2-aa0d-00e098032b8c-PK;
-	 * the GUID is a fixed-length prefix as it contains dashes itself */
-	if (strlen(backend_id) < sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) ||
-	    backend_id[sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) - 1] != '-') {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid backend-id");
-		return NULL;
-	}
-	guid = g_strndup(backend_id, sizeof(FU_EFIVARS_GUID_EFI_GLOBAL) - 1);
-	if (!fwupd_guid_is_valid(guid)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid backend-id");
-		return NULL;
-	}
-
-	uefi_device =
-	    g_object_new(FU_TYPE_UEFI_DEVICE, "backend", backend, "backend-id", backend_id, NULL);
-	fu_uefi_device_set_guid(uefi_device, guid);
-	fu_uefi_device_set_name(uefi_device, backend_id + sizeof(FU_EFIVARS_GUID_EFI_GLOBAL));
-	return FU_DEVICE(g_steal_pointer(&uefi_device));
 }
 
 static void
@@ -94,7 +61,6 @@ fu_uefi_backend_class_init(FuUefiBackendClass *klass)
 {
 	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
 	backend_class->coldplug = fu_uefi_backend_coldplug;
-	backend_class->create_device = fu_uefi_backend_create_device;
 }
 
 FuBackend *

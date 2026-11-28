@@ -22,15 +22,13 @@ fu_uefi_dbx_version_func(void)
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
-	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_uefi_dbx_device_new(ctx));
 	g_autoptr(FuEfiSignature) sig_dbx1 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuEfiSignature) sig_dbx2 = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuEfiX509Signature) sig_kek = fu_efi_x509_signature_new();
 	g_autoptr(FuFirmware) siglist_dbx = fu_efi_signature_list_new();
 	g_autoptr(FuFirmware) siglist_kek = fu_efi_signature_list_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_dbx = NULL;
-	g_autoptr(GBytes) blob_kek = NULL;
 	g_autoptr(GBytes) csum1 = NULL;
 	g_autoptr(GBytes) csum2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -52,17 +50,10 @@ fu_uefi_dbx_version_func(void)
 	fu_efi_x509_signature_set_subject(sig_kek,
 					  "C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
 	fu_firmware_add_image(siglist_kek, FU_FIRMWARE(sig_kek), NULL);
-	blob_kek = fu_firmware_write(siglist_kek, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob_kek);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "KEK",
-					      blob_kek,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						 siglist_kek,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -85,15 +76,10 @@ fu_uefi_dbx_version_func(void)
 	fu_firmware_set_bytes(FU_FIRMWARE(sig_dbx2), csum2);
 	fu_firmware_add_image(siglist_dbx, FU_FIRMWARE(sig_dbx2), NULL);
 
-	blob_dbx = fu_firmware_write(siglist_dbx, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob_dbx);
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_SECURITY_DATABASE,
-					      "dbx",
-					      blob_dbx,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						 siglist_dbx,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -110,11 +96,10 @@ fu_uefi_dbx_zero_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
-	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_uefi_dbx_device_new(ctx));
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) csum = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -133,29 +118,20 @@ fu_uefi_dbx_zero_func(void)
 	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
 	fu_efi_signature_set_owner(sig, FU_EFI_SIGNATURE_GUID_ZERO);
 	fu_firmware_add_image(siglist, FU_FIRMWARE(sig), NULL);
-	blob = fu_firmware_write(siglist, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob);
 
 	/* create a plausible KEK */
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "KEK",
-					      blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						 siglist,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* create an "empty" dbx */
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_SECURITY_DATABASE,
-					      "dbx",
-					      blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_DBX,
+						 siglist,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -212,9 +188,8 @@ fu_uefi_dbx_not_present_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
-	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_uefi_dbx_device_new(ctx));
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GBytes) ms_blob = NULL;
 	g_autoptr(FuFirmware) ms_siglist = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *ms_kek_filename = NULL;
@@ -239,18 +214,10 @@ fu_uefi_dbx_not_present_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(ms_siglist);
 
-	ms_blob = fu_firmware_write(ms_siglist, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(ms_blob);
-
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
-	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
-					      FU_EFIVARS_GUID_EFI_GLOBAL,
-					      "KEK",
-					      ms_blob,
-					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
-					      &error);
+	ret = fu_efivars_set_secure_boot_siglist(fu_context_get_efivars(ctx),
+						 FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK,
+						 ms_siglist,
+						 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -265,7 +232,7 @@ fu_uefi_dbx_prepare_firmware_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
-	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(FuDevice) device = FU_DEVICE(fu_uefi_dbx_device_new(ctx));
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) auth2 = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
 	g_autoptr(FuFirmware) firmware = NULL;

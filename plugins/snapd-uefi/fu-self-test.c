@@ -366,9 +366,7 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	g_assert_true(ret);
 	fu_progress_step_done(progress);
 
-	uefi_device = g_object_new(FU_TYPE_UEFI_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(uefi_device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(uefi_device), "KEK");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK);
 	fu_plugin_runner_device_register(plugin, FU_DEVICE(uefi_device));
 
 	firmware = fu_test_mock_dbx_update_firmware();
@@ -444,9 +442,7 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	uefi_device = g_object_new(FU_TYPE_UEFI_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(uefi_device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(uefi_device), "KEK");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK);
 	fu_plugin_runner_device_register(plugin, FU_DEVICE(uefi_device));
 
 	firmware = fu_test_mock_dbx_update_firmware();
@@ -516,9 +512,7 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	uefi_device = g_object_new(FU_TYPE_UEFI_DEVICE, "context", ctx, NULL);
-	fu_uefi_device_set_guid(FU_UEFI_DEVICE(uefi_device), FU_EFIVARS_GUID_EFI_GLOBAL);
-	fu_uefi_device_set_name(FU_UEFI_DEVICE(uefi_device), "KEK");
+	uefi_device = fu_uefi_device_new(ctx, FU_EFI_SECURE_BOOT_SIGLIST_KIND_KEK);
 	fu_plugin_runner_device_register(plugin, FU_DEVICE(uefi_device));
 
 	ret = fu_device_has_inhibit(FU_DEVICE(uefi_device), "no-snapd");

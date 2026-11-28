@@ -102,14 +102,14 @@ fu_efivars_set_data(FuEfivars *self,
 		    const guint8 *data,
 		    gsize sz,
 		    FuEfiVariableAttrs attr,
-		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
 fu_efivars_set_data_bytes(FuEfivars *self,
 			  const gchar *guid,
 			  const gchar *name,
 			  GBytes *bytes,
 			  FuEfiVariableAttrs attr,
-			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
 fu_efivars_delete(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
@@ -124,6 +124,14 @@ fu_efivars_get_names(FuEfivars *self, const gchar *guid, GError **error) G_GNUC_
 gboolean
 fu_efivars_get_secure_boot(FuEfivars *self, FuEfiSecureBootState *state, GError **error)
     G_GNUC_NON_NULL(1);
+FuFirmware *
+fu_efivars_get_secure_boot_siglist(FuEfivars *self, FuEfiSecureBootSiglistKind kind, GError **error)
+    G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_set_secure_boot_siglist(FuEfivars *self,
+				   FuEfiSecureBootSiglistKind kind,
+				   FuFirmware *firmware,
+				   GError **error) G_GNUC_NON_NULL(1, 3);
 
 gboolean
 fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error) G_GNUC_NON_NULL(1);

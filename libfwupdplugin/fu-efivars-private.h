@@ -18,5 +18,11 @@ gboolean
 fu_efivars_build_boot_order(FuEfivars *self, GError **error, ...) G_GNUC_NON_NULL(1);
 FuPathStore *
 fu_efivars_get_path_store(FuEfivars *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
+const gchar *
+fu_efivars_secure_boot_siglist_kind_to_guid(FuEfiSecureBootSiglistKind kind) G_GNUC_CONST;
+const gchar *
+fu_efivars_secure_boot_siglist_kind_to_name(FuEfiSecureBootSiglistKind kind) G_GNUC_CONST;
+FuEfiSecureBootSiglistKind
+fu_efivars_secure_boot_siglist_kind_from_guid_name(const gchar *guid, const gchar *name);
 
 G_END_DECLS
