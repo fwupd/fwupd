@@ -55,6 +55,12 @@ related chassis:
 The firmware will be deployed as appropriate. The Redfish API does not specify
 when the firmware will actually be written to the SPI device.
 
+On the NVIDIA DGX Station GB300 the BMC stages the firmware, and it becomes active at the next AC
+power cycle. The components that the BMC reports as `PendingActivation` need activation, either by
+unplugging the power cable or with `fwupdmgr activate`, which asks the BMC to shut the host down and
+cut and restore the power of the whole board. Until then, the other components are only updated
+when a release is named explicitly, so that `fwupdmgr update` does not upload the bundle again.
+
 ## Vendor ID Security
 
 No vendor ID is set as there is no vendor field in the schema.

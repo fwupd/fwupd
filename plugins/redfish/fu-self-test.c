@@ -742,6 +742,8 @@ fu_redfish_nvidia_devices_func(void)
 static void
 fu_redfish_nvidia_update_func(void)
 {
+	FuDevice *dev;
+	GPtrArray *devices;
 	gboolean ret;
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
@@ -761,6 +763,14 @@ fu_redfish_nvidia_update_func(void)
 	ret = fu_redfish_nvidia_write_payload(plugin, "completed", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* the BMC reports nothing staged, so the written device waits for the activation */
+	devices = fu_plugin_get_devices(plugin);
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES));
 }
 
 static void
@@ -880,6 +890,68 @@ fu_redfish_nvidia_update_transient_func(void)
 	ret = fu_redfish_nvidia_write_payload(plugin, "transient", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+}
+
+static void
+fu_redfish_nvidia_activate_func(void)
+{
+	FuDevice *dev;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuPlugin) plugin_restarted = NULL;
+	g_autoptr(FuPlugin) plugin_activated = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("redfish-nvidia", &error);
+	g_assert_no_error(error);
+	plugin = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin);
+
+	/* nothing is staged, so the written CPU waits for the activation */
+	ret = fu_redfish_nvidia_write_payload(plugin, "completed", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* the BMC stages the GPU, and leaves the slot of the written CPU empty */
+	ret = fu_redfish_nvidia_write_payload(plugin, "staged", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = fu_plugin_get_devices(plugin);
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES));
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* the BMC still reports it after a restart */
+	plugin_restarted = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin_restarted);
+	devices = fu_plugin_get_devices(plugin_restarted);
+	dev = g_ptr_array_index(devices, 0);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES));
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* the BMC power cycles the board, which activates the firmware */
+	ret = fu_plugin_runner_activate(plugin_restarted, dev, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	plugin_activated = fu_redfish_nvidia_plugin_new(tmpdir, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin_activated);
+	devices = fu_plugin_get_devices(plugin_activated);
+	dev = g_ptr_array_index(devices, 2);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES));
 }
 
 static void
@@ -1591,6 +1663,7 @@ main(int argc, char **argv)
 	g_test_add_func("/redfish/nvidia/update-no-task", fu_redfish_nvidia_update_no_task_func);
 	g_test_add_func("/redfish/nvidia/update-transient",
 			fu_redfish_nvidia_update_transient_func);
+	g_test_add_func("/redfish/nvidia/activate", fu_redfish_nvidia_activate_func);
 	g_test_add_func("/redfish/common", fu_redfish_common_func);
 	g_test_add_func("/redfish/firmware", fu_redfish_firmware_func);
 	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
