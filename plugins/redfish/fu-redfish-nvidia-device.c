@@ -223,6 +223,8 @@ fu_redfish_nvidia_device_ensure_staged(FuRedfishNvidiaDevice *self, FuRedfishBac
 		if (fu_redfish_nvidia_device_member_is_staged(json_member)) {
 			fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 			any_staged = TRUE;
+		} else {
+			fu_device_remove_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		}
 	}
 

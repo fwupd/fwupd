@@ -915,6 +915,11 @@ fu_redfish_nvidia_activate_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(plugin);
 
+	/* nothing is staged, so the written CPU waits for the activation */
+	ret = fu_redfish_nvidia_write_payload(plugin, "completed", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* the BMC stages the GPU, and leaves the slot of the written CPU empty */
 	ret = fu_redfish_nvidia_write_payload(plugin, "staged", &error);
 	g_assert_no_error(error);
