@@ -152,6 +152,31 @@ fu_context_udev_subsystems_func(void)
 }
 
 static void
+fu_context_has_udev_subsystem_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+
+	/* nothing registered yet */
+	g_assert_false(fu_context_has_udev_subsystem(ctx, "usb"));
+
+	/* plain subsystem, with and without a plugin */
+	fu_context_add_udev_subsystem(ctx, "usb", NULL);
+	fu_context_add_udev_subsystem(ctx, "hidraw", "logitech-hidpp");
+	g_assert_true(fu_context_has_udev_subsystem(ctx, "usb"));
+	g_assert_true(fu_context_has_udev_subsystem(ctx, "hidraw"));
+
+	/* subsystem:devtype also registers the base subsystem */
+	fu_context_add_udev_subsystem(ctx, "block:partition", "uf2");
+	g_assert_true(fu_context_has_udev_subsystem(ctx, "block:partition"));
+	g_assert_true(fu_context_has_udev_subsystem(ctx, "block"));
+
+	/* not registered */
+	g_assert_false(fu_context_has_udev_subsystem(ctx, "block:disk"));
+	g_assert_false(fu_context_has_udev_subsystem(ctx, "pciport"));
+	g_assert_false(fu_context_has_udev_subsystem(ctx, ""));
+}
+
+static void
 fu_context_state_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -451,5 +476,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context/firmware-gtypes", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context/state", fu_context_state_func);
 	g_test_add_func("/fwupd/context/udev-subsystems", fu_context_udev_subsystems_func);
+	g_test_add_func("/fwupd/context/has-udev-subsystem", fu_context_has_udev_subsystem_func);
 	return g_test_run();
 }

@@ -602,6 +602,9 @@ if get_option('tests')
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
   endif
+  if host_machine.system() in ['linux', 'android']
+    test_names += 'udev-backend'
+  endif
   foreach test_name : test_names
     e = executable(
       'fu-' + test_name + '-test',

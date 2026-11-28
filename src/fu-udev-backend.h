@@ -15,5 +15,7 @@ G_DECLARE_FINAL_TYPE(FuUdevBackend, fu_udev_backend, FU, UDEV_BACKEND, FuBackend
 
 FuBackend *
 fu_udev_backend_new(FuContext *ctx) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_udev_backend_strsplit_nul(GBytes *blob, GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

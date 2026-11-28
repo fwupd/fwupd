@@ -50,6 +50,8 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_context_has_udev_subsystem(FuContext *self, const gchar *subsystem) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1) G_GNUC_PURE;
 gboolean

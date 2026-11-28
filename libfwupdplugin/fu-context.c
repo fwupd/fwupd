@@ -1025,6 +1025,24 @@ fu_context_get_udev_subsystems(FuContext *self)
 	return g_steal_pointer(&subsystems);
 }
 
+/**
+ * fu_context_has_udev_subsystem:
+ * @self: a #FuContext
+ * @subsystem: (not nullable): a subsystem name, e.g. `pciport`, or `block:partition`
+ *
+ * Finds if the udev subsystem is being watched by the daemon.
+ *
+ * Returns: %TRUE if the udev subsystem was found
+ **/
+gboolean
+fu_context_has_udev_subsystem(FuContext *self, const gchar *subsystem)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(subsystem != NULL, FALSE);
+	return g_hash_table_contains(priv->udev_subsystems, subsystem);
+}
+
 static gchar *
 fu_context_convert_firmware_gtype_to_id(GType gtype)
 {

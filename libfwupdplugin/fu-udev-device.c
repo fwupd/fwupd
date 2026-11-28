@@ -2317,8 +2317,15 @@ fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *v
 	g_return_if_fail(key != NULL);
 
 	/* this are explicit properties too */
-	if (g_strcmp0(key, "DEVNAME") == 0)
-		fu_udev_device_set_device_file(self, value);
+	if (g_strcmp0(key, "DEVNAME") == 0) {
+		if (value != NULL && !g_path_is_absolute(value)) {
+			g_autofree gchar *device_file =
+			    fu_udev_device_build_devfs_path(self, value);
+			fu_udev_device_set_device_file(self, device_file);
+		} else {
+			fu_udev_device_set_device_file(self, value);
+		}
+	}
 	if (g_strcmp0(key, "DEVTYPE") == 0)
 		fu_udev_device_set_devtype(self, value);
 
